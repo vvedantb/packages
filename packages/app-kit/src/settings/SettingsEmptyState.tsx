@@ -1,0 +1,38 @@
+import type { ComponentType, ReactNode } from "react";
+
+interface SettingsEmptyStateProps {
+  /** Tabler icon component, rendered muted above the copy. */
+  icon: ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  /** One line on what to do about it. */
+  description?: string;
+  /** Primary call to action, e.g. the same button as the section header. */
+  action?: ReactNode;
+}
+
+/**
+ * The "nothing here yet" state for a settings section body.
+ *
+ * Sits inside a SettingsSection rather than floating on the canvas, so an empty
+ * list still reads as part of the card it belongs to.
+ * Shared across apps.
+ */
+export function SettingsEmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: SettingsEmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+      <Icon size={28} className="mb-5 text-muted opacity-50" />
+      <h4 className="text-sm font-medium text-foreground">{title}</h4>
+      {description ? (
+        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted">
+          {description}
+        </p>
+      ) : null}
+      {action ? <div className="mt-6">{action}</div> : null}
+    </div>
+  );
+}
