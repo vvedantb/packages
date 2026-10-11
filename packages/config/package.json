@@ -1,0 +1,53 @@
+{
+  "name": "@vvedantb/config",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Shared tsconfig bases, oxlint base, pinned tool versions and a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig.",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vvedantb/ui.git",
+    "directory": "packages/config"
+  },
+  "bin": {
+    "vvedantb-config": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./versions": {
+      "types": "./dist/versions.d.ts",
+      "import": "./dist/versions.js"
+    },
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/web.json": "./tsconfig/web.json",
+    "./tsconfig/convex.json": "./tsconfig/convex.json",
+    "./tsconfig/react-native.json": "./tsconfig/react-native.json",
+    "./oxlint/base.json": "./oxlint/base.json",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "files",
+    "tsconfig",
+    "oxlint",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "prepack": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
