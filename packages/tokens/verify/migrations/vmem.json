@@ -1,0 +1,121 @@
+{
+  "app": "vmem",
+  "verifiedAt": "8c972b1a2cf7b341c3282a26d904fce39aed3232",
+  "css": {
+    "apps/web/src/globals.css": {
+      "imports": [
+        {
+          "file": "animations.css",
+          "before": " | @theme"
+        },
+        {
+          "file": "base.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "tabs-pills.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "dialog.css",
+          "before": " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+        },
+        {
+          "file": "modal.css",
+          "before": "@layer components | .t-modal"
+        },
+        {
+          "file": "tabs.css",
+          "before": "@layer components | .t-modal"
+        },
+        {
+          "file": "scrollbar-thin.css",
+          "after": "@layer utilities | .hit-target:not(.absolute):not(.fixed):not(.sticky)"
+        }
+      ],
+      "remove": [
+        {
+          "via": "animations.css",
+          "keys": [
+            "@theme | @keyframes aurora",
+            "@theme | @keyframes fade-in-up",
+            "@theme | @keyframes indeterminate"
+          ],
+          "trim": {
+            " | @theme": [
+              "--animate-aurora",
+              "--animate-fade-in-up",
+              "--animate-indeterminate"
+            ]
+          }
+        },
+        {
+          "via": "base.css",
+          "keys": [
+            "@layer base | html",
+            "@layer base | ::selection",
+            "@layer base | button, a, input, textarea, [role=\"button\"]",
+            "@layer base | button:not(:disabled), [role=\"button\"]:not(:disabled), a[href]",
+            "@layer base | input[type=\"range\"]"
+          ]
+        },
+        {
+          "via": "tabs-pills.css",
+          "keys": [
+            "@layer base | :root, .light, .default, [data-theme=\"light\"], [data-theme=\"default\"]",
+            "@layer base | .dark, [data-theme=\"dark\"]",
+            "@layer components | .t-tabs--segmented",
+            "@layer components | .t-tabs--pills",
+            "@layer components | .t-tabs--pills .t-tab:not([aria-selected=\"true\"]):not([data-state=\"active\"]):hover",
+            "@layer components | .t-tabs--pills .t-tab[aria-selected=\"true\"], .t-tabs--pills .t-tab[data-state=\"active\"]"
+          ]
+        },
+        {
+          "via": "dialog.css",
+          "keys": [
+            " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+          ]
+        },
+        {
+          "via": "modal.css",
+          "keys": [
+            "@layer components | .t-modal",
+            "@layer components | .t-modal.is-open",
+            "@layer components | .t-modal.is-closing",
+            "@layer components | @keyframes t-modal-presence-wait"
+          ]
+        },
+        {
+          "via": "tabs.css",
+          "keys": [
+            "@layer components > @media (max-width: 639px) | .t-tabs",
+            "@layer components > @media (max-width: 639px) | .t-tabs::-webkit-scrollbar",
+            "@layer components | .t-tab",
+            "@layer components | .t-tab:not([aria-selected=\"true\"]):not([data-state=\"active\"]):hover, .t-tab[aria-selected=\"true\"], .t-tab[data-state=\"active\"]",
+            "@layer components | .t-tabs-pill"
+          ]
+        },
+        {
+          "via": "scrollbar-thin.css",
+          "keys": [
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin",
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin:hover",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-track",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb:hover"
+          ]
+        }
+      ]
+    }
+  },
+  "cascadeReviewed": [
+    {
+      "keys": [
+        "@layer components | .t-tabs {",
+        "@layer components | .t-tabs-pill {"
+      ],
+      "why": ".t-tabs-pill is a child element inside .t-tabs (tabsSliding markup), never the same element."
+    }
+  ]
+}
