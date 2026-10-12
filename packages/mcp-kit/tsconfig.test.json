@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "rootDir": "..",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@vvedantb/convex-kit": ["../convex-kit/src/index.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}
