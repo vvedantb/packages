@@ -11,6 +11,7 @@ Shared UI for vmem, vibot, Verve, velth and vhub web. One token package (tokens,
 | `@vvedantb/app-kit` | Web React helpers shared by apps: Alt-click confirm skip, update-available watcher, settings chrome and a stable Clerk auth hook. Compiled. `0.1.0`, not yet published. |
 | `@vvedantb/config` | tsconfig bases (base, web, convex, react-native), an oxlint base, pinned tool versions and the `vvedantb-config sync` CLI. Compiled. `0.1.0`, not yet published. |
 | `@vvedantb/convex-kit` | Convex backend helpers: query-limit errors, Clerk auth config, bearer tokens, env, MCP CORS and server info. No React. Compiled. `0.1.0`, not yet published. |
+| `@vvedantb/mcp-kit` | MCP server scaffolding for Convex `httpAction`s: `/mcp` bearer-auth handler, OAuth metadata endpoints, a pure JSON-RPC dispatcher, tool helpers and user-scoped explorer tools. Builds on convex-kit. No Node APIs, no MCP SDK dependency. Compiled. `0.1.0`, not yet published. |
 
 All packages are public npm packages under the `vvedantb` scope.
 
@@ -24,6 +25,7 @@ npm install @vvedantb/native-ui @vvedantb/tokens
 npm install @vvedantb/app-kit
 npm install -D @vvedantb/config
 npm install @vvedantb/convex-kit
+npm install @vvedantb/mcp-kit
 ```
 
 For a local checkout of this repo:
@@ -45,6 +47,7 @@ For a local checkout of this repo:
 - `@vvedantb/app-kit`: `ConfirmSkipHint`, `useRequestConfirm`, `useAltHeld`, `startUpdateAvailableWatcher`, `SettingsPage` and friends, `useStableAuth`. Peers: React 19, Clerk, `@tanstack/react-hotkeys`, zod. See `packages/app-kit/README.md`.
 - `@vvedantb/config`: `@vvedantb/config/tsconfig/{base,web,convex,react-native}.json`, `@vvedantb/config/oxlint/base.json`, `@vvedantb/config/versions`, and `npx @vvedantb/config sync [--check]` for Claude commands, `CLAUDE.md` headings, `.cursor/environment.json` and the Convex tsconfig. See `packages/config/README.md`.
 - `@vvedantb/convex-kit`: `clerkAuthConfig`, `getClerkClient`, `extractBearerToken`, `requiredEnv`, `mcpCorsHeaders`, `defineMcpServerInfo`, `expectMcpToolCount` and more. `@clerk/backend` is an optional peer. See `packages/convex-kit/README.md`.
+- `@vvedantb/mcp-kit`: `createMcpHttpHandler`, `createAuthorizationServerMetadataProxy`, `createProtectedResourceMetadata`, `createHealthHandler`, `createOptionsHandler`, `runSdkMcpRequest`, `createMcpDispatcher`, `defineTool`, `createExplorerTools` and result helpers. Depends on `@vvedantb/convex-kit`; `zod` is an optional peer. Per-app migration steps and measured line counts are in `packages/mcp-kit/docs/migration.md`. See `packages/mcp-kit/README.md`.
 
 ## Use in a Tailwind v4 app
 
@@ -139,11 +142,14 @@ Needs Node 22 and pnpm.
 pnpm install
 pnpm build
 pnpm test
+pnpm typecheck
 ```
 
-`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`), compiles `@vvedantb/shell`, `@vvedantb/app-kit`, `@vvedantb/config` and `@vvedantb/convex-kit` to each package's `dist`, checks that every `@vvedantb/tokens` export target and the native-ui entry exist, and typechecks the token native and preset types. `pnpm test` runs the vitest suites in the packages that have one, and an offline `node --test` suite in `@vvedantb/tokens` (exports, CSS structure, Tailwind compile of each shared file and the preset).
+`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`), compiles `@vvedantb/shell`, `@vvedantb/app-kit`, `@vvedantb/config`, `@vvedantb/convex-kit` and `@vvedantb/mcp-kit` to each package's `dist`, checks that every `@vvedantb/tokens` export target and the native-ui entry exist, and typechecks the token native and preset types. `pnpm test` runs the vitest suites in the packages that have one, and an offline `node --test` suite in `@vvedantb/tokens` (exports, CSS structure, Tailwind compile of each shared file and the preset).
 
 `pnpm --filter @vvedantb/tokens verify` is not part of `pnpm test`: it needs the five app clones (`APPS_DIR`) and network access to install Tailwind into a scratch directory (`VERIFY_DIR`). It builds each app's CSS before and after its migration and fails on any difference. Results: `packages/tokens/verify/RESULTS.md`.
+
+`pnpm typecheck` runs each package's `typecheck` script.
 
 ## Publish
 
@@ -155,8 +161,10 @@ pnpm --filter @vvedantb/native-ui exec npm publish --access public
 pnpm --filter @vvedantb/app-kit exec npm publish --access public
 pnpm --filter @vvedantb/config exec npm publish --access public
 pnpm --filter @vvedantb/convex-kit exec npm publish --access public
+# mcp-kit depends on convex-kit via workspace:^; pnpm publish rewrites it to ^0.1.0 (npm publish would not)
+pnpm --filter @vvedantb/mcp-kit publish --access public
 ```
 
-`@vvedantb/app-kit`, `@vvedantb/config` and `@vvedantb/convex-kit` start at `0.1.0` and have not been published. Each compiles in `prepack`, so `npm publish` builds `dist` first. They are independent of each other.
+`@vvedantb/app-kit`, `@vvedantb/config`, `@vvedantb/convex-kit` and `@vvedantb/mcp-kit` start at `0.1.0` and have not been published. Each compiles in `prepack`, so publishing builds `dist` first. The first three are independent of each other; `@vvedantb/mcp-kit` needs `@vvedantb/convex-kit` published first.
 
 Version the package in its `package.json` first. `@vvedantb/tokens` `0.1.1` added `@vvedantb/tokens/native` and must land before `@vvedantb/native-ui` `0.1.0`. `@vvedantb/tokens` `0.2.0` (minor, additive) adds the `css/*.css` files and `tailwind-preset`; `.`, `./tokens.css` and `./native` are unchanged. Publish it before migrating any app (see `packages/tokens/examples/migration.md`); velth also needs it added as a dependency.
