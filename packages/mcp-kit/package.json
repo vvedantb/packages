@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vvedantb/ui.git",
+    "url": "git+https://github.com/vvedantb/packages.git",
     "directory": "packages/mcp-kit"
   },
   "exports": {
