@@ -1,0 +1,57 @@
+/*
+ * @vvedantb/tokens/css/tabs.css: sliding tab bar (.t-tab, .t-tabs-pill)
+ * used by @vvedantb/ui tabsSliding (transitions.dev pattern). The .t-tabs
+ * container rule stays in the app; it differs per app.
+ *
+ * Needs: --tabs-dur, --tabs-ease, --tabs-text-muted, --tabs-text-active,
+ * --tabs-pill-bg. tabs-pills.css sets the three colour variables.
+ */
+
+@layer components {
+  @media (max-width: 639px) {
+    .t-tabs {
+      justify-content: safe center;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .t-tabs::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .t-tab {
+    position: relative;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    height: 30px;
+    padding: 4px 12px;
+    color: var(--tabs-text-muted);
+    cursor: pointer;
+    border-radius: 48px;
+    z-index: 1;
+    transition: color var(--tabs-dur) var(--tabs-ease);
+  }
+  .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover,
+  .t-tab[aria-selected="true"],
+  .t-tab[data-state="active"] {
+    color: var(--tabs-text-active);
+  }
+  .t-tabs-pill {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    height: 30px;
+    width: 0;
+    background: var(--tabs-pill-bg);
+    border-radius: 48px;
+    transform: translateX(0);
+    transition:
+      transform var(--tabs-dur) var(--tabs-ease),
+      width var(--tabs-dur) var(--tabs-ease),
+      top var(--tabs-dur) var(--tabs-ease),
+      height var(--tabs-dur) var(--tabs-ease);
+    will-change: transform, width;
+    z-index: 0;
+    pointer-events: none;
+  }
+}

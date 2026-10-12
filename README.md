@@ -1,10 +1,10 @@
 # ui
 
-Shared UI for vmem, vibot and Verve web. One token file, one primitive library, and two shell pieces.
+Shared UI for vmem, vibot, Verve, velth and vhub web. One token package (tokens, shared app CSS and a Tailwind preset), one primitive library, and two shell pieces.
 
 | Package | What it is |
 | --- | --- |
-| `@vvedantb/tokens` | CSS tokens for Tailwind v4 web, plus `@vvedantb/tokens/native` JS colours, radii and spacing for React Native. |
+| `@vvedantb/tokens` | CSS tokens for Tailwind v4 web, shared app CSS (`@vvedantb/tokens/css/*.css`: base, dialog, modal, tabs, utilities, scrollbar, animations), a Tailwind preset for `@config` apps (`@vvedantb/tokens/tailwind-preset`), and `@vvedantb/tokens/native` JS colours, radii and spacing for React Native. `0.2.0`. See `packages/tokens/README.md`. |
 | `@vvedantb/ui` | Shared React 19 primitives. vmem `packages/ui` is the baseline; leftover vibot and Verve files are included so the apps can share and unify them later. Source-exported. Colour, radius, shadow and font come from `@vvedantb/tokens`, not a second token file. Web only. |
 | `@vvedantb/shell` | React 19 components with no router dependency: `SidebarHeader` and `PillTabs`. Only copy; they are not also in `@vvedantb/ui`. |
 | `@vvedantb/native-ui` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Uses `@vvedantb/tokens/native`. |
@@ -62,13 +62,35 @@ In the app's main stylesheet:
 - Tailwind does not scan `node_modules`. The `@source` lines tell it to read the UI source, the compiled shell, and compiled app-kit, so their classes are generated. Paths are relative to the stylesheet. Change them to match the app's layout.
 - Dark mode uses the `.dark` class (the next-themes class strategy). `[data-theme="dark"]` also works.
 
+#### Shared app CSS (0.2.0)
+
+Rules that 3 or more apps had copied are now opt-in files. Import only the ones the app used to define, at the position of the app's own copy (Tailwind inlines `@import` where it sits; it must be at top level):
+
+```css
+@import "@vvedantb/tokens/css/base.css";        /* html, ::selection, control transitions, cursor, range accent */
+@import "@vvedantb/tokens/css/dialog.css";      /* compact Dialog max-width fix (unlayered) */
+@import "@vvedantb/tokens/css/modal.css";       /* .t-modal, .is-open, .is-closing; needs --modal-* on :root */
+@import "@vvedantb/tokens/css/tabs.css";        /* .t-tab, .t-tabs-pill; needs --tabs-dur, --tabs-ease */
+@import "@vvedantb/tokens/css/tabs-pills.css";  /* --tabs-* colours, .t-tabs--segmented / --pills */
+@import "@vvedantb/tokens/css/utilities.css";   /* @utility hit-target, reveal-on-hover */
+@import "@vvedantb/tokens/css/scrollbar-thin.css";
+@import "@vvedantb/tokens/css/animations.css";  /* CSS-first apps only; @config apps use the preset */
+```
+
+`@vvedantb/tokens/css/index.css` imports base, dialog, utilities, scrollbar-thin and animations for a new app. Apps that load a `tailwind.config.ts` through `@config` add `presets: [tokensPreset()]` from `@vvedantb/tokens/tailwind-preset` (shared colours, radii, shadows, `ease-smooth`, px screens, keyframes). Verve passes its color-mix wrapper: `tokensPreset({ color: v })`.
+
+The per-app steps (which blocks to delete, where each import goes, which `:root` parameters to add) are in `packages/tokens/examples/migration.md`, generated and checked by `pnpm --filter @vvedantb/tokens verify`.
+
 ### What the app must provide
 
 `@vvedantb/ui` uses some classes that neither Tailwind nor `@vvedantb/tokens` defines. Without them the classes silently render nothing:
 
 - `@import "shadow-plugin";` for `smooth-shadow-ring-*`, the edge and shadow of dialogs, sheets, menus, popovers, tooltips and toasts.
-- `@plugin "tailwindcss-animate";` (or `tw-animate-css`) for `animate-in`/`fade-*`/`zoom-*`/`slide-in-*` on overlays. `animate-accordion-down`/`-up` also need `accordion-down`/`accordion-up` keyframes in the app.
-- App-local CSS: `.glass-panel-strong` (dialog and toast fill), `.t-modal` with `.is-open`/`.is-closing` (dialog centring and transition), `.t-tabs`, `.t-tab` and `.t-tabs-pill` (tab layout and active state), `.t-clear*` (ClearInput dissolve layers), and `hit-target`.
+- `@plugin "tailwindcss-animate";` (or `tw-animate-css`) for `animate-in`/`fade-*`/`zoom-*`/`slide-in-*` on overlays. `animate-accordion-down`/`-up` also need `accordion-down`/`accordion-up` keyframes (in `@vvedantb/tokens/tailwind-preset`, or in the app) and an `animation` timing in the app.
+- `.t-modal` with `.is-open`/`.is-closing`: import `@vvedantb/tokens/css/modal.css` and set `--modal-open-dur`, `--modal-close-dur`, `--modal-scale`, `--modal-scale-close` and `--modal-ease` on `:root`, or keep an app copy (vibot and Verve do; theirs differ).
+- `.t-tab` and `.t-tabs-pill`: import `@vvedantb/tokens/css/tabs.css` (+ `tabs-pills.css` for the `--tabs-*` colours and the segmented/pills variants) and set `--tabs-dur` and `--tabs-ease`. The `.t-tabs` container rule is still app CSS.
+- `hit-target` and `reveal-on-hover`: import `@vvedantb/tokens/css/utilities.css` (or keep plain `@layer utilities` rules, as vmem and vhub do).
+- App-local CSS: `.glass-panel-strong` (dialog and toast fill), the `.t-tabs` container, `.t-clear*` (ClearInput dissolve layers).
 
 ### Font
 
@@ -107,7 +129,7 @@ import { SidebarHeader, PillTabs } from "@vvedantb/shell";
 
 ## What stays app-local
 
-Navigation layout (icon rails, sidebars, sidebar and header size variables), page layouts, segmented controls, modal and tab CSS classes (including `--modal-close-dur` and similar), `glass-panel-*` / `smooth-shadow-ring-*` / `hit-target` utilities, marketing fonts, animations and editor styles.
+Navigation layout (icon rails, sidebars, sidebar and header size variables), page layouts, segmented controls, motion variables (`--modal-*`, `--tabs-dur`, `--tabs-ease`, view-transition timings), the `.t-tabs` container and any tab or modal rules that differ from the shared files, `.t-clear*`, `glass-panel-*` / `smooth-shadow-ring-*` utilities, app colours and fonts (velth's pink accent, Verve's chart colours, vibot's feature colours), Tailwind plugins, marketing fonts, page animations, markdown/editor styles and landing CSS. `packages/tokens/verify/ANALYSIS.md` lists every duplicated block that was left in the apps and why.
 
 ## Develop
 
@@ -119,7 +141,9 @@ pnpm build
 pnpm test
 ```
 
-`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`), compiles `@vvedantb/shell`, `@vvedantb/app-kit`, `@vvedantb/config` and `@vvedantb/convex-kit` to each package's `dist`, and checks that the token CSS and native-ui entry files exist. `pnpm test` runs the vitest suites in the packages that have one.
+`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`), compiles `@vvedantb/shell`, `@vvedantb/app-kit`, `@vvedantb/config` and `@vvedantb/convex-kit` to each package's `dist`, checks that every `@vvedantb/tokens` export target and the native-ui entry exist, and typechecks the token native and preset types. `pnpm test` runs the vitest suites in the packages that have one, and an offline `node --test` suite in `@vvedantb/tokens` (exports, CSS structure, Tailwind compile of each shared file and the preset).
+
+`pnpm --filter @vvedantb/tokens verify` is not part of `pnpm test`: it needs the five app clones (`APPS_DIR`) and network access to install Tailwind into a scratch directory (`VERIFY_DIR`). It builds each app's CSS before and after its migration and fails on any difference. Results: `packages/tokens/verify/RESULTS.md`.
 
 ## Publish
 
@@ -135,4 +159,4 @@ pnpm --filter @vvedantb/convex-kit exec npm publish --access public
 
 `@vvedantb/app-kit`, `@vvedantb/config` and `@vvedantb/convex-kit` start at `0.1.0` and have not been published. Each compiles in `prepack`, so `npm publish` builds `dist` first. They are independent of each other.
 
-Version the package in its `package.json` first. `@vvedantb/tokens` `0.1.1` adds `@vvedantb/tokens/native` and must land before `@vvedantb/native-ui` `0.1.0`.
+Version the package in its `package.json` first. `@vvedantb/tokens` `0.1.1` added `@vvedantb/tokens/native` and must land before `@vvedantb/native-ui` `0.1.0`. `@vvedantb/tokens` `0.2.0` (minor, additive) adds the `css/*.css` files and `tailwind-preset`; `.`, `./tokens.css` and `./native` are unchanged. Publish it before migrating any app (see `packages/tokens/examples/migration.md`); velth also needs it added as a dependency.

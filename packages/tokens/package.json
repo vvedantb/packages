@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/tokens",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
-  "description": "Shared CSS and JS design tokens for web and React Native.",
+  "description": "Shared CSS and JS design tokens for web and React Native, plus shared Tailwind v4 CSS and a Tailwind preset.",
   "publishConfig": {
     "access": "public"
   },
@@ -14,14 +14,37 @@
   "exports": {
     ".": "./src/tokens.css",
     "./tokens.css": "./src/tokens.css",
-    "./native": "./src/native.ts"
+    "./native": "./src/native.ts",
+    "./css/index.css": "./src/css/index.css",
+    "./css/base.css": "./src/css/base.css",
+    "./css/dialog.css": "./src/css/dialog.css",
+    "./css/modal.css": "./src/css/modal.css",
+    "./css/tabs.css": "./src/css/tabs.css",
+    "./css/tabs-pills.css": "./src/css/tabs-pills.css",
+    "./css/utilities.css": "./src/css/utilities.css",
+    "./css/scrollbar-thin.css": "./src/css/scrollbar-thin.css",
+    "./css/animations.css": "./src/css/animations.css",
+    "./tailwind-preset": {
+      "types": "./src/tailwind-preset.d.mts",
+      "default": "./src/tailwind-preset.mjs"
+    }
   },
   "files": [
     "src",
+    "examples",
     "LICENSE"
   ],
   "scripts": {
-    "build": "node -e \"require('node:fs').accessSync('src/tokens.css')\"",
-    "prepack": "node -e \"require('node:fs').accessSync('src/tokens.css')\""
+    "build": "node scripts/check-exports.mjs && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "verify": "node verify/run.mjs",
+    "analyze": "node verify/analyze.mjs",
+    "prepack": "node scripts/check-exports.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/node": "4.3.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.9.0"
   }
 }

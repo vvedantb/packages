@@ -1,0 +1,13 @@
+/*
+ * @vvedantb/tokens/css/dialog.css
+ *
+ * @vvedantb/ui >=0.1.5 sets data-compact="true" on DialogContent at
+ * max-width 639px or max-height 500px and renders it as a bottom sheet.
+ * Per-dialog max-w-* utilities must not shrink or left-align that sheet.
+ * Unlayered on purpose, so it wins over Tailwind utilities.
+ */
+
+[role="dialog"][data-compact="true"],
+[role="alertdialog"][data-compact="true"] {
+  max-width: none;
+}

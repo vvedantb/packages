@@ -1,0 +1,211 @@
+{
+  "app": "vibot",
+  "verifiedAt": "f7b61259270bb6152227574b8d249b392ec94f53",
+  "css": {
+    "apps/web/src/styles/globals.css": {
+      "imports": [
+        {
+          "file": "utilities.css",
+          "before": " | @utility hit-target"
+        },
+        {
+          "file": "base.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "dialog.css",
+          "before": " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+        },
+        {
+          "file": "scrollbar-thin.css",
+          "before": "@layer utilities | @property --scroll-fade-top"
+        }
+      ],
+      "remove": [
+        {
+          "via": "utilities.css",
+          "keys": [
+            " | @utility hit-target",
+            " | @utility reveal-on-hover"
+          ]
+        },
+        {
+          "via": "base.css",
+          "keys": [
+            "@layer base | html",
+            "@layer base | ::selection",
+            "@layer base | button, a, input, textarea, [role=\"button\"]",
+            "@layer base | button:not(:disabled), [role=\"button\"]:not(:disabled), a[href]",
+            "@layer base | input[type=\"range\"]"
+          ]
+        },
+        {
+          "via": "tokens.css",
+          "keys": [
+            "@layer base | *",
+            "@layer base | body"
+          ],
+          "trim": {
+            "@layer base | :root, .light, .default, [data-theme=\"light\"], [data-theme=\"default\"]": [
+              "color-scheme",
+              "--accent",
+              "--accent-foreground",
+              "--backdrop",
+              "--background",
+              "--border",
+              "--danger",
+              "--danger-foreground",
+              "--default",
+              "--default-foreground",
+              "--field-background",
+              "--field-border",
+              "--field-foreground",
+              "--field-placeholder",
+              "--focus",
+              "--focus-ring",
+              "--focus-border",
+              "--danger-ring",
+              "--danger-border",
+              "--foreground",
+              "--muted",
+              "--overlay",
+              "--overlay-foreground",
+              "--overlay-shadow",
+              "--scrollbar",
+              "--segment",
+              "--segment-foreground",
+              "--separator",
+              "--success",
+              "--success-foreground",
+              "--surface",
+              "--surface-foreground",
+              "--surface-secondary",
+              "--surface-secondary-foreground",
+              "--surface-tertiary",
+              "--surface-tertiary-foreground",
+              "--surface-card",
+              "--warning",
+              "--warning-foreground",
+              "--radius",
+              "--field-radius"
+            ],
+            "@layer base | .dark, [data-theme=\"dark\"]": [
+              "color-scheme",
+              "--accent",
+              "--accent-foreground",
+              "--backdrop",
+              "--background",
+              "--border",
+              "--danger",
+              "--danger-foreground",
+              "--default",
+              "--default-foreground",
+              "--field-background",
+              "--field-border",
+              "--field-foreground",
+              "--field-placeholder",
+              "--focus",
+              "--focus-ring",
+              "--focus-border",
+              "--danger-ring",
+              "--danger-border",
+              "--foreground",
+              "--muted",
+              "--overlay",
+              "--overlay-foreground",
+              "--overlay-shadow",
+              "--scrollbar",
+              "--segment",
+              "--segment-foreground",
+              "--separator",
+              "--success",
+              "--success-foreground",
+              "--surface",
+              "--surface-foreground",
+              "--surface-secondary",
+              "--surface-secondary-foreground",
+              "--surface-tertiary",
+              "--surface-tertiary-foreground",
+              "--surface-card",
+              "--warning",
+              "--warning-foreground",
+              "--radius",
+              "--field-radius"
+            ]
+          }
+        },
+        {
+          "via": "dialog.css",
+          "keys": [
+            " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+          ]
+        },
+        {
+          "via": "scrollbar-thin.css",
+          "keys": [
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin",
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin:hover",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-track",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb:hover"
+          ]
+        }
+      ]
+    }
+  },
+  "config": {
+    "file": "apps/web/tailwind.config.ts",
+    "via": "tailwind-preset",
+    "edits": [
+      {
+        "find": "import type { Config } from \"tailwindcss\";\n",
+        "replace": "import type { Config } from \"tailwindcss\";\nimport { tokensPreset } from \"@vvedantb/tokens/tailwind-preset\";\n"
+      },
+      {
+        "find": "  darkMode: \"class\",\n",
+        "replace": "  presets: [tokensPreset()],\n"
+      },
+      {
+        "find": "        border: v(\"border\"),\n        backdrop: v(\"backdrop\"),\n        background: v(\"background\"),\n        foreground: v(\"foreground\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        danger: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n          ring: v(\"danger-ring\"),\n          border: v(\"danger-border\"),\n        },\n        default: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "          background: v(\"field-background\"),\n          border: v(\"field-border\"),\n          foreground: v(\"field-foreground\"),\n          placeholder: v(\"field-placeholder\"),\n        },\n        focus: {\n          DEFAULT: v(\"focus\"),\n          ring: v(\"focus-ring\"),\n          border: v(\"focus-border\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        overlay: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        scrollbar: v(\"scrollbar\"),\n        segment: {\n          DEFAULT: v(\"segment\"),\n          foreground: v(\"segment-foreground\"),\n        },\n        separator: v(\"separator\"),\n        success: {\n          DEFAULT: v(\"success\"),\n          foreground: v(\"success-foreground\"),\n        },\n        surface: {\n          DEFAULT: v(\"surface\"),\n          foreground: v(\"surface-foreground\"),\n          secondary: v(\"surface-secondary\"),\n          \"secondary-foreground\": v(\"surface-secondary-foreground\"),\n          tertiary: v(\"surface-tertiary\"),\n          \"tertiary-foreground\": v(\"surface-tertiary-foreground\"),\n          card: v(\"surface-card\"),\n        },\n        warning: {\n          DEFAULT: v(\"warning\"),\n          foreground: v(\"warning-foreground\"),\n        },\n        primary: {\n          DEFAULT: v(\"accent\"),\n          foreground: v(\"accent-foreground\"),\n        },\n        destructive: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n        },\n        secondary: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n        input: v(\"border\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        popover: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        card: {\n          DEFAULT: v(\"surface-card\"),\n          foreground: v(\"surface-foreground\"),\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "        lg: \"var(--radius)\",\n        field: \"var(--field-radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",\n",
+        "replace": ""
+      },
+      {
+        "find": "        soft: \"0 1px 2px rgba(16, 24, 40, 0.06), 0 10px 28px rgba(16, 24, 40, 0.06)\",\n        panel:\n          \"0 1px 2px rgba(16, 24, 40, 0.05), 0 16px 44px rgba(16, 24, 40, 0.1)\",\n        insetSoft:\n          \"inset 0 1px 0 rgba(255, 255, 255, 0.72), inset 0 -1px 0 rgba(16, 24, 40, 0.04)\",\n      },\n      transitionTimingFunction: {\n        smooth: \"cubic-bezier(0.22, 1, 0.36, 1)\",\n",
+        "replace": ""
+      },
+      {
+        "find": "      screens: {\n        xs: \"475px\",\n        sm: \"640px\",\n        md: \"768px\",\n        lg: \"1024px\",\n        xl: \"1280px\",\n        \"2xl\": \"1536px\",\n      },\n",
+        "replace": ""
+      },
+      {
+        "find": "        aurora: {\n          \"0%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n          \"25%\": {\n            backgroundPosition: \"50% 100%\",\n            transform: \"rotate(5deg) scale(1.1)\",\n          },\n          \"50%\": {\n            backgroundPosition: \"100% 50%\",\n            transform: \"rotate(-3deg) scale(0.95)\",\n          },\n          \"75%\": {\n            backgroundPosition: \"50% 0%\",\n            transform: \"rotate(3deg) scale(1.05)\",\n          },\n          \"100%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n        },\n        \"fade-in-up\": {\n          \"0%\": { opacity: \"0\", transform: \"translateY(10px)\" },\n          \"100%\": { opacity: \"1\", transform: \"translateY(0)\" },\n        },\n        indeterminate: {\n          \"0%\": { transform: \"translateX(-100%)\" },\n          \"100%\": { transform: \"translateX(400%)\" },\n        },\n        \"accordion-down\": {\n          from: { height: \"0\" },\n          to: { height: \"var(--radix-accordion-content-height)\" },\n        },\n        \"accordion-up\": {\n          from: { height: \"var(--radix-accordion-content-height)\" },\n          to: { height: \"0\" },\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "        aurora: \"aurora 8s ease-in-out infinite alternate\",\n        \"fade-in-up\": \"fade-in-up 0.4s ease-out forwards\",\n        indeterminate: \"indeterminate 1.5s ease-in-out infinite\",\n",
+        "replace": ""
+      }
+    ]
+  }
+}
