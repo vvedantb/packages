@@ -1,12 +1,10 @@
 {
   "name": "@vvedantb/config",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "private": true,
   "license": "MIT",
   "description": "Shared tsconfig bases, oxlint base, pinned tool versions and a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig.",
   "type": "module",
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vvedantb/ui.git",

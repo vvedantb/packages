@@ -8,39 +8,6 @@ importers:
 
   .: {}
 
-  packages/app-kit:
-    devDependencies:
-      '@clerk/clerk-react':
-        specifier: ^5.0.0
-        version: 5.61.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@tanstack/react-hotkeys':
-        specifier: ^0.13.0
-        version: 0.13.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@types/react':
-        specifier: ^19.1.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.1.0
-        version: 19.3.0(@types/react@19.3.0)
-      happy-dom:
-        specifier: ^18.0.0
-        version: 18.0.1
-      react:
-        specifier: ^19.1.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.3.0(react@19.3.0)
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.0
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
-      zod:
-        specifier: ^4.0.0
-        version: 4.6.6
-
   packages/config:
     devDependencies:
       '@types/node':
@@ -53,11 +20,14 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
-  packages/convex-kit:
+  packages/native-ui:
     devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.5
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.3.0
+      react:
+        specifier: ^19.1.0
+        version: 19.3.0
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -65,11 +35,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
 
-  packages/mcp-kit:
-    dependencies:
-      '@vvedantb/convex-kit':
-        specifier: workspace:^
-        version: link:../convex-kit
+  packages/server:
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -87,56 +53,11 @@ importers:
         specifier: npm:zod@^3.25.76
         version: zod@3.25.76
 
-  packages/native-ui:
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.0
-        version: 19.3.0
-      '@vvedantb/tokens':
-        specifier: workspace:*
-        version: link:../tokens
-      react:
-        specifier: ^19.1.0
-        version: 19.3.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-      vitest:
-        specifier: ^3.2.0
-        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
-
-  packages/shell:
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.1.0
-        version: 19.3.0(@types/react@19.3.0)
-      react:
-        specifier: ^19.1.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.3.0(react@19.3.0)
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  packages/tokens:
-    devDependencies:
-      '@tailwindcss/node':
-        specifier: 4.3.3
-        version: 4.3.3
-      tailwindcss:
-        specifier: 4.3.3
-        version: 4.3.3
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
   packages/ui:
     devDependencies:
+      '@clerk/clerk-react':
+        specifier: ^5.0.0
+        version: 5.61.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.20(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -209,15 +130,18 @@ importers:
       '@tabler/icons-react':
         specifier: ^3.35.0
         version: 3.48.0(react@19.3.0)
+      '@tailwindcss/node':
+        specifier: 4.3.3
+        version: 4.3.3
+      '@tanstack/react-hotkeys':
+        specifier: ^0.13.0
+        version: 0.13.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@types/react':
         specifier: ^19.1.0
         version: 19.3.0
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.3.0(@types/react@19.3.0)
-      '@vvedantb/tokens':
-        specifier: workspace:*
-        version: link:../tokens
       ai:
         specifier: ^5.0.0
         version: 5.0.271(zod@4.6.6)
@@ -233,6 +157,9 @@ importers:
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.3.0)
+      happy-dom:
+        specifier: ^18.0.0
+        version: 18.0.1
       motion:
         specifier: ^12.0.0
         version: 12.43.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -260,6 +187,9 @@ importers:
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.1
+      tailwindcss:
+        specifier: 4.3.3
+        version: 4.3.3
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -269,6 +199,12 @@ importers:
       vaul:
         specifier: ^1.1.0
         version: 1.1.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(happy-dom@18.0.1)(jiti@2.7.0)(lightningcss@1.32.0)
+      zod:
+        specifier: ^4.0.0
+        version: 4.6.6
 
 packages:
 

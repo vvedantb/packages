@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { tokens } from "@vvedantb/tokens/native";
+import { tokens } from "./tokens";
 
 export const DEFAULT_ACCENT = "#db2777";
 

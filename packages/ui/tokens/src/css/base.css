@@ -1,0 +1,51 @@
+/*
+ * @vvedantb/ui/tokens/css/base.css: element defaults shared by the web apps.
+ * Needs --accent and --foreground (tokens.css or the app theme).
+ *
+ * Parameters (set on :root to change; defaults shown):
+ *   --tokens-control-transition-property: background-color, border-color,
+ *     color, box-shadow, transform, opacity
+ *   --tokens-control-transition-duration: 240ms
+ */
+
+@layer base {
+  html {
+    touch-action: manipulation;
+    accent-color: var(--accent);
+  }
+
+  ::selection {
+    background-color: color-mix(in oklch, var(--accent) 18%, transparent);
+    color: var(--foreground);
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  [role="button"] {
+    transition-property: var(
+      --tokens-control-transition-property,
+      background-color,
+      border-color,
+      color,
+      box-shadow,
+      transform,
+      opacity
+    );
+    transition-duration: var(--tokens-control-transition-duration, 240ms);
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Tailwind v4 preflight sets `cursor: default` on buttons. Restore the
+     pointer for enabled interactive controls. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+
+  input[type="range"] {
+    accent-color: var(--accent);
+  }
+}

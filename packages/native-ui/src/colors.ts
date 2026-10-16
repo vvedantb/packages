@@ -1,4 +1,4 @@
-import { tokens } from "@vvedantb/tokens/native";
+import { tokens } from "./tokens";
 
 export const NEUTRAL_100 = "#f5f5f5";
 export const NEUTRAL_500 = tokens.color.muted.light;

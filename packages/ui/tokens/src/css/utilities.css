@@ -1,0 +1,34 @@
+/*
+ * @vvedantb/ui/tokens/css/utilities.css: Tailwind `@utility` helpers. Generated
+ * only when used, and they take variants (e.g. `max-sm:hit-target`).
+ */
+
+/* Extends sub-40px controls to a 40x40px tap target without changing layout.
+   Only force `relative` when the element is otherwise static: absolute /
+   fixed / sticky already form a containing block for ::after. */
+@utility hit-target {
+  &:not(.absolute):not(.fixed):not(.sticky) {
+    position: relative;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+}
+
+/* Row actions that only appear on group-hover. Touch has no hover, so the
+   control stays visible on phones and hides only where hover exists. */
+@utility reveal-on-hover {
+  opacity: 1;
+
+  @media (hover: hover) and (width >= theme(--breakpoint-sm)) {
+    opacity: 0;
+
+    &:is(:where(.group):hover *),
+    &:is(:where(.group):focus-within *),
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+}

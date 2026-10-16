@@ -1,0 +1,38 @@
+import { httpAction, type ActionCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
+import {
+  createAuthorizationServerMetadataProxy,
+  createHealthHandler,
+  createMcpHttpHandler,
+  createProtectedResourceMetadata,
+} from "@vvedantb/server/mcp";
+import type { McpScope } from "../profiles/mcpAccess";
+
+// proxies clerk as metadata for older mcp clients that hit this host's well, known
+export const oauthMetadata = httpAction(createAuthorizationServerMetadataProxy());
+export const protectedResourceMetadata = httpAction(createProtectedResourceMetadata());
+export const protectedResourceMetadataTeam = httpAction(
+  createProtectedResourceMetadata({ resourcePath: "/mcp/team" }),
+);
+
+function mcpEndpoint(scope: McpScope) {
+  return httpAction(
+    createMcpHttpHandler<{ clerkUserId: string }, ActionCtx, McpScope>({
+      scope,
+      resourceMetadataPath:
+        scope === "team" ? "/.well-known/oauth-protected-resource/mcp/team" : undefined,
+      authenticate: ({ ctx, token }) =>
+        ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token }),
+      handleRpc: ({ ctx, principal, body }) =>
+        ctx.runAction(internal.mcp.nodeActions.handleMcpRequest, {
+          clerkUserId: principal.clerkUserId,
+          body,
+          scope,
+        }),
+    }),
+  );
+}
+
+export const mcpHandler = mcpEndpoint("personal");
+export const mcpTeamHandler = mcpEndpoint("team");
+export const health = httpAction(createHealthHandler());

@@ -1,12 +1,10 @@
 # @vvedantb/config
 
-Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, pinned tool versions and a `sync` CLI. Not yet published to npm.
+Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, pinned tool versions and a `sync` CLI. Private: this package is not published to npm. Apps in this repository use it through the pnpm workspace.
 
 ## Install
 
-```sh
-npm install -D @vvedantb/config
-```
+Add it as a workspace dependency (`"@vvedantb/config": "workspace:*"`) inside this repository. It is not on npm.
 
 ## tsconfig bases
 
@@ -39,7 +37,7 @@ Convex: `convex/tsconfig.json` (or `packages/backend/convex/tsconfig.json`)
 
 Generic rules only: plugins `typescript`, `import`, `unicorn`, `react`; `suspicious` as error; ignore patterns for build output and generated files; `no-explicit-any`, `no-non-null-assertion`, `consistent-type-imports`, `no-floating-promises`, `import/no-cycle`, `react/rules-of-hooks`, `react/exhaustive-deps`, `no-console` (allows `warn`, `error`, `info`) and `no-unused-vars` (ignores `^_`). It has no app plugins and no path overrides. Apps add their own `jsPlugins`, `rules` and `overrides`. `no-floating-promises` needs type-aware linting (`oxlint-tsgolint`).
 
-The severity of `no-console` and `no-unused-vars` is set to `error` here. It was not copied from the vmem file, which was not in the extract. Check it against the app.
+The severity of `no-console` and `no-unused-vars` is set to `error` here. It was not copied from the source app file, which was not in the extract. Check it against the app.
 
 ## Versions
 
@@ -80,15 +78,11 @@ CI example:
 - run: npx @vvedantb/config sync --check
 ```
 
-## Develop and publish
+## Develop
 
 ```sh
 pnpm --filter @vvedantb/config build
 pnpm --filter @vvedantb/config test
 ```
 
-Publish from a logged-in npm machine after a version bump in `package.json`. There is no CI publish.
-
-```sh
-pnpm --filter @vvedantb/config exec npm publish --access public
-```
+The package has `"private": true`, so `npm publish` refuses to run. To publish it later, remove `private` and add `publishConfig.access: public` in a separate change.

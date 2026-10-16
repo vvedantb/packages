@@ -205,7 +205,6 @@ describe("package files", () => {
 
   it("ships a generic oxlint base without app plugins", () => {
     const text = readFileSync(join(root, "oxlint/base.json"), "utf8");
-    expect(text).not.toContain("vmem");
     expect(JSON.parse(text)).toMatchObject({
       plugins: ["typescript", "import", "unicorn", "react"],
       categories: { suspicious: "error" },

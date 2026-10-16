@@ -1,5 +1,5 @@
 import { Platform, type ViewStyle } from "react-native";
-import { tokens } from "@vvedantb/tokens/native";
+import { tokens } from "./tokens";
 
 export const FLOATING_INSET = tokens.spacing.unit;
 export const FLOATING_TAB_BAR_HEIGHT = 64;
