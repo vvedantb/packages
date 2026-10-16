@@ -1,4 +1,4 @@
-// Colour, radius, shadow and font tokens live in @vvedantb/tokens. Import that
+// Colour, radius, shadow and font tokens live in @vvedantb/ui/tokens. Import that
 // stylesheet in the app. This package does not ship a second token set.
 export { cn } from "./utils/cn";
 export { floatingSurfaceClass } from "./ui/_menu-classes";
@@ -79,9 +79,6 @@ export {
   ScrollArea as ScrollAreaAlt,
   ScrollBar as ScrollBarAlt,
 } from "./ui/scroll-area.alt";
-
-// Deprecated aliases for the pre-0.1.6 suffixed names.
-export * from "./deprecated";
 
 export * from "./ai-elements/artifact";
 export * from "./ai-elements/attachments";

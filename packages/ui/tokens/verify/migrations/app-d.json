@@ -1,0 +1,130 @@
+{
+  "app": "app-d",
+  "verifiedAt": "3bdce79780d0226465be491854618d5f02281316",
+  "css": {
+    "apps/web/src/globals.css": {
+      "imports": [
+        {
+          "file": "utilities.css",
+          "before": " | @utility hit-target"
+        },
+        {
+          "file": "base.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "modal.css",
+          "before": "@layer components | .t-modal"
+        },
+        {
+          "file": "tabs.css",
+          "split": "@layer components | .t-tabs"
+        },
+        {
+          "file": "scrollbar-thin.css",
+          "before": "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin"
+        }
+      ],
+      "remove": [
+        {
+          "via": "utilities.css",
+          "keys": [
+            " | @utility hit-target",
+            " | @utility reveal-on-hover"
+          ]
+        },
+        {
+          "via": "base.css",
+          "keys": [
+            "@layer base | ::selection",
+            "@layer base | button, a, input, textarea, [role=\"button\"]",
+            "@layer base | button:not(:disabled), [role=\"button\"]:not(:disabled), a[href]",
+            "@layer base | input[type=\"range\"]"
+          ],
+          "trim": {
+            "@layer base | html": [
+              "touch-action",
+              "accent-color"
+            ]
+          }
+        },
+        {
+          "via": "modal.css",
+          "keys": [
+            "@layer components | .t-modal",
+            "@layer components | .t-modal.is-open",
+            "@layer components | .t-modal.is-closing",
+            "@layer components | @keyframes t-modal-presence-wait"
+          ]
+        },
+        {
+          "via": "tabs.css",
+          "keys": [
+            "@layer components > @media (max-width: 639px) | .t-tabs",
+            "@layer components > @media (max-width: 639px) | .t-tabs::-webkit-scrollbar",
+            "@layer components | .t-tab",
+            "@layer components | .t-tab:not([aria-selected=\"true\"]):not([data-state=\"active\"]):hover, .t-tab[aria-selected=\"true\"], .t-tab[data-state=\"active\"]",
+            "@layer components | .t-tabs-pill"
+          ]
+        },
+        {
+          "via": "scrollbar-thin.css",
+          "keys": [
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin",
+            "@layer utilities > @supports not selector(::-webkit-scrollbar) | .scrollbar-thin:hover",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-track",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb",
+            "@layer utilities | .scrollbar-thin::-webkit-scrollbar-thumb:hover"
+          ]
+        }
+      ]
+    }
+  },
+  "config": {
+    "file": "apps/web/tailwind.config.ts",
+    "via": "tailwind-preset",
+    "edits": [
+      {
+        "find": "import type { Config } from \"tailwindcss\";\n",
+        "replace": "import type { Config } from \"tailwindcss\";\nimport { tokensPreset } from \"@vvedantb/ui/tokens/tailwind-preset\";\n"
+      },
+      {
+        "find": "  darkMode: \"class\",\n",
+        "replace": "  presets: [tokensPreset()],\n"
+      },
+      {
+        "find": "        border: v(\"border\"),\n        backdrop: v(\"backdrop\"),\n        background: v(\"background\"),\n        foreground: v(\"foreground\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        },\n        danger: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n          ring: v(\"danger-ring\"),\n          border: v(\"danger-border\"),\n        },\n        default: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n        field: {\n          background: v(\"field-background\"),\n          border: v(\"field-border\"),\n          foreground: v(\"field-foreground\"),\n          placeholder: v(\"field-placeholder\"),\n        },\n        focus: {\n          DEFAULT: v(\"focus\"),\n          ring: v(\"focus-ring\"),\n          border: v(\"focus-border\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        overlay: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        scrollbar: v(\"scrollbar\"),\n        segment: {\n          DEFAULT: v(\"segment\"),\n          foreground: v(\"segment-foreground\"),\n        },\n        separator: v(\"separator\"),\n        success: {\n          DEFAULT: v(\"success\"),\n          foreground: v(\"success-foreground\"),\n        },\n        surface: {\n          DEFAULT: v(\"surface\"),\n          foreground: v(\"surface-foreground\"),\n          secondary: v(\"surface-secondary\"),\n          \"secondary-foreground\": v(\"surface-secondary-foreground\"),\n          tertiary: v(\"surface-tertiary\"),\n          \"tertiary-foreground\": v(\"surface-tertiary-foreground\"),\n          card: v(\"surface-card\"),\n        },\n        warning: {\n          DEFAULT: v(\"warning\"),\n          foreground: v(\"warning-foreground\"),\n        },\n        /* Legacy shadcn aliases \u2014 keep existing class names working */\n        primary: {\n          DEFAULT: v(\"accent\"),\n          foreground: v(\"accent-foreground\"),\n        },\n        secondary: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n        destructive: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n        },\n        card: {\n          DEFAULT: v(\"surface-card\"),\n          foreground: v(\"surface-foreground\"),\n        },\n        popover: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        input: v(\"border\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "      },\n      borderRadius: {\n        lg: \"var(--radius)\",\n        field: \"var(--field-radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",\n",
+        "replace": ""
+      },
+      {
+        "find": "        soft: \"0 1px 2px rgba(16, 24, 40, 0.06), 0 10px 28px rgba(16, 24, 40, 0.06)\",\n        panel:\n          \"0 1px 2px rgba(16, 24, 40, 0.05), 0 16px 44px rgba(16, 24, 40, 0.1)\",\n        insetSoft:\n          \"inset 0 1px 0 rgba(255, 255, 255, 0.72), inset 0 -1px 0 rgba(16, 24, 40, 0.04)\",\n      },\n      transitionTimingFunction: {\n        smooth: \"cubic-bezier(0.22, 1, 0.36, 1)\",\n",
+        "replace": ""
+      },
+      {
+        "find": "      screens: {\n        xs: \"475px\",\n        sm: \"640px\",\n        md: \"768px\",\n        lg: \"1024px\",\n        xl: \"1280px\",\n        \"2xl\": \"1536px\",\n      },\n",
+        "replace": ""
+      },
+      {
+        "find": "        \"accordion-down\": {\n          from: { height: \"0\" },\n          to: { height: \"var(--radix-accordion-content-height)\" },\n        },\n        \"accordion-up\": {\n          from: { height: \"var(--radix-accordion-content-height)\" },\n          to: { height: \"0\" },\n        },\n        aurora: {\n          \"0%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n          \"25%\": {\n            backgroundPosition: \"50% 100%\",\n            transform: \"rotate(5deg) scale(1.1)\",\n          },\n          \"50%\": {\n            backgroundPosition: \"100% 50%\",\n            transform: \"rotate(-3deg) scale(0.95)\",\n          },\n          \"75%\": {\n            backgroundPosition: \"50% 0%\",\n            transform: \"rotate(3deg) scale(1.05)\",\n          },\n          \"100%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n        },\n        \"fade-in-up\": {\n          \"0%\": { opacity: \"0\", transform: \"translateY(10px)\" },\n          \"100%\": { opacity: \"1\", transform: \"translateY(0)\" },\n        },\n        indeterminate: {\n          \"0%\": { transform: \"translateX(-100%)\" },\n          \"100%\": { transform: \"translateX(400%)\" },\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "        aurora: \"aurora 8s ease-in-out infinite alternate\",\n        \"fade-in-up\": \"fade-in-up 0.4s ease-out forwards\",\n        indeterminate: \"indeterminate 1.5s ease-in-out infinite\",\n",
+        "replace": ""
+      }
+    ]
+  }
+}

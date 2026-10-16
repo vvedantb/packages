@@ -1,0 +1,19 @@
+/*
+ * @vvedantb/ui/tokens/css/index.css: every shared file that needs only the
+ * variables tokens.css defines. For new apps. Import after tokens.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "@vvedantb/ui/tokens";
+ *   @import "@vvedantb/ui/tokens/css/index.css";
+ *
+ * modal.css, tabs.css and tabs-pills.css need app motion variables
+ * (--modal-*, --tabs-dur, --tabs-ease) and are not included. Apps that use
+ * the tailwind preset must not import animations.css; import the other
+ * files one by one instead.
+ */
+
+@import "./base.css";
+@import "./dialog.css";
+@import "./utilities.css";
+@import "./scrollbar-thin.css";
+@import "./animations.css";

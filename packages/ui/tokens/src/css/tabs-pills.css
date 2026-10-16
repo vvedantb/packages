@@ -1,0 +1,58 @@
+/*
+ * @vvedantb/ui/tokens/css/tabs-pills.css: tab colour variables plus the
+ * .t-tabs--segmented (connected bar) and .t-tabs--pills (isolated pills)
+ * variants. The `.t-tabs--pills .t-tab` sizing rule stays in the app.
+ *
+ * Needs: --muted, --segment, --segment-foreground, --default (tokens.css).
+ */
+
+@layer base {
+  :root,
+  .light,
+  .default,
+  [data-theme="light"],
+  [data-theme="default"] {
+    --tabs-text-muted: var(--muted);
+    --tabs-text-active: var(--segment-foreground);
+    --tabs-bar-bg: var(--default);
+    --tabs-pill-bg: var(--segment);
+    --tabs-pill-active-bg: var(--default);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --tabs-text-muted: var(--muted);
+    --tabs-text-active: var(--segment-foreground);
+    --tabs-bar-bg: var(--default);
+    --tabs-pill-bg: var(--segment);
+    --tabs-pill-active-bg: var(--default);
+  }
+}
+
+@layer components {
+  /* Connected segmented bar with a sliding pill. */
+  .t-tabs--segmented {
+    gap: 3px;
+    padding: 3px;
+    border-radius: 48px;
+    background: var(--tabs-bar-bg);
+  }
+  /* Isolated pills. Each tab owns its outline; the selected tab is filled. */
+  .t-tabs--pills {
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+  }
+  .t-tabs--pills
+    .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover {
+    background: color-mix(
+      in oklch,
+      var(--tabs-pill-active-bg) 50%,
+      transparent
+    );
+  }
+  .t-tabs--pills .t-tab[aria-selected="true"],
+  .t-tabs--pills .t-tab[data-state="active"] {
+    background: var(--tabs-pill-active-bg);
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, settings chrome, and tab bar.",
   "type": "module",
@@ -37,7 +37,6 @@
     "@rn-primitives/slot": "*",
     "@rn-primitives/switch": "*",
     "@tabler/icons-react-native": "*",
-    "@vvedantb/tokens": ">=0.1.1",
     "class-variance-authority": ">=0.7.0",
     "clsx": ">=2.0.0",
     "dayjs": ">=1.11.0",
@@ -55,14 +54,21 @@
     "tailwind-merge": ">=2.0.0"
   },
   "peerDependenciesMeta": {
-    "@gorhom/bottom-sheet": { "optional": true },
-    "@react-native-community/datetimepicker": { "optional": true },
-    "dayjs": { "optional": true },
-    "expo-router": { "optional": true }
+    "@gorhom/bottom-sheet": {
+      "optional": true
+    },
+    "@react-native-community/datetimepicker": {
+      "optional": true
+    },
+    "dayjs": {
+      "optional": true
+    },
+    "expo-router": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
-    "@vvedantb/tokens": "workspace:*",
     "react": "^19.1.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"

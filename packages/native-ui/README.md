@@ -7,7 +7,7 @@ Web apps should keep using `@vvedantb/ui`. This package is native-only.
 ## Install
 
 ```sh
-npm install @vvedantb/native-ui @vvedantb/tokens
+npm install @vvedantb/native-ui
 ```
 
 Peers the app must already have (Expo SDK 57 / RN 0.76+):
@@ -66,11 +66,17 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 </NativeUiProvider>
 ```
 
-`useLargerText()` steps type and tap targets up. `accentColor` tints FABs and card icons. Surfaces use `@vvedantb/tokens/native` for fill, radius (card 24, row 20, pill 999) and spacing (16).
+`useLargerText()` steps type and tap targets up. `accentColor` tints FABs and card icons. Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, row 20, pill 999) and spacing (16).
 
 ## Floating UI / Android shadows
 
 Do not put `elevation` or NativeWind `shadow-*` on nested or translucent chrome. `floatingShadow` is iOS `shadow*` and Android/web `boxShadow`. `FloatingSurface` paints an opaque fill on Android and clips on an inner view. Blur is iOS-only.
+
+## Tokens
+
+The JS tokens (colours, radii, spacing) live in `src/tokens.ts`. It is a copy of `@vvedantb/ui/tokens/native`, kept inside this package so React Native apps do not install `@vvedantb/ui` (Radix, react-dom and the rest of the web stack) for colour values. A test in `@vvedantb/ui` fails when the two files differ, so change both together.
+
+Apps that already depend on `@vvedantb/ui` can import the same values from `@vvedantb/ui/tokens/native`.
 
 ## Publish
 
@@ -78,8 +84,7 @@ There is no CI publish workflow. From a machine with npm access:
 
 ```sh
 export NPM_CONFIG_USERCONFIG="$HOME/.npmrc"   # if you keep the token there
-cd packages/tokens && npm publish --access public
-cd ../native-ui && npm publish --access public
+cd packages/native-ui && npm publish --access public
 ```
 
-`@vvedantb/tokens` must be `0.1.1+` first (`./native` export).
+`@vvedantb/native-ui` `0.2.0` has no `@vvedantb/tokens` peer. See `MIGRATION.md` at the repository root.

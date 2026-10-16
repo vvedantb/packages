@@ -1,12 +1,10 @@
 # @vvedantb/config
 
-Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, pinned tool versions and a `sync` CLI. Not yet published to npm.
+Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, pinned tool versions and a `sync` CLI. Private: this package is not published to npm. Apps in this repository use it through the pnpm workspace.
 
 ## Install
 
-```sh
-npm install -D @vvedantb/config
-```
+Add it as a workspace dependency (`"@vvedantb/config": "workspace:*"`) inside this repository. It is not on npm.
 
 ## tsconfig bases
 
@@ -80,15 +78,11 @@ CI example:
 - run: npx @vvedantb/config sync --check
 ```
 
-## Develop and publish
+## Develop
 
 ```sh
 pnpm --filter @vvedantb/config build
 pnpm --filter @vvedantb/config test
 ```
 
-Publish from a logged-in npm machine after a version bump in `package.json`. There is no CI publish.
-
-```sh
-pnpm --filter @vvedantb/config exec npm publish --access public
-```
+The package has `"private": true`, so `npm publish` refuses to run. To publish it later, remove `private` and add `publishConfig.access: public` in a separate change.

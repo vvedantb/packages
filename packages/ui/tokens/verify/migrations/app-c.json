@@ -1,0 +1,144 @@
+{
+  "app": "app-c",
+  "verifiedAt": "4d0ab45cbbc640e3bb0cdbde21a9f42a5b6de54e",
+  "css": {
+    "apps/web/src/globals.css": {
+      "imports": [
+        {
+          "file": "base.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "tabs-pills.css",
+          "before": "@layer base | html"
+        },
+        {
+          "file": "dialog.css",
+          "before": " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+        },
+        {
+          "file": "utilities.css",
+          "before": " | @utility hit-target"
+        }
+      ],
+      "params": {
+        "into": " | :root",
+        "values": {
+          "--tokens-control-transition-property": "background-color, color, transform, opacity",
+          "--tokens-control-transition-duration": "100ms"
+        }
+      },
+      "remove": [
+        {
+          "via": "base.css",
+          "keys": [
+            "@layer base | html",
+            "@layer base | ::selection",
+            "@layer base | button, a, input, textarea, [role=\"button\"]",
+            "@layer base | button:not(:disabled), [role=\"button\"]:not(:disabled), a[href]",
+            "@layer base | input[type=\"range\"]"
+          ]
+        },
+        {
+          "via": "tokens.css",
+          "keys": [
+            "@layer base | *",
+            "@layer base | body"
+          ]
+        },
+        {
+          "via": "tabs-pills.css",
+          "keys": [
+            "@layer components | .t-tabs--segmented",
+            "@layer components | .t-tabs--pills",
+            "@layer components | .t-tabs--pills .t-tab:not([aria-selected=\"true\"]):not([data-state=\"active\"]):hover",
+            "@layer components | .t-tabs--pills .t-tab[aria-selected=\"true\"], .t-tabs--pills .t-tab[data-state=\"active\"]"
+          ],
+          "trim": {
+            "@layer base | :root, .light, .default, [data-theme=\"light\"], [data-theme=\"default\"]": [
+              "--tabs-text-muted",
+              "--tabs-text-active",
+              "--tabs-bar-bg",
+              "--tabs-pill-bg",
+              "--tabs-pill-active-bg"
+            ],
+            "@layer base | .dark, [data-theme=\"dark\"]": [
+              "--tabs-text-muted",
+              "--tabs-text-active",
+              "--tabs-bar-bg",
+              "--tabs-pill-bg",
+              "--tabs-pill-active-bg"
+            ]
+          }
+        },
+        {
+          "via": "dialog.css",
+          "keys": [
+            " | [role=\"dialog\"][data-compact=\"true\"], [role=\"alertdialog\"][data-compact=\"true\"]"
+          ]
+        },
+        {
+          "via": "utilities.css",
+          "keys": [
+            " | @utility hit-target",
+            " | @utility reveal-on-hover"
+          ]
+        }
+      ]
+    }
+  },
+  "config": {
+    "file": "apps/web/tailwind.config.ts",
+    "via": "tailwind-preset",
+    "edits": [
+      {
+        "find": "import tailwindcssAnimate from \"tailwindcss-animate\";\n",
+        "replace": "import tailwindcssAnimate from \"tailwindcss-animate\";\nimport { tokensPreset } from \"@vvedantb/ui/tokens/tailwind-preset\";\n"
+      },
+      {
+        "find": "  darkMode: \"class\",\n",
+        "replace": "  presets: [tokensPreset({ color: v })],\n"
+      },
+      {
+        "find": "\n        // \u2500\u2500 HeroUI tokens (aligned with app-a/app-b) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n        border: v(\"border\"),\n        backdrop: v(\"backdrop\"),\n        background: v(\"background\"),\n        foreground: v(\"foreground\"),\n        surface: {\n          DEFAULT: v(\"surface\"),\n          foreground: v(\"surface-foreground\"),\n          secondary: v(\"surface-secondary\"),\n          \"secondary-foreground\": v(\"surface-secondary-foreground\"),\n          tertiary: v(\"surface-tertiary\"),\n          \"tertiary-foreground\": v(\"surface-tertiary-foreground\"),\n          card: v(\"surface-card\"),\n        },\n        default: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n        danger: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n          ring: v(\"danger-ring\"),\n          border: v(\"danger-border\"),\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "          background: v(\"field-background\"),\n          border: v(\"field-border\"),\n          foreground: v(\"field-foreground\"),\n          placeholder: v(\"field-placeholder\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "        focus: {\n          DEFAULT: v(\"focus\"),\n          ring: v(\"focus-ring\"),\n          border: v(\"focus-border\"),\n        },\n        overlay: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        scrollbar: v(\"scrollbar\"),\n        segment: {\n          DEFAULT: v(\"segment\"),\n          foreground: v(\"segment-foreground\"),\n        },\n        separator: v(\"separator\"),\n        success: {\n          DEFAULT: v(\"success\"),\n          foreground: v(\"success-foreground\"),\n        },\n        warning: {\n          DEFAULT: v(\"warning\"),\n          foreground: v(\"warning-foreground\"),\n        },\n\n",
+        "replace": ""
+      },
+      {
+        "find": "        card: {\n          DEFAULT: v(\"surface-card\"),\n          foreground: v(\"surface-foreground\"),\n        },\n        popover: {\n          DEFAULT: v(\"overlay\"),\n          foreground: v(\"overlay-foreground\"),\n        },\n        primary: {\n          DEFAULT: v(\"accent\"),\n          foreground: v(\"accent-foreground\"),\n        },\n        secondary: {\n          DEFAULT: v(\"default\"),\n          foreground: v(\"default-foreground\"),\n        },\n",
+        "replace": ""
+      },
+      {
+        "find": "        destructive: {\n          DEFAULT: v(\"danger\"),\n          foreground: v(\"danger-foreground\"),\n        },\n        input: v(\"border\"),\n",
+        "replace": ""
+      },
+      {
+        "find": "      borderRadius: {\n        lg: \"var(--radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",\n        field: \"var(--field-radius)\",\n      },\n      boxShadow: {\n        soft: \"0 1px 2px rgba(16, 24, 40, 0.06), 0 10px 28px rgba(16, 24, 40, 0.06)\",\n        panel:\n          \"0 1px 2px rgba(16, 24, 40, 0.05), 0 16px 44px rgba(16, 24, 40, 0.1)\",\n        insetSoft:\n          \"inset 0 1px 0 rgba(255, 255, 255, 0.72), inset 0 -1px 0 rgba(16, 24, 40, 0.04)\",\n      },\n      transitionTimingFunction: {\n        smooth: \"cubic-bezier(0.22, 1, 0.36, 1)\",\n      },\n      screens: {\n        xs: \"475px\",\n        sm: \"640px\",\n        md: \"768px\",\n        lg: \"1024px\",\n        xl: \"1280px\",\n        \"2xl\": \"1536px\",\n      },\n",
+        "replace": ""
+      },
+      {
+        "find": "        },\n        aurora: {\n          \"0%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n          \"25%\": {\n            backgroundPosition: \"50% 100%\",\n            transform: \"rotate(5deg) scale(1.1)\",\n          },\n          \"50%\": {\n            backgroundPosition: \"100% 50%\",\n            transform: \"rotate(-3deg) scale(0.95)\",\n          },\n          \"75%\": {\n            backgroundPosition: \"50% 0%\",\n            transform: \"rotate(3deg) scale(1.05)\",\n          },\n          \"100%\": {\n            backgroundPosition: \"0% 50%\",\n            transform: \"rotate(-5deg) scale(0.9)\",\n          },\n        },\n        \"fade-in-up\": {\n          \"0%\": { opacity: \"0\", transform: \"translateY(10px)\" },\n          \"100%\": { opacity: \"1\", transform: \"translateY(0)\" },\n        },\n        indeterminate: {\n          \"0%\": { transform: \"translateX(-100%)\" },\n          \"100%\": { transform: \"translateX(400%)\" },\n        },\n        \"accordion-down\": {\n          from: { height: \"0\" },\n          to: { height: \"var(--radix-accordion-content-height)\" },\n        },\n        \"accordion-up\": {\n          from: { height: \"var(--radix-accordion-content-height)\" },\n          to: { height: \"0\" },\n",
+        "replace": ""
+      },
+      {
+        "find": "        aurora: \"aurora 8s ease-in-out infinite alternate\",\n",
+        "replace": ""
+      },
+      {
+        "find": "        \"fade-in-up\": \"fade-in-up 0.4s ease-out forwards\",\n",
+        "replace": ""
+      },
+      {
+        "find": "        indeterminate: \"indeterminate 1.5s ease-in-out infinite\",\n",
+        "replace": ""
+      }
+    ]
+  }
+}
