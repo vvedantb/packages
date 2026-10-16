@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { cn } from "../utils/cn";
 import { flatInteractiveClass } from "../ui/surface-classes";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
-import { fastTransition } from "../motion/presets.vibot";
+import { fastTransition } from "../motion/presets.app-b";
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
 export const Conversation = ({ className, ...props }: ConversationProps) => (
   <StickToBottom

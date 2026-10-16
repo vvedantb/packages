@@ -20,11 +20,11 @@ export type RunSdkMcpRequestOptions<Transport extends SdkTransportLike> = {
   Transport: new (options: { sessionIdGenerator: undefined; enableJsonResponse: boolean }) => Transport;
   /** JSON-RPC body text from `createMcpHttpHandler`. */
   body: string;
-  /** URL of the synthetic request. Default `http://localhost/mcp` (vmem team: `http://localhost/mcp/team`). */
+  /** URL of the synthetic request. Default `http://localhost/mcp` (app-a team: `http://localhost/mcp/team`). */
   url?: string;
   /**
-   * Pass `JSON.parse(body)` as `parsedBody`, like vmem, vibot and verve
-   * (default `true`). velth passes nothing and lets the transport read the body.
+   * Pass `JSON.parse(body)` as `parsedBody`, like app-a, app-b and app-c
+   * (default `true`). app-d passes nothing and lets the transport read the body.
    */
   parsedBody?: boolean;
   /** Called with the error before the 500 result. Default logs "[MCP][handleMcpRequest] threw:". */

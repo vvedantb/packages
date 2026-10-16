@@ -7,14 +7,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { must } from "./helpers.js";
 import type { RpcResult } from "../src/index.js";
 import type { AppCtx, Handler } from "./fixtures/apps/types.js";
-import * as vmemRef from "./fixtures/apps/vmem.reference.js";
-import * as vmemKit from "./fixtures/apps/vmem.kit.js";
-import * as vibotRef from "./fixtures/apps/vibot.reference.js";
-import * as vibotKit from "./fixtures/apps/vibot.kit.js";
-import * as verveRef from "./fixtures/apps/verve.reference.js";
-import * as verveKit from "./fixtures/apps/verve.kit.js";
-import * as velthRef from "./fixtures/apps/velth.reference.js";
-import * as velthKit from "./fixtures/apps/velth.kit.js";
+import * as appARef from "./fixtures/apps/app-a.reference.js";
+import * as appAKit from "./fixtures/apps/app-a.kit.js";
+import * as appBRef from "./fixtures/apps/app-b.reference.js";
+import * as appBKit from "./fixtures/apps/app-b.kit.js";
+import * as appCRef from "./fixtures/apps/app-c.reference.js";
+import * as appCKit from "./fixtures/apps/app-c.kit.js";
+import * as appDRef from "./fixtures/apps/app-d.reference.js";
+import * as appDKit from "./fixtures/apps/app-d.kit.js";
 
 const ORIGIN = "https://happy-otter-123.convex.site";
 const CLERK = "https://clerk.example.test";
@@ -222,55 +222,55 @@ type AppCase = {
 
 const APPS: AppCase[] = [
   {
-    app: "vmem",
+    app: "app-a",
     credentials: { clerkUserId: "user_1" },
     mcp: [
-      { path: "/mcp", ref: vmemRef.mcpHandler, kit: vmemKit.mcpHandler },
-      { path: "/mcp/team", ref: vmemRef.mcpTeamHandler, kit: vmemKit.mcpTeamHandler },
+      { path: "/mcp", ref: appARef.mcpHandler, kit: appAKit.mcpHandler },
+      { path: "/mcp/team", ref: appARef.mcpTeamHandler, kit: appAKit.mcpTeamHandler },
     ],
     metadata: [
-      { path: "/.well-known/oauth-protected-resource", ref: vmemRef.protectedResourceMetadata, kit: vmemKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource", ref: appARef.protectedResourceMetadata, kit: appAKit.protectedResourceMetadata },
       {
         path: "/.well-known/oauth-protected-resource/mcp/team",
-        ref: vmemRef.protectedResourceMetadataTeam,
-        kit: vmemKit.protectedResourceMetadataTeam,
+        ref: appARef.protectedResourceMetadataTeam,
+        kit: appAKit.protectedResourceMetadataTeam,
       },
     ],
-    oauth: { ref: vmemRef.oauthMetadata, kit: vmemKit.oauthMetadata },
-    health: { ref: vmemRef.health, kit: vmemKit.health },
+    oauth: { ref: appARef.oauthMetadata, kit: appAKit.oauthMetadata },
+    health: { ref: appARef.health, kit: appAKit.health },
   },
   {
-    app: "vibot",
+    app: "app-b",
     credentials: { clerkUserId: "user_1", isPro: true },
-    mcp: [{ path: "/mcp", ref: vibotRef.mcpHandler, kit: vibotKit.mcpHandler }],
+    mcp: [{ path: "/mcp", ref: appBRef.mcpHandler, kit: appBKit.mcpHandler }],
     metadata: [
-      { path: "/.well-known/oauth-protected-resource", ref: vibotRef.protectedResourceMetadata, kit: vibotKit.protectedResourceMetadata },
-      { path: "/.well-known/oauth-protected-resource/mcp", ref: vibotRef.protectedResourceMetadata, kit: vibotKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource", ref: appBRef.protectedResourceMetadata, kit: appBKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource/mcp", ref: appBRef.protectedResourceMetadata, kit: appBKit.protectedResourceMetadata },
     ],
-    oauth: { ref: vibotRef.oauthMetadata, kit: vibotKit.oauthMetadata },
-    options: { ref: vibotRef.mcpOptions, kit: vibotKit.mcpOptions },
+    oauth: { ref: appBRef.oauthMetadata, kit: appBKit.oauthMetadata },
+    options: { ref: appBRef.mcpOptions, kit: appBKit.mcpOptions },
   },
   {
-    app: "verve",
+    app: "app-c",
     credentials: { clerkUserId: "user_1" },
-    mcp: [{ path: "/mcp", ref: verveRef.mcpHandler, kit: verveKit.mcpHandler }],
+    mcp: [{ path: "/mcp", ref: appCRef.mcpHandler, kit: appCKit.mcpHandler }],
     metadata: [
-      { path: "/.well-known/oauth-protected-resource", ref: verveRef.protectedResourceMetadata, kit: verveKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource", ref: appCRef.protectedResourceMetadata, kit: appCKit.protectedResourceMetadata },
     ],
-    oauth: { ref: verveRef.oauthMetadata, kit: verveKit.oauthMetadata },
-    health: { ref: verveRef.health, kit: verveKit.health },
+    oauth: { ref: appCRef.oauthMetadata, kit: appCKit.oauthMetadata },
+    health: { ref: appCRef.health, kit: appCKit.health },
   },
   {
-    app: "velth",
+    app: "app-d",
     credentials: { clerkUserId: "user_1" },
-    mcp: [{ path: "/mcp", ref: velthRef.mcpHandler, kit: velthKit.mcpHandler }],
+    mcp: [{ path: "/mcp", ref: appDRef.mcpHandler, kit: appDKit.mcpHandler }],
     metadata: [
-      { path: "/.well-known/oauth-protected-resource", ref: velthRef.protectedResourceMetadata, kit: velthKit.protectedResourceMetadata },
-      { path: "/.well-known/oauth-protected-resource/mcp", ref: velthRef.protectedResourceMetadata, kit: velthKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource", ref: appDRef.protectedResourceMetadata, kit: appDKit.protectedResourceMetadata },
+      { path: "/.well-known/oauth-protected-resource/mcp", ref: appDRef.protectedResourceMetadata, kit: appDKit.protectedResourceMetadata },
     ],
-    oauth: { ref: velthRef.oauthMetadata, kit: velthKit.oauthMetadata },
-    health: { ref: velthRef.health, kit: velthKit.health },
-    options: { ref: velthRef.options, kit: velthKit.options },
+    oauth: { ref: appDRef.oauthMetadata, kit: appDKit.oauthMetadata },
+    health: { ref: appDRef.health, kit: appDKit.health },
+    options: { ref: appDRef.options, kit: appDKit.options },
   },
 ];
 
@@ -314,8 +314,8 @@ describe.each(APPS)("$app: kit output equals today's native.ts", (app) => {
 });
 
 describe("parity spot checks (what the shared matrix asserts)", () => {
-  it("vmem team 401 points at the team metadata path", async () => {
-    const snap = await compare(vmemRef.mcpTeamHandler, vmemKit.mcpTeamHandler, { clerkUserId: "u" }, "/mcp/team", must(SCENARIOS[0]));
+  it("app-a team 401 points at the team metadata path", async () => {
+    const snap = await compare(appARef.mcpTeamHandler, appAKit.mcpTeamHandler, { clerkUserId: "u" }, "/mcp/team", must(SCENARIOS[0]));
     expect(snap.status).toBe(401);
     expect(snap.headers["www-authenticate"]).toBe(
       `Bearer resource_metadata="${ORIGIN}/.well-known/oauth-protected-resource/mcp/team"`,
@@ -323,53 +323,53 @@ describe("parity spot checks (what the shared matrix asserts)", () => {
     expect(snap.body).toBe('{"error":"Missing Authorization header"}');
   });
 
-  it("vmem passes the scope and the re-encoded body", async () => {
-    const snap = await compare(vmemRef.mcpTeamHandler, vmemKit.mcpTeamHandler, { clerkUserId: "u" }, "/mcp/team", must(SCENARIOS[10]));
+  it("app-a passes the scope and the re-encoded body", async () => {
+    const snap = await compare(appARef.mcpTeamHandler, appAKit.mcpTeamHandler, { clerkUserId: "u" }, "/mcp/team", must(SCENARIOS[10]));
     expect(snap.rpcArgs).toEqual([
       JSON.stringify({ clerkUserId: "u", body: '{"jsonrpc":"2.0","id":2,"method":"ping"}', scope: "team" }),
     ]);
   });
 
-  it("velth forwards the raw body text", async () => {
-    const snap = await compare(velthRef.mcpHandler, velthKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[10]));
+  it("app-d forwards the raw body text", async () => {
+    const snap = await compare(appDRef.mcpHandler, appDKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[10]));
     expect(snap.rpcArgs).toEqual([
       JSON.stringify({ clerkUserId: "u", body: '{ "jsonrpc": "2.0",\n  "id": 2, "method": "ping" }' }),
     ]);
   });
 
-  it("vibot passes isPro", async () => {
-    const snap = await compare(vibotRef.mcpHandler, vibotKit.mcpHandler, { clerkUserId: "u", isPro: false }, "/mcp", must(SCENARIOS[9]));
+  it("app-b passes isPro", async () => {
+    const snap = await compare(appBRef.mcpHandler, appBKit.mcpHandler, { clerkUserId: "u", isPro: false }, "/mcp", must(SCENARIOS[9]));
     expect(JSON.parse(must(snap.rpcArgs[0]))).toMatchObject({ clerkUserId: "u", isPro: false });
   });
 
-  it("vmem and verve log a failed verification; vibot and velth do not", async () => {
-    const vmem = await compare(vmemRef.mcpHandler, vmemKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[3]));
-    const verve = await compare(verveRef.mcpHandler, verveKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[3]));
-    const vibot = await compare(vibotRef.mcpHandler, vibotKit.mcpHandler, { clerkUserId: "u", isPro: true }, "/mcp", must(SCENARIOS[3]));
-    expect(vmem.logs).toEqual(["[MCP][mcpHandler] token verification failed"]);
-    expect(verve.logs).toEqual(["[MCP][mcpHandler] token verification failed"]);
-    expect(vibot.logs).toEqual([]);
+  it("app-a and app-c log a failed verification; app-b and app-d do not", async () => {
+    const appA = await compare(appARef.mcpHandler, appAKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[3]));
+    const appC = await compare(appCRef.mcpHandler, appCKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[3]));
+    const appB = await compare(appBRef.mcpHandler, appBKit.mcpHandler, { clerkUserId: "u", isPro: true }, "/mcp", must(SCENARIOS[3]));
+    expect(appA.logs).toEqual(["[MCP][mcpHandler] token verification failed"]);
+    expect(appC.logs).toEqual(["[MCP][mcpHandler] token verification failed"]);
+    expect(appB.logs).toEqual([]);
   });
 
-  it("vmem logs a JSON parse failure; verve does not", async () => {
-    const vmem = await compare(vmemRef.mcpHandler, vmemKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[7]));
-    const verve = await compare(verveRef.mcpHandler, verveKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[7]));
-    expect(vmem.logs).toEqual(["[MCP][mcpHandler] failed to parse JSON body: SyntaxError"]);
-    expect(verve.logs).toEqual([]);
+  it("app-a logs a JSON parse failure; app-c does not", async () => {
+    const appA = await compare(appARef.mcpHandler, appAKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[7]));
+    const appC = await compare(appCRef.mcpHandler, appCKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[7]));
+    expect(appA.logs).toEqual(["[MCP][mcpHandler] failed to parse JSON body: SyntaxError"]);
+    expect(appC.logs).toEqual([]);
   });
 
   it("a throwing verifier escapes (Convex answers 500), as today", async () => {
-    const snap = await compare(verveRef.mcpHandler, verveKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[13]));
+    const snap = await compare(appCRef.mcpHandler, appCKit.mcpHandler, { clerkUserId: "u" }, "/mcp", must(SCENARIOS[13]));
     expect(snap).toMatchObject({ status: "threw", body: "runAction failed" });
   });
 
   it("env fallback rules differ only when vars are missing or empty", async () => {
     useEnv({});
-    const verve = await compareMeta(verveRef.protectedResourceMetadata, verveKit.protectedResourceMetadata, "/x");
-    const velth = await compareMeta(velthRef.protectedResourceMetadata, velthKit.protectedResourceMetadata, "/x");
-    const vibot = await compareMeta(vibotRef.protectedResourceMetadata, vibotKit.protectedResourceMetadata, "/x");
-    expect(verve.body).toBe("NEXT_PUBLIC_CLERK_FRONTEND_API_URL is not set in Convex env");
-    expect(velth.body).toBe("CLERK_FRONTEND_API_URL is not set in Convex env");
-    expect(vibot.body).toBe("CLERK_FRONTEND_API_URL is not set in Convex env");
+    const appC = await compareMeta(appCRef.protectedResourceMetadata, appCKit.protectedResourceMetadata, "/x");
+    const appD = await compareMeta(appDRef.protectedResourceMetadata, appDKit.protectedResourceMetadata, "/x");
+    const appB = await compareMeta(appBRef.protectedResourceMetadata, appBKit.protectedResourceMetadata, "/x");
+    expect(appC.body).toBe("NEXT_PUBLIC_CLERK_FRONTEND_API_URL is not set in Convex env");
+    expect(appD.body).toBe("CLERK_FRONTEND_API_URL is not set in Convex env");
+    expect(appB.body).toBe("CLERK_FRONTEND_API_URL is not set in Convex env");
   });
 });

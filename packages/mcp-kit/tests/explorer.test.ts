@@ -99,7 +99,7 @@ describe("createExplorerTools: validation before the executor", () => {
     ]);
   });
 
-  it("uses configured limits (velth: default 50, max 200)", async () => {
+  it("uses configured limits (app-d: default 50, max 200)", async () => {
     const { call, calls } = setup({ limits: { default: 50, max: 200 } });
     await call("query_table", { table: "projects" });
     await call("query_table", { table: "projects", limit: 999 });
@@ -119,7 +119,7 @@ describe("createExplorerTools: validation before the executor", () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it("supports a predicate catalog (verve deny-list) and still checks the name shape", async () => {
+  it("supports a predicate catalog (app-c deny-list) and still checks the name shape", async () => {
     const execute = vi.fn(async () => 1);
     const tools = createExplorerTools<P, Ctx>({ tables: (t) => t !== "waitlist", execute });
     const count = must(tools.find((t) => t.name === "count_table"));
@@ -218,7 +218,7 @@ describe("createExplorerTools: run_query", () => {
     expect(runQuery).toHaveBeenCalledTimes(1);
   });
 
-  it("checks velth-style tables against the catalog before the callback", async () => {
+  it("checks app-d-style tables against the catalog before the callback", async () => {
     const runQuery = vi.fn(async () => toolTextResult("ok"));
     const { call } = setup({ runQuery, features: { runQueryTables: true } });
     expect(await call("run_query", { code: "x", tables: ["projects", "users"] })).toEqual(

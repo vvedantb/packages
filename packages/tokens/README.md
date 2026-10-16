@@ -1,6 +1,6 @@
 # @vvedantb/tokens
 
-Design tokens and shared Tailwind v4 CSS for the vvedantb web apps (vmem, vibot, Verve, velth, vhub), plus JS tokens for React Native. Source-exported: no build step, no runtime dependencies.
+Design tokens and shared Tailwind v4 CSS for the vvedantb web apps (app-a, app-b, app-c, app-d, app-e), plus JS tokens for React Native. Source-exported: no build step, no runtime dependencies.
 
 ## Exports
 
@@ -78,8 +78,8 @@ Where apps share a rule but drifted in one value, the value is a custom property
 
 | File | Property | Default | Set by |
 | --- | --- | --- | --- |
-| `base.css` | `--tokens-control-transition-property` | `background-color, border-color, color, box-shadow, transform, opacity` | verve: `background-color, color, transform, opacity` |
-| `base.css` | `--tokens-control-transition-duration` | `240ms` | verve: `100ms` |
+| `base.css` | `--tokens-control-transition-property` | `background-color, border-color, color, box-shadow, transform, opacity` | app-c: `background-color, color, transform, opacity` |
+| `base.css` | `--tokens-control-transition-duration` | `240ms` | app-c: `100ms` |
 
 ## Develop
 

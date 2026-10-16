@@ -32,10 +32,10 @@ export type McpHttpLogEvent =
 export type McpHttpLogger = (event: McpHttpLogEvent) => void;
 
 /**
- * Logs with the vmem strings: "[MCP][mcpHandler] token verification failed"
- * and "[MCP][mcpHandler] failed to parse JSON body:". verve logs only the
+ * Logs with the app-a strings: "[MCP][mcpHandler] token verification failed"
+ * and "[MCP][mcpHandler] failed to parse JSON body:". app-c logs only the
  * first (`log: (e) => e.type === "auth-failed" && consoleMcpLogger(e)`);
- * vibot and velth log nothing (`log: false`).
+ * app-b and app-d log nothing (`log: false`).
  */
 export const consoleMcpLogger: McpHttpLogger = (event) => {
   switch (event.type) {
@@ -83,7 +83,7 @@ export type McpHttpHandlerConfig<Principal, Ctx, Scope extends string = string> 
    * The result is sent with `Content-Type: application/json` plus CORS.
    */
   handleRpc: (args: HandleRpcArgs<Principal, Ctx, Scope>) => Promise<RpcResult>;
-  /** Opaque value passed to `authenticate` and `handleRpc` (vmem: "personal" | "team"). */
+  /** Opaque value passed to `authenticate` and `handleRpc` (app-a: "personal" | "team"). */
   scope?: Scope;
   /** Path for `WWW-Authenticate: Bearer resource_metadata="<origin><path>"`. Default `/.well-known/oauth-protected-resource`. */
   resourceMetadataPath?: string;
@@ -91,11 +91,11 @@ export type McpHttpHandlerConfig<Principal, Ctx, Scope extends string = string> 
   resourceMetadataUrl?: (request: Request) => string;
   /** Methods answered 405 (stateless server). Default `["GET", "DELETE"]`. */
   rejectMethods?: readonly string[];
-  /** When to reject those methods. Default `"after-auth"` (all four apps); vhub checks before auth. */
+  /** When to reject those methods. Default `"after-auth"` (all four apps); app-e checks before auth. */
   methodCheck?: "after-auth" | "before-auth";
   /**
-   * `"json"` (default): `JSON.stringify(await request.json())`, like vmem, vibot, verve.
-   * `"text"`: raw text, checked with `JSON.parse`, like velth.
+   * `"json"` (default): `JSON.stringify(await request.json())`, like app-a, app-b, app-c.
+   * `"text"`: raw text, checked with `JSON.parse`, like app-d.
    */
   body?: "json" | "text";
   /** CORS on every response. Default none. With CORS set, `OPTIONS` returns a 204 preflight. */

@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/tokens",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Shared CSS and JS design tokens for web and React Native, plus shared Tailwind v4 CSS and a Tailwind preset.",
   "publishConfig": {

@@ -6,7 +6,7 @@ import { cn } from "../utils/cn";
 import { flatInteractiveClass } from "../ui/surface-classes";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-import { fastTransition } from "../motion/presets.vibot";
+import { fastTransition } from "../motion/presets.app-b";
 export type SuggestionsProps = {
   className?: string;
   children?: ReactNode;

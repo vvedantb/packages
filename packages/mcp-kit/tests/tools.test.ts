@@ -161,7 +161,7 @@ describe("registry", () => {
     expect(() => createToolRegistry([echo, echo])).toThrow("Duplicate MCP tool name: echo");
   });
 
-  it("filters by scope (vmem scopes) and works with convex-kit test helpers", () => {
+  it("filters by scope (app-a scopes) and works with convex-kit test helpers", () => {
     const registry = createToolRegistry<P, C, Scope>([echo, teamOnly]);
     assertMcpTools(registry.names("personal"), ["echo"]);
     assertMcpTools(registry.names("team"), ["echo", "team_only"]);

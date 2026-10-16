@@ -25,19 +25,19 @@ export const SCRATCH_DEPS = {
 
 // Stylesheet inputs per app, relative to the app repo root.
 export const APPS = {
-  vmem: { css: ["apps/web/src/globals.css"] },
-  vibot: {
+  "app-a": { css: ["apps/web/src/globals.css"] },
+  "app-b": {
     css: ["apps/web/src/styles/globals.css", "apps/web/src/styles/markdown.css"],
     config: "apps/web/tailwind.config.ts",
   },
-  verve: { css: ["apps/web/src/globals.css"], config: "apps/web/tailwind.config.ts" },
-  velth: {
+  "app-c": { css: ["apps/web/src/globals.css"], config: "apps/web/tailwind.config.ts" },
+  "app-d": {
     css: ["apps/web/src/globals.css"],
     config: "apps/web/tailwind.config.ts",
     // tailwind.config.ts `content` scans the app's own UI package.
     extra: ["packages/ui/src"],
   },
-  vhub: { css: ["apps/web/src/globals.css"] },
+  "app-e": { css: ["apps/web/src/globals.css"] },
 };
 
 export function appDir(app) {

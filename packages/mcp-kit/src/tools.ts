@@ -13,12 +13,12 @@ export type ToolResult = {
   structuredContent?: { [key: string]: JsonInput };
 };
 
-/** `{ content: [{ type: "text", text }] }` (velth `textResult`). */
+/** `{ content: [{ type: "text", text }] }` (app-d `textResult`). */
 export function toolTextResult(text: string): ToolResult {
   return { content: [{ type: "text", text }] };
 }
 
-/** Pretty JSON text, `JSON.stringify(data, null, 2)` (vibot and verve `textResult`). */
+/** Pretty JSON text, `JSON.stringify(data, null, 2)` (app-b and app-c `textResult`). */
 export function toolJsonResult(data: JsonInput): ToolResult {
   return toolTextResult(JSON.stringify(data, null, 2));
 }
@@ -30,8 +30,8 @@ export function toolErrorResult(message: string): ToolResult {
 
 /**
  * Run `fn` and return its value as pretty JSON, or its error as an error
- * result. `errorLabel` prefixes the message (vmem: "Files get failed: ...").
- * A value with no JSON form becomes "Result is not JSON" (velth `jsonTool`).
+ * result. `errorLabel` prefixes the message (app-a: "Files get failed: ...").
+ * A value with no JSON form becomes "Result is not JSON" (app-d `jsonTool`).
  */
 export async function runTool(
   fn: () => Promise<JsonInput | undefined>,
@@ -90,10 +90,10 @@ export type ToolContext<Principal, Ctx, Scope extends string = string> = {
 type ToolMeta<Scope extends string> = {
   name: string;
   title?: string;
-  /** A string, or a function of the scope (vmem: personal vs team wording). */
+  /** A string, or a function of the scope (app-a: personal vs team wording). */
   description: string | ((scope: Scope | undefined) => string);
   annotations?: ToolAnnotations;
-  /** Scopes the tool is listed and callable on. Omit for all (vmem `scopes`). */
+  /** Scopes the tool is listed and callable on. Omit for all (app-a `scopes`). */
   scopes?: readonly Scope[];
 };
 

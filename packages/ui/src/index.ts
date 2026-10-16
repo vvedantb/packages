@@ -55,30 +55,30 @@ export * from "./ui/sheet";
 export * from "./ui/visually-hidden";
 export * from "./ui/clearInputDissolve";
 
-// Dual copies: richer file uses the plain name; the other keeps a suffix.
+// Dual copies: richer file uses the plain name; the other keeps a suffix (AppB / AppC).
 export * from "./ui/accordion";
 export {
-  Accordion as AccordionVerve,
-  AccordionItem as AccordionItemVerve,
-  AccordionTrigger as AccordionTriggerVerve,
-  AccordionContent as AccordionContentVerve,
-} from "./ui/accordion.verve";
+  Accordion as AccordionAppC,
+  AccordionItem as AccordionItemAppC,
+  AccordionTrigger as AccordionTriggerAppC,
+  AccordionContent as AccordionContentAppC,
+} from "./ui/accordion.app-c";
 export * from "./ui/clear-input";
-export { ClearInput as ClearInputVibot } from "./ui/clear-input.vibot";
+export { ClearInput as ClearInputAppB } from "./ui/clear-input.app-b";
 export * from "./ui/input-group";
 export {
-  InputGroup as InputGroupVerve,
-  InputGroupAddon as InputGroupAddonVerve,
-  InputGroupButton as InputGroupButtonVerve,
-  InputGroupText as InputGroupTextVerve,
-  InputGroupInput as InputGroupInputVerve,
-  InputGroupTextarea as InputGroupTextareaVerve,
-} from "./ui/input-group.verve";
+  InputGroup as InputGroupAppC,
+  InputGroupAddon as InputGroupAddonAppC,
+  InputGroupButton as InputGroupButtonAppC,
+  InputGroupText as InputGroupTextAppC,
+  InputGroupInput as InputGroupInputAppC,
+  InputGroupTextarea as InputGroupTextareaAppC,
+} from "./ui/input-group.app-c";
 export * from "./ui/scroll-area";
 export {
-  ScrollArea as ScrollAreaVerve,
-  ScrollBar as ScrollBarVerve,
-} from "./ui/scroll-area.verve";
+  ScrollArea as ScrollAreaAppC,
+  ScrollBar as ScrollBarAppC,
+} from "./ui/scroll-area.app-c";
 
 export * from "./ai-elements/artifact";
 export * from "./ai-elements/attachments";
@@ -96,3 +96,24 @@ export * from "./ai-elements/shimmer";
 export * from "./ai-elements/sources";
 export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
+
+// Deprecated aliases for the pre-0.1.6 export names. Remove in the next minor release.
+export {
+  Accordion as AccordionVerve,
+  AccordionItem as AccordionItemVerve,
+  AccordionTrigger as AccordionTriggerVerve,
+  AccordionContent as AccordionContentVerve,
+} from "./ui/accordion.app-c";
+export { ClearInput as ClearInputVibot } from "./ui/clear-input.app-b";
+export {
+  InputGroup as InputGroupVerve,
+  InputGroupAddon as InputGroupAddonVerve,
+  InputGroupButton as InputGroupButtonVerve,
+  InputGroupText as InputGroupTextVerve,
+  InputGroupInput as InputGroupInputVerve,
+  InputGroupTextarea as InputGroupTextareaVerve,
+} from "./ui/input-group.app-c";
+export {
+  ScrollArea as ScrollAreaVerve,
+  ScrollBar as ScrollBarVerve,
+} from "./ui/scroll-area.app-c";

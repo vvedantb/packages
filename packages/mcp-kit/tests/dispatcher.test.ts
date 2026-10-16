@@ -23,7 +23,7 @@ type SdkFixture = {
   exchanges: Record<string, { request: string; response: { status: number | string; body: string | null } }>;
 };
 
-const APPS: ReadonlyArray<"vmem" | "vibot" | "verve" | "velth"> = ["vmem", "vibot", "verve", "velth"];
+const APPS: ReadonlyArray<"app-a" | "app-b" | "app-c" | "app-d"> = ["app-a", "app-b", "app-c", "app-d"];
 const load = (app: string): SdkFixture =>
   JSON.parse(readFileSync(new URL(`./fixtures/sdk/${app}.sdk.json`, import.meta.url), "utf8"));
 
@@ -79,10 +79,10 @@ describe.each(APPS)("pure dispatcher vs SDK capture (%s)", (app) => {
 
   it.each(names)("%s is byte-identical", async (name) => {
     const exchange = must(fixture.exchanges[name]);
-    // SDK 1.29 (vmem) dumps raw zod 3 issues; 1.30+ formats "<message> at <path>", as the kit does.
+    // SDK 1.29 (app-a) dumps raw zod 3 issues; 1.30+ formats "<message> at <path>", as the kit does.
     if (name === "toolsCallInvalidArgs" && fixture.sdkVersion === "1.29.0") {
       expect((await run(fixture, zodMajor, exchange.request)).body).toBe(
-        must(load("vibot").exchanges[name]).response.body?.replace("vibot", app),
+        must(load("app-b").exchanges[name]).response.body?.replace("app-b", app),
       );
       return;
     }
@@ -128,7 +128,7 @@ describe("createMcpDispatcher options", () => {
   it("configures protocol versions, capabilities, instructions and per-scope serverInfo", async () => {
     const dispatcher = createMcpDispatcher<P, Ctx, "personal" | "team">({
       ...base,
-      serverInfo: (scope) => ({ name: scope === "team" ? "vmem-mcp-team" : "vmem-mcp", version: "2.0.0" }),
+      serverInfo: (scope) => ({ name: scope === "team" ? "app-a-mcp-team" : "app-a-mcp", version: "2.0.0" }),
       protocol: { versions: ["2025-06-18", "2025-03-26"], fallback: "2025-03-26" },
       capabilities: { tools: {} },
       instructions: "Be nice.",
@@ -138,7 +138,7 @@ describe("createMcpDispatcher options", () => {
       result: {
         protocolVersion: "2025-03-26",
         capabilities: { tools: {} },
-        serverInfo: { name: "vmem-mcp-team", version: "2.0.0" },
+        serverInfo: { name: "app-a-mcp-team", version: "2.0.0" },
         instructions: "Be nice.",
       },
       jsonrpc: "2.0",
@@ -206,10 +206,10 @@ describe("negotiateProtocolVersion", () => {
     expect(negotiateProtocolVersion(5)).toBe("2025-11-25");
   });
 
-  it("supports vhub's list with a 2025-03-26 fallback", () => {
-    const vhub = { versions: ["2025-06-18", "2025-03-26", "2024-11-05"], fallback: "2025-03-26" };
-    expect(negotiateProtocolVersion("2025-06-18", vhub)).toBe("2025-06-18");
-    expect(negotiateProtocolVersion("2025-11-25", vhub)).toBe("2025-03-26");
+  it("supports app-e's list with a 2025-03-26 fallback", () => {
+    const appE = { versions: ["2025-06-18", "2025-03-26", "2024-11-05"], fallback: "2025-03-26" };
+    expect(negotiateProtocolVersion("2025-06-18", appE)).toBe("2025-06-18");
+    expect(negotiateProtocolVersion("2025-11-25", appE)).toBe("2025-03-26");
     expect(() => negotiateProtocolVersion("x", { versions: [] })).toThrow("at least one version");
   });
 });

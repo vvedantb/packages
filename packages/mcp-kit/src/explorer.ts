@@ -14,15 +14,15 @@ import {
 export type TableEntry = { name: string; fields?: ReadonlyArray<string | { name: string }> } & object;
 
 /**
- * Tables the tools accept: a fixed list (vibot, velth), or a predicate for
- * catalogs read at runtime (verve: a deny-list). Names must also match
+ * Tables the tools accept: a fixed list (app-b, app-d), or a predicate for
+ * catalogs read at runtime (app-c: a deny-list). Names must also match
  * `^[A-Za-z_][A-Za-z0-9_]*$`.
  */
 export type TableCatalog = ReadonlyArray<string | TableEntry> | ((table: string) => boolean);
 
 export type FilterValue = string | number | boolean | null;
 
-/** Top-level field filters (velth `eq` / `gte` / `lte`). */
+/** Top-level field filters (app-d `eq` / `gte` / `lte`). */
 export type ExplorerFilters = {
   eq?: Record<string, FilterValue>;
   gte?: Record<string, number>;
@@ -61,32 +61,32 @@ export type ExplorerToolsConfig<Principal, Ctx, Scope extends string = string> =
   execute: (op: ExplorerOperation, context: ToolContext<Principal, Ctx, Scope>) => Promise<JsonInput | null>;
   /** Optional `run_query`. The kit validates arguments only; evaluation and scoping are the app's. */
   runQuery?: (args: RunQueryArgs, context: ToolContext<Principal, Ctx, Scope>) => Promise<ToolResult>;
-  /** `limit` default and maximum for query_table. Default 100 and 1000 (vibot, verve; velth: 50 and 200). */
+  /** `limit` default and maximum for query_table. Default 100 and 1000 (app-b, app-c; app-d: 50 and 200). */
   limits?: { default?: number; max?: number };
   features?: {
-    /** `cursor` argument on query_table (vibot). Default false. */
+    /** `cursor` argument on query_table (app-b). Default false. */
     cursor?: boolean;
-    /** `eq` / `gte` / `lte` on query_table and count_table (velth). Default false. */
+    /** `eq` / `gte` / `lte` on query_table and count_table (app-d). Default false. */
     filters?: boolean;
     /** get_document tool. Default true. */
     getDocument?: boolean;
-    /** `tables` and `limitPerTable` on run_query (velth). Default false. */
+    /** `tables` and `limitPerTable` on run_query (app-d). Default false. */
     runQueryTables?: boolean;
   };
   names?: Partial<Record<ExplorerToolKey, string>>;
   descriptions?: Partial<Record<ExplorerToolKey, string>>;
   messages?: {
     /**
-     * Unknown or malformed table, per tool. Default verve's
+     * Unknown or malformed table, per tool. Default app-c's
      * "Access denied: table "<t>" is not available via MCP.".
      */
     unknownTable?: (table: string, tool: "query_table" | "count_table" | "run_query") => string;
-    /** Executor returned `null`. Default vibot's "Cannot query table "<t>". Use list_tables." and similar. */
+    /** Executor returned `null`. Default app-b's "Cannot query table "<t>". Use list_tables." and similar. */
     denied?: (op: ExplorerOperation) => string;
-    /** get_document id is not `^[a-zA-Z0-9_]+$`. Default verve's text. */
+    /** get_document id is not `^[a-zA-Z0-9_]+$`. Default app-c's text. */
     invalidId?: string;
   };
-  /** Scopes the tools are on (vmem-style). Omit for all. */
+  /** Scopes the tools are on (app-a-style). Omit for all. */
   scopes?: readonly Scope[];
 };
 

@@ -1,0 +1,185 @@
+{
+  "$source": "app-b packages/backend: convex/mcp/native.ts + nodeActions.ts (verifyAccessToken adds isPro from the JWT claims), convex/mcp/tools.test.ts (SDK client listing tools for isPro false and true). SDK responses: sdk/app-b.sdk.json (SDK 1.30.0). The token is a fake unsigned JWT whose payload carries the Pro claim; signature checks stay in app-b.",
+  "bodyMode": "json",
+  "cors": {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
+    "access-control-allow-headers": "Content-Type, Authorization, MCP-Protocol-Version",
+    "access-control-allow-credentials": "false",
+    "access-control-max-age": "86400"
+  },
+  "endpoints": [
+    {
+      "path": "/mcp",
+      "handler": "mcpHandler",
+      "serverInfo": {
+        "name": "app-b-mcp",
+        "version": "1.15.0"
+      },
+      "exchanges": [
+        {
+          "name": "initialize",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+              "protocolVersion": "2025-03-26",
+              "capabilities": {},
+              "clientInfo": {
+                "name": "fixture-client",
+                "version": "1.0.0"
+              }
+            }
+          },
+          "sdkExchange": "initialize"
+        },
+        {
+          "name": "notifications/initialized",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized"
+          },
+          "sdkExchange": "initialized"
+        },
+        {
+          "name": "tools/list",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/list",
+            "params": {}
+          },
+          "sdkExchange": "toolsList"
+        },
+        {
+          "name": "tools/call success",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "tools/call",
+            "params": {
+              "name": "echo",
+              "arguments": {
+                "text": "hi"
+              }
+            }
+          },
+          "sdkExchange": "toolsCallOk"
+        },
+        {
+          "name": "tools/call handler error",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+              "name": "fails",
+              "arguments": {}
+            }
+          },
+          "sdkExchange": "toolsCallThrows"
+        },
+        {
+          "name": "tools/call unknown tool",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {
+              "name": "nope",
+              "arguments": {}
+            }
+          },
+          "sdkExchange": "toolsCallUnknown"
+        },
+        {
+          "name": "ping",
+          "origin": "sdk-captured",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "ping"
+          },
+          "sdkExchange": "ping"
+        },
+        {
+          "name": "missing token",
+          "origin": "synthesised",
+          "token": null,
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/list",
+            "params": {}
+          },
+          "expect": {
+            "status": 401,
+            "wwwAuthenticate": "https://happy-otter-123.convex.site/.well-known/oauth-protected-resource",
+            "body": "{\"error\":\"Missing Authorization header\"}"
+          }
+        },
+        {
+          "name": "token rejected",
+          "origin": "synthesised",
+          "token": "bad",
+          "method": "POST",
+          "request": {
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/list",
+            "params": {}
+          },
+          "expect": {
+            "status": 401,
+            "wwwAuthenticate": "https://happy-otter-123.convex.site/.well-known/oauth-protected-resource",
+            "body": "{\"error\":\"Invalid or expired token\"}"
+          }
+        },
+        {
+          "name": "GET is 405 after auth",
+          "origin": "synthesised",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "GET",
+          "expect": {
+            "status": 405,
+            "body": "{\"error\":\"Method not supported in stateless mode\"}"
+          }
+        },
+        {
+          "name": "bad JSON is 400",
+          "origin": "synthesised",
+          "token": "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyX3BybyIsInBsYSI6InU6cHJvIn0.sig",
+          "method": "POST",
+          "request": "{not json",
+          "expect": {
+            "status": 400,
+            "body": "{\"error\":\"Invalid JSON body\"}"
+          }
+        }
+      ]
+    }
+  ],
+  "sdkCapture": "sdk/app-b.sdk.json"
+}
