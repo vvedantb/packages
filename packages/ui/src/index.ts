@@ -55,30 +55,46 @@ export * from "./ui/sheet";
 export * from "./ui/visually-hidden";
 export * from "./ui/clearInputDissolve";
 
-// Dual copies: richer file uses the plain name; the other keeps a suffix.
+// Dual copies: the primary file uses the plain name; the alt copy uses an `Alt` suffix.
+// Legacy `*Verve` / `*Vibot` names are deprecated aliases kept for compatibility.
 export * from "./ui/accordion";
 export {
-  Accordion as AccordionVerve,
-  AccordionItem as AccordionItemVerve,
-  AccordionTrigger as AccordionTriggerVerve,
-  AccordionContent as AccordionContentVerve,
-} from "./ui/accordion.verve";
+  Accordion as AccordionAlt,
+  AccordionItem as AccordionItemAlt,
+  AccordionTrigger as AccordionTriggerAlt,
+  AccordionContent as AccordionContentAlt,
+  Accordion as AccordionVerve, // deprecated alias
+  AccordionItem as AccordionItemVerve, // deprecated alias
+  AccordionTrigger as AccordionTriggerVerve, // deprecated alias
+  AccordionContent as AccordionContentVerve, // deprecated alias
+} from "./ui/accordion.alt";
 export * from "./ui/clear-input";
-export { ClearInput as ClearInputVibot } from "./ui/clear-input.vibot";
+export {
+  ClearInput as ClearInputAlt,
+  ClearInput as ClearInputVibot, // deprecated alias
+} from "./ui/clear-input.alt";
 export * from "./ui/input-group";
 export {
-  InputGroup as InputGroupVerve,
-  InputGroupAddon as InputGroupAddonVerve,
-  InputGroupButton as InputGroupButtonVerve,
-  InputGroupText as InputGroupTextVerve,
-  InputGroupInput as InputGroupInputVerve,
-  InputGroupTextarea as InputGroupTextareaVerve,
-} from "./ui/input-group.verve";
+  InputGroup as InputGroupAlt,
+  InputGroupAddon as InputGroupAddonAlt,
+  InputGroupButton as InputGroupButtonAlt,
+  InputGroupText as InputGroupTextAlt,
+  InputGroupInput as InputGroupInputAlt,
+  InputGroupTextarea as InputGroupTextareaAlt,
+  InputGroup as InputGroupVerve, // deprecated alias
+  InputGroupAddon as InputGroupAddonVerve, // deprecated alias
+  InputGroupButton as InputGroupButtonVerve, // deprecated alias
+  InputGroupText as InputGroupTextVerve, // deprecated alias
+  InputGroupInput as InputGroupInputVerve, // deprecated alias
+  InputGroupTextarea as InputGroupTextareaVerve, // deprecated alias
+} from "./ui/input-group.alt";
 export * from "./ui/scroll-area";
 export {
-  ScrollArea as ScrollAreaVerve,
-  ScrollBar as ScrollBarVerve,
-} from "./ui/scroll-area.verve";
+  ScrollArea as ScrollAreaAlt,
+  ScrollBar as ScrollBarAlt,
+  ScrollArea as ScrollAreaVerve, // deprecated alias
+  ScrollBar as ScrollBarVerve, // deprecated alias
+} from "./ui/scroll-area.alt";
 
 export * from "./ai-elements/artifact";
 export * from "./ai-elements/attachments";

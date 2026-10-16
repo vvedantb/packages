@@ -1,4 +1,4 @@
-/** Eva-aligned floating overlay shell — tone + smooth-shadow-ring, no hairline. */
+/** Floating overlay shell — tone + smooth-shadow-ring, no hairline. */
 export const floatingSurfaceClass =
   "rounded-lg bg-overlay text-overlay-foreground smooth-shadow-ring-lg";
 
@@ -9,7 +9,7 @@ export const floatingSurfaceAnimateClass = [
   "origin-(--radix-popper-transform-origin) data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=open]:duration-200 data-[state=closed]:duration-150 data-[state=open]:ease-[cubic-bezier(0.32,0.72,0,1)] data-[state=closed]:ease-[cubic-bezier(0.32,0.72,0,1)]",
 ].join(" ");
 
-/** Shared floating menu surfaces — matches Eva's popover + smooth-shadow-ring-lg. */
+/** Shared floating menu surfaces — matches the popover + smooth-shadow-ring-lg. */
 export const menuContentClass = [
   "z-50 min-w-48 overflow-hidden p-1.5 outline-hidden",
   floatingSurfaceClass,
