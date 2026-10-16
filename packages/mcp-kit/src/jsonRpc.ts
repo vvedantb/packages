@@ -78,7 +78,7 @@ export type ProtocolVersionOptions = {
 
 /**
  * Echo the client's version when supported, else the fallback. The SDK
- * falls back to its latest version; vhub's gateway falls back to
+ * falls back to its latest version; app-e's gateway falls back to
  * "2025-03-26" (`{ versions: ["2025-06-18", "2025-03-26", "2024-11-05"], fallback: "2025-03-26" }`).
  */
 export function negotiateProtocolVersion(

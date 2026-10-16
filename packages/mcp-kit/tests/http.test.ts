@@ -130,7 +130,7 @@ describe("createMcpHttpHandler: methods and body", () => {
     expect((await h(CTX, req("GET"))).status).toBe(401);
   });
 
-  it("can reject methods before auth (vhub order) and take a custom list", async () => {
+  it("can reject methods before auth (app-e order) and take a custom list", async () => {
     const { h, authenticate } = handler({ methodCheck: "before-auth", rejectMethods: ["GET", "PUT"] });
     expect((await h(CTX, req("GET"))).status).toBe(405);
     expect((await h(CTX, req("PUT"))).status).toBe(405);
@@ -176,7 +176,7 @@ describe("createMcpHttpHandler: methods and body", () => {
     });
   });
 
-  it("computes CORS per request when given a function (vhub reflects Origin)", async () => {
+  it("computes CORS per request when given a function (app-e reflects Origin)", async () => {
     const { h } = handler({
       cors: (request) => ({ "Access-Control-Allow-Origin": request.headers.get("Origin") ?? "*" }),
     });

@@ -22,9 +22,9 @@ export type AuthorizationServerMetadataProxyOptions = CommonOptions & {
   issuer?: EnvUrl;
   /**
    * How the upstream body is returned on 200:
-   * - `"json"` (default): `Response.json(await res.json())`, like vmem and vhub.
-   * - `"text"`: `await res.text()` as `application/json`, like verve and velth.
-   * - `"stream"`: `res.body` streamed as `application/json`, like vibot.
+   * - `"json"` (default): `Response.json(await res.json())`, like app-a and app-e.
+   * - `"text"`: `await res.text()` as `application/json`, like app-c and app-d.
+   * - `"stream"`: `res.body` streamed as `application/json`, like app-b.
    */
   forward?: "json" | "text" | "stream";
   /** Fetch implementation. Default the global `fetch` at request time. */
@@ -66,7 +66,7 @@ export function createAuthorizationServerMetadataProxy(
 }
 
 export type ProtectedResourceMetadataOptions = CommonOptions & {
-  /** Resource path on this origin. Default `/mcp` (vmem team: `/mcp/team`). */
+  /** Resource path on this origin. Default `/mcp` (app-a team: `/mcp/team`). */
   resourcePath?: string;
   /** Authorization server URL env var. Default `CLERK_FRONTEND_API_URL`. */
   authorizationServer?: EnvUrl;
@@ -100,7 +100,7 @@ export function createProtectedResourceMetadata(
 }
 
 export type HealthOptions = Omit<CommonOptions, "env"> & {
-  /** Body. Default `{ status: "ok" }`. vhub: `{ status: "ok", service: "vhub" }`. */
+  /** Body. Default `{ status: "ok" }`. app-e: `{ status: "ok", service: "app-e" }`. */
   body?: JsonInput;
 };
 

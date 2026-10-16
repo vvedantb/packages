@@ -6,25 +6,25 @@ Scratch toolchain: `tailwindcss@4.3.3`, `@tailwindcss/cli@4.3.3`, `@tailwindcss/
 
 | App | HEAD | Lockfile tailwindcss / @tailwindcss/node | Compiled rules before / after | Keys identical | Removed / added / changed | Cascade fails / unreviewed / reviewed | Source lines deleted | Added | Net | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| vmem | `8c972b1a2cf7` | 4.3.3 / 4.3.3 | 1682 / 1683 | 1810 | 0 / 0 / 0 | 0 / 0 / 1 | 257 | 10 | -247 | identical |
-| vibot | `f7b61259270b` | 4.3.3 / 4.3.3 | 1735 / 1725 | 1848 | 0 / 0 / 0 | 0 / 0 / 0 | 341 | 8 | -333 | identical |
-| verve | `4d0ab45cbbc6` | 4.3.3 / 4.3.3 | 1414 / 1415 | 1531 | 0 / 0 / 0 | 0 / 0 / 0 | 257 | 9 | -248 | identical |
-| velth | `3bdce79780d0` | 4.3.3 / 4.3.3 | 751 / 753 | 861 | 0 / 0 / 0 | 0 / 0 / 0 | 300 | 11 | -289 | identical |
-| vhub | `7077eaf9ff8a` | 4.3.3 / 4.3.3 | 1088 / 1088 | 1186 | 0 / 0 / 0 | 0 / 0 / 1 | 132 | 6 | -126 | identical |
+| app-a | `8c972b1a2cf7` | 4.3.3 / 4.3.3 | 1682 / 1683 | 1810 | 0 / 0 / 0 | 0 / 0 / 1 | 257 | 10 | -247 | identical |
+| app-b | `f7b61259270b` | 4.3.3 / 4.3.3 | 1735 / 1725 | 1848 | 0 / 0 / 0 | 0 / 0 / 0 | 341 | 8 | -333 | identical |
+| app-c | `4d0ab45cbbc6` | 4.3.3 / 4.3.3 | 1414 / 1415 | 1531 | 0 / 0 / 0 | 0 / 0 / 0 | 257 | 9 | -248 | identical |
+| app-d | `3bdce79780d0` | 4.3.3 / 4.3.3 | 751 / 753 | 861 | 0 / 0 / 0 | 0 / 0 / 0 | 300 | 11 | -289 | identical |
+| app-e | `7077eaf9ff8a` | 4.3.3 / 4.3.3 | 1088 / 1088 | 1186 | 0 / 0 / 0 | 0 / 0 / 1 | 132 | 6 | -126 | identical |
 | **Total** | | | | | | | **1287** | **44** | **-1243** | |
 
 "Compiled rules" counts style rules in the optimised output; after migration a rule can split in two (e.g. a trimmed `html` rule) without changing any key.
 
 ## Details
 
-### vmem
+### app-a
 
 Shared files: `animations.css`, `base.css`, `tabs-pills.css`, `dialog.css`, `modal.css`, `tabs.css`, `scrollbar-thin.css`.
 
 - `apps/web/src/globals.css`: -257 +10
 - Reviewed order change: `[components] @layer components | .t-tabs { position: relative }  <->  @layer components | .t-tabs-pill { position: absolute }`. .t-tabs-pill is a child element inside .t-tabs (tabsSliding markup), never the same element.
 
-### vibot
+### app-b
 
 Shared files: `utilities.css`, `base.css`, `dialog.css`, `scrollbar-thin.css`, `tailwind-preset`.
 
@@ -35,7 +35,7 @@ Shared files: `utilities.css`, `base.css`, `dialog.css`, `scrollbar-thin.css`, `
 - Explained difference: `@layer theme | :root: --ease-in-out: cubic-bezier(.4, 0, .2, 1) -> (none) (theme variable only referenced by the utility above)`
 - Explained difference: `@layer theme | :host: --ease-in-out: cubic-bezier(.4, 0, .2, 1) -> (none) (theme variable only referenced by the utility above)`
 
-### verve
+### app-c
 
 Shared files: `base.css`, `tabs-pills.css`, `dialog.css`, `utilities.css`, `tailwind-preset`.
 
@@ -43,7 +43,7 @@ Shared files: `base.css`, `tabs-pills.css`, `dialog.css`, `utilities.css`, `tail
 - `apps/web/tailwind.config.ts`: -140 +2
 - Config structural check (preset merged under `theme.extend` vs original): same paths and values.
 
-### velth
+### app-d
 
 Shared files: `utilities.css`, `base.css`, `modal.css`, `tabs.css`, `scrollbar-thin.css`, `tailwind-preset`.
 
@@ -51,7 +51,7 @@ Shared files: `utilities.css`, `base.css`, `modal.css`, `tabs.css`, `scrollbar-t
 - `apps/web/tailwind.config.ts`: -138 +2
 - Config structural check (preset merged under `theme.extend` vs original): same paths and values.
 
-### vhub
+### app-e
 
 Shared files: `tabs-pills.css`, `dialog.css`, `modal.css`, `tabs.css`.
 
@@ -62,9 +62,9 @@ Shared files: `tabs-pills.css`, `dialog.css`, `modal.css`, `tabs.css`.
 
 - No pixel or screenshot comparison. The proof is "same compiled CSS", built with the Tailwind v4 CLI (`--optimize`, which is lightningcss, like a production Vite build), not with each app's Vite pipeline. Vite-only inputs (CSS imported from components, CSS modules, `landing.css`, `editor.css`, `tiptap.css`) are not built. They are untouched by the migration.
 - Both builds use this worktree's `@vvedantb/tokens`, `@vvedantb/ui` (src), `@vvedantb/shell` (dist) and `@vvedantb/app-kit` (dist), symlinked into the copy. The apps pin older published versions (`tokens` 0.1.0 or 0.1.1, `ui` 0.1.5, `shell` 0.1.2, `app-kit` 0.1.0). So "before" is not byte-for-byte what each app ships today. It is the same input on both sides, which is what the comparison needs.
-- One toolchain for all apps: `tailwindcss` / `@tailwindcss/cli` / `@tailwindcss/node` 4.3.3, `shadow-plugin` 1.2.7, `tailwindcss-animate` 1.0.7, which is what every app lockfile resolves (table above). vibot, verve and velth lockfiles also contain `tailwindcss@3.4.19`, a peer of `tailwindcss-animate`, which the v4 build does not use.
-- Class scanning covers the copied `apps/web` tree (auto-detection from `apps/web`, as Vite's root), the `@source` paths and, for `@config` apps, the config's `content` globs (velth: `packages/ui/src`). Classes that only reach the DOM from unscanned places (server HTML, CMS content) are not covered on either side.
+- One toolchain for all apps: `tailwindcss` / `@tailwindcss/cli` / `@tailwindcss/node` 4.3.3, `shadow-plugin` 1.2.7, `tailwindcss-animate` 1.0.7, which is what every app lockfile resolves (table above). app-b, app-c and app-d lockfiles also contain `tailwindcss@3.4.19`, a peer of `tailwindcss-animate`, which the v4 build does not use.
+- Class scanning covers the copied `apps/web` tree (auto-detection from `apps/web`, as Vite's root), the `@source` paths and, for `@config` apps, the config's `content` globs (app-d: `packages/ui/src`). Classes that only reach the DOM from unscanned places (server HTML, CMS content) are not covered on either side.
 - `tailwind.config.ts` files are loaded through Tailwind's own `@config` loader. The structural check deep-merges the preset under the app's `theme.extend` and compares every flattened path with the original config. It assumes Tailwind's deep merge for `presets`, which the compiled-CSS diff confirms for the classes in use.
-- Moving theme blocks from `tailwind.config.ts` into the preset removes their text from a scanned file. In vibot that drops the unused `.ease-in-out` utility and its `--ease-in-out` theme variable, which only existed because `ease-in-out` appeared in the config's animation strings. The harness accepts such a drop only when the class name occurs in no other scanned file. It is listed above as an explained difference.
+- Moving theme blocks from `tailwind.config.ts` into the preset removes their text from a scanned file. In app-b that drops the unused `.ease-in-out` utility and its `--ease-in-out` theme variable, which only existed because `ease-in-out` appeared in the config's animation strings. The harness accepts such a drop only when the class name occurs in no other scanned file. It is listed above as an explained difference.
 - The cascade check is a heuristic. Rules are grouped by layer, importance and property family (shorthands overlap their longhands). It compares only pairs with equal specificity and different values whose winner flips. "Same element" means one selector's last compound contains the other's. Two different classes on one element are not detected as the same element, so every such flip is a warning that the spec must acknowledge with a reason (`cascadeReviewed`) or the run fails.
 - Equivalence is semantic, not textual. Declarations are merged per (context, selector) with last-wins. Selector lists are split. Whitespace and time units are normalised (`.1s` equals `100ms`; lightningcss shortens times outside `var()` only). `var(--tokens-*, fallback)` is inlined with the app's value, and those parameter declarations are excluded after the run asserts that they reach `:root` with the spec's value.

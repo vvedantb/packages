@@ -6,9 +6,9 @@ import { requiredEnvUrl, type EnvSource } from "@vvedantb/convex-kit";
  *
  * | mode | rule | used by |
  * | --- | --- | --- |
- * | `"fallback-if-set"` | fallback only when primary is empty and fallback is non-empty; else primary | velth |
- * | `"prefer-primary"` | primary when non-empty, else fallback (error names the fallback) | verve |
- * | `"nullish"` | `env[name] ?? env[fallback]`, read as `name` (an empty primary does not fall back) | vibot |
+ * | `"fallback-if-set"` | fallback only when primary is empty and fallback is non-empty; else primary | app-d |
+ * | `"prefer-primary"` | primary when non-empty, else fallback (error names the fallback) | app-c |
+ * | `"nullish"` | `env[name] ?? env[fallback]`, read as `name` (an empty primary does not fall back) | app-b |
  */
 export type EnvFallbackMode = "fallback-if-set" | "prefer-primary" | "nullish";
 

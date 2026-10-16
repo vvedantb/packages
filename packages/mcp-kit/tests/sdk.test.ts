@@ -39,7 +39,7 @@ describe("runSdkMcpRequest", () => {
     ]);
   });
 
-  it("can skip parsedBody (velth) and use another URL (vmem team)", async () => {
+  it("can skip parsedBody (app-d) and use another URL (app-a team)", async () => {
     const sdk = fakeSdk(() => new Response(null, { status: 202 }));
     const result = await runSdkMcpRequest({
       body: "{}",

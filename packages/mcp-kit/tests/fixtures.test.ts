@@ -21,10 +21,10 @@ import {
   type RpcResult,
 } from "../src/index.js";
 import type { AppCtx, Handler } from "./fixtures/apps/types.js";
-import * as vmemKit from "./fixtures/apps/vmem.kit.js";
-import * as vibotKit from "./fixtures/apps/vibot.kit.js";
-import * as verveKit from "./fixtures/apps/verve.kit.js";
-import * as velthKit from "./fixtures/apps/velth.kit.js";
+import * as appAKit from "./fixtures/apps/app-a.kit.js";
+import * as appBKit from "./fixtures/apps/app-b.kit.js";
+import * as appCKit from "./fixtures/apps/app-c.kit.js";
+import * as appDKit from "./fixtures/apps/app-d.kit.js";
 
 const ORIGIN = "https://happy-otter-123.convex.site";
 
@@ -48,8 +48,8 @@ type SdkCapture = { exchanges: Record<string, { response: { status: number; body
 
 const readJson = (path: string) => JSON.parse(readFileSync(new URL(`./fixtures/${path}`, import.meta.url), "utf8"));
 
-/** vibot: Clerk verifies the token; isPro comes from the JWT payload claims. */
-function vibotVerifier(token: string): { clerkUserId: string; isPro: boolean } | null {
+/** app-b: Clerk verifies the token; isPro comes from the JWT payload claims. */
+function appBVerifier(token: string): { clerkUserId: string; isPro: boolean } | null {
   const payload = token.split(".")[1];
   if (!payload) return null;
   const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
@@ -58,21 +58,21 @@ function vibotVerifier(token: string): { clerkUserId: string; isPro: boolean } |
 
 /** Stand-ins for each app's verifyAccessToken. The real checks stay in the apps. */
 const VERIFIERS: Record<string, (token: string) => object | null> = {
-  vmem: (token) => (token === "good" ? { clerkUserId: "user_1" } : null),
-  verve: (token) => (token === "good" ? { clerkUserId: "user_1" } : null),
-  vibot: (token) => vibotVerifier(token),
-  // velth: legacy velth-issued JWTs (here "legacy:<sub>") first, else Clerk.
-  velth: (token) => {
+  "app-a": (token) => (token === "good" ? { clerkUserId: "user_1" } : null),
+  "app-c": (token) => (token === "good" ? { clerkUserId: "user_1" } : null),
+  "app-b": (token) => appBVerifier(token),
+  // app-d: legacy app-d-issued JWTs (here "legacy:<sub>") first, else Clerk.
+  "app-d": (token) => {
     if (token.startsWith("legacy:")) return { clerkUserId: token.slice("legacy:".length) };
     return token === "oat_clerk_token" ? { clerkUserId: "user_clerk_alice" } : null;
   },
 };
 
 const HANDLERS: Record<string, Record<string, Handler<object, object>>> = {
-  vmem: { mcpHandler: vmemKit.mcpHandler, mcpTeamHandler: vmemKit.mcpTeamHandler },
-  vibot: { mcpHandler: vibotKit.mcpHandler },
-  verve: { mcpHandler: verveKit.mcpHandler },
-  velth: { mcpHandler: velthKit.mcpHandler },
+  "app-a": { mcpHandler: appAKit.mcpHandler, mcpTeamHandler: appAKit.mcpTeamHandler },
+  "app-b": { mcpHandler: appBKit.mcpHandler },
+  "app-c": { mcpHandler: appCKit.mcpHandler },
+  "app-d": { mcpHandler: appDKit.mcpHandler },
 };
 
 /** The pure-dispatcher version of the capture script's tools. */
@@ -111,7 +111,7 @@ function requestFor(path: string, exchange: Exchange): Request {
   return new Request(`${ORIGIN}${path}`, { method: exchange.method, headers, body });
 }
 
-describe.each(["vmem", "vibot", "verve", "velth"])("%s fixtures", (app) => {
+describe.each(["app-a", "app-b", "app-c", "app-d"])("%s fixtures", (app) => {
   const fixture: AppFixture = readJson(`${app}.json`);
   const sdk: SdkCapture = readJson(fixture.sdkCapture);
   const verify = must(VERIFIERS[app]);
@@ -140,7 +140,7 @@ describe.each(["vmem", "vibot", "verve", "velth"])("%s fixtures", (app) => {
             if (!captured) throw new Error(`no SDK capture for ${exchange.name}`);
             return {
               status: captured.status,
-              // The capture used one serverInfo per app; vmem team renames it, as mcpServerInfo("team") does.
+              // The capture used one serverInfo per app; app-a team renames it, as mcpServerInfo("team") does.
               body: captured.body.replace(/"serverInfo":\{[^}]*\}/, `"serverInfo":${JSON.stringify(endpoint.serverInfo)}`),
             };
           },
@@ -164,7 +164,7 @@ describe.each(["vmem", "vibot", "verve", "velth"])("%s fixtures", (app) => {
       expect(result.status).toBe(captured.status);
       expect(result.headers).toEqual({ "content-type": "application/json", ...fixture.cors });
       if (endpoint.path === "/mcp") expect(result.body).toBe(captured.body);
-      // json mode re-encodes the pretty request; text mode (velth) forwards it untouched.
+      // json mode re-encodes the pretty request; text mode (app-d) forwards it untouched.
       const sent = JSON.stringify(exchange.request, null, 2);
       expect(result.forwarded.map((f) => f.body)).toEqual([
         fixture.bodyMode === "text" ? sent : JSON.stringify(exchange.request),
@@ -177,7 +177,7 @@ describe.each(["vmem", "vibot", "verve", "velth"])("%s fixtures", (app) => {
       async (exchange) => {
         const viaSdk = await replay(exchange, "sdk");
         const viaDispatcher = await replay(exchange, "dispatcher");
-        // vmem's SDK 1.29.0 formats validation errors differently; none of these exchanges hit that path.
+        // app-a's SDK 1.29.0 formats validation errors differently; none of these exchanges hit that path.
         expect(viaDispatcher).toEqual(viaSdk);
       },
     );
@@ -198,14 +198,14 @@ describe.each(["vmem", "vibot", "verve", "velth"])("%s fixtures", (app) => {
 });
 
 describe("app-specific principal data", () => {
-  it("vibot passes isPro from the token claims", async () => {
-    const fixture: AppFixture = readJson("vibot.json");
+  it("app-b passes isPro from the token claims", async () => {
+    const fixture: AppFixture = readJson("app-b.json");
     const exchange = must(must(fixture.endpoints[0]).exchanges[0]);
     const seen: object[] = [];
-    await vibotKit.mcpHandler(
+    await appBKit.mcpHandler(
       {
         deps: {
-          verifyAccessToken: async ({ token }) => vibotVerifier(token),
+          verifyAccessToken: async ({ token }) => appBVerifier(token),
           handleMcpRequest: async (args) => {
             seen.push(args);
             return { status: 200, body: "{}" };
@@ -217,8 +217,8 @@ describe("app-specific principal data", () => {
     expect(seen).toMatchObject([{ clerkUserId: "user_pro", isPro: true }]);
   });
 
-  it("velth accepts a legacy token through the same path", async () => {
-    const fixture: AppFixture = readJson("velth.json");
+  it("app-d accepts a legacy token through the same path", async () => {
+    const fixture: AppFixture = readJson("app-d.json");
     const legacy = must(fixture.endpoints[0]).exchanges.find((e) => e.token?.startsWith("legacy:"));
     expect(legacy?.sdkExchange).toBe("toolsList");
   });

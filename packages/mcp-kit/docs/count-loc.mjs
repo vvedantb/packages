@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 const root = process.argv[2];
 if (!root) {
-  console.error("usage: count-loc.mjs <apps-root containing vmem, vibot, verve, velth, vhub>");
+  console.error("usage: count-loc.mjs <apps-root containing app-a, app-b, app-c, app-d, app-e>");
   process.exit(1);
 }
 const here = dirname(fileURLToPath(import.meta.url));
@@ -73,26 +73,26 @@ const tool = (name) => ({ tool: name, label: `tool ${name}` });
 const decl = (name, re) => ({ start: re, label: name });
 
 const PLAN = {
-  vmem: [
-    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["vmem/native.ts"] },
-    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["vmem/nodeActions.handleMcpRequest.ts"] },
+  "app-a": [
+    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["app-a/native.ts"] },
+    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["app-a/nodeActions.handleMcpRequest.ts"] },
   ],
-  vibot: [
-    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["vibot/native.ts"] },
-    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["vibot/nodeActions.handleMcpRequest.ts"] },
-    { phase: 1, file: "convex/mcp/toolShared.ts", blocks: [decl("TextContent", /^type TextContent = /), decl("textContent", /^function textContent\(/), decl("errorResult", /^export function errorResult\(/), decl("textResult", /^export function textResult\(/)], remains: ["vibot/toolShared.resultHelpers.ts"] },
-    { phase: 2, file: "convex/mcp/tools.ts", blocks: ["list_tables", "query_table", "get_document", "count_table", "run_query"].map(tool), remains: ["vibot/tools.explorer.ts"] },
+  "app-b": [
+    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["app-b/native.ts"] },
+    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["app-b/nodeActions.handleMcpRequest.ts"] },
+    { phase: 1, file: "convex/mcp/toolShared.ts", blocks: [decl("TextContent", /^type TextContent = /), decl("textContent", /^function textContent\(/), decl("errorResult", /^export function errorResult\(/), decl("textResult", /^export function textResult\(/)], remains: ["app-b/toolShared.resultHelpers.ts"] },
+    { phase: 2, file: "convex/mcp/tools.ts", blocks: ["list_tables", "query_table", "get_document", "count_table", "run_query"].map(tool), remains: ["app-b/tools.explorer.ts"] },
   ],
-  verve: [
-    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["verve/native.ts"] },
-    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["verve/nodeActions.handleMcpRequest.ts"] },
-    { phase: 1, file: "convex/mcp/tools.ts", blocks: [decl("textResult", /^function textResult\(/), decl("errorResult", /^function errorResult\(/)], remains: ["verve/tools.resultHelpers.ts"] },
-    { phase: 2, file: "convex/mcp/tools.ts", blocks: ["list_tables", "query_table", "get_document", "run_query", "count_table"].map(tool), remains: ["verve/tools.explorer.ts"] },
+  "app-c": [
+    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["app-c/native.ts"] },
+    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["app-c/nodeActions.handleMcpRequest.ts"] },
+    { phase: 1, file: "convex/mcp/tools.ts", blocks: [decl("textResult", /^function textResult\(/), decl("errorResult", /^function errorResult\(/)], remains: ["app-c/tools.resultHelpers.ts"] },
+    { phase: 2, file: "convex/mcp/tools.ts", blocks: ["list_tables", "query_table", "get_document", "run_query", "count_table"].map(tool), remains: ["app-c/tools.explorer.ts"] },
   ],
-  velth: [
-    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["velth/native.ts"] },
-    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["velth/nodeActions.handleMcpRequest.ts"] },
-    { phase: 1, file: "convex/mcp/toolResult.ts", whole: true, remains: ["velth/toolResult.ts"] },
+  "app-d": [
+    { phase: 1, file: "convex/mcp/native.ts", whole: true, remains: ["app-d/native.ts"] },
+    { phase: 1, file: "convex/mcp/nodeActions.ts", blocks: [decl("handleMcpRequest", /^export const handleMcpRequest = /)], remains: ["app-d/nodeActions.handleMcpRequest.ts"] },
+    { phase: 1, file: "convex/mcp/toolResult.ts", whole: true, remains: ["app-d/toolResult.ts"] },
     {
       phase: 2,
       file: "convex/mcp/tools.ts",
@@ -104,10 +104,10 @@ const PLAN = {
         decl("runQuerySchema", /^const runQuerySchema = /),
         ...["list_tables", "query_table", "count_table", "get_document", "run_query"].map(tool),
       ],
-      remains: ["velth/tools.explorer.ts"],
+      remains: ["app-d/tools.explorer.ts"],
     },
   ],
-  vhub: [
+  "app-e": [
     {
       phase: 1,
       file: "convex/mcp/native.ts",
@@ -117,7 +117,7 @@ const PLAN = {
         decl("protectedResourceMetadata", /^export const protectedResourceMetadata = /),
         decl("health", /^export const health = /),
       ],
-      remains: ["vhub/native.partial.ts"],
+      remains: ["app-e/native.partial.ts"],
     },
   ],
 };

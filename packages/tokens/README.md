@@ -1,6 +1,6 @@
 # @vvedantb/tokens
 
-Design tokens and shared Tailwind v4 CSS for the vvedantb web apps (vmem, vibot, Verve, velth, vhub), plus JS tokens for React Native. Source-exported: no build step, no runtime dependencies.
+Design tokens and shared Tailwind v4 CSS for the vvedantb web apps, plus JS tokens for React Native. Source-exported: no build step, no runtime dependencies.
 
 ## Exports
 
@@ -78,8 +78,8 @@ Where apps share a rule but drifted in one value, the value is a custom property
 
 | File | Property | Default | Set by |
 | --- | --- | --- | --- |
-| `base.css` | `--tokens-control-transition-property` | `background-color, border-color, color, box-shadow, transform, opacity` | verve: `background-color, color, transform, opacity` |
-| `base.css` | `--tokens-control-transition-duration` | `240ms` | verve: `100ms` |
+| `base.css` | `--tokens-control-transition-property` | `background-color, border-color, color, box-shadow, transform, opacity` | app-c: `background-color, color, transform, opacity` |
+| `base.css` | `--tokens-control-transition-duration` | `240ms` | app-c: `100ms` |
 
 ## Develop
 
@@ -90,4 +90,4 @@ pnpm --filter @vvedantb/tokens analyze   # rule-level duplication across the app
 pnpm --filter @vvedantb/tokens verify    # before/after compile of every app -> verify/RESULTS.md, examples/migration.md
 ```
 
-`analyze` and `verify` need the app clones (`APPS_DIR`, default `/workspace/cvx`) and network access the first time: they install Tailwind 4.3.3, the plugins, postcss and jiti into a scratch directory (`VERIFY_DIR`, default `/workspace/pk-tokens-verify`, outside the repo). `verify` also needs `pnpm build` at the repo root (it scans `@vvedantb/shell` and `@vvedantb/app-kit` `dist`). The migration for each app is data in `verify/migrations/<app>.json`. Each removed block must equal the shared file's block with the same context and selector, or the run fails.
+`analyze` and `verify` need the app clones (`APPS_DIR`, default `/workspace/cvx`; name or symlink the clones `app-a` to `app-e` inside it) and network access the first time: they install Tailwind 4.3.3, the plugins, postcss and jiti into a scratch directory (`VERIFY_DIR`, default `/workspace/pk-tokens-verify`, outside the repo). `verify` also needs `pnpm build` at the repo root (it scans `@vvedantb/shell` and `@vvedantb/app-kit` `dist`). The migration for each app is data in `verify/migrations/<app>.json`. Each removed block must equal the shared file's block with the same context and selector, or the run fails.

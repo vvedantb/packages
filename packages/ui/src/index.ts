@@ -55,30 +55,33 @@ export * from "./ui/sheet";
 export * from "./ui/visually-hidden";
 export * from "./ui/clearInputDissolve";
 
-// Dual copies: richer file uses the plain name; the other keeps a suffix.
+// Dual copies: the richer file uses the plain name; the other keeps an `Alt` suffix.
 export * from "./ui/accordion";
 export {
-  Accordion as AccordionVerve,
-  AccordionItem as AccordionItemVerve,
-  AccordionTrigger as AccordionTriggerVerve,
-  AccordionContent as AccordionContentVerve,
-} from "./ui/accordion.verve";
+  Accordion as AccordionAlt,
+  AccordionItem as AccordionItemAlt,
+  AccordionTrigger as AccordionTriggerAlt,
+  AccordionContent as AccordionContentAlt,
+} from "./ui/accordion.alt";
 export * from "./ui/clear-input";
-export { ClearInput as ClearInputVibot } from "./ui/clear-input.vibot";
+export { ClearInput as ClearInputAlt } from "./ui/clear-input.alt";
 export * from "./ui/input-group";
 export {
-  InputGroup as InputGroupVerve,
-  InputGroupAddon as InputGroupAddonVerve,
-  InputGroupButton as InputGroupButtonVerve,
-  InputGroupText as InputGroupTextVerve,
-  InputGroupInput as InputGroupInputVerve,
-  InputGroupTextarea as InputGroupTextareaVerve,
-} from "./ui/input-group.verve";
+  InputGroup as InputGroupAlt,
+  InputGroupAddon as InputGroupAddonAlt,
+  InputGroupButton as InputGroupButtonAlt,
+  InputGroupText as InputGroupTextAlt,
+  InputGroupInput as InputGroupInputAlt,
+  InputGroupTextarea as InputGroupTextareaAlt,
+} from "./ui/input-group.alt";
 export * from "./ui/scroll-area";
 export {
-  ScrollArea as ScrollAreaVerve,
-  ScrollBar as ScrollBarVerve,
-} from "./ui/scroll-area.verve";
+  ScrollArea as ScrollAreaAlt,
+  ScrollBar as ScrollBarAlt,
+} from "./ui/scroll-area.alt";
+
+// Deprecated aliases for the pre-0.1.6 suffixed names.
+export * from "./deprecated";
 
 export * from "./ai-elements/artifact";
 export * from "./ai-elements/attachments";

@@ -2,7 +2,7 @@
 
 MCP server scaffolding for Convex `httpAction`s: the `/mcp` bearer-auth handler, OAuth metadata endpoints, a pure JSON-RPC dispatcher, tool helpers and user-scoped explorer tools. Web-standard `Request`/`Response` only, no Node APIs, no MCP SDK dependency. Compiled ESM with types. `0.1.0`, not yet published to npm.
 
-It replaces the near-copies of `convex/mcp/native.ts`, the `handleMcpRequest` body and the explorer tools in vmem, vibot, verve and velth. vhub uses only the metadata, CORS and protocol-version helpers. See [docs/migration.md](docs/migration.md) for per-app steps and measured line counts.
+It replaces the near-copies of `convex/mcp/native.ts`, the `handleMcpRequest` body and the explorer tools in app-a, app-b, app-c and app-d. app-e uses only the metadata, CORS and protocol-version helpers. See [docs/migration.md](docs/migration.md) for per-app steps and measured line counts.
 
 ## Install
 
@@ -91,7 +91,7 @@ export const mcpHandler = httpAction(
 | `createOptionsHandler({ cors })` | 204 preflight with only the CORS headers. |
 | `mcpCors(overrides?, origin?)` | convex-kit `mcpCorsHeaders(origin)` with overrides on top. |
 | `readEnvUrl(source, env?)` | Env URL with optional fallback var, through convex-kit `requiredEnvUrl`. |
-| `consoleMcpLogger` | Default log hook with the vmem strings. |
+| `consoleMcpLogger` | Default log hook with the app-a strings. |
 | `runSdkMcpRequest(options)` | The apps' `handleMcpRequest` body: stateless JSON-response SDK transport, 500 JSON-RPC -32603 on any throw. SDK classes are passed in. |
 | `mcpInternalError(err)` | `{ status: 500, body: '{"jsonrpc":"2.0","error":{"code":-32603,"message":...},"id":null}' }`. |
 
@@ -101,11 +101,11 @@ export const mcpHandler = httpAction(
 | --- | --- | --- |
 | `authenticate({ token, request, ctx, scope })` | required | Return the principal or `null` (401 "Invalid or expired token"). A throw escapes (Convex answers 500), as in the apps today; `onAuthenticateError: "unauthorized"` maps it to 401 instead. |
 | `handleRpc({ principal, body, json, request, ctx, scope })` | required | Returns `{ status, body }`, sent with `Content-Type: application/json` plus CORS. `body` is the JSON text, `json` the parsed value. |
-| `scope` | none | Opaque value passed to both callbacks (vmem `"personal"` / `"team"`). |
+| `scope` | none | Opaque value passed to both callbacks (app-a `"personal"` / `"team"`). |
 | `resourceMetadataPath` / `resourceMetadataUrl(request)` | `/.well-known/oauth-protected-resource` | Used in `WWW-Authenticate: Bearer resource_metadata="<origin><path>"`. |
 | `rejectMethods` | `["GET", "DELETE"]` | 405 "Method not supported in stateless mode". |
-| `methodCheck` | `"after-auth"` | All four apps check after auth; vhub before. |
-| `body` | `"json"` | `"json"`: `JSON.stringify(await request.json())` (vmem, vibot, verve). `"text"`: raw text checked with `JSON.parse` (velth). Bad JSON: 400 "Invalid JSON body". |
+| `methodCheck` | `"after-auth"` | All four apps check after auth; app-e before. |
+| `body` | `"json"` | `"json"`: `JSON.stringify(await request.json())` (app-a, app-b, app-c). `"text"`: raw text checked with `JSON.parse` (app-d). Bad JSON: 400 "Invalid JSON body". |
 | `cors` | none | `false`, a header map, or `(request) => headers`. With CORS, `OPTIONS` returns a 204 preflight. |
 | `headers` | none | Extra headers on every response. |
 | `messages` | apps' strings | `missingToken`, `invalidToken`, `methodNotAllowed`, `invalidJson`. |
@@ -115,10 +115,10 @@ Env fallback modes (`EnvUrl = string | { name, fallback?, fallbackMode? }`). The
 
 | `fallbackMode` | Rule | App |
 | --- | --- | --- |
-| `"fallback-if-set"` (default) | `!env[name] && !!env[fallback] ? fallback : name` | velth |
-| `"prefer-primary"` | `env[name] ? name : fallback` (error names the fallback when both are missing) | verve |
-| `"nullish"` | `env[name] ?? env[fallback]`, read as `name` (an empty primary does not fall back) | vibot |
-| plain string | no fallback | vmem, vhub |
+| `"fallback-if-set"` (default) | `!env[name] && !!env[fallback] ? fallback : name` | app-d |
+| `"prefer-primary"` | `env[name] ? name : fallback` (error names the fallback when both are missing) | app-c |
+| `"nullish"` | `env[name] ?? env[fallback]`, read as `name` (an empty primary does not fall back) | app-b |
+| plain string | no fallback | app-a, app-e |
 
 ### JSON-RPC dispatcher
 
@@ -138,8 +138,8 @@ Config: `serverInfo` (or a function of the scope), `tools`, `protocol` (`version
 | --- | --- |
 | `defineTool({ name, description, inputSchema, handler, annotations?, scopes?, title?, jsonSchema? })` | zod schema (3.25+ or 4), or a raw JSON Schema plus `parseArgs`. `description` may be a function of the scope. `call()` validates, runs the handler, and shapes errors like MCP SDK 1.30+. |
 | `toolTextResult(text)`, `toolJsonResult(data)`, `toolErrorResult(message)` | `{content:[{type:"text",text}]}`, pretty JSON text, and `{content:[...], isError:true}`, as in the apps. |
-| `runTool(fn, { errorLabel? })` | velth `jsonTool`: value as pretty JSON, a throw as an error result. |
-| `createToolRegistry(tools)`, `toolsToList`, `assertUniqueToolNames` | Duplicate names throw. Scope filtering (vmem `scopes`). `registry.names(scope)` feeds convex-kit `assertMcpTools`. |
+| `runTool(fn, { errorLabel? })` | app-d `jsonTool`: value as pretty JSON, a throw as an error result. |
+| `createToolRegistry(tools)`, `toolsToList`, `assertUniqueToolNames` | Duplicate names throw. Scope filtering (app-a `scopes`). `registry.names(scope)` feeds convex-kit `assertMcpTools`. |
 | `formatIssues`, `invalidArgumentsResult` | SDK-style validation messages. |
 
 zod 3 converter, typed without a cast:
@@ -154,15 +154,15 @@ const toJsonSchema: JsonSchemaConverter = (schema) => (schema instanceof ZodType
 
 `createExplorerTools({ tables, execute, runQuery?, limits?, features?, names?, descriptions?, messages?, scopes? })` returns `list_tables`, `query_table`, `count_table`, `get_document` and, with `runQuery`, `run_query`. All are marked `readOnlyHint`.
 
-- `tables`: a list of names or `{ name, fields? }` entries (vibot, velth), or a predicate (verve's deny-list). Names must match `^[A-Za-z_][A-Za-z0-9_]*$`.
+- `tables`: a list of names or `{ name, fields? }` entries (app-b, app-d), or a predicate (app-c's deny-list). Names must match `^[A-Za-z_][A-Za-z0-9_]*$`.
 - `execute(op, { principal, ctx, scope })`: the app's user-scoped executor. `op` is `list_tables`, `query_table` (`table`, `order`, `limit`, `cursor`, `filters`), `count_table` or `get_document`. Return a string (sent as-is), any other JSON value (pretty JSON) or `null` (denied). A throw becomes an error result with its message.
 - Checked before `execute` runs: table in catalog, argument types, `order`, `limit` (default 100, max 1000, floored and clamped to at least 1), filter field names (identifiers; in `fields` when the entry lists them, plus `_id` and `_creationTime`), document id `^[a-zA-Z0-9_]+$`, `run_query` tables. An unknown table never reaches the executor.
-- `features`: `cursor` (vibot), `filters` (`eq`/`gte`/`lte`, velth), `getDocument` (default on), `runQueryTables` (velth `tables`/`limitPerTable`).
+- `features`: `cursor` (app-b), `filters` (`eq`/`gte`/`lte`, app-d), `getDocument` (default on), `runQueryTables` (app-d `tables`/`limitPerTable`).
 - `createExplorerTools` throws at creation without `execute` or `tables`.
 
 ## Configuration per app
 
-| | vmem | vibot | verve | velth | vhub |
+| | app-a | app-b | app-c | app-d | app-e |
 | --- | --- | --- | --- | --- | --- |
 | MCP routes | `/mcp`, `/mcp/team` | `/mcp` (+OPTIONS) | `/mcp` | `/mcp` (+OPTIONS) | own gateway |
 | `scope` | `personal` / `team` | none | none | none | n/a |
@@ -183,8 +183,8 @@ The exact configs are in `tests/fixtures/apps/<app>.kit.ts` and `docs/migrated/<
 
 The kit does not do authentication, authorisation or data access.
 
-- `authenticate` is the app's. Clerk verification, vibot's Pro claim, velth's legacy HS256 tokens, vhub's API keys and scopes, and user creation all stay in the app.
-- Per-user scoping stays in the app: vibot `userScope.ts`/`scoping.ts`/`owned.ts`/`queries.ts`, verve `scoping.ts`/`owned.ts`/`queries.ts`, velth `scope.ts`/`owned.ts`/`queries.ts`, vmem `memoryScope.ts`.
+- `authenticate` is the app's. Clerk verification, app-b's Pro claim, app-d's legacy HS256 tokens, app-e's API keys and scopes, and user creation all stay in the app.
+- Per-user scoping stays in the app: app-b `userScope.ts`/`scoping.ts`/`owned.ts`/`queries.ts`, app-c `scoping.ts`/`owned.ts`/`queries.ts`, app-d `scope.ts`/`owned.ts`/`queries.ts`, app-a `memoryScope.ts`.
 - The explorer `execute` and `runQuery` callbacks MUST enforce per-user scoping. The kit passes the principal through as an opaque value and has no bypass option. It only narrows input: an unknown table or malformed field name never reaches the callback.
 - `run_query` code is never evaluated by the kit.
 - A missing bearer token is rejected before `authenticate` runs. A thrown `authenticate` is not swallowed unless you opt in.
@@ -200,11 +200,11 @@ The kit does not do authentication, authorisation or data access.
 | Exchange | Same bytes? |
 | --- | --- |
 | initialize (supported, latest, unsupported version), notifications/initialized (202, empty), ping, tools/call ok, handler throw, unknown tool, resources/list and unknown methods (-32601), batches, parse error | yes |
-| invalid arguments | yes against SDK 1.30+; SDK 1.29.0 (vmem) dumps raw zod issues instead |
+| invalid arguments | yes against SDK 1.30+; SDK 1.29.0 (app-a) dumps raw zod issues instead |
 | tools/list | names, descriptions and annotations yes; the SDK adds `execution: {taskSupport: "forbidden"}`; schemas are equal with zod 4 and depend on the converter with zod 3 |
 | invalid JSON-RPC message | no: the kit answers 400 -32600 "Invalid Request" (JSON-RPC spec); the SDK answers 400 -32700 "Parse error: Invalid JSON-RPC message" |
 
-Not implemented in the dispatcher: resources, prompts, completions, `logging/setLevel`, tasks, elicitation, sampling and output-schema validation. vmem registers resources and an MCP app, so vmem keeps the SDK.
+Not implemented in the dispatcher: resources, prompts, completions, `logging/setLevel`, tasks, elicitation, sampling and output-schema validation. app-a registers resources and an MCP app, so app-a keeps the SDK.
 
 ## Develop
 
@@ -219,7 +219,7 @@ Tests and typecheck read convex-kit from source (`vitest.config.ts` alias, `tsco
 To recapture SDK fixtures from an installed SDK (read-only):
 
 ```sh
-node scripts/capture-sdk-fixtures.mjs <path>/node_modules/@modelcontextprotocol/sdk velth-mcp 1.2.0 no tests/fixtures/sdk/velth.sdk.json
+node scripts/capture-sdk-fixtures.mjs <path>/node_modules/@modelcontextprotocol/sdk app-d-mcp 1.2.0 no tests/fixtures/sdk/app-d.sdk.json
 ```
 
 ## Publish

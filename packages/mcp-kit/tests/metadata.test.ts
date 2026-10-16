@@ -84,7 +84,7 @@ describe("createProtectedResourceMetadata", () => {
     expect(Object.fromEntries(res.headers)).toEqual({ "content-type": "application/json" });
   });
 
-  it("supports the vmem team resource path", async () => {
+  it("supports the app-a team resource path", async () => {
     const res = await createProtectedResourceMetadata({ env, resourcePath: "/mcp/team" })({}, get());
     expect((await res.json()).resource).toBe("https://site.test/mcp/team");
   });
@@ -139,8 +139,8 @@ describe("createHealthHandler and createOptionsHandler", () => {
   it("health returns {status:ok} by default and a custom body", async () => {
     const res = await createHealthHandler()({}, get("/health"));
     expect(await res.text()).toBe('{"status":"ok"}');
-    const vhub = await createHealthHandler({ body: { status: "ok", service: "vhub" } })({}, get("/health"));
-    expect(await vhub.text()).toBe('{"status":"ok","service":"vhub"}');
+    const appE = await createHealthHandler({ body: { status: "ok", service: "app-e" } })({}, get("/health"));
+    expect(await appE.text()).toBe('{"status":"ok","service":"app-e"}');
   });
 
   it("options returns 204 with only the CORS headers", async () => {

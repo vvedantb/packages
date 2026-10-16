@@ -105,15 +105,15 @@ const cfgRows = allPaths.map((p) => {
   };
 });
 
-// Config keyframes/animation vs vmem's CSS @theme counterparts.
-const vmemCss = readFileSync(join(appDir("vmem"), APPS.vmem.css[0]), "utf8");
-const vmemKf = new Map();
-const vmemAnim = new Map();
-for (const e of entries(await parseCss(vmemCss, "vmem"), "vmem")) {
-  if (e.selector.startsWith("@keyframes") && e.ctx.join() === "@theme") vmemKf.set(e.selector.slice(11), e.body);
+// Config keyframes/animation vs app-a's CSS @theme counterparts.
+const appACss = readFileSync(join(appDir("app-a"), APPS["app-a"].css[0]), "utf8");
+const appAKf = new Map();
+const appAAnim = new Map();
+for (const e of entries(await parseCss(appACss, "app-a"), "app-a")) {
+  if (e.selector.startsWith("@keyframes") && e.ctx.join() === "@theme") appAKf.set(e.selector.slice(11), e.body);
   if (e.selector === "@theme") {
     for (const d of e.node.nodes.filter((n) => n.type === "decl" && n.prop.startsWith("--animate-"))) {
-      vmemAnim.set(d.prop.slice(10), d.value);
+      appAAnim.set(d.prop.slice(10), d.value);
     }
   }
 }
@@ -125,12 +125,12 @@ async function kfToCss(name, frames) {
   return entries(await parseCss(text, "cfg"), "cfg")[0].body;
 }
 const cross = [];
-for (const [name, body] of vmemKf) {
-  const row = { name, vmemAnim: vmemAnim.get(name), apps: {} };
+for (const [name, body] of appAKf) {
+  const row = { name, appAAnim: appAAnim.get(name), apps: {} };
   for (const [app, c] of Object.entries(configs)) {
     const kf = c.theme?.extend?.keyframes?.[name];
     const an = c.theme?.extend?.animation?.[name];
-    row.apps[app] = kf ? `${(await kfToCss(name, kf)) === body ? "kf=" : "kf≠"} ${an === row.vmemAnim ? "anim=" : "anim≠"}` : "-";
+    row.apps[app] = kf ? `${(await kfToCss(name, kf)) === body ? "kf=" : "kf≠"} ${an === row.appAAnim ? "anim=" : "anim≠"}` : "-";
   }
   cross.push(row);
 }
@@ -178,9 +178,9 @@ for (const [k, ctxs] of ctxDrift) {
   md.push(`- \`${k.replace(/\n/g, " ").slice(0, 120)}\`: ${[...ctxs].map(([c, a]) => `${[...a].join("/")} in \`${c}\``).join("; ")}`);
 }
 
-md.push("", "## tailwind.config.ts (vibot, verve, velth)", "");
+md.push("", "## tailwind.config.ts (app-b, app-c, app-d)", "");
 md.push(
-  "Paths are flattened from the evaluated config (`content` omitted). `same token` treats verve's `color-mix(in oklch, var(--x) calc(<alpha-value> * 100%), transparent)` wrapper as `var(--x)`.",
+  "Paths are flattened from the evaluated config (`content` omitted). `same token` treats app-c's `color-mix(in oklch, var(--x) calc(<alpha-value> * 100%), transparent)` wrapper as `var(--x)`.",
   "",
   "| Path | Present | Identical | Same token | Values |",
   "| --- | --- | --- | --- | --- |",
@@ -194,11 +194,11 @@ for (const r of cfgRows) {
 }
 const cfg3 = cfgRows.filter((r) => r.identical === 3);
 const cfg3Token = cfgRows.filter((r) => r.identical < 3 && r.sameToken === 3);
-md.push("", `Summary: ${cfgRows.length} paths; ${cfg3.length} identical in all three configs; ${cfg3Token.length} more identical once verve's alpha wrapper is ignored.`);
+md.push("", `Summary: ${cfgRows.length} paths; ${cfg3.length} identical in all three configs; ${cfg3Token.length} more identical once app-c's alpha wrapper is ignored.`);
 
-md.push("", "### Config keyframes/animation vs vmem `@theme` (CSS-first)", "");
-md.push("| Name | vmem `--animate-*` | " + Object.keys(configs).join(" | ") + " |", "| --- | --- | " + Object.keys(configs).map(() => "---").join(" | ") + " |");
-for (const r of cross) md.push(`| ${r.name} | \`${r.vmemAnim}\` | ${Object.values(r.apps).join(" | ")} |`);
+md.push("", "### Config keyframes/animation vs app-a `@theme` (CSS-first)", "");
+md.push("| Name | app-a `--animate-*` | " + Object.keys(configs).join(" | ") + " |", "| --- | --- | " + Object.keys(configs).map(() => "---").join(" | ") + " |");
+for (const r of cross) md.push(`| ${r.name} | \`${r.appAAnim}\` | ${Object.values(r.apps).join(" | ")} |`);
 
 writeFileSync(join(VERIFY_SRC, "ANALYSIS.tables.md"), md.join("\n") + "\n");
 console.log(`wrote ${join(VERIFY_SRC, "ANALYSIS.tables.md")} (${shared.length} shared CSS keys, ${cfgRows.length} config paths)`);

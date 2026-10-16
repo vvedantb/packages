@@ -21,7 +21,7 @@ import {
 } from "./tools.js";
 
 export type McpDispatcherConfig<Principal, Ctx, Scope extends string = string> = {
-  /** `serverInfo` in the initialize result (convex-kit `defineMcpServerInfo`), or a function of the scope (vmem). */
+  /** `serverInfo` in the initialize result (convex-kit `defineMcpServerInfo`), or a function of the scope (app-a). */
   serverInfo: McpServerInfo | ((scope: Scope | undefined) => McpServerInfo);
   /** Tools. Names must be unique (checked at creation). */
   tools: ReadonlyArray<McpTool<Principal, Ctx, Scope>>;

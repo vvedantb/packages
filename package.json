@@ -1,5 +1,5 @@
 {
-  "name": "vmem-ui",
+  "name": "packages",
   "private": true,
   "license": "MIT",
   "packageManager": "pnpm@10.33.3",

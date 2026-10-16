@@ -1,6 +1,6 @@
 # `@vvedantb/native-ui`
 
-React Native + Expo primitives extracted from Velth. Floating pill chrome, Android-safe shadows, forms, list rows, and settings sections.
+React Native + Expo primitives extracted from a React Native app. Floating pill chrome, Android-safe shadows, forms, list rows, and settings sections.
 
 Web apps should keep using `@vvedantb/ui`. This package is native-only.
 
