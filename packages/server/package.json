@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Shared Convex backend helpers and MCP server scaffolding: query-limit errors, Clerk auth config, bearer tokens, env, CORS, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher and explorer tools.",
   "type": "module",
@@ -34,7 +34,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run",
+    "test": "vitest run && node --test tests-node/esm-exports.mjs",
     "prepack": "tsc -p tsconfig.json"
   },
   "peerDependencies": {

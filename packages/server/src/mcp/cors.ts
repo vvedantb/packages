@@ -1,4 +1,4 @@
-import { mcpCorsHeaders } from "../convex/index";
+import { mcpCorsHeaders } from "../convex/index.js";
 
 export type HeaderMap = Record<string, string>;
 

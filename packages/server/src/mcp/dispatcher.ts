@@ -1,4 +1,4 @@
-import type { McpServerInfo } from "../convex/index";
+import type { McpServerInfo } from "../convex/index.js";
 import type { HandleRpcArgs } from "./http.js";
 import { isJsonObject, type JsonObject, type JsonValue } from "./json.js";
 import {

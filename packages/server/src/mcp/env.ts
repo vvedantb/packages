@@ -1,4 +1,4 @@
-import { requiredEnvUrl, type EnvSource } from "../convex/index";
+import { requiredEnvUrl, type EnvSource } from "../convex/index.js";
 
 /**
  * How a fallback env var is chosen. They differ only when the primary is

@@ -1,4 +1,4 @@
-import { extractBearerToken } from "../convex/index";
+import { extractBearerToken } from "../convex/index.js";
 import { resolveCors, type CorsOption, type HeaderMap } from "./cors.js";
 import type { JsonValue, Thrown } from "./json.js";
 import type { RpcResult } from "./jsonRpc.js";
