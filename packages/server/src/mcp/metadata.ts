@@ -1,4 +1,4 @@
-import type { EnvSource } from "../convex/index";
+import type { EnvSource } from "../convex/index.js";
 import { resolveCors, type CorsOption, type HeaderMap } from "./cors.js";
 import { readEnvUrl, type EnvUrl } from "./env.js";
 import type { HttpHandler } from "./http.js";
