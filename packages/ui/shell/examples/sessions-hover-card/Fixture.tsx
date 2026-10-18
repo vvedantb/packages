@@ -20,7 +20,8 @@ export function Fixture() {
   return (
     <main className="min-h-screen bg-background p-8 text-foreground">
       <Button onClick={() => setDark((d) => !d)}>Toggle theme</Button>
-      <div className="mt-6 w-56">
+      {/* The card sits inside an overflow:hidden box. Portal is on by default, so it is not clipped. */}
+      <div className="mt-6 w-56 overflow-hidden rounded-lg border border-border p-2">
         <SessionsHoverCard
           open
           header="Refactor settings page"
