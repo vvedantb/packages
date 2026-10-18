@@ -46,7 +46,7 @@ export const ArtifactDescription = ({
   className,
   ...props
 }: ArtifactDescriptionProps) => (
-  <p className={cn("text-xs text-muted", className)} {...props} />
+  <p className={cn("text-xs text-muted-foreground", className)} {...props} />
 );
 
 export type ArtifactActionsProps = ComponentProps<"div">;

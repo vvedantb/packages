@@ -12,7 +12,7 @@ npm install @vvedantb/ui
 
 Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui`, needed only for this subpath: `@clerk/clerk-react` (`useStableAuth`), `@tanstack/react-hotkeys` and `zod`.
 
-`sonner` is not a dependency. The update watcher takes the toast API as an option. This subpath uses a local class join (`cn`), not the `cn` from `@vvedantb/ui`. Tailwind must scan `node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}` so the class names are generated, and the app needs the `@vvedantb/ui/tokens` names (`bg-surface-card`, `divide-separator`, `text-muted` and so on).
+`sonner` is not a dependency. The update watcher takes the toast API as an option. This subpath uses a local class join (`cn`), not the `cn` from `@vvedantb/ui`. Tailwind must scan `node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}` so the class names are generated, and the app needs the `@vvedantb/ui/tokens` names (`bg-surface-card`, `divide-separator`, `text-muted-foreground` and so on).
 
 ```css
 @source "../node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}";

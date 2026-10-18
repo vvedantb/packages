@@ -102,7 +102,7 @@ function InputGroupText({
   return (
     <span
       className={cn(
-        "flex items-center text-sm text-muted/95",
+        "flex items-center text-sm text-muted-foreground/95",
         className,
       )}
       {...props}

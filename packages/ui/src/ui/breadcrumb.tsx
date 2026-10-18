@@ -48,7 +48,7 @@ const BreadcrumbLink = React.forwardRef<
     <Comp
       ref={ref}
       className={cn(
-        "min-w-0 truncate font-medium text-muted transition-colors hover:text-foreground",
+        "min-w-0 truncate font-medium text-muted-foreground transition-colors hover:text-foreground",
         className,
       )}
       {...props}
@@ -74,7 +74,7 @@ BreadcrumbPage.displayName = "BreadcrumbPage";
 
 // separator rendered automatically between breadcrumb children
 const BreadcrumbSeparator = () => (
-  <span aria-hidden className="flex-shrink-0 text-muted/40">
+  <span aria-hidden className="flex-shrink-0 text-muted-foreground/40">
     /
   </span>
 );

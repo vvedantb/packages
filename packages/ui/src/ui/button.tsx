@@ -9,14 +9,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-accent text-accent-foreground hover:-translate-y-0.5 hover:opacity-90",
+          "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:opacity-90",
         destructive:
           "bg-[oklch(47.2%_0.195_25.7)] text-white hover:bg-[oklch(42.5%_0.185_25.7)]",
         outline:
           "border border-border bg-transparent text-foreground hover:bg-default",
         secondary: "bg-default text-default-foreground hover:bg-default/78",
-        ghost: "text-muted hover:bg-surface-tertiary hover:text-foreground",
-        link: "text-accent underline-offset-4 hover:underline active:scale-100",
+        ghost: "text-muted-foreground hover:bg-surface-tertiary hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline active:scale-100",
       },
       size: {
         default: "h-10 px-4 py-2",

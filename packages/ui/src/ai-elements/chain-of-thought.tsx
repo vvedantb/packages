@@ -75,7 +75,7 @@ export function ChainOfThoughtHeader({
     <Collapsible onOpenChange={setIsOpen} open={isOpen}>
       <CollapsibleTrigger
         className={cn(
-          "flex w-full items-center gap-2 text-muted text-sm transition-[color,transform] duration-150 ease-out active:scale-[0.99] hover:text-foreground",
+          "flex w-full items-center gap-2 text-muted-foreground text-sm transition-[color,transform] duration-150 ease-out active:scale-[0.99] hover:text-foreground",
           className,
         )}
         {...props}
@@ -102,8 +102,8 @@ export type ChainOfThoughtStepProps = ComponentProps<"div"> & {
 };
 const stepStatusStyles = {
   active: "text-foreground",
-  complete: "text-muted",
-  pending: "text-muted/50",
+  complete: "text-muted-foreground",
+  pending: "text-muted-foreground/50",
 };
 export function ChainOfThoughtStep({
   className,
@@ -130,7 +130,7 @@ export function ChainOfThoughtStep({
       </div>
       <div className="flex-1 space-y-2 overflow-hidden">
         <div>{label}</div>
-        {description && <div className="text-muted text-xs">{description}</div>}
+        {description && <div className="text-muted-foreground text-xs">{description}</div>}
         {children}
       </div>
     </div>
@@ -206,7 +206,7 @@ export function ChainOfThoughtImage({
       >
         {children}
       </div>
-      {caption && <p className="text-muted text-xs">{caption}</p>}
+      {caption && <p className="text-muted-foreground text-xs">{caption}</p>}
     </div>
   );
 }

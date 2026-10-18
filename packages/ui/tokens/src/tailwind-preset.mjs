@@ -88,6 +88,12 @@ export function tokensPreset({ color = cssVar } = {}) {
             DEFAULT: v("default"),
             foreground: v("default-foreground"),
           },
+          muted: { DEFAULT: v("muted"), foreground: v("muted") },
+          accent: {
+            DEFAULT: v("accent"),
+            foreground: v("accent-foreground"),
+          },
+          ring: v("focus"),
           input: v("border"),
           popover: {
             DEFAULT: v("overlay"),

@@ -211,7 +211,7 @@ const LINE_NUMBER_CLASSES = cn(
   "before:w-8",
   "before:mr-4",
   "before:text-right",
-  "before:text-muted/50",
+  "before:text-muted-foreground/50",
   "before:font-mono",
   "before:select-none",
 );
@@ -285,7 +285,7 @@ export const CodeBlockHeader = ({
     className={cn(
       cn(
         flatPanelSubtleClass,
-        "flex items-center justify-between px-3 py-2 text-muted text-xs",
+        "flex items-center justify-between px-3 py-2 text-muted-foreground text-xs",
       ),
       className,
     )}

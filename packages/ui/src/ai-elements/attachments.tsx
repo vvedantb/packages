@@ -212,7 +212,7 @@ export const AttachmentPreview = ({
   const { data, mediaCategory, variant } = useAttachmentContext();
   const iconSize = variant === "inline" ? "size-3" : "size-4";
   const renderIcon = (Icon: typeof IconPhoto) => (
-    <Icon className={cn(iconSize, "text-muted")} />
+    <Icon className={cn(iconSize, "text-muted-foreground")} />
   );
   const renderContent = () => {
     if (mediaCategory === "image" && data.type === "file" && data.url) {
@@ -259,7 +259,7 @@ export const AttachmentInfo = ({
     <div className={cn("min-w-0 flex-1", className)} {...props}>
       <span className="block truncate">{label}</span>
       {showMediaType && data.mediaType && (
-        <span className="block truncate text-muted text-xs">
+        <span className="block truncate text-muted-foreground text-xs">
           {data.mediaType}
         </span>
       )}
@@ -356,7 +356,7 @@ export const AttachmentEmpty = ({
 }: AttachmentEmptyProps) => (
   <div
     className={cn(
-      "flex items-center justify-center p-4 text-muted text-sm",
+      "flex items-center justify-center p-4 text-muted-foreground text-sm",
       className,
     )}
     {...props}

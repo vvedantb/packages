@@ -16,7 +16,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         leading={
           <IconSearch
             size={16}
-            className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 shrink-0 text-muted"
+            className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 shrink-0 text-muted-foreground"
           />
         }
         {...props}

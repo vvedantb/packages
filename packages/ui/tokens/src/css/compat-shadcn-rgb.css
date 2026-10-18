@@ -1,0 +1,75 @@
+/*
+ * @vvedantb/ui/tokens/css/compat-shadcn-rgb.css
+ *
+ * For apps that already define shadcn-style variables as space-separated RGB
+ * channels (for example `--background: 244 245 246`) and read them with
+ * `rgb(var(--x) / alpha)`.
+ *
+ * Import this file INSTEAD OF tokens.css. Never import both: they define the
+ * same `--color-*` names in different forms.
+ *
+ *   @import "tailwindcss";
+ *   @import "@vvedantb/ui/tokens/css/compat-shadcn-rgb.css";
+ *
+ * It defines only the names that @vvedantb/ui components use and that a
+ * shadcn theme lacks. Every value is a reference to an app variable; no
+ * colour is copied. It never defines --background, --foreground, --muted,
+ * --accent, --primary, --card, --popover, --border or --radius. The app owns
+ * those and may change them at runtime.
+ *
+ * The app must define: --background, --foreground, --card, --card-foreground,
+ * --popover, --popover-foreground, --primary, --primary-foreground,
+ * --secondary, --secondary-foreground, --muted, --muted-foreground,
+ * --accent, --accent-foreground, --destructive, --destructive-foreground,
+ * --border, --input, --ring and --radius (all colours as "R G B").
+ *
+ * Alpha values follow common shadcn-RGB classes (ring/35, ring/50,
+ * destructive/20, placeholder /90, scrollbar /35).
+ */
+
+@theme inline {
+  --color-default: rgb(var(--secondary));
+  --color-default-foreground: rgb(var(--secondary-foreground));
+  --color-surface: rgb(var(--card));
+  --color-surface-foreground: rgb(var(--card-foreground));
+  --color-surface-card: rgb(var(--card));
+  --color-surface-secondary: rgb(var(--muted));
+  --color-surface-secondary-foreground: rgb(var(--foreground));
+  --color-surface-tertiary: rgb(var(--secondary));
+  --color-surface-tertiary-foreground: rgb(var(--secondary-foreground));
+  --color-overlay: rgb(var(--popover));
+  --color-overlay-foreground: rgb(var(--popover-foreground));
+  --color-field-background: rgb(var(--card));
+  --color-field-foreground: rgb(var(--foreground));
+  --color-field-border: rgb(var(--input));
+  --color-field-placeholder: rgb(var(--muted-foreground) / 0.9);
+  --color-focus: rgb(var(--ring));
+  --color-focus-ring: rgb(var(--ring) / 0.35);
+  --color-focus-border: rgb(var(--ring) / 0.5);
+  --color-danger: rgb(var(--destructive));
+  --color-danger-foreground: rgb(var(--destructive-foreground));
+  --color-danger-ring: rgb(var(--destructive) / 0.2);
+  --color-danger-border: rgb(var(--destructive) / 0.55);
+  --color-separator: rgb(var(--border));
+  --color-segment: rgb(var(--card));
+  --color-segment-foreground: rgb(var(--foreground));
+  --color-backdrop: rgb(0 0 0 / 0.5);
+  --color-scrollbar: rgb(var(--muted-foreground) / 0.35);
+  --radius-field: min(calc(var(--radius) + 0.25rem), 1.25rem);
+}
+
+:root {
+  --scrollbar: rgb(var(--muted-foreground) / 0.35);
+  --field-radius: min(calc(var(--radius) + 0.25rem), 1.25rem);
+}
+
+/*
+ * Fallback fill for toasts, dialogs and hover cards (`glass-panel-strong`).
+ * Equivalent to `bg-card/95 backdrop-blur-md`. An app may override it by
+ * declaring its own `@utility glass-panel-strong` after this import.
+ */
+@utility glass-panel-strong {
+  background-color: rgb(var(--card) / 0.95);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}

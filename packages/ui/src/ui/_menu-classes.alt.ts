@@ -26,8 +26,8 @@ export const menuCheckboxRadioItemClass =
   "relative flex cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2.5 text-sm outline-hidden transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.99] focus:bg-default focus:text-foreground data-highlighted:bg-default data-highlighted:text-foreground data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50";
 
 export const menuLabelClass =
-  "px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted";
+  "px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground";
 
 export const menuSeparatorClass = "-mx-1.5 my-1 h-px bg-separator";
 
-export const menuShortcutClass = "ml-auto text-xs tracking-wide text-muted/90";
+export const menuShortcutClass = "ml-auto text-xs tracking-wide text-muted-foreground/90";

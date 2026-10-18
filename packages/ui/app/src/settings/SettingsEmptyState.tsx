@@ -25,10 +25,10 @@ export function SettingsEmptyState({
 }: SettingsEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-      <Icon size={28} className="mb-5 text-muted opacity-50" />
+      <Icon size={28} className="mb-5 text-muted-foreground opacity-50" />
       <h4 className="text-sm font-medium text-foreground">{title}</h4>
       {description ? (
-        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted">
+        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
           {description}
         </p>
       ) : null}

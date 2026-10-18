@@ -34,7 +34,7 @@ export const MessageContent = ({
   <div
     className={cn(
       "flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
-      "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:bg-accent group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-accent-foreground",
+      "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:bg-primary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-primary-foreground",
       "group-[.is-assistant]:px-0 group-[.is-assistant]:text-foreground",
       className,
     )}
@@ -242,7 +242,7 @@ export const MessageBranchPage = ({
   return (
     <ButtonGroupText
       className={cn(
-        "border-none bg-transparent text-muted shadow-none",
+        "border-none bg-transparent text-muted-foreground shadow-none",
         className,
       )}
       {...props}
