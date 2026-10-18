@@ -2,6 +2,8 @@
 
 From 0.4.0-rc.1, `@vvedantb/ui` has one JavaScript entry: the root (`.`). Every JS subpath is removed from `exports`. Change each import to `@vvedantb/ui`. CSS and Tailwind preset paths do not change.
 
+The public surface is `@vvedantb/ui`, plus the CSS paths and `@vvedantb/ui/tokens/tailwind-preset`. Consumers import from nothing else. The internal layout is unchanged: `src/composer/`, `src/app/`, `src/shell/`, `src/audio/` and the other folders stay separate, and `src/index.ts` only re-exports from them. Removing the JS subpath exports does not mean collapsing those directories.
+
 ## Old subpath to root replacement
 
 | Old import | New import | Notes |
