@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0-rc.2
+
+- `InputActions` plus menu: content now defaults to `align="start"`, as in the original app adapter. Radix had defaulted to centre. `side="top"` and `collisionPadding={12}` are unchanged. The shared `DropdownMenuContent` primitive default is not changed.
+- `InputActions` `menuContentProps` and `InputArea` `plusMenuContentProps`: props merged onto the menu content (`align`, `side`, `sideOffset`, `collisionPadding`, `className` and others). Your keys win. Omitted, the markup matches the original.
+- `LabeledSwitchRow` `className`: optional, merged onto the outer wrapper with `cn`. Omitted, the classes are unchanged.
+
 ## 0.4.0-rc.1
 
 Release candidate. **Breaking for imports:** one JavaScript entry. See [`MIGRATION.md`](MIGRATION.md) for every old path and the consumer files that need a change.

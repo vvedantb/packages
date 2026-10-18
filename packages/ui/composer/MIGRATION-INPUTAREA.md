@@ -52,6 +52,10 @@ Main chat (`chat.tsx`): `MAIN_CHAT_ACTION_FEATURES`, no `value`. Wrap the local-
 
 Project chat (`ProjectInputArea.tsx`): `value` and `onChange` from the route, `CONTEXT_CHAT_ACTION_FEATURES`, and `onSubmit` forwarded to the route's `onSubmit(text, files)`. Placeholder: `Ask ... about ${projectName ?? "your project"}...`.
 
+## Plus menu placement
+
+The plus menu opens with `align="start"` and `side="top"`, as in the original app adapter. To change it, pass `plusMenuContentProps`, for example `{ align: "center", sideOffset: 8 }`. Your keys win over the defaults. A `className` replaces the default max-size classes.
+
 ## Differences to check
 
 - Ghost text: new prop `predictionTextClassName`, applied to the ghost suggestion span. The default is `text-muted`, as in the original app composer, so nothing changes on migration. To use the token-safe class, pass `predictionTextClassName="text-muted-foreground"`. The default needs a `text-muted` utility in the app theme.

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "../utils/cn";
 import { Label } from "./label";
 import { Switch } from "./switch";
 
@@ -11,6 +12,7 @@ interface LabeledSwitchRowProps {
   disabled?: boolean;
   icon?: ReactNode;
   trailing?: ReactNode;
+  className?: string;
 }
 
 export function LabeledSwitchRow({
@@ -22,9 +24,10 @@ export function LabeledSwitchRow({
   disabled,
   icon,
   trailing,
+  className,
 }: LabeledSwitchRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3 max-sm:flex-wrap">
+    <div className={cn("flex items-center justify-between gap-3 max-sm:flex-wrap", className)}>
       <div className="flex min-w-0 items-start gap-2">
         {icon ? (
           <span className="mt-0.5 shrink-0 text-muted-foreground">{icon}</span>

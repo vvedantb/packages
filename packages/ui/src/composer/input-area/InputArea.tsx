@@ -23,7 +23,7 @@ import { SpeechInput } from "../../ai-elements/speech-input";
 import { chatInputContainerClass } from "../../ui/surface-classes";
 import { ComposerSlashMenu } from "./ComposerSlashMenu";
 import { FadePresence } from "./FadePresence";
-import { InputActions } from "./InputActions";
+import { InputActions, type InputActionsProps } from "./InputActions";
 import { motionFast } from "./motion";
 import type { ComposerSlashItem } from "./composerSlashItems";
 import { useComposerCompact } from "./useComposerCompact";
@@ -90,6 +90,8 @@ export type InputAreaProps = {
   chips?: ReactNode;
   /** Extra rows in the plus menu after the attach row. Include your own separators. */
   plusMenuExtra?: ReactNode;
+  /** Props merged onto the plus-menu dropdown content, such as `align`, `side` or `sideOffset`. Defaults: `align="start"`, `side="top"`. */
+  plusMenuContentProps?: InputActionsProps["menuContentProps"];
 
   /** Items for the `/` menu. Omit to turn the menu off. */
   slashItems?: ComposerSlashItem[];
@@ -141,6 +143,7 @@ export function InputArea({
   attachments,
   chips,
   plusMenuExtra,
+  plusMenuContentProps,
   slashItems,
   onSlashSelect,
   renderSlashItem,
@@ -244,6 +247,7 @@ export function InputArea({
       onAttachFile={openFilePicker}
       compact={compact}
       extra={plusMenuExtra}
+      menuContentProps={plusMenuContentProps}
     />
   );
 

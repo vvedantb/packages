@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { IconPaperclip, IconPlus } from "@tabler/icons-react";
 import { Button } from "../../ui/button";
 import {
@@ -9,6 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 
+export type InputActionsMenuContentProps = ComponentPropsWithoutRef<
+  typeof DropdownMenuContent
+>;
+
 export type InputActionsProps = {
   showFileUpload?: boolean;
   onAttachFile?: () => void;
@@ -16,6 +20,11 @@ export type InputActionsProps = {
   /** Extra menu rows after the attach row, such as a skill picker and a connection item. Include your own separators. */
   extra?: ReactNode;
   attachLabel?: ReactNode;
+  /**
+   * Props merged onto the menu content. Defaults: `align="start"`, `side="top"`,
+   * `collisionPadding={12}`. Your keys win. A `className` replaces the default size classes.
+   */
+  menuContentProps?: InputActionsMenuContentProps;
 };
 
 export function InputActions({
@@ -24,6 +33,7 @@ export function InputActions({
   compact = false,
   extra,
   attachLabel = "Attach file",
+  menuContentProps,
 }: InputActionsProps) {
   return (
     <DropdownMenu>
@@ -41,9 +51,11 @@ export function InputActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         aria-label="Tool options"
+        align="start"
         side="top"
         collisionPadding={12}
         className="max-h-[min(24rem,calc(100dvh-6rem))] max-w-[min(20rem,calc(100vw-1.5rem))] overflow-y-auto"
+        {...menuContentProps}
       >
         {showFileUpload ? (
           <>
