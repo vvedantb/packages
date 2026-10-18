@@ -5,6 +5,7 @@ import {
   isComposerCompact,
   readEditorInnerWidth,
 } from "./composerCompact";
+import { readInlineChipsWidth } from "./InputAreaEditor";
 
 export function useComposerCompact({
   value,
@@ -24,10 +25,7 @@ export function useComposerCompact({
   const editor = editorNode instanceof HTMLElement ? editorNode : null;
   const font = editor ? getComputedStyle(editor).font : "14px sans-serif";
   if (editor && wasCompactRef.current) {
-    const chipsWidth =
-      editor.querySelector<HTMLElement>("[data-composer-chips-inline]")
-        ?.offsetWidth ?? 0;
-    const inner = readEditorInnerWidth(editor) - chipsWidth;
+    const inner = readEditorInnerWidth(editor) - readInlineChipsWidth(editor);
     if (inner > 0) pillWidthRef.current = inner;
   }
   const exceedsPill =
