@@ -6,7 +6,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | --- | --- |
 | `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
 | `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
-| `@vvedantb/ui/composer` | `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction` and the pure prediction helpers. |
+| `@vvedantb/ui/composer` | `InputArea` (recommended) and its building blocks. Also the deprecated 0.3 `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction` and the pure prediction helpers. |
 | `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
 | `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
@@ -38,6 +38,57 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 - `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
 
 ## Composer
+
+### InputArea (recommended)
+
+`InputArea` is the chat composer extracted from an app: a pill that grows into a card, a plus menu, dictate, stop and send, ghost text, a `/` menu, and slots for banners, a queue, attachments and chips. It is presentational. It makes no requests and reads no router, billing or storage. The app passes data in and handles callbacks. It adds its own `TooltipProvider` and `LazyMotion`, so it needs no app provider.
+
+```tsx
+import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui/composer";
+
+<InputArea
+  value={draft}
+  onChange={setDraft}
+  onSubmit={(text) => send(text)}
+  onStop={abort}
+  isStreaming={isStreaming}
+  fileCount={files.length}
+  chipCount={chips.length}
+  onFilesSelected={addFiles}
+  onRemoveLastChip={removeLastChip}
+  showDictate
+  slashItems={slashItems}
+  onSlashSelect={(item, { openFilePicker }) => run(item, openFilePicker)}
+  attachments={<AttachmentStrip />}
+  chips={<ChipRow />}
+  plusMenuExtra={<SkillPickerAndConnectionRows />}
+  getPrediction={complete}
+  className={composerClass}
+  borderClassName={borderClass}
+  submitButtonClassName={submitBg}
+  submitIconClassName={submitText}
+/>
+```
+
+| Prop | Default | Notes |
+| --- | --- | --- |
+| `value`, `onChange`, `defaultValue` | uncontrolled, `""` | `onSubmit` clears the draft through `onChange("")` first. Restore it yourself if sending fails. |
+| `onSubmit(text)` | none | Trimmed text. Not called while `isSending`, or when send is disabled. |
+| `onStop`, `isStreaming`, `isSending`, `isUploading` | off | While streaming, stop shows next to send, and send queues. Sending or uploading shows a spinner and disables send. |
+| `canSubmit` | text, or `fileCount` or `chipCount` above 0 | Overrides when send is enabled. |
+| `fileCount`, `chipCount` | `0` | Compact mode needs them: files or chips keep the card open. |
+| `showDictate`, `onDictateTranscription` | off, append to draft | |
+| `showFileUpload`, `onFilesSelected`, `onAttachFile`, `attachAccept` | on, none, click the hidden input, images and PDF | The hidden input and drop handling appear only with `onFilesSelected`. `onAttachFile` replaces the click. |
+| `banners`, `promoBanner`, `queue`, `attachments`, `chips`, `plusMenuExtra` | none | Slots. `plusMenuExtra` goes after the attach row: include your own `DropdownMenuSeparator`. |
+| `slashItems`, `onSlashSelect`, `renderSlashItem` | menu off | Build items with `buildComposerSlashItems`. `renderSlashItem(item, row)` wraps a row, for example in a hover card. |
+| `getPrediction`, `predictionEnabled` | off, `true` | Ghost text. Tab accepts, Esc dismisses. Paused while the `/` menu is open. |
+| `className`, `containerClassName`, `borderClassName`, `submitButtonClassName`, `submitIconClassName`, `placeholder` | none | The app passes its own class strings for an exact match. |
+
+Building blocks: `InputActions`, `ConnectionStatusMenuItem` (icon, label, description, `connected`, `onClick`, `title`), `InputBanners`, `PromoBanner` (`show`, `onUpgrade`, `onDismiss`, text as children), `FadePresence`, `ComposerSlashMenu`, `ComposerSlashRow`, and the hooks and helpers listed in the changelog. Parity against the original: `composer/examples/parity/PARITY.md`. App migration: `composer/MIGRATION.md`.
+
+### Composer (deprecated)
+
+> **Deprecated in 0.4.0.** Use `InputArea`. The 0.3 `Composer` was written from scratch and does not match the app composer. It stays exported and unchanged for existing consumers, and is not removed in 0.4.0.
 
 Chat composer with an autosizing textarea, a footer with a plus-menu slot, action slots and a send or stop button. It also shows optional ghost-text predictions. It makes no network calls: the app supplies `getPrediction`.
 

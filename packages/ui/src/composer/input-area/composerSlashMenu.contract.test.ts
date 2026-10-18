@@ -5,6 +5,12 @@ import { expect, test } from "vitest";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
+// Built from parts so this file does not contain the names it forbids.
+const FORBIDDEN = new RegExp(
+  ["vm" + "em", "vi" + "bot", "ver" + "ve", "vel" + "th", "vh" + "ub", "\\b" + "ev" + "a\\b"].join("|"),
+  "i",
+);
+
 function read(name: string) {
   return readFileSync(join(dir, name), "utf8");
 }
@@ -35,6 +41,6 @@ test("the package carries no app brand names", () => {
     "ComposerSlashMenu.tsx",
     "ConnectionStatusMenuItem.tsx",
   ]) {
-    expect(read(name)).not.toMatch(/vmem|vibot|verve|velth|vhub|\beva\b/i);
+    expect(read(name)).not.toMatch(FORBIDDEN);
   }
 });

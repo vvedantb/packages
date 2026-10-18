@@ -1,7 +1,7 @@
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { IconArrowUp, IconLoader2, IconPlayerStop } from "@tabler/icons-react";
 import { cn } from "../../utils/cn";
 import { Button } from "../../ui/button";
@@ -320,6 +320,7 @@ export function InputArea({
   );
 
   return (
+    <LazyMotion features={domAnimation}>
     <TooltipProvider>
       <div className="min-w-0 shrink-0 overflow-x-clip">
         {showFileUpload && onFilesSelected ? (
@@ -498,5 +499,6 @@ export function InputArea({
           : null}
       </div>
     </TooltipProvider>
+    </LazyMotion>
   );
 }

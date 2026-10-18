@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+Additive. Nothing from 0.3.x is removed or changed in behaviour. See [`composer/MIGRATION.md`](composer/MIGRATION.md) for the exact props an app passes.
+
+- New `InputArea` in `@vvedantb/ui/composer`: the app chat composer, extracted as presentational UI. Same DOM and classes as the app `InputAreaCore`: the pill that grows into a card (compact mode), the footer with plus menu, dictate, stop and send, ghost text, and the `/` menu. Data, routing, billing, uploads and skills stay in the app and arrive as props, callbacks and slots (`banners`, `promoBanner`, `queue`, `attachments`, `chips`, `plusMenuExtra`, `slashItems`, `renderSlashItem`).
+- Building blocks: `InputActions`, `ConnectionStatusMenuItem`, `ComposerSlashMenu`, `ComposerSlashRow`, `InputBanners`, `PromoBanner`, `FadePresence`, `useComposerCompact`, `useComposerSlashMenu`, `useInputAreaPrediction`, `buildComposerSlashItems`, `filterAndGroupSlashItems`, the slash trigger, position and option id helpers, `shouldSkipPrediction`, `ghostSuggestion`, `scheduleCompletion`, the presets (`MAIN_CHAT_ACTION_FEATURES` and others) and the types `ActionFeatures`, `BannerFeatures` and `SkillChipPreview`.
+- `Button` `startContent` and `DropdownMenuItem` `startContent` and `description`: optional. Omitted, the markup is unchanged.
+- **Deprecated:** the 0.3 `Composer` (a from-scratch generic composer). Use `InputArea`. `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton` and `useComposerPrediction` still work unchanged and are not removed in this release. Replacing or removing `Composer` in a later release would be cleaner, because two composers with two prediction hooks is confusing, but that is a breaking change for any consumer and is left for a major or a clearly flagged minor.
+- `useInputAreaPrediction` is the extracted prediction hook. It does not replace the 0.3 `useComposerPrediction`, which has a different signature.
+- Ghost text uses `text-muted-foreground` where the app used `text-muted`, because `check:tokens` forbids `text-muted`. If the app theme maps the two to different colours, the ghost text colour changes. Check this when you migrate.
+- Parity fixture: `composer/examples/parity.html` and `composer/examples/parity/`. `PARITY.md` lists pixels changed per state against a frozen snapshot of the original JSX.
+- Tests: ported unit tests (compact, prediction helpers, slash items, trigger, position, option id, contract) and `InputArea` render tests.
+
 ## 0.3.2
 
 Additive and default-safe. With the new props omitted, `Composer` and `ComposerShell` behave as in 0.3.1.

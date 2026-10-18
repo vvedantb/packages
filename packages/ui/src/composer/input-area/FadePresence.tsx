@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
 import { motionFast } from "./motion";
 
 export type FadePresenceProps = {
@@ -8,9 +8,10 @@ export type FadePresenceProps = {
   className?: string;
 };
 
-/** Fades children in and out as `show` changes. Does not animate on first mount. */
+/** Fades children in and out as `show` changes. Does not animate on first mount. Brings its own `LazyMotion`, so `m` components animate without an app provider. */
 export function FadePresence({ show, children, className }: FadePresenceProps) {
   return (
+    <LazyMotion features={domAnimation}>
     <AnimatePresence initial={false}>
       {show ? (
         <m.div
@@ -25,5 +26,6 @@ export function FadePresence({ show, children, className }: FadePresenceProps) {
         </m.div>
       ) : null}
     </AnimatePresence>
+    </LazyMotion>
   );
 }
