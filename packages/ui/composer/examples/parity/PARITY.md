@@ -10,13 +10,13 @@ Pixels changed per state, 640 x 520 px per column, device scale factor 1, `pixel
 | --- | --- | --- | --- | --- |
 | empty | light | 0 | 332800 | 0.0000% |
 | typing | light | 0 | 332800 | 0.0000% |
-| slash | light | 9 | 332800 | 0.0027% |
+| slash | light | 0 | 332800 | 0.0000% |
 | plus | light | 0 | 332800 | 0.0000% |
 | streaming | light | 0 | 332800 | 0.0000% |
 | compact | light | 0 | 332800 | 0.0000% |
 | empty | dark | 0 | 332800 | 0.0000% |
 | typing | dark | 0 | 332800 | 0.0000% |
-| slash | dark | 4 | 332800 | 0.0012% |
+| slash | dark | 0 | 332800 | 0.0000% |
 | plus | dark | 0 | 332800 | 0.0000% |
 | streaming | dark | 0 | 332800 | 0.0000% |
 | compact | dark | 0 | 332800 | 0.0000% |
