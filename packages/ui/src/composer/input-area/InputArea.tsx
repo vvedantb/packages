@@ -206,7 +206,9 @@ export function InputArea({
     "smooth-typing-input field-sizing-content focus-visible:outline-hidden",
     compact
       ? COMPACT_EDITOR
-      : "min-h-0 max-h-50 w-full self-stretch overflow-y-auto rounded-none px-4 pt-3.5 pb-1 text-left",
+      : // `py-0` clears InputGroupTextarea's default `py-3` so the expanded
+        // padding matches the session composer (`px-4 pt-3.5 pb-1`).
+        "min-h-0 max-h-50 w-full self-stretch overflow-y-auto rounded-none py-0 px-4 pt-3.5 pb-1 text-left",
     inlineChips && "px-0 pt-0 pb-0",
   );
 

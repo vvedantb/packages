@@ -7,17 +7,21 @@ const chipClass =
 
 const chip = (name: string) => (
   <button key={name} type="button" className={chipClass}>
-    {name}
+    /{name}
   </button>
 );
 
-const WORD = "word ";
+// Narrow column so wrap states are visible. Newlines force expanded chrome for
+// multi-line cases (pill width is not measured until after the first paint).
+const LINE =
+  "word word word word word word word word word word word word";
 const texts: Record<string, string> = {
   empty: "",
   short: "Summarise the notes",
-  "just before wrap": WORD.repeat(14).trim(),
-  "wraps to 2 lines": WORD.repeat(26).trim(),
-  "wraps to 3 lines": WORD.repeat(46).trim(),
+  "just before wrap":
+    "word word word word word word word word word word word",
+  "wraps to 2 lines": `${LINE}\n${LINE}`,
+  "wraps to 3 lines": `${LINE}\n${LINE}\n${LINE}`,
 };
 const chipSets: Record<string, string[]> = {
   "0 chips": [],
@@ -30,12 +34,16 @@ function Matrix({ theme }: { theme: "light" | "dark" }) {
     <section
       className={`${theme === "dark" ? "dark" : ""} bg-background p-6 text-foreground`}
       data-theme={theme}
+      data-harness-theme={theme}
     >
       <h2 className="mb-4 text-lg font-semibold">{theme}</h2>
-      <div className="mx-auto flex max-w-xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-md flex-col gap-6">
         {Object.entries(chipSets).flatMap(([cLabel, names]) =>
           Object.entries(texts).map(([tLabel, text]) => (
-            <div key={`${cLabel}-${tLabel}`}>
+            <div
+              key={`${cLabel}-${tLabel}`}
+              data-harness-case={`${theme}:${cLabel}:${tLabel}`}
+            >
               <p className="mb-1 text-xs text-muted-foreground">
                 {cLabel} / {tLabel}
               </p>
