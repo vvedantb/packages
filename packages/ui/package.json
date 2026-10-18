@@ -61,7 +61,9 @@
     "tokens/src",
     "tokens/examples",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!**/*.test.ts",
+    "!**/*.test.tsx"
   ],
   "sideEffects": [
     "./src/ui/sonner.css"

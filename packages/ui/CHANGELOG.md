@@ -12,7 +12,7 @@ Additive. No change for apps that do not use the new exports.
 - `tokens/css/utilities.css`: new `@utility rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`).
 - `tokens/css/compat-shadcn-rgb.css`: adds `--color-card` and `--color-muted` as references to `--card` and `--muted`.
 - New fixture in `tokens/examples/toaster/` with a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark. It uses all the opt-in props.
-- Tests now also run from `src/**` and `shell/**`.
+- Tests now also run from `src/**` and `shell/**`. Test files are not published.
 - New fixture in `shell/examples/sessions-hover-card/` with a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark.
 
 ## 0.2.1
