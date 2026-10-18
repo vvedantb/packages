@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1
+
+- `InputArea` height: the expanded composer no longer reserves `min-h-16`. It stays one line and grows only when the text wraps. `field-sizing-content`, `rows={1}`, `max-h-50`, the padding and the compact classes are unchanged. The ghost text overlay follows the same rule.
+- `InputArea` chips: `chips` now render inline in the input row, before the text. They share the line with the caret and wrap with the text, in a flex-wrap row with `gap-1.5`. Backspace at position 0 still calls `onRemoveLastChip`.
+- `InputArea` `chipsPlacement`: new optional prop, `"inline"` (default) or `"top"`. Use `"top"` to keep the earlier strip above the text. Compact mode is unchanged.
+- Visual check page: `composer/examples/inputarea-harness`. It is not part of the published files.
+
 ## 0.4.0-rc.2
 
 - `InputActions` plus menu: content now defaults to `align="start"`, as in the original app adapter. Radix had defaulted to centre. `side="top"` and `collisionPadding={12}` are unchanged. The shared `DropdownMenuContent` primitive default is not changed.

@@ -91,6 +91,52 @@ describe("InputArea", () => {
     });
   });
 
+  describe("height and chips", () => {
+    const chip = <button type="button" data-testid="chip">skill</button>;
+    const chipEl = () => document.querySelector('[data-testid="chip"]') as HTMLElement;
+
+    it("grows only on wrap: no reserved min height when expanded", async () => {
+      await mount({ defaultValue: "line one\nline two" });
+      const cls = textarea().className;
+      expect(cls.split(" ")).not.toContain("min-h-16");
+      expect(cls.split(" ")).toContain("min-h-0");
+      expect(cls).toContain("field-sizing-content");
+      expect(cls).toContain("max-h-50");
+      expect(textarea().getAttribute("rows")).toBe("1");
+    });
+
+    it("places chips inline, in a flex-wrap row before the textarea", async () => {
+      await mount({ chips: chip, chipCount: 1 });
+      const row = chipEl().parentElement as HTMLElement;
+      expect(row.hasAttribute("data-composer-chips-inline")).toBe(true);
+      expect(row.className).toContain("flex-wrap");
+      expect(row.contains(textarea())).toBe(true);
+      expect(
+        chipEl().compareDocumentPosition(textarea()) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("places chips above the input row when chipsPlacement is top", async () => {
+      await mount({ chips: chip, chipCount: 1, chipsPlacement: "top" });
+      expect(document.querySelector("[data-composer-chips-inline]")).toBeNull();
+      expect(
+        chipEl().compareDocumentPosition(textarea()) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("removes the last chip on Backspace at position 0", async () => {
+      const onRemoveLastChip = vi.fn();
+      await mount({ chips: chip, chipCount: 1, onRemoveLastChip });
+      await act(async () => {
+        textarea().setSelectionRange(0, 0);
+        textarea().dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Backspace", bubbles: true, cancelable: true }),
+        );
+      });
+      expect(onRemoveLastChip).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("opens the slash menu from /", async () => {
     await mount({
       slashItems: [

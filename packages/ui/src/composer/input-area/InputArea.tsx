@@ -86,8 +86,10 @@ export type InputAreaProps = {
   queue?: ReactNode;
   /** Attachment strip. Shown inside the input, above the text. */
   attachments?: ReactNode;
-  /** Chip row. Shown inside the input, above the text. */
+  /** Chip row. Shown inside the input, before the text (see `chipsPlacement`). */
   chips?: ReactNode;
+  /** `inline` (default): chips sit on the first line, before the text, and wrap with it. `top`: chips sit in a strip above the text. Compact mode ignores this. */
+  chipsPlacement?: "inline" | "top";
   /** Extra rows in the plus menu after the attach row. Include your own separators. */
   plusMenuExtra?: ReactNode;
   /** Props merged onto the plus-menu dropdown content, such as `align`, `side` or `sideOffset`. Defaults: `align="start"`, `side="top"`. */
@@ -142,6 +144,7 @@ export function InputArea({
   queue,
   attachments,
   chips,
+  chipsPlacement = "inline",
   plusMenuExtra,
   plusMenuContentProps,
   slashItems,
@@ -195,13 +198,16 @@ export function InputArea({
     getPrediction,
   });
 
+  const inlineChips = chipsPlacement === "inline" && !compact && !!chips;
+
   const textareaClassName = cn(
     "bg-transparent! shadow-none border-none",
     "text-sm md:text-[15px] leading-5 placeholder:text-muted-foreground",
     "smooth-typing-input field-sizing-content focus-visible:outline-hidden",
     compact
       ? COMPACT_EDITOR
-      : "min-h-16 max-h-50 w-full self-stretch overflow-y-auto rounded-none px-4 pt-3.5 pb-1 text-left",
+      : "min-h-0 max-h-50 w-full self-stretch overflow-y-auto rounded-none px-4 pt-3.5 pb-1 text-left",
+    inlineChips && "px-0 pt-0 pb-0",
   );
 
   const submitDisabled =
@@ -332,6 +338,83 @@ export function InputArea({
     </div>
   );
 
+  const body = (
+    <PromptInputBody>
+      <div
+        className={cn(
+          "relative min-w-0",
+          compact ? "flex-1" : "w-full self-stretch",
+        )}
+      >
+        {prediction.suggestion ? (
+          <div
+            aria-hidden
+            className={cn(
+              textareaClassName,
+              "pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap wrap-break-word text-foreground",
+            )}
+          >
+            {input}
+            <span className={predictionTextClassName}>
+              {prediction.suggestion}
+            </span>
+          </div>
+        ) : null}
+        <PromptInputTextarea
+          ref={inputRef}
+          value={input}
+          placeholder={placeholder}
+          className={cn(
+            textareaClassName,
+            "relative z-10",
+            prediction.suggestion &&
+              "caret-current text-transparent",
+          )}
+          rows={1}
+          role={slashMenu.comboboxProps.role}
+          aria-multiline={slashMenu.comboboxProps["aria-multiline"]}
+          aria-haspopup={slashMenu.comboboxProps["aria-haspopup"]}
+          aria-autocomplete={
+            slashMenu.comboboxProps["aria-autocomplete"]
+          }
+          aria-expanded={slashMenu.comboboxProps["aria-expanded"]}
+          aria-controls={slashMenu.comboboxProps["aria-controls"]}
+          aria-activedescendant={
+            slashMenu.comboboxProps["aria-activedescendant"]
+          }
+          onKeyDown={(event) => {
+            if (slashMenu.onKeyDown(event)) return;
+            if (prediction.suggestion) {
+              if (event.key === "Tab" && !event.shiftKey) {
+                event.preventDefault();
+                setInput(input + prediction.suggestion);
+                return;
+              }
+              if (event.key === "Escape") {
+                event.preventDefault();
+                prediction.dismiss();
+                return;
+              }
+            }
+            if (
+              event.key === "Backspace" &&
+              event.currentTarget.selectionStart === 0 &&
+              event.currentTarget.selectionEnd === 0 &&
+              chipCount > 0
+            ) {
+              event.preventDefault();
+              onRemoveLastChip?.();
+            }
+          }}
+          onBlur={slashMenu.onBlur}
+          onChange={(e) => {
+            setInput(e.currentTarget.value);
+          }}
+        />
+      </div>
+    </PromptInputBody>
+  );
+
   return (
     <LazyMotion features={domAnimation}>
     <TooltipProvider>
@@ -390,7 +473,7 @@ export function InputArea({
                 }
               >
                 {showFileUpload ? attachments : null}
-                {chips}
+                {inlineChips ? null : chips}
                 {compact ? (
                   <InputGroupAddon
                     align="inline-start"
@@ -399,80 +482,17 @@ export function InputArea({
                     {plusButton}
                   </InputGroupAddon>
                 ) : null}
-                <PromptInputBody>
+                {inlineChips ? (
                   <div
-                    className={cn(
-                      "relative min-w-0",
-                      compact ? "flex-1" : "w-full self-stretch",
-                    )}
+                    data-composer-chips-inline=""
+                    className="flex w-full min-w-0 flex-wrap items-center gap-1.5 px-4 pt-3.5 pb-1"
                   >
-                    {prediction.suggestion ? (
-                      <div
-                        aria-hidden
-                        className={cn(
-                          textareaClassName,
-                          "pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap wrap-break-word text-foreground",
-                        )}
-                      >
-                        {input}
-                        <span className={predictionTextClassName}>
-                          {prediction.suggestion}
-                        </span>
-                      </div>
-                    ) : null}
-                    <PromptInputTextarea
-                      ref={inputRef}
-                      value={input}
-                      placeholder={placeholder}
-                      className={cn(
-                        textareaClassName,
-                        "relative z-10",
-                        prediction.suggestion &&
-                          "caret-current text-transparent",
-                      )}
-                      rows={1}
-                      role={slashMenu.comboboxProps.role}
-                      aria-multiline={slashMenu.comboboxProps["aria-multiline"]}
-                      aria-haspopup={slashMenu.comboboxProps["aria-haspopup"]}
-                      aria-autocomplete={
-                        slashMenu.comboboxProps["aria-autocomplete"]
-                      }
-                      aria-expanded={slashMenu.comboboxProps["aria-expanded"]}
-                      aria-controls={slashMenu.comboboxProps["aria-controls"]}
-                      aria-activedescendant={
-                        slashMenu.comboboxProps["aria-activedescendant"]
-                      }
-                      onKeyDown={(event) => {
-                        if (slashMenu.onKeyDown(event)) return;
-                        if (prediction.suggestion) {
-                          if (event.key === "Tab" && !event.shiftKey) {
-                            event.preventDefault();
-                            setInput(input + prediction.suggestion);
-                            return;
-                          }
-                          if (event.key === "Escape") {
-                            event.preventDefault();
-                            prediction.dismiss();
-                            return;
-                          }
-                        }
-                        if (
-                          event.key === "Backspace" &&
-                          event.currentTarget.selectionStart === 0 &&
-                          event.currentTarget.selectionEnd === 0 &&
-                          chipCount > 0
-                        ) {
-                          event.preventDefault();
-                          onRemoveLastChip?.();
-                        }
-                      }}
-                      onBlur={slashMenu.onBlur}
-                      onChange={(e) => {
-                        setInput(e.currentTarget.value);
-                      }}
-                    />
+                    {chips}
+                    <div className="min-w-32 flex-1">{body}</div>
                   </div>
-                </PromptInputBody>
+                ) : (
+                  body
+                )}
                 {compact ? (
                   <InputGroupAddon
                     align="inline-end"
