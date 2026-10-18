@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.3
+
+Additive. Existing defaults render as before.
+
+- New `SlideOverPanel`: right-side panel, absolutely positioned inside its nearest positioned parent. Only the close button closes it. Props: `open`, `width` (`"w-96"` default or `"w-80"`), `onClose`, `header`, `children`, `closeLabel`, `className`.
+- New `ToolbarSearchInput`: compact toolbar search field with a clear button that is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. The ref goes to the `<input>`.
+- `SettingsField` `layout`: new optional prop, `"stacked"` (default, unchanged) or `"horizontal"` (label and description left, control right).
+- `ConfirmDialog` `size`: new optional prop, `"default"` (unchanged alert dialog) or `"sm"` (compact dismissible dialog). In `"sm"`, confirm does not close the dialog.
+
 ## 0.4.2
 
 - `InputArea` inline chips: fixes a 0.4.1 bug where the user could not type when `chips` were shown. With an empty draft, the chips host was the editor's only child, so the caret had no editable position. In the compact pill, the editor was a flex container, so a click could put the caret inside a chip.

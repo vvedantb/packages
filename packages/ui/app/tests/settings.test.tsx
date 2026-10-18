@@ -41,6 +41,26 @@ describe("settings chrome", () => {
     expect(html).toContain("Shown publicly");
   });
 
+  it("renders a horizontal field as a flex row with label and control", () => {
+    const html = renderToStaticMarkup(
+      <SettingsField label="Theme" description="Pick one" layout="horizontal">
+        <select />
+      </SettingsField>,
+    );
+    expect(html).toBe(
+      '<div class="flex items-center justify-between gap-3"><div class="min-w-0"><p class="text-sm font-medium text-foreground">Theme</p><p class="mt-1 text-xs text-muted-foreground text-pretty">Pick one</p></div><select></select></div>',
+    );
+  });
+
+  it("uses a label element in horizontal layout when htmlFor is set", () => {
+    const html = renderToStaticMarkup(
+      <SettingsField label="Theme" htmlFor="t" layout="horizontal">
+        <select id="t" />
+      </SettingsField>,
+    );
+    expect(html).toContain('<label for="t" class="block text-sm font-medium text-foreground">Theme</label>');
+  });
+
   it("renders the empty state with the given icon", () => {
     const html = renderToStaticMarkup(
       <SettingsEmptyState

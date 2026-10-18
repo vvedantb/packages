@@ -77,7 +77,7 @@ import { SettingsPage, SettingsSection, SettingsToggleRow } from "@vvedantb/ui";
 </SettingsPage>
 ```
 
-Exports: `SettingsSection`, `SettingsField`, `SettingsStack`, `SettingsToggleRow`, `SettingsEmptyState` (icon is `ComponentType<{ size?: number; className?: string }>`), `SettingsPage`. Without `layout`, `SettingsPage` renders a plain `div` with a heading and the optional slots.
+Exports: `SettingsSection`, `SettingsField`, `SettingsStack`, `SettingsToggleRow`, `SettingsEmptyState` (icon is `ComponentType<{ size?: number; className?: string }>`), `SettingsPage`. `SettingsField` `layout`: `"stacked"` (default) puts the label above the control. `"horizontal"` renders one row with the label and description on the left and the control on the right. Without `layout`, `SettingsPage` renders a plain `div` with a heading and the optional slots.
 
 ## useStableAuth
 
