@@ -4,6 +4,8 @@ export { cn } from "./utils/cn";
 export { floatingSurfaceClass } from "./ui/_menu-classes";
 export * from "./ui/surface-classes";
 export * from "./motion/presets";
+export * from "./motion/panel-transition";
+export { restoreModalScrollLock } from "./ui/overlay-a11y";
 
 export * from "./ui/badge";
 export * from "./ui/breadcrumb";
@@ -40,6 +42,7 @@ export {
 } from "./ui/radix-select";
 export * from "./ui/search-input";
 export * from "./ui/select";
+export * from "./ui/select-field";
 export * from "./ui/separator";
 export * from "./ui/skeleton";
 export * from "./ui/slide-over-panel";

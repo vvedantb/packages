@@ -214,6 +214,40 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
 - `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
 - `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it.
 
+## Buttons, menus and fields (0.4.4)
+
+All of these are opt-in. Without the new props, components render as before.
+
+```tsx
+import {
+  Button, CardHeader, CommandDialog, DropdownMenuContent, DropdownMenuItem,
+  FadePresence, PanelTransition, PopoverContent, SelectField, SelectItem,
+  fadeUpSpring, restoreModalScrollLock,
+} from "@vvedantb/ui";
+
+<Button variant="flat" loading={saving} endContent={<IconArrowRight />}>Save</Button>
+
+<DropdownMenuContent fitViewport suppressAltKey restoreScrollLockOnClose>
+  <DropdownMenuItem startContent={<IconFile />} endContent={<Kbd>⌘O</Kbd>}>Open</DropdownMenuItem>
+</DropdownMenuContent>
+
+<SelectField id="tone" label="Tone" placeholder="Pick one" value={tone} onValueChange={setTone}>
+  <SelectItem value="calm">Calm</SelectItem>
+</SelectField>
+
+<FadePresence show={visible} variants={fadeUpSpring}>…</FadePresence>
+```
+
+- `Button`: variants `flat`, `success` and `warning` (each is `ghost` plus an override). `loading` disables the button, sets `data-loading="true"` and shows a spinner in place of `startContent`; without `loading` there is no `data-loading` attribute. `endContent` renders after the children. Both are ignored with `asChild` (`loading` still disables).
+- `DropdownMenuContent`: `fitViewport` caps the height on small screens and scrolls. It reads the optional `--vv-height` CSS variable, which the app may set to the visual viewport height (falls back to `70dvh`). `suppressAltKey` stops a bare Alt press from moving focus. `restoreScrollLockOnClose` calls `restoreModalScrollLock` on close (now and on the next tick). `ContextMenuContent` takes `suppressAltKey` too.
+- `DropdownMenuItem` `endContent` and `ContextMenuItem` `startContent`, `description` and `endContent`: the label moves into a growing column (`min-w-0 flex-1`), the description sits under it and `endContent` sits at the end. `DropdownMenuSubTrigger` and `ContextMenuSubTrigger` take `startContent`.
+- `PopoverContent` `fitViewport`: grows from the trigger (`--radix-popper-transform-origin`), defaults `collisionPadding` to 8 (your value wins) and, on small screens, caps width to `100vw - 1.5rem` and height as above.
+- `CommandDialog`: `title` and `description` add a visually hidden dialog header. `className` merges onto the dialog content. `shouldFilter` goes to `Command`. `listLayout` is `"pinned"` (default, fixed list height) or `"auto"` (the list sizes itself and items keep your styling).
+- `restoreModalScrollLock()`: clears body `pointer-events`, and, when no dialog or alert dialog is open, the body and root `overflow` and body `padding-right` left by a modal menu.
+- `CardHeader`: `flex flex-col space-y-1.5 p-6`.
+- `SelectField`: a labelled single select built from `Select`. Children are `SelectItem`s. An empty `value` shows the placeholder. `id` goes to the trigger and the label points at it. `className` merges onto the trigger.
+- Motion: `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes optional `variants` (`hidden`, `show`, `exit`); omitted, it keeps its opacity fade. `PanelTransition` wraps children in React `ViewTransition` with `default="none"` and `enter`/`exit` classes (`vt-panel-in`, `vt-panel-out` by default). It needs a React build that exports `ViewTransition`, and the app supplies the `::view-transition-*` CSS.
+
 ## Toaster
 
 ```tsx
@@ -255,7 +289,7 @@ Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`,
 
 ## Colour names in components
 
-Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
+Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
 
 ## Using an existing shadcn RGB theme
 

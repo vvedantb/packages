@@ -32,6 +32,25 @@ export function restoreBodyPointerEvents(): void {
   }
 }
 
+/**
+ * Clears the body pointer-events and scroll lock a closing modal menu can leave
+ * behind. Keeps the scroll lock while any dialog or alert dialog is still open.
+ */
+export function restoreModalScrollLock(): void {
+  if (typeof document === "undefined") return;
+  document.body.style.removeProperty("pointer-events");
+  if (
+    document.querySelector(
+      '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+    )
+  ) {
+    return;
+  }
+  document.body.style.removeProperty("overflow");
+  document.body.style.removeProperty("padding-right");
+  document.documentElement.style.removeProperty("overflow");
+}
+
 export function connectBodyPointerEventsFix(): () => void {
   restoreBodyPointerEvents();
   const observer = new MutationObserver(() => restoreBodyPointerEvents());

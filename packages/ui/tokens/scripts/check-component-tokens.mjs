@@ -31,11 +31,16 @@ function* walk(dir) {
   }
 }
 
-// One intentional compat default: the InputArea ghost text class must be the
-// bare `text-muted` of the original app composer. Allowed only in that file,
-// and only on a line that carries the marker comment.
+// Intentional compat classes that must match the original app markup: the
+// InputArea ghost text, the Button `flat` variant and the CommandDialog "auto"
+// list layout use the bare `text-muted`. Allowed only in these files, and only
+// on a line that carries the marker comment.
 const ALLOW_MARKER = "check-tokens-allow: text-muted";
-const ALLOW_FILE = "src/composer/input-area/InputArea.tsx";
+const ALLOW_FILES = new Set([
+  "src/composer/input-area/InputArea.tsx",
+  "src/ui/button.tsx",
+  "src/ui/command.tsx",
+]);
 
 const hits = [];
 for (const d of dirs) {
@@ -44,7 +49,7 @@ for (const d of dirs) {
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
-        if (r.msg === "use text-muted-foreground" && line.includes(ALLOW_MARKER) && relative(root, file) === ALLOW_FILE) continue;
+        if (r.msg === "use text-muted-foreground" && line.includes(ALLOW_MARKER) && ALLOW_FILES.has(relative(root, file))) continue;
         for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }
     });

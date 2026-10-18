@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.4
+
+Additive. Existing defaults render as before; every change is a new prop, variant or export.
+
+- `Button`: new variants `flat`, `success` and `warning` (each is `ghost` plus an override). New `loading` prop: disables the button, sets `data-loading="true"` and shows a spinner in place of `startContent`. Without `loading` the attribute is omitted. New `endContent` prop, rendered after the children. Both are ignored with `asChild`, but `loading` still disables.
+- `DropdownMenuContent`: new `fitViewport` (small-screen height cap with scroll; reads the optional `--vv-height` CSS variable), `suppressAltKey` and `restoreScrollLockOnClose`.
+- `DropdownMenuItem`: new `endContent`. When set, the label and description move into a growing column and `endContent` sits at the end. Without it the markup is unchanged.
+- `DropdownMenuSubTrigger` and `ContextMenuSubTrigger`: new `startContent`.
+- `ContextMenuContent`: new `suppressAltKey`. `ContextMenuItem`: new `startContent`, `description` and `endContent`, with the same row layout as above.
+- `PopoverContent`: new `fitViewport` (transform origin, `collisionPadding` default of 8, small-screen width and height caps).
+- `CommandDialog`: new `title` and `description` (visually hidden header), `className`, `shouldFilter` and `listLayout` (`"pinned"` default or `"auto"`).
+- New `restoreModalScrollLock()` on the root: clears body `pointer-events` and, when no dialog is open, the scroll lock.
+- New `CardHeader` and `SelectField` (labelled single select).
+- Motion: new `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes an optional `variants` prop; omitted, it keeps its opacity fade. New `PanelTransition` (React `ViewTransition` with `vt-panel-in` / `vt-panel-out` classes; needs a React build that exports `ViewTransition`).
+- `check:tokens` allows the marked bare `text-muted` in the `Button` `flat` variant and the `CommandDialog` `"auto"` layout, which match existing app markup.
+
 ## 0.4.3
 
 Additive. Existing defaults render as before.

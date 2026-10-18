@@ -1,7 +1,13 @@
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { IconSearch } from "@tabler/icons-react";
-import { Dialog, DialogContent } from "./dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./dialog";
 import { cn } from "../utils/cn";
 
 const Command = React.forwardRef<
@@ -19,16 +25,50 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
+// The list is pinned rather than `max-h`: a palette that resizes on every
+// keystroke shifts the whole dialog under the cursor.
+const commandDialogPinnedClass =
+  "[&_[cmdk-list]]:h-80 [&_[cmdk-list]]:max-h-[60dvh] [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-1.5 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-11 [&_[cmdk-item]]:rounded-md [&_[cmdk-item]]:px-2.5 [&_[cmdk-item]]:py-2 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4";
+
+// The list sizes itself and items keep the caller's styling.
+const commandDialogAutoClass =
+  "[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-1.5 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-11 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4"; // check-tokens-allow: text-muted
+
+interface CommandDialogProps extends React.ComponentProps<typeof Dialog> {
+  /** Screen-reader title. With `description`, adds a visually hidden header. */
+  title?: string;
+  /** Screen-reader description. With `title`, adds a visually hidden header. */
+  description?: string;
+  /** Merged onto the dialog content. */
+  className?: string;
+  /** Passed to `Command`. Set `false` to filter items yourself. */
+  shouldFilter?: boolean;
+  /** `"pinned"` (default) fixes the list height; `"auto"` lets it size itself. */
+  listLayout?: "pinned" | "auto";
+}
+
 function CommandDialog({
   children,
+  title,
+  description,
+  className,
+  shouldFilter,
+  listLayout = "pinned",
   ...props
-}: React.ComponentProps<typeof Dialog>) {
+}: CommandDialogProps) {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
-        {/* The list is pinned rather than `max-h`: a palette that resizes on
-            every keystroke shifts the whole dialog under the cursor. */}
-        <Command className="[&_[cmdk-list]]:h-80 [&_[cmdk-list]]:max-h-[60dvh] [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-1.5 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-11 [&_[cmdk-item]]:rounded-md [&_[cmdk-item]]:px-2.5 [&_[cmdk-item]]:py-2 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4">
+      <DialogContent className={cn("overflow-hidden p-0 sm:max-w-xl", className)}>
+        {title !== undefined || description !== undefined ? (
+          <DialogHeader className="sr-only">
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+        ) : null}
+        <Command
+          shouldFilter={shouldFilter}
+          className={listLayout === "auto" ? commandDialogAutoClass : commandDialogPinnedClass}
+        >
           {children}
         </Command>
       </DialogContent>

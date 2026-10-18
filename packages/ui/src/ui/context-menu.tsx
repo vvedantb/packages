@@ -15,6 +15,7 @@ import {
   menuShortcutClass,
   menuSubTriggerClass,
 } from "./_menu-classes";
+import { MenuItemRow, SubTriggerRow, suppressAltKeyDown } from "./_menu-parts";
 
 const ContextMenu = ContextMenuPrimitive.Root;
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
@@ -27,14 +28,18 @@ const ContextMenuSubTrigger = React.forwardRef<
   React.ComponentRef<typeof ContextMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
     inset?: boolean;
+    /** Leading icon or mark. The label then fills the row. */
+    startContent?: React.ReactNode;
   }
->(({ className, inset, children, ...props }, ref) => (
+>(({ className, inset, startContent, children, ...props }, ref) => (
   <ContextMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(menuSubTriggerClass, inset && "pl-8", className)}
     {...props}
   >
-    {children}
+    {startContent === undefined ? children : (
+      <SubTriggerRow startContent={startContent}>{children}</SubTriggerRow>
+    )}
     <IconChevronRight className="ml-auto" />
   </ContextMenuPrimitive.SubTrigger>
 ));
@@ -54,12 +59,16 @@ ContextMenuSubContent.displayName = ContextMenuPrimitive.SubContent.displayName;
 
 const ContextMenuContent = React.forwardRef<
   React.ComponentRef<typeof ContextMenuPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content> & {
+    /** Stop a bare Alt press from moving focus (e.g. into the browser menu bar). */
+    suppressAltKey?: boolean;
+  }
+>(({ className, suppressAltKey, onKeyDown, ...props }, ref) => (
   <ContextMenuPrimitive.Portal>
     <ContextMenuPrimitive.Content
       ref={ref}
       className={cn(menuContentClass, "w-40", className)}
+      onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
       {...props}
     />
   </ContextMenuPrimitive.Portal>
@@ -70,14 +79,34 @@ const ContextMenuItem = React.forwardRef<
   React.ComponentRef<typeof ContextMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & {
     inset?: boolean;
+    /** Leading icon or mark. Ignored with `asChild`. */
+    startContent?: React.ReactNode;
+    /** Second line under the label. Ignored with `asChild`. */
+    description?: React.ReactNode;
+    /** Trailing content. Ignored with `asChild`. */
+    endContent?: React.ReactNode;
   }
->(({ className, inset, ...props }, ref) => (
-  <ContextMenuPrimitive.Item
-    ref={ref}
-    className={cn(menuItemClass, inset && "pl-8", className)}
-    {...props}
-  />
-));
+>(
+  (
+    { className, inset, startContent, description, endContent, children, asChild, ...props },
+    ref,
+  ) => (
+    <ContextMenuPrimitive.Item
+      ref={ref}
+      asChild={asChild}
+      className={cn(menuItemClass, inset && "pl-8", className)}
+      {...props}
+    >
+      {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
+        children
+      ) : (
+        <MenuItemRow startContent={startContent} description={description} endContent={endContent}>
+          {children}
+        </MenuItemRow>
+      )}
+    </ContextMenuPrimitive.Item>
+  ),
+);
 ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName;
 
 const ContextMenuCheckboxItem = React.forwardRef<

@@ -8,6 +8,8 @@ test("root exposes former subpath APIs", () => {
     "requestConfirm", "useRequestConfirm", "startUpdateAvailableWatcher",
     "SettingsPage", "useStableAuth", "tokens",
     "SlideOverPanel", "ToolbarSearchInput", "ConfirmDialog", "SettingsField",
+    "CardHeader", "SelectField", "FadePresence", "PanelTransition",
+    "restoreModalScrollLock", "springTransition", "springFastTransition", "fadeUpSpring",
   ]) {
     expect(root, name).toHaveProperty(name);
   }
