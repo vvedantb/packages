@@ -4,7 +4,7 @@ Shared packages for vvedantb apps. Three public npm packages and one private con
 
 | Package | Version | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui` | `0.3.1` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./sonner`: `SonnerToaster` and `toast`. `./audio`: chime, `playTone` and the shared audio floor. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
+| `@vvedantb/ui` | `0.3.2` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./sonner`: `SonnerToaster` and `toast`. `./audio`: chime, `playTone` and the shared audio floor. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
 | `@vvedantb/native-ui` | `0.2.0` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Has no dependency on `@vvedantb/ui`; it carries its own copy of the JS tokens. |
 | `@vvedantb/server` | `0.1.0` | Convex backend helpers. `./convex`: query-limit errors, Clerk auth config, bearer tokens, env, MCP CORS and server info. `./mcp`: MCP server scaffolding for Convex `httpAction`s. Compiled. |
 | `@vvedantb/config` | `0.1.1` | Private, not on npm. tsconfig bases, an oxlint base, pinned tool versions and the `vvedantb-config sync` CLI, used inside this repository. |

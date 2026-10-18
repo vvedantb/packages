@@ -488,3 +488,149 @@ describe("Composer renderInput", () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith("I would like to ask about the plan");
   });
 });
+
+describe("Composer canSend", () => {
+  it("does not submit an empty draft by default", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} defaultValue="   " />);
+    expect(sendButton()!.disabled).toBe(true);
+    await press("Enter");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("canSend true enables send on an empty draft and submits \"\" on Enter and click", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend />);
+    expect(sendButton()!.disabled).toBe(false);
+    await press("Enter");
+    expect(onSubmit).toHaveBeenLastCalledWith("");
+    await act(async () => sendButton()!.click());
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+    expect(onSubmit).toHaveBeenLastCalledWith("");
+  });
+
+  it("submits \"\" for a whitespace draft when canSend allows it", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend defaultValue="  " />);
+    await act(async () => sendButton()!.click());
+    expect(onSubmit).toHaveBeenCalledWith("");
+  });
+
+  it("canSend false blocks a non-empty draft", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend={false} defaultValue="hello" />);
+    expect(sendButton()!.disabled).toBe(true);
+    await press("Enter");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("accepts a function that receives the live draft", async () => {
+    const onSubmit = vi.fn();
+    const canSend = vi.fn((draft: string) => draft.includes("x"));
+    await mount(<Composer onSubmit={onSubmit} canSend={canSend} />);
+    expect(sendButton()!.disabled).toBe(true);
+    await type("abc");
+    expect(sendButton()!.disabled).toBe(true);
+    await type(" x ");
+    expect(canSend).toHaveBeenLastCalledWith(" x ");
+    expect(sendButton()!.disabled).toBe(false);
+    await press("Enter");
+    expect(onSubmit).toHaveBeenCalledWith("x");
+  });
+
+  it("a function returning true enables an empty draft", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend={() => true} />);
+    expect(sendButton()!.disabled).toBe(false);
+    await press("Enter");
+    expect(onSubmit).toHaveBeenCalledWith("");
+  });
+
+  it("does not override disabled", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend disabled defaultValue="hi" />);
+    expect(textarea().disabled).toBe(true);
+    expect(sendButton()!.disabled).toBe(true);
+    await press("Enter");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does not override the streaming block in replace mode", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer onSubmit={onSubmit} canSend streaming defaultValue="hi" />);
+    expect(sendButton()).toBeNull();
+    await press("Enter");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe("Composer stopMode", () => {
+  it("replace is the default: only stop shows while streaming", async () => {
+    await mount(<Composer streaming />);
+    expect(stopButton()).not.toBeNull();
+    expect(sendButton()).toBeNull();
+    expect(document.querySelector("[data-slot=composer]")!.getAttribute("data-stop-mode")).toBe("replace");
+  });
+
+  it("alongside shows stop and send, stop before send", async () => {
+    await mount(<Composer streaming stopMode="alongside" defaultValue="next" />);
+    const stop = stopButton()!;
+    const send = sendButton()!;
+    expect(stop).not.toBeNull();
+    expect(send).not.toBeNull();
+    expect(stop.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("alongside lets Enter and send submit while streaming, and stop still stops", async () => {
+    const onSubmit = vi.fn();
+    const onStop = vi.fn();
+    await mount(
+      <Composer streaming stopMode="alongside" onSubmit={onSubmit} onStop={onStop} defaultValue="next" />,
+    );
+    await press("Enter");
+    expect(onSubmit).toHaveBeenCalledWith("next");
+    await type("again");
+    await act(async () => sendButton()!.click());
+    expect(onSubmit).toHaveBeenLastCalledWith("again");
+    await act(async () => stopButton()!.click());
+    expect(onStop).toHaveBeenCalledOnce();
+  });
+
+  it("alongside with an empty draft disables send unless canSend allows it", async () => {
+    const onSubmit = vi.fn();
+    await mount(<Composer streaming stopMode="alongside" onSubmit={onSubmit} />);
+    expect(sendButton()!.disabled).toBe(true);
+    await press("Enter");
+    expect(onSubmit).not.toHaveBeenCalled();
+    await act(async () => root!.unmount());
+    host!.remove();
+    await mount(<Composer streaming stopMode="alongside" onSubmit={onSubmit} canSend />);
+    expect(sendButton()!.disabled).toBe(false);
+  });
+
+  it("alongside still respects disabled", async () => {
+    await mount(<Composer streaming disabled stopMode="alongside" defaultValue="x" />);
+    expect(sendButton()!.disabled).toBe(true);
+  });
+
+  it("alongside keeps predictions off while streaming", async () => {
+    const getPrediction = vi.fn(async () => " more");
+    await mount(
+      <Composer
+        streaming
+        stopMode="alongside"
+        getPrediction={getPrediction}
+        defaultValue="a long enough draft here"
+        predictionDebounceMs={0}
+      />,
+    );
+    await wait(50);
+    expect(getPrediction).not.toHaveBeenCalled();
+  });
+
+  it("alongside works in the inline layout", async () => {
+    await mount(<Composer layout="inline" streaming stopMode="alongside" defaultValue="x" />);
+    expect(stopButton()).not.toBeNull();
+    expect(sendButton()).not.toBeNull();
+  });
+});

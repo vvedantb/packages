@@ -1,6 +1,6 @@
 # composer fixture
 
-Renders `Composer` from `@vvedantb/ui/composer` in six states: empty, typing with ghost text, with attachments, streaming (stop button), disabled and a long draft that scrolls. Two pages, one for each style mode:
+Renders `Composer` from `@vvedantb/ui/composer` in eight states: empty, typing with ghost text, with attachments, streaming (stop button), streaming with `stopMode="alongside"`, an empty draft with `canSend` on, disabled and a long draft that scrolls. Two pages, one for each style mode:
 
 | Page | Stylesheet |
 | --- | --- |

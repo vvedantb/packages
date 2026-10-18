@@ -6,6 +6,7 @@ export type {
   ComposerProps,
   ComposerShellProps,
   ComposerSlotContext,
+  ComposerStopMode,
   ComposerTrailingContext,
 } from "./Composer";
 export { useComposerPrediction } from "./useComposerPrediction";
