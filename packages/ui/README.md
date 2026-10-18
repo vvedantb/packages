@@ -180,7 +180,7 @@ Opt-in props (all default to the current look):
 | `loadingIcon` | node (default none) | Custom loading icon, merged into `icons`. A caller `icons.loading` wins. `icons={{ loading }}` works with both `toastIcons` values. |
 | `hideStackedContent` | `false` (default), `true` | Adds `[&[data-expanded=false][data-front=false]>*]:opacity-0` to the toast, so content behind the front toast is hidden while the stack is collapsed. `sonner.css` applies the same rule when imported. |
 
-With `closeButtonStyle="hoverChip"`, hover changes the text colour only. The border stays `border-border`, so the ring does not brighten in dark mode.
+With `closeButtonStyle="hoverChip"`, hover changes the text colour, and sonner may still change the background. The border stays `border-border` (pinned with `hover:border-border!` over sonner's dark hover border), so the ring does not brighten in dark mode.
 
 Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 

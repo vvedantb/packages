@@ -169,10 +169,14 @@ export const SessionsHoverCard = forwardRef<
     if (!isFocusVisible(event.currentTarget)) event.preventDefault();
   };
 
-  // Always close on pointer leave, even while focus stays on the trigger.
+  // Radix handles hover close, including closeDelay and moving onto the
+  // content. Force-close only when the card is stuck open by pointer-driven
+  // focus on the trigger (focused, but not `:focus-visible`).
   const handlePointerLeave = (event: React.PointerEvent<HTMLElement>) => {
     onPointerLeave?.(event as never);
-    if (event.pointerType !== "touch" && open) handleOpenChange(false);
+    if (event.pointerType === "touch" || !open) return;
+    const el = event.currentTarget;
+    if (el.ownerDocument.activeElement === el && !isFocusVisible(el)) handleOpenChange(false);
   };
 
   const bodyNode = loadContent ? (

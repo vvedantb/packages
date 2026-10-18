@@ -187,7 +187,9 @@ describe("0.3.1 opt-ins", () => {
     expect(render({ toastIcons: "filled24", loadingIcon: a, icons: { loading: b } }).icons.loading).toBe(b);
   });
 
-  it("pins the hover chip border on hover", () => {
-    expect(hoverChipCloseButtonClassName).toContain("hover:border-border");
+  it("pins the hover chip border over sonner's hover border", () => {
+    // Sonner's dark `[data-close-button]:hover` rule is not gated on data-styled.
+    expect(hoverChipCloseButtonClassName).toContain("hover:border-border!");
+    expect(hoverChipCloseButtonClassName).not.toMatch(/hover:border-border(?!!)/);
   });
 });

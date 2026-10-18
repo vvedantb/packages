@@ -200,7 +200,15 @@ describe("SessionsHoverCard", () => {
       expect(onOpenChange).toHaveBeenCalledWith(true);
     });
 
-    it("closes on pointer leave while focus stays on the trigger", async () => {
+    // React derives onPointerLeave from native pointerout (with a null or outside
+    // relatedTarget). A native pointerleave event does not reach the handler.
+    function leave(el: HTMLElement) {
+      return act(async () => {
+        el.dispatchEvent(new PointerEvent("pointerout", { pointerType: "mouse", bubbles: true, relatedTarget: null }));
+      });
+    }
+
+    it("closes on pointer leave when stuck open by non-focus-visible focus", async () => {
       const onOpenChange = vi.fn();
       await mount(
         <SessionsHoverCard defaultOpen header="Head" onOpenChange={onOpenChange}>
@@ -208,13 +216,41 @@ describe("SessionsHoverCard", () => {
         </SessionsHoverCard>,
       );
       const row = document.querySelector("button")!;
+      setFocusVisible(row, false);
       row.focus();
-      await act(async () => {
-        row.dispatchEvent(new PointerEvent("pointerout", { pointerType: "mouse", bubbles: true, relatedTarget: null }));
-      });
+      await leave(row);
       expect(onOpenChange).toHaveBeenCalledWith(false);
       await act(async () => new Promise((r) => setTimeout(r, 20)));
       expect(document.body.textContent).not.toContain("Head");
+    });
+
+    it("stays open on pointer leave with keyboard focus-visible", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, true);
+      row.focus();
+      await leave(row);
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(document.body.textContent).toContain("Head");
+    });
+
+    it("does not force-close on pointer leave without focus (Radix owns hover close)", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen closeDelay={1000} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      await leave(row);
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(document.body.textContent).toContain("Head");
     });
   });
 });
