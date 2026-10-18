@@ -9,20 +9,18 @@ function getMeasureContext(): CanvasRenderingContext2D | null {
   return context;
 }
 
+/** Chips never force the stacked card: only files, newlines and a wrapped line do. */
 export function isComposerCompact({
   value,
   fileCount,
-  chipCount,
   exceedsPill,
 }: {
   value: string;
   fileCount: number;
-  chipCount: number;
   exceedsPill: boolean;
 }): boolean {
   if (fileCount > 0) return false;
-  if (chipCount > 0) return false;
-  if (value.trim().length === 0) return true;
+  if (value === "" || value === "\n") return true;
   if (value.includes("\n")) return false;
   return !exceedsPill;
 }

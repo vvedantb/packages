@@ -1,4 +1,4 @@
-import type { ChangeEvent, ReactNode } from "react";
+import type { ChangeEvent, ReactNode, RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";
@@ -22,6 +22,7 @@ import {
 import { SpeechInput } from "../../ai-elements/speech-input";
 import { chatInputContainerClass } from "../../ui/surface-classes";
 import { ComposerSlashMenu } from "./ComposerSlashMenu";
+import { InputAreaEditor } from "./InputAreaEditor";
 import { FadePresence } from "./FadePresence";
 import { InputActions, type InputActionsProps } from "./InputActions";
 import { motionFast } from "./motion";
@@ -30,6 +31,8 @@ import { useComposerCompact } from "./useComposerCompact";
 import { useComposerSlashMenu } from "./useComposerSlashMenu";
 import { useInputAreaPrediction } from "./useInputAreaPrediction";
 
+const EXPANDED_EDITOR =
+  "min-h-16 max-h-50 w-full self-stretch overflow-y-auto rounded-none px-4 pt-3.5 pb-1 text-left";
 const COMPACT_EDITOR =
   "flex min-h-9 max-h-9 min-w-0 w-auto flex-1 items-center self-center overflow-hidden whitespace-pre! rounded-none px-1 py-2 text-left leading-5";
 const COMPACT_START_ADDON =
@@ -67,8 +70,9 @@ export type InputAreaProps = {
   /** When omitted: the draft has text, or `fileCount` or `chipCount` is above 0. */
   canSubmit?: boolean;
 
-  /** Inputs to the compact pill. */
+  /** Files force the stacked card. */
   fileCount?: number;
+  /** Chips never force the stacked card. They only enable send and Backspace removal. */
   chipCount?: number;
 
   showDictate?: boolean;
@@ -88,7 +92,7 @@ export type InputAreaProps = {
   attachments?: ReactNode;
   /** Chip row. Shown inside the input, before the text (see `chipsPlacement`). */
   chips?: ReactNode;
-  /** `inline` (default): chips sit on the first line, before the text, and wrap with it. `top`: chips sit in a strip above the text. Compact mode ignores this. */
+  /** `inline` (default): chips are non-editable atoms at the start of the same text flow, so wrapped lines start under them. `top`: chips sit in a strip above the text. */
   chipsPlacement?: "inline" | "top";
   /** Extra rows in the plus menu after the attach row. Include your own separators. */
   plusMenuExtra?: ReactNode;
@@ -104,7 +108,7 @@ export type InputAreaProps = {
   /** Returns a continuation for the draft. Omit to turn ghost text off. */
   getPrediction?: (text: string) => Promise<string>;
   predictionEnabled?: boolean;
-  /** Classes on the ghost suggestion span. Default matches the original app composer. */
+  /** Classes on the ghost suggestion span. Applies to `chipsPlacement="top"`. Inline mode draws the ghost text with a fixed muted `::after`. */
   predictionTextClassName?: string;
 
   /** Wrapper around banners, queue and the input. */
@@ -167,7 +171,10 @@ export function InputArea({
     if (!isControlled) setInternalValue(next);
     onChange?.(next);
   };
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLElement>(null);
+  // Measure once after mount so a long `defaultValue` expands on first paint.
+  const [, setMeasured] = useState(false);
+  useEffect(() => setMeasured(true), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasFiles = fileCount > 0;
 
@@ -179,7 +186,6 @@ export function InputArea({
   const { chromeRef, compact } = useComposerCompact({
     value: input,
     fileCount,
-    chipCount,
   });
 
   const items = slashItems ?? [];
@@ -198,18 +204,17 @@ export function InputArea({
     getPrediction,
   });
 
-  const inlineChips = chipsPlacement === "inline" && !compact && !!chips;
+  const inlineMode = chipsPlacement === "inline";
 
   const textareaClassName = cn(
     "bg-transparent! shadow-none border-none",
     "text-sm md:text-[15px] leading-5 placeholder:text-muted-foreground",
-    "smooth-typing-input field-sizing-content focus-visible:outline-hidden",
+    "smooth-typing-input focus-visible:outline-hidden",
     compact
       ? COMPACT_EDITOR
-      : // `py-0` clears InputGroupTextarea's default `py-3` so the expanded
-        // padding matches the session composer (`px-4 pt-3.5 pb-1`).
-        "min-h-0 max-h-50 w-full self-stretch overflow-y-auto rounded-none py-0 px-4 pt-3.5 pb-1 text-left",
-    inlineChips && "px-0 pt-0 pb-0",
+      : // `py-0` clears InputGroupTextarea's default `py-3`.
+        cn(EXPANDED_EDITOR, "py-0 pt-3.5 pb-1"),
+    !inlineMode && "field-sizing-content",
   );
 
   const submitDisabled =
@@ -237,12 +242,25 @@ export function InputArea({
       const activeElement = document.activeElement;
       const isInputFocused =
         activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTextAreaElement;
-      if (!isInputFocused && inputRef.current) {
-        const textarea = inputRef.current;
-        textarea.focus();
-        const length = textarea.value.length;
-        textarea.setSelectionRange(length, length);
+        activeElement instanceof HTMLTextAreaElement ||
+        (activeElement instanceof HTMLElement &&
+          activeElement.isContentEditable);
+      const editor = inputRef.current;
+      if (!isInputFocused && editor) {
+        editor.focus();
+        if (editor instanceof HTMLTextAreaElement) {
+          const length = editor.value.length;
+          editor.setSelectionRange(length, length);
+        } else {
+          const sel = window.getSelection();
+          if (sel) {
+            const range = document.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -340,6 +358,36 @@ export function InputArea({
     </div>
   );
 
+  const comboboxProps = {
+    role: slashMenu.comboboxProps.role,
+    "aria-multiline": slashMenu.comboboxProps["aria-multiline"],
+    "aria-haspopup": slashMenu.comboboxProps["aria-haspopup"],
+    "aria-autocomplete": slashMenu.comboboxProps["aria-autocomplete"],
+    "aria-expanded": slashMenu.comboboxProps["aria-expanded"],
+    "aria-controls": slashMenu.comboboxProps["aria-controls"],
+    "aria-activedescendant": slashMenu.comboboxProps["aria-activedescendant"],
+  };
+
+  /** Slash menu and ghost text keys. Returns true when handled. */
+  const handleCommonKeyDown = (
+    event: Parameters<typeof slashMenu.onKeyDown>[0],
+  ): boolean => {
+    if (slashMenu.onKeyDown(event)) return true;
+    if (prediction.suggestion) {
+      if (event.key === "Tab" && !event.shiftKey) {
+        event.preventDefault();
+        setInput(input + prediction.suggestion);
+        return true;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        prediction.dismiss();
+        return true;
+      }
+    }
+    return false;
+  };
+
   const body = (
     <PromptInputBody>
       <div
@@ -348,71 +396,69 @@ export function InputArea({
           compact ? "flex-1" : "w-full self-stretch",
         )}
       >
-        {prediction.suggestion ? (
-          <div
-            aria-hidden
-            className={cn(
-              textareaClassName,
-              "pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap wrap-break-word text-foreground",
-            )}
-          >
-            {input}
-            <span className={predictionTextClassName}>
-              {prediction.suggestion}
-            </span>
-          </div>
-        ) : null}
-        <PromptInputTextarea
-          ref={inputRef}
-          value={input}
-          placeholder={placeholder}
-          className={cn(
-            textareaClassName,
-            "relative z-10",
-            prediction.suggestion &&
-              "caret-current text-transparent",
-          )}
-          rows={1}
-          role={slashMenu.comboboxProps.role}
-          aria-multiline={slashMenu.comboboxProps["aria-multiline"]}
-          aria-haspopup={slashMenu.comboboxProps["aria-haspopup"]}
-          aria-autocomplete={
-            slashMenu.comboboxProps["aria-autocomplete"]
-          }
-          aria-expanded={slashMenu.comboboxProps["aria-expanded"]}
-          aria-controls={slashMenu.comboboxProps["aria-controls"]}
-          aria-activedescendant={
-            slashMenu.comboboxProps["aria-activedescendant"]
-          }
-          onKeyDown={(event) => {
-            if (slashMenu.onKeyDown(event)) return;
-            if (prediction.suggestion) {
-              if (event.key === "Tab" && !event.shiftKey) {
-                event.preventDefault();
-                setInput(input + prediction.suggestion);
-                return;
-              }
-              if (event.key === "Escape") {
-                event.preventDefault();
-                prediction.dismiss();
-                return;
-              }
-            }
-            if (
-              event.key === "Backspace" &&
-              event.currentTarget.selectionStart === 0 &&
-              event.currentTarget.selectionEnd === 0 &&
-              chipCount > 0
-            ) {
-              event.preventDefault();
-              onRemoveLastChip?.();
-            }
-          }}
-          onBlur={slashMenu.onBlur}
-          onChange={(e) => {
-            setInput(e.currentTarget.value);
-          }}
-        />
+        {inlineMode ? (
+          <InputAreaEditor
+            editorRef={inputRef as RefObject<HTMLDivElement | null>}
+            value={input}
+            onValueChange={setInput}
+            placeholder={placeholder}
+            suggestion={prediction.suggestion || undefined}
+            chips={chips}
+            chipCount={chipCount}
+            onRemoveLastChip={onRemoveLastChip}
+            className={cn(textareaClassName, "relative z-10")}
+            ariaProps={comboboxProps}
+            onKeyDown={(event) => {
+              handleCommonKeyDown(event);
+            }}
+            onBlur={slashMenu.onBlur}
+          />
+        ) : (
+          <>
+            {prediction.suggestion ? (
+              <div
+                aria-hidden
+                className={cn(
+                  textareaClassName,
+                  "pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap wrap-break-word text-foreground",
+                )}
+              >
+                {input}
+                <span className={predictionTextClassName}>
+                  {prediction.suggestion}
+                </span>
+              </div>
+            ) : null}
+            <PromptInputTextarea
+              ref={inputRef as RefObject<HTMLTextAreaElement | null>}
+              value={input}
+              placeholder={placeholder}
+              className={cn(
+                textareaClassName,
+                "relative z-10",
+                prediction.suggestion && "caret-current text-transparent",
+              )}
+              rows={1}
+              {...comboboxProps}
+              onKeyDown={(event) => {
+                if (handleCommonKeyDown(event)) return;
+                if (
+                  event.key === "Backspace" &&
+                  event.currentTarget.selectionStart === 0 &&
+                  event.currentTarget.selectionEnd === 0 &&
+                  chipCount > 0
+                ) {
+                  event.preventDefault();
+                  onRemoveLastChip?.();
+                }
+              }}
+              onBlur={slashMenu.onBlur}
+              onChange={(e) => {
+                setInput(e.currentTarget.value);
+              }}
+            />
+          </>
+        )}
       </div>
     </PromptInputBody>
   );
@@ -450,7 +496,7 @@ export function InputArea({
                   "flex w-full min-w-0 [interpolate-size:allow-keywords] transition-[color,box-shadow,border-color,border-radius,height] duration-200",
                   chatInputContainerClass,
                   compact
-                    ? "h-12 flex-row flex-nowrap items-center rounded-full py-1 has-[>textarea]:h-12"
+                    ? "h-12 flex-row flex-nowrap items-center rounded-full py-1 has-[[data-slot=input-group-control]]:h-12"
                     : "h-auto flex-col items-start rounded-surface",
                   borderClassName,
                   containerClassName,
@@ -475,7 +521,7 @@ export function InputArea({
                 }
               >
                 {showFileUpload ? attachments : null}
-                {inlineChips ? null : chips}
+                {inlineMode ? null : chips}
                 {compact ? (
                   <InputGroupAddon
                     align="inline-start"
@@ -484,17 +530,7 @@ export function InputArea({
                     {plusButton}
                   </InputGroupAddon>
                 ) : null}
-                {inlineChips ? (
-                  <div
-                    data-composer-chips-inline=""
-                    className="flex w-full min-w-0 flex-wrap items-center gap-1.5 px-4 pt-3.5 pb-1"
-                  >
-                    {chips}
-                    <div className="min-w-32 flex-1">{body}</div>
-                  </div>
-                ) : (
-                  body
-                )}
+                {body}
                 {compact ? (
                   <InputGroupAddon
                     align="inline-end"
