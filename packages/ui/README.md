@@ -194,6 +194,26 @@ import { SessionsHoverCard } from "@vvedantb/ui";
 
 `children` is the trigger. It is rendered with `asChild` by default, so it keeps its own handlers (such as a context menu). Extra props and the ref go to it. Use `asChild={false}` for a default trigger element. The content portals to `document.body` by default, so `overflow:hidden` ancestors do not clip it. Pass `portal={false}` to opt out. `surface` is `"overlay"` (default), `"surface"` (`rounded-surface`) or `"glass"` (`glass-panel-strong`, `rounded-surface`). `className` merges over the surface without `!`. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. The card opens on pointer hover and on keyboard focus (`:focus-visible`) only. Focus that follows a click or a context menu close does not open it. If pointer-driven focus left it stuck open, pointer leave force-closes it; otherwise Radix handles close (including moving onto the content). Fixture: `shell/examples/sessions-hover-card/`.
 
+## Panels, search and confirm
+
+```tsx
+import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui";
+
+<div className="relative">
+  <SlideOverPanel open={open} onClose={() => setOpen(false)} header={<h2>Details</h2>}>
+    <div className="p-4">Body</div>
+  </SlideOverPanel>
+</div>
+
+<ToolbarSearchInput value={query} onChange={setQuery} />
+
+<ConfirmDialog size="sm" open={open} onOpenChange={setOpen} title="Delete item?" variant="destructive" onConfirm={remove} />
+```
+
+- `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
+- `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
+- `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it.
+
 ## Toaster
 
 ```tsx
