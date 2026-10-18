@@ -47,6 +47,29 @@ describe("createToasterClassNames", () => {
   });
 });
 
+describe("createToasterClassNames variants", () => {
+  it("uses rounded-field for control radius", () => {
+    const toast = createToasterClassNames({ toastRadius: "control" }).toast!;
+    expect(toast).toContain("rounded-field");
+    expect(toast).not.toContain("rounded-lg");
+  });
+
+  it("tightens padding, gap and text for compact density", () => {
+    const names = createToasterClassNames({ density: "compact" });
+    expect(names.toast).toContain("gap-2");
+    expect(names.toast).toContain("px-3 py-2 text-xs");
+    expect(names.toast).not.toContain("px-4");
+    expect(names.description).toBe("text-xs leading-snug text-muted-foreground");
+  });
+
+  it("passes density and toastRadius through SonnerToaster", () => {
+    const toast = render({ density: "compact", toastRadius: "control" }).toastOptions.classNames
+      .toast;
+    expect(toast).toContain("py-2");
+    expect(toast).toContain("rounded-field");
+  });
+});
+
 describe("mergeToastClassNames", () => {
   it("appends caller classes after the defaults and keeps untouched keys", () => {
     const defaults = createToasterClassNames();
