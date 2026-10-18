@@ -98,3 +98,5 @@ export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
 
 export * from "./audio";
+
+export * from "./composer";
