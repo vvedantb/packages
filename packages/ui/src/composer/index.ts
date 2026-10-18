@@ -1,6 +1,10 @@
-export { Composer, ComposerIconButton } from "./Composer";
+export { Composer, ComposerGhostText, ComposerIconButton, ComposerShell } from "./Composer";
 export type {
+  ComposerGhostTextProps,
+  ComposerInputRenderContext,
+  ComposerLayout,
   ComposerProps,
+  ComposerShellProps,
   ComposerSlotContext,
   ComposerTrailingContext,
 } from "./Composer";

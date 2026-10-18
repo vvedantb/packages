@@ -6,7 +6,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | --- | --- |
 | `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
 | `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
-| `@vvedantb/ui/composer` | `Composer`, `ComposerIconButton` and the pure prediction helpers. |
+| `@vvedantb/ui/composer` | `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction` and the pure prediction helpers. |
 | `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
 | `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
@@ -63,6 +63,8 @@ import { Composer, ComposerIconButton } from "@vvedantb/ui"; // or "@vvedantb/ui
 | `streaming`, `onStop` | `false` | The stop button replaces send and calls `onStop`. Typing stays on, Enter does not submit. |
 | `disabled` | `false` | Disables the textarea and send. |
 | `placeholder` | `"Message"` | Also the textarea `aria-label`. |
+| `layout` | `"stacked"` | `"stacked"`: input above, footer bar with `plusMenu` left and `trailingActions` plus send or stop right. `"inline"`: one row with `plusMenu`, the input and the actions. Attachments stay above the row. |
+| `renderInput(ctx)` | none | Supplies your own input instead of the textarea. See Building blocks. |
 | `maxHeight` | `200` (px) | The textarea grows to this height, then scrolls. |
 | `autoFocus`, `className`, `textareaClassName` | none | `className` is the outer shell. `textareaClassName` is also applied to the ghost text mirror, so put padding and font classes there, not on the shell. |
 | `plusMenu` | none | Node, or `({ disabled }) => node`. Left of the footer. |
@@ -76,7 +78,53 @@ Keys: Enter sends, Shift+Enter adds a line, and nothing sends during IME composi
 
 Predictions skip drafts shorter than `predictionMinLength`, drafts whose last word starts with `@` or `/`, and drafts that match `/[.!?]\s*$/`. Each edit aborts the previous request, and a result for an older draft is dropped. Ghost text shows only while the caret is at the end of the draft, so Tab always appends. It does not insert at a caret in the middle of the text. A space joins the draft and the prediction when neither has whitespace at the join.
 
-The ref goes to the textarea. `ComposerIconButton` is a round icon-only ghost button for the slots. The pure helpers `shouldSkipComposerPrediction`, `joinComposerPrediction`, `nextComposerPredictionState`, `visibleComposerPrediction` and `acceptComposerPrediction`, and the `useComposerPrediction` hook, are exported for apps with their own textarea.
+The ref goes to the textarea. `ComposerIconButton` is a round icon-only ghost button for the slots. The pure helpers `shouldSkipComposerPrediction`, `joinComposerPrediction`, `nextComposerPredictionState`, `visibleComposerPrediction` and `acceptComposerPrediction`, and the `useComposerPrediction` hook, are exported for apps with their own input.
+
+### Building blocks
+
+`renderInput` swaps the textarea for your own input and keeps the shell, slots, send or stop and predictions. The context gives `value`, `onChange`, `onKeyDown`, `ghostText`, `acceptGhost`, `dismissGhost`, `inputRef`, `disabled`, `placeholder`, `streaming`, `maxHeight` and `textareaClassName`.
+
+```tsx
+<Composer
+  layout="inline"
+  getPrediction={getPrediction}
+  renderInput={(ctx) => (
+    <MyEditor
+      ref={ctx.inputRef}
+      data-composer-input=""
+      value={ctx.value}
+      onChange={ctx.onChange}
+      onKeyDown={ctx.onKeyDown}
+      ghostText={ctx.ghostText}
+    />
+  )}
+/>
+```
+
+Rules for a custom input:
+
+- `onKeyDown` handles Enter (calls `preventDefault`, then submits, never during IME composition), Tab (accepts the ghost text) and Esc (dismisses it). Shift+Enter is not handled: your editor decides what a newline does.
+- Autosize and the caret-at-end ghost gate apply to the default textarea only. With `renderInput`, predictions run whenever the composer is not disabled or streaming. You size the editor (use `maxHeight`) and decide when the caret allows ghost text, for example by ignoring `ghostText`.
+- Put the `data-composer-input` attribute on the editor so the shell shows the focus ring.
+- `ref` on `Composer` points at the default textarea only. Use `ctx.inputRef` for a custom input.
+
+To build without `Composer`, assemble the parts yourself. `useComposerPrediction` takes the draft string and reads no element. `ComposerGhostText` draws the draft invisibly, then the ghost text, so give it the same padding and font classes as your editor and place it under the editor.
+
+```tsx
+import { ComposerGhostText, ComposerShell, useComposerPrediction } from "@vvedantb/ui/composer";
+
+function MentionComposer({ draft, setDraft, send }: Props) {
+  const prediction = useComposerPrediction({ value: draft, enabled: true, getPrediction });
+  return (
+    <ComposerShell layout="inline" plusMenu={plus} canSend={draft.trim() !== ""} onSend={send}>
+      <ComposerGhostText value={draft} ghostText={prediction.ghost} className="px-2 py-1 text-sm leading-6" />
+      <Editor data-composer-input="" className="relative px-2 py-1 text-sm leading-6" onChange={setDraft} />
+    </ComposerShell>
+  );
+}
+```
+
+`ComposerShell` props: `layout`, `disabled`, `streaming`, `canSend`, `onSend`, `onStop`, `plusMenu`, `trailingActions`, `attachments`, `className` and `children` (the input region). In the shell the Enter, Tab and Esc keys are yours to wire when you do not use `Composer`.
 
 Fixture: `composer/examples/` (see its README). It has a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark.
 

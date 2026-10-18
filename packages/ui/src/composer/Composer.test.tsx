@@ -338,3 +338,153 @@ describe("Composer predictions", () => {
     expect(ghost().textContent).toBe(draft);
   });
 });
+
+describe("Composer layout", () => {
+  it("stacked is the default and has a footer below the input", async () => {
+    await mount(<Composer plusMenu={<button aria-label="Add" />} />);
+    const shell = document.querySelector("[data-slot=composer]")!;
+    expect(shell.getAttribute("data-layout")).toBe("stacked");
+    const footer = document.querySelector("[data-slot=composer-footer]")!;
+    expect(footer).not.toBeNull();
+    expect(footer.contains(textarea())).toBe(false);
+    expect(footer.contains(sendButton())).toBe(true);
+  });
+
+  it("inline has no footer and puts plus, input and send in one row", async () => {
+    await mount(
+      <Composer
+        layout="inline"
+        plusMenu={<button aria-label="Add" />}
+        trailingActions={<button aria-label="Mic" />}
+        attachments={<span>chip</span>}
+      />,
+    );
+    const shell = document.querySelector("[data-slot=composer]")!;
+    expect(shell.getAttribute("data-layout")).toBe("inline");
+    expect(document.querySelector("[data-slot=composer-footer]")).toBeNull();
+    const row = document.querySelector("[data-slot=composer-row]")!;
+    expect(row.contains(textarea())).toBe(true);
+    expect(row.contains(sendButton())).toBe(true);
+    expect(row.querySelector("[aria-label=Add]")).not.toBeNull();
+    expect(row.querySelector("[aria-label=Mic]")).not.toBeNull();
+    const attachments = document.querySelector("[data-slot=composer-attachments]")!;
+    expect(row.contains(attachments)).toBe(false);
+  });
+
+  it("inline shows stop while streaming", async () => {
+    await mount(<Composer layout="inline" streaming />);
+    expect(stopButton()).not.toBeNull();
+    expect(sendButton()).toBeNull();
+  });
+
+  it("inline still autosizes up to maxHeight", async () => {
+    await mount(<Composer layout="inline" maxHeight={50} defaultValue="a" />);
+    Object.defineProperty(textarea(), "scrollHeight", { configurable: true, value: 120 });
+    await type("a\nb\nc\nd");
+    expect(textarea().style.height).toBe("50px");
+  });
+});
+
+describe("Composer renderInput", () => {
+  const editable = () => document.querySelector("[data-testid=editor]") as HTMLElement;
+
+  function renderEditor(extra: Partial<ComposerProps> = {}) {
+    return (
+      <Composer
+        {...extra}
+        renderInput={(ctx) => (
+          <div
+            data-testid="editor"
+            data-composer-input=""
+            contentEditable
+            suppressContentEditableWarning
+            ref={ctx.inputRef as React.RefObject<HTMLDivElement>}
+            onKeyDown={ctx.onKeyDown}
+            onInput={(e) => ctx.onChange(e.currentTarget.textContent ?? "")}
+          >
+            {ctx.ghostText ? <span data-testid="ghost">{ctx.ghostText}</span> : null}
+          </div>
+        )}
+      />
+    );
+  }
+
+  async function pressOn(el: HTMLElement, key: string) {
+    const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+    await act(async () => {
+      el.dispatchEvent(event);
+    });
+    return event;
+  }
+
+  it("mounts the custom node and not the default textarea", async () => {
+    await mount(renderEditor());
+    expect(editable()).not.toBeNull();
+    expect(document.querySelector("textarea")).toBeNull();
+    expect(document.querySelector("[data-slot=composer-ghost]")).toBeNull();
+    expect(sendButton()).not.toBeNull();
+  });
+
+  it("passes value, disabled, placeholder and streaming in the context", async () => {
+    const seen: Array<Record<string, unknown>> = [];
+    await mount(
+      <Composer
+        defaultValue="hi"
+        placeholder="Say"
+        streaming
+        maxHeight={77}
+        renderInput={(ctx) => {
+          seen.push({ ...ctx });
+          return <div />;
+        }}
+      />,
+    );
+    const ctx = seen[seen.length - 1]!;
+    expect(ctx.value).toBe("hi");
+    expect(ctx.placeholder).toBe("Say");
+    expect(ctx.streaming).toBe(true);
+    expect(ctx.maxHeight).toBe(77);
+    expect(ctx.disabled).toBe(false);
+  });
+
+  it("Enter submits the draft through the context key handler", async () => {
+    const onSubmit = vi.fn();
+    await mount(renderEditor({ onSubmit, defaultValue: "hello" }));
+    const event = await pressOn(editable(), "Enter");
+    expect(event.defaultPrevented).toBe(true);
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith("hello");
+  });
+
+  it("Tab accepts ghost text and Esc dismisses it without a caret gate", async () => {
+    const onChange = vi.fn();
+    await mount(
+      renderEditor({
+        defaultValue: "I would like to ask",
+        onChange,
+        getPrediction: async () => "about the plan",
+        predictionDebounceMs: 0,
+      }),
+    );
+    await wait(1);
+    expect(document.querySelector("[data-testid=ghost]")!.textContent).toBe(" about the plan");
+    const esc = await pressOn(editable(), "Escape");
+    expect(esc.defaultPrevented).toBe(true);
+    expect(document.querySelector("[data-testid=ghost]")).toBeNull();
+  });
+
+  it("Tab appends the prediction", async () => {
+    const onChange = vi.fn();
+    await mount(
+      renderEditor({
+        defaultValue: "I would like to ask",
+        onChange,
+        getPrediction: async () => "about the plan",
+        predictionDebounceMs: 0,
+      }),
+    );
+    await wait(1);
+    const tab = await pressOn(editable(), "Tab");
+    expect(tab.defaultPrevented).toBe(true);
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("I would like to ask about the plan");
+  });
+});

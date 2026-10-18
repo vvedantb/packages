@@ -14,6 +14,29 @@ import { useComposerPrediction } from "./useComposerPrediction";
 
 export type ComposerSlotContext = { disabled: boolean };
 export type ComposerTrailingContext = { disabled: boolean; streaming: boolean };
+export type ComposerLayout = "stacked" | "inline";
+
+export type ComposerInputRenderContext = {
+  value: string;
+  onChange: (value: string) => void;
+  /**
+   * Shared key handler. Enter submits (preventDefault, not while composing),
+   * Tab accepts the ghost text, Esc dismisses it. It ignores IME composition.
+   * Shift+Enter is not handled: the caller decides what a newline does.
+   */
+  onKeyDown: (event: React.KeyboardEvent) => void;
+  /** Visible ghost text including the joining space, or `""`. */
+  ghostText: string;
+  acceptGhost: () => void;
+  dismissGhost: () => void;
+  /** Attach to the input element (textarea or contenteditable root). */
+  inputRef: React.RefObject<HTMLElement | null>;
+  disabled: boolean;
+  placeholder: string;
+  streaming: boolean;
+  maxHeight: number;
+  textareaClassName?: string;
+};
 
 export type ComposerProps = {
   /** Controlled value. Omit it for an uncontrolled composer. */
@@ -35,6 +58,15 @@ export type ComposerProps = {
   autoFocus?: boolean;
   /** Classes for the outer shell. */
   className?: string;
+  /** `"stacked"` (default): input above, footer bar below. `"inline"`: one row with plus, input and actions. */
+  layout?: ComposerLayout;
+  /**
+   * Supplies your own input (for example a contenteditable editor) in place of
+   * the textarea. The shell, slots, send/stop and predictions stay. Autosize
+   * and the caret-at-end gate apply to the default textarea only: the caller
+   * sizes the editor and decides when ghost text is valid.
+   */
+  renderInput?: (ctx: ComposerInputRenderContext) => React.ReactNode;
   /** Classes for the textarea. Also applied to the ghost text mirror, so keep padding and font here. */
   textareaClassName?: string;
 
@@ -61,7 +93,9 @@ export type ComposerProps = {
 const DEFAULT_MAX_HEIGHT = 200;
 
 // The textarea and its ghost text mirror must share these metrics.
-const TEXT_METRICS = "block w-full px-4 pt-3.5 pb-1 text-sm leading-6 break-words whitespace-pre-wrap";
+const TEXT_METRICS_BASE = "block w-full text-sm leading-6 break-words whitespace-pre-wrap";
+const textMetrics = (layout: ComposerLayout) =>
+  cn(TEXT_METRICS_BASE, layout === "inline" ? "px-2 py-1" : "px-4 pt-3.5 pb-1");
 
 function isCaretAtEnd(el: HTMLTextAreaElement): boolean {
   return el.selectionStart === el.selectionEnd && el.selectionEnd === el.value.length;
@@ -83,6 +117,150 @@ const ComposerIconButton = React.forwardRef<
 ));
 ComposerIconButton.displayName = "ComposerIconButton";
 
+
+type SlotNode<C> = React.ReactNode | ((ctx: C) => React.ReactNode);
+
+export type ComposerShellProps = {
+  layout?: ComposerLayout;
+  disabled?: boolean;
+  streaming?: boolean;
+  /** Enables the send button. */
+  canSend?: boolean;
+  onSend?: () => void;
+  onStop?: () => void;
+  plusMenu?: SlotNode<ComposerSlotContext>;
+  trailingActions?: SlotNode<ComposerTrailingContext>;
+  attachments?: React.ReactNode;
+  className?: string;
+  /** The input region: a textarea, a contenteditable, plus any ghost overlay. */
+  children?: React.ReactNode;
+};
+
+/**
+ * Outer chrome of the composer: border, field tokens, focus ring, attachments,
+ * plus-menu and trailing slots, and send or stop. Put your input in `children`.
+ * The focus ring follows any descendant with the `data-composer-input`
+ * attribute that matches `:focus-visible`.
+ */
+function ComposerShell({
+  layout = "stacked",
+  disabled = false,
+  streaming = false,
+  canSend = false,
+  onSend,
+  onStop,
+  plusMenu,
+  trailingActions,
+  attachments,
+  className,
+  children,
+}: ComposerShellProps) {
+  const plus = typeof plusMenu === "function" ? plusMenu({ disabled }) : plusMenu;
+  const trailing =
+    typeof trailingActions === "function"
+      ? trailingActions({ disabled, streaming })
+      : trailingActions;
+  const inline = layout === "inline";
+
+  const action = streaming ? (
+    <ComposerIconButton
+      variant="default"
+      aria-label="Stop generating"
+      data-slot="composer-stop"
+      onClick={() => onStop?.()}
+    >
+      <IconPlayerStop className="size-4" aria-hidden="true" />
+    </ComposerIconButton>
+  ) : (
+    <ComposerIconButton
+      variant="default"
+      aria-label="Send message"
+      data-slot="composer-send"
+      disabled={!canSend}
+      onClick={() => onSend?.()}
+    >
+      <IconArrowUp className="size-4" aria-hidden="true" />
+    </ComposerIconButton>
+  );
+
+  return (
+    <div
+      data-slot="composer"
+      data-layout={layout}
+      data-disabled={disabled || undefined}
+      data-streaming={streaming || undefined}
+      className={cn(
+        "group/composer relative flex w-full min-w-0 flex-col rounded-field border border-border bg-field-background text-sm transition-[border-color,box-shadow] duration-200 ease-smooth",
+        "has-[[data-composer-input]:focus-visible]:border-focus-border has-[[data-composer-input]:focus-visible]:ring-2 has-[[data-composer-input]:focus-visible]:ring-focus-ring",
+        disabled && "opacity-60",
+        className,
+      )}
+    >
+      {attachments ? (
+        <div data-slot="composer-attachments" className="flex flex-wrap items-center gap-2 px-3 pt-3">
+          {attachments}
+        </div>
+      ) : null}
+
+      {inline ? (
+        <div data-slot="composer-row" className="flex min-w-0 items-end gap-1 p-1.5">
+          {plus ? <div className="flex shrink-0 items-center gap-1">{plus}</div> : null}
+          <div data-slot="composer-input-region" className="relative min-w-0 flex-1">
+            {children}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {trailing}
+            {action}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div data-slot="composer-input-region" className="relative min-w-0">
+            {children}
+          </div>
+          <div data-slot="composer-footer" className="flex items-center gap-1 px-2 pt-1 pb-2">
+            {plus ? <div className="flex items-center gap-1">{plus}</div> : null}
+            <div className="ml-auto flex items-center gap-1">
+              {trailing}
+              {action}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export type ComposerGhostTextProps = {
+  value: string;
+  ghostText: string;
+  className?: string;
+};
+
+/**
+ * Input-agnostic ghost overlay. It renders the draft invisibly, then the ghost
+ * text, so the ghost lands after the last character. Position it absolutely
+ * under (or over) your input and give it the same padding and font classes.
+ */
+const ComposerGhostText = React.forwardRef<HTMLDivElement, ComposerGhostTextProps>(
+  function ComposerGhostText({ value, ghostText, className }, ref) {
+    return (
+      <div
+        ref={ref}
+        aria-hidden="true"
+        data-slot="composer-ghost"
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-y-auto [scrollbar-color:transparent_transparent] [&::-webkit-scrollbar]:bg-transparent",
+          className,
+        )}
+      >
+        <span className="invisible">{value}</span>
+        {ghostText ? <span className="text-muted-foreground/50">{ghostText}</span> : null}
+      </div>
+    );
+  },
+);
+
 /**
  * Chat composer: autosizing textarea, plus-menu and action slots, send/stop
  * button and optional ghost-text predictions. The ref points at the textarea.
@@ -101,6 +279,8 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
     autoFocus,
     className,
     textareaClassName,
+    layout = "stacked",
+    renderInput,
     plusMenu,
     trailingActions,
     attachments,
@@ -116,6 +296,8 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
 
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const mirrorRef = React.useRef<HTMLDivElement | null>(null);
+  const customInputRef = React.useRef<HTMLElement | null>(null);
+  const custom = renderInput !== undefined;
   const setRefs = React.useCallback(
     (node: HTMLTextAreaElement | null) => {
       textareaRef.current = node;
@@ -137,7 +319,7 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
   const [caretAtEnd, setCaretAtEnd] = React.useState(true);
   const prediction = useComposerPrediction({
     value,
-    enabled: caretAtEnd && !disabled && !streaming,
+    enabled: (custom || caretAtEnd) && !disabled && !streaming,
     getPrediction,
     debounceMs: predictionDebounceMs,
     minLength: predictionMinLength,
@@ -147,12 +329,12 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
   // Autosize: grow with the content up to `maxHeight`, then scroll.
   React.useLayoutEffect(() => {
     const el = textareaRef.current;
-    if (!el) return;
+    if (custom || !el) return;
     el.style.height = "auto";
     const full = el.scrollHeight;
     el.style.height = `${Math.min(full, maxHeight)}px`;
     el.style.overflowY = full > maxHeight ? "auto" : "hidden";
-  }, [value, maxHeight]);
+  }, [value, maxHeight, custom]);
 
   const syncScroll = () => {
     if (mirrorRef.current && textareaRef.current) {
@@ -178,16 +360,23 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
     }
   };
 
-  const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const acceptGhost = () => {
+    if (!ghost) return;
+    prediction.clear();
+    setValue(acceptComposerPrediction(value, ghost));
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
     const el = event.currentTarget;
     const native = event.nativeEvent;
     if (native.isComposing || event.keyCode === 229) return;
 
     if (event.key === "Tab" && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
-      if (ghost && isCaretAtEnd(el)) {
+      // The caret gate applies to the default textarea only. A custom input owns it.
+      const atEnd = custom || !(el instanceof HTMLTextAreaElement) || isCaretAtEnd(el);
+      if (ghost && atEnd) {
         event.preventDefault();
-        prediction.clear();
-        setValue(acceptComposerPrediction(value, ghost));
+        acceptGhost();
       }
       return;
     }
@@ -206,99 +395,75 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
 
   const updateCaret = (el: HTMLTextAreaElement) => setCaretAtEnd(isCaretAtEnd(el));
 
-  const ctx = { disabled };
-  const plus = typeof plusMenu === "function" ? plusMenu(ctx) : plusMenu;
-  const trailing =
-    typeof trailingActions === "function"
-      ? trailingActions({ disabled, streaming })
-      : trailingActions;
+  const metrics = textMetrics(layout);
+
+  const input = renderInput ? (
+    renderInput({
+      value,
+      onChange: setValue,
+      onKeyDown,
+      ghostText: ghost,
+      acceptGhost,
+      dismissGhost: prediction.dismiss,
+      inputRef: customInputRef,
+      disabled,
+      placeholder,
+      streaming,
+      maxHeight,
+      textareaClassName,
+    })
+  ) : (
+    <>
+      <ComposerGhostText
+        ref={mirrorRef}
+        value={value}
+        ghostText={ghost}
+        className={cn(metrics, textareaClassName)}
+      />
+      <textarea
+        ref={setRefs}
+        data-slot="composer-textarea"
+        data-composer-input=""
+        rows={1}
+        value={value}
+        placeholder={placeholder}
+        aria-label={placeholder}
+        disabled={disabled}
+        autoFocus={autoFocus}
+        onChange={(event) => {
+          setValue(event.target.value);
+          updateCaret(event.target);
+        }}
+        onKeyDown={onKeyDown}
+        onSelect={(event) => updateCaret(event.currentTarget)}
+        onKeyUp={(event) => updateCaret(event.currentTarget)}
+        onClick={(event) => updateCaret(event.currentTarget)}
+        onScroll={syncScroll}
+        className={cn(
+          metrics,
+          "relative resize-none overflow-y-hidden border-0 bg-transparent text-foreground outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed",
+          textareaClassName,
+        )}
+      />
+    </>
+  );
 
   return (
-    <div
-      data-slot="composer"
-      data-disabled={disabled || undefined}
-      data-streaming={streaming || undefined}
-      className={cn(
-        "group/composer relative flex w-full min-w-0 flex-col rounded-field border border-border bg-field-background text-sm transition-[border-color,box-shadow] duration-200 ease-smooth",
-        "has-[textarea:focus-visible]:border-focus-border has-[textarea:focus-visible]:ring-2 has-[textarea:focus-visible]:ring-focus-ring",
-        disabled && "opacity-60",
-        className,
-      )}
+    <ComposerShell
+      layout={layout}
+      disabled={disabled}
+      streaming={streaming}
+      canSend={canSend}
+      onSend={submit}
+      onStop={onStop}
+      plusMenu={plusMenu}
+      trailingActions={trailingActions}
+      attachments={attachments}
+      className={className}
     >
-      {attachments ? (
-        <div data-slot="composer-attachments" className="flex flex-wrap items-center gap-2 px-3 pt-3">
-          {attachments}
-        </div>
-      ) : null}
-
-      <div className="relative min-w-0">
-        <div
-          ref={mirrorRef}
-          aria-hidden="true"
-          data-slot="composer-ghost"
-          className={cn(
-            TEXT_METRICS,
-            "pointer-events-none absolute inset-0 overflow-y-auto [scrollbar-color:transparent_transparent] [&::-webkit-scrollbar]:bg-transparent",
-            textareaClassName,
-          )}
-        >
-          <span className="invisible">{value}</span>
-          {ghost ? <span className="text-muted-foreground/50">{ghost}</span> : null}
-        </div>
-        <textarea
-          ref={setRefs}
-          data-slot="composer-textarea"
-          rows={1}
-          value={value}
-          placeholder={placeholder}
-          aria-label={placeholder}
-          disabled={disabled}
-          autoFocus={autoFocus}
-          onChange={(event) => {
-            setValue(event.target.value);
-            updateCaret(event.target);
-          }}
-          onKeyDown={onKeyDown}
-          onSelect={(event) => updateCaret(event.currentTarget)}
-          onKeyUp={(event) => updateCaret(event.currentTarget)}
-          onClick={(event) => updateCaret(event.currentTarget)}
-          onScroll={syncScroll}
-          className={cn(
-            TEXT_METRICS,
-            "relative resize-none overflow-y-hidden border-0 bg-transparent text-foreground outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed",
-            textareaClassName,
-          )}
-        />
-      </div>
-
-      <div data-slot="composer-footer" className="flex items-center gap-1 px-2 pt-1 pb-2">
-        {plus ? <div className="flex items-center gap-1">{plus}</div> : null}
-        <div className="ml-auto flex items-center gap-1">
-          {trailing}
-          {streaming ? (
-            <ComposerIconButton
-              variant="default"
-              aria-label="Stop generating"
-              data-slot="composer-stop"
-              onClick={() => onStop?.()}
-            >
-              <IconPlayerStop className="size-4" aria-hidden="true" />
-            </ComposerIconButton>
-          ) : (
-            <ComposerIconButton
-              variant="default"
-              aria-label="Send message"
-              data-slot="composer-send"
-              disabled={!canSend}
-              onClick={submit}
-            >
-              <IconArrowUp className="size-4" aria-hidden="true" />
-            </ComposerIconButton>
-          )}
-        </div>
-      </div>
-    </div>
+      {input}
+    </ComposerShell>
   );
 });
 
-export { Composer, ComposerIconButton };
+export { Composer, ComposerGhostText, ComposerIconButton, ComposerShell };
