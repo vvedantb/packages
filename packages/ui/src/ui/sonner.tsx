@@ -26,8 +26,13 @@ type ToastClassNames = NonNullable<
 type ToasterStyle = CSSProperties & Record<`--${string}`, string>;
 
 type SonnerToasterOptions = {
-  /** `"lg"` (default) uses `rounded-lg`. `"surface"` uses `rounded-surface`. */
-  toastRadius?: "lg" | "surface";
+  /**
+   * `"lg"` (default) uses `rounded-lg`. `"surface"` uses `rounded-surface`.
+   * `"control"` uses `rounded-field`, the radius of inputs and selects.
+   */
+  toastRadius?: "lg" | "surface" | "control";
+  /** `"default"` keeps the current padding and text size. `"compact"` tightens padding, gap and text. */
+  density?: "default" | "compact";
   /** `"default"` keeps sonner's icons. `"filled24"` uses 24px filled icons. */
   toastIcons?: "default" | "filled24";
   /**
@@ -48,22 +53,31 @@ const hoverChipCloseButtonClassName =
 const defaultCloseButtonClassName =
   "rounded-lg bg-default px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-default/78";
 
+const toastRadiusClasses = {
+  lg: "rounded-lg",
+  surface: "rounded-surface",
+  control: "rounded-field",
+} as const;
+
 /** Default `classNames`, with the opt-in variants applied. No options gives the 0.2.1 defaults. */
 function createToasterClassNames({
   toastRadius = "lg",
+  density = "default",
   closeButtonStyle = "default",
   descriptionMuted = false,
 }: Pick<
   SonnerToasterOptions,
-  "toastRadius" | "closeButtonStyle" | "descriptionMuted"
+  "toastRadius" | "density" | "closeButtonStyle" | "descriptionMuted"
 > = {}): ToastClassNames {
-  const radius = toastRadius === "surface" ? "rounded-surface" : "rounded-lg";
+  const radius = toastRadiusClasses[toastRadius];
+  const compact = density === "compact";
+  const descriptionSize = compact ? "text-xs" : "text-[13px]";
   return {
-    toast: `group toast glass-panel-strong flex w-full items-center gap-3 ${radius} px-4 py-3 text-sm text-foreground smooth-shadow-ring-md`,
+    toast: `group toast glass-panel-strong flex w-full items-center ${compact ? "gap-2" : "gap-3"} ${radius} ${compact ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm"} text-foreground smooth-shadow-ring-md`,
     title: "font-medium leading-snug",
     description: descriptionMuted
-      ? "text-[13px] leading-snug text-muted-foreground!"
-      : "text-[13px] leading-snug text-muted-foreground",
+      ? `${descriptionSize} leading-snug text-muted-foreground!`
+      : `${descriptionSize} leading-snug text-muted-foreground`,
     actionButton:
       "rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90",
     cancelButton:
@@ -129,6 +143,7 @@ function mergeToastOptions(
 
 function SonnerToaster({
   toastRadius,
+  density,
   toastIcons = "default",
   closeButtonStyle = "default",
   sonnerVars = false,
@@ -157,6 +172,7 @@ function SonnerToaster({
           unstyled: true,
           classNames: createToasterClassNames({
             toastRadius,
+            density,
             closeButtonStyle,
             descriptionMuted,
           }),

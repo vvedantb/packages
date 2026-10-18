@@ -5,6 +5,8 @@ Shared React 19 web UI. Source-exported: no build step.
 | Import | What it is |
 | --- | --- |
 | `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
+| `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
+| `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
 | `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
 | `@vvedantb/ui/app` | Alt-click confirm skip, update watcher, settings chrome, `useStableAuth`. See `app/README.md` in the repository. |
@@ -29,6 +31,9 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 ```
 
 - `playChime()`: soft rising two-note chime (WebAudio). One shared `AudioContext`, created on first use. It is a no-op on the server and when autoplay blocks audio. Calls less than 1 second apart play once.
+- `playTone(tone | tones)`: plays `{ frequency, startOffsetS?, durationS?, peakGain?, type? }` through the same floor.
+- Audio floor: every package sound shares one 1 second minimum gap. Route your own sounds through it with `withAudioFloor(() => play())` or `if (tryAcquireAudioFloor()) play()`.
+- These are also available from `@vvedantb/ui/audio`, which does not load the rest of the root barrel.
 - `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
 
 ## Sessions hover card
@@ -45,13 +50,13 @@ import { SessionsHoverCard } from "@vvedantb/ui/shell";
 </SessionsHoverCard>
 ```
 
-`children` is the trigger. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
+`children` is the trigger. It is rendered with `asChild` by default, so it keeps its own handlers (such as a context menu). Extra props and the ref go to it. Use `asChild={false}` for a default trigger element. The content portals to `document.body` by default, so `overflow:hidden` ancestors do not clip it. Pass `portal={false}` to opt out. `surface` is `"overlay"` (default), `"surface"` (`rounded-surface`) or `"glass"` (`glass-panel-strong`, `rounded-surface`). `className` merges over the surface without `!`. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
 
 ## Toaster
 
 ```tsx
 import { toast } from "sonner";
-import { SonnerToaster } from "@vvedantb/ui";
+import { SonnerToaster } from "@vvedantb/ui"; // or "@vvedantb/ui/sonner"
 
 <SonnerToaster
   theme={theme}
@@ -73,7 +78,8 @@ Opt-in props (all default to the current look):
 
 | Prop | Values | Effect |
 | --- | --- | --- |
-| `toastRadius` | `"lg"` (default), `"surface"` | `rounded-lg` or `rounded-surface` (from `tokens/css/utilities.css`). |
+| `toastRadius` | `"lg"` (default), `"surface"`, `"control"` | `rounded-lg`, `rounded-surface` (from `tokens/css/utilities.css`) or `rounded-field` (the input radius). |
+| `density` | `"default"`, `"compact"` | Current padding and text, or `gap-2 px-3 py-2 text-xs` with `text-xs` descriptions. |
 | `toastIcons` | `"default"`, `"filled24"` | Sonner icons or 24px filled success, info, warning and error icons, a matching loader and a 14px close cross. |
 | `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |
 | `sonnerVars` | `false` (default), `true` | Sets `--normal-bg`, `--normal-border`, `--normal-text`, `--normal-bg-hover` and `--normal-border-hover` from `--color-card`, `--color-border`, `--color-foreground` and `--color-muted`, and `font-family: inherit`. |

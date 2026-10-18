@@ -1,6 +1,6 @@
 # sessions-hover-card fixture
 
-Renders `SessionsHoverCard` from `@vvedantb/ui/shell` forced open, with header, body and footer slots. Two pages, one for each style mode:
+Renders `SessionsHoverCard` from `@vvedantb/ui/shell` forced open, with header, body and footer slots. The trigger sits in an `overflow:hidden` box, and the card portals by default, so it is not clipped. Two pages, one for each style mode:
 
 | Page | Stylesheet |
 | --- | --- |

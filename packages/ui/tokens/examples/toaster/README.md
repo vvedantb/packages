@@ -15,4 +15,4 @@ Run it from this folder (it is not a workspace member, and React resolves from t
 pnpm install --ignore-workspace && pnpm dev
 ```
 
-Open the printed URL plus `/tokens.html` or `/compat.html`. Add `?theme=dark` for dark mode, or use "Toggle theme". Hover the toast to see the close chip. `Fixture.tsx` is not part of the package typecheck.
+Open the printed URL plus `/tokens.html` or `/compat.html`. Add `?variant=compact` for the compact density with `toastRadius="control"`. Add `?theme=dark` for dark mode (combine with `&`), or use "Toggle theme". Hover the toast to see the close chip. `Fixture.tsx` is not part of the package typecheck.

@@ -1,17 +1,49 @@
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../../src/ui/hover-card";
+import { forwardRef, useEffect, useState } from "react";
+import type { ComponentPropsWithoutRef, ComponentRef, ReactNode } from "react";
+import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
+import { HoverCard, HoverCardTrigger } from "../../src/ui/hover-card";
+import { floatingSurfaceAnimateClass, floatingSurfaceClass } from "../../src/ui/_menu-classes";
 import { cn } from "../../src/utils/cn";
 
 export type SessionsHoverCardContext = { open: boolean };
 
-export type SessionsHoverCardProps = {
-  /** The element that triggers the card, such as a list row. Rendered with `asChild`. */
+export type SessionsHoverCardSurface = "overlay" | "surface" | "glass";
+
+/**
+ * Surface classes. Only `overlay` carries the shared floating surface, so the
+ * others need no `!` overrides, and `className` merges over all of them.
+ */
+const surfaceClasses: Record<SessionsHoverCardSurface, string> = {
+  overlay: floatingSurfaceClass,
+  surface: "rounded-surface bg-overlay text-overlay-foreground smooth-shadow-ring-lg",
+  glass: "rounded-surface glass-panel-strong text-foreground smooth-shadow-ring-lg",
+};
+
+export type SessionsHoverCardProps = Omit<
+  ComponentPropsWithoutRef<typeof HoverCardTrigger>,
+  "className" | "children"
+> & {
+  /**
+   * The trigger. With `asChild` (default) it is the element that triggers the
+   * card, such as a list row. Trigger props and the ref go to that element,
+   * which keeps its own handlers. With `asChild={false}` the children render
+   * inside a default trigger element.
+   */
   children: ReactNode;
+  /** Default `true`. */
+  asChild?: boolean;
+  /**
+   * Render the content in a portal on `document.body`, so `overflow:hidden`
+   * ancestors do not clip it. Default `true`. Use `false` to keep the content
+   * in place in the DOM.
+   */
+  portal?: boolean;
+  /**
+   * `"overlay"` (default): floating overlay, `rounded-lg`. `"surface"`: same
+   * fill with `rounded-surface`. `"glass"`: `glass-panel-strong` with
+   * `rounded-surface`.
+   */
+  surface?: SessionsHoverCardSurface;
   header?: ReactNode;
   /**
    * Body slot. A function runs only while the card is open, so it can start
@@ -34,7 +66,7 @@ export type SessionsHoverCardProps = {
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
   sideOffset?: number;
-  /** Merged over the default `w-64 p-3`. */
+  /** Merged over the default `w-64 p-3` and the surface classes. */
   className?: string;
 };
 
@@ -86,8 +118,14 @@ function RenderBody({
  * position, width and padding, and gives header, body and footer slots. The
  * app supplies the content.
  */
-export function SessionsHoverCard({
+export const SessionsHoverCard = forwardRef<
+  ComponentRef<typeof HoverCardTrigger>,
+  SessionsHoverCardProps
+>(function SessionsHoverCard({
   children,
+  asChild = true,
+  portal = true,
+  surface = "overlay",
   header,
   body,
   loadContent,
@@ -102,7 +140,8 @@ export function SessionsHoverCard({
   align = "start",
   sideOffset = 8,
   className,
-}: SessionsHoverCardProps) {
+  ...triggerProps
+}, ref) {
   const [openState, setOpenState] = useState(defaultOpen);
   const open = openProp ?? openState;
 
@@ -119,6 +158,31 @@ export function SessionsHoverCard({
     body
   );
 
+  const content = (
+    <HoverCardPrimitive.Content
+      side={side}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 outline-none max-sm:max-h-[85dvh] max-sm:max-w-[calc(100vw-2rem)] max-sm:overflow-y-auto",
+        surfaceClasses[surface],
+        floatingSurfaceAnimateClass,
+        "w-64 p-3",
+        className,
+      )}
+    >
+      {header ? (
+        <div className="mb-2 text-sm font-medium text-foreground">{header}</div>
+      ) : null}
+      {bodyNode != null ? (
+        <div className="text-sm text-muted-foreground">{bodyNode}</div>
+      ) : null}
+      {footer ? (
+        <div className="mt-2 text-xs text-muted-foreground">{footer}</div>
+      ) : null}
+    </HoverCardPrimitive.Content>
+  );
+
   return (
     <HoverCard
       open={open}
@@ -126,23 +190,10 @@ export function SessionsHoverCard({
       openDelay={openDelay}
       closeDelay={closeDelay}
     >
-      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
-      <HoverCardContent
-        side={side}
-        align={align}
-        sideOffset={sideOffset}
-        className={cn("w-64 p-3", className)}
-      >
-        {header ? (
-          <div className="mb-2 text-sm font-medium text-foreground">{header}</div>
-        ) : null}
-        {bodyNode != null ? (
-          <div className="text-sm text-muted-foreground">{bodyNode}</div>
-        ) : null}
-        {footer ? (
-          <div className="mt-2 text-xs text-muted-foreground">{footer}</div>
-        ) : null}
-      </HoverCardContent>
+      <HoverCardTrigger ref={ref} asChild={asChild} {...triggerProps}>
+        {children}
+      </HoverCardTrigger>
+      {portal ? <HoverCardPrimitive.Portal>{content}</HoverCardPrimitive.Portal> : content}
     </HoverCard>
   );
-}
+});

@@ -7,6 +7,10 @@ function initialDark(): boolean {
   return new URLSearchParams(window.location.search).get("theme") === "dark";
 }
 
+const compact =
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).get("variant") === "compact";
+
 function fire() {
   toast.success("Changes saved", {
     description: "Your settings were updated and will apply to new sessions.",
@@ -42,7 +46,8 @@ export function Fixture() {
       </main>
       <SonnerToaster
         theme={dark ? "dark" : "light"}
-        toastRadius="surface"
+        toastRadius={compact ? "control" : "surface"}
+        density={compact ? "compact" : "default"}
         toastIcons="filled24"
         closeButtonStyle="hoverChip"
         sonnerVars

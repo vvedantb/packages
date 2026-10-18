@@ -8,4 +8,5 @@ export { SessionsHoverCard } from "./SessionsHoverCard.js";
 export type {
   SessionsHoverCardContext,
   SessionsHoverCardProps,
+  SessionsHoverCardSurface,
 } from "./SessionsHoverCard.js";

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from "react";
+import { act, createRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SessionsHoverCard } from "./SessionsHoverCard";
@@ -75,5 +75,87 @@ describe("SessionsHoverCard", () => {
     expect(document.body.textContent).toContain("open=true");
     expect(loadContent).toHaveBeenCalledTimes(1);
     expect(document.body.textContent).toContain("Loaded preview");
+  });
+
+  it("portals the content to document.body by default", async () => {
+    await mount(
+      <div id="clip" style={{ overflow: "hidden" }}>
+        <SessionsHoverCard open body="Body text">
+          <button type="button">Row</button>
+        </SessionsHoverCard>
+      </div>,
+    );
+    const content = document.querySelector("[data-radix-popper-content-wrapper]");
+    expect(content).not.toBeNull();
+    expect(document.getElementById("clip")!.contains(content)).toBe(false);
+    expect(document.body.textContent).toContain("Body text");
+  });
+
+  it("keeps the content in place with portal={false}", async () => {
+    await mount(
+      <div id="clip" style={{ overflow: "hidden" }}>
+        <SessionsHoverCard open portal={false} body="Body text">
+          <button type="button">Row</button>
+        </SessionsHoverCard>
+      </div>,
+    );
+    const content = document.querySelector("[data-radix-popper-content-wrapper]");
+    expect(document.getElementById("clip")!.contains(content)).toBe(true);
+  });
+
+  it("swaps the surface without keeping the default one", async () => {
+    await mount(
+      <>
+        <SessionsHoverCard open surface="glass" body="G" className="p-5">
+          <button type="button">A</button>
+        </SessionsHoverCard>
+      </>,
+    );
+    const card = document.querySelector("[data-state=open][data-side]") as HTMLElement;
+    expect(card.className).toContain("glass-panel-strong");
+    expect(card.className).toContain("rounded-surface");
+    expect(card.className).not.toContain("bg-overlay");
+    expect(card.className).not.toContain("rounded-lg");
+    expect(card.className).toContain("p-5");
+    expect(card.className).not.toContain("p-3");
+  });
+
+  it("uses the floating overlay surface by default", async () => {
+    await mount(
+      <SessionsHoverCard open body="B">
+        <button type="button">A</button>
+      </SessionsHoverCard>,
+    );
+    const card = document.querySelector("[data-state=open][data-side]") as HTMLElement;
+    expect(card.className).toContain("bg-overlay");
+    expect(card.className).toContain("rounded-lg");
+  });
+
+  it("forwards the ref and props to the child trigger and keeps its handlers", async () => {
+    const ref = createRef<HTMLButtonElement>();
+    const onClick = vi.fn();
+    await mount(
+      <SessionsHoverCard ref={ref as never} data-testid="row" body="B">
+        <button type="button" onClick={onClick}>
+          Row
+        </button>
+      </SessionsHoverCard>,
+    );
+    const button = document.querySelector("button") as HTMLButtonElement;
+    expect(ref.current).toBe(button);
+    expect(button.getAttribute("data-testid")).toBe("row");
+    await act(async () => button.click());
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders its own trigger element with asChild={false}", async () => {
+    await mount(
+      <SessionsHoverCard asChild={false} body="B">
+        <span>Row</span>
+      </SessionsHoverCard>,
+    );
+    const trigger = document.querySelector("[data-state]") as HTMLElement;
+    expect(trigger.tagName).toBe("A");
+    expect(trigger.textContent).toBe("Row");
   });
 });
