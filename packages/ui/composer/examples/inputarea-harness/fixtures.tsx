@@ -16,9 +16,9 @@ const words = (n: number) => Array.from({ length: n }, () => "word").join(" ");
 export const texts: Record<string, string> = {
   empty: "",
   short: "Summarise the notes",
-  "just before wrap": words(8),
-  "wraps to 2 lines": words(18),
-  "wraps to 3 lines": words(30),
+  "just before wrap": words(12),
+  "wraps to 2 lines": words(28),
+  "wraps to 3 lines": words(48),
 };
 export const chipSets: Record<string, string[]> = {
   "0 chips": [],

@@ -134,7 +134,8 @@ describe("InputArea", () => {
       const host = chipEl().closest("[data-composer-chips-inline]") as HTMLElement;
       expect(host).not.toBeNull();
       expect(host.getAttribute("contenteditable")).toBe("false");
-      expect(host.className).toContain("inline-flex");
+      // `contents` so each chip is an atom in the editor flow (not one flex box).
+      expect(host.className).toContain("contents");
       expect(editor().contains(host)).toBe(true);
       expect(editor().getAttribute("contenteditable")).toBe("true");
       expect(host.parentElement).toBe(editor());

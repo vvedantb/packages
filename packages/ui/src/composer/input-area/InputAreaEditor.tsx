@@ -19,8 +19,10 @@ export const CHIPS_HOST_ATTR = "data-composer-chips-inline";
 export const INLINE_EDITOR_CLASS =
   "relative block w-full cursor-text whitespace-pre-wrap wrap-break-word bg-transparent outline-hidden data-empty:after:pointer-events-none data-empty:after:select-none data-empty:after:text-muted-foreground data-empty:after:content-[attr(data-placeholder)] data-suggestion:after:pointer-events-none data-suggestion:after:select-none data-suggestion:after:text-muted-foreground/50 data-suggestion:after:content-[attr(data-suggestion)]";
 
-const CHIPS_HOST_CLASS =
-  "mr-1.5 inline-flex max-w-full flex-wrap items-center gap-1.5 align-middle empty:hidden";
+// `contents` so each chip is an inline atom in the editor's own flow (same as
+// session-composer chip spans). A wrapping flex host becomes one box and puts
+// the text in a column beside it.
+const CHIPS_HOST_CLASS = "contents empty:hidden [&>*]:mr-1.5";
 
 /** Reads the plain text of the editor. Skips the chips host. */
 export function extractEditorText(root: HTMLElement): string {

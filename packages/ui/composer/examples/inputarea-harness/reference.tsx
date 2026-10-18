@@ -19,7 +19,7 @@ const BUTTON =
 
 function Reference({ names, text }: { names: string[]; text: string }) {
   // Approximate wrap threshold for the static reference only.
-  const expanded = text.length > 36 - names.length * 8 || text.includes("\n");
+  const expanded = text.length > 52 - names.length * 10 || text.includes("\n");
   const editor = (
     <div
       contentEditable
@@ -27,10 +27,7 @@ function Reference({ names, text }: { names: string[]; text: string }) {
       className={expanded ? EXPANDED_EDITOR : COMPACT_EDITOR}
     >
       {names.length ? (
-        <span
-          contentEditable={false}
-          className="mr-1.5 inline-flex max-w-full flex-wrap items-center gap-1.5 align-middle"
-        >
+        <span contentEditable={false} className="contents [&>*]:mr-1.5">
           {names.map((n) => (
             <span key={n} className={chipClass}>
               /{n}
@@ -75,13 +72,13 @@ function Column({ theme }: { theme: "light" | "dark" }) {
                 {cLabel} / {tLabel}
               </p>
               <div className="grid grid-cols-2 gap-4">
-                <div className="max-w-md">
+                <div className="min-w-0">
                   <p className="mb-1 text-[10px] uppercase text-muted-foreground">
                     Reference
                   </p>
                   <Reference names={names} text={text} />
                 </div>
-                <div className="max-w-md">
+                <div className="min-w-0">
                   <p className="mb-1 text-[10px] uppercase text-muted-foreground">
                     InputArea
                   </p>
