@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Toaster, type ToasterProps } from "sonner";
 import { filledToastIcons } from "./sonner-icons";
 import "./sonner.css";
@@ -45,10 +45,22 @@ type SonnerToasterOptions = {
   sonnerVars?: boolean;
   /** When true, descriptions use `text-muted-foreground!` so sonner's dark rule cannot win. */
   descriptionMuted?: boolean;
+  /** `"snug"` (default) keeps `leading-snug`. `"5"` uses `leading-5` (20px at `text-sm`). */
+  titleLeading?: "snug" | "5";
+  /** Custom loading icon. Merged into `icons`. A caller `icons.loading` wins. */
+  loadingIcon?: ReactNode;
+  /**
+   * When true, adds a class that hides the content of toasts behind the front toast
+   * while the stack is collapsed. Default false. `sonner.css` has the same rule.
+   */
+  hideStackedContent?: boolean;
 };
 
+const hideStackedContentClassName =
+  "[&[data-expanded=false][data-front=false]>*]:opacity-0";
+
 const hoverChipCloseButtonClassName =
-  "pointer-events-none absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card/95 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring group-hover:pointer-events-auto group-hover:opacity-100 max-sm:pointer-events-auto max-sm:opacity-100 max-sm:hit-target";
+  "pointer-events-none absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card/95 text-muted-foreground opacity-0 transition-opacity hover:border-border hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring group-hover:pointer-events-auto group-hover:opacity-100 max-sm:pointer-events-auto max-sm:opacity-100 max-sm:hit-target";
 
 const defaultCloseButtonClassName =
   "rounded-lg bg-default px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-default/78";
@@ -65,16 +77,23 @@ function createToasterClassNames({
   density = "default",
   closeButtonStyle = "default",
   descriptionMuted = false,
+  titleLeading = "snug",
+  hideStackedContent = false,
 }: Pick<
   SonnerToasterOptions,
-  "toastRadius" | "density" | "closeButtonStyle" | "descriptionMuted"
+  | "toastRadius"
+  | "density"
+  | "closeButtonStyle"
+  | "descriptionMuted"
+  | "titleLeading"
+  | "hideStackedContent"
 > = {}): ToastClassNames {
   const radius = toastRadiusClasses[toastRadius];
   const compact = density === "compact";
   const descriptionSize = compact ? "text-xs" : "text-[13px]";
   return {
-    toast: `group toast glass-panel-strong flex w-full items-center ${compact ? "gap-2" : "gap-3"} ${radius} ${compact ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm"} text-foreground smooth-shadow-ring-md`,
-    title: "font-medium leading-snug",
+    toast: `group toast glass-panel-strong flex w-full items-center ${compact ? "gap-2" : "gap-3"} ${radius} ${compact ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm"} text-foreground smooth-shadow-ring-md${hideStackedContent ? ` ${hideStackedContentClassName}` : ""}`,
+    title: titleLeading === "5" ? "font-medium leading-5" : "font-medium leading-snug",
     description: descriptionMuted
       ? `${descriptionSize} leading-snug text-muted-foreground!`
       : `${descriptionSize} leading-snug text-muted-foreground`,
@@ -148,6 +167,9 @@ function SonnerToaster({
   closeButtonStyle = "default",
   sonnerVars = false,
   descriptionMuted,
+  titleLeading,
+  loadingIcon,
+  hideStackedContent,
   toastOptions,
   icons,
   style,
@@ -155,8 +177,14 @@ function SonnerToaster({
   closeButton,
   ...props
 }: ToasterProps & SonnerToasterOptions) {
+  const loadingOverride =
+    loadingIcon != null ? { loading: loadingIcon } : undefined;
   const mergedIcons =
-    toastIcons === "filled24" ? { ...filledToastIcons, ...icons } : icons;
+    toastIcons === "filled24"
+      ? { ...filledToastIcons, ...loadingOverride, ...icons }
+      : loadingOverride
+        ? { ...loadingOverride, ...icons }
+        : icons;
   return (
     <Toaster
       expand={false}
@@ -175,6 +203,8 @@ function SonnerToaster({
             density,
             closeButtonStyle,
             descriptionMuted,
+            titleLeading,
+            hideStackedContent,
           }),
         },
         toastOptions,

@@ -158,4 +158,63 @@ describe("SessionsHoverCard", () => {
     expect(trigger.tagName).toBe("A");
     expect(trigger.textContent).toBe("Row");
   });
+
+  describe("focus and pointer", () => {
+    function setFocusVisible(el: HTMLElement, value: boolean) {
+      const orig = el.matches.bind(el);
+      el.matches = (sel: string) => (sel === ":focus-visible" ? value : orig(sel));
+    }
+
+    it("does not open on pointer-driven focus after a context menu", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard openDelay={0} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, false);
+      await act(async () => {
+        row.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+        row.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+        row.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      });
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).not.toHaveBeenCalledWith(true);
+      expect(document.body.textContent).not.toContain("Head");
+    });
+
+    it("opens on keyboard focus-visible", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard openDelay={0} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, true);
+      await act(async () => {
+        row.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      });
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
+
+    it("closes on pointer leave while focus stays on the trigger", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      row.focus();
+      await act(async () => {
+        row.dispatchEvent(new PointerEvent("pointerout", { pointerType: "mouse", bubbles: true, relatedTarget: null }));
+      });
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(document.body.textContent).not.toContain("Head");
+    });
+  });
 });

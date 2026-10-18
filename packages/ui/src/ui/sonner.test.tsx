@@ -150,3 +150,44 @@ describe("SonnerToaster merging", () => {
     expect(render({ closeButtonStyle: "hoverChip", closeButton: false }).closeButton).toBe(false);
   });
 });
+
+describe("0.3.1 opt-ins", () => {
+  it("keeps leading-snug and no stacked-content class by default", () => {
+    const names = createToasterClassNames();
+    expect(names.title).toBe("font-medium leading-snug");
+    expect(names.toast).not.toContain("data-front=false");
+  });
+
+  it("uses leading-5 when titleLeading is 5", () => {
+    expect(createToasterClassNames({ titleLeading: "5" }).title).toBe("font-medium leading-5");
+    expect(render({ titleLeading: "5" }).toastOptions.classNames.title).toContain("leading-5");
+  });
+
+  it("adds the stacked-content class only when hideStackedContent is true", () => {
+    const cls = "[&[data-expanded=false][data-front=false]>*]:opacity-0";
+    expect(createToasterClassNames({ hideStackedContent: true }).toast).toContain(cls);
+    expect(render({ hideStackedContent: true }).toastOptions.classNames.toast).toContain(cls);
+    expect(render().toastOptions.classNames.toast).not.toContain(cls);
+  });
+
+  it("lets icons.loading override the default and filled24 loaders", () => {
+    const loading = <i />;
+    expect(render({ icons: { loading } }).icons.loading).toBe(loading);
+    const filled = render({ toastIcons: "filled24", icons: { loading } }).icons;
+    expect(filled.loading).toBe(loading);
+    expect(filled.success).toBe(filledToastIcons.success);
+  });
+
+  it("merges loadingIcon into icons and lets icons.loading win", () => {
+    const a = <i />;
+    const b = <b />;
+    expect(render({ loadingIcon: a }).icons.loading).toBe(a);
+    expect(render({ toastIcons: "filled24", loadingIcon: a }).icons.loading).toBe(a);
+    expect(render({ loadingIcon: a, icons: { loading: b } }).icons.loading).toBe(b);
+    expect(render({ toastIcons: "filled24", loadingIcon: a, icons: { loading: b } }).icons.loading).toBe(b);
+  });
+
+  it("pins the hover chip border on hover", () => {
+    expect(hoverChipCloseButtonClassName).toContain("hover:border-border");
+  });
+});

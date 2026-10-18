@@ -70,6 +70,15 @@ export type SessionsHoverCardProps = Omit<
   className?: string;
 };
 
+/** `:focus-visible` is true for keyboard focus only. Treat unsupported engines as keyboard. */
+function isFocusVisible(el: Element): boolean {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
+
 type LoadState = { status: "loading" } | { status: "ready"; node: ReactNode };
 
 /** Mounts only while the card is open, so `loadContent` never runs while closed. */
@@ -140,6 +149,8 @@ export const SessionsHoverCard = forwardRef<
   align = "start",
   sideOffset = 8,
   className,
+  onFocus,
+  onPointerLeave,
   ...triggerProps
 }, ref) {
   const [openState, setOpenState] = useState(defaultOpen);
@@ -148,6 +159,20 @@ export const SessionsHoverCard = forwardRef<
   const handleOpenChange = (next: boolean) => {
     setOpenState(next);
     onOpenChange?.(next);
+  };
+
+  // Open on keyboard focus only. Focus that returns after a context menu or a
+  // click is pointer-driven, so it must not open the card.
+  const handleFocus = (event: React.FocusEvent<HTMLElement>) => {
+    onFocus?.(event as never);
+    if (event.defaultPrevented) return;
+    if (!isFocusVisible(event.currentTarget)) event.preventDefault();
+  };
+
+  // Always close on pointer leave, even while focus stays on the trigger.
+  const handlePointerLeave = (event: React.PointerEvent<HTMLElement>) => {
+    onPointerLeave?.(event as never);
+    if (event.pointerType !== "touch" && open) handleOpenChange(false);
   };
 
   const bodyNode = loadContent ? (
@@ -190,7 +215,13 @@ export const SessionsHoverCard = forwardRef<
       openDelay={openDelay}
       closeDelay={closeDelay}
     >
-      <HoverCardTrigger ref={ref} asChild={asChild} {...triggerProps}>
+      <HoverCardTrigger
+        ref={ref}
+        asChild={asChild}
+        {...triggerProps}
+        onFocus={handleFocus}
+        onPointerLeave={handlePointerLeave}
+      >
         {children}
       </HoverCardTrigger>
       {portal ? <HoverCardPrimitive.Portal>{content}</HoverCardPrimitive.Portal> : content}
