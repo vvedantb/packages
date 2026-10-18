@@ -9,11 +9,9 @@ import {
 export function useComposerCompact({
   value,
   fileCount,
-  chipCount,
 }: {
   value: string;
   fileCount: number;
-  chipCount: number;
 }): { chromeRef: RefObject<HTMLDivElement | null>; compact: boolean } {
   "use no memo";
   const chromeRef = useRef<HTMLDivElement>(null);
@@ -26,7 +24,10 @@ export function useComposerCompact({
   const editor = editorNode instanceof HTMLElement ? editorNode : null;
   const font = editor ? getComputedStyle(editor).font : "14px sans-serif";
   if (editor && wasCompactRef.current) {
-    const inner = readEditorInnerWidth(editor);
+    const chipsWidth =
+      editor.querySelector<HTMLElement>("[data-composer-chips-inline]")
+        ?.offsetWidth ?? 0;
+    const inner = readEditorInnerWidth(editor) - chipsWidth;
     if (inner > 0) pillWidthRef.current = inner;
   }
   const exceedsPill =
@@ -37,7 +38,6 @@ export function useComposerCompact({
   const compact = isComposerCompact({
     value,
     fileCount,
-    chipCount,
     exceedsPill,
   });
   wasCompactRef.current = compact;

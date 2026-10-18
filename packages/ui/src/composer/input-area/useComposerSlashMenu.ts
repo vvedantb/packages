@@ -30,7 +30,7 @@ export function useComposerSlashMenu({
   value: string;
   onValueChange: (value: string) => void;
   items: ComposerSlashItem[];
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  textareaRef: RefObject<HTMLElement | null>;
   onSelect: (item: ComposerSlashItem) => void;
   /** When false the menu never opens. */
   enabled?: boolean;
@@ -122,7 +122,7 @@ export function useComposerSlashMenu({
     if (item) applyItem(item, trigger);
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): boolean => {
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>): boolean => {
     if (!showPopup) return false;
     if (visibleItems.length > 0) {
       if (event.key === "ArrowDown") {
