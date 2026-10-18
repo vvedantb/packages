@@ -1,4 +1,4 @@
-# `@vvedantb/ui/app`
+# App helpers (`@vvedantb/ui`)
 
 Shared web React helpers that were duplicated across apps. Source-exported as the `./app` subpath of `@vvedantb/ui`.
 
@@ -10,9 +10,9 @@ npm install @vvedantb/ui
 
 ## Peers
 
-Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui`, needed only for this subpath: `@clerk/clerk-react` (`useStableAuth`), `@tanstack/react-hotkeys` and `zod`.
+Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui`, needed only for the app helpers: `@clerk/clerk-react` (`useStableAuth`), `@tanstack/react-hotkeys` and `zod`.
 
-`sonner` is not a dependency. The update watcher takes the toast API as an option. This subpath uses a local class join (`cn`), not the `cn` from `@vvedantb/ui`. Tailwind must scan `node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}` so the class names are generated, and the app needs the `@vvedantb/ui/tokens` names (`bg-surface-card`, `divide-separator`, `text-muted-foreground` and so on).
+`sonner` is not a dependency. The update watcher takes the toast API as an option. The app source uses a local class join, which the root does not export (the root `cn` is the clsx and tailwind-merge one). Tailwind must scan `node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}` so the class names are generated, and the app needs the `@vvedantb/ui/tokens` names (`bg-surface-card`, `divide-separator`, `text-muted-foreground` and so on).
 
 ```css
 @source "../node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}";
@@ -21,7 +21,7 @@ Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui`, need
 ## Confirm skip (Alt-click)
 
 ```tsx
-import { ConfirmSkipHint, skipConfirmTitle, useRequestConfirm } from "@vvedantb/ui/app";
+import { ConfirmSkipHint, skipConfirmTitle, useRequestConfirm } from "@vvedantb/ui";
 
 const { request } = useRequestConfirm();
 
@@ -42,7 +42,7 @@ const { request } = useRequestConfirm();
 
 ```ts
 import { toast } from "sonner";
-import { startUpdateAvailableWatcher } from "@vvedantb/ui/app";
+import { startUpdateAvailableWatcher } from "@vvedantb/ui";
 
 useEffect(
   () =>
@@ -61,7 +61,7 @@ Options: `origin`, `toast`, `closeConvex?`, `pollMs?` (default 60000), `toastId?
 ## Settings chrome
 
 ```tsx
-import { SettingsPage, SettingsSection, SettingsToggleRow } from "@vvedantb/ui/app";
+import { SettingsPage, SettingsSection, SettingsToggleRow } from "@vvedantb/ui";
 
 <SettingsPage
   title="Notifications"
@@ -82,8 +82,8 @@ Exports: `SettingsSection`, `SettingsField`, `SettingsStack`, `SettingsToggleRow
 ## useStableAuth
 
 ```ts
-import { useStableAuth } from "@vvedantb/ui/app"; // 2000 ms debounce, wraps Clerk useAuth
-import { createUseStableAuth } from "@vvedantb/ui/app";
+import { useStableAuth } from "@vvedantb/ui"; // 2000 ms debounce, wraps Clerk useAuth
+import { createUseStableAuth } from "@vvedantb/ui";
 
 const useAuth = createUseStableAuth(useClerkAuth, { debounceMs: 3000 });
 ```

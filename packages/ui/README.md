@@ -4,17 +4,15 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. Also the composer: `InputArea` (recommended), `ConnectionStatusMenuItem`, `buildComposerSlashItems`, the deprecated 0.3 `Composer` and its building blocks (`ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction`, prediction helpers). |
-| `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
-| `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
-| `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
-| `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
-| `@vvedantb/ui/app` | Alt-click confirm skip, update watcher, settings chrome, `useStableAuth`. See `app/README.md` in the repository. |
-| `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. |
-| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. |
-| `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. |
-| `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset for apps that load a JS config with `@config`. |
-| `@vvedantb/ui/tokens/native` | JS colours, radii and spacing. No CSS, no React DOM. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
+| `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
+| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. CSS. |
+| `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
+| `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
+| `@vvedantb/ui/package.json` | Package metadata. |
+
+Removed in 0.4.0-rc.1: the `/cn`, `/sonner`, `/audio`, `/shell`, `/app`, `/composer` and `/tokens/native` subpaths. Import from `@vvedantb/ui`. See [`MIGRATION.md`](MIGRATION.md).
 
 ```css
 @import "tailwindcss";
@@ -33,7 +31,7 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 - `playChime()`: soft rising two-note chime (WebAudio). One shared `AudioContext`, created on first use. It is a no-op on the server and when autoplay blocks audio. Calls less than 1 second apart play once.
 - `playTone(tone | tones)`: plays `{ frequency, startOffsetS?, durationS?, peakGain?, type? }` through the same floor.
 - Audio floor: every package sound shares one 1 second minimum gap. Route your own sounds through it with `withAudioFloor(() => play())` or `if (tryAcquireAudioFloor()) play()`.
-- These are also available from `@vvedantb/ui/audio`, which does not load the rest of the root barrel.
+- The root barrel has no top-level side effects, so an app that imports only the audio symbols bundles only audio code.
 - `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
 
 ## Composer
@@ -83,7 +81,7 @@ import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui";
 | `getPrediction`, `predictionEnabled` | off, `true` | Ghost text. Tab accepts, Esc dismisses. Paused while the `/` menu is open. |
 | `className`, `containerClassName`, `borderClassName`, `submitButtonClassName`, `submitIconClassName`, `placeholder` | none | The app passes its own class strings for an exact match. |
 
-Building blocks: `InputActions`, `ConnectionStatusMenuItem` (icon, label, description, `connected`, `onClick`, `title`), `InputBanners`, `PromoBanner` (`show`, `onUpgrade`, `onDismiss`, text as children), `FadePresence`, `ComposerSlashMenu`, `ComposerSlashRow`, and the hooks and helpers listed in the changelog. Parity against the original: `composer/examples/parity/PARITY.md`. App migration: `composer/MIGRATION.md`.
+Building blocks: `InputActions`, `ConnectionStatusMenuItem` (icon, label, description, `connected`, `onClick`, `title`), `InputBanners`, `PromoBanner` (`show`, `onUpgrade`, `onDismiss`, text as children), `FadePresence`, `ComposerSlashMenu`, `ComposerSlashRow`, and the hooks and helpers listed in the changelog. Parity against the original: `composer/examples/parity/PARITY.md`. App migration: `composer/MIGRATION-INPUTAREA.md`.
 
 ### Composer (deprecated)
 
@@ -183,7 +181,7 @@ Fixture: `composer/examples/` (see its README). It has a `tokens.css` page and a
 ## Sessions hover card
 
 ```tsx
-import { SessionsHoverCard } from "@vvedantb/ui/shell";
+import { SessionsHoverCard } from "@vvedantb/ui";
 
 <SessionsHoverCard
   header="Session title"
@@ -199,8 +197,7 @@ import { SessionsHoverCard } from "@vvedantb/ui/shell";
 ## Toaster
 
 ```tsx
-import { toast } from "sonner";
-import { SonnerToaster } from "@vvedantb/ui"; // or "@vvedantb/ui/sonner"
+import { SonnerToaster, toast } from "@vvedantb/ui";
 
 <SonnerToaster
   theme={theme}
@@ -260,6 +257,6 @@ The compat file includes a fallback `glass-panel-strong` (`rgb(var(--card) / 0.9
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
 
-`@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod` are optional peers. Install them only if you import `@vvedantb/ui/app`.
+`@clerk/clerk-react`, `@tanstack/react-hotkeys`, `motion` and `zod` are optional peers (`peerDependenciesMeta`). Install `@clerk/clerk-react` only to use `useStableAuth`, `@tanstack/react-hotkeys` and `zod` only for the features that use them, and `motion` only to use the motion presets, `InputArea`, the 0.3 `Composer` or the AI elements and primitives that animate.
 
 Full documentation: the repository `README.md`. Upgrading from `@vvedantb/tokens`, `@vvedantb/shell` or `@vvedantb/app-kit`: `MIGRATION.md`.

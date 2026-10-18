@@ -2,7 +2,7 @@
   "name": "@vvedantb/ui",
   "version": "0.4.0-rc.1",
   "license": "MIT",
-  "description": "Shared React 19 UI for web apps: primitives, shell pieces, app helpers, design tokens, shared Tailwind v4 CSS and a Tailwind preset.",
+  "description": "Shared React 19 UI for web apps: one JavaScript entry (primitives, shell pieces, app helpers, native tokens), design-token CSS, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -17,32 +17,8 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./cn": {
-      "types": "./src/utils/cn.ts",
-      "default": "./src/utils/cn.ts"
-    },
-    "./sonner": {
-      "types": "./src/sonner.ts",
-      "default": "./src/sonner.ts"
-    },
-    "./audio": {
-      "types": "./src/audio/index.ts",
-      "default": "./src/audio/index.ts"
-    },
-    "./shell": {
-      "types": "./shell/src/index.ts",
-      "default": "./shell/src/index.ts"
-    },
-    "./app": {
-      "types": "./app/src/index.ts",
-      "default": "./app/src/index.ts"
-    },
     "./tokens": "./tokens/src/tokens.css",
     "./tokens/tokens.css": "./tokens/src/tokens.css",
-    "./tokens/native": {
-      "types": "./tokens/src/native.ts",
-      "default": "./tokens/src/native.ts"
-    },
     "./tokens/css/index.css": "./tokens/src/css/index.css",
     "./tokens/css/base.css": "./tokens/src/css/base.css",
     "./tokens/css/dialog.css": "./tokens/src/css/dialog.css",
@@ -187,6 +163,9 @@
       "optional": true
     },
     "@tanstack/react-hotkeys": {
+      "optional": true
+    },
+    "motion": {
       "optional": true
     },
     "zod": {
