@@ -158,4 +158,99 @@ describe("SessionsHoverCard", () => {
     expect(trigger.tagName).toBe("A");
     expect(trigger.textContent).toBe("Row");
   });
+
+  describe("focus and pointer", () => {
+    function setFocusVisible(el: HTMLElement, value: boolean) {
+      const orig = el.matches.bind(el);
+      el.matches = (sel: string) => (sel === ":focus-visible" ? value : orig(sel));
+    }
+
+    it("does not open on pointer-driven focus after a context menu", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard openDelay={0} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, false);
+      await act(async () => {
+        row.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+        row.dispatchEvent(new FocusEvent("focus", { bubbles: false }));
+        row.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      });
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).not.toHaveBeenCalledWith(true);
+      expect(document.body.textContent).not.toContain("Head");
+    });
+
+    it("opens on keyboard focus-visible", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard openDelay={0} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, true);
+      await act(async () => {
+        row.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      });
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).toHaveBeenCalledWith(true);
+    });
+
+    // React derives onPointerLeave from native pointerout (with a null or outside
+    // relatedTarget). A native pointerleave event does not reach the handler.
+    function leave(el: HTMLElement) {
+      return act(async () => {
+        el.dispatchEvent(new PointerEvent("pointerout", { pointerType: "mouse", bubbles: true, relatedTarget: null }));
+      });
+    }
+
+    it("closes on pointer leave when stuck open by non-focus-visible focus", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, false);
+      row.focus();
+      await leave(row);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(document.body.textContent).not.toContain("Head");
+    });
+
+    it("stays open on pointer leave with keyboard focus-visible", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      setFocusVisible(row, true);
+      row.focus();
+      await leave(row);
+      await act(async () => new Promise((r) => setTimeout(r, 20)));
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(document.body.textContent).toContain("Head");
+    });
+
+    it("does not force-close on pointer leave without focus (Radix owns hover close)", async () => {
+      const onOpenChange = vi.fn();
+      await mount(
+        <SessionsHoverCard defaultOpen closeDelay={1000} header="Head" onOpenChange={onOpenChange}>
+          <button type="button">Row</button>
+        </SessionsHoverCard>,
+      );
+      const row = document.querySelector("button")!;
+      await leave(row);
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      expect(document.body.textContent).toContain("Head");
+    });
+  });
 });

@@ -142,7 +142,7 @@ import { SessionsHoverCard } from "@vvedantb/ui/shell";
 </SessionsHoverCard>
 ```
 
-`children` is the trigger. It is rendered with `asChild` by default, so it keeps its own handlers (such as a context menu). Extra props and the ref go to it. Use `asChild={false}` for a default trigger element. The content portals to `document.body` by default, so `overflow:hidden` ancestors do not clip it. Pass `portal={false}` to opt out. `surface` is `"overlay"` (default), `"surface"` (`rounded-surface`) or `"glass"` (`glass-panel-strong`, `rounded-surface`). `className` merges over the surface without `!`. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
+`children` is the trigger. It is rendered with `asChild` by default, so it keeps its own handlers (such as a context menu). Extra props and the ref go to it. Use `asChild={false}` for a default trigger element. The content portals to `document.body` by default, so `overflow:hidden` ancestors do not clip it. Pass `portal={false}` to opt out. `surface` is `"overlay"` (default), `"surface"` (`rounded-surface`) or `"glass"` (`glass-panel-strong`, `rounded-surface`). `className` merges over the surface without `!`. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. The card opens on pointer hover and on keyboard focus (`:focus-visible`) only. Focus that follows a click or a context menu close does not open it. If pointer-driven focus left it stuck open, pointer leave force-closes it; otherwise Radix handles close (including moving onto the content). Fixture: `shell/examples/sessions-hover-card/`.
 
 ## Toaster
 
@@ -176,6 +176,11 @@ Opt-in props (all default to the current look):
 | `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |
 | `sonnerVars` | `false` (default), `true` | Sets `--normal-bg`, `--normal-border`, `--normal-text`, `--normal-bg-hover` and `--normal-border-hover` from `--color-card`, `--color-border`, `--color-foreground` and `--color-muted`, and `font-family: inherit`. |
 | `descriptionMuted` | `false` (default), `true` | Description uses `text-muted-foreground!`, which beats sonner's dark-theme rule. |
+| `titleLeading` | `"snug"` (default), `"5"` | Title `leading-snug` (19.25px at `text-sm`) or `leading-5` (20px). |
+| `loadingIcon` | node (default none) | Custom loading icon, merged into `icons`. A caller `icons.loading` wins. `icons={{ loading }}` works with both `toastIcons` values. |
+| `hideStackedContent` | `false` (default), `true` | Adds `[&[data-expanded=false][data-front=false]>*]:opacity-0` to the toast, so content behind the front toast is hidden while the stack is collapsed. `sonner.css` applies the same rule when imported. |
+
+With `closeButtonStyle="hoverChip"`, hover changes the text colour, and sonner may still change the background. The border stays `border-border` (pinned with `hover:border-border!` over sonner's dark hover border), so the ring does not brighten in dark mode.
 
 Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 
