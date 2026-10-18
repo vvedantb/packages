@@ -8,7 +8,7 @@ Additive. Opt-in or default-safe. Defaults are unchanged, except the `SessionsHo
 - `SonnerToaster` `loadingIcon`: opt-in loading icon merged into `icons`. A caller `icons.loading` wins over it. `icons.loading` already overrode the loader with both `toastIcons` values, and tests now cover this.
 - `SonnerToaster` `hideStackedContent` (default `false`): adds `[&[data-expanded=false][data-front=false]>*]:opacity-0` to the toast class. `sonner.css` is unchanged.
 - `closeButtonStyle="hoverChip"`: hover no longer brightens the border or ring in dark mode (`hover:border-border!`, which beats sonner's own dark hover border rule). The text colour changes, and sonner may still change the hover background. Other close button styles are unchanged.
-- `SessionsHoverCard`: focus that follows a click or a context menu close no longer opens the card, so it cannot stay open after the pointer leaves. It opens on keyboard focus (`:focus-visible`) and on pointer hover. It now always closes on pointer leave, even while focus stays on the trigger.
+- `SessionsHoverCard`: focus that follows a click or a context menu close no longer opens the card (`:focus-visible` only for focus-open). It still opens on pointer hover. If pointer-driven focus left the card stuck open, pointer leave force-closes it; otherwise Radix handles close (including moving onto the content).
 
 ## 0.3.0
 
