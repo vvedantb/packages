@@ -4,7 +4,7 @@ Shared packages for vvedantb apps. Three public npm packages and one private con
 
 | Package | Version | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui` | `0.2.2` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
+| `@vvedantb/ui` | `0.2.3` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./sonner`: `SonnerToaster` and `toast`. `./audio`: chime, `playTone` and the shared audio floor. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
 | `@vvedantb/native-ui` | `0.2.0` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Has no dependency on `@vvedantb/ui`; it carries its own copy of the JS tokens. |
 | `@vvedantb/server` | `0.1.0` | Convex backend helpers. `./convex`: query-limit errors, Clerk auth config, bearer tokens, env, MCP CORS and server info. `./mcp`: MCP server scaffolding for Convex `httpAction`s. Compiled. |
 | `@vvedantb/config` | `0.1.1` | Private, not on npm. tsconfig bases, an oxlint base, pinned tool versions and the `vvedantb-config sync` CLI, used inside this repository. |
@@ -103,7 +103,7 @@ import { SidebarHeader, PillTabs } from "@vvedantb/ui/shell";
 
 - `SidebarHeader`: 44px (`h-11`) header row with a truncated title and an optional `trailing` slot. It has no close button, icons or navigation.
 - `PillTabs`: controlled pill tabs, icon and label only. It has no counts or badges. Use it only where you want pill tabs. It does not replace each app's segmented controls. Arrow keys, Home and End move between tabs.
-- `SessionsHoverCard`: hover card shell for list rows. `children` is the trigger. Sets `openDelay` (400 ms default), position, `w-64 p-3` and `header`, `body` and `footer` slots. `body` can be a function of `{ open }`, and `loadContent` runs only while the card is open.
+- `SessionsHoverCard`: hover card shell for list rows. `children` is the trigger. Sets `openDelay` (400 ms default), position, `w-64 p-3` and `header`, `body` and `footer` slots. `body` can be a function of `{ open }`, and `loadContent` runs only while the card is open. It portals by default (`portal={false}` opts out), takes `surface` and `asChild`, and forwards its ref.
 - `playChime` and `useReplyChime` (from `@vvedantb/ui`): soft two-note reply chime and a hook that plays it once when a thread stops streaming.
 
 ## What moved into `@vvedantb/ui`
