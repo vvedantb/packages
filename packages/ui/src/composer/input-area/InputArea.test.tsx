@@ -86,6 +86,28 @@ describe("InputArea", () => {
       expect(editor().getAttribute("data-suggestion")).toBe(" and then some");
     });
 
+    it("applies predictionTextClassName to the ghost text in inline mode", async () => {
+      const style = document.createElement("style");
+      style.textContent = ".ghost-test { color: rgb(1, 2, 3); }";
+      document.head.appendChild(style);
+      try {
+        await mount({
+          getPrediction: async () => "and then some",
+          predictionTextClassName: "ghost-test",
+        });
+        await type("a draft long enough to predict");
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 650));
+        });
+        const probe = document.querySelector("[data-composer-ghost-probe] > span");
+        expect(probe?.className).toBe("ghost-test");
+        expect(editor().className).toContain("var(--composer-ghost-color");
+        expect(editor().style.getPropertyValue("--composer-ghost-color")).toBe("rgb(1, 2, 3)");
+      } finally {
+        style.remove();
+      }
+    });
+
     it("applies predictionTextClassName to the overlay span when chips are on top", async () => {
       await mount({
         getPrediction: async () => "and then some",

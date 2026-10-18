@@ -4,7 +4,8 @@
 
 - `InputArea` compact mode: `chipCount` no longer forces the stacked card. The composer stays in the one-row pill (plus, editor, send in an `h-12` pill) for short text, with or without chips that fit. It expands on a wrapped line, a newline or `fileCount` above 0. The editor classes match the session composer: expanded keeps `min-h-16 max-h-50 px-4 pt-3.5 pb-1`. `chipCount` still enables send and Backspace removal.
 - `InputArea` chips: with `chipsPlacement="inline"` (default) the input is a contenteditable. `chips` render in a non-editable inline host (`data-composer-chips-inline`) at the start of the same text flow, so wrapped lines start under the chips at the left edge. `value` and `onChange` stay plain text. Backspace at the start of the text calls `onRemoveLastChip`. Enter submits, Shift+Enter adds a newline, paste is plain text, and Enter is ignored during IME composition.
-- `InputArea` ghost text in inline mode: drawn with `data-suggestion` and a muted `::after`, not an overlay. `predictionTextClassName` applies only with `chipsPlacement="top"`.
+- `InputArea` ghost text in inline mode: drawn with `data-suggestion` and an `::after`, not an overlay.
+- `InputArea` `predictionTextClassName` applies in inline mode again, as in `"top"` mode and 0.4.0-rc.2. A hidden probe span carries the class, and its colour and opacity are copied to `--composer-ghost-color` on the editor, which the `::after` reads. `InputAreaEditor` takes a new optional `suggestionClassName` prop.
 - `InputArea` `chipsPlacement`: new optional prop, `"inline"` (default) or `"top"`. `"top"` keeps the strip above a textarea.
 - `useComposerSlashMenu`: `textareaRef` accepts any `HTMLElement` and the key handler takes an `HTMLElement` event.
 - `isComposerCompact` and `useComposerCompact`: the `chipCount` argument is removed.

@@ -108,7 +108,7 @@ export type InputAreaProps = {
   /** Returns a continuation for the draft. Omit to turn ghost text off. */
   getPrediction?: (text: string) => Promise<string>;
   predictionEnabled?: boolean;
-  /** Classes on the ghost suggestion span. Applies to `chipsPlacement="top"`. Inline mode draws the ghost text with a fixed muted `::after`. */
+  /** Classes for the ghost suggestion. With `chipsPlacement="top"` they sit on the overlay span. Inline mode copies their colour and opacity to the `::after` ghost text. */
   predictionTextClassName?: string;
 
   /** Wrapper around banners, queue and the input. */
@@ -403,6 +403,7 @@ export function InputArea({
             onValueChange={setInput}
             placeholder={placeholder}
             suggestion={prediction.suggestion || undefined}
+            suggestionClassName={predictionTextClassName}
             chips={chips}
             chipCount={chipCount}
             onRemoveLastChip={onRemoveLastChip}

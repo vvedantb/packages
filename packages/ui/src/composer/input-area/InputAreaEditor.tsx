@@ -11,13 +11,17 @@ import { cn } from "../../utils/cn";
 
 export const CHIPS_HOST_ATTR = "data-composer-chips-inline";
 
+/** Custom property the ghost `::after` reads its colour from. */
+export const GHOST_COLOR_VAR = "--composer-ghost-color";
+
 /**
  * Editor base class. Placeholder and ghost text use `::after`, so both follow
- * the chips on the same line. The ghost colour is fixed here: inline mode
- * cannot apply `predictionTextClassName` to a pseudo-element.
+ * the chips on the same line. A class cannot reach a pseudo-element, so the
+ * ghost colour comes from `--composer-ghost-color`, read off a probe span that
+ * carries `suggestionClassName`. Muted foreground is the fallback.
  */
 export const INLINE_EDITOR_CLASS =
-  "relative block w-full cursor-text whitespace-pre-wrap wrap-break-word bg-transparent outline-hidden data-empty:after:pointer-events-none data-empty:after:select-none data-empty:after:text-muted-foreground data-empty:after:content-[attr(data-placeholder)] data-suggestion:after:pointer-events-none data-suggestion:after:select-none data-suggestion:after:text-muted-foreground/50 data-suggestion:after:content-[attr(data-suggestion)]";
+  "relative block w-full cursor-text whitespace-pre-wrap wrap-break-word bg-transparent outline-hidden data-empty:after:pointer-events-none data-empty:after:select-none data-empty:after:text-muted-foreground data-empty:after:content-[attr(data-placeholder)] data-suggestion:after:pointer-events-none data-suggestion:after:select-none data-suggestion:after:text-[color:var(--composer-ghost-color,var(--color-muted-foreground))] data-suggestion:after:content-[attr(data-suggestion)]";
 
 // `contents` so each chip is an inline atom in the editor's own flow (same as
 // session-composer chip spans). A wrapping flex host becomes one box and puts
@@ -100,6 +104,8 @@ export type InputAreaEditorProps = {
   onValueChange: (value: string) => void;
   placeholder?: string;
   suggestion?: string;
+  /** Classes for the ghost text. Its colour and opacity are copied to the `::after`. */
+  suggestionClassName?: string;
   chips?: ReactNode;
   chipCount?: number;
   onRemoveLastChip?: () => void;
@@ -123,6 +129,7 @@ export function InputAreaEditor({
   onValueChange,
   placeholder,
   suggestion,
+  suggestionClassName,
   chips,
   chipCount = 0,
   onRemoveLastChip,
@@ -133,6 +140,7 @@ export function InputAreaEditor({
 }: InputAreaEditorProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const composingRef = useRef(false);
+  const ghostProbeRef = useRef<HTMLSpanElement | null>(null);
 
   const setRefs = (node: HTMLDivElement | null) => {
     rootRef.current = node;
@@ -152,6 +160,26 @@ export function InputAreaEditor({
     if (value !== "") root.appendChild(document.createTextNode(value));
     if (document.activeElement === root) placeCaretAtEnd(root);
   });
+
+  // Copy the probe colour to the editor. Opacity below 1 is folded into the
+  // colour, so the `::after` needs one variable.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const probe = ghostProbeRef.current;
+    const style = probe ? getComputedStyle(probe) : null;
+    if (!style?.color) {
+      root.style.removeProperty(GHOST_COLOR_VAR);
+      return;
+    }
+    const opacity = Number.parseFloat(style.opacity);
+    root.style.setProperty(
+      GHOST_COLOR_VAR,
+      opacity >= 0 && opacity < 1
+        ? `color-mix(in srgb, ${style.color} ${opacity * 100}%, transparent)`
+        : style.color,
+    );
+  }, [suggestion, suggestionClassName]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
@@ -186,42 +214,55 @@ export function InputAreaEditor({
   };
 
   return (
-    <div
-      ref={setRefs}
-      data-slot="input-group-control"
-      contentEditable
-      suppressContentEditableWarning
-      spellCheck
-      aria-label={placeholder}
-      aria-multiline
-      {...ariaProps}
-      role="combobox"
-      data-empty={value === "" ? "" : undefined}
-      data-placeholder={placeholder}
-      data-suggestion={suggestion || undefined}
-      className={cn(INLINE_EDITOR_CLASS, className)}
-      onInput={(event) => {
-        if (composingRef.current) return;
-        onValueChange(extractEditorText(event.currentTarget));
-      }}
-      onCompositionStart={() => {
-        composingRef.current = true;
-      }}
-      onCompositionEnd={(event) => {
-        composingRef.current = false;
-        onValueChange(extractEditorText(event.currentTarget));
-      }}
-      onKeyDown={handleKeyDown}
-      onPaste={handlePaste}
-      onBlur={onBlur}
-    >
-      <span
-        contentEditable={false}
-        {...{ [CHIPS_HOST_ATTR]: "" }}
-        className={CHIPS_HOST_CLASS}
+    <>
+      <div
+        ref={setRefs}
+        data-slot="input-group-control"
+        contentEditable
+        suppressContentEditableWarning
+        spellCheck
+        aria-label={placeholder}
+        aria-multiline
+        {...ariaProps}
+        role="combobox"
+        data-empty={value === "" ? "" : undefined}
+        data-placeholder={placeholder}
+        data-suggestion={suggestion || undefined}
+        className={cn(INLINE_EDITOR_CLASS, className)}
+        onInput={(event) => {
+          if (composingRef.current) return;
+          onValueChange(extractEditorText(event.currentTarget));
+        }}
+        onCompositionStart={() => {
+          composingRef.current = true;
+        }}
+        onCompositionEnd={(event) => {
+          composingRef.current = false;
+          onValueChange(extractEditorText(event.currentTarget));
+        }}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        onBlur={onBlur}
       >
-        {chips}
-      </span>
-    </div>
+        <span
+          contentEditable={false}
+          {...{ [CHIPS_HOST_ATTR]: "" }}
+          className={CHIPS_HOST_CLASS}
+        >
+          {chips}
+        </span>
+      </div>
+      {suggestion && suggestionClassName ? (
+        // Outside the editor, so reconciliation and the text value never see it.
+        // Zero-size, not `display: none`, so the computed colour is real.
+        <span
+          aria-hidden
+          data-composer-ghost-probe=""
+          className="pointer-events-none absolute size-0 select-none overflow-hidden text-foreground"
+        >
+          <span ref={ghostProbeRef} className={suggestionClassName} />
+        </span>
+      ) : null}
+    </>
   );
 }
