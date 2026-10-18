@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: primitives, shell pieces, app helpers, design tokens, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
@@ -28,6 +28,10 @@
     "./audio": {
       "types": "./src/audio/index.ts",
       "default": "./src/audio/index.ts"
+    },
+    "./composer": {
+      "types": "./src/composer/index.ts",
+      "default": "./src/composer/index.ts"
     },
     "./shell": {
       "types": "./shell/src/index.ts",

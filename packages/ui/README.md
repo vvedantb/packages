@@ -6,6 +6,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | --- | --- |
 | `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
 | `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
+| `@vvedantb/ui/composer` | `Composer`, `ComposerIconButton` and the pure prediction helpers. |
 | `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
 | `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
@@ -35,6 +36,49 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 - Audio floor: every package sound shares one 1 second minimum gap. Route your own sounds through it with `withAudioFloor(() => play())` or `if (tryAcquireAudioFloor()) play()`.
 - These are also available from `@vvedantb/ui/audio`, which does not load the rest of the root barrel.
 - `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
+
+## Composer
+
+Chat composer with an autosizing textarea, a footer with a plus-menu slot, action slots and a send or stop button. It also shows optional ghost-text predictions. It makes no network calls: the app supplies `getPrediction`.
+
+```tsx
+import { Composer, ComposerIconButton } from "@vvedantb/ui"; // or "@vvedantb/ui/composer"
+
+<Composer
+  value={draft}
+  onChange={setDraft}
+  onSubmit={(text) => send(text)}
+  streaming={isStreaming}
+  onStop={cancel}
+  plusMenu={<ComposerIconButton aria-label="Add">+</ComposerIconButton>}
+  attachments={chips}
+  getPrediction={(draft, { signal }) => fetchContinuation(draft, signal)}
+/>;
+```
+
+| Prop | Default | Notes |
+| --- | --- | --- |
+| `value`, `defaultValue`, `onChange` | uncontrolled, `""` | Pass `value` to control it. When controlled, clear the value yourself after `onSubmit`. When uncontrolled, the composer clears after submit. |
+| `onSubmit(text)` | none | Called with the trimmed draft on Enter or the send button. Not called for an empty draft, or when `disabled` or `streaming`. If it returns a rejected promise, an uncontrolled composer restores the draft. |
+| `streaming`, `onStop` | `false` | The stop button replaces send and calls `onStop`. Typing stays on, Enter does not submit. |
+| `disabled` | `false` | Disables the textarea and send. |
+| `placeholder` | `"Message"` | Also the textarea `aria-label`. |
+| `maxHeight` | `200` (px) | The textarea grows to this height, then scrolls. |
+| `autoFocus`, `className`, `textareaClassName` | none | `className` is the outer shell. `textareaClassName` is also applied to the ghost text mirror, so put padding and font classes there, not on the shell. |
+| `plusMenu` | none | Node, or `({ disabled }) => node`. Left of the footer. |
+| `trailingActions` | none | Node, or `({ disabled, streaming }) => node`. Right of the footer, before send or stop. |
+| `attachments` | none | Node rendered in a row above the textarea. The app renders the chips and their remove buttons. |
+| `getPrediction(draft, { signal })` | none | Returns the continuation of `draft`. Pass `signal` to your request. Errors show no ghost text. |
+| `predictionDebounceMs` | `500` (ms) | Pause after the last edit before a request. |
+| `predictionMinLength` | `12` (characters) | Minimum trimmed draft length. |
+
+Keys: Enter sends, Shift+Enter adds a line, and nothing sends during IME composition. Tab accepts the ghost text, and Esc hides it for the current draft.
+
+Predictions skip drafts shorter than `predictionMinLength`, drafts whose last word starts with `@` or `/`, and drafts that match `/[.!?]\s*$/`. Each edit aborts the previous request, and a result for an older draft is dropped. Ghost text shows only while the caret is at the end of the draft, so Tab always appends. It does not insert at a caret in the middle of the text. A space joins the draft and the prediction when neither has whitespace at the join.
+
+The ref goes to the textarea. `ComposerIconButton` is a round icon-only ghost button for the slots. The pure helpers `shouldSkipComposerPrediction`, `joinComposerPrediction`, `nextComposerPredictionState`, `visibleComposerPrediction` and `acceptComposerPrediction`, and the `useComposerPrediction` hook, are exported for apps with their own textarea.
+
+Fixture: `composer/examples/` (see its README). It has a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark.
 
 ## Sessions hover card
 
