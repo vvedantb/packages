@@ -10,7 +10,7 @@ import {
 } from "@vvedantb/ui";
 ```
 
-`@vvedantb/ui/composer` remains a supported alias for the same symbols and their types (`InputAreaProps`, `InputAreaSlashContext`, `ConnectionStatusMenuItemProps`, `ComposerSlashItem` and others). Both entry points are tree-shakeable. An app that imports neither gets no composer code.
+The root export includes the types too (`InputAreaProps`, `InputAreaSlashContext`, `ConnectionStatusMenuItemProps`, `ComposerSlashItem` and others). The `@vvedantb/ui/composer` subpath was removed in 0.4.0-rc.1. The root is tree-shakeable, and an app that imports no composer symbols gets no composer code.
 
 Source for the mapping: `apps/web/src/components/chat/input/InputAreaCore.tsx`, the chat route and `ProjectInputArea.tsx` (source tarball, not dated). Anything marked **check** could not be confirmed from the tarball.
 

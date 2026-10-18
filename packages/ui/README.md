@@ -4,9 +4,8 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
+| `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. Also the composer: `InputArea` (recommended), `ConnectionStatusMenuItem`, `buildComposerSlashItems`, the deprecated 0.3 `Composer` and its building blocks (`ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction`, prediction helpers). |
 | `@vvedantb/ui/sonner` | `SonnerToaster`, its helpers and `toast`. |
-| `@vvedantb/ui/composer` | `InputArea` (recommended) and its building blocks. Also the deprecated 0.3 `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton`, `useComposerPrediction` and the pure prediction helpers. |
 | `@vvedantb/ui/audio` | `playChime`, `useReplyChime`, `playTone` and the shared audio floor. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
 | `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
@@ -44,7 +43,7 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 `InputArea` is the chat composer extracted from an app: a pill that grows into a card, a plus menu, dictate, stop and send, ghost text, a `/` menu, and slots for banners, a queue, attachments and chips. It is presentational. It makes no requests and reads no router, billing or storage. The app passes data in and handles callbacks. It adds its own `TooltipProvider` and `LazyMotion`, so it needs no app provider.
 
 ```tsx
-import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui"; // or "@vvedantb/ui/composer"
+import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui";
 
 <InputArea
   value={draft}
@@ -93,7 +92,7 @@ Building blocks: `InputActions`, `ConnectionStatusMenuItem` (icon, label, descri
 Chat composer with an autosizing textarea, a footer with a plus-menu slot, action slots and a send or stop button. It also shows optional ghost-text predictions. It makes no network calls: the app supplies `getPrediction`.
 
 ```tsx
-import { Composer, ComposerIconButton } from "@vvedantb/ui"; // or "@vvedantb/ui/composer"
+import { Composer, ComposerIconButton } from "@vvedantb/ui";
 
 <Composer
   value={draft}
@@ -164,7 +163,7 @@ Rules for a custom input:
 To build without `Composer`, assemble the parts yourself. `useComposerPrediction` takes the draft string and reads no element. `ComposerGhostText` draws the draft invisibly, then the ghost text, so give it the same padding and font classes as your editor and place it under the editor.
 
 ```tsx
-import { ComposerGhostText, ComposerShell, useComposerPrediction } from "@vvedantb/ui/composer";
+import { ComposerGhostText, ComposerShell, useComposerPrediction } from "@vvedantb/ui";
 
 function MentionComposer({ draft, setDraft, send }: Props) {
   const prediction = useComposerPrediction({ value: draft, enabled: true, getPrediction });

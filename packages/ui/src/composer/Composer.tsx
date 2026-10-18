@@ -303,7 +303,7 @@ const ComposerGhostText = React.forwardRef<HTMLDivElement, ComposerGhostTextProp
  * Chat composer: autosizing textarea, plus-menu and action slots, send/stop
  * button and optional ghost-text predictions. The ref points at the textarea.
  */
-/** @deprecated Use `InputArea` from `@vvedantb/ui/composer`. Kept unchanged for existing consumers. */
+/** @deprecated Use `InputArea` from `@vvedantb/ui`. Kept unchanged for existing consumers. */
 const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function Composer(
   {
     value: valueProp,

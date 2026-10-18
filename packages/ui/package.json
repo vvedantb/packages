@@ -29,10 +29,6 @@
       "types": "./src/audio/index.ts",
       "default": "./src/audio/index.ts"
     },
-    "./composer": {
-      "types": "./src/composer/index.ts",
-      "default": "./src/composer/index.ts"
-    },
     "./shell": {
       "types": "./shell/src/index.ts",
       "default": "./shell/src/index.ts"
