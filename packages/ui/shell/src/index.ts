@@ -4,3 +4,8 @@ export { PillTabs } from "./PillTabs.js";
 export type { PillTabItem, PillTabsProps } from "./PillTabs.js";
 export { cn } from "./cn.js";
 export type { ClassValue } from "./cn.js";
+export { SessionsHoverCard } from "./SessionsHoverCard.js";
+export type {
+  SessionsHoverCardContext,
+  SessionsHoverCardProps,
+} from "./SessionsHoverCard.js";

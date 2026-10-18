@@ -13,7 +13,7 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps, plus JS toke
 | `@vvedantb/ui/tokens/css/modal.css` | `src/css/modal.css` | `.t-modal`, `.is-open`, `.is-closing` and `t-modal-presence-wait` (`@layer components`). |
 | `@vvedantb/ui/tokens/css/tabs.css` | `src/css/tabs.css` | `.t-tab`, active colour, `.t-tabs-pill`, small-screen `.t-tabs` scrolling. |
 | `@vvedantb/ui/tokens/css/tabs-pills.css` | `src/css/tabs-pills.css` | `--tabs-*` colour variables, `.t-tabs--segmented`, `.t-tabs--pills` and pill hover / active fills. |
-| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target` and `@utility reveal-on-hover`. |
+| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target`, `@utility reveal-on-hover` and `@utility rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`). |
 | `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). |
 | `@vvedantb/ui/tokens/css/animations.css` | `src/css/animations.css` | `animate-aurora`, `animate-fade-in-up`, `animate-indeterminate` as `@theme` (CSS-first apps). |
 | `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius` and a `glass-panel-strong` fallback. Import it **or** `tokens.css`, never both. |

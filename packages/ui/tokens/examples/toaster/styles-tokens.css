@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "../../src/tokens.css";
+@import "../../src/css/utilities.css";
+@source "../../../src/**/*.{ts,tsx}";
+@source "./*.tsx";
+
+/* Toast classes the app owns (not part of tokens.css). */
+@utility glass-panel-strong {
+  background-color: color-mix(in oklch, var(--color-card) 95%, transparent);
+  backdrop-filter: blur(12px);
+}
+@utility smooth-shadow-ring-md {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-border) 60%, transparent),
+    0 4px 12px rgb(0 0 0 / 0.08);
+}

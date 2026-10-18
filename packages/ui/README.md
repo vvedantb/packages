@@ -4,9 +4,9 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | Primitives (Radix-based) and AI elements. |
+| `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
-| `@vvedantb/ui/shell` | Router-free `SidebarHeader` and `PillTabs`. |
+| `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
 | `@vvedantb/ui/app` | Alt-click confirm skip, update watcher, settings chrome, `useStableAuth`. See `app/README.md` in the repository. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. |
@@ -19,6 +19,67 @@ Shared React 19 web UI. Source-exported: no build step.
 @import "@vvedantb/ui/tokens";
 @source "../node_modules/@vvedantb/ui/src/**/*.{ts,tsx}";
 ```
+
+## Reply chime
+
+```tsx
+import { playChime, useReplyChime } from "@vvedantb/ui";
+
+useReplyChime({ enabled: soundOn, isStreaming, threadId });
+```
+
+- `playChime()`: soft rising two-note chime (WebAudio). One shared `AudioContext`, created on first use. It is a no-op on the server and when autoplay blocks audio. Calls less than 1 second apart play once.
+- `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
+
+## Sessions hover card
+
+```tsx
+import { SessionsHoverCard } from "@vvedantb/ui/shell";
+
+<SessionsHoverCard
+  header="Session title"
+  loadContent={() => fetchPreview(id)}
+  footer="Updated today"
+>
+  <button type="button">Row</button>
+</SessionsHoverCard>
+```
+
+`children` is the trigger. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
+
+## Toaster
+
+```tsx
+import { toast } from "sonner";
+import { SonnerToaster } from "@vvedantb/ui";
+
+<SonnerToaster
+  theme={theme}
+  toastRadius="surface"
+  toastIcons="filled24"
+  closeButtonStyle="hoverChip"
+  sonnerVars
+  descriptionMuted
+/>;
+```
+
+With no new props the toaster looks as it did in 0.2.1. Caller props merge with the package defaults instead of replacing them:
+
+- `toastOptions.classNames`: per key, the package classes come first and the caller classes follow, so callers can override utilities. Other `toastOptions` fields (such as `duration`) take the caller value.
+- `icons`: merged per key. With `toastIcons="filled24"` the caller overrides single icons and keeps the rest.
+- `style`: merged over the package style. `className` is appended.
+
+Opt-in props (all default to the current look):
+
+| Prop | Values | Effect |
+| --- | --- | --- |
+| `toastRadius` | `"lg"` (default), `"surface"` | `rounded-lg` or `rounded-surface` (from `tokens/css/utilities.css`). |
+| `toastIcons` | `"default"`, `"filled24"` | Sonner icons or 24px filled success, info, warning and error icons, a matching loader and a 14px close cross. |
+| `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |
+| `sonnerVars` | `false` (default), `true` | Sets `--normal-bg`, `--normal-border`, `--normal-text`, `--normal-bg-hover` and `--normal-border-hover` from `--color-card`, `--color-border`, `--color-foreground` and `--color-muted`, and `font-family: inherit`. |
+| `descriptionMuted` | `false` (default), `true` | Description uses `text-muted-foreground!`, which beats sonner's dark-theme rule. |
+
+Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 
 ## Colour names in components
 

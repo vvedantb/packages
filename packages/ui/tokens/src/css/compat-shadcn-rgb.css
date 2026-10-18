@@ -23,11 +23,18 @@
  * --accent, --accent-foreground, --destructive, --destructive-foreground,
  * --border, --input, --ring and --radius (all colours as "R G B").
  *
+ * `--color-card` and `--color-muted` are references to `--card` and `--muted`.
+ * `SonnerToaster sonnerVars` reads them, along with `--color-border` and
+ * `--color-foreground`. An app that already maps those names keeps its own
+ * mapping if it declares them after this import.
+ *
  * Alpha values follow common shadcn-RGB classes (ring/35, ring/50,
  * destructive/20, placeholder /90, scrollbar /35).
  */
 
 @theme inline {
+  --color-card: rgb(var(--card));
+  --color-muted: rgb(var(--muted));
   --color-default: rgb(var(--secondary));
   --color-default-foreground: rgb(var(--secondary-foreground));
   --color-surface: rgb(var(--card));

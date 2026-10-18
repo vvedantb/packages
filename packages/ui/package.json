@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: primitives, shell pieces, app helpers, design tokens, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
@@ -61,7 +61,9 @@
     "tokens/src",
     "tokens/examples",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!**/*.test.ts",
+    "!**/*.test.tsx"
   ],
   "sideEffects": [
     "./src/ui/sonner.css"
