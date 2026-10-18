@@ -33,3 +33,21 @@ export const fadeUp: Variants = {
     transition: { duration: motionDuration.fast, ease: motionEase },
   },
 };
+
+export const springTransition: Transition = {
+  type: "spring",
+  bounce: 0,
+  duration: 0.35,
+};
+
+export const springFastTransition: Transition = {
+  type: "spring",
+  bounce: 0,
+  duration: 0.25,
+};
+
+export const fadeUpSpring: Variants = {
+  hidden: { opacity: 0, y: motionDistance.pageY },
+  show: { opacity: 1, y: 0, transition: springTransition },
+  exit: { opacity: 0, y: 6, transition: springFastTransition },
+};

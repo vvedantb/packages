@@ -15,6 +15,13 @@ import {
   menuShortcutClass,
   menuSubTriggerClass,
 } from "./_menu-classes";
+import {
+  fitViewportClass,
+  MenuItemRow,
+  SubTriggerRow,
+  suppressAltKeyDown,
+} from "./_menu-parts";
+import { restoreModalScrollLock } from "./overlay-a11y";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
@@ -27,14 +34,18 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
     inset?: boolean;
+    /** Leading icon or mark. The label then fills the row. */
+    startContent?: React.ReactNode;
   }
->(({ className, inset, children, ...props }, ref) => (
+>(({ className, inset, startContent, children, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(menuSubTriggerClass, inset && "pl-8", className)}
     {...props}
   >
-    {children}
+    {startContent === undefined ? children : (
+      <SubTriggerRow startContent={startContent}>{children}</SubTriggerRow>
+    )}
     <IconChevronRight className="ml-auto" />
   </DropdownMenuPrimitive.SubTrigger>
 ));
@@ -58,17 +69,48 @@ DropdownMenuSubContent.displayName =
 
 const DropdownMenuContent = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <DropdownMenuPrimitive.Portal>
-    <DropdownMenuPrimitive.Content
-      ref={ref}
-      sideOffset={sideOffset}
-      className={cn(menuContentClass, className)}
-      {...props}
-    />
-  </DropdownMenuPrimitive.Portal>
-));
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & {
+    /** On small screens, cap the height to the viewport and scroll. */
+    fitViewport?: boolean;
+    /** Stop a bare Alt press from moving focus (e.g. into the browser menu bar). */
+    suppressAltKey?: boolean;
+    /** On close, clear any body scroll lock left behind when no dialog is open. */
+    restoreScrollLockOnClose?: boolean;
+  }
+>(
+  (
+    {
+      className,
+      sideOffset = 4,
+      fitViewport,
+      suppressAltKey,
+      restoreScrollLockOnClose,
+      onKeyDown,
+      onCloseAutoFocus,
+      ...props
+    },
+    ref,
+  ) => (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        ref={ref}
+        sideOffset={sideOffset}
+        className={cn(menuContentClass, fitViewport && fitViewportClass, className)}
+        onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
+        onCloseAutoFocus={
+          restoreScrollLockOnClose
+            ? (event) => {
+                restoreModalScrollLock();
+                window.setTimeout(restoreModalScrollLock, 0);
+                onCloseAutoFocus?.(event);
+              }
+            : onCloseAutoFocus
+        }
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  ),
+);
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
 const DropdownMenuItem = React.forwardRef<
@@ -79,10 +121,12 @@ const DropdownMenuItem = React.forwardRef<
     startContent?: React.ReactNode;
     /** Second line under the label. Ignored with `asChild`. */
     description?: React.ReactNode;
+    /** Trailing content. The label then fills the row. Ignored with `asChild`. */
+    endContent?: React.ReactNode;
   }
 >(
   (
-    { className, inset, startContent, description, children, asChild, ...props },
+    { className, inset, startContent, description, endContent, children, asChild, ...props },
     ref,
   ) => (
     <DropdownMenuPrimitive.Item
@@ -91,8 +135,12 @@ const DropdownMenuItem = React.forwardRef<
       className={cn(menuItemClass, inset && "pl-8", className)}
       {...props}
     >
-      {asChild || (startContent === undefined && description === undefined) ? (
+      {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
         children
+      ) : endContent !== undefined ? (
+        <MenuItemRow startContent={startContent} description={description} endContent={endContent}>
+          {children}
+        </MenuItemRow>
       ) : (
         <>
           {startContent}
