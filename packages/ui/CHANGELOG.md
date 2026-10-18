@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.4.1
+## 0.4.2
+
+- `InputArea` inline chips: fixes a 0.4.1 bug where the user could not type when `chips` were shown. With an empty draft, the chips host was the editor's only child, so the caret had no editable position. In the compact pill, the editor was a flex container, so a click could put the caret inside a chip.
+- The editor now keeps a zero-width space (U+200B) text node right after the chips host, so the caret always has an editable position after the chips. The text is reconciled behind it. U+200B never reaches `onChange` or `onSubmit`. `data-empty`, the placeholder and the ghost suggestion are unchanged.
+- The caret and selection never rest in the chips host. On focus, click, key-up and `selectionchange`, the editor moves them to the start of the text. Clicks on controls inside chips, such as remove buttons, are not changed. Typing anywhere on the page puts the caret at the end of the text, after the chips.
+- Select-all (Ctrl+A or Cmd+A) selects the text only. Backspace, Delete, typing or paste over a selection never deletes the chips host. Backspace at the start of the text calls `onRemoveLastChip` once and keeps the zero-width space.
+- Compact pill: the editor is a block, not a flex container, so chips and text share one line of inline flow. The pill looks the same: `h-12`, plus, editor, send. Chips stay level with the text. The expanded layout is unchanged.
+- Compact width: the chips width is now measured from where the text starts. The chips host uses `display: contents` and has no width of its own. Before this fix the composer could switch between the pill and the card on each keystroke when chips were shown.
 
 - `InputArea` compact mode: `chipCount` no longer forces the stacked card. The composer stays in the one-row pill (plus, editor, send in an `h-12` pill) for short text, with or without chips that fit. It expands on a wrapped line, a newline or `fileCount` above 0. The editor classes match the session composer: expanded keeps `min-h-16 max-h-50 px-4 pt-3.5 pb-1`. `chipCount` still enables send and Backspace removal.
 - `InputArea` chips: with `chipsPlacement="inline"` (default) the input is a contenteditable. `chips` render in a non-editable inline host (`data-composer-chips-inline`) at the start of the same text flow, so wrapped lines start under the chips at the left edge. `value` and `onChange` stay plain text. Backspace at the start of the text calls `onRemoveLastChip`. Enter submits, Shift+Enter adds a newline, paste is plain text, and Enter is ignored during IME composition.

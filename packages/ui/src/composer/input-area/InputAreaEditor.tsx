@@ -28,6 +28,8 @@ export const INLINE_EDITOR_CLASS =
 // the text in a column beside it.
 const CHIPS_HOST_CLASS = "contents empty:hidden [&>*]:mr-1.5";
 
+const ZERO_WIDTH_SPACE = "\u200b";
+
 /** Reads the plain text of the editor. Skips the chips host. */
 export function extractEditorText(root: HTMLElement): string {
   let out = "";
@@ -50,7 +52,7 @@ export function extractEditorText(root: HTMLElement): string {
         return;
       }
       if (child.nodeType === Node.TEXT_NODE) {
-        out += (child.textContent ?? "").replace(/\u200b/g, "");
+        out += (child.textContent ?? "").replaceAll(ZERO_WIDTH_SPACE, "");
       }
     });
   };
@@ -58,14 +60,105 @@ export function extractEditorText(root: HTMLElement): string {
   return out;
 }
 
-function placeCaretAtEnd(el: HTMLElement) {
+function chipsHost(root: HTMLElement): HTMLElement | null {
+  for (const child of root.children) {
+    if (child instanceof HTMLElement && child.hasAttribute(CHIPS_HOST_ATTR)) return child;
+  }
+  return null;
+}
+
+/**
+ * Returns the text node right after the chips host, creating it if missing.
+ * It starts with U+200B, so the caret always has an editable position after
+ * the chips, even with an empty draft. `extractEditorText` strips U+200B.
+ */
+function ensureCaretAnchor(root: HTMLElement): Text {
+  const existing = findCaretAnchor(root);
+  if (existing) return existing;
+  const host = chipsHost(root);
+  const anchor = document.createTextNode(ZERO_WIDTH_SPACE);
+  root.insertBefore(anchor, host ? host.nextSibling : root.firstChild);
+  return anchor;
+}
+
+function findCaretAnchor(root: HTMLElement): Text | null {
+  const host = chipsHost(root);
+  const next = host ? host.nextSibling : root.firstChild;
+  return next instanceof Text && next.data.startsWith(ZERO_WIDTH_SPACE) ? next : null;
+}
+
+function setSelection(
+  anchorNode: Node,
+  anchorOffset: number,
+  focusNode: Node = anchorNode,
+  focusOffset: number = anchorOffset,
+) {
+  window.getSelection()?.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+}
+
+/** End of the text: the last text node, or the end of the editor after a line break. */
+function textEnd(root: HTMLElement): [Node, number] {
+  ensureCaretAnchor(root);
+  const last = root.lastChild;
+  if (last instanceof Text) return [last, last.length];
+  return [root, root.childNodes.length];
+}
+
+/** Puts a collapsed caret at the end of the text, after the chips host. */
+export function placeCaretAtEnd(root: HTMLElement) {
+  const [node, offset] = textEnd(root);
+  setSelection(node, offset);
+}
+
+/**
+ * Moves any selection end that sits inside or before the chips host to the
+ * first text position after it. The host is React's, so the caret must never
+ * rest in it and an edit must never delete it.
+ */
+export function normaliseSelection(root: HTMLElement) {
   const sel = window.getSelection();
-  if (!sel) return;
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  range.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(range);
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  const { startContainer, startOffset, endContainer, endOffset } = range;
+  if (!root.contains(startContainer) || !root.contains(endContainer)) return;
+  const anchor = ensureCaretAnchor(root);
+  const first = document.createRange();
+  first.setStart(anchor, 1);
+  // The host comes first, so only the start can be before the text unless both are.
+  if (first.comparePoint(startContainer, startOffset) >= 0) return;
+  const endBefore = first.comparePoint(endContainer, endOffset) < 0;
+  const [end, endAt]: [Node, number] = endBefore ? [anchor, 1] : [endContainer, endOffset];
+  const backwards =
+    !range.collapsed &&
+    sel.anchorNode === endContainer &&
+    sel.anchorOffset === endOffset;
+  if (backwards) setSelection(end, endAt, anchor, 1);
+  else setSelection(anchor, 1, end, endAt);
+}
+
+/** Selects the text only, never the chips host. */
+function selectText(root: HTMLElement) {
+  const anchor = ensureCaretAnchor(root);
+  const [node, offset] = textEnd(root);
+  setSelection(anchor, 1, node, offset);
+}
+
+/**
+ * Width the inline chips take before the text on the first line. The host is
+ * `display: contents` and has no box, so this measures where the text starts.
+ */
+export function readInlineChipsWidth(root: HTMLElement): number {
+  const anchor = findCaretAnchor(root);
+  if (!anchor || !chipsHost(root)?.childElementCount) return 0;
+  // A text offset, not an element boundary: Chromium gives no rect for the latter.
+  const textStart = document.createRange();
+  textStart.setStart(anchor, 0);
+  const style = getComputedStyle(root);
+  const contentLeft =
+    root.getBoundingClientRect().left +
+    root.clientLeft +
+    (Number.parseFloat(style.paddingLeft) || 0);
+  return Math.max(0, textStart.getBoundingClientRect().left - contentLeft);
 }
 
 /** True when nothing but the chips host sits before the caret. */
@@ -74,13 +167,24 @@ function caretAtTextStart(root: HTMLElement): boolean {
   if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return false;
   const anchor = sel.anchorNode;
   if (!anchor || !root.contains(anchor)) return false;
-  const host = root.querySelector(`[${CHIPS_HOST_ATTR}]`);
+  const host = chipsHost(root);
   if (host?.contains(anchor)) return false;
   const probe = document.createRange();
   probe.selectNodeContents(root);
   if (host) probe.setStartAfter(host);
   probe.setEnd(anchor, sel.anchorOffset);
-  return probe.toString().replace(/\u200b/g, "") === "";
+  const before = probe.cloneContents();
+  return (
+    (before.textContent ?? "").replaceAll(ZERO_WIDTH_SPACE, "") === "" &&
+    before.querySelector("br, div, p") === null
+  );
+}
+
+/** Clicks on chip controls, such as remove buttons, keep their own behaviour. */
+function isChipControl(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const control = target.closest("button, a, input, [role=button]");
+  return control?.closest(`[${CHIPS_HOST_ATTR}]`) != null;
 }
 
 function insertPlainText(root: HTMLElement, text: string) {
@@ -121,7 +225,8 @@ export type InputAreaEditorProps = {
  * Contenteditable editor. The chips host is a non-editable inline atom at the
  * start of the same text flow, so wrapped lines start under the chips. React
  * owns the host only. The text nodes after it belong to the DOM and are
- * reconciled against `value`.
+ * reconciled against `value`, behind a U+200B caret anchor that keeps an
+ * editable position after the chips.
  */
 export function InputAreaEditor({
   editorRef,
@@ -142,23 +247,45 @@ export function InputAreaEditor({
   const composingRef = useRef(false);
   const ghostProbeRef = useRef<HTMLSpanElement | null>(null);
 
-  const setRefs = (node: HTMLDivElement | null) => {
+  const assignEditorRef = (node: HTMLDivElement | null) => {
     rootRef.current = node;
     if (typeof editorRef === "function") editorRef(node);
     else if (editorRef) editorRef.current = node;
   };
 
+  const keepCaretOutsideChips = (root: HTMLElement) => {
+    if (!composingRef.current) normaliseSelection(root);
+  };
+
+  // Native listeners: React has no `selectionchange`, and its `onBeforeInput`
+  // does not see deletions.
+  const setRefs = (node: HTMLDivElement) => {
+    assignEditorRef(node);
+    const keepSelectionOutsideChips = () => {
+      if (document.activeElement === node) keepCaretOutsideChips(node);
+    };
+    document.addEventListener("selectionchange", keepSelectionOutsideChips);
+    node.addEventListener("beforeinput", keepSelectionOutsideChips);
+    return () => {
+      document.removeEventListener("selectionchange", keepSelectionOutsideChips);
+      node.removeEventListener("beforeinput", keepSelectionOutsideChips);
+      assignEditorRef(null);
+    };
+  };
+
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || composingRef.current) return;
-    if (extractEditorText(root) === value) return;
-    Array.from(root.childNodes).forEach((child) => {
-      if (!(child instanceof HTMLElement && child.hasAttribute(CHIPS_HOST_ATTR))) {
-        root.removeChild(child);
-      }
-    });
-    if (value !== "") root.appendChild(document.createTextNode(value));
-    if (document.activeElement === root) placeCaretAtEnd(root);
+    if (extractEditorText(root) !== value) {
+      Array.from(root.childNodes).forEach((child) => {
+        if (!(child instanceof HTMLElement && child.hasAttribute(CHIPS_HOST_ATTR))) {
+          root.removeChild(child);
+        }
+      });
+      root.appendChild(document.createTextNode(ZERO_WIDTH_SPACE + value));
+      if (document.activeElement === root) placeCaretAtEnd(root);
+    }
+    ensureCaretAnchor(root);
   });
 
   // Copy the probe colour to the editor. Opacity below 1 is folded into the
@@ -185,8 +312,20 @@ export function InputAreaEditor({
     onKeyDown?.(event);
     if (event.defaultPrevented) return;
     const root = event.currentTarget;
+    if (composingRef.current || event.nativeEvent.isComposing) return;
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      !event.altKey &&
+      !event.shiftKey &&
+      event.key.toLowerCase() === "a"
+    ) {
+      event.preventDefault();
+      selectText(root);
+      return;
+    }
+    // Before the default action, so a selection never spans the chips host.
+    normaliseSelection(root);
     if (event.key === "Enter") {
-      if (composingRef.current || event.nativeEvent.isComposing) return;
       if (event.shiftKey) return;
       event.preventDefault();
       const form = root.closest("form");
@@ -197,13 +336,10 @@ export function InputAreaEditor({
       form?.requestSubmit();
       return;
     }
-    if (
-      event.key === "Backspace" &&
-      chipCount > 0 &&
-      caretAtTextStart(root)
-    ) {
+    // Nothing visible to delete. The default would eat the U+200B anchor.
+    if (event.key === "Backspace" && caretAtTextStart(root)) {
       event.preventDefault();
-      onRemoveLastChip?.();
+      if (chipCount > 0) onRemoveLastChip?.();
     }
   };
 
@@ -231,6 +367,7 @@ export function InputAreaEditor({
         className={cn(INLINE_EDITOR_CLASS, className)}
         onInput={(event) => {
           if (composingRef.current) return;
+          ensureCaretAnchor(event.currentTarget);
           onValueChange(extractEditorText(event.currentTarget));
         }}
         onCompositionStart={() => {
@@ -238,9 +375,15 @@ export function InputAreaEditor({
         }}
         onCompositionEnd={(event) => {
           composingRef.current = false;
+          ensureCaretAnchor(event.currentTarget);
           onValueChange(extractEditorText(event.currentTarget));
         }}
         onKeyDown={handleKeyDown}
+        onFocus={(event) => keepCaretOutsideChips(event.currentTarget)}
+        onMouseUp={(event) => {
+          if (!isChipControl(event.target)) keepCaretOutsideChips(event.currentTarget);
+        }}
+        onKeyUp={(event) => keepCaretOutsideChips(event.currentTarget)}
         onPaste={handlePaste}
         onBlur={onBlur}
       >

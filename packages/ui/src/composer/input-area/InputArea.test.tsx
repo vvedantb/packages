@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InputArea, type InputAreaProps } from "./InputArea";
+import { normaliseSelection, placeCaretAtEnd } from "./InputAreaEditor";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -58,7 +59,7 @@ describe("InputArea", () => {
       submit().form!.requestSubmit();
     });
     expect(onSubmit).toHaveBeenCalledWith("hello");
-    expect(editor().textContent).toBe("");
+    expect(editor().textContent?.replaceAll("\u200b", "")).toBe("");
   });
 
   it("enables send for chips alone", async () => {
@@ -163,7 +164,8 @@ describe("InputArea", () => {
       expect(host.parentElement).toBe(editor());
       expect(document.querySelector("textarea")).toBeNull();
       expect(editor().textContent).toContain("hello");
-      expect(host.nextSibling?.textContent).toBe("hello");
+      // A U+200B anchor leads the text, so the caret always has a place after the chips.
+      expect(host.nextSibling?.textContent).toBe("\u200bhello");
     });
 
     it("keeps typed text after the chips and reports plain text", async () => {
@@ -171,7 +173,7 @@ describe("InputArea", () => {
       await mount({ chips: chip, chipCount: 1, onChange });
       await type("abc");
       expect(onChange).toHaveBeenLastCalledWith("abc");
-      expect(editor().textContent).toBe("skillabc");
+      expect(editor().textContent?.replaceAll("\u200b", "")).toBe("skillabc");
     });
 
     it("places chips above the input when chipsPlacement is top", async () => {
@@ -195,6 +197,187 @@ describe("InputArea", () => {
         key({ key: "Backspace" });
       });
       expect(onRemoveLastChip).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("caret around inline chips", () => {
+    const chips = (
+      <>
+        <button type="button" data-testid="chip">/review</button>
+        <button type="button" aria-label="Remove review">x</button>
+      </>
+    );
+    const chipsHost = () =>
+      document.querySelector("[data-composer-chips-inline]") as HTMLElement;
+    const selection = () => window.getSelection()!;
+    const caretOutsideHost = () => {
+      const sel = selection();
+      return !chipsHost().contains(sel.anchorNode) && !chipsHost().contains(sel.focusNode);
+    };
+    function setCaret(node: Node, offset: number, focusNode = node, focusOffset = offset) {
+      selection().setBaseAndExtent(node, offset, focusNode, focusOffset);
+    }
+
+    it.each(["", "hello"])("keeps a U+200B text node right after the host (value %j)", async (value) => {
+      await mount({ chips, chipCount: 1, defaultValue: value });
+      const next = chipsHost().nextSibling;
+      expect(next?.nodeType).toBe(Node.TEXT_NODE);
+      expect(next?.textContent).toBe(`\u200b${value}`);
+    });
+
+    it("restores the anchor when the DOM loses it", async () => {
+      const onChange = vi.fn();
+      await mount({ chips, chipCount: 1, onChange });
+      await act(async () => {
+        chipsHost().nextSibling!.remove();
+        editor().appendChild(document.createTextNode("x"));
+        editor().dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      expect(chipsHost().nextSibling?.textContent).toBe("\u200b");
+      expect(onChange).toHaveBeenLastCalledWith("x");
+    });
+
+    it("never reports U+200B through onChange or onSubmit", async () => {
+      const onChange = vi.fn();
+      const onSubmit = vi.fn();
+      await mount({ chips, chipCount: 1, onChange, onSubmit });
+      await type("hi");
+      await act(async () => {
+        key({ key: "Enter" });
+      });
+      await type("again");
+      expect(onChange.mock.calls.map(([v]) => v)).toEqual(["hi", "", "again"]);
+      expect(onSubmit.mock.calls).toEqual([["hi"]]);
+      expect(editor().hasAttribute("data-empty")).toBe(false);
+    });
+
+    it("keeps data-empty for an empty draft with chips", async () => {
+      await mount({ chips, chipCount: 1, placeholder: "Ask" });
+      expect(editor().hasAttribute("data-empty")).toBe(true);
+      expect(editor().getAttribute("data-placeholder")).toBe("Ask");
+    });
+
+    it.each(["", "hello"])("placeCaretAtEnd lands after the host (value %j)", async (value) => {
+      await mount({ chips, chipCount: 1, defaultValue: value });
+      editor().focus();
+      placeCaretAtEnd(editor());
+      const sel = selection();
+      expect(sel.isCollapsed).toBe(true);
+      expect(sel.anchorNode).toBe(chipsHost().nextSibling);
+      expect(sel.anchorOffset).toBe(1 + value.length);
+    });
+
+    it("moves a caret inside a chip to the start of the text", async () => {
+      await mount({ chips, chipCount: 1, defaultValue: "hello" });
+      const chipText = (document.querySelector('[data-testid="chip"]') as HTMLElement).firstChild!;
+      setCaret(chipText, 3);
+      normaliseSelection(editor());
+      expect(caretOutsideHost()).toBe(true);
+      expect(selection().anchorNode).toBe(chipsHost().nextSibling);
+      expect(selection().anchorOffset).toBe(1);
+    });
+
+    it("moves a caret before the host, or before the anchor, to the start of the text", async () => {
+      await mount({ chips, chipCount: 1 });
+      const anchor = chipsHost().nextSibling!;
+      for (const [node, offset] of [[editor(), 0], [editor(), 1], [anchor, 0]] as const) {
+        setCaret(node, offset);
+        normaliseSelection(editor());
+        expect([selection().anchorNode, selection().anchorOffset]).toEqual([anchor, 1]);
+      }
+    });
+
+    it("normalises the caret on focus", async () => {
+      await mount({ chips, chipCount: 1, defaultValue: "hello" });
+      setCaret(editor(), 0);
+      await act(async () => {
+        editor().focus();
+        editor().dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      });
+      expect(caretOutsideHost()).toBe(true);
+    });
+
+    it("type-anywhere focuses the editor with the caret after the host", async () => {
+      await mount({ chips, chipCount: 1 });
+      (document.activeElement as HTMLElement | null)?.blur();
+      await act(async () => {
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
+      });
+      expect(document.activeElement).toBe(editor());
+      expect(selection().anchorNode).toBe(chipsHost().nextSibling);
+      expect(selection().anchorOffset).toBe(1);
+    });
+
+    it.each(["", "hello"])("Backspace at the text start removes one chip and keeps the anchor (value %j)", async (value) => {
+      const onRemoveLastChip = vi.fn();
+      await mount({ chips, chipCount: 1, onRemoveLastChip, defaultValue: value });
+      editor().focus();
+      setCaret(chipsHost().nextSibling!, 1);
+      let event!: KeyboardEvent;
+      await act(async () => {
+        event = key({ key: "Backspace" });
+      });
+      expect(event.defaultPrevented).toBe(true);
+      expect(onRemoveLastChip).toHaveBeenCalledTimes(1);
+      expect(chipsHost().nextSibling?.textContent).toBe(`\u200b${value}`);
+    });
+
+    it("leaves Backspace inside the text to the browser", async () => {
+      const onRemoveLastChip = vi.fn();
+      await mount({ chips, chipCount: 1, onRemoveLastChip, defaultValue: "hello" });
+      editor().focus();
+      placeCaretAtEnd(editor());
+      let event!: KeyboardEvent;
+      await act(async () => {
+        event = key({ key: "Backspace" });
+      });
+      expect(event.defaultPrevented).toBe(false);
+      expect(onRemoveLastChip).not.toHaveBeenCalled();
+    });
+
+    it("select-all selects the text only", async () => {
+      await mount({ chips, chipCount: 1, defaultValue: "hello" });
+      editor().focus();
+      let event!: KeyboardEvent;
+      await act(async () => {
+        event = key({ key: "a", ctrlKey: true });
+      });
+      expect(event.defaultPrevented).toBe(true);
+      expect(caretOutsideHost()).toBe(true);
+      expect(selection().toString().replaceAll("\u200b", "")).toBe("hello");
+    });
+
+    it.each(["Backspace", "Delete", "x"])("a whole-editor selection + %s clears the text and keeps the chips", async (pressed) => {
+      const onChange = vi.fn();
+      await mount({ chips, chipCount: 1, onChange, defaultValue: "hello" });
+      editor().focus();
+      setCaret(editor(), 0, editor(), editor().childNodes.length);
+      await act(async () => {
+        const event = key({ key: pressed });
+        expect(event.defaultPrevented).toBe(false);
+        // The browser default: delete the (normalised) selection.
+        selection().getRangeAt(0).deleteContents();
+        editor().dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      expect(editor().contains(chipsHost())).toBe(true);
+      expect(document.querySelector('[data-testid="chip"]')).not.toBeNull();
+      expect(document.querySelector('[aria-label="Remove review"]')).not.toBeNull();
+      expect(chipsHost().nextSibling?.textContent).toBe("\u200b");
+      expect(onChange).toHaveBeenLastCalledWith("");
+    });
+
+    it("does not move the caret while a chip control is clicked", async () => {
+      const onRemove = vi.fn();
+      await mount({
+        chips: <button type="button" aria-label="Remove review" onClick={onRemove}>x</button>,
+        chipCount: 1,
+      });
+      const remove = document.querySelector('[aria-label="Remove review"]') as HTMLButtonElement;
+      await act(async () => {
+        remove.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+        remove.click();
+      });
+      expect(onRemove).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -22,7 +22,7 @@ import {
 import { SpeechInput } from "../../ai-elements/speech-input";
 import { chatInputContainerClass } from "../../ui/surface-classes";
 import { ComposerSlashMenu } from "./ComposerSlashMenu";
-import { InputAreaEditor } from "./InputAreaEditor";
+import { InputAreaEditor, placeCaretAtEnd } from "./InputAreaEditor";
 import { FadePresence } from "./FadePresence";
 import { InputActions, type InputActionsProps } from "./InputActions";
 import { motionFast } from "./motion";
@@ -33,8 +33,11 @@ import { useInputAreaPrediction } from "./useInputAreaPrediction";
 
 const EXPANDED_EDITOR =
   "min-h-16 max-h-50 w-full self-stretch overflow-y-auto rounded-none px-4 pt-3.5 pb-1 text-left";
+// Block, not flex: chips and text must share one inline flow, or a click lands
+// the caret inside a chip. The 36px box (py-2 + leading-5) centres the line, and
+// `align-top` keeps chips level with the text as the old flex row did.
 const COMPACT_EDITOR =
-  "flex min-h-9 max-h-9 min-w-0 w-auto flex-1 items-center self-center overflow-hidden whitespace-pre! rounded-none px-1 py-2 text-left leading-5";
+  "block min-h-9 max-h-9 min-w-0 w-auto overflow-hidden whitespace-pre! rounded-none px-1 py-2 text-left leading-5 [&>[data-composer-chips-inline]>*]:align-top";
 const COMPACT_START_ADDON =
   "order-first shrink-0 justify-start gap-1 py-0 pl-1.5 pr-0 has-[>button]:ml-0";
 const COMPACT_END_ADDON =
@@ -252,14 +255,7 @@ export function InputArea({
           const length = editor.value.length;
           editor.setSelectionRange(length, length);
         } else {
-          const sel = window.getSelection();
-          if (sel) {
-            const range = document.createRange();
-            range.selectNodeContents(editor);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
+          placeCaretAtEnd(editor);
         }
       }
     };
