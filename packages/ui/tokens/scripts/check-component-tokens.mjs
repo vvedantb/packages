@@ -31,6 +31,12 @@ function* walk(dir) {
   }
 }
 
+// One intentional compat default: the InputArea ghost text class must be the
+// bare `text-muted` of the original app composer. Allowed only in that file,
+// and only on a line that carries the marker comment.
+const ALLOW_MARKER = "check-tokens-allow: text-muted";
+const ALLOW_FILE = "src/composer/input-area/InputArea.tsx";
+
 const hits = [];
 for (const d of dirs) {
   for (const file of walk(join(root, d))) {
@@ -38,6 +44,7 @@ for (const d of dirs) {
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
+        if (r.msg === "use text-muted-foreground" && line.includes(ALLOW_MARKER) && relative(root, file) === ALLOW_FILE) continue;
         for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }
     });

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0-rc.1
+
+Release candidate. It folds in the 0.4.0 notes below and adds the following.
+
+- Root exports: `InputArea`, `ConnectionStatusMenuItem`, `buildComposerSlashItems` and their public types are importable from `@vvedantb/ui` and from `@vvedantb/ui/composer`. The root re-exports `./composer`. `MIGRATION.md` now shows root imports first.
+- `InputArea` `predictionTextClassName`: classes on the ghost suggestion span. The default is `text-muted`, matching the original app composer. This replaces the `text-muted-foreground` default in the 0.4.0 notes. `check:tokens` allows the bare `text-muted` on one marked line in `InputArea.tsx` only. Pass `text-muted-foreground` to keep the earlier look.
+- Tree-shaking: `sideEffects` is unchanged (`./src/ui/sonner.css` only). Composer modules have no top-level side effects. `LazyMotion` and `domAnimation` run only inside the `InputArea` render.
+- Peer dependencies: none added. The composer uses existing peers (`motion`, `react`, Radix, `@tabler/icons-react` and others). An app that never imports composer symbols needs nothing new.
+
 ## 0.4.0
 
 Additive. Nothing from 0.3.x is removed or changed in behaviour. See [`composer/MIGRATION.md`](composer/MIGRATION.md) for the exact props an app passes.
@@ -9,7 +18,7 @@ Additive. Nothing from 0.3.x is removed or changed in behaviour. See [`composer/
 - `Button` `startContent` and `DropdownMenuItem` `startContent` and `description`: optional. Omitted, the markup is unchanged.
 - **Deprecated:** the 0.3 `Composer` (a from-scratch generic composer). Use `InputArea`. `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton` and `useComposerPrediction` still work unchanged and are not removed in this release. Replacing or removing `Composer` in a later release would be cleaner, because two composers with two prediction hooks is confusing, but that is a breaking change for any consumer and is left for a major or a clearly flagged minor.
 - `useInputAreaPrediction` is the extracted prediction hook. It does not replace the 0.3 `useComposerPrediction`, which has a different signature.
-- Ghost text uses `text-muted-foreground` where the app used `text-muted`, because `check:tokens` forbids `text-muted`. If the app theme maps the two to different colours, the ghost text colour changes. Check this when you migrate.
+- Ghost text: superseded in 0.4.0-rc.1 by `predictionTextClassName` (default `text-muted`).
 - Parity fixture: `composer/examples/parity.html` and `composer/examples/parity/`. `PARITY.md` lists pixels changed per state against a frozen snapshot of the original JSX.
 - Tests: ported unit tests (compact, prediction helpers, slash items, trigger, position, option id, contract) and `InputArea` render tests.
 

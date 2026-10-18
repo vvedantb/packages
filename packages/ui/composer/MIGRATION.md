@@ -1,6 +1,16 @@
 # Migrating the app composer to `InputArea`
 
-Replace the app `InputAreaCore` with `InputArea` from `@vvedantb/ui/composer` (0.4.0). The package holds the UI. The app keeps data, routing, billing and skills. This note lists what the app passes so the output stays the same.
+Replace the app `InputAreaCore` with `InputArea` from `@vvedantb/ui` (0.4.0-rc.1). The package holds the UI. The app keeps data, routing, billing and skills. This note lists what the app passes so the output stays the same.
+
+```ts
+import {
+  InputArea,
+  ConnectionStatusMenuItem,
+  buildComposerSlashItems,
+} from "@vvedantb/ui";
+```
+
+`@vvedantb/ui/composer` remains a supported alias for the same symbols and their types (`InputAreaProps`, `InputAreaSlashContext`, `ConnectionStatusMenuItemProps`, `ComposerSlashItem` and others). Both entry points are tree-shakeable. An app that imports neither gets no composer code.
 
 Source for the mapping: `apps/web/src/components/chat/input/InputAreaCore.tsx`, the chat route and `ProjectInputArea.tsx` (source tarball, not dated). Anything marked **check** could not be confirmed from the tarball.
 
@@ -44,7 +54,7 @@ Project chat (`ProjectInputArea.tsx`): `value` and `onChange` from the route, `C
 
 ## Differences to check
 
-- Ghost text: `text-muted` became `text-muted-foreground`. Check the app theme maps both to the same colour.
+- Ghost text: new prop `predictionTextClassName`, applied to the ghost suggestion span. The default is `text-muted`, as in the original app composer, so nothing changes on migration. To use the token-safe class, pass `predictionTextClassName="text-muted-foreground"`. The default needs a `text-muted` utility in the app theme.
 - The app `@vv/ui` adapters (`Dropdown`, `DropdownTrigger`, `DropdownItem`, `Button startContent`) are not in the tarball. The package uses its own `DropdownMenu*` parts and the new optional `startContent` and `description`. **Check** that the app adapters render the same row layout (icon, then label with a second description line).
 - `FadePresence` and the fast transition are rebuilt from the call sites. **Check** against the app versions.
 - `InputArea` wraps itself in `LazyMotion` (`domAnimation`) and `TooltipProvider`. Nested providers are harmless.

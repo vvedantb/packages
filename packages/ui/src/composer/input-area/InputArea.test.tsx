@@ -70,6 +70,27 @@ describe("InputArea", () => {
     expect(document.querySelector('[aria-label="Stop generating"]')).not.toBeNull();
   });
 
+  describe("prediction text class", () => {
+    async function ghostSpan(extra: Partial<InputAreaProps>) {
+      await mount({ getPrediction: async () => "and then some", ...extra });
+      await type("a draft long enough to predict");
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 650));
+      });
+      return document.querySelector("[aria-hidden] > span") as HTMLElement | null;
+    }
+
+    it("defaults to text-muted, as the original app composer", async () => {
+      const span = await ghostSpan({});
+      expect(span?.className).toBe("text-muted");
+    });
+
+    it("applies predictionTextClassName", async () => {
+      const span = await ghostSpan({ predictionTextClassName: "text-muted-foreground" });
+      expect(span?.className).toBe("text-muted-foreground");
+    });
+  });
+
   it("opens the slash menu from /", async () => {
     await mount({
       slashItems: [

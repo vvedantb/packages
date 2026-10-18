@@ -37,6 +37,12 @@ const COMPACT_START_ADDON =
 const COMPACT_END_ADDON =
   "order-last shrink-0 justify-end gap-1 py-0 pr-1.5 pl-1 has-[>button]:mr-0";
 
+/**
+ * Default ghost text class. It matches the original app composer, whose theme
+ * defines the bare muted utility. Pass `predictionTextClassName` to use another class.
+ */
+export const DEFAULT_PREDICTION_TEXT_CLASS = "text-muted"; // check-tokens-allow: text-muted
+
 export const DEFAULT_ATTACH_ACCEPT =
   "image/png,image/jpeg,image/jpg,image/webp,application/pdf";
 
@@ -94,6 +100,8 @@ export type InputAreaProps = {
   /** Returns a continuation for the draft. Omit to turn ghost text off. */
   getPrediction?: (text: string) => Promise<string>;
   predictionEnabled?: boolean;
+  /** Classes on the ghost suggestion span. Default matches the original app composer. */
+  predictionTextClassName?: string;
 
   /** Wrapper around banners, queue and the input. */
   className?: string;
@@ -138,6 +146,7 @@ export function InputArea({
   renderSlashItem,
   getPrediction,
   predictionEnabled = true,
+  predictionTextClassName = DEFAULT_PREDICTION_TEXT_CLASS,
   className,
   containerClassName,
   borderClassName,
@@ -402,7 +411,7 @@ export function InputArea({
                         )}
                       >
                         {input}
-                        <span className="text-muted-foreground">
+                        <span className={predictionTextClassName}>
                           {prediction.suggestion}
                         </span>
                       </div>

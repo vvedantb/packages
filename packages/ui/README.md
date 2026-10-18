@@ -44,7 +44,7 @@ useReplyChime({ enabled: soundOn, isStreaming, threadId });
 `InputArea` is the chat composer extracted from an app: a pill that grows into a card, a plus menu, dictate, stop and send, ghost text, a `/` menu, and slots for banners, a queue, attachments and chips. It is presentational. It makes no requests and reads no router, billing or storage. The app passes data in and handles callbacks. It adds its own `TooltipProvider` and `LazyMotion`, so it needs no app provider.
 
 ```tsx
-import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui/composer";
+import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui"; // or "@vvedantb/ui/composer"
 
 <InputArea
   value={draft}
@@ -88,7 +88,7 @@ Building blocks: `InputActions`, `ConnectionStatusMenuItem` (icon, label, descri
 
 ### Composer (deprecated)
 
-> **Deprecated in 0.4.0.** Use `InputArea`. The 0.3 `Composer` was written from scratch and does not match the app composer. It stays exported and unchanged for existing consumers, and is not removed in 0.4.0.
+> **Deprecated in 0.4.0-rc.1.** Use `InputArea`. The 0.3 `Composer` was written from scratch and does not match the app composer. It stays exported and unchanged for existing consumers, and is not removed in 0.4.0-rc.1.
 
 Chat composer with an autosizing textarea, a footer with a plus-menu slot, action slots and a send or stop button. It also shows optional ghost-text predictions. It makes no network calls: the app supplies `getPrediction`.
 
