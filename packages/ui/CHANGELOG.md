@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2
+
+Additive and default-safe. With the new props omitted, `Composer` and `ComposerShell` behave as in 0.3.1.
+
+- `Composer` `canSend?: boolean | ((draft: string) => boolean)`: overrides whether send is enabled. Omitted, send is enabled when the trimmed draft is not empty, as before. A boolean gates send directly. A function receives the live draft (not trimmed), so callers usually check `draft.trim()` and any attachments, for example `canSend={(draft) => draft.trim() !== "" || hasAttachments}`. `disabled` always disables send and the textarea. With `stopMode="replace"`, `streaming` still blocks send. When `canSend` allows an empty or whitespace draft, `onSubmit` is called with `""`. The `onSubmit` note "never called for an empty draft" now applies only when `canSend` is omitted.
+- `Composer` and `ComposerShell` `stopMode?: "replace" | "alongside"` (default `"replace"`). `"replace"` keeps the 0.3.1 behaviour: while streaming, stop takes the place of send and Enter does not submit. `"alongside"`: while streaming, the footer shows `trailingActions`, then stop, then send. Send stays usable to queue the next message, so Enter and the send button submit while streaming when `canSend` allows. Not streaming, only send shows. Predictions stay off while streaming. The shell carries `data-stop-mode`.
+- `ComposerShell` `canSend` stays a boolean. `Composer` resolves the function form and passes the result.
+- New type `ComposerStopMode`.
+- Fixture: new states for an empty draft with `canSend` on, and streaming with `stopMode="alongside"`.
+- Tests: `canSend` (boolean, function, `disabled`, streaming in replace mode, regression for the empty default) and `stopMode` (replace, alongside, button order, submit while streaming, stop, disabled, predictions).
+
 ## 0.3.1
 
 Additive. Opt-in or default-safe. Defaults are unchanged, except the `SessionsHoverCard` focus fix and the `hoverChip` hover border below.

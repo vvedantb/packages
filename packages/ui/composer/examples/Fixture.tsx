@@ -135,6 +135,22 @@ export function Fixture() {
         <Section title="Streaming (stop button)">
           <Composer plusMenu={plus} streaming placeholder="Reply is streaming" />
         </Section>
+        <Section title='Streaming, stopMode="alongside"'>
+          <Composer
+            plusMenu={plus}
+            streaming
+            stopMode="alongside"
+            defaultValue="Queue this next"
+            placeholder="Reply is streaming"
+          />
+        </Section>
+        <Section title="Empty draft, canSend on (attachment only)">
+          <Composer
+            plusMenu={plus}
+            canSend
+            attachments={<Chip name="brief.pdf" />}
+          />
+        </Section>
         <Section title="Disabled">
           <Composer plusMenu={plus} disabled placeholder="Not available" />
         </Section>

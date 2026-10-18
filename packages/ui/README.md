@@ -59,8 +59,10 @@ import { Composer, ComposerIconButton } from "@vvedantb/ui"; // or "@vvedantb/ui
 | Prop | Default | Notes |
 | --- | --- | --- |
 | `value`, `defaultValue`, `onChange` | uncontrolled, `""` | Pass `value` to control it. When controlled, clear the value yourself after `onSubmit`. When uncontrolled, the composer clears after submit. |
-| `onSubmit(text)` | none | Called with the trimmed draft on Enter or the send button. Not called for an empty draft, or when `disabled` or `streaming`. If it returns a rejected promise, an uncontrolled composer restores the draft. |
-| `streaming`, `onStop` | `false` | The stop button replaces send and calls `onStop`. Typing stays on, Enter does not submit. |
+| `onSubmit(text)` | none | Called with the trimmed draft on Enter or the send button. By default it is not called for an empty draft, or when `disabled` or (with `stopMode="replace"`) `streaming`. A `canSend` override that allows an empty draft calls it with `""`. If it returns a rejected promise, an uncontrolled composer restores the draft. |
+| `streaming`, `onStop` | `false` | The stop button calls `onStop`. With `stopMode="replace"` it replaces send and Enter does not submit. Typing stays on. |
+| `stopMode` | `"replace"` | `"alongside"` shows stop and send together while streaming, in the order `trailingActions`, stop, send. Send stays usable to queue the next message: Enter and the send button submit while streaming when `canSend` allows. Not streaming, only send shows. Predictions stay off while streaming. |
+| `canSend` | trimmed draft is not empty | `boolean` or `(draft: string) => boolean`. Overrides whether send is enabled. The function gets the live draft (not trimmed). `disabled` and, in replace mode, `streaming` still block send. With attachments, use `canSend={(draft) => draft.trim() !== "" \|\| hasAttachments}`. `onSubmit` then gets `""` for an empty draft. |
 | `disabled` | `false` | Disables the textarea and send. |
 | `placeholder` | `"Message"` | Also the textarea `aria-label`. |
 | `layout` | `"stacked"` | `"stacked"`: input above, footer bar with `plusMenu` left and `trailingActions` plus send or stop right. `"inline"`: one row with `plusMenu`, the input and the actions. Attachments stay above the row. |
@@ -124,7 +126,7 @@ function MentionComposer({ draft, setDraft, send }: Props) {
 }
 ```
 
-`ComposerShell` props: `layout`, `disabled`, `streaming`, `canSend`, `onSend`, `onStop`, `plusMenu`, `trailingActions`, `attachments`, `className` and `children` (the input region). In the shell the Enter, Tab and Esc keys are yours to wire when you do not use `Composer`.
+`ComposerShell` props: `layout`, `disabled`, `streaming`, `canSend` (always a boolean: `Composer` resolves the function form), `stopMode` (`"replace"` or `"alongside"`, where the buttons render), `onSend`, `onStop`, `plusMenu`, `trailingActions`, `attachments`, `className` and `children` (the input region). In the shell the Enter, Tab and Esc keys are yours to wire when you do not use `Composer`.
 
 Fixture: `composer/examples/` (see its README). It has a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark.
 

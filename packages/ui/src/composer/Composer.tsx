@@ -15,6 +15,12 @@ import { useComposerPrediction } from "./useComposerPrediction";
 export type ComposerSlotContext = { disabled: boolean };
 export type ComposerTrailingContext = { disabled: boolean; streaming: boolean };
 export type ComposerLayout = "stacked" | "inline";
+/**
+ * How stop behaves while `streaming`. `"replace"` (default): stop takes the
+ * place of send. `"alongside"`: stop and send show together, in the order
+ * trailing actions, stop, send.
+ */
+export type ComposerStopMode = "replace" | "alongside";
 
 export type ComposerInputRenderContext = {
   value: string;
@@ -44,13 +50,30 @@ export type ComposerProps = {
   defaultValue?: string;
   onChange?: (value: string) => void;
 
-  /** Called with the trimmed draft on Enter or the send button. Never called for an empty draft. */
+  /**
+   * Called with the trimmed draft on Enter or the send button. By default it
+   * is not called for an empty draft. A `canSend` override that allows an
+   * empty draft calls it with `""`.
+   */
   onSubmit?: (value: string) => void | Promise<void>;
   onStop?: () => void;
-  /** Shows the stop button in place of send. Typing stays enabled. Enter does not submit. */
+  /**
+   * Shows the stop button. With `stopMode="replace"` (default) it takes the
+   * place of send and Enter does not submit. Typing stays enabled.
+   */
   streaming?: boolean;
-  /** Disables the textarea and the send button. */
+  /** Disables the textarea and the send button. `canSend` cannot override it. */
   disabled?: boolean;
+  /**
+   * Overrides whether send is enabled. Default: the trimmed draft is not
+   * empty. `disabled` and, with `stopMode="replace"`, `streaming` still block
+   * send. A function receives the live draft (not trimmed), so check
+   * `draft.trim()` yourself. Use it to allow an empty draft when attachments
+   * exist: `canSend={(draft) => draft.trim() !== "" || hasAttachments}`.
+   */
+  canSend?: boolean | ((draft: string) => boolean);
+  /** `"replace"` (default) or `"alongside"`. See `ComposerStopMode`. */
+  stopMode?: ComposerStopMode;
 
   placeholder?: string;
   /** Maximum textarea height in px. The textarea scrolls after it. Default 200. */
@@ -124,8 +147,10 @@ export type ComposerShellProps = {
   layout?: ComposerLayout;
   disabled?: boolean;
   streaming?: boolean;
-  /** Enables the send button. */
+  /** Enables the send button. Always a boolean: `Composer` resolves its function form. */
   canSend?: boolean;
+  /** `"replace"` (default) or `"alongside"`. Alongside while streaming: trailing actions, stop, send. */
+  stopMode?: ComposerStopMode;
   onSend?: () => void;
   onStop?: () => void;
   plusMenu?: SlotNode<ComposerSlotContext>;
@@ -147,6 +172,7 @@ function ComposerShell({
   disabled = false,
   streaming = false,
   canSend = false,
+  stopMode = "replace",
   onSend,
   onStop,
   plusMenu,
@@ -162,7 +188,7 @@ function ComposerShell({
       : trailingActions;
   const inline = layout === "inline";
 
-  const action = streaming ? (
+  const stopButton = (
     <ComposerIconButton
       variant="default"
       aria-label="Stop generating"
@@ -171,7 +197,8 @@ function ComposerShell({
     >
       <IconPlayerStop className="size-4" aria-hidden="true" />
     </ComposerIconButton>
-  ) : (
+  );
+  const sendButton = (
     <ComposerIconButton
       variant="default"
       aria-label="Send message"
@@ -182,6 +209,16 @@ function ComposerShell({
       <IconArrowUp className="size-4" aria-hidden="true" />
     </ComposerIconButton>
   );
+  const action = !streaming ? (
+    sendButton
+  ) : stopMode === "alongside" ? (
+    <>
+      {stopButton}
+      {sendButton}
+    </>
+  ) : (
+    stopButton
+  );
 
   return (
     <div
@@ -189,6 +226,7 @@ function ComposerShell({
       data-layout={layout}
       data-disabled={disabled || undefined}
       data-streaming={streaming || undefined}
+      data-stop-mode={stopMode}
       className={cn(
         "group/composer relative flex w-full min-w-0 flex-col rounded-field border border-border bg-field-background text-sm transition-[border-color,box-shadow] duration-200 ease-smooth",
         "has-[[data-composer-input]:focus-visible]:border-focus-border has-[[data-composer-input]:focus-visible]:ring-2 has-[[data-composer-input]:focus-visible]:ring-focus-ring",
@@ -274,6 +312,8 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
     onStop,
     streaming = false,
     disabled = false,
+    canSend: canSendProp,
+    stopMode = "replace",
     placeholder = "Message",
     maxHeight = DEFAULT_MAX_HEIGHT,
     autoFocus,
@@ -343,7 +383,11 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
   };
   React.useLayoutEffect(syncScroll, [value, ghost]);
 
-  const canSend = !disabled && !streaming && value.trim() !== "";
+  const override = typeof canSendProp === "function" ? canSendProp(value) : canSendProp;
+  const canSend =
+    !disabled &&
+    (stopMode === "alongside" || !streaming) &&
+    (override ?? value.trim() !== "");
 
   const submit = () => {
     if (!canSend) return;
@@ -454,6 +498,7 @@ const Composer = React.forwardRef<HTMLTextAreaElement, ComposerProps>(function C
       disabled={disabled}
       streaming={streaming}
       canSend={canSend}
+      stopMode={stopMode}
       onSend={submit}
       onStop={onStop}
       plusMenu={plusMenu}
