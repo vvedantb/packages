@@ -1,13 +1,13 @@
 # `@vvedantb/ui/tokens`
 
-Design tokens and shared Tailwind v4 CSS for the vvedantb web apps, plus JS tokens for React Native. These are subpaths of `@vvedantb/ui`, source-exported: no build step. Paths in the `File` column are relative to `packages/ui/tokens/`.
+Design tokens and shared Tailwind v4 CSS for the vvedantb web apps. The CSS and Tailwind preset are subpaths of `@vvedantb/ui`; the native JS tokens are named exports of the root (`tokens`, `Tokens`). Source-exported: no build step. Paths in the `File` column are relative to `packages/ui/tokens/`.
 
 ## Exports
 
 | Export | File | What it is |
 | --- | --- | --- |
 | `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, `*` border and `body` defaults. In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. |
-| `@vvedantb/ui/tokens/native` | `src/native.ts` | JS colours, radii and spacing for React Native. `@vvedantb/native-ui` keeps its own copy in `src/tokens.ts`; a test keeps the two equal. |
+| `tokens` and `Tokens` from `@vvedantb/ui` | `src/native.ts` | JS colours, radii and spacing for React Native. `@vvedantb/native-ui` keeps its own copy in `src/tokens.ts`; a test keeps the two equal. |
 | `@vvedantb/ui/tokens/css/base.css` | `src/css/base.css` | `html` touch/accent, `::selection`, control transitions, pointer cursor, range accent (`@layer base`). |
 | `@vvedantb/ui/tokens/css/dialog.css` | `src/css/dialog.css` | Unlayered `max-width: none` for `@vvedantb/ui` compact (bottom-sheet) dialogs. |
 | `@vvedantb/ui/tokens/css/modal.css` | `src/css/modal.css` | `.t-modal`, `.is-open`, `.is-closing` and `t-modal-presence-wait` (`@layer components`). |

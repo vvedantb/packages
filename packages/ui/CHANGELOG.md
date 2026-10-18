@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.4.0-rc.2
+
+- `InputActions` plus menu: content now defaults to `align="start"`, as in the original app adapter. Radix had defaulted to centre. `side="top"` and `collisionPadding={12}` are unchanged. The shared `DropdownMenuContent` primitive default is not changed.
+- `InputActions` `menuContentProps` and `InputArea` `plusMenuContentProps`: props merged onto the menu content (`align`, `side`, `sideOffset`, `collisionPadding`, `className` and others). Your keys win. Omitted, the markup matches the original.
+- `LabeledSwitchRow` `className`: optional, merged onto the outer wrapper with `cn`. Omitted, the classes are unchanged.
+
+## 0.4.0-rc.1
+
+Release candidate. **Breaking for imports:** one JavaScript entry. See [`MIGRATION.md`](MIGRATION.md) for every old path and the consumer files that need a change.
+
+- Single JS entry: `@vvedantb/ui` (`.`). Removed from `exports`: `./cn`, `./sonner`, `./audio`, `./shell`, `./app`, `./composer` and `./tokens/native`. Everything they exported is on the root: `cn`, `SonnerToaster` and helpers, `toast` (re-exported from `sonner`), audio, `SidebarHeader`, `PillTabs`, `SessionsHoverCard`, the app helpers (`useRequestConfirm`, `startUpdateAvailableWatcher`, `SettingsPage`, `useStableAuth` and others), and the native tokens `tokens` and `Tokens`.
+- This changes the public export map only. Source folders (`composer/`, `app/`, `shell/`, `audio/` and others) are not moved or merged, and the root index re-exports from them.
+- Name collision: shell `cn` and `ClassValue` are not exported. The root `cn` (clsx and tailwind-merge) is the only `cn`. It merges conflicting Tailwind classes, so output can differ from the shell `cn`. No other duplicate names.
+- Kept in `exports`, none of them JS component APIs: `./package.json`; the CSS paths `./tokens`, `./tokens/tokens.css`, `./tokens/css/*` (and `./tokens/css/*.css`) and `./tokens/compat/shadcn-rgb.css`; and `./tokens/tailwind-preset`. The preset stays because Tailwind `@config "@vvedantb/ui/tokens/tailwind-preset"` needs a resolvable package path. It is a build-tool entry (`.mjs`), not a React API.
+- Optional peers: `motion` is now optional in `peerDependenciesMeta` (with `@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod`). No peer was added or removed from `peerDependencies`. No other peer was marked optional. Tooling that resolves every import in the barrel still needs the packages installed.
+- `sideEffects` is unchanged (`./src/ui/sonner.css` only). The root barrel has no top-level side effects.
+- `composer/MIGRATION.md` is now `composer/MIGRATION-INPUTAREA.md`.
+
+Also in this release candidate. It folds in the 0.4.0 notes below.
+
+- Root exports: `InputArea`, `ConnectionStatusMenuItem`, `buildComposerSlashItems` and their public types are importable from `@vvedantb/ui`. The root re-exports `./composer`. **Removed:** the `@vvedantb/ui/composer` subpath no longer exists in the `exports` map. Import every composer symbol from `@vvedantb/ui`. `MIGRATION.md` now shows root imports first.
+- `InputArea` `predictionTextClassName`: classes on the ghost suggestion span. The default is `text-muted`, matching the original app composer. This replaces the `text-muted-foreground` default in the 0.4.0 notes. `check:tokens` allows the bare `text-muted` on one marked line in `InputArea.tsx` only. Pass `text-muted-foreground` to keep the earlier look.
+- Tree-shaking: Composer modules have no top-level side effects. `LazyMotion` and `domAnimation` run only inside the `InputArea` render.
+- Peer dependencies: none added. The composer uses existing peers (`motion`, `react`, Radix, `@tabler/icons-react` and others). An app that never imports composer symbols needs nothing new.
+
+## 0.4.0
+
+Additive. Nothing from 0.3.x is removed or changed in behaviour. See [`composer/MIGRATION-INPUTAREA.md`](composer/MIGRATION-INPUTAREA.md) for the exact props an app passes.
+
+- New `InputArea` in `@vvedantb/ui` (first shipped under the `./composer` subpath, since removed): the app chat composer, extracted as presentational UI. Same DOM and classes as the app `InputAreaCore`: the pill that grows into a card (compact mode), the footer with plus menu, dictate, stop and send, ghost text, and the `/` menu. Data, routing, billing, uploads and skills stay in the app and arrive as props, callbacks and slots (`banners`, `promoBanner`, `queue`, `attachments`, `chips`, `plusMenuExtra`, `slashItems`, `renderSlashItem`).
+- Building blocks: `InputActions`, `ConnectionStatusMenuItem`, `ComposerSlashMenu`, `ComposerSlashRow`, `InputBanners`, `PromoBanner`, `FadePresence`, `useComposerCompact`, `useComposerSlashMenu`, `useInputAreaPrediction`, `buildComposerSlashItems`, `filterAndGroupSlashItems`, the slash trigger, position and option id helpers, `shouldSkipPrediction`, `ghostSuggestion`, `scheduleCompletion`, the presets (`MAIN_CHAT_ACTION_FEATURES` and others) and the types `ActionFeatures`, `BannerFeatures` and `SkillChipPreview`.
+- `Button` `startContent` and `DropdownMenuItem` `startContent` and `description`: optional. Omitted, the markup is unchanged.
+- **Deprecated:** the 0.3 `Composer` (a from-scratch generic composer). Use `InputArea`. `Composer`, `ComposerShell`, `ComposerGhostText`, `ComposerIconButton` and `useComposerPrediction` still work unchanged and are not removed in this release. Replacing or removing `Composer` in a later release would be cleaner, because two composers with two prediction hooks is confusing, but that is a breaking change for any consumer and is left for a major or a clearly flagged minor.
+- `useInputAreaPrediction` is the extracted prediction hook. It does not replace the 0.3 `useComposerPrediction`, which has a different signature.
+- Ghost text: superseded in 0.4.0-rc.1 by `predictionTextClassName` (default `text-muted`).
+- Parity fixture: `composer/examples/parity.html` and `composer/examples/parity/`. `PARITY.md` lists pixels changed per state against a frozen snapshot of the original JSX.
+- Tests: ported unit tests (compact, prediction helpers, slash items, trigger, position, option id, contract) and `InputArea` render tests.
+
 ## 0.3.2
 
 Additive and default-safe. With the new props omitted, `Composer` and `ComposerShell` behave as in 0.3.1.
@@ -25,7 +63,7 @@ Additive. Opt-in or default-safe. Defaults are unchanged, except the `SessionsHo
 
 Additive. No change for apps that do not use the new exports.
 
-- New `Composer` from `@vvedantb/ui` and the new subpath `@vvedantb/ui/composer`. It has an autosizing textarea (`maxHeight`, default 200 px, then it scrolls), a footer with `plusMenu` on the left and `trailingActions` plus send or stop on the right, and an `attachments` row. Value is controlled (`value`, `onChange`) or uncontrolled (`defaultValue`). Enter calls `onSubmit` with the trimmed draft, Shift+Enter adds a line, and IME composition (`isComposing` or key code 229) never submits. `streaming` swaps send for stop, which calls `onStop`. `disabled` turns off the textarea and send. The ref goes to the textarea.
+- New `Composer` from `@vvedantb/ui` (0.3.0 also added a `./composer` subpath. It was removed in 0.4.0-rc.1). It has an autosizing textarea (`maxHeight`, default 200 px, then it scrolls), a footer with `plusMenu` on the left and `trailingActions` plus send or stop on the right, and an `attachments` row. Value is controlled (`value`, `onChange`) or uncontrolled (`defaultValue`). Enter calls `onSubmit` with the trimmed draft, Shift+Enter adds a line, and IME composition (`isComposing` or key code 229) never submits. `streaming` swaps send for stop, which calls `onStop`. `disabled` turns off the textarea and send. The ref goes to the textarea.
 - Ghost-text predictions when `getPrediction(draft, { signal })` is set. The package makes no requests. Defaults: `predictionDebounceMs` 500 ms and `predictionMinLength` 12 characters. It skips drafts whose last word starts with `@` or `/` and drafts that end a sentence. Each edit aborts the previous request, and aborted or out-of-date results are dropped. Tab accepts, Esc dismisses for the current draft. Ghost text shows only while the caret is at the end, so Tab appends. It is drawn in a mirror under the textarea with `text-muted-foreground/50`.
 - New exports: `ComposerIconButton`, `useComposerPrediction`, the pure helpers `shouldSkipComposerPrediction`, `joinComposerPrediction`, `nextComposerPredictionState`, `visibleComposerPrediction`, `acceptComposerPrediction` and `initialComposerPredictionState`, the constants `COMPOSER_PREDICTION_DEBOUNCE_MS` and `COMPOSER_PREDICTION_MIN_LENGTH`, and the types `ComposerProps`, `ComposerSlotContext`, `ComposerTrailingContext`, `ComposerPrediction`, `UseComposerPredictionOptions`, `ComposerPredictionState` and `ComposerPredictionAction`.
 - Styling uses package tokens only (`rounded-field`, `bg-field-background`, `border-focus-border`, `ring-focus-ring`, `text-muted-foreground`), so it works with `tokens.css` and `compat-shadcn-rgb.css`.

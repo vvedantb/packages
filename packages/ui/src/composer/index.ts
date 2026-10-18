@@ -22,3 +22,4 @@ export {
   visibleComposerPrediction,
 } from "./prediction";
 export type { ComposerPredictionAction, ComposerPredictionState } from "./prediction";
+export * from "./input-area";

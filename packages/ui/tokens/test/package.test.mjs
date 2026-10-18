@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.3.2", () => {
-  assert.equal(pkg.version, "0.3.2");
+test("version is 0.4.0", () => {
+  assert.equal(pkg.version, "0.4.0");
 });
 
 test("every export resolves to an existing file", () => {
@@ -27,7 +27,8 @@ test("every export resolves to an existing file", () => {
 test("existing exports are unchanged", () => {
   assert.equal(pkg.exports["./tokens"], "./tokens/src/tokens.css");
   assert.equal(pkg.exports["./tokens/tokens.css"], "./tokens/src/tokens.css");
-  assert.equal(pkg.exports["./tokens/native"].default, "./tokens/src/native.ts");
+  assert.equal(pkg.exports["./tokens/native"], undefined);
+  assert.equal(pkg.exports["./tokens/tailwind-preset"].default, "./tokens/src/tailwind-preset.mjs");
 });
 
 test("every shared CSS file is exported and every css export is a shared file", () => {
@@ -72,4 +73,18 @@ test("native-ui keeps an identical copy of the native tokens", () => {
   const body = (f) => readFileSync(f, "utf8").replace(/^\/\*\*[\s\S]*?\*\/\s*/, "");
   const copy = join(PKG, "../native-ui/src/tokens.ts");
   assert.equal(body(copy), body(join(TOKENS, "src/native.ts")));
+});
+
+test("root is the only JS entry; other exports are CSS or the Tailwind preset", () => {
+  for (const [key, value] of Object.entries(pkg.exports)) {
+    if (key === "." || key === "./package.json" || key === "./tokens/tailwind-preset") continue;
+    assert.ok(typeof value === "string" && value.endsWith(".css"), `${key} is not CSS`);
+  }
+});
+
+test("optional peers: motion, Clerk, hotkeys and zod", () => {
+  for (const name of ["motion", "@clerk/clerk-react", "@tanstack/react-hotkeys", "zod"]) {
+    assert.ok(pkg.peerDependencies[name], `${name} stays in peerDependencies`);
+    assert.equal(pkg.peerDependenciesMeta[name]?.optional, true, `${name} is optional`);
+  }
 });

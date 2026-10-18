@@ -4,10 +4,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "parity": "node parity/run.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
+    "pixelmatch": "^7.0.0",
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^24.0.0",
     "tailwindcss": "4.3.3",
     "vite": "^7.0.0"
   }

@@ -75,14 +75,42 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean;
+    /** Leading icon or mark. Ignored with `asChild`. */
+    startContent?: React.ReactNode;
+    /** Second line under the label. Ignored with `asChild`. */
+    description?: React.ReactNode;
   }
->(({ className, inset, ...props }, ref) => (
-  <DropdownMenuPrimitive.Item
-    ref={ref}
-    className={cn(menuItemClass, inset && "pl-8", className)}
-    {...props}
-  />
-));
+>(
+  (
+    { className, inset, startContent, description, children, asChild, ...props },
+    ref,
+  ) => (
+    <DropdownMenuPrimitive.Item
+      ref={ref}
+      asChild={asChild}
+      className={cn(menuItemClass, inset && "pl-8", className)}
+      {...props}
+    >
+      {asChild || (startContent === undefined && description === undefined) ? (
+        children
+      ) : (
+        <>
+          {startContent}
+          {description === undefined ? (
+            children
+          ) : (
+            <span className="flex min-w-0 flex-col">
+              <span>{children}</span>
+              <span className="text-xs text-muted-foreground">
+                {description}
+              </span>
+            </span>
+          )}
+        </>
+      )}
+    </DropdownMenuPrimitive.Item>
+  ),
+);
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuCheckboxItem = React.forwardRef<

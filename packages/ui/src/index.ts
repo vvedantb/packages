@@ -100,3 +100,24 @@ export * from "./ai-elements/suggestion";
 export * from "./audio";
 
 export * from "./composer";
+export { toast } from "sonner";
+
+// Shell: router-free pieces. Shell's own `cn` and `ClassValue` are not re-exported;
+// use the root `cn` (clsx + tailwind-merge).
+export { SidebarHeader } from "../shell/src/SidebarHeader";
+export type { SidebarHeaderProps } from "../shell/src/SidebarHeader";
+export { PillTabs } from "../shell/src/PillTabs";
+export type { PillTabItem, PillTabsProps } from "../shell/src/PillTabs";
+export { SessionsHoverCard } from "../shell/src/SessionsHoverCard";
+export type {
+  SessionsHoverCardContext,
+  SessionsHoverCardProps,
+  SessionsHoverCardSurface,
+} from "../shell/src/SessionsHoverCard";
+
+// App helpers: confirm skip, update watcher, settings chrome, stable auth.
+export * from "../app/src/index";
+
+// Native tokens (JS values that match tokens.css).
+export { tokens } from "../tokens/src/native";
+export type { Tokens } from "../tokens/src/native";
