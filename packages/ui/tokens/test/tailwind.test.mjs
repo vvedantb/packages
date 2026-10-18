@@ -29,13 +29,13 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "modal.css": [".t-modal.is-closing", "@keyframes t-modal-presence-wait"],
     "tabs.css": [".t-tabs-pill", ".t-tab"],
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
-    "utilities.css": [".hit-target:after", ".reveal-on-hover"],
+    "utilities.css": [".hit-target:after", ".reveal-on-hover", ".rounded-surface"],
     "scrollbar-thin.css": [".scrollbar-thin::-webkit-scrollbar-thumb:hover"],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
     "index.css": ["::selection", ".hit-target", ".scrollbar-thin", "@keyframes fade-in-up"],
   };
   for (const [file, needles] of Object.entries(expect)) {
-    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
+    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "rounded-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
     for (const n of needles) assert.ok(out.includes(n), `${file}: missing ${n}`);
   }
 });

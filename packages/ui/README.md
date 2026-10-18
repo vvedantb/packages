@@ -47,6 +47,39 @@ import { SessionsHoverCard } from "@vvedantb/ui/shell";
 
 `children` is the trigger. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
 
+## Toaster
+
+```tsx
+import { SonnerToaster, toast } from "@vvedantb/ui";
+
+<SonnerToaster
+  theme={theme}
+  toastRadius="surface"
+  toastIcons="filled24"
+  closeButtonStyle="hoverChip"
+  sonnerVars
+  descriptionMuted
+/>;
+```
+
+With no new props the toaster looks as it did in 0.2.1. Caller props merge with the package defaults instead of replacing them:
+
+- `toastOptions.classNames`: per key, the package classes come first and the caller classes follow, so callers can override utilities. Other `toastOptions` fields (such as `duration`) take the caller value.
+- `icons`: merged per key. With `toastIcons="filled24"` the caller overrides single icons and keeps the rest.
+- `style`: merged over the package style. `className` is appended.
+
+Opt-in props (all default to the current look):
+
+| Prop | Values | Effect |
+| --- | --- | --- |
+| `toastRadius` | `"lg"` (default), `"surface"` | `rounded-lg` or `rounded-surface` (from `tokens/css/utilities.css`). |
+| `toastIcons` | `"default"`, `"filled24"` | Sonner icons or 24px filled success, info, warning and error icons, a matching loader and a 14px close cross. |
+| `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |
+| `sonnerVars` | `false` (default), `true` | Sets `--normal-bg`, `--normal-border`, `--normal-text`, `--normal-bg-hover` and `--normal-border-hover` from `--color-card`, `--color-border`, `--color-foreground` and `--color-muted`, and `font-family: inherit`. |
+| `descriptionMuted` | `false` (default), `true` | Description uses `text-muted-foreground!`, which beats sonner's dark-theme rule. |
+
+Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
