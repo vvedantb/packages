@@ -96,3 +96,5 @@ export * from "./ai-elements/shimmer";
 export * from "./ai-elements/sources";
 export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
+
+export * from "./audio";

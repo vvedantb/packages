@@ -4,9 +4,9 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | Primitives (Radix-based) and AI elements. |
+| `@vvedantb/ui` | Primitives (Radix-based), AI elements, `playChime` and `useReplyChime`. |
 | `@vvedantb/ui/cn` | `cn` class helper (clsx + tailwind-merge). |
-| `@vvedantb/ui/shell` | Router-free `SidebarHeader` and `PillTabs`. |
+| `@vvedantb/ui/shell` | Router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. |
 | `@vvedantb/ui/app` | Alt-click confirm skip, update watcher, settings chrome, `useStableAuth`. See `app/README.md` in the repository. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. |
@@ -19,6 +19,33 @@ Shared React 19 web UI. Source-exported: no build step.
 @import "@vvedantb/ui/tokens";
 @source "../node_modules/@vvedantb/ui/src/**/*.{ts,tsx}";
 ```
+
+## Reply chime
+
+```tsx
+import { playChime, useReplyChime } from "@vvedantb/ui";
+
+useReplyChime({ enabled: soundOn, isStreaming, threadId });
+```
+
+- `playChime()`: soft rising two-note chime (WebAudio). One shared `AudioContext`, created on first use. It is a no-op on the server and when autoplay blocks audio. Calls less than 1 second apart play once.
+- `useReplyChime`: chimes once when `isStreaming` goes from `true` to `false` for the same `threadId`. It is silent on the first sight of a thread, when `threadId` changes, and when `threadId` is null or undefined. While `enabled` is `false` it still tracks the edge, so enabling mid-turn does not replay a finish.
+
+## Sessions hover card
+
+```tsx
+import { SessionsHoverCard } from "@vvedantb/ui/shell";
+
+<SessionsHoverCard
+  header="Session title"
+  loadContent={() => fetchPreview(id)}
+  footer="Updated today"
+>
+  <button type="button">Row</button>
+</SessionsHoverCard>
+```
+
+`children` is the trigger. Defaults: `openDelay` 400 ms, `closeDelay` 150 ms, `side="right"`, `align="start"`, `sideOffset` 8, width and padding `w-64 p-3` (override with `className`). `body` is a node or a function of `{ open }`. `loadContent` runs only while the card is open. Control the state with `open`, `defaultOpen` and `onOpenChange`. Fixture: `shell/examples/sessions-hover-card/`.
 
 ## Colour names in components
 
