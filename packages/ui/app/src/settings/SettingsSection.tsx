@@ -60,7 +60,7 @@ export function SettingsSection({
             {title}
           </h3>
           {description ? (
-            <p className="mt-0.5 text-pretty text-sm leading-relaxed text-muted">
+            <p className="mt-0.5 text-pretty text-sm leading-relaxed text-muted-foreground">
               {description}
             </p>
           ) : null}

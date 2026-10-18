@@ -176,7 +176,7 @@ export const Suggestion = ({
   return (
     <Button
       className={cn(
-        "h-auto cursor-pointer rounded-full bg-surface-secondary px-3 py-1.5 text-sm text-muted hover:bg-surface-tertiary hover:text-foreground",
+        "h-auto cursor-pointer rounded-full bg-surface-secondary px-3 py-1.5 text-sm text-muted-foreground hover:bg-surface-tertiary hover:text-foreground",
         className,
       )}
       onClick={handleClick}

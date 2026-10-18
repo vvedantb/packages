@@ -251,7 +251,7 @@ const DialogDescription = React.forwardRef<
     ref={ref}
     className={cn(
       // `--muted` is ~3.5:1 on overlay; mix toward overlay-foreground for 4.5:1.
-      "text-sm leading-relaxed text-[color-mix(in_oklch,var(--overlay-foreground)_72%,var(--overlay))]",
+      "text-sm leading-relaxed text-[color-mix(in_oklch,var(--color-popover-foreground)_72%,var(--color-popover))]",
       className,
     )}
     {...props}

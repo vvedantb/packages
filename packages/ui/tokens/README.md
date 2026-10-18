@@ -6,7 +6,7 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps, plus JS toke
 
 | Export | File | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, `*` border and `body` defaults. Unchanged in 0.2.0. |
+| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, `*` border and `body` defaults. In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. |
 | `@vvedantb/ui/tokens/native` | `src/native.ts` | JS colours, radii and spacing for React Native. `@vvedantb/native-ui` keeps its own copy in `src/tokens.ts`; a test keeps the two equal. |
 | `@vvedantb/ui/tokens/css/base.css` | `src/css/base.css` | `html` touch/accent, `::selection`, control transitions, pointer cursor, range accent (`@layer base`). |
 | `@vvedantb/ui/tokens/css/dialog.css` | `src/css/dialog.css` | Unlayered `max-width: none` for `@vvedantb/ui` compact (bottom-sheet) dialogs. |
@@ -16,6 +16,7 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps, plus JS toke
 | `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target` and `@utility reveal-on-hover`. |
 | `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). |
 | `@vvedantb/ui/tokens/css/animations.css` | `src/css/animations.css` | `animate-aurora`, `animate-fade-in-up`, `animate-indeterminate` as `@theme` (CSS-first apps). |
+| `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius` and a `glass-panel-strong` fallback. Import it **or** `tokens.css`, never both. |
 | `@vvedantb/ui/tokens/css/index.css` | `src/css/index.css` | base + dialog + utilities + scrollbar-thin + animations, for new CSS-first apps. |
 | `@vvedantb/ui/tokens/tailwind-preset` | `src/tailwind-preset.mjs` (+ `.d.mts`) | Tailwind preset for apps that load a JS config with `@config`. |
 
@@ -71,6 +72,10 @@ Tailwind inlines an `@import` where it sits, even in the middle of a file (it mu
 | `scrollbar-thin.css` | `--scrollbar` | tokens.css or the app theme |
 | `animations.css` | none | |
 | `tailwind-preset` | the CSS variables named in its colour map, `--radius`, `--field-radius` | tokens.css or the app theme |
+
+### Using an existing shadcn RGB theme
+
+See the package `README.md`. With the compat file, `base.css`, `scrollbar-thin.css`, `utilities.css`, `dialog.css`, `modal.css` and `tabs.css` need no `tokens.css`. `base.css` reads `--accent` and `--foreground` and `tabs-pills.css` reads `--muted`, `--segment` and `--default`. Those are not channel-compatible, so skip `tabs-pills.css` and `index.css` (which includes `base.css`) unless the app defines those variables as full colours.
 
 ### Parameters
 

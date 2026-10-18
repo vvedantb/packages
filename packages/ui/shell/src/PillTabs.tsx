@@ -16,7 +16,7 @@ export type PillTabsProps = {
 
 const tabBase =
   "inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-border px-3.5 py-1 text-sm font-medium transition-[color,background-color,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-const tabIdle = "text-muted hover:bg-default/50 hover:text-foreground";
+const tabIdle = "text-muted-foreground hover:bg-default/50 hover:text-foreground";
 const tabSelected = "bg-default text-foreground";
 
 export function PillTabs({ tabs, value, onValueChange, className }: PillTabsProps) {

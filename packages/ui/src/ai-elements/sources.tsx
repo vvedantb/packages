@@ -28,7 +28,7 @@ export const SourcesTrigger = ({
 }: SourcesTriggerProps) => (
   <CollapsibleTrigger
     className={cn(
-      "group inline-flex items-center gap-1.5 text-xs text-muted transition-[color,transform] duration-150 ease-out active:scale-[0.97] hover:text-foreground",
+      "group inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-[color,transform] duration-150 ease-out active:scale-[0.97] hover:text-foreground",
       className,
     )}
     {...props}
@@ -63,7 +63,7 @@ export const Source = ({
 }: SourceProps) => (
   <a
     className={cn(
-      "flex items-center justify-between gap-2 rounded-md px-3 py-2 text-xs text-muted transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.99] hover:bg-surface-secondary hover:text-foreground",
+      "flex items-center justify-between gap-2 rounded-md px-3 py-2 text-xs text-muted-foreground transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.99] hover:bg-surface-secondary hover:text-foreground",
       className,
     )}
     href={href}

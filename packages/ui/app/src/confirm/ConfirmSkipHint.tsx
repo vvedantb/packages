@@ -23,7 +23,7 @@ export function ConfirmSkipHint({ className }: { className?: string }) {
   return (
     <kbd
       className={cn(
-        "ml-auto shrink-0 rounded bg-surface-secondary px-1 py-0.5 font-mono text-[10px] text-muted",
+        "ml-auto shrink-0 rounded bg-surface-secondary px-1 py-0.5 font-mono text-[10px] text-muted-foreground",
         !altHeld && "hidden",
         className,
       )}

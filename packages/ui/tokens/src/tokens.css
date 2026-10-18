@@ -59,6 +59,21 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
+  /* shadcn-style aliases onto the same tokens. */
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted);
+  --color-secondary: var(--default);
+  --color-secondary-foreground: var(--default-foreground);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+  --color-card: var(--surface-card);
+  --color-card-foreground: var(--surface-foreground);
+  --color-popover: var(--overlay);
+  --color-popover-foreground: var(--overlay-foreground);
+  --color-input: var(--border);
+  --color-ring: var(--focus);
+
   --radius-lg: var(--radius);
   --radius-field: var(--field-radius);
   --radius-md: calc(var(--radius) - 2px);

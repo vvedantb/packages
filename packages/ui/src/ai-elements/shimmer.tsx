@@ -26,11 +26,11 @@ function Shimmer({
     "--spread": `${totalSpread}px`,
     "--bg": `linear-gradient(
             90deg,
-            var(--muted) 0%,
-            var(--foreground) calc(50% - var(--spread)),
-            var(--muted) 50%,
-            var(--foreground) calc(50% + var(--spread)),
-            var(--muted) 100%
+            var(--color-muted-foreground) 0%,
+            var(--color-foreground) calc(50% - var(--spread)),
+            var(--color-muted-foreground) 50%,
+            var(--color-foreground) calc(50% + var(--spread)),
+            var(--color-muted-foreground) 100%
           )`,
     backgroundImage: "var(--bg)",
     backgroundSize: "200% 100%",

@@ -774,7 +774,7 @@ export const PromptInputButton = ({
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side={side}>
         {tooltipContent}
-        {shortcut && <span className="ml-2 text-muted">{shortcut}</span>}
+        {shortcut && <span className="ml-2 text-muted-foreground">{shortcut}</span>}
       </TooltipContent>
     </Tooltip>
   );
@@ -871,7 +871,7 @@ export const PromptInputModelSelectTrigger = ({
 }: PromptInputModelSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      "border-none bg-transparent font-medium text-muted shadow-none transition-[color,transform] duration-150 ease-out active:scale-[0.97]",
+      "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-[color,transform] duration-150 ease-out active:scale-[0.97]",
       "hover:bg-surface-secondary hover:text-foreground",
       segmentExpandedStateClass,
       className,
@@ -943,7 +943,7 @@ export const PromptInputTabLabel = ({
   ...props
 }: PromptInputTabLabelProps) => (
   <h3
-    className={cn("mb-2 px-3 font-medium text-muted text-xs", className)}
+    className={cn("mb-2 px-3 font-medium text-muted-foreground text-xs", className)}
     {...props}
   />
 );

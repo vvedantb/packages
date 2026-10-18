@@ -94,7 +94,7 @@ const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
             )}
           >
             <span>{`${hour}:${minute}`}</span>
-            <IconClock className="h-3.5 w-3.5 text-muted" />
+            <IconClock className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -134,7 +134,7 @@ const TimeColumn = React.forwardRef<HTMLDivElement, TimeColumnProps>(
   ({ label, values, selected, onSelect }, ref) => {
     return (
       <div className="flex w-14 flex-col">
-        <div className="px-2 pb-1 text-[10px] uppercase tracking-wider text-muted">
+        <div className="px-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
         <div
@@ -152,7 +152,7 @@ const TimeColumn = React.forwardRef<HTMLDivElement, TimeColumnProps>(
                 className={cn(
                   "flex h-7 w-full items-center justify-center text-xs tabular-nums transition-colors",
                   isSelected
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-primary text-primary-foreground"
                     : "text-foreground/80 hover:bg-surface-tertiary/50",
                 )}
               >

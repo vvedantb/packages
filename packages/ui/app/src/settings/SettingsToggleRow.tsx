@@ -40,7 +40,7 @@ export function SettingsToggleRow({
           <p className={titleClassName}>{title}</p>
         )}
         {description ? (
-          <p className="mt-1 text-pretty text-xs leading-relaxed text-muted">
+          <p className="mt-1 text-pretty text-xs leading-relaxed text-muted-foreground">
             {description}
           </p>
         ) : null}

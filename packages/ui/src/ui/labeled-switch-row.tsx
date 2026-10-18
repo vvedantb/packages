@@ -27,14 +27,14 @@ export function LabeledSwitchRow({
     <div className="flex items-center justify-between gap-3 max-sm:flex-wrap">
       <div className="flex min-w-0 items-start gap-2">
         {icon ? (
-          <span className="mt-0.5 shrink-0 text-muted">{icon}</span>
+          <span className="mt-0.5 shrink-0 text-muted-foreground">{icon}</span>
         ) : null}
         <div className="min-w-0">
           <Label htmlFor={id} className="text-sm font-medium">
             {label}
           </Label>
           {description ? (
-            <p className="mt-1 text-xs text-muted text-pretty">{description}</p>
+            <p className="mt-1 text-xs text-muted-foreground text-pretty">{description}</p>
           ) : null}
         </div>
       </div>

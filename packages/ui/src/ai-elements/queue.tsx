@@ -73,7 +73,7 @@ export function QueueHeader({
       )}
     >
       <div className="flex items-center gap-2">
-        <IconStack2 size={16} className="text-muted" />
+        <IconStack2 size={16} className="text-muted-foreground" />
         <span className="text-sm font-medium text-foreground">
           Queued Messages
         </span>
@@ -84,7 +84,7 @@ export function QueueHeader({
       <IconChevronDown
         size={16}
         className={cn(
-          "text-muted transition-transform duration-200 ease-out",
+          "text-muted-foreground transition-transform duration-200 ease-out",
           isOpen && "rotate-180",
         )}
       />

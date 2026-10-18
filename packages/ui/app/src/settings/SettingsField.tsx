@@ -33,7 +33,7 @@ export function SettingsField({
       </label>
       {children}
       {description ? (
-        <p className="mt-1.5 text-pretty text-xs leading-relaxed text-muted">
+        <p className="mt-1.5 text-pretty text-xs leading-relaxed text-muted-foreground">
           {description}
         </p>
       ) : null}

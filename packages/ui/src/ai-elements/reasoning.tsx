@@ -137,7 +137,7 @@ export function ReasoningTrigger({
   return (
     <CollapsibleTrigger
       className={cn(
-        "flex w-full items-center gap-2 py-1 text-sm text-muted transition-[color,transform] duration-150 ease-out active:scale-[0.99] hover:text-foreground",
+        "flex w-full items-center gap-2 py-1 text-sm text-muted-foreground transition-[color,transform] duration-150 ease-out active:scale-[0.99] hover:text-foreground",
         className,
       )}
       {...props}
