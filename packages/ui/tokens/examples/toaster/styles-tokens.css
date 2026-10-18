@@ -6,7 +6,7 @@
 
 /* Toast classes the app owns (not part of tokens.css). */
 @utility glass-panel-strong {
-  background-color: color-mix(in srgb, var(--color-card) 95%, transparent);
+  background-color: color-mix(in oklch, var(--color-card) 95%, transparent);
   backdrop-filter: blur(12px);
 }
 @utility smooth-shadow-ring-md {

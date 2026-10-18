@@ -17,6 +17,15 @@ function fire() {
 export function Fixture() {
   const [dark, setDark] = useState(initialDark);
 
+  // Sonner portals toasts onto `document.body`, so `.dark` must live on `<html>`
+  // (not an inner wrapper) for token / Tailwind dark styles to reach them.
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, [dark]);
+
   // Fire one sample toast on load so a screenshot captures it.
   useEffect(() => {
     const id = window.setTimeout(fire, 150);
@@ -24,7 +33,7 @@ export function Fixture() {
   }, []);
 
   return (
-    <div className={dark ? "dark" : ""}>
+    <>
       <main className="min-h-screen bg-background p-8 text-foreground">
         <div className="flex gap-3">
           <Button onClick={() => setDark((d) => !d)}>Toggle theme</Button>
@@ -39,6 +48,6 @@ export function Fixture() {
         sonnerVars
         descriptionMuted
       />
-    </div>
+    </>
   );
 }
