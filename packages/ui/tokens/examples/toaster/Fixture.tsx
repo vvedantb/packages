@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button, SonnerToaster, toast } from "../../../src";
+import { toast } from "sonner";
+import { Button } from "../../../src/ui/button";
+import { SonnerToaster } from "../../../src/ui/sonner";
 
 function initialDark(): boolean {
   return new URLSearchParams(window.location.search).get("theme") === "dark";

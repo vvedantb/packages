@@ -50,7 +50,8 @@ import { SessionsHoverCard } from "@vvedantb/ui/shell";
 ## Toaster
 
 ```tsx
-import { SonnerToaster, toast } from "@vvedantb/ui";
+import { toast } from "sonner";
+import { SonnerToaster } from "@vvedantb/ui";
 
 <SonnerToaster
   theme={theme}
