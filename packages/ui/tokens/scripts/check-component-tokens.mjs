@@ -15,7 +15,9 @@ const rules = [
   { re: /(?<![\w-])text-muted(?![\w-])/g, msg: "use text-muted-foreground" },
   { re: new RegExp(`(?<![\\w-])${UTIL}-accent(?:-foreground)?(?![\\w-])`, "g"), msg: "use the primary equivalent" },
   {
-    re: /var\(--(?:muted|accent|accent-foreground|overlay|overlay-foreground|foreground|background|border|surface|surface-foreground)\)/g,
+    // A raw read is allowed only as the fallback of a --color-* read, for apps
+    // that use the preset without tokens.css (no --color-* variables).
+    re: /(?<!var\(--color-[\w-]+,\s*)var\(--(?:muted|accent|accent-foreground|overlay|overlay-foreground|foreground|background|border|surface|surface-foreground)\)/g,
     msg: "read var(--color-*) instead of the raw variable",
     tsOnly: true,
   },
