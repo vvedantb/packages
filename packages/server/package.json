@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/server",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "description": "Shared Convex backend helpers, MCP server scaffolding and Node-side MCP client OAuth from one root import: query-limit errors, Clerk auth and token verification, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools, WebCrypto primitives, Convex optimistic-update helpers, and an MCP client OAuth provider with a loopback redirect server for desktop apps.",
   "type": "module",
