@@ -3,7 +3,7 @@
 // with the options from convex/dist/esm/bundler/debugBundle.js (1.47). The
 // root also carries Node-only MCP client OAuth (node:http, the MCP SDK), so
 // this checks none of it reaches a V8 bundle.
-// Run with: node --test tests-node/bundle.test.mjs
+// Run with: node --test tests-node/bundle.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";

@@ -46,7 +46,7 @@ tests/mcp/         vitest, with fixtures/ (SDK captures, app references)
 tests/mcp-client/  vitest, against fake MCP and authorization servers
 tests/crypto/      vitest, with published vectors and app format parity
 tests-node/        plain Node checks of the built package: exports map and peers (esm-exports.mjs),
-                   Convex V8 and Electron main bundles with esbuild (bundle.test.mjs)
+                   Convex V8 and Electron main bundles with esbuild (bundle.mjs)
 docs/              convex.md, mcp.md, mcp-client.md, crypto.md, migration.md, migrated/<app>/
 scripts/           capture-sdk-fixtures.mjs
 ```

@@ -28,8 +28,8 @@ Each lazy `import()` is awaited directly in a `try` block. esbuild and Metro rea
 
 | Bundle | Result | Checked by |
 | --- | --- | --- |
-| Convex default runtime (Convex's esbuild: `platform: "browser"`, conditions `convex`, `module`, ESM, splitting, tree shaking) | Builds. No `node:` import or `require` of a built-in in any output. Without the SDK: one output file. With the SDK installed: esbuild still writes the SDK modules as unused chunks (about 0.5 MB), which nothing imports at runtime. | `tests-node/bundle.test.mjs` |
-| Electron main (esbuild `platform: "node"`, ESM, splitting, no `node_modules` shipped) | The SDK is bundled into chunks; the bundle signs in from a directory with no `node_modules`. | `tests-node/bundle.test.mjs` |
+| Convex default runtime (Convex's esbuild: `platform: "browser"`, conditions `convex`, `module`, ESM, splitting, tree shaking) | Builds. No `node:` import or `require` of a built-in in any output. Without the SDK: one output file. With the SDK installed: esbuild still writes the SDK modules as unused chunks (about 0.5 MB), which nothing imports at runtime. | `tests-node/bundle.mjs` |
+| Electron main (esbuild `platform: "node"`, ESM, splitting, no `node_modules` shipped) | The SDK is bundled into chunks; the bundle signs in from a directory with no `node_modules`. | `tests-node/bundle.mjs` |
 | Plain Node, no peer installed | The root loads; the plain helpers and the loopback work. | `tests-node/esm-exports.mjs` |
 
 ## State and storage

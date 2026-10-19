@@ -9,7 +9,7 @@ import type { McpOAuthState } from "./state.js";
 // The SDK is an optional peer, imported on first use and never at module load, so the package root stays loadable
 // in Convex's V8 runtime without it. Each import() is awaited directly in a try block (not inside Promise.all):
 // esbuild (Convex, Electron main) and Metro then treat a missing SDK as optional, and still bundle it when it is
-// installed. tests-node/bundle.test.mjs checks this with Convex's esbuild.
+// installed. tests-node/bundle.mjs checks this with Convex's esbuild.
 const SDK_MISSING = "The MCP client OAuth helpers need the @modelcontextprotocol/sdk package";
 
 async function loadSdkAuth() {

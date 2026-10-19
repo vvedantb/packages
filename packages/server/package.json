@@ -33,7 +33,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run && node --test tests-node/esm-exports.mjs tests-node/bundle.test.mjs",
+    "test": "vitest run && node --test tests-node/esm-exports.mjs tests-node/bundle.mjs",
     "prepack": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
