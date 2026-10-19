@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0
+
+Additive: behavioural helpers that apps duplicated. No existing export changes.
+
+- `createThemeProvider({ missingProviderMessage? })` returns `{ ThemeProvider, useTheme }`. A port of next-themes 0.4.6 with the same props and semantics (localStorage writes, `<html>` class or `data-*` attribute, `style.colorScheme`, `prefers-color-scheme` listener, cross-tab `storage` sync, transition blocking, DOM options read on the first render, nested provider passthrough, `setTheme` identity tied to `theme`). Adds `mounted`, `isDark` and `toggleTheme` to the state. Renders no inline script.
+- `getSystemTheme()` and `applyThemeClass(theme)` for apps that keep their own theme state.
+- `createPageTitleContext({ missingProviderMessage?, documentTitle? })` returns `{ PageTitleProvider, usePageTitle, usePageTitleSync }`. The value holds `pageTitle` and a mobile actions slot element. `documentTitle` (`suffix`, `separator`, `fallback`) is opt-in; without it `document.title` is not touched.
+- `PageMotionProvider` (`disabled`, `motionConfig`) and `useDisablePageMotion()`: stamps `html[data-page-motion]` and sets Motion's `reducedMotion`. Does not import `motion`; the app passes `MotionConfig` or its own wrapper.
+- `formatCompactRelativeTime(date, { now?, justNow?, calendar? })`: `"now"` / `"42s"`, `"5m"`, `"3h"`, `"2d"`, `"4mo"`, `"1y"`. Elapsed-time units by default; `calendar` counts as `dayjs().diff` does. Pure TypeScript.
+- Tests: parity suites run each app's current provider or formatter beside its adoption on these helpers and compare storage writes, `<html>` state, committed context values, `document.title` and formatter output with a fixed clock across time zones. `app/tests-node` imports the helpers in plain Node ESM without `motion` installed.
+- Dev only: `next-themes` 0.4.6 and `dayjs` 1.11.19, the reference implementations for the parity tests.
+
 ## 0.7.2
 
 Dark mode visual change for sidebar panel nav rows; everything else is additive. No props removed. Light mode looks the same.
