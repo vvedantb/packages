@@ -3,11 +3,13 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "../../src/ui/tooltip";
+import { Tabs, TabsContent } from "../../src/ui/tabs";
 import { AppShell } from "./AppShell";
 import { AppSidebar } from "./AppSidebar";
 import { RailDivider, RailTile, SidebarRail } from "./SidebarRail";
 import { SidebarPanel } from "./SidebarPanel";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
+import { useAppShellResize, type SidebarResizeOptions } from "./SidebarResize";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
 import { cn } from "../../src/utils/cn";
 
@@ -49,6 +51,7 @@ afterEach(async () => {
   await act(async () => root?.unmount());
   host?.remove();
   document.body.innerHTML = "";
+  localStorage.clear();
   root = null;
   host = null;
 });
@@ -340,5 +343,193 @@ describe("SidebarAccountMenu", () => {
     expect(stack.children).toHaveLength(1);
     expect(stack.children[0]?.className).toBe(NAME_LINE);
     expect(stack.textContent).toBe("Test User");
+  });
+});
+
+describe("opt-in defaults", () => {
+  it("renders no resize handle and no tab roles without resizable or tabs", async () => {
+    await mount(
+      <AppShell
+        sidebar={
+          <AppSidebar
+            isDesktop
+            mobileOpen={false}
+            onMobileOpenChange={() => {}}
+            rail={
+              <SidebarRail>
+                <RailTile label="Home">
+                  <svg />
+                </RailTile>
+              </SidebarRail>
+            }
+            panel={<SidebarPanel title="Library" />}
+          />
+        }
+      />,
+    );
+    expect(host?.querySelector('[role="separator"]')).toBeNull();
+    expect(host?.querySelector('[role="tablist"], [role="tab"]')).toBeNull();
+    expect(first().style.getPropertyValue("--app-shell-sidebar-width")).toBe("20rem");
+    expect(q("main").className).toContain(MAIN_TRANSITION);
+    expect(q("aside").className).toContain(
+      "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+    );
+    expect(q("aside").lastElementChild?.tagName).toBe("DIV");
+    expect(q('button[aria-label="Home"]').querySelector(".sr-only")).toBeNull();
+  });
+});
+
+describe("AppShell resizable", () => {
+  const resizable: SidebarResizeOptions = {
+    storageKey: "test-sidebar-width",
+    defaultWidth: 256,
+    minWidth: 200,
+    maxWidth: 400,
+  };
+
+  function WidthProbe() {
+    const resize = useAppShellResize();
+    return <output data-testid="probe">{resize ? String(resize.width) : "none"}</output>;
+  }
+
+  function shell(props: { collapsed?: boolean; isDesktop?: boolean } = {}) {
+    return (
+      <AppShell
+        resizable={resizable}
+        sidebar={
+          <AppSidebar
+            isDesktop={props.isDesktop ?? true}
+            collapsed={props.collapsed}
+            mobileOpen={false}
+            onMobileOpenChange={() => {}}
+            rail={<SidebarRail />}
+            panel={<SidebarPanel title="Library" />}
+          />
+        }
+      >
+        <WidthProbe />
+      </AppShell>
+    );
+  }
+
+  const handle = () => q('[role="separator"]');
+  const sidebarWidth = () => first().style.getPropertyValue("--app-shell-sidebar-width");
+
+  it("renders the handle on the aside edge and sets the width variable", async () => {
+    await mount(shell());
+    const separator = handle();
+    expect(q("aside").lastElementChild).toBe(separator);
+    expect(separator.getAttribute("aria-orientation")).toBe("vertical");
+    expect(separator.getAttribute("aria-label")).toBe("Resize sidebar");
+    expect(separator.getAttribute("aria-valuemin")).toBe("200");
+    expect(separator.getAttribute("aria-valuemax")).toBe("400");
+    expect(separator.getAttribute("aria-valuenow")).toBe("256");
+    expect(separator.tabIndex).toBe(0);
+    expect(sidebarWidth()).toBe("calc(4rem + 256px)");
+    expect(q('[data-testid="probe"]').textContent).toBe("256");
+  });
+
+  it("steps 16px with ArrowRight, persists it and resets on double-click", async () => {
+    await mount(shell());
+    await act(async () => {
+      handle().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    expect(handle().getAttribute("aria-valuenow")).toBe("272");
+    expect(sidebarWidth()).toBe("calc(4rem + 272px)");
+    expect(localStorage.getItem("test-sidebar-width")).toBe("272");
+
+    await act(async () => {
+      handle().dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    });
+    expect(handle().getAttribute("aria-valuenow")).toBe("256");
+    expect(localStorage.getItem("test-sidebar-width")).toBe("256");
+  });
+
+  it("clamps keyboard steps to the bounds", async () => {
+    localStorage.setItem("test-sidebar-width", "392");
+    await mount(shell());
+    await act(async () => {
+      handle().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    expect(handle().getAttribute("aria-valuenow")).toBe("400");
+  });
+
+  it("restores the stored width on remount and ignores invalid values", async () => {
+    localStorage.setItem("test-sidebar-width", "320");
+    await mount(shell());
+    expect(handle().getAttribute("aria-valuenow")).toBe("320");
+    expect(sidebarWidth()).toBe("calc(4rem + 320px)");
+
+    await act(async () => root?.unmount());
+    localStorage.setItem("test-sidebar-width", '"wide"');
+    await mount(shell());
+    expect(handle().getAttribute("aria-valuenow")).toBe("256");
+  });
+
+  it("hides the handle when collapsed and in the mobile drawer", async () => {
+    await mount(shell({ collapsed: true }));
+    expect(host?.querySelector('[role="separator"]')).toBeNull();
+    await rerender(shell({ isDesktop: false }));
+    expect(host?.querySelector('[role="separator"]')).toBeNull();
+  });
+
+  it("returns null from useAppShellResize outside a resizable shell", async () => {
+    await mount(<AppShell><WidthProbe /></AppShell>);
+    expect(q('[data-testid="probe"]').textContent).toBe("none");
+  });
+});
+
+describe("SidebarRail tabs", () => {
+  async function mountTabs() {
+    await mount(
+      <Tabs defaultValue="files" orientation="vertical">
+        <SidebarRail tabs>
+          <RailTile tabValue="files" label="Files" active>
+            <svg />
+          </RailTile>
+          <RailTile tabValue="search" label="Search" badge={<span data-testid="badge">2</span>}>
+            <svg />
+          </RailTile>
+        </SidebarRail>
+        <TabsContent value="files">Files panel</TabsContent>
+        <TabsContent value="search">Search panel</TabsContent>
+      </Tabs>,
+    );
+  }
+
+  const tabs = () => Array.from(host?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
+  const visiblePanel = () => q('[role="tabpanel"][data-state="active"]').textContent;
+
+  it("renders a vertical tablist of triggers with the tile classes and sr-only labels", async () => {
+    await mountTabs();
+    const list = q('[role="tablist"]');
+    expect(list.getAttribute("aria-orientation")).toBe("vertical");
+    expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2");
+    const [files, search] = tabs();
+    expect(files?.className).toBe(cn(railTileClass, "group relative", railTileStateClass(true)));
+    expect(search?.className).toBe(cn(railTileClass, "group relative", railTileStateClass(false)));
+    expect(files?.hasAttribute("aria-label")).toBe(false);
+    expect(files?.querySelector(".sr-only")?.textContent).toBe("Files");
+    expect(files?.getAttribute("aria-selected")).toBe("true");
+    expect(search?.lastElementChild?.getAttribute("data-testid")).toBe("badge");
+    expect(visiblePanel()).toBe("Files panel");
+  });
+
+  it("switches the visible panel on press and moves focus with ArrowDown", async () => {
+    await mountTabs();
+    const [files, search] = tabs();
+    await act(async () => {
+      search?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }));
+    });
+    expect(search?.getAttribute("aria-selected")).toBe("true");
+    expect(visiblePanel()).toBe("Search panel");
+
+    await act(async () => files?.focus());
+    await act(async () => {
+      files?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      // Radix roving focus moves focus on the next tick.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(document.activeElement).toBe(search);
   });
 });

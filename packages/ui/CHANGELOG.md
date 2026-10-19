@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.1
+
+Additive. With the new props unset, every shell component renders as in 0.5.0.
+
+- `AppShell` `resizable` (`SidebarResizeOptions`: `storageKey`, `defaultWidth`, `minWidth`, `maxWidth`, optional `label`; widths are panel px, rail excluded). The shell owns the panel width and resize state. It reads the stored width (a JSON number in `localStorage`) on mount, ignores invalid values, clamps it to the bounds and writes each change. It sets `--app-shell-sidebar-width` to `calc(<railWidth> + <width>px)` in place of `sidebarWidth`, and drops the main margin transition while resizing.
+- `AppSidebar` inside a resizable `AppShell`: renders `SidebarResizeHandle` as the last child of the `<aside>` on desktop while the panel shows (not `collapsed`, not `panelHidden`), and drops the `<aside>` width transition while resizing. The mobile drawer has no handle.
+- New `SidebarResizeHandle` (optional `className`): a vertical `separator` with `aria-valuenow`, `aria-valuemin` and `aria-valuemax`. Dragging past the bounds rubber-bands and springs back on release with the release velocity. ArrowLeft and ArrowRight step 16px, and double-click resets to `defaultWidth`. It renders nothing outside a resizable `AppShell`.
+- New `useAppShellResize()`: `{ width, setWidth, isResizing, minWidth, maxWidth, defaultWidth }` inside a resizable `AppShell`, else `null`.
+- `SidebarRail` `tabs`: renders the body as a Radix tabs list with the same classes. Use it inside a Tabs root with `orientation="vertical"`. `bodyAsChild` still works.
+- `RailTile` `tabValue`: renders a Radix tabs trigger with the tile classes plus `relative`, the children, the label as sr-only text (no `aria-label`) and the badge. `active` drives the state classes; `asChild` is ignored.
+
 ## 0.5.0
 
 Additive. Existing exports and defaults are unchanged.

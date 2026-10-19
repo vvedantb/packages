@@ -5,6 +5,7 @@ import { Button } from "../../src/ui/button";
 import { motionEase, motionTiming } from "../../src/motion/presets";
 import { cn } from "../../src/utils/cn";
 import { mobileMenuButtonClass } from "./app-shell-classes";
+import { SidebarResizeHandle, useSidebarResizeContext } from "./SidebarResize";
 
 export type AppSidebarProps = {
   /** Icon rail, usually a `SidebarRail`. */
@@ -41,7 +42,8 @@ const defaultMobileMenuIcon = () => <IconMenu2 size={20} />;
 /**
  * Sidebar chrome: the mobile header, the drawer backdrop and the `<aside>`
  * (fixed on desktop, a swipe-to-close drawer below it). Reads the
- * `--app-shell-*` width variables set by `AppShell`.
+ * `--app-shell-*` width variables set by `AppShell`. Inside a resizable
+ * `AppShell` it adds the resize handle while the panel shows on desktop.
  */
 export function AppSidebar({
   rail,
@@ -62,6 +64,8 @@ export function AppSidebar({
   const autoId = useId();
   const drawerId = id ?? autoId;
   const layout = isDesktop ? "desktop" : "drawer";
+  const resize = useSidebarResizeContext();
+  const showResizeHandle = resize !== null && isDesktop && !collapsed && !panelHidden;
 
   // Reaching the desktop breakpoint closes the drawer, so it does not reopen
   // on the way back down. Runs on breakpoint change only.
@@ -142,7 +146,8 @@ export function AppSidebar({
           collapsed || panelHidden
             ? "md:w-[var(--app-shell-rail-width)]"
             : "md:w-[var(--app-shell-sidebar-width)]",
-          "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+          !resize?.isResizing &&
+            "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
           className,
         )}
         initial={false}
@@ -156,6 +161,7 @@ export function AppSidebar({
       >
         {rail}
         {panelHidden ? null : panel}
+        {showResizeHandle ? <SidebarResizeHandle /> : null}
       </motion.aside>
     </>
   );
