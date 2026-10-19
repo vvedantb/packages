@@ -10,7 +10,14 @@ import {
   AlertDialogTitle,
 } from "./alert-dialog";
 import { Button } from "./button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./dialog";
 
 export type ConfirmDialogProps = React.ComponentProps<typeof AlertDialog> & {
   title: React.ReactNode;
@@ -25,8 +32,10 @@ export type ConfirmDialogProps = React.ComponentProps<typeof AlertDialog> & {
    * `"default"`: blocking alert dialog that closes on either button.
    * `"sm"`: compact dismissible dialog (outside click, Escape and the close
    * button close it). Confirm does not close it; the caller controls `open`.
+   * `"md"`: dismissible dialog like `"sm"`, with a header, description and
+   * footer in separate sections and default-size buttons.
    */
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "md";
 };
 
 function ConfirmDialog({
@@ -73,6 +82,36 @@ function ConfirmDialog({
               {confirmLabel}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (size === "md") {
+    return (
+      <Dialog {...props}>
+        {children}
+        <DialogContent className="sm:max-w-96">
+          <DialogHeader className="pb-4">
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          {description != null ? (
+            <DialogDescription className="py-6 text-muted-foreground">{description}</DialogDescription>
+          ) : null}
+          <DialogFooter className="pt-4">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                onCancel?.();
+                props.onOpenChange?.(false);
+              }}
+            >
+              {cancelLabel}
+            </Button>
+            <Button variant={variant} disabled={confirmDisabled} onClick={onConfirm}>
+              {confirmLabel}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );

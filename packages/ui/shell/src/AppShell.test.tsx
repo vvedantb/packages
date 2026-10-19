@@ -12,6 +12,7 @@ import { SidebarAccountMenu } from "./SidebarAccountMenu";
 import { useAppShellResize, type SidebarResizeOptions } from "./SidebarResize";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
 import { cn } from "../../src/utils/cn";
+import { Button } from "../../src/ui/button";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -263,6 +264,44 @@ describe("AppSidebar", () => {
   });
 });
 
+describe("AppSidebar mobileHeaderActions", () => {
+  const base = { rail: <div />, isDesktop: false, mobileOpen: false, onMobileOpenChange: () => {} };
+  const SPACER = "ml-auto h-11 w-11 shrink-0";
+
+  it("keeps the end spacer by default", async () => {
+    await mount(<AppSidebar {...base} mobileTitle="Title" />);
+    const header = q("header");
+    const spacer = header.lastElementChild;
+    expect(spacer?.className).toBe(SPACER);
+    expect(spacer?.getAttribute("aria-hidden")).toBe("true");
+    expect(spacer?.children).toHaveLength(0);
+    expect(header.querySelector("[data-app-sidebar-mobile-actions]")).toBeNull();
+  });
+
+  it("renders the actions at the end of the header in place of the spacer", async () => {
+    await mount(
+      <AppSidebar
+        {...base}
+        mobileTitle="Title"
+        mobileHeaderActions={
+          <>
+            <button type="button" data-testid="a" />
+            <button type="button" data-testid="b" />
+          </>
+        }
+      />,
+    );
+    const header = q("header");
+    const actions = q("[data-app-sidebar-mobile-actions]", header);
+    expect(header.lastElementChild).toBe(actions);
+    expect(actions.className).toBe("ml-auto flex shrink-0 items-center gap-2");
+    expect(actions.hasAttribute("aria-hidden")).toBe(false);
+    expect(Array.from(actions.children).map((c) => c.getAttribute("data-testid"))).toEqual(["a", "b"]);
+    expect(header.querySelector(`[class="${SPACER}"]`)).toBeNull();
+    expect(q("h1", header).textContent).toBe("Title");
+  });
+});
+
 describe("SidebarPanel", () => {
   it("renders the header with trailing content and the close button", async () => {
     const onClose = vi.fn();
@@ -343,6 +382,101 @@ describe("SidebarAccountMenu", () => {
     expect(stack.children).toHaveLength(1);
     expect(stack.children[0]?.className).toBe(NAME_LINE);
     expect(stack.textContent).toBe("Test User");
+  });
+});
+
+describe("SidebarAccountMenu opt-in props", () => {
+  const TRIGGER = cn(railTileClass, "h-11 w-11 p-0", railTileStateClass(false));
+
+  /** The 0.5.1 trigger classes: a ghost `Button` with the tile classes. */
+  async function referenceTriggerClass(extra?: string) {
+    await mount(<Button variant="ghost" className={cn(TRIGGER, extra)} />);
+    const className = q("button").className;
+    await act(async () => root?.unmount());
+    host?.remove();
+    return className;
+  }
+  const BADGE =
+    "pointer-events-none absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-danger transition-opacity duration-150 ease-out";
+
+  async function openMenu() {
+    await act(async () => {
+      q("button").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    return q('[role="menu"]', document.body);
+  }
+
+  it("renders the 0.5.1 trigger and content without the new props", async () => {
+    const reference = await referenceTriggerClass();
+    await mount(<SidebarAccountMenu name="Test User" />);
+    const trigger = q("button");
+    expect(trigger.className).toBe(reference);
+    expect(trigger.children).toHaveLength(1);
+    expect(trigger.parentElement).toBe(host);
+    expect(host?.children).toHaveLength(1);
+    expect(host?.querySelector("[data-account-badge]")).toBeNull();
+    const menu = await openMenu();
+    expect(menu.className).toContain("w-56");
+    expect(menu.className).not.toContain("max-sm:max-h-[min(70dvh,var(--vv-height,70dvh))]");
+    expect(menu.hasAttribute("aria-label")).toBe(false);
+  });
+
+  /** The dot is the last child of a `relative` wrapper, after the trigger, not inside it. */
+  function badgeDot() {
+    const trigger = q("button");
+    const wrapper = trigger.parentElement;
+    expect(wrapper?.parentElement).toBe(host);
+    expect(wrapper?.tagName).toBe("DIV");
+    expect(wrapper?.className).toBe("relative");
+    const dot = q("[data-account-badge]");
+    expect(trigger.contains(dot)).toBe(false);
+    expect(wrapper?.lastElementChild).toBe(dot);
+    expect(trigger.children).toHaveLength(1);
+    expect(dot.getAttribute("aria-hidden")).toBe("true");
+    return dot;
+  }
+
+  it("shows the badge dot beside the trigger when badge is true", async () => {
+    const reference = await referenceTriggerClass();
+    await mount(<SidebarAccountMenu name="Test User" badge />);
+    expect(q("button").className).toBe(reference);
+    expect(badgeDot().className).toBe(`${BADGE} opacity-100`);
+  });
+
+  it("keeps the badge dot mounted at zero opacity when badge is false", async () => {
+    await mount(<SidebarAccountMenu name="Test User" badge={false} />);
+    expect(badgeDot().className).toBe(`${BADGE} opacity-0`);
+  });
+
+  it("spreads triggerProps over the defaults and merges className", async () => {
+    const reference = await referenceTriggerClass("mt-1");
+    await mount(
+      <SidebarAccountMenu
+        name="Test User"
+        triggerProps={{ "aria-label": "Account", title: "You", className: "mt-1", id: "account" }}
+      />,
+    );
+    const trigger = q("button");
+    expect(trigger.getAttribute("aria-label")).toBe("Account");
+    expect(trigger.getAttribute("title")).toBe("You");
+    expect(trigger.id).toBe("account");
+    expect(trigger.className).toBe(reference);
+    expect(trigger.className.endsWith(" mt-1")).toBe(true);
+  });
+
+  it("spreads contentProps onto the menu content", async () => {
+    await mount(
+      <SidebarAccountMenu
+        name="Test User"
+        contentClassName="p-2"
+        contentProps={{ "aria-label": "Account actions", fitViewport: true }}
+      />,
+    );
+    const menu = await openMenu();
+    expect(menu.getAttribute("aria-label")).toBe("Account actions");
+    expect(menu.className).toContain("w-56");
+    expect(menu.className).toContain("p-2");
+    expect(menu.className).toContain("max-sm:max-h-[min(70dvh,var(--vv-height,70dvh))]");
   });
 });
 

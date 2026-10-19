@@ -208,11 +208,13 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
 <ToolbarSearchInput value={query} onChange={setQuery} />
 
 <ConfirmDialog size="sm" open={open} onOpenChange={setOpen} title="Delete item?" variant="destructive" onConfirm={remove} />
+
+<ConfirmDialog size="md" open={open} onOpenChange={setOpen} title="Delete item?" description="This cannot be undone." confirmLabel="Delete" variant="destructive" onConfirm={remove} />
 ```
 
 - `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
 - `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
-- `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it.
+- `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it. `"md"` (0.5.2) is dismissible like `"sm"`, with the title in a header (`pb-4`), the description in its own section (`py-6`) and a footer (`pt-4`) with default-size buttons. It has the same Cancel and confirm behaviour as `"sm"`.
 
 ## Buttons, menus and fields (0.4.4)
 
@@ -248,7 +250,7 @@ import {
 - `SelectField`: a labelled single select built from `Select`. Children are `SelectItem`s. An empty `value` shows the placeholder. `id` goes to the trigger and the label points at it. `className` merges onto the trigger.
 - Motion: `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes optional `variants` (`hidden`, `show`, `exit`); omitted, it keeps its opacity fade. `PanelTransition` wraps children in React `ViewTransition` with `default="none"` and `enter`/`exit` classes (`vt-panel-in`, `vt-panel-out` by default). It needs a React build that exports `ViewTransition`, and the app supplies the `::view-transition-*` CSS.
 
-## App shell (0.5.0, 0.5.1)
+## App shell (0.5.0 to 0.5.2)
 
 A sidebar and main page layout, extracted from existing app markup. It is router-free: pass your own links (with `asChild`), state and media query result. Tooltips need a `TooltipProvider` above the shell.
 
@@ -289,14 +291,41 @@ import {
 
 - Widths: `AppShell` sets `--app-shell-rail-width` (default `4rem`), `--app-shell-sidebar-width` (rail plus panel, default `20rem`) and `--app-shell-mobile-header-height` (default `calc(3.5rem + env(safe-area-inset-top, 0px))`) as inline style. Change them with `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. The other pieces read these variables. Outside `AppShell`, set the variables yourself or pass a width class with `className`.
 - `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
-- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app.
+- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app.
 - `SidebarRail`: `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
 - `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `className`. Without `asChild` it is a ghost `Button`; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
 - `RailDivider`, `SidebarIconTooltip` (`label`, `enabled`, `side` `"right"`, `sideOffset` 8).
 - `SidebarPanel`: `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
-- `SidebarAccountMenu`: `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
+- `SidebarAccountMenu`: `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
 - `SignOutDialog`: `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
 - Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarSectionLabelClass`.
+
+### Header actions and account badge (0.5.2)
+
+All opt-in. Without these props the header keeps its end spacer and the account trigger has no dot.
+
+```tsx
+<AppSidebar
+  /* … */
+  mobileHeaderActions={
+    <>
+      <Button size="icon" variant="ghost" aria-label="Search"><IconSearch size={20} /></Button>
+      <Button size="icon" variant="ghost" aria-label="New item"><IconPlus size={20} /></Button>
+    </>
+  }
+/>
+
+<SidebarAccountMenu
+  name={name}
+  badge={hasUnread}
+  triggerProps={{ "aria-label": hasUnread ? `Account menu for ${name}, unread updates` : `Account menu for ${name}` }}
+  contentProps={{ fitViewport: true, "aria-label": "Account" }}
+>
+  <DropdownMenuItem>Settings</DropdownMenuItem>
+</SidebarAccountMenu>
+```
+
+The dot is `aria-hidden`, so say it in the trigger label when it matters, as above.
 
 ### Resizable panel (0.5.1)
 

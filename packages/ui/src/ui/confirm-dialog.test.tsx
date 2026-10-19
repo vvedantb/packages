@@ -56,3 +56,63 @@ describe('ConfirmDialog size="sm"', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe('ConfirmDialog size="md"', () => {
+  it("renders the sectioned layout and closes only on Cancel", async () => {
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    const onOpenChange = vi.fn();
+    await mount(
+      <ConfirmDialog
+        size="md"
+        open
+        onOpenChange={onOpenChange}
+        title="Remove member?"
+        description="They lose access now."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />,
+    );
+    expect(document.querySelector('[role="alertdialog"]')).toBeNull();
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog?.className).toContain("sm:max-w-96");
+    const title = document.querySelector("h2");
+    expect(title?.textContent).toBe("Remove member?");
+    expect(title?.parentElement?.className).toContain("pb-4");
+    const description = document.querySelector("p.py-6");
+    expect(description?.textContent).toBe("They lose access now.");
+    expect(description?.className).toContain("py-6 text-muted-foreground");
+    const footer = document.querySelector('[data-slot="dialog-footer"]');
+    expect(footer?.className).toContain("pt-4");
+    const buttons = Array.from(footer?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+    expect(buttons.map((b) => b.textContent)).toEqual(["Cancel", "Remove"]);
+
+    await act(async () => buttons[1]?.click());
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    await act(async () => buttons[0]?.click());
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("omits the description without one and disables confirm with confirmDisabled", async () => {
+    await mount(<ConfirmDialog size="md" open title="Leave?" confirmDisabled />);
+    expect(document.querySelector("p.py-6")).toBeNull();
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-slot="dialog-footer"] button'),
+    );
+    expect(buttons.map((b) => b.disabled)).toEqual([false, true]);
+  });
+});
+
+describe('ConfirmDialog size="default"', () => {
+  it("still renders the blocking alert dialog", async () => {
+    await mount(<ConfirmDialog open title="Discard?" description="Changes are lost." />);
+    expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.querySelector("[data-alert-cancel]")?.textContent).toBe("Cancel");
+  });
+});
