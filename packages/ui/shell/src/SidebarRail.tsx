@@ -1,7 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { Button } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
@@ -99,7 +98,7 @@ export type RailTileProps = Omit<ComponentPropsWithoutRef<"button">, "children">
   children: ReactNode;
 };
 
-/** Rail tile with a right-side tooltip. Renders a ghost `Button`, its child with `asChild`, or a tabs trigger with `tabValue`. */
+/** Rail tile with a right-side tooltip. Renders a native `<button>`, its child with `asChild`, or a tabs trigger with `tabValue`. */
 export function RailTile({
   label,
   active = false,
@@ -135,16 +134,15 @@ export function RailTile({
           {badge}
         </Slot>
       ) : (
-        <Button
+        <button
           type="button"
-          variant="ghost"
           {...props}
           aria-label={label}
-          className={cn(railTileClass, "group h-11 w-11 p-0", railTileStateClass(active), className)}
+          className={cn(railTileClass, "group", railTileStateClass(active), className)}
         >
           {children}
           {badge}
-        </Button>
+        </button>
       )}
     </SidebarIconTooltip>
   );

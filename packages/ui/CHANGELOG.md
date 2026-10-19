@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.3
+
+- `AppSidebar`: the mobile header uses a solid `bg-surface`, the content card's token, in place of `bg-background/80 backdrop-blur-md`, so it blends with the page instead of showing as a grey bar.
+- `RailTile`: without `asChild` or `tabValue` it renders a native `<button type="button">` with the same classes as the `asChild` tile, not a ghost `Button`, so icons keep their authored size (no 16px clamp), matching `asChild` and `tabValue` tiles.
+
 ## 0.5.2
 
 Additive. With the new props unset, every component renders as in 0.5.1.
