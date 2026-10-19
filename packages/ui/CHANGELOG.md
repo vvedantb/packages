@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.2
+
+Dark mode visual change for sidebar panel nav rows; everything else is additive. No props removed. Light mode looks the same.
+
+- Visual change: nav row fills (`sidebarNavLinkTextClass`, `sidebarNavItemClass`, `Sidebar.NavItem`) use `bg-sidebar-accent` instead of `bg-surface-tertiary`. New token `--sidebar-accent` (`--color-sidebar-accent`): light `var(--surface-tertiary)` (unchanged look), dark `oklch(22.64% 0 0)` (sRGB 28 28 28, was about 39 39 39). `compat-shadcn-rgb.css` maps it to the app's `--sidebar-accent` channels, falling back to `--secondary` (the old fill). Compat apps that define `--sidebar-accent` now get that colour in both modes. Rail tiles are unchanged.
+- Additive: `sidebarNavItemClass` options `selected` (fill without `font-medium`), `dragging` (`opacity-40 cursor-grabbing`) and `dropTarget` (fill plus `ring-2 ring-inset ring-focus`). The returned string always includes the same styles keyed off `data-selected="true"`, `data-dragging="true"` and `data-drop-target="true"`, so the exact class string for `{ active, iconOnly }` gains those data-attribute classes; they apply only when the attribute is set.
+- Additive: `Sidebar.NavItem` props `selected`, `indent` (12px per level on top of the 16px left padding, as inline `paddingLeft`), `dragging` and `dropTarget`. It sets `data-active`, `data-selected`, `data-dragging` and `data-drop-target` (`"true"`) only when the matching prop is on.
+- Additive: row parts `Sidebar.NavItemLeading`, `Sidebar.NavItemLabel`, `Sidebar.NavItemTrailing` and `Sidebar.NavItemActions` (`<span>`, or `asChild`; type `SidebarNavItemPartProps`), with class helpers `sidebarNavItemLeadingClass`, `sidebarNavItemLabelClass`, `sidebarNavItemSubtitleClass`, `sidebarNavItemTrailingClass`, `sidebarNavItemActionsClass` and `sidebarNavItemIndentStyle(indent)`. Actions are in the row flow and show on row hover, focus within, or while a menu trigger inside is `data-state="open"`.
+
 ## 0.7.1
 
 Intended visual change. No props removed; DOM structure unchanged. Values in brackets are at the default `--radius: 1rem`.

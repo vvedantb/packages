@@ -299,7 +299,7 @@ import {
 - `SidebarPanel`: legacy (still supported) `headerTrailing`, `onClose`, `closeLabel` and `closeButtonClassName`; compose `Sidebar.Panel` parts instead. `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
 - `SidebarAccountMenu`: legacy (still supported) `badge`, `triggerProps`, `contentProps` and `stackedLabel`; compose `Sidebar.Account*` parts instead. `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
 - `SignOutDialog`: legacy (still supported) `question` and `title`; compose `ConfirmDialog` parts with `alert={false}` for other copy. `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
-- Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarNavItemClass({ active, iconOnly })`, `sidebarNavIconClass(active)`, `sidebarSectionLabelClass`. See [Menu item corners and sidebar nav rows (0.7.1)](#menu-item-corners-and-sidebar-nav-rows-071).
+- Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarNavItemClass({ active, iconOnly, selected, dragging, dropTarget })`, `sidebarNavIconClass(active)`, `sidebarSectionLabelClass`, and the row parts `sidebarNavItemLeadingClass`, `sidebarNavItemLabelClass`, `sidebarNavItemSubtitleClass`, `sidebarNavItemTrailingClass`, `sidebarNavItemActionsClass` and `sidebarNavItemIndentStyle(indent)`. See [Menu item corners and sidebar nav rows (0.7.1)](#menu-item-corners-and-sidebar-nav-rows-071) and [Sidebar nav row parts (0.7.2)](#sidebar-nav-row-parts-072).
 
 ### Header actions and account badge (0.5.2)
 
@@ -434,7 +434,8 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | `PanelHeader` | Padded header row for `PanelTitle` and `PanelActions`. |
 | `PanelTitle` / `PanelActions` | The `<h2>` and the trailing actions. |
 | `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. |
-| `NavItem` | Panel nav row (`sidebarNavItemClass`). `active` (fill, `font-medium`, `aria-current="page"`), `iconOnly`, `icon` (element; gets `sidebarNavIconClass`), `asChild` for a router link. A `<button type="button">` without `asChild`. |
+| `NavItem` | Panel nav row (`sidebarNavItemClass`). `active` (fill, `font-medium`, `aria-current="page"`), `iconOnly`, `icon` (element; gets `sidebarNavIconClass`), `asChild` for a router link. A `<button type="button">` without `asChild`. 0.7.2: `selected`, `indent`, `dragging`, `dropTarget`; see [Sidebar nav row parts (0.7.2)](#sidebar-nav-row-parts-072). |
+| `NavItemLeading` / `NavItemLabel` / `NavItemTrailing` / `NavItemActions` | Row parts (0.7.2): leading slot, truncated label, always-visible trailing content and hover-revealed actions. `<span>`, or the child with `asChild`. |
 | `AccountMenu` | Dropdown root. `badge` adds the unread dot (`AccountBadge`) in a `relative` wrapper. |
 | `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props; native `name` goes to the button. |
 | `AccountAvatar` | Avatar image or initials. `userName`, `imageUrl`. |
@@ -693,11 +694,103 @@ Colour mapping. The package has no sidebar colour tokens, so the rows use the ne
 
 | Role | Reference look (light / dark, sRGB) | Package token (light / dark, sRGB) |
 | --- | --- | --- |
-| Hover and active fill | 233 234 236 / 28 28 28 | `surface-tertiary`: 234 234 234 / about 39 39 39. Light matches; dark is a step lighter. It is the rail tile's active fill too, so a rail tile and a nav row stay the same. |
+| Hover and active fill | 233 234 236 / 28 28 28 | `surface-tertiary`: 234 234 234 / about 39 39 39. Light matches; dark is a step lighter. It is the rail tile's active fill too, so a rail tile and a nav row stay the same. From 0.7.2 the rows use `sidebar-accent` (234 234 234 / 28 28 28); see below. |
 | Active text and icon | 9 9 11 / 250 250 250 | `foreground`: 24 24 24 / 252 252 252 |
 | Idle text (80%) | 24 24 25 / 251 252 253 | `foreground` at 80% |
 | Idle icon | 100 101 103 / 159 160 162 | `muted-foreground` (`--muted`): 114 114 114 / 160 160 160 |
 | Focus ring (35%) | 9 9 11 / 250 250 250 | `foreground` at 35% |
+
+## Sidebar nav row parts (0.7.2)
+
+One row style for every sidebar list: plain nav links and rich rows (checkbox, avatar, two-line label, nested folders, `...` menus, drag and drop, rename inputs). `Sidebar.NavItem` is the row; the parts go inside it.
+
+Rich row (the link is the row; the parts are its children):
+
+```tsx
+<Sidebar.NavItem asChild active={isActive} selected={selected} indent={1} dragging={isDragged} dropTarget={isOver}>
+  <Link to="/chat/$id" params={{ id }} draggable onDragStart={onDragStart}>
+    <Sidebar.NavItemLeading>
+      <Checkbox checked={selected} onClick={(event) => event.stopPropagation()} aria-label={`Select ${title}`} />
+    </Sidebar.NavItemLeading>
+    <Sidebar.NavItemLabel>{title}</Sidebar.NavItemLabel>
+    <Sidebar.NavItemTrailing>{generating ? <Spinner size={14} decorative /> : count}</Sidebar.NavItemTrailing>
+    <Sidebar.NavItemActions>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Row actions"
+            onClick={(event) => {
+              event.stopPropagation();
+              event.preventDefault();
+            }}
+          >
+            <IconDots size={16} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>...</DropdownMenuContent>
+      </DropdownMenu>
+    </Sidebar.NavItemActions>
+  </Link>
+</Sidebar.NavItem>
+```
+
+Simple row (unchanged from 0.7.1):
+
+```tsx
+<Sidebar.NavItem asChild active={active} icon={<IconHome />}>
+  <Link to="/home"><span className="truncate">Home</span></Link>
+</Sidebar.NavItem>
+```
+
+`Sidebar.NavItem` props added in 0.7.2:
+
+| Prop | Effect |
+| --- | --- |
+| `selected` | The active fill (`bg-sidebar-accent text-foreground`) without `font-medium` or `aria-current`. `data-selected="true"`. |
+| `indent` | Nesting level from 0. Left padding is `calc(1rem + indent * 12px)`: 16px, 28px, 40px, ... Set as inline `paddingLeft`, so any depth works and a `style.paddingLeft` you pass wins. Ignored with `iconOnly`. |
+| `dragging` | `opacity-40 cursor-grabbing`. `data-dragging="true"`. |
+| `dropTarget` | Fill plus `ring-2 ring-inset ring-focus`. `data-drop-target="true"`. |
+
+`active` also sets `data-active="true"`. Each attribute is left off when its prop is false. The styles key off the attributes (`data-[selected=true]:`, `data-[dragging=true]:`, `data-[drop-target=true]:`), so a row that sets them itself (for example from a tree library's drag state) gets the same look. `sidebarNavItemClass` takes the same `selected`, `dragging` and `dropTarget` options for rows that use the class only.
+
+Parts. Each renders a `<span>` with its class (`className` merges last), or merges onto its single child with `asChild`:
+
+| Part | Class | Use |
+| --- | --- | --- |
+| `NavItemLeading` | `sidebarNavItemLeadingClass`: `flex shrink-0 items-center` | Checkbox, icon, avatar, status dot, folder chevron. Put `sidebarNavIconClass(active)` on an icon. A 40px avatar makes the row taller; add `py-2` to the row if you want more room. |
+| `NavItemLabel` | `sidebarNavItemLabelClass`: `min-w-0 flex-1 truncate` | The title. For two lines, put `<span className="block truncate">` and `<span className={sidebarNavItemSubtitleClass}>` (`block truncate text-xs text-muted-foreground`) inside. For rename, `asChild` on the input. |
+| `NavItemTrailing` | `sidebarNavItemTrailingClass`: `ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground` | Always visible: counts, unread dots, spinners, badges. |
+| `NavItemActions` | `sidebarNavItemActionsClass` (below) | Hover-revealed `...` button. |
+
+Actions sit in the row flow at the end (`ml-auto`), so an `asChild` link row needs no `relative`. The part is `h-6` with `-my-1`, so a 24px or 28px icon button does not change the 30px row height. It reserves its width while hidden, so the label truncates a little earlier. For the older overlay look, pass `className="absolute right-3"` to the part and `relative` to the row. Visibility:
+
+- `opacity-0` by default, `transition-opacity duration-75`.
+- `group-hover:opacity-100` and `group-focus-within:opacity-100`: the row is a `group`.
+- `has-[[data-state=open]]:opacity-100`: a Radix menu trigger inside it is open.
+- `data-[state=open]:opacity-100`: the part itself is the trigger (`asChild`).
+
+The part adds no handlers. Call `stopPropagation()` (and `preventDefault()` inside a link) on the button so it does not run the row click.
+
+Other rich-row needs:
+
+- Folder rows and drop zones: render the row as a `<div>` or `<button>` (`asChild` on a `<div>` when the row holds its own buttons) and wrap it in your drop zone. Set `dropTarget` while a drag is over it.
+- Indent guide lines: absolutely positioned spans in the row; add `relative` to the row.
+- Context menus and hover cards: wrap `Sidebar.NavItem` as before; `ContextMenuTrigger asChild` can wrap it directly.
+
+Classes a rich row no longer needs beside the parts: `rounded-lg`, `rounded-md`, `text-sm` (and `text-sm` on the title span), `px-3 py-1.5`, `gap-3`, `py-2`/`gap-3` for padding alone, `pl-7`/`pl-8` (use `indent`), `bg-surface-tertiary` for active, hover or selected, `ring-2 ring-inset ring-focus` and `opacity-40 cursor-grabbing` for drag states, `opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity` on the menu button, `mr-2` on a checkbox (the row `gap-2` spaces it), `truncate flex-1 min-w-0` on the title, `text-xs text-muted` on counts, and app row helpers that set any of these (a local list-item class, an outer `group py-px` wrapper, a `ui-sidebar-row` class).
+
+### Fill colour: `sidebar-accent`
+
+Rows (hover, active, selected, drop target) use `bg-sidebar-accent` instead of `bg-surface-tertiary`.
+
+| | Light | Dark |
+| --- | --- | --- |
+| `tokens.css` `--sidebar-accent` | `var(--surface-tertiary)` (about 234 234 234; unchanged) | `oklch(22.64% 0 0)` (28 28 28; was about 39 39 39) |
+| `compat-shadcn-rgb.css` `--color-sidebar-accent` | `rgb(var(--sidebar-accent, var(--secondary)))`: the app's `--sidebar-accent` channels if defined, else `--secondary` as before | same |
+
+Rail tiles keep `surface-tertiary`, so in dark mode the active rail tile is a step lighter than the active row. An app that imports `tokens.css` and defines its own `--sidebar-accent` overrides the fill; it must be a full colour value there (use `compat-shadcn-rgb.css` for `R G B` channels).
 
 ## Toaster
 
@@ -747,7 +840,7 @@ Components use `text-muted-foreground`, `primary` and `--color-*` theme variable
 Use this when the app defines shadcn-style variables as space-separated channels (`--background: 244 245 246`) and reads them as `rgb(var(--background) / 0.5)`.
 
 1. Import `compat-shadcn-rgb.css` **instead of** `tokens.css`. Never import both.
-2. The app keeps `--background`, `--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring` (each with its `-foreground` where shadcn has one) and `--radius`. The compat file does not define them. It only references them, so the app can change `--primary`, `--ring`, `--radius` or `--font-sans` at runtime.
+2. The app keeps `--background`, `--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring` (each with its `-foreground` where shadcn has one) and `--radius`. The compat file does not define them. It only references them, so the app can change `--primary`, `--ring`, `--radius` or `--font-sans` at runtime. `--sidebar-accent` is optional: sidebar nav rows use it when set, else `--secondary` (0.7.2).
 3. Add the `@source` line for the package sources.
 
 ```css

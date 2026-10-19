@@ -9,7 +9,18 @@ import {
   AccountSeparator,
   AccountTrigger,
 } from "./SidebarAccountMenu";
-import { NavItem, Panel, PanelActions, PanelClose, PanelHeader, PanelTitle } from "./SidebarPanel";
+import {
+  NavItem,
+  NavItemActions,
+  NavItemLabel,
+  NavItemLeading,
+  NavItemTrailing,
+  Panel,
+  PanelActions,
+  PanelClose,
+  PanelHeader,
+  PanelTitle,
+} from "./SidebarPanel";
 import { Rail, RailBody, RailFooter, RailHeader, RailItem, RailSeparator } from "./SidebarRail";
 
 export type {
@@ -36,6 +47,7 @@ export type {
   SidebarPanelHeaderProps,
   SidebarPanelRootProps,
   SidebarPanelTitleProps,
+  SidebarNavItemPartProps,
   SidebarNavItemProps,
 } from "./SidebarPanel";
 export type {
@@ -70,6 +82,10 @@ export const Sidebar = {
   PanelActions,
   PanelClose,
   NavItem,
+  NavItemLeading,
+  NavItemLabel,
+  NavItemTrailing,
+  NavItemActions,
   AccountMenu,
   AccountTrigger,
   AccountAvatar,

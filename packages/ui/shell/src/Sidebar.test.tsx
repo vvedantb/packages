@@ -3,11 +3,18 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import { IconHome, IconSearch } from "@tabler/icons-react";
-import { DropdownMenuItem } from "../../src/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../src/ui/dropdown-menu";
 import { TooltipProvider } from "../../src/ui/tooltip";
 import { cn } from "../../src/utils/cn";
 import { AppShell } from "./AppShell";
-import { sidebarNavIconClass, sidebarNavItemClass } from "./app-shell-classes";
+import {
+  sidebarNavIconClass,
+  sidebarNavItemActionsClass,
+  sidebarNavItemClass,
+  sidebarNavItemLabelClass,
+  sidebarNavItemLeadingClass,
+  sidebarNavItemTrailingClass,
+} from "./app-shell-classes";
 import { AppSidebar } from "./AppSidebar";
 import { Sidebar } from "./Sidebar";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
@@ -298,12 +305,15 @@ describe("Sidebar.AccountTrigger", () => {
 });
 
 describe("Sidebar nav rows", () => {
+  const dataStates =
+    "data-[selected=true]:bg-sidebar-accent data-[selected=true]:text-foreground data-[dragging=true]:cursor-grabbing data-[dragging=true]:opacity-40 data-[drop-target=true]:bg-sidebar-accent data-[drop-target=true]:text-foreground data-[drop-target=true]:ring-2 data-[drop-target=true]:ring-inset data-[drop-target=true]:ring-focus";
+
   it("builds the whole row from one call", () => {
     expect(sidebarNavItemClass({ active: true })).toBe(
-      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 gap-2 px-4 bg-surface-tertiary font-medium text-foreground",
+      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 gap-2 px-4 bg-sidebar-accent font-medium text-foreground " + dataStates,
     );
     expect(sidebarNavItemClass({ iconOnly: true })).toBe(
-      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 justify-center px-0 font-normal text-foreground/80 hover:bg-surface-tertiary hover:text-foreground",
+      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 justify-center px-0 font-normal text-foreground/80 hover:bg-sidebar-accent hover:text-foreground " + dataStates,
     );
   });
 
@@ -335,5 +345,120 @@ describe("Sidebar nav rows", () => {
     expect(button?.getAttribute("type")).toBe("button");
     expect(button?.hasAttribute("aria-current")).toBe(false);
     expect(button?.className).toBe(sidebarNavItemClass());
+  });
+
+  it("adds selected, dragging and drop-target styles as options", () => {
+    const selected = sidebarNavItemClass({ selected: true });
+    expect(selected).toContain(" bg-sidebar-accent text-foreground");
+    expect(selected).not.toMatch(/(^| )text-foreground\/80|font-medium/);
+    expect(sidebarNavItemClass({ active: true, selected: true })).toContain("font-medium");
+    expect(sidebarNavItemClass({ dragging: true })).toMatch(/ cursor-grabbing opacity-40$/);
+    expect(sidebarNavItemClass({ dropTarget: true })).toMatch(/ bg-sidebar-accent text-foreground ring-2 ring-inset ring-focus$/);
+  });
+
+  it("Sidebar.NavItem sets state data attributes only when on", async () => {
+    await mount(
+      <>
+        <Sidebar.NavItem data-testid="on" active selected dragging dropTarget>
+          On
+        </Sidebar.NavItem>
+        <Sidebar.NavItem data-testid="off">Off</Sidebar.NavItem>
+      </>,
+    );
+    const on = host?.querySelector('[data-testid="on"]');
+    const off = host?.querySelector('[data-testid="off"]');
+    for (const name of ["data-active", "data-selected", "data-dragging", "data-drop-target"]) {
+      expect(on?.getAttribute(name), name).toBe("true");
+      expect(off?.hasAttribute(name), name).toBe(false);
+    }
+    expect(on?.className).toBe(sidebarNavItemClass({ active: true }));
+  });
+
+  it("Sidebar.NavItem indents 12px per level on top of the 16px padding", async () => {
+    await mount(
+      <>
+        <Sidebar.NavItem data-testid="flat">Flat</Sidebar.NavItem>
+        <Sidebar.NavItem data-testid="one" indent={1}>One</Sidebar.NavItem>
+        <Sidebar.NavItem data-testid="three" indent={3} style={{ color: "red" }}>Three</Sidebar.NavItem>
+        <Sidebar.NavItem data-testid="override" indent={2} style={{ paddingLeft: "4px" }}>Override</Sidebar.NavItem>
+        <Sidebar.NavItem data-testid="icon" indent={2} iconOnly>Icon</Sidebar.NavItem>
+        <Sidebar.NavItem asChild indent={2}>
+          <a data-testid="link" href="/nested" style={{ color: "blue" }}>Nested</a>
+        </Sidebar.NavItem>
+      </>,
+    );
+    const style = (id: string) => host?.querySelector<HTMLElement>(`[data-testid="${id}"]`)?.style;
+    expect(style("flat")?.paddingLeft).toBe("");
+    expect(style("one")?.paddingLeft).toBe("calc(1rem + 12px)");
+    expect(style("three")?.paddingLeft).toBe("calc(1rem + 36px)");
+    expect(style("three")?.color).toBe("red");
+    expect(style("override")?.paddingLeft).toBe("4px");
+    expect(style("icon")?.paddingLeft).toBe("");
+    expect(style("link")?.paddingLeft).toBe("calc(1rem + 24px)");
+    expect(style("link")?.color).toBe("blue");
+  });
+
+  it("composes leading, label, trailing and actions parts in a link row", async () => {
+    const clicks: string[] = [];
+    await mount(
+      <Sidebar.NavItem asChild selected indent={1}>
+        <a href="/chat" onClick={(event) => { event.preventDefault(); clicks.push("row"); }}>
+          <Sidebar.NavItemLeading>
+            <input type="checkbox" aria-label="Select" />
+          </Sidebar.NavItemLeading>
+          <Sidebar.NavItemLabel className="font-medium">Chat title</Sidebar.NavItemLabel>
+          <Sidebar.NavItemTrailing>3</Sidebar.NavItemTrailing>
+          <Sidebar.NavItemActions>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="Chat actions" onClick={(event) => { event.stopPropagation(); event.preventDefault(); clicks.push("actions"); }}>
+                  ...
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Rename</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Sidebar.NavItemActions>
+        </a>
+      </Sidebar.NavItem>,
+    );
+    const link = host?.querySelector("a");
+    expect(link?.getAttribute("data-selected")).toBe("true");
+    const [leading, label, trailing, actions] = Array.from(link?.children ?? []);
+    expect(leading?.tagName).toBe("SPAN");
+    expect(leading?.className).toBe(sidebarNavItemLeadingClass);
+    expect(label?.className).toBe(cn(sidebarNavItemLabelClass, "font-medium"));
+    expect(label?.textContent).toBe("Chat title");
+    expect(trailing?.className).toBe(sidebarNavItemTrailingClass);
+    expect(actions?.className).toBe(sidebarNavItemActionsClass);
+    expect(actions?.className).toContain("opacity-0 ");
+    expect(actions?.className).toContain("group-hover:opacity-100");
+    expect(actions?.className).toContain("group-focus-within:opacity-100");
+    expect(actions?.className).toContain("has-[[data-state=open]]:opacity-100");
+    expect(actions?.querySelector("button")?.getAttribute("data-state")).toBe("closed");
+    await act(async () => actions?.querySelector("button")?.click());
+    await act(async () => label?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(clicks).toEqual(["actions", "row"]);
+  });
+
+  it("parts merge onto their child with asChild", async () => {
+    await mount(
+      <Sidebar.NavItem asChild>
+        <div>
+          <Sidebar.NavItemLabel asChild className="font-medium">
+            <input aria-label="Rename" defaultValue="Draft" />
+          </Sidebar.NavItemLabel>
+          <Sidebar.NavItemActions asChild>
+            <button type="button" data-state="open" aria-label="More" />
+          </Sidebar.NavItemActions>
+        </div>
+      </Sidebar.NavItem>,
+    );
+    const input = host?.querySelector("input");
+    expect(input?.className).toBe(cn(sidebarNavItemLabelClass, "font-medium"));
+    const more = host?.querySelector('button[aria-label="More"]');
+    expect(more?.className).toBe(sidebarNavItemActionsClass);
+    expect(more?.className).toContain("data-[state=open]:opacity-100");
   });
 });

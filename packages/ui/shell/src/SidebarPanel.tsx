@@ -3,7 +3,17 @@ import { Slot, Slottable } from "@radix-ui/react-slot";
 import { IconX } from "@tabler/icons-react";
 import { Button, type ButtonProps } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
-import { panelCloseButtonClass, sidebarHeaderRowClass, sidebarNavIconClass, sidebarNavItemClass } from "./app-shell-classes";
+import {
+  panelCloseButtonClass,
+  sidebarHeaderRowClass,
+  sidebarNavIconClass,
+  sidebarNavItemActionsClass,
+  sidebarNavItemClass,
+  sidebarNavItemIndentStyle,
+  sidebarNavItemLabelClass,
+  sidebarNavItemLeadingClass,
+  sidebarNavItemTrailingClass,
+} from "./app-shell-classes";
 import { useOptionalSidebar } from "./SidebarChrome";
 
 export type SidebarPanelProps = {
@@ -134,23 +144,36 @@ export function PanelClose({ label = "Close navigation", onClick, className, chi
 }
 
 export type SidebarNavItemProps = ComponentPropsWithoutRef<"button"> & {
-  /** Current route: static fill, `font-medium`, `aria-current="page"`. */
+  /** Current route: static fill, `font-medium`, `aria-current="page"`, `data-active="true"`. */
   active?: boolean;
   /** Collapsed panel: centred icon, no horizontal padding. */
   iconOnly?: boolean;
-  /** Leading icon element; gets `sidebarNavIconClass(active)` merged onto it. */
+  /** Leading icon element; gets `sidebarNavIconClass(active)` merged onto it. For other leading content use `Sidebar.NavItemLeading`. */
   icon?: ReactElement;
   /** Render the single child element (for example a router link) as the row. */
   asChild?: boolean;
+  /** Picked (for example in a multi-select list): the active fill without `font-medium`. Sets `data-selected="true"`. */
+  selected?: boolean;
+  /** Nesting level from 0. Each level adds 12px to the 16px left padding. Ignored with `iconOnly`. */
+  indent?: number;
+  /** Row being dragged. Sets `data-dragging="true"`. */
+  dragging?: boolean;
+  /** Row under a drag. Sets `data-drop-target="true"`. */
+  dropTarget?: boolean;
 };
 
-/** Panel nav row (`sidebarNavItemClass`). Renders a native `<button>`, or its child with `asChild`. */
+/** Panel nav row (`sidebarNavItemClass`). Renders a native `<button>`, or its child with `asChild`. Compose `NavItemLeading`, `NavItemLabel`, `NavItemTrailing` and `NavItemActions` inside. */
 export function NavItem({
   active = false,
   iconOnly = false,
   icon,
   asChild = false,
+  selected = false,
+  indent = 0,
+  dragging = false,
+  dropTarget = false,
   className,
+  style,
   children,
   ...props
 }: SidebarNavItemProps) {
@@ -160,10 +183,48 @@ export function NavItem({
       type={asChild ? undefined : "button"}
       {...props}
       aria-current={active ? "page" : undefined}
+      data-active={active || undefined}
+      data-selected={selected || undefined}
+      data-dragging={dragging || undefined}
+      data-drop-target={dropTarget || undefined}
+      style={indent > 0 && !iconOnly ? { ...sidebarNavItemIndentStyle(indent), ...style } : style}
       className={cn(sidebarNavItemClass({ active, iconOnly }), className)}
     >
       {icon ? <Slot className={sidebarNavIconClass(active)}>{icon}</Slot> : null}
       <Slottable>{children}</Slottable>
     </Row>
   );
+}
+
+export type SidebarNavItemPartProps = ComponentPropsWithoutRef<"span"> & {
+  /** Merge the part classes onto the single child element instead of a `<span>`. */
+  asChild?: boolean;
+};
+
+function NavItemPart({ partClass, asChild = false, className, ...props }: SidebarNavItemPartProps & { partClass: string }) {
+  const Part = asChild ? Slot : "span";
+  return <Part {...props} className={cn(partClass, className)} />;
+}
+
+/** Leading slot of a nav row: checkbox, icon, avatar or status dot (`sidebarNavItemLeadingClass`). */
+export function NavItemLeading(props: SidebarNavItemPartProps) {
+  return <NavItemPart {...props} partClass={sidebarNavItemLeadingClass} />;
+}
+
+/** Truncated label of a nav row (`sidebarNavItemLabelClass`). `asChild` on a rename input keeps the layout. */
+export function NavItemLabel(props: SidebarNavItemPartProps) {
+  return <NavItemPart {...props} partClass={sidebarNavItemLabelClass} />;
+}
+
+/** Always-visible trailing content of a nav row: counts, badges, spinners (`sidebarNavItemTrailingClass`). */
+export function NavItemTrailing(props: SidebarNavItemPartProps) {
+  return <NavItemPart {...props} partClass={sidebarNavItemTrailingClass} />;
+}
+
+/**
+ * Hover-revealed actions of a nav row, such as a `...` menu (`sidebarNavItemActionsClass`).
+ * Adds no handlers: stop propagation (and prevent default inside a link) on the button.
+ */
+export function NavItemActions(props: SidebarNavItemPartProps) {
+  return <NavItemPart {...props} partClass={sidebarNavItemActionsClass} />;
 }
