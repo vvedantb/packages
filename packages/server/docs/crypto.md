@@ -53,7 +53,7 @@ The two app copies are the same: encode both strings as UTF-8, return `false` at
 | app-a | `convex/lib/base64.ts` | `@scure/base` `base64`, `base64url` (padded) | `bytesToBase64`, `base64ToBytes(v, { strict: true })`, `bytesToBase64Url(b, { padding: true })` |
 | app-a | `convex/apiKeys.ts` | `<prefix>_sk_<base64url of 24 bytes>`; hash `hex(sha256(key))` | `randomToken(24, "base64url")` (24 bytes never pads), `sha256Hex` |
 | app-e | `convex/crypto.ts` | `enc:<version>:<iv>:<ct>` (master key, versioned env), `enc2:<iv>:<ct>` (per-user data key), wrapped key `{ wrapped, iv, masterVersion, dekVersion }`; AAD labels on all; btoa/atob | `aesGcmEncrypt(key, text, { aad })` + `bytesToBase64`/`base64ToBytes`; `randomBytes(32)` for a data key; `sha256Hex`; `randomToken(24, "hex")` |
-| app-b | `convex/vhubCredentials/seal.ts` | `{ ciphertext, nonce }` base64, no AAD; key 64 hex chars or 32 raw UTF-8 bytes | `hexToBytes` for the hex form, `aesGcmEncrypt` + `bytesToBase64` |
+| app-b | `convex/<app>Credentials/seal.ts` | `{ ciphertext, nonce }` base64, no AAD; key 64 hex chars or 32 raw UTF-8 bytes | `hexToBytes` for the hex form, `aesGcmEncrypt` + `bytesToBase64` |
 | app-b | `convex/routines/triggerEvents.ts` | trigger secret base64url (unpadded) of 32 bytes; event boundary hex of 12; `sha256Hex`; `timingSafeEqual` | `randomToken(32, "base64url")`, `randomToken(12, "hex")`, `sha256Hex`, `timingSafeEqual` |
 | app-c | `convex/http.ts` | `timingSafeEqual` for a bootstrap header | `timingSafeEqual` |
 

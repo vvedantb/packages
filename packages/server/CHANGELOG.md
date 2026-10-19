@@ -1,17 +1,24 @@
 # Changelog
 
+## 0.4.1
+
+Docs and comments only; no runtime change.
+
+- Shipped docs describe the Convex optimistic-update helpers and the MCP OAuth client helpers by what they do, and name no consuming app.
+- `docs/mcp-client.md` is now `docs/mcp-oauth-client.md`. Internal folders `src/mcp-client` and `tests/mcp-client` are now `mcp-oauth-client`. Export names do not change.
+
 ## 0.4.0
 
-Additive: two packages fold in under the same export names. Nothing in 0.3.0 changes.
+Additive: the Convex optimistic-update helpers and the MCP OAuth client helpers join the root. Nothing in 0.3.0 changes. (Historical: these came from the former `@vvedantb/convex-client` and `@vvedantb/mcp-client` 0.1.0 packages, under the same export names.)
 
 ### Added
 
-- From `@vvedantb/convex-client` 0.1.0, its non-React helpers: `mapLoadedQuery` (also `forEachLoadedQuery` and `updateAllCachedQueries`), `patchLoadedQuery`, `OptimisticStore`, `tempId(table?, { format? })`, `TempIdFormat`, `TempIdOptions` and `createMemoryOptimisticStore()`. See `docs/convex.md`. The package still never imports `convex` at runtime: the memory store carries a copy of `getFunctionName`, tested against Convex's.
-- From `@vvedantb/mcp-client` 0.1.0, every export: `createMcpOAuthStateSchema`, `hasMcpOAuthTokens`, `isAccessTokenExpiring`, `createMcpOAuthProvider`, `authorizeMcpServer`, `refreshMcpOAuth`, `revokeMcpOAuth`, `startLoopback`, `LOOPBACK_PATH`, `LOOPBACK_TIMEOUT_MS` and their types. See `docs/mcp-client.md`. Node only; nothing Node-only loads when the root is imported: `startLoopback` imports `node:http` when called, the SDK loads on first use, and `state()` uses WebCrypto instead of `node:crypto` (same format).
+- Convex optimistic-update helpers (no React): `mapLoadedQuery` (also `forEachLoadedQuery` and `updateAllCachedQueries`), `patchLoadedQuery`, `OptimisticStore`, `tempId(table?, { format? })`, `TempIdFormat`, `TempIdOptions` and `createMemoryOptimisticStore()`. See `docs/convex.md`. The package still never imports `convex` at runtime: the memory store carries a copy of `getFunctionName`, tested against Convex's.
+- MCP OAuth client helpers: `createMcpOAuthStateSchema`, `hasMcpOAuthTokens`, `isAccessTokenExpiring`, `createMcpOAuthProvider`, `authorizeMcpServer`, `refreshMcpOAuth`, `revokeMcpOAuth`, `startLoopback`, `LOOPBACK_PATH`, `LOOPBACK_TIMEOUT_MS` and their types. See `docs/mcp-oauth-client.md`. Node only; nothing Node-only loads when the root is imported: `startLoopback` imports `node:http` when called, the SDK loads on first use, and `state()` uses WebCrypto instead of `node:crypto` (same format).
 - New optional peers: `@modelcontextprotocol/sdk` `^1.29.0` (MCP client OAuth calls) and `convex` `^1.24.0` (types only). Neither is imported when the root loads.
-- Tests: the convex-client and mcp-client suites are ported. `tests-node/bundle.mjs` bundles a Convex function that imports the root with Convex's own esbuild and options, with and without the SDK installed, and asserts no `node:` import or built-in `require` in any output; it also runs an Electron-style Node bundle with no `node_modules`. `tests-node/esm-exports.mjs` imports the root with no peer installed.
+- Tests: suites for both sets of helpers. `tests-node/bundle.mjs` bundles a Convex function that imports the root with Convex's own esbuild and options, with and without the SDK installed, and asserts no `node:` import or built-in `require` in any output; it also runs an Electron-style Node bundle with no `node_modules`. `tests-node/esm-exports.mjs` imports the root with no peer installed.
 
-### Changed (from `@vvedantb/mcp-client` 0.1.0)
+### Changed (from the earlier MCP OAuth client package)
 
 - A non-interactive provider's `redirectToAuthorization` returns a promise that rejects with the SDK's `UnauthorizedError`, instead of throwing it synchronously: the class is only reachable once the SDK is loaded. The SDK awaits the call, so its sign-in, refresh and connect flows are unchanged.
 - Without the SDK installed, `authorizeMcpServer` and `redirectToAuthorization` reject with "The MCP client OAuth helpers need the @modelcontextprotocol/sdk package", and `refreshMcpOAuth` and `revokeMcpOAuth` return `false`. Before, a missing SDK failed the package import.

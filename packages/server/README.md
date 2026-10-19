@@ -1,6 +1,6 @@
 # @vvedantb/server
 
-Server-side helpers for Convex backends, Convex optimistic updates and Node-side MCP client OAuth, from one root import.
+Server-side helpers for Convex backends, Convex optimistic updates and Node-side MCP OAuth client helpers, from one root import.
 
 ```sh
 npm install @vvedantb/server
@@ -17,8 +17,8 @@ There are no subpath exports (0.2.0 removed `/convex` and `/mcp`; see [CHANGELOG
 | Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification, Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
 | MCP scaffolding | For Convex `httpAction`s: bearer-auth handler, OAuth metadata, route registration, a pure JSON-RPC dispatcher, tool helpers and explorer tools. | [docs/mcp.md](docs/mcp.md) |
 | Crypto | WebCrypto-only base64/base64url/hex, SHA-256, random tokens, `timingSafeEqual`, AES-GCM. Convex default runtime and Node 20+. | [docs/crypto.md](docs/crypto.md) |
-| Optimistic updates | `mapLoadedQuery` (also `forEachLoadedQuery`, `updateAllCachedQueries`), `patchLoadedQuery`, `tempId`, `createMemoryOptimisticStore`. Client-side, no React. From `@vvedantb/convex-client`. | [docs/convex.md](docs/convex.md#optimistic-updates-client-side) |
-| MCP client OAuth | Node only (Electron main): OAuth provider over injected storage, sign-in, refresh, revocation, loopback redirect server. Node built-ins and the MCP SDK load on first use, so Convex V8 bundles of the root stay clean. From `@vvedantb/mcp-client`. | [docs/mcp-client.md](docs/mcp-client.md) |
+| Optimistic updates | `mapLoadedQuery` (also `forEachLoadedQuery`, `updateAllCachedQueries`), `patchLoadedQuery`, `tempId`, `createMemoryOptimisticStore`. Client-side, no React. | [docs/convex.md](docs/convex.md#optimistic-updates-client-side) |
+| MCP OAuth client | Node only (Electron main): OAuth provider over injected storage, sign-in, refresh, revocation, loopback redirect server. Node built-ins and the MCP SDK load on first use, so Convex V8 bundles of the root stay clean. | [docs/mcp-oauth-client.md](docs/mcp-oauth-client.md) |
 
 Migration steps per app: [docs/migration.md](docs/migration.md).
 
@@ -36,19 +36,19 @@ No React, no web dependencies. `"sideEffects": false`. Compiled ESM with types i
 ## Layout
 
 ```
-src/index.ts       the only export: re-exports the four folders
-src/convex/        Convex helpers and optimistic updates
-src/mcp/           MCP scaffolding (imports ../convex by relative path)
-src/mcp-client/    MCP client OAuth (Node only; lazy node:http and SDK imports)
-src/crypto/        WebCrypto primitives
-tests/convex/      vitest
-tests/mcp/         vitest, with fixtures/ (SDK captures, app references)
-tests/mcp-client/  vitest, against fake MCP and authorization servers
-tests/crypto/      vitest, with published vectors and app format parity
-tests-node/        plain Node checks of the built package: exports map and peers (esm-exports.mjs),
-                   Convex V8 and Electron main bundles with esbuild (bundle.mjs)
-docs/              convex.md, mcp.md, mcp-client.md, crypto.md, migration.md, migrated/<app>/
-scripts/           capture-sdk-fixtures.mjs
+src/index.ts             the only export: re-exports the four folders
+src/convex/              Convex helpers and optimistic updates
+src/mcp/                 MCP scaffolding (imports ../convex by relative path)
+src/mcp-oauth-client/    MCP OAuth client helpers (Node only; lazy node:http and SDK imports)
+src/crypto/              WebCrypto primitives
+tests/convex/            vitest
+tests/mcp/               vitest, with fixtures/ (SDK captures, app references)
+tests/mcp-oauth-client/  vitest, against fake MCP and authorization servers
+tests/crypto/            vitest, with published vectors and app format parity
+tests-node/              plain Node checks of the built package: exports map and peers (esm-exports.mjs),
+                         Convex V8 and Electron main bundles with esbuild (bundle.mjs)
+docs/                    convex.md, mcp.md, mcp-oauth-client.md, crypto.md, migration.md, migrated/<app>/
+scripts/                 capture-sdk-fixtures.mjs
 ```
 
 ## Develop

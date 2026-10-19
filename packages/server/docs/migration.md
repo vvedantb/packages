@@ -17,7 +17,7 @@ Add the dependency in each app's `packages/backend/package.json` (after `@vvedan
 
 ## Upgrading to 0.4.0
 
-Additive: the optimistic-update helpers from `@vvedantb/convex-client` and every export of `@vvedantb/mcp-client` join the root under the same names. Bump to `"@vvedantb/server": "^0.4.0"`; backends that used neither package change nothing else. Steps for the apps that used them: the repository `MIGRATION.md`, section "Folded packages".
+Additive: the Convex optimistic-update helpers and the MCP OAuth client helpers join the root. Bump to `"@vvedantb/server": "^0.4.0"`; backends that use neither change nothing else. See [convex.md](convex.md#optimistic-updates-client-side) and [mcp-oauth-client.md](mcp-oauth-client.md).
 
 ## Upgrading to 0.2.0
 
@@ -35,7 +35,7 @@ Additive: the optimistic-update helpers from `@vvedantb/convex-client` and every
 | app-c, app-d | `jsonResponse`, `createOriginAllowlistCors` | the local `jsonResponse`, `getCorsHeaders`, `getPreflightHeaders` in `convex/http.ts` | `const cors = createOriginAllowlistCors(ALLOWED_ORIGINS)`; `cors.headers(origin)`, `cors.preflightHeaders(origin)`. |
 | app-c | `timingSafeEqual` | the local copy in `convex/http.ts` | Same semantics. |
 | app-b | `timingSafeEqual`, `sha256Hex`, `randomToken`, `bytesToBase64Url`, `bytesToHex` | the local helpers in `convex/routines/triggerEvents.ts` | `generateTriggerSecret = () => randomToken(32, "base64url")`; `generateEventBoundary = () => randomToken(12, "hex")`. `githubSignature` keeps its HMAC call and uses `bytesToHex`. |
-| app-b | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes`, `hexToBytes` | the body of `convex/vhubCredentials/seal.ts` | Keep `secretBytes` (env name, trim, hex-or-raw rule) and the `{ ciphertext, nonce }` shape. |
+| app-b | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes`, `hexToBytes` | the body of `convex/<app>Credentials/seal.ts` | Keep `secretBytes` (env name, trim, hex-or-raw rule) and the `{ ciphertext, nonce }` shape. |
 | app-a | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes(v, { strict: true })`, `bytesToBase64Url(b, { padding: true })`, `sha256Hex`, `randomToken` | `convex/lib/crypto.ts`, `convex/lib/base64.ts`, `generateApiKey`/`hashApiKey` in `convex/apiKeys.ts` | `strict` and `padding` keep `@scure/base` behaviour; then `@scure/base` can go if nothing else uses it. Keep the `v1:` format and `ENCRYPTION_KEY`. |
 | app-e | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes`, `randomBytes`, `randomToken`, `sha256Hex` | the WebCrypto calls and encoders in `convex/crypto.ts` | Keep `enc:`/`enc2:`, the AAD label functions, key versions, `masterKeyBytes` checks and `WrappedDek`. |
 

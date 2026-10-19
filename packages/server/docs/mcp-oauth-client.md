@@ -1,8 +1,8 @@
-# MCP client OAuth (`@vvedantb/server`)
+# MCP OAuth client helpers (`@vvedantb/server`)
 
-Node-side MCP client OAuth for desktop apps. It covers OAuth 2.1 with PKCE and dynamic client registration against a remote MCP server. Pieces: an `OAuthClientProvider` over storage you supply, sign-in, refresh, best-effort revocation, and a one-shot loopback redirect server on `127.0.0.1`. It has no Electron imports: the app supplies the storage, the redirect and the browser. Node 20 or later (Electron main process).
+Node-side MCP OAuth client helpers for desktop apps. It covers OAuth 2.1 with PKCE and dynamic client registration against a remote MCP server. Pieces: an `OAuthClientProvider` over storage you supply, sign-in, refresh, best-effort revocation, and a one-shot loopback redirect server on `127.0.0.1`. It has no Electron imports: the app supplies the storage, the redirect and the browser. Node 20 or later (Electron main process).
 
-Moved from `@vvedantb/mcp-client` 0.1.0 with the same export names. One behaviour differs: a non-interactive provider's `redirectToAuthorization` rejects instead of throwing (see [Provider](#provider)). Import everything from the package root, `@vvedantb/server`.
+Import everything from the package root, `@vvedantb/server`.
 
 ## Install
 
@@ -68,7 +68,7 @@ const provider = createMcpOAuthProvider({
 | `storage` | (required) | `McpOAuthStorage`. |
 | `clientName` | (required) | `client_name` for dynamic registration. |
 | `scope` | none | Added to the client metadata. `authorizeMcpServer` without `connectAs` also sends it with the authorization request. |
-| `redirectUrl`, `redirectToAuthorization` | none | Set both for the interactive sign-in. Without them the provider only uses and refreshes what is stored. It never opens a browser: `redirectToAuthorization` returns a promise that rejects with the SDK's `UnauthorizedError(signInRequiredMessage)` (0.1.0 of `@vvedantb/mcp-client` threw it synchronously; the SDK awaits the call, so its flows see the same error). |
+| `redirectUrl`, `redirectToAuthorization` | none | Set both for the interactive sign-in. Without them the provider only uses and refreshes what is stored. It never opens a browser: `redirectToAuthorization` returns a promise that rejects with the SDK's `UnauthorizedError(signInRequiredMessage)` (the SDK awaits the call, so its flows see the same error as a synchronous throw). |
 | `signInRequiredMessage` | `"Sign-in required"` | The message of that error. Tell the user where to sign in. |
 | `clientRegistration` | `"interactive"` | `"interactive"`: `saveClientInformation` exists only on an interactive provider, so a non-interactive 401 stops before any registration request. `"always"`: every provider can save a client, so the SDK never throws for want of somewhere to keep it. |
 | `stampObtainedAt` | `true` | Stamp `obtained_at` on saved tokens, for `isAccessTokenExpiring`. |
@@ -128,6 +128,6 @@ Each page is `<!doctype html><meta charset="utf-8"><title>{title}</title><body s
 
 ```sh
 pnpm --filter @vvedantb/server build
-pnpm --filter @vvedantb/server test       # vitest from source (tests/mcp-client), then node --test on the built package
+pnpm --filter @vvedantb/server test       # vitest from source (tests/mcp-oauth-client), then node --test on the built package
 pnpm --filter @vvedantb/server typecheck
 ```
