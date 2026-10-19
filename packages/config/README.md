@@ -1,6 +1,6 @@
 # @vvedantb/config
 
-Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, pinned tool versions, a `sync` CLI and a packaged Electron `app.asar` module check (`vvedantb-check-asar`).
+Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, Vite, Vitest, Babel and Metro presets, pinned tool versions, a `sync` CLI and a packaged Electron `app.asar` module check (`vvedantb-check-asar`).
 
 ## Install
 
@@ -11,7 +11,7 @@ npm install -D @electron/asar   # only for vvedantb-check-asar list
 
 ## Exports
 
-The only JS entry is the root (`@vvedantb/config`). The JSON files below are also exported by path, because TypeScript (`extends`) and oxlint resolve them as files, not as modules:
+The only JS entry is the root (`@vvedantb/config`). It is an ES module exported under the `default` condition, so both `import` and `require()` reach it. `require()` of an ES module needs Node 20.19+ or 22.12+, which every Expo SDK from 54 needs anyway. The JSON files below are also exported by path, because TypeScript (`extends`) and oxlint resolve them as files, not as modules:
 
 - `@vvedantb/config/tsconfig/base.json`, `web.json`, `convex.json` and `react-native.json`
 - `@vvedantb/config/oxlint/base.json`
@@ -50,6 +50,80 @@ Generic rules only: plugins `typescript`, `import`, `unicorn`, `react`; `suspici
 
 The severity of `no-console` and `no-unused-vars` is set to `error` here. It was not copied from the source app file, which was not in the extract. Check it against the app.
 
+## Vite and Vitest presets
+
+The root never imports Vite or a plugin. The app imports its plugins and passes the factories in, so the versions stay the app's own. The functions return plain objects; spread them into Vite's `defineConfig` and add `server`, `base` or `root` there.
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tanstackRouter from "@tanstack/router-plugin/vite";
+import { REACT_DEDUPE, defineWebViteConfig, srcAlias } from "@vvedantb/config";
+
+export default defineConfig({
+  ...defineWebViteConfig({
+    tailwindcss,
+    router: { plugin: tanstackRouter, options: { routesDirectory: "./src/routes" } },
+    react: { plugin: react, compiler: true },
+    alias: srcAlias(import.meta.dirname),
+    dedupe: REACT_DEDUPE,
+    vendorChunks: true,
+  }),
+  server: { port: 5173 },
+});
+```
+
+`defineWebViteConfig` options:
+
+| Option | Result |
+| --- | --- |
+| `tailwindcss` | `tailwindcss()`, first plugin. |
+| `router: { plugin, options? }` | `plugin({ ...options, autoCodeSplitting: true })`, after Tailwind. Options: `target`, `routesDirectory`, `generatedRouteTree`, `routeFileIgnorePattern`. |
+| `react: { plugin, compiler? }` | After the router. `compiler: true` calls `react({ compiler: true })` (plugin-react 6.1+). `compiler: { babel, preset }` calls `react()` then `babel({ presets: [preset()] })`, for `@rolldown/plugin-babel` with `reactCompilerPreset`. No `compiler` calls `react()`. |
+| `plugins` | App plugins, last. Falsy entries are dropped, so `flag && plugin()` works. |
+| `tsconfigPaths` | `resolve.tsconfigPaths: true`. |
+| `alias` | `resolve.alias` as given (object or `{ find, replacement }` list). `srcAlias(dir)` is `{ "@": "<dir>/src" }`. |
+| `dedupe` | `resolve.dedupe` as given. `REACT_DEDUPE` is `react`, `react-dom`, `convex`, `@tanstack/react-router`, `@clerk/clerk-react`. |
+| `vendorChunks` | `build`: `outDir: "dist"`, `chunkSizeWarningLimit: 1000` and rolldown chunk groups `vendor-radix`, `vendor-convex`, `vendor-clerk`, `vendor-motion` (priority 15). An object keyed by group (`radix`, `convex`, `clerk`, `motion`) replaces that group's `test` RegExp. |
+
+Keys that are not asked for are left out, so `resolve` and `build` appear only when set. `reactPlugins(setup)` and `vendorChunkBuild(tests?)` are exported on their own.
+
+`defineWebVitestConfig` takes `plugins`, `tsconfigPaths`, `alias`, `automaticJsx` (`esbuild: { jsx: "automatic" }`), `include` (default `["src/**/*.test.ts"]`) and `inline` (`test.server.deps.inline`). It always sets `test.environment: "node"`. Pass the result to `defineConfig` from `vitest/config`.
+
+## Expo presets
+
+`babel.config.js` and `metro.config.js` are CommonJS, loaded by Expo:
+
+```js
+// babel.config.js
+module.exports = require("@vvedantb/config").expoBabelConfig;
+```
+
+`expoBabelConfig(api)` calls `api.cache(true)` and returns `babel-preset-expo` with `jsxImportSource: "nativewind"`, then `nativewind/babel`. Babel resolves both from the app.
+
+```js
+// metro.config.js
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
+const { defineExpoMetroConfig } = require("@vvedantb/config");
+
+module.exports = defineExpoMetroConfig({
+  projectRoot: __dirname,
+  getDefaultConfig,
+  withNativeWind,
+  inlineRem: 16,
+  monorepoRoot: "../..",
+});
+```
+
+`defineExpoMetroConfig` calls `withNativeWind(getDefaultConfig(projectRoot), { input, inlineRem })`. `input` defaults to `"./global.css"`; `inlineRem` is passed only when set. Then, on a new object:
+
+- `monorepoRoot` sets `watchFolders: [<root>]` and `resolver.nodeModulesPaths` to the app's and the root's `node_modules`.
+- `packageExports: true` sets `resolver.unstable_enablePackageExports: true`.
+
+`withNativeWind` copies the config and its resolver and reads neither setting, so the order matches setting them before it.
+
 ## Versions
 
 ```ts
@@ -68,13 +142,15 @@ The `./versions` subpath was removed in 0.2.0; import from the root.
 
 ## sync
 
+Install the package as a devDependency and run its `vvedantb-config` bin from the repo root:
+
 ```sh
-npx @vvedantb/config sync            # write
-npx @vvedantb/config sync --check    # CI: exit 1 if anything would change
-npx @vvedantb/config sync --cwd ../app
+pnpm exec vvedantb-config sync            # write
+pnpm exec vvedantb-config sync --check    # CI: exit 1 if anything would change
+pnpm exec vvedantb-config sync --cwd ../app
 ```
 
-The `vvedantb-config` bin is the same command. Run from the repo root.
+In `package.json` scripts, call `vvedantb-config sync --check` directly. Without installing, use `npx -p @vvedantb/config vvedantb-config sync`. Plain `npx @vvedantb/config` does not work: the package has two bins and neither is named `config`, so npx cannot choose one. A bin named `config` was not added, because that generic name would land in every app's `node_modules/.bin`.
 
 | Target | Behaviour |
 | --- | --- |
@@ -88,7 +164,7 @@ Exit codes: 0 in sync (or written), 1 drift under `--check`, 2 bad arguments or 
 CI example:
 
 ```yaml
-- run: npx @vvedantb/config sync --check
+- run: pnpm exec vvedantb-config sync --check
 ```
 
 ## check-asar
