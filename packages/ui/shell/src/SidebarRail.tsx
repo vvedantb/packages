@@ -5,7 +5,7 @@ import { cn } from "../../src/utils/cn";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
 
-export type SidebarRailProps = {
+export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
   /** Pinned at the top, above the scroll body. */
   top?: ReactNode;
   /** Scroll body. */
@@ -22,7 +22,7 @@ export type SidebarRailProps = {
   footerClassName?: string;
 };
 
-/** Icon rail column. Width reads `--app-shell-rail-width`; override with `className`. */
+/** Icon rail column. Width reads `--app-shell-rail-width`; override with `className`. Other props go to the root `<div>`. */
 export function SidebarRail({
   top,
   children,
@@ -33,10 +33,12 @@ export function SidebarRail({
   topClassName,
   bodyClassName,
   footerClassName,
+  ...props
 }: SidebarRailProps) {
   const Body = bodyAsChild ? Slot : "div";
   return (
     <div
+      {...props}
       className={cn(
         "flex h-full w-[var(--app-shell-rail-width)] shrink-0 flex-col items-center bg-background",
         showDivider && "border-r border-separator",

@@ -1,4 +1,15 @@
-import { ViewTransition, type ReactNode } from "react";
+import * as React from "react";
+import type { ComponentType, ReactNode } from "react";
+
+/** The `ViewTransition` props used here. Typed locally so consumers on `@types/react` without `ViewTransition` still typecheck. */
+type ViewTransitionLikeProps = {
+  children?: ReactNode;
+  default?: string;
+  enter?: string;
+  exit?: string;
+};
+
+const ViewTransition: ComponentType<ViewTransitionLikeProps> = Reflect.get(React, "ViewTransition");
 
 export interface PanelTransitionProps {
   children?: ReactNode;

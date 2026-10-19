@@ -140,6 +140,21 @@ describe("SidebarRail", () => {
     expect(list.tagName).toBe("UL");
     expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2");
   });
+
+  it("spreads extra HTML attributes onto the root div", async () => {
+    await mount(
+      <SidebarRail id="rail" data-vt="rail" aria-label="Primary">
+        <span>body</span>
+      </SidebarRail>,
+    );
+    const rail = first();
+    expect(rail.id).toBe("rail");
+    expect(rail.getAttribute("data-vt")).toBe("rail");
+    expect(rail.getAttribute("aria-label")).toBe("Primary");
+    expect(rail.className).toBe(
+      "flex h-full w-[var(--app-shell-rail-width)] shrink-0 flex-col items-center bg-background",
+    );
+  });
 });
 
 describe("RailTile", () => {
@@ -288,5 +303,42 @@ describe("SidebarAccountMenu", () => {
     const avatar = q("button span");
     expect(avatar.textContent).toBe("TU");
     expect(avatar.className).toContain("h-7 w-7");
+  });
+
+  async function openMenu() {
+    const trigger = q("button");
+    await act(async () => {
+      trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    return q('[role="menu"]', document.body);
+  }
+
+  const NAME_LINE = "block truncate text-sm font-medium text-foreground";
+
+  it("uses a one-line label without email by default", async () => {
+    await mount(<SidebarAccountMenu name="Test User" />);
+    const menu = await openMenu();
+    const label = q("span.truncate", menu);
+    expect(label.className).toBe("truncate text-sm font-medium text-foreground");
+    expect(label.textContent).toBe("Test User");
+    expect(menu.querySelector("span.min-w-0")).toBeNull();
+  });
+
+  it("uses the two-line label with email", async () => {
+    await mount(<SidebarAccountMenu name="Test User" email="user@example.test" />);
+    const menu = await openMenu();
+    const stack = q("span.min-w-0", menu);
+    expect(stack.children).toHaveLength(2);
+    expect(stack.children[0]?.className).toBe(NAME_LINE);
+    expect(stack.children[1]?.textContent).toBe("user@example.test");
+  });
+
+  it("uses the two-line layout without email when stackedLabel is set", async () => {
+    await mount(<SidebarAccountMenu name="Test User" stackedLabel />);
+    const menu = await openMenu();
+    const stack = q("span.min-w-0", menu);
+    expect(stack.children).toHaveLength(1);
+    expect(stack.children[0]?.className).toBe(NAME_LINE);
+    expect(stack.textContent).toBe("Test User");
   });
 });

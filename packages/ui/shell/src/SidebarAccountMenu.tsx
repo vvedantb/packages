@@ -17,6 +17,8 @@ export type SidebarAccountMenuProps = {
   name: string;
   /** When set, the label shows the name and email on two lines. */
   email?: string;
+  /** Always use the two-line label layout, even without `email`. Default `false`. */
+  stackedLabel?: boolean;
   /** Avatar image. Without it the avatar shows up to two initials of `name`. */
   imageUrl?: string;
   /** Default `"center"`. */
@@ -64,6 +66,7 @@ function AccountAvatar({ src, name, className }: { src?: string; name: string; c
 export function SidebarAccountMenu({
   name,
   email,
+  stackedLabel = false,
   imageUrl,
   align = "center",
   side = "right",
@@ -94,10 +97,10 @@ export function SidebarAccountMenu({
       >
         <DropdownMenuLabel className="flex items-center gap-2 font-normal normal-case tracking-normal">
           <AccountAvatar src={imageUrl} name={name} className="h-6 w-6 shrink-0" />
-          {email ? (
+          {stackedLabel || email ? (
             <span className="min-w-0">
               <span className="block truncate text-sm font-medium text-foreground">{name}</span>
-              <span className={accountEmailClass}>{email}</span>
+              {email ? <span className={accountEmailClass}>{email}</span> : null}
             </span>
           ) : (
             <span className="truncate text-sm font-medium text-foreground">{name}</span>
