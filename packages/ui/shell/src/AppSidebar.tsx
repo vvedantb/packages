@@ -96,9 +96,10 @@ export function AppSidebar({
 
   return (
     <>
+      {/* Three columns keep the title centred and stop it overlapping the actions: it truncates instead. */}
       <header
         onKeyDown={closeOnEscape}
-        className="fixed inset-x-0 top-0 z-30 flex h-[var(--app-shell-mobile-header-height)] items-center gap-2 bg-surface px-3 pt-[env(safe-area-inset-top,0px)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] md:hidden"
+        className="fixed inset-x-0 top-0 z-30 grid h-[var(--app-shell-mobile-header-height)] grid-cols-[minmax(max-content,1fr)_minmax(0,auto)_minmax(max-content,1fr)] items-center gap-2 bg-surface px-3 pt-[env(safe-area-inset-top,0px)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] md:hidden"
       >
         <Button
           type="button"
@@ -108,21 +109,26 @@ export function AppSidebar({
           aria-label={mobileMenuLabel}
           aria-expanded={mobileOpen}
           aria-controls={drawerId}
-          className={mobileMenuButtonClass}
+          className={cn(mobileMenuButtonClass, "justify-self-start")}
         >
           {mobileMenuIcon(mobileOpen)}
         </Button>
         {mobileTitle ? (
-          <h1 className="pointer-events-none absolute inset-x-14 top-[env(safe-area-inset-top,0px)] bottom-0 flex items-center justify-center truncate text-center text-base font-semibold leading-none tracking-tight text-foreground text-balance">
+          <h1 className="pointer-events-none min-w-0 truncate text-center text-base font-semibold leading-tight tracking-tight text-foreground">
             {mobileTitle}
           </h1>
-        ) : null}
+        ) : (
+          <span aria-hidden="true" />
+        )}
         {mobileHeaderActions ? (
-          <div data-app-sidebar-mobile-actions="" className="ml-auto flex shrink-0 items-center gap-2">
+          <div
+            data-app-sidebar-mobile-actions=""
+            className="flex shrink-0 items-center justify-self-end gap-2"
+          >
             {mobileHeaderActions}
           </div>
         ) : (
-          <div className="ml-auto h-11 w-11 shrink-0" aria-hidden="true" />
+          <div className="h-11 w-11 shrink-0 justify-self-end" aria-hidden="true" />
         )}
       </header>
 

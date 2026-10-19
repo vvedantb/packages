@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.4
+
+- `InputArea` (inline chips): Shift+Enter at the end of the text no longer leaves the editor stuck with a hidden `"\n"`. Under `white-space: pre-wrap` Chromium adds a trailing line holder newline, so `"hi"` then Shift+Enter gave `"hi\n\n"`, and clearing the text left `"\n"`, which apps then stored as the draft. `onChange` now drops that one trailing holder (`"hi\n"`, then `""`), and newlines inside the text are unchanged. A value ending in `"\n"` is written with its holder so it round-trips. A value of `"\n"` (Shift+Enter on an empty draft, or a draft stored by an earlier version) shows as an empty editor: `data-empty` and the placeholder show, and the first typed character replaces it, so `/` opens the slash menu again. Placing the caret at the end puts it before the holder.
+- `AppSidebar`: the mobile header is a three-column grid (`grid-cols-[minmax(max-content,1fr)_minmax(0,auto)_minmax(max-content,1fr)]`): menu button, title, then the actions or the end spacer. The title is no longer absolutely positioned. It is `min-w-0 truncate text-center` with `leading-tight` and without `text-balance`, so it stays on one row and ends with an ellipsis instead of overlapping two or more trailing actions. With no title an empty `<span>` keeps the middle column. The actions div is `flex shrink-0 items-center justify-self-end gap-2` (was `ml-auto ...`) and the spacer is `h-11 w-11 shrink-0 justify-self-end`.
+
 ## 0.5.3
 
 - `AppSidebar`: the mobile header uses a solid `bg-surface`, the content card's token, in place of `bg-background/80 backdrop-blur-md`, so it blends with the page instead of showing as a grey bar.

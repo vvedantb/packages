@@ -30,16 +30,33 @@ const CHIPS_HOST_CLASS = "contents empty:hidden [&>*]:mr-1.5";
 
 const ZERO_WIDTH_SPACE = "\u200b";
 
-/** Reads the plain text of the editor. Skips the chips host. */
+/**
+ * A value of "\n" is an empty draft: Shift+Enter on an empty editor, or a
+ * stray line holder that apps stored before 0.5.4. Mirrors `isComposerCompact`.
+ */
+function isEmptyDraft(value: string): boolean {
+  return value === "" || value === "\n";
+}
+
+/**
+ * Reads the plain text of the editor. Skips the chips host. Under `pre-wrap` a
+ * single trailing "\n" renders no line, so Chromium ends the text with an extra
+ * "\n" that only holds the last line open. That holder, or a trailing `<br>`,
+ * is dropped once.
+ */
 export function extractEditorText(root: HTMLElement): string {
   let out = "";
+  let heldByBr = false;
   const walk = (node: Node, isRoot: boolean) => {
     node.childNodes.forEach((child, index) => {
       if (child instanceof HTMLElement) {
         if (child.hasAttribute(CHIPS_HOST_ATTR)) return;
         if (child.tagName === "BR") {
           // A trailing <br> only holds the line open.
-          if (isRoot && index === node.childNodes.length - 1) return;
+          if (isRoot && index === node.childNodes.length - 1) {
+            heldByBr = true;
+            return;
+          }
           out += "\n";
           return;
         }
@@ -57,7 +74,29 @@ export function extractEditorText(root: HTMLElement): string {
     });
   };
   walk(root, true);
-  return out;
+  return !heldByBr && out.endsWith("\n") ? out.slice(0, -1) : out;
+}
+
+/** The DOM text for a value: a trailing "\n" gets its line holder. */
+function editorTextFor(value: string): string {
+  return value.endsWith("\n") ? `${value}\n` : value;
+}
+
+/** Every editor node except the chips host: the anchor, text and line breaks. */
+function textNodes(root: HTMLElement): ChildNode[] {
+  return Array.from(root.childNodes).filter(
+    (child) => !(child instanceof HTMLElement && child.hasAttribute(CHIPS_HOST_ATTR)),
+  );
+}
+
+/**
+ * True when the DOM shows `shown`. An empty draft must be the bare U+200B
+ * anchor: a stray "\n" or `<br>` reads as "" but pushes the placeholder down.
+ */
+function editorShows(root: HTMLElement, shown: string): boolean {
+  if (shown !== "") return extractEditorText(root) === shown;
+  const [only, ...rest] = textNodes(root);
+  return rest.length === 0 && only instanceof Text && only.data === ZERO_WIDTH_SPACE;
 }
 
 function chipsHost(root: HTMLElement): HTMLElement | null {
@@ -96,11 +135,14 @@ function setSelection(
   window.getSelection()?.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
 }
 
-/** End of the text: the last text node, or the end of the editor after a line break. */
+/**
+ * End of the text: the last text node before its trailing line holder, or the
+ * end of the editor after a line break.
+ */
 function textEnd(root: HTMLElement): [Node, number] {
   ensureCaretAnchor(root);
   const last = root.lastChild;
-  if (last instanceof Text) return [last, last.length];
+  if (last instanceof Text) return [last, last.data.endsWith("\n") ? last.length - 1 : last.length];
   return [root, root.childNodes.length];
 }
 
@@ -276,13 +318,10 @@ export function InputAreaEditor({
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || composingRef.current) return;
-    if (extractEditorText(root) !== value) {
-      Array.from(root.childNodes).forEach((child) => {
-        if (!(child instanceof HTMLElement && child.hasAttribute(CHIPS_HOST_ATTR))) {
-          root.removeChild(child);
-        }
-      });
-      root.appendChild(document.createTextNode(ZERO_WIDTH_SPACE + value));
+    const shown = isEmptyDraft(value) ? "" : value;
+    if (!editorShows(root, shown)) {
+      textNodes(root).forEach((child) => root.removeChild(child));
+      root.appendChild(document.createTextNode(ZERO_WIDTH_SPACE + editorTextFor(shown)));
       if (document.activeElement === root) placeCaretAtEnd(root);
     }
     ensureCaretAnchor(root);
@@ -361,7 +400,7 @@ export function InputAreaEditor({
         aria-multiline
         {...ariaProps}
         role="combobox"
-        data-empty={value === "" ? "" : undefined}
+        data-empty={isEmptyDraft(value) ? "" : undefined}
         data-placeholder={placeholder}
         data-suggestion={suggestion || undefined}
         className={cn(INLINE_EDITOR_CLASS, className)}
