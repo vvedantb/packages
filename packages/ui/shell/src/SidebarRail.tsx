@@ -28,7 +28,13 @@ export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" 
   footerClassName?: string;
 };
 
-/** Icon rail column. Width reads `--app-shell-rail-width`; override with `className`. Other props go to the root `<div>`. */
+/**
+ * Icon rail column. Width reads `--app-shell-rail-width`; override with `className`. Other props go to the root `<div>`.
+ *
+ * Legacy (still supported): the `top`, `footer`, `bodyAsChild`, `tabs` and
+ * `*ClassName` props. Compose `Sidebar.Rail`, `.RailHeader`, `.RailBody` and
+ * `.RailFooter` instead.
+ */
 export function SidebarRail({
   top,
   children,
@@ -42,11 +48,24 @@ export function SidebarRail({
   footerClassName,
   ...props
 }: SidebarRailProps) {
-  const Body = bodyAsChild ? Slot : "div";
-  const bodyClass = cn(
-    "flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2",
-    bodyClassName,
+  return (
+    <Rail {...props} showDivider={showDivider} className={className}>
+      {top == null ? null : <RailHeader className={topClassName}>{top}</RailHeader>}
+      <RailBody asChild={bodyAsChild} tabs={tabs} className={bodyClassName}>
+        {children}
+      </RailBody>
+      {footer == null ? null : <RailFooter className={footerClassName}>{footer}</RailFooter>}
+    </Rail>
   );
+}
+
+export type SidebarRailRootProps = ComponentPropsWithoutRef<"div"> & {
+  /** Adds a right border between the rail and the panel. Default `false`. */
+  showDivider?: boolean;
+};
+
+/** Rail column `<div>`. Width reads `--app-shell-rail-width`. */
+export function Rail({ showDivider = false, className, ...props }: SidebarRailRootProps) {
   return (
     <div
       {...props}
@@ -55,29 +74,43 @@ export function SidebarRail({
         showDivider && "border-r border-separator",
         className,
       )}
-    >
-      {top == null ? null : (
-        <div className={cn("flex w-full flex-col items-center gap-1.5 px-0 pt-3", topClassName)}>
-          {top}
-        </div>
-      )}
-      {tabs ? (
-        <TabsPrimitive.List asChild={bodyAsChild} className={bodyClass}>
-          {children}
-        </TabsPrimitive.List>
-      ) : (
-        <Body className={bodyClass}>{children}</Body>
-      )}
-      {footer == null ? null : (
-        <div className={cn("flex w-full flex-col items-center gap-1.5 py-3", footerClassName)}>
-          {footer}
-        </div>
-      )}
-    </div>
+    />
   );
 }
 
-export type RailTileProps = Omit<ComponentPropsWithoutRef<"button">, "children"> & {
+export type SidebarRailHeaderProps = ComponentPropsWithoutRef<"div">;
+
+/** Block pinned at the top of the rail, above the scroll body. */
+export function RailHeader({ className, ...props }: SidebarRailHeaderProps) {
+  return <div {...props} className={cn("flex w-full flex-col items-center gap-1.5 px-0 pt-3", className)} />;
+}
+
+export type SidebarRailBodyProps = ComponentPropsWithoutRef<"div"> & {
+  /** Render the body as its single child element (for example a `<nav>`), with the body classes merged. */
+  asChild?: boolean;
+  /**
+   * Render a Radix tabs list (arrow-key roving focus). Use it inside a Tabs
+   * root with `orientation="vertical"` and give each item a `tabValue`.
+   */
+  tabs?: boolean;
+};
+
+/** Scroll body of the rail. */
+export function RailBody({ asChild = false, tabs = false, className, ...props }: SidebarRailBodyProps) {
+  const bodyClass = cn("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2", className);
+  if (tabs) return <TabsPrimitive.List {...props} asChild={asChild} className={bodyClass} />;
+  const Body = asChild ? Slot : "div";
+  return <Body {...props} className={bodyClass} />;
+}
+
+export type SidebarRailFooterProps = ComponentPropsWithoutRef<"div">;
+
+/** Block pinned at the bottom of the rail. */
+export function RailFooter({ className, ...props }: SidebarRailFooterProps) {
+  return <div {...props} className={cn("flex w-full flex-col items-center gap-1.5 py-3", className)} />;
+}
+
+export type SidebarRailItemProps = Omit<ComponentPropsWithoutRef<"button">, "children"> & {
   /** `aria-label`, and the tooltip unless `tooltip` is set. */
   label: string;
   /** Active state. With `asChild`, also sets `aria-current="page"`. */
@@ -99,7 +132,7 @@ export type RailTileProps = Omit<ComponentPropsWithoutRef<"button">, "children">
 };
 
 /** Rail tile with a right-side tooltip. Renders a native `<button>`, its child with `asChild`, or a tabs trigger with `tabValue`. */
-export function RailTile({
+export function RailItem({
   label,
   active = false,
   tooltip,
@@ -110,7 +143,7 @@ export function RailTile({
   className,
   children,
   ...props
-}: RailTileProps) {
+}: SidebarRailItemProps) {
   return (
     <SidebarIconTooltip label={tooltip ?? label} enabled={showTooltip}>
       {tabValue !== undefined ? (
@@ -148,8 +181,21 @@ export function RailTile({
   );
 }
 
+export type RailTileProps = SidebarRailItemProps;
+
+/** Legacy name of `Sidebar.RailItem`. */
+export const RailTile = RailItem;
+
+export type SidebarRailSeparatorProps = ComponentPropsWithoutRef<"div">;
+
+/** Short horizontal rule between rail items. */
+export function RailSeparator({ className, ...props }: SidebarRailSeparatorProps) {
+  return <div {...props} className={cn("h-px w-8 bg-separator", className)} aria-hidden />;
+}
+
 export type RailDividerProps = { className?: string };
 
+/** Legacy name of `Sidebar.RailSeparator`. */
 export function RailDivider({ className }: RailDividerProps) {
-  return <div className={cn("h-px w-8 bg-separator", className)} aria-hidden />;
+  return <RailSeparator className={className} />;
 }

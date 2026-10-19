@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { sidebarHeaderRowClass } from "./app-shell-classes";
 import { cn } from "./cn.js";
+import { PanelActions, PanelTitle } from "./SidebarPanel";
 
 export type SidebarHeaderProps = {
   title: string;
@@ -7,15 +9,12 @@ export type SidebarHeaderProps = {
   className?: string;
 };
 
+/** Header row: a title and optional trailing actions. Inside a panel, compose `Sidebar.PanelHeader` instead. */
 export function SidebarHeader({ title, trailing, className }: SidebarHeaderProps) {
   return (
-    <div className={cn("flex h-11 items-center gap-1 pl-3 pr-1", className)}>
-      <h2 className="min-w-0 flex-1 truncate text-left text-base font-semibold leading-none tracking-tight text-foreground">
-        {title}
-      </h2>
-      {trailing ? (
-        <div className="flex items-center justify-end gap-0.5">{trailing}</div>
-      ) : null}
+    <div className={cn(sidebarHeaderRowClass, className)}>
+      <PanelTitle>{title}</PanelTitle>
+      {trailing ? <PanelActions>{trailing}</PanelActions> : null}
     </div>
   );
 }
