@@ -248,7 +248,7 @@ import {
 - `SelectField`: a labelled single select built from `Select`. Children are `SelectItem`s. An empty `value` shows the placeholder. `id` goes to the trigger and the label points at it. `className` merges onto the trigger.
 - Motion: `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes optional `variants` (`hidden`, `show`, `exit`); omitted, it keeps its opacity fade. `PanelTransition` wraps children in React `ViewTransition` with `default="none"` and `enter`/`exit` classes (`vt-panel-in`, `vt-panel-out` by default). It needs a React build that exports `ViewTransition`, and the app supplies the `::view-transition-*` CSS.
 
-## App shell (0.5.0)
+## App shell (0.5.0, 0.5.1)
 
 A sidebar and main page layout, extracted from existing app markup. It is router-free: pass your own links (with `asChild`), state and media query result. Tooltips need a `TooltipProvider` above the shell.
 
@@ -297,6 +297,59 @@ import {
 - `SidebarAccountMenu`: `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
 - `SignOutDialog`: `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
 - Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarSectionLabelClass`.
+
+### Resizable panel (0.5.1)
+
+Pass `resizable` to `AppShell`. Widths are panel px, rail excluded. Without it nothing changes.
+
+```tsx
+<AppShell
+  resizable={{ storageKey: "sidebar-width", defaultWidth: 256, minWidth: 200, maxWidth: 480 }}
+  sidebar={<AppSidebar /* as above */ />}
+>
+  {page}
+</AppShell>
+```
+
+- `resizable`: `storageKey`, `defaultWidth`, `minWidth`, `maxWidth`, `label` (default `"Resize sidebar"`). The shell reads the stored width (a JSON number in `localStorage`) on mount, ignores invalid values, clamps it to the bounds and writes each change. Server and hydration renders use `defaultWidth`. `--app-shell-sidebar-width` becomes `calc(<railWidth> + <width>px)` and `sidebarWidth` is ignored. While resizing, the main margin and `<aside>` width transitions are off.
+- `AppSidebar` adds the handle to the `<aside>` right edge on desktop while the panel shows (not `collapsed`, not `panelHidden`). The mobile drawer has none.
+- `SidebarResizeHandle` (`className`): the handle, for custom layouts. Place it in a positioned parent. Dragging past the bounds rubber-bands and springs back on release. ArrowLeft and ArrowRight step 16px. Double-click resets to `defaultWidth`. It renders nothing outside a resizable `AppShell`.
+- `useAppShellResize()`: `{ width, setWidth, isResizing, minWidth, maxWidth, defaultWidth }`, or `null` outside a resizable `AppShell`. `setWidth` takes a number or an updater.
+
+```tsx
+function PanelWidth() {
+  const resize = useAppShellResize();
+  return resize ? <span>{Math.round(resize.width)}px</span> : null;
+}
+```
+
+### Rail tabs (0.5.1)
+
+`SidebarRail tabs` renders the body as a Radix tabs list (arrow-key roving focus, same classes). Wrap the sidebar in a Tabs root with `orientation="vertical"` (the package `Tabs` works). `RailTile tabValue` renders a tabs trigger: tile classes, the children, the label as sr-only text instead of `aria-label`, then the badge. `active` drives the state classes and other props (for example `aria-expanded`) go to the trigger. `asChild` is ignored with `tabValue`. Without `tabs` and `tabValue` the rail renders as before.
+
+```tsx
+<Tabs value={tab} onValueChange={setTab} orientation="vertical">
+  <AppSidebar
+    /* … */
+    rail={
+      <SidebarRail tabs>
+        <RailTile tabValue="files" label="Files" active={tab === "files"} aria-expanded={tab === "files" ? !collapsed : undefined}>
+          <IconFiles size={22} />
+        </RailTile>
+        <RailTile tabValue="search" label="Search" active={tab === "search"}>
+          <IconSearch size={22} />
+        </RailTile>
+      </SidebarRail>
+    }
+    panel={
+      <>
+        <TabsContent value="files">{files}</TabsContent>
+        <TabsContent value="search">{search}</TabsContent>
+      </>
+    }
+  />
+</Tabs>
+```
 
 ## Toaster
 

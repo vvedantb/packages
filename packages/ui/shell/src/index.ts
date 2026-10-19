@@ -16,6 +16,12 @@ export { AppSidebar } from "./AppSidebar.js";
 export type { AppSidebarProps } from "./AppSidebar.js";
 export { SidebarRail, RailTile, RailDivider } from "./SidebarRail.js";
 export type { SidebarRailProps, RailTileProps, RailDividerProps } from "./SidebarRail.js";
+export { SidebarResizeHandle, useAppShellResize } from "./SidebarResize.js";
+export type {
+  AppShellResize,
+  SidebarResizeHandleProps,
+  SidebarResizeOptions,
+} from "./SidebarResize.js";
 export { SidebarIconTooltip } from "./SidebarIconTooltip.js";
 export type { SidebarIconTooltipProps } from "./SidebarIconTooltip.js";
 export { SidebarPanel } from "./SidebarPanel.js";

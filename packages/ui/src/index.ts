@@ -128,6 +128,12 @@ export { AppSidebar } from "../shell/src/AppSidebar";
 export type { AppSidebarProps } from "../shell/src/AppSidebar";
 export { SidebarRail, RailTile, RailDivider } from "../shell/src/SidebarRail";
 export type { SidebarRailProps, RailTileProps, RailDividerProps } from "../shell/src/SidebarRail";
+export { SidebarResizeHandle, useAppShellResize } from "../shell/src/SidebarResize";
+export type {
+  AppShellResize,
+  SidebarResizeHandleProps,
+  SidebarResizeOptions,
+} from "../shell/src/SidebarResize";
 export { SidebarIconTooltip } from "../shell/src/SidebarIconTooltip";
 export type { SidebarIconTooltipProps } from "../shell/src/SidebarIconTooltip";
 export { SidebarPanel } from "../shell/src/SidebarPanel";

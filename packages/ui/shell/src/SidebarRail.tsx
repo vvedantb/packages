@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { Button } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
@@ -16,6 +17,12 @@ export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" 
   showDivider?: boolean;
   /** Render the body as its single child element (for example a tabs list), with the body classes merged. */
   bodyAsChild?: boolean;
+  /**
+   * Render the body as a Radix tabs list (arrow-key roving focus). Use it
+   * inside a Tabs root with `orientation="vertical"` and give each `RailTile`
+   * a `tabValue`. Default `false`.
+   */
+  tabs?: boolean;
   className?: string;
   topClassName?: string;
   bodyClassName?: string;
@@ -29,6 +36,7 @@ export function SidebarRail({
   footer,
   showDivider = false,
   bodyAsChild = false,
+  tabs = false,
   className,
   topClassName,
   bodyClassName,
@@ -36,6 +44,10 @@ export function SidebarRail({
   ...props
 }: SidebarRailProps) {
   const Body = bodyAsChild ? Slot : "div";
+  const bodyClass = cn(
+    "flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2",
+    bodyClassName,
+  );
   return (
     <div
       {...props}
@@ -50,14 +62,13 @@ export function SidebarRail({
           {top}
         </div>
       )}
-      <Body
-        className={cn(
-          "flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2",
-          bodyClassName,
-        )}
-      >
-        {children}
-      </Body>
+      {tabs ? (
+        <TabsPrimitive.List asChild={bodyAsChild} className={bodyClass}>
+          {children}
+        </TabsPrimitive.List>
+      ) : (
+        <Body className={bodyClass}>{children}</Body>
+      )}
       {footer == null ? null : (
         <div className={cn("flex w-full flex-col items-center gap-1.5 py-3", footerClassName)}>
           {footer}
@@ -80,10 +91,15 @@ export type RailTileProps = Omit<ComponentPropsWithoutRef<"button">, "children">
   badge?: ReactNode;
   /** Render the single child element (for example a router link) as the tile. */
   asChild?: boolean;
+  /**
+   * Render a Radix tabs trigger for this value (inside a `SidebarRail tabs`).
+   * The label is sr-only text instead of `aria-label`; `asChild` is ignored.
+   */
+  tabValue?: string;
   children: ReactNode;
 };
 
-/** Rail tile with a right-side tooltip. Renders a ghost `Button`, or its child with `asChild`. */
+/** Rail tile with a right-side tooltip. Renders a ghost `Button`, its child with `asChild`, or a tabs trigger with `tabValue`. */
 export function RailTile({
   label,
   active = false,
@@ -91,13 +107,24 @@ export function RailTile({
   showTooltip = true,
   badge,
   asChild = false,
+  tabValue,
   className,
   children,
   ...props
 }: RailTileProps) {
   return (
     <SidebarIconTooltip label={tooltip ?? label} enabled={showTooltip}>
-      {asChild ? (
+      {tabValue !== undefined ? (
+        <TabsPrimitive.Trigger
+          {...props}
+          value={tabValue}
+          className={cn(railTileClass, "group relative", railTileStateClass(active), className)}
+        >
+          {children}
+          <span className="sr-only">{label}</span>
+          {badge}
+        </TabsPrimitive.Trigger>
+      ) : asChild ? (
         <Slot
           {...props}
           aria-label={label}

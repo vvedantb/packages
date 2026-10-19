@@ -11,6 +11,7 @@ test("root exposes former subpath APIs", () => {
     "CardHeader", "SelectField", "FadePresence", "PanelTransition",
     "restoreModalScrollLock", "springTransition", "springFastTransition", "fadeUpSpring",
     "AppShell", "AppSidebar", "SidebarRail", "RailTile", "RailDivider", "SidebarIconTooltip",
+    "SidebarResizeHandle", "useAppShellResize",
     "SidebarPanel", "SidebarAccountMenu", "SidebarAccountMenuPlaceholder", "SignOutDialog",
     "railTileClass", "railTileStateClass", "railBadgeClass",
     "sidebarNavRowClass", "sidebarNavLinkTextClass", "sidebarSectionLabelClass",
