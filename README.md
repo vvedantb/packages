@@ -1,6 +1,6 @@
 # packages
 
-Shared packages for vvedantb apps. Four public npm packages and one private config package.
+Shared packages for vvedantb apps. Six public npm packages.
 
 | Package | Version | What it is |
 | --- | --- | --- |
@@ -8,7 +8,8 @@ Shared packages for vvedantb apps. Four public npm packages and one private conf
 | `@vvedantb/native-ui` | `0.2.0` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Has no dependency on `@vvedantb/ui`; it carries its own copy of the JS tokens. |
 | `@vvedantb/server` | `0.3.0` | Convex backend helpers from one root export (`.` only): query-limit errors, Clerk auth and token verification, Clerk-user lookups and `ensureUser`, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, and WebCrypto primitives. Compiled. |
 | `@vvedantb/convex-client` | `0.1.0` | Browser and React Convex helpers from one root export (`.` only): optimistic-update helpers, an in-memory optimistic store for tests, `ConvexClerkProvider`, `parseClientEnv` and `useEnsureUser`. Compiled. |
-| `@vvedantb/config` | `0.1.1` | Private, not on npm. tsconfig bases, an oxlint base, pinned tool versions and the `vvedantb-config sync` CLI, used inside this repository. |
+| `@vvedantb/mcp-client` | `0.1.0` | Node-side MCP client OAuth for desktop apps from one root export (`.` only): an `OAuthClientProvider` over injected storage, a state schema built with your `z`, sign-in, refresh, best-effort revocation and a `127.0.0.1` loopback redirect server. Compiled. |
+| `@vvedantb/config` | `0.2.0` | Root JS export plus JSON tsconfig and oxlint bases, pinned tool versions, the `vvedantb-config sync` CLI and the `vvedantb-check-asar` packaged-app check. Compiled. |
 
 Moving from the earlier packages (`@vvedantb/tokens`, `shell`, `app-kit`, `convex-kit`, `mcp-kit`)? See [MIGRATION.md](MIGRATION.md).
 
@@ -19,6 +20,8 @@ npm install @vvedantb/ui                 # web
 npm install @vvedantb/native-ui          # Expo / React Native
 npm install @vvedantb/server             # Convex backends
 npm install @vvedantb/convex-client      # Convex web clients (React)
+npm install @vvedantb/mcp-client         # MCP client OAuth (Node, desktop apps)
+npm install -D @vvedantb/config          # tooling
 ```
 
 For a local checkout of this repo:
@@ -29,7 +32,7 @@ For a local checkout of this repo:
 }
 ```
 
-`@vvedantb/ui` and `@vvedantb/native-ui` ship source and need no compile step. `@vvedantb/server` and `@vvedantb/convex-client` publish compiled `dist` (built on pack); after a path or git install, run `pnpm build` first.
+`@vvedantb/ui` and `@vvedantb/native-ui` ship source and need no compile step. `@vvedantb/server`, `@vvedantb/convex-client`, `@vvedantb/mcp-client` and `@vvedantb/config` publish compiled `dist` (built on pack); after a path or git install, run `pnpm build` first.
 
 `@vvedantb/ui` expects the baseline peer stack (React 19, Radix, CVA, cmdk, motion, sonner, clsx, tailwind-merge, Tabler icons) plus the extras' peers (`radix-ui`, accordion/scroll-area/visually-hidden, vaul, embla, shiki, `ai`, streamdown, nanoid, use-stick-to-bottom). Install those in the app. The `./app` subpath also uses `@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod`. These three are optional peers: install them only if you import `@vvedantb/ui/app`.
 
@@ -39,7 +42,8 @@ For a local checkout of this repo:
 - `@vvedantb/ui/tokens`: see `packages/ui/tokens/README.md`.
 - `@vvedantb/server`: see `packages/server/README.md`, `packages/server/docs/convex.md`, `packages/server/docs/mcp.md` and `packages/server/docs/crypto.md`. Per-app migration steps and measured line counts for the MCP kit are in `packages/server/docs/migration.md`.
 - `@vvedantb/convex-client`: see `packages/convex-client/README.md`.
-- `@vvedantb/config`: `@vvedantb/config/tsconfig/{base,web,convex,react-native}.json`, `@vvedantb/config/oxlint/base.json`, `@vvedantb/config/versions`, and `vvedantb-config sync [--check]`. See `packages/config/README.md`.
+- `@vvedantb/mcp-client`: see `packages/mcp-client/README.md`.
+- `@vvedantb/config`: `versions` and the CLIs from the root, `@vvedantb/config/tsconfig/{base,web,convex,react-native}.json` and `@vvedantb/config/oxlint/base.json` (JSON by path), `vvedantb-config sync [--check]` and `vvedantb-check-asar list|resolve`. See `packages/config/README.md`.
 
 ## Use in a Tailwind v4 app
 
@@ -140,7 +144,7 @@ pnpm test
 pnpm typecheck
 ```
 
-`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`) and checks that every `@vvedantb/ui` export target exists, compiles `@vvedantb/server` and `@vvedantb/config` to each package's `dist`, and checks the `@vvedantb/native-ui` entry. `pnpm test` runs the vitest suites, and an offline `node --test` suite in `@vvedantb/ui` for the tokens (exports, CSS structure, Tailwind compile of each shared file and the preset).
+`pnpm build` typechecks `@vvedantb/ui` (source export, no `dist`) and checks that every `@vvedantb/ui` export target exists, compiles `@vvedantb/server`, `@vvedantb/convex-client`, `@vvedantb/mcp-client` and `@vvedantb/config` to each package's `dist`, and checks the `@vvedantb/native-ui` entry. `pnpm test` runs the vitest suites, and an offline `node --test` suite in `@vvedantb/ui` for the tokens (exports, CSS structure, Tailwind compile of each shared file and the preset).
 
 `pnpm --filter @vvedantb/ui verify` is not part of `pnpm test`: it needs the five app clones (`APPS_DIR`) and network access to install Tailwind into a scratch directory (`VERIFY_DIR`). It builds each app's CSS before and after its migration and fails on any difference. Results: `packages/ui/tokens/verify/RESULTS.md`.
 
@@ -154,8 +158,11 @@ No CI workflow. Publish from a logged-in npm machine (`NPM_CONFIG_USERCONFIG` if
 pnpm --filter @vvedantb/ui exec npm publish --access public
 pnpm --filter @vvedantb/native-ui exec npm publish --access public
 pnpm --filter @vvedantb/server exec npm publish --access public
+pnpm --filter @vvedantb/convex-client exec npm publish --access public
+pnpm --filter @vvedantb/mcp-client exec npm publish --access public
+pnpm --filter @vvedantb/config exec npm publish --access public
 ```
 
-`@vvedantb/config` is private (`"private": true`) and is not published. `@vvedantb/server` compiles in `prepack`, so publishing builds `dist` first. The three packages are independent of each other: `@vvedantb/native-ui` does not need `@vvedantb/ui`.
+`@vvedantb/server`, `@vvedantb/convex-client`, `@vvedantb/mcp-client` and `@vvedantb/config` compile in `prepack`, so publishing builds `dist` first. The packages are independent of each other: `@vvedantb/native-ui` does not need `@vvedantb/ui`.
 
 `@vvedantb/ui` `0.2.0` removes the old `@vvedantb/tokens` and `@vvedantb/shell` packages and the deprecated alias exports. Apps must change imports before they upgrade; see `MIGRATION.md`.
