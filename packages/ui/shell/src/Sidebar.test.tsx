@@ -146,9 +146,9 @@ function composedShell({ isDesktop, mobileOpen, collapsed = false, panelHidden =
             <Sidebar.RailFooter>
               <Sidebar.RailSeparator />
               <Sidebar.AccountMenu badge>
-                <Sidebar.AccountTrigger name="Test User" />
+                <Sidebar.AccountTrigger userName="Test User" />
                 <Sidebar.AccountContent>
-                  <Sidebar.AccountLabel name="Test User" email="user@example.test" />
+                  <Sidebar.AccountLabel userName="Test User" email="user@example.test" />
                   <Sidebar.AccountSeparator />
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                 </Sidebar.AccountContent>
@@ -278,4 +278,19 @@ describe("Sidebar.ResizeHandle", () => {
       expect(host?.querySelector('[role="separator"]') !== null).toBe(shown);
     });
   }
+});
+
+describe("Sidebar.AccountTrigger", () => {
+  it("uses userName for the defaults and passes native name to the button", async () => {
+    await mount(
+      <Sidebar.AccountMenu>
+        <Sidebar.AccountTrigger userName="Test User" name="account-trigger" />
+      </Sidebar.AccountMenu>,
+    );
+    const trigger = host?.querySelector("button");
+    expect(trigger?.getAttribute("name")).toBe("account-trigger");
+    expect(trigger?.getAttribute("title")).toBe("Test User");
+    expect(trigger?.getAttribute("aria-label")).toBe("Account menu for Test User");
+    expect(trigger?.textContent).toBe("TU");
+  });
 });
