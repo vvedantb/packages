@@ -7,7 +7,7 @@ import {
   jsonWithCors,
   mcpCorsHeaders,
   requiredEnvUrl,
-} from "@vvedantb/server/convex";
+} from "@vvedantb/server";
 import type { AppCtx } from "./types.js";
 
 export type AppBCredentials = { clerkUserId: string; isPro: boolean };

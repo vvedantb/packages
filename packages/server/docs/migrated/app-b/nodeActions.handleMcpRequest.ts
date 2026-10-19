@@ -1,4 +1,4 @@
-import { runSdkMcpRequest } from "@vvedantb/server/mcp";
+import { runSdkMcpRequest } from "@vvedantb/server";
 
 export const handleMcpRequest = internalAction({
   args: { clerkUserId: v.string(), isPro: v.boolean(), body: v.string() },

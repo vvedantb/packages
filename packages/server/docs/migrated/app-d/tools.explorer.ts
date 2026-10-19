@@ -1,4 +1,4 @@
-import { createExplorerTools } from "@vvedantb/server/mcp";
+import { createExplorerTools } from "@vvedantb/server";
 
 const BLOCKED_TABLES = [
   "waitlist",

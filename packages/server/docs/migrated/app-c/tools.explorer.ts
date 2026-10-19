@@ -1,4 +1,4 @@
-import { createExplorerTools } from "@vvedantb/server/mcp";
+import { createExplorerTools } from "@vvedantb/server";
 
 const explorerTools = createExplorerTools<string, ActionCtx>({
   tables: isTableAllowed,

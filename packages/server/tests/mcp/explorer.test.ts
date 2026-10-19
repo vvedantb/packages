@@ -1,4 +1,4 @@
-import { assertMcpTools } from "@vvedantb/server/convex";
+import { assertMcpTools } from "@vvedantb/server";
 import { describe, expect, it, vi } from "vitest";
 import { must } from "./helpers.js";
 import {

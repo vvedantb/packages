@@ -7,7 +7,7 @@ import {
   createProtectedResourceMetadata,
   mcpCors,
   type EnvUrl,
-} from "@vvedantb/server/mcp";
+} from "@vvedantb/server";
 
 // Kit CORS plus the headers MCP clients need that the kit does not send.
 const cors = mcpCors({

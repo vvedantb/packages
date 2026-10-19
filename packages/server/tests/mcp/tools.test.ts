@@ -1,4 +1,4 @@
-import { assertMcpTools, expectMcpToolCount } from "@vvedantb/server/convex";
+import { assertMcpTools, expectMcpToolCount } from "@vvedantb/server";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { z as z3 } from "zod3";
