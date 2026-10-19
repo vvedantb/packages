@@ -120,6 +120,34 @@ export type {
   SessionsHoverCardSurface,
 } from "../shell/src/SessionsHoverCard";
 
+// App shell: sidebar and main page layout. Widths come from the
+// `--app-shell-*` CSS variables that `AppShell` sets.
+export { AppShell } from "../shell/src/AppShell";
+export type { AppShellProps } from "../shell/src/AppShell";
+export { AppSidebar } from "../shell/src/AppSidebar";
+export type { AppSidebarProps } from "../shell/src/AppSidebar";
+export { SidebarRail, RailTile, RailDivider } from "../shell/src/SidebarRail";
+export type { SidebarRailProps, RailTileProps, RailDividerProps } from "../shell/src/SidebarRail";
+export { SidebarIconTooltip } from "../shell/src/SidebarIconTooltip";
+export type { SidebarIconTooltipProps } from "../shell/src/SidebarIconTooltip";
+export { SidebarPanel } from "../shell/src/SidebarPanel";
+export type { SidebarPanelProps } from "../shell/src/SidebarPanel";
+export { SidebarAccountMenu, SidebarAccountMenuPlaceholder } from "../shell/src/SidebarAccountMenu";
+export type {
+  SidebarAccountMenuProps,
+  SidebarAccountMenuPlaceholderProps,
+} from "../shell/src/SidebarAccountMenu";
+export { SignOutDialog } from "../shell/src/SignOutDialog";
+export type { SignOutDialogProps } from "../shell/src/SignOutDialog";
+export {
+  railBadgeClass,
+  railTileClass,
+  railTileStateClass,
+  sidebarNavLinkTextClass,
+  sidebarNavRowClass,
+  sidebarSectionLabelClass,
+} from "../shell/src/app-shell-classes";
+
 // App helpers: confirm skip, update watcher, settings chrome, stable auth.
 export * from "../app/src/index";
 

@@ -10,6 +10,10 @@ test("root exposes former subpath APIs", () => {
     "SlideOverPanel", "ToolbarSearchInput", "ConfirmDialog", "SettingsField",
     "CardHeader", "SelectField", "FadePresence", "PanelTransition",
     "restoreModalScrollLock", "springTransition", "springFastTransition", "fadeUpSpring",
+    "AppShell", "AppSidebar", "SidebarRail", "RailTile", "RailDivider", "SidebarIconTooltip",
+    "SidebarPanel", "SidebarAccountMenu", "SidebarAccountMenuPlaceholder", "SignOutDialog",
+    "railTileClass", "railTileStateClass", "railBadgeClass",
+    "sidebarNavRowClass", "sidebarNavLinkTextClass", "sidebarSectionLabelClass",
   ]) {
     expect(root, name).toHaveProperty(name);
   }
