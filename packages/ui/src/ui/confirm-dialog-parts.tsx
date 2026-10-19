@@ -24,11 +24,12 @@ type ConfirmDialogContextValue = {
   size: ConfirmDialogSize;
   alert: boolean;
   pending: boolean;
+  focusCancel: boolean;
   confirmPhrase: string | undefined;
   typed: string;
   setTyped: (value: string) => void;
   phraseMatches: boolean;
-  /** Calls the Root's `onOpenChange(false)` unless `pending`. */
+  /** Calls the Root's `onOpenChange(false)` unless `pending` (and not `dismissibleWhilePending`). */
   requestClose: () => void;
 };
 
@@ -36,6 +37,7 @@ const ConfirmDialogContext = React.createContext<ConfirmDialogContextValue>({
   size: "default",
   alert: true,
   pending: false,
+  focusCancel: false,
   confirmPhrase: undefined,
   typed: "",
   setTyped: () => {},
@@ -59,6 +61,18 @@ export type ConfirmDialogRootProps = React.ComponentProps<typeof Dialog> & {
    * Needs a controlled `open`.
    */
   pending?: boolean;
+  /**
+   * While `pending`, Escape, outside click and the close button still close
+   * (Root `onOpenChange(false)` runs). Cancel stays disabled and Action stays
+   * pending. Default `false`.
+   */
+  dismissibleWhilePending?: boolean;
+  /**
+   * Non-alert only: Cancel renders `data-alert-cancel=""`, so a Content with
+   * `role="alertdialog"` focuses it on open. An explicit `data-alert-cancel`
+   * on Cancel wins. No-op with `alert` (its Cancel already has it). Default `false`.
+   */
+  focusCancel?: boolean;
   /** Type-to-confirm phrase for `ConfirmDialog.Field`. Action stays disabled until it matches (trimmed, case-insensitive). */
   confirmPhrase?: string;
 };
@@ -67,6 +81,8 @@ function Root({
   size = "default",
   alert = size === "default",
   pending = false,
+  dismissibleWhilePending = false,
+  focusCancel = false,
   confirmPhrase,
   open,
   onOpenChange,
@@ -81,7 +97,7 @@ function Root({
   }
 
   const handleOpenChange = (next: boolean) => {
-    if (!next && pending) return;
+    if (!next && pending && !dismissibleWhilePending) return;
     if (next) setTyped("");
     onOpenChange?.(next);
   };
@@ -96,6 +112,7 @@ function Root({
         size,
         alert,
         pending,
+        focusCancel,
         confirmPhrase,
         typed,
         setTyped,
@@ -163,12 +180,27 @@ function Body(props: ConfirmDialogBodyProps) {
 }
 Body.displayName = "ConfirmDialog.Body";
 
-export type ConfirmDialogFooterProps = React.HTMLAttributes<HTMLDivElement>;
+export type ConfirmDialogFooterProps = React.HTMLAttributes<HTMLDivElement> & {
+  /**
+   * Right-aligned row of buttons at every width, laid out like a
+   * `flex justify-end gap-2` div inside the footer. Adds `justify-end flex-row!`:
+   * the `!important` beats both the footer's own `flex-col-reverse` below `sm`
+   * and the compact sheet's descendant `flex-col-reverse` rule, which has higher
+   * specificity than a plain class. Keeps `data-slot` and every other footer
+   * class. No-op for `size="sm"` (already a row). Default `false`.
+   */
+  row?: boolean;
+};
 
-function Footer({ className, ...props }: ConfirmDialogFooterProps) {
+function Footer({ row = false, className, ...props }: ConfirmDialogFooterProps) {
   const { size } = useConfirmDialog();
   if (size === "sm") return <div {...props} className={cn("flex justify-end gap-2", className)} />;
-  return <DialogFooter {...props} className={cn(size === "md" && "pt-4", className)} />;
+  return (
+    <DialogFooter
+      {...props}
+      className={cn(size === "md" && "pt-4", row && "justify-end flex-row!", className)}
+    />
+  );
 }
 Footer.displayName = "ConfirmDialog.Footer";
 
@@ -177,7 +209,8 @@ export type ConfirmDialogCancelProps = ButtonProps;
 /**
  * Alert: a `DialogClose` outline button. Otherwise a ghost button that runs
  * `onClick` and then, unless it called `preventDefault()`, the Root's
- * `onOpenChange(false)`. Disabled while pending.
+ * `onOpenChange(false)`. Disabled while pending. With Root `focusCancel`
+ * it also gets `data-alert-cancel`.
  */
 function Cancel({ children = "Cancel", variant, size, disabled, onClick, ...props }: ConfirmDialogCancelProps) {
   const dialog = useConfirmDialog();
@@ -198,6 +231,7 @@ function Cancel({ children = "Cancel", variant, size, disabled, onClick, ...prop
     <Button
       variant={variant ?? "ghost"}
       size={size ?? (dialog.size === "sm" ? "sm" : undefined)}
+      data-alert-cancel={dialog.focusCancel ? "" : undefined}
       {...props}
       onClick={(event) => {
         onClick?.(event);
@@ -218,6 +252,8 @@ export type ConfirmDialogActionProps = ButtonProps & {
   pendingLabel?: React.ReactNode;
   /** Spinner size in px. Default `14`. */
   spinnerSize?: number;
+  /** Merged into the spinner className after `animate-spin`, e.g. `"mr-2"`. */
+  spinnerClassName?: string;
 };
 
 /** Confirm button. Does not close the dialog. Disabled while pending or until the confirm phrase matches. */
@@ -225,6 +261,7 @@ function Action({
   pending: pendingProp,
   pendingLabel,
   spinnerSize = 14,
+  spinnerClassName,
   size,
   disabled,
   children,
@@ -235,7 +272,7 @@ function Action({
   const content =
     pending && pendingLabel !== undefined ? (
       <>
-        <IconLoader2 size={spinnerSize} className="animate-spin" />
+        <IconLoader2 size={spinnerSize} className={cn("animate-spin", spinnerClassName)} />
         {pendingLabel}
       </>
     ) : (

@@ -215,7 +215,7 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
 - `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
 - `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
 - `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it. `"md"` (0.5.2) is dismissible like `"sm"`, with the title in a header (`pb-4`), the description in its own section (`py-6`) and a footer (`pt-4`) with default-size buttons. It has the same Cancel and confirm behaviour as `"sm"`.
-- Legacy (still supported): the `ConfirmDialog` `size`, `variant`, `cancelLabel` and `confirmLabel` props. For anything they do not cover, compose the parts (see [Composable parts](#composable-parts-060)).
+- Legacy (still supported): the `ConfirmDialog` `size`, `variant`, `cancelLabel` and `confirmLabel` props. For anything they do not cover, compose the parts (see [Composable parts](#composable-parts-060-options-061)).
 
 ## Buttons, menus and fields (0.4.4)
 
@@ -381,7 +381,7 @@ function PanelWidth() {
 </Tabs>
 ```
 
-## Composable parts (0.6.0)
+## Composable parts (0.6.0, options 0.6.1)
 
 Shadcn-style building blocks. The prop-driven components above are thin compositions of them and render the same DOM.
 
@@ -391,18 +391,18 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 
 | Part | Purpose |
 | --- | --- |
-| `Root` | Radix dialog root. `size` (`"default"`, `"sm"`, `"md"`: layout slot for the other parts), `alert` (blocking alert dialog; default `size === "default"`), `pending` (swallows close requests, disables Cancel, Action shows its pending state), `confirmPhrase` (type-to-confirm; the typed text resets each time the dialog opens). |
+| `Root` | Radix dialog root. `size` (`"default"`, `"sm"`, `"md"`: layout slot for the other parts), `alert` (blocking alert dialog; default `size === "default"`), `pending` (swallows close requests, disables Cancel, Action shows its pending state), `confirmPhrase` (type-to-confirm; the typed text resets each time the dialog opens). 0.6.1: `dismissibleWhilePending` (Escape, outside click and the close button still close while `pending`; Cancel stays disabled), `focusCancel` (with `alert={false}`, Cancel gets `data-alert-cancel` so a `role="alertdialog"` Content focuses it on open). |
 | `Content` | `AlertDialogContent` with `alert`, else `DialogContent`. `sm` and `md` add `sm:max-w-96`. Takes every `DialogContent` prop (`role`, `hideCloseButton`, ...). |
 | `Header` | `DialogHeader`; `md` adds `pb-4`. |
 | `Title` | `DialogTitle`; `sm` adds `mb-2 text-sm font-medium`. |
 | `Description` | `DialogDescription`; `sm` and `md` add their spacing. |
 | `Body` | Plain `<div>` for extra content. No default classes. |
-| `Footer` | `DialogFooter` (`md` adds `pt-4`); `sm` renders a `flex justify-end gap-2` row. |
-| `Cancel` | Alert: the outline `AlertDialogCancel` (closes through Radix). Otherwise a ghost `Button` that runs `onClick`, then (unless it called `preventDefault()`) the Root `onOpenChange(false)`. Disabled while pending. Default text `"Cancel"`. |
-| `Action` | Confirm button. Never closes the dialog. Disabled while `disabled`, pending, or until `confirmPhrase` matches. `pendingLabel` replaces the children with a spinner (`spinnerSize`, default 14) and the label while pending. |
+| `Footer` | `DialogFooter` (`md` adds `pt-4`); `sm` renders a `flex justify-end gap-2` row. 0.6.1: `row` keeps a right-aligned row at every width, compact sheet included (`justify-end flex-row!`); no-op for `sm`. |
+| `Cancel` | Alert: the outline `AlertDialogCancel` (closes through Radix). Otherwise a ghost `Button` that runs `onClick`, then (unless it called `preventDefault()`) the Root `onOpenChange(false)`. In both modes `preventDefault()` in `onClick` skips the close, and `variant` overrides the default. Disabled while pending. Default text `"Cancel"`. |
+| `Action` | Confirm button. Never closes the dialog. Disabled while `disabled`, pending, or until `confirmPhrase` matches. `pendingLabel` replaces the children with a spinner (`spinnerSize`, default 14) and the label while pending. `pending` on Action alone shows the pending state without blocking close. 0.6.1: `spinnerClassName` merges after `animate-spin` (for example `"mr-2"`). |
 | `Field` | Type-to-confirm input bound to `confirmPhrase` (trimmed, case-insensitive). `label` replaces the label content, `onEnter` runs on Enter while the phrase matches, `inputProps` go to the `Input`. |
 
-`useConfirmDialog()` returns `{ size, alert, pending, phraseMatches, typed, setTyped, requestClose }` for custom parts.
+`useConfirmDialog()` returns `{ size, alert, pending, focusCancel, phraseMatches, typed, setTyped, requestClose }` for custom parts.
 
 ### `AppShell.*`
 
@@ -482,6 +482,27 @@ A dismissible rename dialog:
   </ConfirmDialog.Content>
 </ConfirmDialog.Root>
 ```
+
+A dismissible alert (0.6.1 options) that focuses Cancel, keeps a button row on mobile, and can still be closed while busy:
+
+```tsx
+<ConfirmDialog.Root open={open} onOpenChange={setOpen} alert={false} focusCancel pending={busy} dismissibleWhilePending>
+  <ConfirmDialog.Content role="alertdialog">
+    <ConfirmDialog.Header>
+      <ConfirmDialog.Title>Delete item?</ConfirmDialog.Title>
+      <ConfirmDialog.Description>This cannot be undone.</ConfirmDialog.Description>
+    </ConfirmDialog.Header>
+    <ConfirmDialog.Footer row>
+      <ConfirmDialog.Cancel variant="outline" />
+      <ConfirmDialog.Action variant="destructive" pendingLabel="Delete" spinnerSize={16} spinnerClassName="mr-2" onClick={remove}>
+        Delete
+      </ConfirmDialog.Action>
+    </ConfirmDialog.Footer>
+  </ConfirmDialog.Content>
+</ConfirmDialog.Root>
+```
+
+Parts read the nearest Root through context, so `Footer`, `Cancel` and `Action` work inside a child component or a `<form>` rendered in `Content`. To show another step, render a different footer (and Content `role`) conditionally inside the same Root and Content.
 
 A full shell:
 

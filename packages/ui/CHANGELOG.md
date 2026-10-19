@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1
+
+Additive. With the new options unset every part renders as in 0.6.0.
+
+- `ConfirmDialog.Footer` `row`: a right-aligned row of buttons at every width, including the compact sheet (`justify-end flex-row!`). Looks like a `flex justify-end gap-2` div inside the footer. No-op for `size="sm"`.
+- `ConfirmDialog.Root` `focusCancel`: with `alert={false}`, Cancel gets `data-alert-cancel=""`, so a Content with `role="alertdialog"` focuses it on open. An explicit `data-alert-cancel` on Cancel wins. No-op with `alert`.
+- `ConfirmDialog.Root` `dismissibleWhilePending`: while `pending`, Escape, outside click and the close button still call `onOpenChange(false)`. Cancel stays disabled and Action stays pending.
+- `ConfirmDialog.Action` `spinnerClassName`: merged into the spinner className after `animate-spin`, for example `"mr-2"`.
+- README: documents patterns that already worked in 0.6.0 (pending on Action alone, Cancel `variant`, Cancel `preventDefault()`, parts in a child component, swapping footers and Content `role`).
+
 ## 0.6.0
 
 Additive. Every existing component keeps its props and renders the same DOM as in 0.5.4 (checked by a DOM parity test against output captured from 0.5.4).
