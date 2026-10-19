@@ -1,5 +1,5 @@
-// Plain Node ESM, no vitest: the Convex helpers from the former
-// @vvedantb/convex-client, transpiled as they are.
+// Plain Node ESM, no vitest: the Convex helpers in app/src/convex,
+// transpiled as they are.
 //
 // `convex` and `@clerk/clerk-react` are optional peers, but the package root
 // cannot be loaded without them: `ConvexClerkProvider` and `useEnsureUser` need

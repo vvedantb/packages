@@ -394,10 +394,10 @@ describe("vitest configs", () => {
       test: {
         environment: "node",
         include: ["src/**/*.test.ts"],
-        server: { deps: { inline: ["@vvedantb/convex-client"] } },
+        server: { deps: { inline: ["@scope/example-client"] } },
       },
     };
-    expect(defineWebVitestConfig({ automaticJsx: true, inline: ["@vvedantb/convex-client"] })).toStrictEqual(
+    expect(defineWebVitestConfig({ automaticJsx: true, inline: ["@scope/example-client"] })).toStrictEqual(
       current,
     );
   });
@@ -426,13 +426,13 @@ describe("vitest configs", () => {
       test: {
         environment: "node",
         include: ["src/**/*.test.ts"],
-        server: { deps: { inline: ["@vvedantb/convex-client"] } },
+        server: { deps: { inline: ["@scope/example-client"] } },
       },
     };
     expect(
       defineWebVitestConfig({
         alias: [{ find: "@", replacement: path.resolve(DIR, "src") }],
-        inline: ["@vvedantb/convex-client"],
+        inline: ["@scope/example-client"],
       }),
     ).toStrictEqual(current);
   });

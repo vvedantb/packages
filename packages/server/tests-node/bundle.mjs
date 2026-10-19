@@ -17,7 +17,7 @@ import { build, installFixture, pkg, pkgDir } from "./installed.mjs";
 const convexPackageJson = realpathSync(join(pkgDir, "node_modules", "convex", "package.json"));
 const { default: esbuild } = await import(pathToFileURL(createRequire(convexPackageJson).resolve("esbuild")).href);
 
-// Server root exports a Convex backend uses, plus pure ones from the former @vvedantb/mcp-client.
+// Server root exports a Convex backend uses, plus pure MCP client OAuth ones.
 const functionFile = `
 import { httpActionGeneric } from "convex/server";
 import { extractBearerToken, hasMcpOAuthTokens, isAccessTokenExpiring, jsonResponse, sha256Hex } from ${JSON.stringify(pkg.name)};

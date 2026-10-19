@@ -9,8 +9,6 @@ Shared packages for vvedantb apps. Four public npm packages.
 | `@vvedantb/server` | `0.4.0` | Convex backend helpers, Convex optimistic updates and Node-side MCP client OAuth from one root export (`.` only): query-limit errors, Clerk auth and token verification, Clerk-user lookups and `ensureUser`, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, WebCrypto primitives, optimistic-update helpers (`mapLoadedQuery`, `patchLoadedQuery`, `tempId`, an in-memory store for tests) and MCP client OAuth for desktop apps (provider, sign-in, refresh, revocation, loopback redirect server; Node built-ins and the MCP SDK load on first use, so Convex V8 bundles stay clean). Compiled. |
 | `@vvedantb/config` | `0.3.0` | Root JS export plus JSON tsconfig and oxlint bases, Vite, Vitest, Babel and Metro presets, pinned tool versions, the `vvedantb-config sync` CLI and the `vvedantb-check-asar` packaged-app check. Compiled. |
 
-Moved packages: `@vvedantb/convex-client` 0.1.0 is folded into `@vvedantb/ui` (React and VITE env helpers) and `@vvedantb/server` (optimistic-update helpers); `@vvedantb/mcp-client` 0.1.0 is folded into `@vvedantb/server`. Same export names. Their directories keep only a README and CHANGELOG with the move note. Steps per app: [MIGRATION.md](MIGRATION.md#folded-packages-ui-0100-and-server-040).
-
 Moving from the earlier packages (`@vvedantb/tokens`, `shell`, `app-kit`, `convex-kit`, `mcp-kit`)? See [MIGRATION.md](MIGRATION.md).
 
 ## Install
