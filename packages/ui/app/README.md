@@ -194,7 +194,7 @@ Strings are parsed with `new Date(string)`. dayjs parses a date-only string such
 
 ## Convex provider, VITE env and ensure-user (0.10.0)
 
-Moved from `@vvedantb/convex-client` 0.1.0 with the same names and behaviour. Its non-React helpers (`mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `createMemoryOptimisticStore`) moved to `@vvedantb/server` instead, so backend packages, tests and React Native can use them without loading this package.
+React and VITE env helpers for Convex apps. The non-React Convex helpers (`mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `createMemoryOptimisticStore`) live in `@vvedantb/server`, so backend packages, tests and React Native can use them without loading this package.
 
 ### `ConvexClerkProvider`
 

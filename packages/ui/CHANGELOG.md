@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+Docs only; no runtime change.
+
+- `app/README.md` describes the Convex provider, VITE env and ensure-user helpers by what they do, without the name of the package they came from.
+
 ## 0.10.0
 
 Additive: `@vvedantb/convex-client` 0.1.0's React and VITE env helpers move here with the same names and behaviour. No existing export changes, and no name collides.

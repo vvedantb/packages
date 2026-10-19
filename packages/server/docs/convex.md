@@ -234,7 +234,7 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 
 ## Optimistic updates (client side)
 
-Moved from `@vvedantb/convex-client` 0.1.0 with the same names and behaviour. They live here, not in `@vvedantb/ui`, because they have no React: a backend package's client folder, its tests and a React Native app import them, and none of those can load the `@vvedantb/ui` root.
+Client-side helpers for Convex optimistic updates. They live here, not in `@vvedantb/ui`, because they have no React: a backend package's client folder, its tests and a React Native app import them, and none of those can load the `@vvedantb/ui` root.
 
 ```ts
 import { mapLoadedQuery, patchLoadedQuery, tempId } from "@vvedantb/server";

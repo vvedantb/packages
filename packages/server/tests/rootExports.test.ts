@@ -3,10 +3,10 @@ import * as root from "@vvedantb/server";
 import * as convex from "../src/convex/index.js";
 import * as cryptoPrimitives from "../src/crypto/index.js";
 import * as mcp from "../src/mcp/index.js";
-import * as mcpClient from "../src/mcp-client/index.js";
+import * as mcpClient from "../src/mcp-oauth-client/index.js";
 
 describe("@vvedantb/server root export", () => {
-  const parts = { convex, crypto: cryptoPrimitives, mcp, "mcp-client": mcpClient };
+  const parts = { convex, crypto: cryptoPrimitives, mcp, "mcp-oauth-client": mcpClient };
 
   it("has no name in two folders", () => {
     const seen = new Map<string, string>();
