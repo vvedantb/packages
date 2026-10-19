@@ -10,3 +10,13 @@ export {
   type SyncResult,
 } from "./sync.js";
 export { runCli, type CliIo } from "./run.js";
+export {
+  CHECK_ASAR_CHILD_ENV,
+  findBareImports,
+  findSpecifiers,
+  packageName,
+  runCheckAsar,
+  type AsarCheckHook,
+  type AsarCheckHookContext,
+  type CheckAsarIo,
+} from "./check-asar.js";

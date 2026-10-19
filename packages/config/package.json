@@ -1,26 +1,25 @@
 {
   "name": "@vvedantb/config",
-  "version": "0.1.1",
-  "private": true,
+  "version": "0.2.0",
   "license": "MIT",
-  "description": "Shared tsconfig bases, oxlint base, pinned tool versions and a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig.",
+  "description": "Shared tsconfig bases, oxlint base, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vvedantb/ui.git",
+    "url": "git+https://github.com/vvedantb/packages.git",
     "directory": "packages/config"
   },
   "bin": {
-    "vvedantb-config": "./dist/cli.js"
+    "vvedantb-config": "./dist/cli.js",
+    "vvedantb-check-asar": "./dist/check-asar-cli.js"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./versions": {
-      "types": "./dist/versions.d.ts",
-      "import": "./dist/versions.js"
     },
     "./tsconfig/base.json": "./tsconfig/base.json",
     "./tsconfig/web.json": "./tsconfig/web.json",
@@ -35,6 +34,7 @@
     "files",
     "tsconfig",
     "oxlint",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
@@ -43,7 +43,16 @@
     "test": "vitest run",
     "prepack": "tsc -p tsconfig.json"
   },
+  "peerDependencies": {
+    "@electron/asar": "^3.2.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@electron/asar": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@electron/asar": "^4.3.1",
     "@types/node": "^22.0.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
