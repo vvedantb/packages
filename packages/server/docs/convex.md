@@ -12,6 +12,8 @@ npm install @vvedantb/server
 
 None required. `@clerk/backend` is an optional peer. The package never imports it: `getClerkClient` takes its `createClerkClient`, and `verifyClerkAccessToken` takes a client (or a function that builds one).
 
+`convex` is an optional peer for types only: the optimistic-update helpers below name Convex's `FunctionReference`, `OptimisticLocalStore` and `GenericId` types. The package never imports `convex` at runtime.
+
 ## Usage
 
 ```ts
@@ -229,6 +231,59 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 - **ensure-user patch.** app-a patches the normalised email when it is defined and changed; app-b never patches; app-d patches `clerkId` (only possible after an email match); app-e touches `lastSeenAt` after 60 s.
 
 `tests/convex/clerkUserAuth.test.ts` ports each app's code and runs it next to the kit on the same fake ctx over each identity case (none, empty subject, known, duplicate, unknown, legacy email): return values, thrown messages, rows and writes match.
+
+## Optimistic updates (client side)
+
+Moved from `@vvedantb/convex-client` 0.1.0 with the same names and behaviour. They live here, not in `@vvedantb/ui`, because they have no React: a backend package's client folder, its tests and a React Native app import them, and none of those can load the `@vvedantb/ui` root.
+
+```ts
+import { mapLoadedQuery, patchLoadedQuery, tempId } from "@vvedantb/server";
+
+const createTask = useMutation(api.tasks.create).withOptimisticUpdate((store, args) => {
+  const now = Date.now();
+  mapLoadedQuery(store, api.tasks.list, (tasks, listArgs) =>
+    listArgs.projectId === args.projectId
+      ? [{ _id: tempId("tasks"), _creationTime: now, title: args.title, done: false }, ...tasks]
+      : tasks,
+  );
+  patchLoadedQuery(store, api.tasks.count, { projectId: args.projectId }, (count) => count + 1);
+});
+```
+
+| Export | Semantics |
+| --- | --- |
+| `mapLoadedQuery(store, query, update)` | For each entry of `store.getAllQueries(query)` whose `value` is not `undefined` (still loading), `store.setQuery(query, entry.args, update(entry.value, entry.args))`. Does nothing if the store has no `getAllQueries`. |
+| `forEachLoadedQuery`, `updateAllCachedQueries` | The same function as `mapLoadedQuery`, under the names some apps use. |
+| `patchLoadedQuery(store, query, args, update)` | If `store.getQuery(query, args)` is not `undefined`, set it to `update(value)`. Never creates an entry. |
+| `OptimisticStore` | The part of `OptimisticLocalStore` these read (`getAllQueries` optional). A real `OptimisticLocalStore` fits. |
+| `tempId(table?, { format? })` | A placeholder `GenericId<table>`. `"uuid"` (default): `crypto.randomUUID()`. `"timestamp"`: `` `optimistic_${Date.now()}_${Math.random().toString(36).slice(2)}` ``. `table` only types the id. |
+| `createMemoryOptimisticStore()` | An in-memory `OptimisticLocalStore` for tests: keyed by function name and `JSON.stringify(args)` (missing args read as `{}`, so key order matters), entries in first-set order, setting `undefined` deletes. |
+
+```ts
+// Test an optimistic update without a client.
+const store = createMemoryOptimisticStore();
+store.setQuery(api.tasks.list, { projectId }, []);
+applyCreateTask(store, { projectId, title: "Write tests" });
+expect(store.getQuery(api.tasks.list, { projectId })).toHaveLength(1);
+```
+
+`createMemoryOptimisticStore` names functions with a copy of Convex's `getFunctionName` (as of `convex` 1.47), so the package still never imports `convex`. `tests/convex/memoryStore.test.ts` checks it against Convex's own for `api` references, name strings, function handles and component references.
+
+### How each app maps onto them
+
+| App | Today | With the package |
+| --- | --- | --- |
+| app-a web | `tempId<T>()` and `updateAllCachedQueries` in `apps/web/src/lib/convex-optimistic.ts` | the same names from `@vvedantb/server`; the query-specific helpers stay |
+| app-b shared | `OptimisticStore`, `mapLoadedQuery`, `patchLoadedQuery` in `packages/shared/optimistic/store.ts` | same names |
+| app-c shared | `tempId(table)` and `createMemoryStore` in `packages/shared/optimistic/` | `tempId(table)`, `createMemoryOptimisticStore` |
+| app-d backend client | `forEachLoadedQuery` in `client/optimistic/store.ts`, `tempId(table, { format: "timestamp" })` in `client/optimistic/id.ts`, `createMemoryOptimisticStore` in `tests/optimisticMemoryStore.ts` | the same names from `@vvedantb/server` (already a dependency) |
+
+### Differences between the copies
+
+- **`tempId` format.** app-a and app-c use `crypto.randomUUID()` (app-c takes the table name as an unused argument); app-d uses `optimistic_<ms>_<random base 36>`. Both are reproducible through `format`.
+- **`getAllQueries`.** app-b's `OptimisticStore` makes it optional and does nothing without it; app-a and app-d require it. Same result on a real store, so the three are one function.
+- **Update callback.** app-a's map function gets the value only; app-b and app-d also get the args. Passing args to a one-argument callback changes nothing.
+- **Memory stores.** app-d's is a `Map` per function; app-c's is one array. Same lookups, order and deletes. app-d also reads `setQuery` with missing args as `{}`; app-c would key it as `undefined` (unreachable through Convex's types). The package follows app-d. `getAllQueries` returns the stored entry objects (app-d), not copies (app-c).
 
 ## Develop
 

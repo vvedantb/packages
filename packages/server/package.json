@@ -37,10 +37,14 @@
   },
   "peerDependencies": {
     "@clerk/backend": ">=1",
+    "convex": "^1.24.0",
     "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "@clerk/backend": {
+      "optional": true
+    },
+    "convex": {
       "optional": true
     },
     "zod": {

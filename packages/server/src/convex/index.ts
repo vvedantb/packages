@@ -26,6 +26,14 @@ export {
   isConvexResourceLimitError,
 } from "./convexQueryLimits.js";
 export { jsonResponse } from "./jsonResponse.js";
+export { createMemoryOptimisticStore } from "./memoryStore.js";
+export {
+  forEachLoadedQuery,
+  mapLoadedQuery,
+  patchLoadedQuery,
+  updateAllCachedQueries,
+  type OptimisticStore,
+} from "./optimistic.js";
 export {
   createOriginAllowlistCors,
   type OriginAllowlistCors,
@@ -33,6 +41,7 @@ export {
 export { requiredEnv, requiredEnvUrl, type EnvSource } from "./env.js";
 export { defineMcpServerInfo, type McpServerInfo } from "./mcpServerInfo.js";
 export { assertMcpTools, expectMcpToolCount } from "./mcpTestHelpers.js";
+export { tempId, type TempIdFormat, type TempIdOptions } from "./tempId.js";
 export {
   consoleClerkVerifyLogger,
   verifyClerkAccessToken,
