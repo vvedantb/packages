@@ -11,7 +11,8 @@ const pkg: { exports: Record<string, string | Record<string, string>>; bin: Reco
 
 describe("package.json", () => {
   it("has one JS entry (the root); the other subpaths are JSON files", () => {
-    expect(pkg.exports["."]).toEqual({ types: "./dist/index.d.ts", import: "./dist/index.js" });
+    // `default`, not `import`: CommonJS configs (babel.config.js, metro.config.js) require() the same ESM root.
+    expect(pkg.exports["."]).toEqual({ types: "./dist/index.d.ts", default: "./dist/index.js" });
     for (const [subpath, target] of Object.entries(pkg.exports)) {
       if (subpath === ".") continue;
       expect(subpath).toMatch(/\.json$/);

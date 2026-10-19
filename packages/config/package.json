@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/config",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
-  "description": "Shared tsconfig bases, oxlint base, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
+  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -19,7 +19,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./tsconfig/base.json": "./tsconfig/base.json",
     "./tsconfig/web.json": "./tsconfig/web.json",
@@ -54,7 +54,9 @@
   "devDependencies": {
     "@electron/asar": "^4.3.1",
     "@types/node": "^22.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "typescript": "^5.9.0",
+    "vite": "^8.3.4",
     "vitest": "^3.2.0"
   }
 }
