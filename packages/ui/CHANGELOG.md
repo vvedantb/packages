@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.0
+
+Additive: `@vvedantb/convex-client` 0.1.0's React and VITE env helpers move here with the same names and behaviour. No existing export changes, and no name collides.
+
+- `ConvexClerkProvider({ client, useAuth?, clerk? })`: `ConvexProviderWithClerk` (default `useAuth` is Clerk's), a plain `ConvexProvider` with `clerk={false}`, or the children alone without a client. Types `ConvexClerkProviderProps`, `ConvexClerkUseAuth`.
+- `parseClientEnv(rawEnv, { z, viteEnv?, extend? })` and `VITE_ENV_NAMES`: zod VITE env parsing with your `z` (zod 3.25+ or 4). Types `ClientEnv`, `ClientEnvOptions`, `ClientEnvSource`, `ClientEnvWithoutViteEnv`, `ViteEnvMode`, `ViteEnvName`.
+- `useEnsureUser(mutation)`: calls an ensure-user mutation each time Convex auth becomes authenticated. Type `EnsureUserMutation`.
+- convex-client's non-React helpers (`mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `createMemoryOptimisticStore`) went to `@vvedantb/server` 0.4.0 instead, so backend packages, tests and React Native can use them without loading this package.
+- New optional peer: `convex` `^1.24.0`. Like `@clerk/clerk-react`, the root imports it statically (`convex/react` in `ConvexClerkProvider` and `useEnsureUser`), so apps that import the root need it installed. The README now says this for every optional peer the root imports.
+- Tests: `app/tests/convex/` ports convex-client's suites (each app's copy beside the helper). `app/tests-node/convex-esm.test.mjs` pins the root modules that import `convex` or Clerk, loads `parseClientEnv` in plain Node without `convex`, Clerk or zod, and renders the provider and hook with them. The plain Node suites share `app/tests-node/graph.mjs`.
+- Dev only: `convex` and `zod3` (zod 3.25) for the tests.
+
 ## 0.9.0
 
 Additive. Existing components render as in 0.8.0; `SidebarAccountMenu` without the new props is unchanged.
