@@ -12,8 +12,8 @@ const skip = /\.(test|spec)\.|\/__tests__\//;
 
 const UTIL = "(?:bg|text|border|ring|from|to|via|outline|fill|stroke|shadow|divide|decoration|caret|accent)";
 const rules = [
-  { re: /(?<![\w-])text-muted(?![\w-])/g, msg: "use text-muted-foreground" },
-  { re: new RegExp(`(?<![\\w-])${UTIL}-accent(?:-foreground)?(?![\\w-])`, "g"), msg: "use the primary equivalent" },
+  { re: /(?<![\w-])text-muted(?![\w-])/g, msg: "use text-muted-foreground", allow: "check-tokens-allow: text-muted" },
+  { re: new RegExp(`(?<![\\w-])${UTIL}-accent(?:-foreground)?(?![\\w-])`, "g"), msg: "use the primary equivalent", allow: "check-tokens-allow: accent" },
   {
     // A raw read is allowed only as the fallback of a --color-* read, for apps
     // that use the preset without tokens.css (no --color-* variables).
@@ -32,14 +32,15 @@ function* walk(dir) {
 }
 
 // Intentional compat classes that must match the original app markup: the
-// InputArea ghost text, the Button `flat` variant and the CommandDialog "auto"
-// list layout use the bare `text-muted`. Allowed only in these files, and only
-// on a line that carries the marker comment.
-const ALLOW_MARKER = "check-tokens-allow: text-muted";
+// InputArea ghost text, the Button `flat` variant, the CommandDialog "auto"
+// list layout and the app shell classes use the bare `text-muted` (and the
+// shell rail badge uses `accent`). Allowed only in these files, and only on a
+// line that carries the rule's marker comment.
 const ALLOW_FILES = new Set([
   "src/composer/input-area/InputArea.tsx",
   "src/ui/button.tsx",
   "src/ui/command.tsx",
+  "shell/src/app-shell-classes.ts",
 ]);
 
 const hits = [];
@@ -49,7 +50,7 @@ for (const d of dirs) {
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
-        if (r.msg === "use text-muted-foreground" && line.includes(ALLOW_MARKER) && ALLOW_FILES.has(relative(root, file))) continue;
+        if (r.allow && line.includes(r.allow) && ALLOW_FILES.has(relative(root, file))) continue;
         for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }
     });

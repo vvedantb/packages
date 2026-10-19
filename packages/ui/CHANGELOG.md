@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0
+
+Additive. Existing exports and defaults are unchanged.
+
+- New app shell on the root entry, extracted from existing app markup with the same classes and behaviour. It is router-free: the app passes links, state and media query results in.
+- `AppShell`: full-height frame with a skip link, a `sidebar` slot and `<main>` with the content card. It sets `--app-shell-rail-width` (`4rem`), `--app-shell-sidebar-width` (`20rem`) and `--app-shell-mobile-header-height` (`calc(3.5rem + env(safe-area-inset-top, 0px))`) from `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. `panelHidden` offsets main by the rail width instead of the sidebar width.
+- `AppSidebar`: mobile header (menu button, optional `mobileTitle`), drawer backdrop and the `<aside>` with `rail` and `panel` slots. It handles swipe and Escape to close, `inert` while the drawer is closed, `data-sidebar-layout` and closing the drawer at the desktop breakpoint. The app owns `mobileOpen`, `isDesktop` and route-change closing.
+- `SidebarRail` (`top`, body and `footer` slots, `showDivider`, `bodyAsChild`), `RailTile` (ghost button or `asChild` link with tooltip, `active`, `badge`), `RailDivider` and `SidebarIconTooltip`.
+- `SidebarPanel`: panel column with a `SidebarHeader`, `headerTrailing`, an optional close button (`onClose`, `closeButtonClassName`) and `collapsed`.
+- `SidebarAccountMenu` (avatar or initials trigger, name or name and email label, app-provided items), `SidebarAccountMenuPlaceholder` and `SignOutDialog`.
+- Class helpers: `railTileClass`, `railTileStateClass`, `railBadgeClass`, `sidebarNavRowClass`, `sidebarNavLinkTextClass` and `sidebarSectionLabelClass`.
+- Packaging: `files` lists `shell/src/**/*.{ts,tsx}` instead of `shell/src`, so `pnpm pack` no longer ships the shell test files (`npm pack` already left them out).
+- `check:tokens` markers are now per rule. The shell class file may use the marked bare `text-muted` and `accent` names, which match existing app markup.
+
 ## 0.4.4
 
 Additive. Existing defaults render as before; every change is a new prop, variant or export.

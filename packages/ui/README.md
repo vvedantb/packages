@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. CSS. |
@@ -247,6 +247,56 @@ import {
 - `CardHeader`: `flex flex-col space-y-1.5 p-6`.
 - `SelectField`: a labelled single select built from `Select`. Children are `SelectItem`s. An empty `value` shows the placeholder. `id` goes to the trigger and the label points at it. `className` merges onto the trigger.
 - Motion: `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes optional `variants` (`hidden`, `show`, `exit`); omitted, it keeps its opacity fade. `PanelTransition` wraps children in React `ViewTransition` with `default="none"` and `enter`/`exit` classes (`vt-panel-in`, `vt-panel-out` by default). It needs a React build that exports `ViewTransition`, and the app supplies the `::view-transition-*` CSS.
+
+## App shell (0.5.0)
+
+A sidebar and main page layout, extracted from existing app markup. It is router-free: pass your own links (with `asChild`), state and media query result. Tooltips need a `TooltipProvider` above the shell.
+
+```tsx
+import {
+  AppShell, AppSidebar, SidebarRail, RailTile, RailDivider, SidebarPanel,
+  SidebarAccountMenu, DropdownMenuItem, railBadgeClass,
+} from "@vvedantb/ui";
+
+<AppShell
+  panelHidden={collapsed || !hasPanel}
+  sidebar={
+    <AppSidebar
+      isDesktop={isDesktop}
+      collapsed={collapsed}
+      panelHidden={!hasPanel}
+      mobileOpen={open}
+      onMobileOpenChange={setOpen}
+      mobileTitle={pageTitle}
+      rail={
+        <SidebarRail
+          showDivider={hasPanel && !(isDesktop && collapsed)}
+          top={<RailTile asChild label="Home" active={isHome}><Link to="/"><IconHome size={22} /></Link></RailTile>}
+          bodyClassName="scrollbar-thin"
+          footerClassName="border-t border-separator"
+          footer={<SidebarAccountMenu name={name} email={email} imageUrl={avatarUrl}><DropdownMenuItem>Settings</DropdownMenuItem></SidebarAccountMenu>}
+        >
+          <RailDivider />
+        </SidebarRail>
+      }
+      panel={<SidebarPanel title="Library" collapsed={collapsed} onClose={isDesktop ? undefined : () => setOpen(false)}>{nav}</SidebarPanel>}
+    />
+  }
+>
+  {page}
+</AppShell>
+```
+
+- Widths: `AppShell` sets `--app-shell-rail-width` (default `4rem`), `--app-shell-sidebar-width` (rail plus panel, default `20rem`) and `--app-shell-mobile-header-height` (default `calc(3.5rem + env(safe-area-inset-top, 0px))`) as inline style. Change them with `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. The other pieces read these variables. Outside `AppShell`, set the variables yourself or pass a width class with `className`.
+- `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
+- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app.
+- `SidebarRail`: `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. The top and footer wrappers render only when their slot is set.
+- `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `className`. Without `asChild` it is a ghost `Button`; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
+- `RailDivider`, `SidebarIconTooltip` (`label`, `enabled`, `side` `"right"`, `sideOffset` 8).
+- `SidebarPanel`: `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
+- `SidebarAccountMenu`: `name`, `email` (two-line label when set), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
+- `SignOutDialog`: `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
+- Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarSectionLabelClass`.
 
 ## Toaster
 
