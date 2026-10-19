@@ -385,7 +385,7 @@ function PanelWidth() {
 
 Shadcn-style building blocks. The prop-driven components above are thin compositions of them and render the same DOM.
 
-Convention: compound parts are static members of a namespace object, `<Namespace>.<Part>`. There are three namespaces: `ConfirmDialog.*`, `AppShell.*` and `Sidebar.*`. `ConfirmDialog` and `AppShell` stay callable with their legacy props. `Sidebar` is a plain object. Prop types are exported flat, for example `ConfirmDialogRootProps`, `AppShellMainProps` and `SidebarRailItemProps`. Every part that renders an element merges `className` last and forwards native props.
+Convention: compound parts are static members of a namespace object, `<Namespace>.<Part>`. There are four namespaces: `ConfirmDialog.*`, `AppShell.*`, `Sidebar.*` and (0.7.0) `EmptyState.*` (see [Spinner, empty state, tabs, badge and kbd](#spinner-empty-state-tabs-badge-and-kbd-070)). `ConfirmDialog` and `AppShell` stay callable with their legacy props. `Sidebar` is a plain object. Prop types are exported flat, for example `ConfirmDialogRootProps`, `AppShellMainProps` and `SidebarRailItemProps`. Every part that renders an element merges `className` last and forwards native props.
 
 ### `ConfirmDialog.*`
 
@@ -558,6 +558,65 @@ A full shell:
   </AppShell.Main>
 </AppShell.Root>
 ```
+
+## Spinner, empty state, tabs, badge and kbd (0.7.0)
+
+All of these are opt-in. Without the new props, components render as in 0.6.1.
+
+```tsx
+import {
+  Badge, Button, EmptyState, Kbd, Spinner, Tabs, TabsList, TabsTrigger,
+} from "@vvedantb/ui";
+
+<Button disabled={saving}>
+  {saving ? <Spinner size={14} tone="inherit" decorative className="mr-1.5" /> : null}
+  Save
+</Button>
+
+<EmptyState.Root className="h-full">
+  <EmptyState.Icon icon={IconFolder} />
+  <EmptyState.Description>No files yet.</EmptyState.Description>
+</EmptyState.Root>
+
+<EmptyState.Root variant="panel">
+  <EmptyState.Icon icon={IconLink} />
+  <EmptyState.Title>No linked items</EmptyState.Title>
+  <EmptyState.Description>Link one to see it here.</EmptyState.Description>
+  <EmptyState.Actions><Button size="sm">Link</Button></EmptyState.Actions>
+</EmptyState.Root>
+
+<Tabs value={active}>
+  <TabsList>
+    <TabsTrigger value="keys" asChild>
+      <Link to="/settings/keys">Keys</Link>
+    </TabsTrigger>
+  </TabsList>
+</Tabs>
+
+<Tabs value={feature} onValueChange={setFeature}>
+  <TabsList variant="soft" aria-label="Features">
+    <TabsTrigger value="notes"><IconNotes size={15} />Notes</TabsTrigger>
+  </TabsList>
+</Tabs>
+
+<Badge variant="destructive-soft">Revoked</Badge>
+<Kbd variant="subtle">Esc</Kbd>
+```
+
+- `Spinner` `size`: `"sm"`, `"md"` (default) and `"lg"` add a `size-*` class; a number is passed to the icon as its pixel size and adds no size class. `stroke` sets the stroke width. `tone`: `"muted"` (default) adds `text-muted-foreground`; `"inherit"` adds no colour class, so the spinner takes the current text colour. A colour class in `className` also replaces the muted default. `decorative` renders `aria-hidden="true"` with no `role="status"` or `aria-label`; use it where the parent already has a label, such as a busy button. Without it, `aria-label` in props replaces `"Loading"`.
+- `EmptyState.*`: composable "nothing here yet" block. Parts read the Root `variant`.
+
+| Part | Purpose |
+| --- | --- |
+| `Root` | `<div>`, centred column. `variant`: `"default"` (`px-4 py-20`, open) or `"panel"` (`rounded-lg bg-surface-secondary px-4 py-10`). |
+| `Icon` | `icon` component (for example a Tabler icon). `default`: the bare icon, `size` 40, `mb-3 text-muted-foreground`. `panel`: the icon (`size` 22, `stroke` 1.5, `text-muted-foreground`) in an `h-11 w-11 rounded-lg bg-surface-tertiary` tile. `size` and `stroke` override; `className` goes on the outer element (icon or tile). |
+| `Title` | `<p>`, `text-sm font-medium text-foreground`; `default` adds `mb-1`. `asChild` renders your element (for example an `h3`) instead. |
+| `Description` | `<p>`, `text-sm text-muted-foreground`; `panel` adds `mt-1 max-w-[240px]`. |
+| `Actions` | `<div>`, `mt-4`. |
+
+- `TabsList` `variant="soft"`: borderless pills that wrap and centre (`flex flex-wrap items-center justify-center gap-1.5`). Triggers inside it are `rounded-full px-4 py-2 text-sm`, muted until active, filled with `bg-surface-secondary` when active or hovered, and `relative overflow-hidden` so a child such as a progress bar can sit on the bottom edge. It uses no `t-tabs` CSS and has no focus ring of its own. `pills` and `segmented` are unchanged. Link tabs work with any variant: `TabsTrigger asChild` around the router link (Radix sets `role="tab"`, `data-state` and roving focus on it). The package does not depend on a router.
+- `Badge` `variant="destructive-soft"`: neutral border with a faint danger tint (`border-border bg-danger/10 text-danger`). Resolves to the same classes as a default badge with `className="bg-danger/10 text-danger"`. `variant="success"` already resolves to the same classes as a default badge with `className="border-success/25 bg-success/12 text-success"`.
+- `Kbd` `variant="subtle"`: a plain filled key for inline hints, `rounded bg-surface-secondary px-1.5 py-0.5 text-foreground`. No fixed height, font or size, so it follows the surrounding text.
 
 ## Toaster
 

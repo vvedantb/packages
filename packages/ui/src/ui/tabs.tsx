@@ -8,7 +8,11 @@ const Tabs = TabsPrimitive.Root;
 
 // `pills` (default): isolated rounded pills with a gap, no shared track.
 // `segmented`: connected bar with a sliding pill, kept for marketing surfaces.
-type TabsListVariant = "pills" | "segmented";
+// `soft`: borderless wrapping pills, the active one filled. Uses no `t-tabs`
+// CSS, so triggers can hold an absolutely placed child (e.g. a progress bar).
+type TabsListVariant = "pills" | "segmented" | "soft";
+
+const TabsListVariantContext = React.createContext<TabsListVariant>("pills");
 
 const TabsList = React.forwardRef<
   React.ComponentRef<typeof TabsPrimitive.List>,
@@ -82,21 +86,26 @@ const TabsList = React.forwardRef<
   }, [variant]);
 
   return (
-    <TabsPrimitive.List
-      ref={mergedRef}
-      className={cn(
-        "t-tabs max-sm:max-w-full max-sm:justify-center-safe max-sm:overflow-x-auto max-sm:scrollbar-none",
-        variant === "segmented" ? "t-tabs--segmented" : "t-tabs--pills",
-        className,
-      )}
-      data-variant={variant}
-      {...props}
-    >
-      {variant === "segmented" ? (
-        <span ref={pillRef} className="t-tabs-pill" aria-hidden="true" />
-      ) : null}
-      {children}
-    </TabsPrimitive.List>
+    <TabsListVariantContext value={variant}>
+      <TabsPrimitive.List
+        ref={mergedRef}
+        className={cn(
+          variant === "soft"
+            ? "flex flex-wrap items-center justify-center gap-1.5"
+            : "t-tabs max-sm:max-w-full max-sm:justify-center-safe max-sm:overflow-x-auto max-sm:scrollbar-none",
+          variant === "segmented" && "t-tabs--segmented",
+          variant === "pills" && "t-tabs--pills",
+          className,
+        )}
+        data-variant={variant}
+        {...props}
+      >
+        {variant === "segmented" ? (
+          <span ref={pillRef} className="t-tabs-pill" aria-hidden="true" />
+        ) : null}
+        {children}
+      </TabsPrimitive.List>
+    </TabsListVariantContext>
   );
 });
 TabsList.displayName = TabsPrimitive.List.displayName;
@@ -108,7 +117,9 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "t-tab inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      React.use(TabsListVariantContext) === "soft"
+        ? "relative flex items-center gap-2 overflow-hidden rounded-full px-4 py-2 text-sm text-muted-foreground transition-[transform,background-color] hover:bg-surface-secondary active:scale-[0.97] data-[state=active]:bg-surface-secondary data-[state=active]:text-foreground"
+        : "t-tab inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       className,
     )}
     {...props}

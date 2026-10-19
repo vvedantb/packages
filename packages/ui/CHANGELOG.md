@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+Additive. With the new props unset every existing component renders as in 0.6.1.
+
+- `Spinner`: numeric `size` (pixel size passed to the icon, no size class), `stroke`, `tone` (`"muted"` default, `"inherit"` drops the colour class so the spinner uses the current text colour) and `decorative` (`aria-hidden="true"`, no `role="status"` or `aria-label`).
+- `EmptyState.*` (new): `Root` (`variant` `"default"` or `"panel"`), `Icon`, `Title` (`asChild`), `Description` and `Actions`. `default` is an open block with a large bare icon; `panel` is a filled block with the icon in a tile.
+- `TabsList` `variant="soft"`: borderless wrapping pills with a filled active pill, no `t-tabs` CSS. `TabsTrigger` picks its classes from the list variant; with `pills` or `segmented` it is unchanged.
+- `Badge` `variant="destructive-soft"`: `border-border bg-danger/10 text-danger`.
+- `Kbd` `variant="subtle"`: `rounded bg-surface-secondary px-1.5 py-0.5 text-foreground`.
+
 ## 0.6.1
 
 Additive. With the new options unset every part renders as in 0.6.0.
