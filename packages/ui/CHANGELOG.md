@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.0
+
+Additive. Every existing component keeps its props and renders the same DOM as in 0.5.3 (checked by a DOM parity test against output captured from 0.5.3).
+
+- Composable parts, shadcn style. Each part is a static member of a namespace: `ConfirmDialog.*`, `AppShell.*` and `Sidebar.*`. `ConfirmDialog` and `AppShell` stay callable with their props. `Sidebar` is a new plain object. Prop types are exported flat (`ConfirmDialogRootProps`, `SidebarRailItemProps`, ...). Every part that renders an element merges `className` last and forwards native props.
+- `ConfirmDialog.Root` (`size`, `alert`, `pending`, `confirmPhrase`), `.Content`, `.Header`, `.Title`, `.Description`, `.Body`, `.Footer`, `.Cancel`, `.Action` (`pending`, `pendingLabel`, `spinnerSize`) and `.Field` (type-to-confirm), plus `useConfirmDialog()`. While `pending`, close requests are swallowed and Cancel is disabled. With `confirmPhrase`, Action stays disabled until the typed text matches (trimmed, case-insensitive); the text resets each time the dialog opens.
+- `AppShell.Root`, `.SkipLink`, `.Main` and `.Content`.
+- `Sidebar.Root` (drawer and layout state, no DOM), `.MobileHeader`, `.MobileMenuButton`, `.MobileTitle`, `.MobileActions`, `.Backdrop`, `.Aside`, `.ResizeHandle`, `.Rail`, `.RailHeader`, `.RailBody`, `.RailFooter` (alias `.Footer`), `.RailItem`, `.RailSeparator`, `.Tooltip`, `.Panel`, `.PanelHeader`, `.PanelTitle`, `.PanelActions`, `.PanelClose`, `.AccountMenu`, `.AccountTrigger`, `.AccountAvatar`, `.AccountContent`, `.AccountLabel`, `.AccountSeparator` and `.AccountBadge`.
+- `ConfirmDialog`, `SignOutDialog`, `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `RailDivider`, `SidebarPanel`, `SidebarHeader` and `SidebarAccountMenu` are now thin compositions of these parts. Output and behaviour are unchanged.
+- Variant-heavy props are marked "Legacy (still supported)" in the README and JSDoc. Nothing is removed.
+- `DialogContent` also counts a `*Dialog.Description` part (by display name) as the alert dialog description, so a composed alert dialog with `ConfirmDialog.Description` gets no generated fallback description.
+
 ## 0.5.3
 
 - `AppSidebar`: the mobile header uses a solid `bg-surface`, the content card's token, in place of `bg-background/80 backdrop-blur-md`, so it blends with the page instead of showing as a grey bar.

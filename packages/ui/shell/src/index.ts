@@ -11,9 +11,17 @@ export type {
   SessionsHoverCardSurface,
 } from "./SessionsHoverCard.js";
 export { AppShell } from "./AppShell.js";
-export type { AppShellProps } from "./AppShell.js";
+export type {
+  AppShellContentProps,
+  AppShellMainProps,
+  AppShellProps,
+  AppShellRootProps,
+  AppShellSkipLinkProps,
+} from "./AppShell.js";
 export { AppSidebar } from "./AppSidebar.js";
 export type { AppSidebarProps } from "./AppSidebar.js";
+// Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
+export * from "./Sidebar.js";
 export { SidebarRail, RailTile, RailDivider } from "./SidebarRail.js";
 export type { SidebarRailProps, RailTileProps, RailDividerProps } from "./SidebarRail.js";
 export { SidebarResizeHandle, useAppShellResize } from "./SidebarResize.js";

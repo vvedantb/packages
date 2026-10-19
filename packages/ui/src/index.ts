@@ -123,9 +123,17 @@ export type {
 // App shell: sidebar and main page layout. Widths come from the
 // `--app-shell-*` CSS variables that `AppShell` sets.
 export { AppShell } from "../shell/src/AppShell";
-export type { AppShellProps } from "../shell/src/AppShell";
+export type {
+  AppShellContentProps,
+  AppShellMainProps,
+  AppShellProps,
+  AppShellRootProps,
+  AppShellSkipLinkProps,
+} from "../shell/src/AppShell";
 export { AppSidebar } from "../shell/src/AppSidebar";
 export type { AppSidebarProps } from "../shell/src/AppSidebar";
+// Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
+export * from "../shell/src/Sidebar";
 export { SidebarRail, RailTile, RailDivider } from "../shell/src/SidebarRail";
 export type { SidebarRailProps, RailTileProps, RailDividerProps } from "../shell/src/SidebarRail";
 export { SidebarResizeHandle, useAppShellResize } from "../shell/src/SidebarResize";

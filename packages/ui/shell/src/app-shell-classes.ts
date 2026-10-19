@@ -33,6 +33,9 @@ export function sidebarNavRowClass(isIconOnly: boolean): string {
   return cn(isIconOnly ? "justify-center px-0 py-1.5" : "gap-3 px-3 py-1.5");
 }
 
+/** Sidebar header row: the panel title and its trailing actions. */
+export const sidebarHeaderRowClass = "flex h-11 items-center gap-1 pl-3 pr-1";
+
 export const mobileMenuButtonClass = "-ml-1 h-11 w-11 shrink-0 rounded-lg text-muted hover:bg-surface-tertiary/50 hover:text-foreground"; // check-tokens-allow: text-muted
 
 export const panelCloseButtonClass = "rounded-lg text-muted hover:bg-surface-tertiary/50 hover:text-foreground"; // check-tokens-allow: text-muted
@@ -42,3 +45,6 @@ export const accountEmailClass = "block truncate text-xs font-normal text-muted"
 export const signOutDescriptionClass = "mt-1 text-sm text-muted"; // check-tokens-allow: text-muted
 
 export const signOutCancelClass = "text-muted"; // check-tokens-allow: text-muted
+
+/** Label of the type-to-confirm field (`ConfirmDialog.Field`). */
+export const confirmFieldLabelClass = "text-sm text-muted"; // check-tokens-allow: text-muted
