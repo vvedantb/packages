@@ -29,6 +29,8 @@ export type AppSidebarProps = {
   className?: string;
   /** Centred in the mobile header when truthy. */
   mobileTitle?: ReactNode;
+  /** Trailing actions in the mobile header, for example icon buttons. Replaces the end spacer. */
+  mobileHeaderActions?: ReactNode;
   /** Menu button icon. Default a 20px menu icon. */
   mobileMenuIcon?: (open: boolean) => ReactNode;
   /** Default `"Open navigation menu"`. */
@@ -57,6 +59,7 @@ export function AppSidebar({
   asideProps,
   className,
   mobileTitle,
+  mobileHeaderActions,
   mobileMenuIcon = defaultMobileMenuIcon,
   mobileMenuLabel = "Open navigation menu",
   closeLabel = "Close navigation",
@@ -114,7 +117,13 @@ export function AppSidebar({
             {mobileTitle}
           </h1>
         ) : null}
-        <div className="ml-auto h-11 w-11 shrink-0" aria-hidden="true" />
+        {mobileHeaderActions ? (
+          <div data-app-sidebar-mobile-actions="" className="ml-auto flex shrink-0 items-center gap-2">
+            {mobileHeaderActions}
+          </div>
+        ) : (
+          <div className="ml-auto h-11 w-11 shrink-0" aria-hidden="true" />
+        )}
       </header>
 
       <AnimatePresence initial={false}>

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.2
+
+Additive. With the new props unset, every component renders as in 0.5.1.
+
+- `AppSidebar` `mobileHeaderActions`: trailing actions in the mobile header, for example icon buttons. When set, a `<div data-app-sidebar-mobile-actions>` (`ml-auto flex shrink-0 items-center gap-2`) holding them replaces the end spacer. The title stays centred.
+- `SidebarAccountMenu` `badge`: an unread dot over the trigger's top-right corner (`data-account-badge`, `aria-hidden`). When set, a `<div class="relative">` wraps the menu and the dot is its last child, a sibling of the trigger, so the trigger's `opacity-75` and press scale do not apply to it. `true` shows it. `false` keeps it mounted at `opacity-0` so it fades out. Omitted, there is no wrapper and no dot.
+- `SidebarAccountMenu` `triggerProps`: spread onto the trigger `Button` after the defaults, so they override `title`, `aria-label` and the rest. `className` merges after the default classes.
+- `SidebarAccountMenu` `contentProps`: spread onto `DropdownMenuContent` (for example `fitViewport`, `suppressAltKey`, `restoreScrollLockOnClose`, `aria-label`). `align`, `side`, `sideOffset` and `collisionPadding` still come from their own props, and `contentClassName` stays the class hook, so `contentProps` takes no `className`.
+- `ConfirmDialog` `size="md"`: a dismissible dialog with the title in a `DialogHeader` (`pb-4`), the description (`py-6 text-muted-foreground`) and a `DialogFooter` (`pt-4`) with default-size Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it. `"default"` and `"sm"` are unchanged.
+
 ## 0.5.1
 
 Additive. With the new props unset, every shell component renders as in 0.5.0.

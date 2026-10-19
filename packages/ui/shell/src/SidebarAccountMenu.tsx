@@ -30,6 +30,19 @@ export type SidebarAccountMenuProps = {
   collisionPadding?: ContentProps["collisionPadding"];
   /** Merged onto the menu content after `w-56`. */
   contentClassName?: string;
+  /**
+   * Unread dot over the trigger's top-right corner, a sibling of the trigger in
+   * a `relative` wrapper. `true` shows it, `false` keeps it mounted at zero
+   * opacity so it fades out. Omitted: no wrapper and no dot.
+   */
+  badge?: boolean;
+  /** Spread onto the trigger `Button` after the defaults (overrides `title`, `aria-label`, …). `className` merges last. */
+  triggerProps?: Omit<ComponentPropsWithoutRef<typeof Button>, "children" | "asChild">;
+  /** Spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`. Use `contentClassName` for classes. */
+  contentProps?: Omit<
+    ContentProps,
+    "children" | "className" | "align" | "side" | "sideOffset" | "collisionPadding"
+  >;
   /** Menu items after the label and separator. */
   children?: ReactNode;
 };
@@ -73,9 +86,12 @@ export function SidebarAccountMenu({
   sideOffset = 8,
   collisionPadding,
   contentClassName,
+  badge,
+  triggerProps,
+  contentProps,
   children,
 }: SidebarAccountMenuProps) {
-  return (
+  const menu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -83,12 +99,19 @@ export function SidebarAccountMenu({
           variant="ghost"
           title={name}
           aria-label={`Account menu for ${name}`}
-          className={cn(railTileClass, "h-11 w-11 p-0", railTileStateClass(false))}
+          {...triggerProps}
+          className={cn(
+            railTileClass,
+            "h-11 w-11 p-0",
+            railTileStateClass(false),
+            triggerProps?.className,
+          )}
         >
           <AccountAvatar src={imageUrl} name={name} className="h-7 w-7" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        {...contentProps}
         align={align}
         side={side}
         sideOffset={sideOffset}
@@ -110,6 +133,21 @@ export function SidebarAccountMenu({
         {children}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+  if (badge === undefined) return menu;
+  // Sibling of the trigger, so its opacity and press scale do not reach the dot.
+  return (
+    <div className="relative">
+      {menu}
+      <span
+        aria-hidden="true"
+        data-account-badge=""
+        className={cn(
+          "pointer-events-none absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-danger transition-opacity duration-150 ease-out",
+          badge ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
   );
 }
 
