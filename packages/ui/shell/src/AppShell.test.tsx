@@ -177,19 +177,21 @@ describe("RailTile", () => {
     expect(Array.from(link.children).map((c) => c.getAttribute("data-testid"))).toEqual(["icon", "badge"]);
   });
 
-  it("renders a ghost button tile without aria-current when inactive", async () => {
+  it("renders a native button tile without aria-current when inactive", async () => {
     const onClick = vi.fn();
     await mount(
       <RailTile label="Search" onClick={onClick}>
-        <svg />
+        <svg width="22" />
       </RailTile>,
     );
     const button = q("button");
     expect(button.getAttribute("type")).toBe("button");
     expect(button.getAttribute("aria-label")).toBe("Search");
     expect(button.hasAttribute("aria-current")).toBe(false);
-    expect(button.className).toContain("group h-11 w-11 p-0");
-    expect(button.className).toContain(railTileStateClass(false));
+    expect(button.className).toBe(cn(railTileClass, "group", railTileStateClass(false)));
+    expect(button.className).toContain("size-11");
+    expect(button.className).not.toContain("[&_svg:not([class*='size-'])]:size-4");
+    expect(button.querySelector("svg")?.getAttribute("width")).toBe("22");
     await act(async () => button.click());
     expect(onClick).toHaveBeenCalledTimes(1);
   });
@@ -276,6 +278,9 @@ describe("AppSidebar mobileHeaderActions", () => {
     expect(spacer?.getAttribute("aria-hidden")).toBe("true");
     expect(spacer?.children).toHaveLength(0);
     expect(header.querySelector("[data-app-sidebar-mobile-actions]")).toBeNull();
+    expect(header.classList.contains("bg-surface")).toBe(true);
+    expect(header.className).not.toContain("bg-background/80");
+    expect(header.className).not.toContain("backdrop-blur-md");
   });
 
   it("renders the actions at the end of the header in place of the spacer", async () => {
