@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, settings chrome, and tab bar.",
   "type": "module",
@@ -16,7 +16,8 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "./src/index.ts",
   "files": [
