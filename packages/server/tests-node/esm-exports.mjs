@@ -50,7 +50,7 @@ test(`plain Node ESM can import ${pkg.name}`, () => {
     "import-root",
     `const m = await import(${JSON.stringify(pkg.name)});\n` +
       // One export from each internal folder.
-      `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken"]) {\n` +
+      `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken", "createClerkUserAuth"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n`,
   );

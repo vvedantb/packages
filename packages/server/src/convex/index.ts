@@ -2,6 +2,20 @@ export { clerkAuthConfig, type ClerkAuthConfigEnv } from "./authConfig.js";
 export { extractBearerToken } from "./bearerToken.js";
 export { getClerkClient, type ClerkClientEnv } from "./clerk.js";
 export {
+  createClerkUserAuth,
+  type ClerkUserAuthConfig,
+  type ClerkUserDataModelLike,
+  type ClerkUserDbReader,
+  type ClerkUserIdentityLike,
+  type ClerkUserIndexRange,
+  type ClerkUserInsert,
+  type ClerkUserMutationCtx,
+  type ClerkUserQueryCtx,
+  type ClerkUserTableInfoLike,
+  type EnsureClerkUserOptions,
+  type EnsureClerkUserResult,
+} from "./clerkUserAuth.js";
+export {
   corsPreflight,
   jsonWithCors,
   mcpCorsHeaders,

@@ -1,0 +1,61 @@
+{
+  "name": "@vvedantb/convex-client",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Browser and React helpers for Convex from one root import: optimistic-update helpers, an in-memory optimistic store for tests, a Clerk-aware Convex provider, VITE env parsing and an ensure-user-on-sign-in hook.",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vvedantb/packages.git",
+    "directory": "packages/convex-client"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run && node --test tests-node/esm-exports.mjs",
+    "prepack": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@clerk/clerk-react": ">=5",
+    "convex": "^1.24.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "zod": "^3.25.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@clerk/clerk-react": "^5.61.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "convex": "^1.47.0",
+    "jsdom": "^26.1.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7",
+    "zod": "^4.6.6",
+    "zod3": "npm:zod@^3.25.76"
+  }
+}
