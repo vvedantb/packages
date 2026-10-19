@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/config",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
-  "description": "Shared tsconfig bases, oxlint base, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
+  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
   "type": "module",
   "publishConfig": {
     "access": "public"

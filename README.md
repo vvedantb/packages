@@ -9,7 +9,7 @@ Shared packages for vvedantb apps. Six public npm packages.
 | `@vvedantb/server` | `0.3.0` | Convex backend helpers from one root export (`.` only): query-limit errors, Clerk auth and token verification, Clerk-user lookups and `ensureUser`, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, and WebCrypto primitives. Compiled. |
 | `@vvedantb/convex-client` | `0.1.0` | Browser and React Convex helpers from one root export (`.` only): optimistic-update helpers, an in-memory optimistic store for tests, `ConvexClerkProvider`, `parseClientEnv` and `useEnsureUser`. Compiled. |
 | `@vvedantb/mcp-client` | `0.1.0` | Node-side MCP client OAuth for desktop apps from one root export (`.` only): an `OAuthClientProvider` over injected storage, a state schema built with your `z`, sign-in, refresh, best-effort revocation and a `127.0.0.1` loopback redirect server. Compiled. |
-| `@vvedantb/config` | `0.2.0` | Root JS export plus JSON tsconfig and oxlint bases, pinned tool versions, the `vvedantb-config sync` CLI and the `vvedantb-check-asar` packaged-app check. Compiled. |
+| `@vvedantb/config` | `0.3.0` | Root JS export plus JSON tsconfig and oxlint bases, Vite, Vitest, Babel and Metro presets, pinned tool versions, the `vvedantb-config sync` CLI and the `vvedantb-check-asar` packaged-app check. Compiled. |
 
 Moving from the earlier packages (`@vvedantb/tokens`, `shell`, `app-kit`, `convex-kit`, `mcp-kit`)? See [MIGRATION.md](MIGRATION.md).
 
