@@ -2,7 +2,7 @@
   "name": "@vvedantb/server",
   "version": "0.3.0",
   "license": "MIT",
-  "description": "Shared Convex backend helpers and MCP server scaffolding from one root import: query-limit errors, Clerk auth and token verification, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools and WebCrypto primitives.",
+  "description": "Shared Convex backend helpers, MCP server scaffolding and Node-side MCP client OAuth from one root import: query-limit errors, Clerk auth and token verification, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools, WebCrypto primitives, Convex optimistic-update helpers, and an MCP client OAuth provider with a loopback redirect server for desktop apps.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -24,6 +24,7 @@
     "docs/convex.md",
     "docs/crypto.md",
     "docs/mcp.md",
+    "docs/mcp-client.md",
     "docs/migration.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -32,16 +33,20 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run && node --test tests-node/esm-exports.mjs",
+    "test": "vitest run && node --test tests-node/esm-exports.mjs tests-node/bundle.test.mjs",
     "prepack": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
     "@clerk/backend": ">=1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "convex": "^1.24.0",
     "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "@clerk/backend": {
+      "optional": true
+    },
+    "@modelcontextprotocol/sdk": {
       "optional": true
     },
     "convex": {
@@ -52,6 +57,7 @@
     }
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@types/node": "^22.0.0",
     "convex": "^1.47.0",
     "typescript": "^5.9.0",
