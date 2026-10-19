@@ -33,7 +33,8 @@ function* walk(dir) {
 
 // Intentional compat classes that must match the original app markup: the
 // InputArea ghost text, the Button `flat` variant, the CommandDialog "auto"
-// list layout and the app shell classes use the bare `text-muted` (and the
+// list layout, the app shell classes and the landing kit, site footer and
+// pricing dialog classes use the bare `text-muted` (and the
 // shell rail badge uses `accent`). Allowed only in these files, and only on a
 // line that carries the rule's marker comment.
 const ALLOW_FILES = new Set([
@@ -41,6 +42,7 @@ const ALLOW_FILES = new Set([
   "src/ui/button.tsx",
   "src/ui/command.tsx",
   "shell/src/app-shell-classes.ts",
+  "src/marketing/marketing-classes.ts",
 ]);
 
 const hits = [];

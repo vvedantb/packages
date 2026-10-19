@@ -1,6 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpandFilled } from "@tabler/icons-react";
 import { cn } from "../../src/utils/cn";
 import { railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
@@ -198,4 +199,23 @@ export type RailDividerProps = { className?: string };
 /** Legacy name of `Sidebar.RailSeparator`. */
 export function RailDivider({ className }: RailDividerProps) {
   return <RailSeparator className={className} />;
+}
+
+export type RailCollapseTileProps = {
+  /** Panel is collapsed: shows the expand icon and "Show sidebar". */
+  collapsed: boolean;
+  onToggle: () => void;
+};
+
+/** Rail tile that shows or hides the sidebar panel. */
+export function RailCollapseTile({ collapsed, onToggle }: RailCollapseTileProps) {
+  return (
+    <RailItem label={collapsed ? "Show sidebar" : "Hide sidebar"} onClick={onToggle}>
+      {collapsed ? (
+        <IconLayoutSidebarLeftExpandFilled className="size-[22px]" />
+      ) : (
+        <IconLayoutSidebarLeftCollapse className="size-[22px]" />
+      )}
+    </RailItem>
+  );
 }

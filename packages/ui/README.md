@@ -4,12 +4,13 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. CSS. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
+| `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
 | `@vvedantb/ui/package.json` | Package metadata. |
 
 Removed in 0.4.0-rc.1: the `/cn`, `/sonner`, `/audio`, `/shell`, `/app`, `/composer` and `/tokens/native` subpaths. Import from `@vvedantb/ui`. See [`MIGRATION.md`](MIGRATION.md).
@@ -791,6 +792,93 @@ Rows (hover, active, selected, drop target) use `bg-sidebar-accent` instead of `
 | `compat-shadcn-rgb.css` `--color-sidebar-accent` | `rgb(var(--sidebar-accent, var(--secondary)))`: the app's `--sidebar-accent` channels if defined, else `--secondary` as before | same |
 
 Rail tiles keep `surface-tertiary`, so in dark mode the active rail tile is a step lighter than the active row. An app that imports `tokens.css` and defines its own `--sidebar-accent` overrides the fill; it must be a full colour value there (use `compat-shadcn-rgb.css` for `R G B` channels).
+
+## Landing kit, site footer and pricing dialog (0.9.0)
+
+Marketing pieces the apps copied between each other. Each one renders the same
+DOM and class strings as the app copies it replaces. Copy, links, logos, prices
+and auth buttons come from the app; the package imports no router, no Clerk and
+no Motion.
+
+Import the stylesheet once (from CSS or TypeScript):
+
+```css
+@import "@vvedantb/ui/landing.css";
+```
+
+The components live under `src/`, which the usual `@source` line already scans.
+
+### Landing kit
+
+`createLandingKit({ motion })` takes `motion` from `motion/react` and returns
+the animated parts. Call it once at module scope.
+
+```tsx
+import { motion } from "motion/react";
+import { createLandingKit } from "@vvedantb/ui";
+
+export const { LandingReveal, LandingRevealItem, LandingHero, LandingNav, LandingCta } =
+  createLandingKit({ motion });
+```
+
+| Part | Props |
+| --- | --- |
+| `LandingReveal` | `className`, `delay` (seconds, default `0`). Staggers its children in once, when 20% is in view. |
+| `LandingRevealItem` | `className`. One revealed child (`landingItemVariants`). |
+| `LandingHero` | `eyebrow`, `title`, `description` (nodes), `actions` (the button row; it renders even when empty), `capabilities` (strings). |
+| `LandingNav` | `brand`, `homeLabel` (home link `aria-label`), `links`, `github` (`href`, `label`, `icon`), `actions`, `menu`. |
+| `LandingCta` | `title`, `description`, `action`. |
+
+Plain parts, no Motion:
+
+| Part | Props |
+| --- | --- |
+| `LandingPageLayout` | `nav`, `heroBackdrop` (before the hero, inside the atmosphere block), `hero`, `children` (sections), `footer`. Root is `#top`. |
+| `LandingSection` | `id`, `className`. |
+| `LandingSectionHeading` | `eyebrow`, `heading`, `intro`, `className`. |
+| `LandingLattice` | `className` (grid columns). Cells share 1px borders. |
+| `LandingFeatureCard` | `icon` (a component, rendered `size={18} stroke={1.5}`), `title`, `description`. |
+| `LandingNavMenu` | `links`, `github` (`href`, `icon`). Overflow menu below `md`. |
+| `LandingFooter` | `brand`, `tagline`, `links`, `actions` (after the links), `github` (`href`, `label`, `icon`). |
+
+Constants: `landingShellClass`, `landingPanelClass`, `landingItemVariants`, and
+for the footer's `actions` slot `landingFooterLinkClass` (a text link) and
+`landingFooterButtonClass` (a `Button variant="link"`).
+
+### `SiteFooter`
+
+Brand, tagline and social icon buttons; link columns; then copyright and legal
+links under a separator.
+
+| Prop | |
+| --- | --- |
+| `brand`, `tagline` | Nodes. |
+| `socials` | `{ href, icon, label? }[]`. `icon` is a component that takes `className`. Links open in a new tab. |
+| `columns` | `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt } }`. |
+| `name`, `year` | "Copyright © {year} {name}". `year` defaults to the current year. |
+| `legalLinks` | `{ href, label }[]`, open in a new tab. |
+| `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |
+
+### `PricingModal`
+
+One-plan upgrade dialog. Props: `open`, `onClose`, `title` (accessible, hidden),
+`description` (hidden; when set the title is an `sr-only` `DialogTitle`,
+otherwise it sits in `VisuallyHidden`), `logo` (`dark` and `light` image URLs,
+shown in that colour mode), `wordmark`, `price`, `tagline`,
+`taglineFontClassName`, `features`, `ctaLabel` (default "Get Pro"),
+`renderCheckout(button)` (wrap the button in the billing provider's checkout),
+`closeButton` (an extra compact close button, default `false`) and `tone`
+(`"muted"` default or `"muted-foreground"`).
+
+### Account menu items and rail collapse tile
+
+`SidebarAccountMenu` takes three optional props. Without them it renders as before.
+
+- `themeToggle={{ isDark, onToggle }}`: a "Light mode" / "Dark mode" item after `children`.
+- `signOut={{ onSignOut, description? }}`: a separator and a danger "Sign out" item, last. It opens `SignOutDialog`; Alt-click skips the dialog and `ConfirmSkipHint` shows while Alt is held. The menu owns the dialog state. If `onSignOut` rejects, the dialog buttons enable again.
+- `itemIconSize`: `size` of those two items' icons. Default: the icon's own size.
+
+`RailCollapseTile({ collapsed, onToggle })`: the rail tile that shows or hides the sidebar panel ("Show sidebar" with the expand icon, or "Hide sidebar").
 
 ## Toaster
 

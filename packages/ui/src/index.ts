@@ -135,8 +135,13 @@ export { AppSidebar } from "../shell/src/AppSidebar";
 export type { AppSidebarProps } from "../shell/src/AppSidebar";
 // Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
 export * from "../shell/src/Sidebar";
-export { SidebarRail, RailTile, RailDivider } from "../shell/src/SidebarRail";
-export type { SidebarRailProps, RailTileProps, RailDividerProps } from "../shell/src/SidebarRail";
+export { SidebarRail, RailTile, RailDivider, RailCollapseTile } from "../shell/src/SidebarRail";
+export type {
+  SidebarRailProps,
+  RailTileProps,
+  RailDividerProps,
+  RailCollapseTileProps,
+} from "../shell/src/SidebarRail";
 export { SidebarResizeHandle, useAppShellResize } from "../shell/src/SidebarResize";
 export type {
   AppShellResize,
@@ -171,6 +176,51 @@ export {
   sidebarSectionLabelClass,
 } from "../shell/src/app-shell-classes";
 export type { SidebarNavItemClassOptions } from "../shell/src/app-shell-classes";
+
+// Marketing: landing kit, site footer and pricing dialog. Router- and Motion-free;
+// `createLandingKit` takes the app's `motion`. Styles: `@vvedantb/ui/landing.css`.
+export {
+  LandingFeatureCard,
+  LandingFooter,
+  LandingLattice,
+  LandingNavMenu,
+  LandingPageLayout,
+  LandingSection,
+  LandingSectionHeading,
+  landingItemVariants,
+} from "./marketing/landing";
+export type {
+  LandingFeature,
+  LandingFooterProps,
+  LandingLatticeProps,
+  LandingLink,
+  LandingNavMenuProps,
+  LandingPageLayoutProps,
+  LandingSectionHeadingProps,
+  LandingSectionProps,
+} from "./marketing/landing";
+export { createLandingKit } from "./marketing/createLandingKit";
+export type {
+  LandingCtaProps,
+  LandingHeroProps,
+  LandingKit,
+  LandingKitOptions,
+  LandingMotion,
+  LandingNavProps,
+  LandingRevealItemProps,
+  LandingRevealProps,
+} from "./marketing/createLandingKit";
+export {
+  landingFooterButtonClass,
+  landingFooterLinkClass,
+  landingPanelClass,
+  landingShellClass,
+} from "./marketing/marketing-classes";
+export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";
+export { SiteFooter } from "./marketing/SiteFooter";
+export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./marketing/SiteFooter";
+export { PricingModal } from "./marketing/PricingModal";
+export type { PricingModalProps } from "./marketing/PricingModal";
 
 // App helpers: confirm skip, update watcher, settings chrome, stable auth.
 export * from "../app/src/index";

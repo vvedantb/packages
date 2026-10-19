@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0
+
+Additive. Existing components render as in 0.8.0; `SidebarAccountMenu` without the new props is unchanged.
+
+- Landing kit, from two apps' copies. `createLandingKit({ motion })` returns `LandingReveal`, `LandingRevealItem`, `LandingHero`, `LandingNav` and `LandingCta` on the app's Motion; the package does not import Motion. Plain parts: `LandingPageLayout`, `LandingSection`, `LandingSectionHeading`, `LandingLattice`, `LandingFeatureCard`, `LandingNavMenu` and `LandingFooter`. Constants: `landingShellClass`, `landingPanelClass`, `landingItemVariants`, `landingFooterLinkClass` and `landingFooterButtonClass`. Copy, brand, links and auth buttons are props or slots.
+- New CSS subpath `@vvedantb/ui/landing.css`: the landing stylesheet the two apps shared (atmosphere, grain, pulse dot, ambient graph and preview animations, smooth `#top` scrolling, reduced-motion overrides). Listed in `sideEffects`.
+- `SiteFooter`: the marketing footer three apps copied. Variants `muted` (default), `muted-foreground` and `touch`.
+- `PricingModal`: the one-plan upgrade dialog two apps copied. Checkout goes through `renderCheckout(button)`. Options `description`, `closeButton`, `taglineFontClassName` and `tone` cover the differences between the copies.
+- `SidebarAccountMenu`: `themeToggle`, `signOut` and `itemIconSize`. They add the theme item, the sign-out item with Alt-click skip, and `SignOutDialog` with its state, as two apps wrote them by hand.
+- `RailCollapseTile`: the show or hide sidebar rail tile three apps copied.
+- The bare `text-muted` in these components is allowed by the token check in `src/marketing/marketing-classes.ts` only, where every class string lives.
+- Tests: parity suites render each app's current component (copies under `app/tests/marketing/fixtures`, app names replaced) beside the same screen built on the shared component, and expect identical markup. Menus and dialogs are mounted and opened. `app/tests-node/marketing-esm.test.mjs` imports the marketing modules in plain Node ESM without Motion or Clerk installed.
+
 ## 0.8.0
 
 Additive: behavioural helpers that apps duplicated. No existing export changes.
