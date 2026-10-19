@@ -43,3 +43,12 @@ export {
   type WebVitestConfig,
   type WebVitestOptions,
 } from "./vite.js";
+export {
+  defineExpoMetroConfig,
+  expoBabelConfig,
+  type BabelApi,
+  type ExpoBabelConfig,
+  type ExpoMetroOptions,
+  type MetroConfigLike,
+  type NativeWindMetroOptions,
+} from "./expo.js";
