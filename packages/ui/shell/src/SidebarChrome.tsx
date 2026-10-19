@@ -98,7 +98,7 @@ function MobileHeader({ className, onKeyDown, ...props }: SidebarMobileHeaderPro
         closeOnEscape(sidebar, event);
       }}
       className={cn(
-        "fixed inset-x-0 top-0 z-30 flex h-[var(--app-shell-mobile-header-height)] items-center gap-2 bg-background/80 px-3 pt-[env(safe-area-inset-top,0px)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] backdrop-blur-md md:hidden",
+        "fixed inset-x-0 top-0 z-30 flex h-[var(--app-shell-mobile-header-height)] items-center gap-2 bg-surface px-3 pt-[env(safe-area-inset-top,0px)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] md:hidden",
         className,
       )}
     />

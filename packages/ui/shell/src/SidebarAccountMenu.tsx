@@ -65,7 +65,7 @@ export function SidebarAccountMenu({
 }: SidebarAccountMenuProps) {
   return (
     <AccountMenu badge={badge}>
-      <AccountTrigger {...triggerProps} name={name} imageUrl={imageUrl} />
+      <AccountTrigger {...triggerProps} userName={name} imageUrl={imageUrl} />
       <AccountContent
         {...contentProps}
         align={align}
@@ -74,7 +74,7 @@ export function SidebarAccountMenu({
         collisionPadding={collisionPadding}
         className={contentClassName}
       >
-        <AccountLabel name={name} email={email} imageUrl={imageUrl} stacked={stackedLabel} />
+        <AccountLabel userName={name} email={email} imageUrl={imageUrl} stacked={stackedLabel} />
         <AccountSeparator />
         {children}
       </AccountContent>
@@ -126,15 +126,15 @@ export function AccountBadge({ visible = true, className, ...props }: SidebarAcc
 }
 
 export type SidebarAccountAvatarProps = {
-  name: string;
-  /** Without it the avatar shows up to two initials of `name`. */
+  userName: string;
+  /** Without it the avatar shows up to two initials of `userName`. */
   imageUrl?: string;
   /** Size classes, for example `h-7 w-7`. */
   className?: string;
 };
 
-/** Round avatar image, or up to two initials of `name`. */
-export function AccountAvatar({ imageUrl, name, className }: SidebarAccountAvatarProps) {
+/** Round avatar image, or up to two initials of `userName`. */
+export function AccountAvatar({ imageUrl, userName, className }: SidebarAccountAvatarProps) {
   if (imageUrl) {
     return (
       <img
@@ -144,7 +144,7 @@ export function AccountAvatar({ imageUrl, name, className }: SidebarAccountAvata
       />
     );
   }
-  const initials = name
+  const initials = userName
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -162,25 +162,25 @@ export function AccountAvatar({ imageUrl, name, className }: SidebarAccountAvata
   );
 }
 
-export type SidebarAccountTriggerProps = Omit<ButtonProps, "asChild" | "name"> & {
-  /** Default `title` and `aria-label`, and the avatar initials. */
-  name: string;
+export type SidebarAccountTriggerProps = Omit<ButtonProps, "asChild"> & {
+  /** Default `title` and `aria-label`, and the avatar initials. Native `name` goes to the button. */
+  userName: string;
   imageUrl?: string;
 };
 
 /** Rail-tile-sized avatar button that opens the menu. Children replace the avatar. */
-export function AccountTrigger({ name, imageUrl, className, children, ...props }: SidebarAccountTriggerProps) {
+export function AccountTrigger({ userName, imageUrl, className, children, ...props }: SidebarAccountTriggerProps) {
   return (
     <DropdownMenuTrigger asChild>
       <Button
         type="button"
         variant="ghost"
-        title={name}
-        aria-label={`Account menu for ${name}`}
+        title={userName}
+        aria-label={`Account menu for ${userName}`}
         {...props}
         className={cn(railTileClass, "h-11 w-11 p-0", railTileStateClass(false), className)}
       >
-        {children ?? <AccountAvatar imageUrl={imageUrl} name={name} className="h-7 w-7" />}
+        {children ?? <AccountAvatar imageUrl={imageUrl} userName={userName} className="h-7 w-7" />}
       </Button>
     </DropdownMenuTrigger>
   );
@@ -208,7 +208,7 @@ export function AccountContent({
 }
 
 export type SidebarAccountLabelProps = Omit<ComponentPropsWithoutRef<typeof DropdownMenuLabel>, "children"> & {
-  name: string;
+  userName: string;
   /** Shown under the name. */
   email?: string;
   imageUrl?: string;
@@ -217,20 +217,20 @@ export type SidebarAccountLabelProps = Omit<ComponentPropsWithoutRef<typeof Drop
 };
 
 /** Identity label: small avatar, name and optional email. Follow it with `AccountSeparator`. */
-export function AccountLabel({ name, email, imageUrl, stacked = false, className, ...props }: SidebarAccountLabelProps) {
+export function AccountLabel({ userName, email, imageUrl, stacked = false, className, ...props }: SidebarAccountLabelProps) {
   return (
     <DropdownMenuLabel
       {...props}
       className={cn("flex items-center gap-2 font-normal normal-case tracking-normal", className)}
     >
-      <AccountAvatar imageUrl={imageUrl} name={name} className="h-6 w-6 shrink-0" />
+      <AccountAvatar imageUrl={imageUrl} userName={userName} className="h-6 w-6 shrink-0" />
       {stacked || email ? (
         <span className="min-w-0">
-          <span className="block truncate text-sm font-medium text-foreground">{name}</span>
+          <span className="block truncate text-sm font-medium text-foreground">{userName}</span>
           {email ? <span className={accountEmailClass}>{email}</span> : null}
         </span>
       ) : (
-        <span className="truncate text-sm font-medium text-foreground">{name}</span>
+        <span className="truncate text-sm font-medium text-foreground">{userName}</span>
       )}
     </DropdownMenuLabel>
   );

@@ -469,6 +469,29 @@ describe("SidebarAccountMenu opt-in props", () => {
     expect(trigger.className.endsWith(" mt-1")).toBe(true);
   });
 
+  it("forwards triggerProps.name to the trigger's native name, otherwise matching the trigger without it", async () => {
+    // Attributes sorted and the generated Radix id dropped, so only order and ids are ignored.
+    const snapshot = (el: Element) => ({
+      tag: el.tagName,
+      attributes: Array.from(el.attributes, (a) => `${a.name}=${a.value}`)
+        .filter((attr) => !attr.startsWith("id="))
+        .sort(),
+      html: el.innerHTML,
+    });
+    await mount(<SidebarAccountMenu name="Test User" />);
+    const reference = q("button");
+    reference.setAttribute("name", "account-trigger");
+    const expected = snapshot(reference);
+    await act(async () => root?.unmount());
+    host?.remove();
+    await mount(<SidebarAccountMenu name="Test User" triggerProps={{ name: "account-trigger" }} />);
+    const trigger = q("button");
+    expect(trigger.getAttribute("name")).toBe("account-trigger");
+    expect(trigger.getAttribute("title")).toBe("Test User");
+    expect(trigger.getAttribute("aria-label")).toBe("Account menu for Test User");
+    expect(snapshot(trigger)).toEqual(expected);
+  });
+
   it("spreads contentProps onto the menu content", async () => {
     await mount(
       <SidebarAccountMenu

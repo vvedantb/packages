@@ -435,10 +435,10 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | `PanelTitle` / `PanelActions` | The `<h2>` and the trailing actions. |
 | `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. |
 | `AccountMenu` | Dropdown root. `badge` adds the unread dot (`AccountBadge`) in a `relative` wrapper. |
-| `AccountTrigger` | Rail-tile-sized avatar button. `name`, `imageUrl`, plus `Button` props. |
-| `AccountAvatar` | Avatar image or initials. |
+| `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props; native `name` goes to the button. |
+| `AccountAvatar` | Avatar image or initials. `userName`, `imageUrl`. |
 | `AccountContent` | Menu content. Defaults `align="center"`, `side="right"`, `sideOffset={8}`, `w-56`. |
-| `AccountLabel` | Identity label: avatar, `name`, optional `email`, `stacked`. |
+| `AccountLabel` | Identity label: avatar, `userName`, optional `email`, `stacked`. |
 | `AccountSeparator` | Separator after the label. Kept separate so the label can stand alone. |
 | `AccountBadge` | Unread dot. `visible` (default `true`; `false` fades it out). |
 
@@ -513,9 +513,9 @@ A full shell:
         </Sidebar.RailBody>
         <Sidebar.RailFooter>
           <Sidebar.AccountMenu>
-            <Sidebar.AccountTrigger name={name} imageUrl={avatarUrl} />
+            <Sidebar.AccountTrigger userName={name} imageUrl={avatarUrl} />
             <Sidebar.AccountContent>
-              <Sidebar.AccountLabel name={name} email={email} imageUrl={avatarUrl} />
+              <Sidebar.AccountLabel userName={name} email={email} imageUrl={avatarUrl} />
               <Sidebar.AccountSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
             </Sidebar.AccountContent>
