@@ -2,7 +2,7 @@
 
 ## 0.6.0
 
-Additive. Every existing component keeps its props and renders the same DOM as in 0.5.3 (checked by a DOM parity test against output captured from 0.5.3).
+Additive. Every existing component keeps its props and renders the same DOM as in 0.5.4 (checked by a DOM parity test against output captured from 0.5.4).
 
 - Composable parts, shadcn style. Each part is a static member of a namespace: `ConfirmDialog.*`, `AppShell.*` and `Sidebar.*`. `ConfirmDialog` and `AppShell` stay callable with their props. `Sidebar` is a new plain object. Prop types are exported flat (`ConfirmDialogRootProps`, `SidebarRailItemProps`, ...). Every part that renders an element merges `className` last and forwards native props.
 - `ConfirmDialog.Root` (`size`, `alert`, `pending`, `confirmPhrase`), `.Content`, `.Header`, `.Title`, `.Description`, `.Body`, `.Footer`, `.Cancel`, `.Action` (`pending`, `pendingLabel`, `spinnerSize`) and `.Field` (type-to-confirm), plus `useConfirmDialog()`. While `pending`, close requests are swallowed and Cancel is disabled. With `confirmPhrase`, Action stays disabled until the typed text matches (trimmed, case-insensitive); the text resets each time the dialog opens.
