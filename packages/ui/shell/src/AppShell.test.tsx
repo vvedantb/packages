@@ -268,7 +268,7 @@ describe("AppSidebar", () => {
 
 describe("AppSidebar mobileHeaderActions", () => {
   const base = { rail: <div />, isDesktop: false, mobileOpen: false, onMobileOpenChange: () => {} };
-  const SPACER = "ml-auto h-11 w-11 shrink-0";
+  const SPACER = "h-11 w-11 shrink-0 justify-self-end";
 
   it("keeps the end spacer by default", async () => {
     await mount(<AppSidebar {...base} mobileTitle="Title" />);
@@ -299,11 +299,51 @@ describe("AppSidebar mobileHeaderActions", () => {
     const header = q("header");
     const actions = q("[data-app-sidebar-mobile-actions]", header);
     expect(header.lastElementChild).toBe(actions);
-    expect(actions.className).toBe("ml-auto flex shrink-0 items-center gap-2");
+    expect(actions.className).toBe("flex shrink-0 items-center justify-self-end gap-2");
     expect(actions.hasAttribute("aria-hidden")).toBe(false);
     expect(Array.from(actions.children).map((c) => c.getAttribute("data-testid"))).toEqual(["a", "b"]);
     expect(header.querySelector(`[class="${SPACER}"]`)).toBeNull();
     expect(q("h1", header).textContent).toBe("Title");
+  });
+
+  it("lays the header out as three columns so the title truncates beside the actions", async () => {
+    await mount(
+      <AppSidebar
+        {...base}
+        mobileTitle="A long title that must not overlap the actions"
+        mobileHeaderActions={
+          <>
+            <button type="button" data-testid="a" />
+            <button type="button" data-testid="b" />
+          </>
+        }
+      />,
+    );
+    const header = q("header");
+    for (const cls of [
+      "grid",
+      "grid-cols-[minmax(max-content,1fr)_minmax(0,auto)_minmax(max-content,1fr)]",
+      "items-center",
+      "md:hidden",
+    ]) {
+      expect(header.classList.contains(cls)).toBe(true);
+    }
+    expect(header.classList.contains("flex")).toBe(false);
+    expect(header.children).toHaveLength(3);
+    const title = q("h1", header);
+    expect(header.children[1]).toBe(title);
+    expect(title.classList.contains("truncate")).toBe(true);
+    expect(title.classList.contains("min-w-0")).toBe(true);
+    expect(title.classList.contains("absolute")).toBe(false);
+    expect(title.classList.contains("text-balance")).toBe(false);
+    expect(q("header > button").classList.contains("justify-self-start")).toBe(true);
+  });
+
+  it("keeps three columns without a title", async () => {
+    await mount(<AppSidebar {...base} />);
+    const header = q("header");
+    expect(header.children).toHaveLength(3);
+    expect(header.querySelector("h1")).toBeNull();
   });
 });
 

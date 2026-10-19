@@ -69,7 +69,7 @@ import { InputArea, InputBanners, buildComposerSlashItems } from "@vvedantb/ui";
 
 | Prop | Default | Notes |
 | --- | --- | --- |
-| `value`, `onChange`, `defaultValue` | uncontrolled, `""` | `onSubmit` clears the draft through `onChange("")` first. Restore it yourself if sending fails. |
+| `value`, `onChange`, `defaultValue` | uncontrolled, `""` | `onSubmit` clears the draft through `onChange("")` first. Restore it yourself if sending fails. A value of `"\n"` shows as an empty editor with the placeholder, and the editor never reports a trailing line holder newline (0.5.4). |
 | `onSubmit(text)` | none | Trimmed text. Not called while `isSending`, or when send is disabled. |
 | `onStop`, `isStreaming`, `isSending`, `isUploading` | off | While streaming, stop shows next to send, and send queues. Sending or uploading shows a spinner and disables send. |
 | `canSubmit` | text, or `fileCount` or `chipCount` above 0 | Overrides when send is enabled. |
@@ -250,7 +250,7 @@ import {
 - `SelectField`: a labelled single select built from `Select`. Children are `SelectItem`s. An empty `value` shows the placeholder. `id` goes to the trigger and the label points at it. `className` merges onto the trigger.
 - Motion: `springTransition`, `springFastTransition` and `fadeUpSpring` presets. `FadePresence` takes optional `variants` (`hidden`, `show`, `exit`); omitted, it keeps its opacity fade. `PanelTransition` wraps children in React `ViewTransition` with `default="none"` and `enter`/`exit` classes (`vt-panel-in`, `vt-panel-out` by default). It needs a React build that exports `ViewTransition`, and the app supplies the `::view-transition-*` CSS.
 
-## App shell (0.5.0 to 0.5.3)
+## App shell (0.5.0 to 0.5.4)
 
 A sidebar and main page layout, extracted from existing app markup. It is router-free: pass your own links (with `asChild`), state and media query result. Tooltips need a `TooltipProvider` above the shell.
 
@@ -291,7 +291,7 @@ import {
 
 - Widths: `AppShell` sets `--app-shell-rail-width` (default `4rem`), `--app-shell-sidebar-width` (rail plus panel, default `20rem`) and `--app-shell-mobile-header-height` (default `calc(3.5rem + env(safe-area-inset-top, 0px))`) as inline style. Change them with `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. The other pieces read these variables. Outside `AppShell`, set the variables yourself or pass a width class with `className`.
 - `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
-- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app.
+- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app. The mobile header is a three-column grid, so the title and trailing actions stay on one row and a long title truncates (0.5.4).
 - `SidebarRail`: `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
 - `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `className`. Without `asChild` it is a native `<button type="button">` (0.5.3), so icons keep their authored size; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
 - `RailDivider`, `SidebarIconTooltip` (`label`, `enabled`, `side` `"right"`, `sideOffset` 8).

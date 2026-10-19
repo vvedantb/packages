@@ -4,7 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InputArea, type InputAreaProps } from "./InputArea";
-import { normaliseSelection, placeCaretAtEnd } from "./InputAreaEditor";
+import { extractEditorText, normaliseSelection, placeCaretAtEnd } from "./InputAreaEditor";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -378,6 +378,96 @@ describe("InputArea", () => {
         remove.click();
       });
       expect(onRemove).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("trailing newline", () => {
+    const editorWith = (text: string) => {
+      const el = document.createElement("div");
+      el.textContent = text;
+      return el;
+    };
+
+    it.each([
+      ["\u200bhi\n\n", "hi\n"],
+      ["\u200b\n", ""],
+      ["\u200b\n\n", "\n"],
+      ["\u200bhello\nworld", "hello\nworld"],
+      ["\u200bhello", "hello"],
+    ])("extractEditorText reads %j as %j", (text, expected) => {
+      expect(extractEditorText(editorWith(text))).toBe(expected);
+    });
+
+    it("drops only one line holder when the editor ends with a <br>", () => {
+      const el = editorWith("\u200bhi");
+      el.append(document.createElement("br"), document.createElement("br"));
+      expect(extractEditorText(el)).toBe("hi\n");
+    });
+
+    it("shows a value of \"\\n\" as an empty editor with the placeholder", async () => {
+      await mount({ value: "\n", placeholder: "Ask" });
+      expect(editor().hasAttribute("data-empty")).toBe(true);
+      expect(editor().getAttribute("data-placeholder")).toBe("Ask");
+      expect(editor().textContent).toBe("\u200b");
+      expect(submit().disabled).toBe(true);
+    });
+
+    it("replaces a stored \"\\n\" with the first typed character and opens the slash menu", async () => {
+      const onChange = vi.fn();
+      await mount({
+        defaultValue: "\n",
+        onChange,
+        slashItems: [
+          {
+            id: "action:attach",
+            label: "attach",
+            group: "Actions",
+            kind: "action",
+            action: "attach",
+            icon: "paperclip",
+            keywords: [],
+          },
+        ],
+      });
+      await type("/");
+      expect(onChange).toHaveBeenLastCalledWith("/");
+      expect(editor().getAttribute("aria-expanded")).toBe("true");
+      expect(editor().hasAttribute("data-empty")).toBe(false);
+    });
+
+    it("normalises a stray line holder left after deleting to empty", async () => {
+      const onChange = vi.fn();
+      await mount({ onChange });
+      await type("hi");
+      // Chromium after "hi", Shift+Enter, Backspace x3: anchor plus "\n".
+      await act(async () => {
+        const el = editor();
+        const chips = el.querySelector("[data-composer-chips-inline]");
+        el.replaceChildren(...(chips ? [chips] : []), document.createTextNode("\u200b\n"));
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      expect(onChange).toHaveBeenLastCalledWith("");
+      expect(editor().textContent).toBe("\u200b");
+      expect(editor().hasAttribute("data-empty")).toBe(true);
+    });
+
+    it("writes a line holder for a trailing newline so the value round-trips", async () => {
+      const onChange = vi.fn();
+      await mount({ defaultValue: "hi\n", onChange });
+      const text = editor().textContent ?? "";
+      expect(text).toBe("\u200bhi\n\n");
+      expect(extractEditorText(editor())).toBe("hi\n");
+      expect(editor().hasAttribute("data-empty")).toBe(false);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it("puts the end caret before the line holder", async () => {
+      await mount({ defaultValue: "hi\n" });
+      editor().focus();
+      placeCaretAtEnd(editor());
+      const sel = window.getSelection()!;
+      expect(sel.anchorNode).toBe(editor().lastChild);
+      expect(sel.anchorOffset).toBe("\u200bhi\n".length);
     });
   });
 
