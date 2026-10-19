@@ -59,7 +59,7 @@ Because everything is one entry, a tool that resolves every import in the barrel
 
 Source: a scan of shallow clones of public repositories. Not dated. Not re-run against current `main`. Change `from "@vvedantb/ui/<subpath>"` to `from "@vvedantb/ui"` in each file.
 
-**vvedantb/vmem**
+**One public consuming app**
 
 - `apps/web/src/providers/ConvexClientProvider.tsx`
 - `apps/web/src/providers/EnsureUser.tsx`
@@ -100,11 +100,11 @@ Source: a scan of shallow clones of public repositories. Not dated. Not re-run a
 - `apps/web/src/routes/_main/settings/api/-components/KeysPanel.tsx`
 - `apps/web/src/routes/_main/settings/data-controls/-components/DangerZonePanel.tsx`
 - `apps/web/src/routes/_main/settings/data-controls/export.tsx`
-- `oxlint-plugin-vmem/test/rules.test.mjs` (`/cn`)
-- `oxlint-plugin-vmem/rules/no-deep-package-imports.mjs` (a comment mentions `/cn`)
+- the app's oxlint plugin folder: `test/rules.test.mjs` (`/cn`)
+- the app's oxlint plugin folder: `rules/no-deep-package-imports.mjs` (a comment mentions `/cn`)
 
 `apps/web/src/globals.css` has `@source` lines into `shell/src` and `app/src`. These are filesystem globs, not export-map imports. They keep working while `files` includes those directories. CSS `@import "@vvedantb/ui/tokens..."` is unchanged.
 
-**vvedantb/bee** and **vvedantb/eva**: no JS subpath imports found (root and tokens only).
+**Two other public consuming repositories**: no JS subpath imports found (root and tokens only).
 
-**vvedantb/vibot**, **verve**, **velth** and **vhub**: not publicly cloneable and not found through `gh` for this scan. Not checked. Search each for `@vvedantb/ui/(cn|sonner|audio|shell|app|composer|tokens/native)`.
+**Four private consuming apps**: not publicly cloneable and not found through `gh` for this scan. Not checked. Search each for `@vvedantb/ui/(cn|sonner|audio|shell|app|composer|tokens/native)`.
