@@ -126,23 +126,23 @@ Install `@vvedantb/server` once and import everything from the root. `0.1.x` use
 
 ## Removed aliases
 
-The 13 deprecated aliases are deleted, along with `packages/ui/src/deprecated.ts`. Use the `Alt` names. They were already exported.
+The 13 deprecated aliases are deleted, along with `packages/ui/src/deprecated.ts`. Each was the `Alt` name with an app name in place of `Alt` (written `<App>` below). Use the `Alt` names. They were already exported.
 
 | Removed | Use |
 | --- | --- |
-| `AccordionVerve` | `AccordionAlt` |
-| `AccordionItemVerve` | `AccordionItemAlt` |
-| `AccordionTriggerVerve` | `AccordionTriggerAlt` |
-| `AccordionContentVerve` | `AccordionContentAlt` |
-| `ClearInputVibot` | `ClearInputAlt` |
-| `InputGroupVerve` | `InputGroupAlt` |
-| `InputGroupAddonVerve` | `InputGroupAddonAlt` |
-| `InputGroupButtonVerve` | `InputGroupButtonAlt` |
-| `InputGroupTextVerve` | `InputGroupTextAlt` |
-| `InputGroupInputVerve` | `InputGroupInputAlt` |
-| `InputGroupTextareaVerve` | `InputGroupTextareaAlt` |
-| `ScrollAreaVerve` | `ScrollAreaAlt` |
-| `ScrollBarVerve` | `ScrollBarAlt` |
+| `Accordion<App>` | `AccordionAlt` |
+| `AccordionItem<App>` | `AccordionItemAlt` |
+| `AccordionTrigger<App>` | `AccordionTriggerAlt` |
+| `AccordionContent<App>` | `AccordionContentAlt` |
+| `ClearInput<App>` | `ClearInputAlt` |
+| `InputGroup<App>` | `InputGroupAlt` |
+| `InputGroupAddon<App>` | `InputGroupAddonAlt` |
+| `InputGroupButton<App>` | `InputGroupButtonAlt` |
+| `InputGroupText<App>` | `InputGroupTextAlt` |
+| `InputGroupInput<App>` | `InputGroupInputAlt` |
+| `InputGroupTextarea<App>` | `InputGroupTextareaAlt` |
+| `ScrollArea<App>` | `ScrollAreaAlt` |
+| `ScrollBar<App>` | `ScrollBarAlt` |
 
 ## Other changes
 
