@@ -1,5 +1,9 @@
 # Changelog
 
+## Moved
+
+- No further releases. The exports moved, with the same names and behaviour: `ConvexClerkProvider`, `parseClientEnv`, `VITE_ENV_NAMES`, `useEnsureUser` and their types to `@vvedantb/ui` 0.10.0; `mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId` and `createMemoryOptimisticStore` to `@vvedantb/server` 0.4.0. 0.1.0 stays on npm, to be marked deprecated there.
+
 ## 0.1.0
 
 - First release, one root export:
