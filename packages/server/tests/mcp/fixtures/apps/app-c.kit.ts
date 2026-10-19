@@ -1,4 +1,4 @@
-// app-c's native.ts rebuilt on @vvedantb/server/mcp. In the app, wrap each export
+// app-c's native.ts rebuilt on @vvedantb/server. In the app, wrap each export
 // in httpAction(...) and call ctx.runAction(internal.mcp.nodeActions.*).
 import {
   consoleMcpLogger,

@@ -10,7 +10,7 @@ import {
   mcpCors,
   readEnvUrl,
   type EnvUrl,
-} from "@vvedantb/server/mcp";
+} from "@vvedantb/server";
 
 const cors = mcpCors({
   "Access-Control-Allow-Headers":

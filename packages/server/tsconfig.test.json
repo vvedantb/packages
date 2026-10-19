@@ -10,11 +10,8 @@
       "DOM.Iterable"
     ],
     "paths": {
-      "@vvedantb/server/convex": [
-        "./src/convex/index.ts"
-      ],
-      "@vvedantb/server/mcp": [
-        "./src/mcp/index.ts"
+      "@vvedantb/server": [
+        "./src/index.ts"
       ]
     }
   },

@@ -1,4 +1,4 @@
-// app-d's native.ts rebuilt on @vvedantb/server/mcp (legacyRefreshToken stays in
+// app-d's native.ts rebuilt on @vvedantb/server (legacyRefreshToken stays in
 // the app). In the app, wrap each export in httpAction(...) and call
 // ctx.runAction(internal.mcp.nodeActions.*).
 import {

@@ -7,7 +7,7 @@ import {
   createMcpHttpHandler,
   createProtectedResourceMetadata,
   type EnvUrl,
-} from "@vvedantb/server/mcp";
+} from "@vvedantb/server";
 
 const clerk: EnvUrl = {
   name: "CLERK_FRONTEND_API_URL",

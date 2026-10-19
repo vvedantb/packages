@@ -5,7 +5,7 @@ export type ClerkAuthConfigEnv = { CLERK_FRONTEND_API_URL?: string | undefined }
  * `CLERK_FRONTEND_API_URL`; the application ID is always `"convex"`.
  *
  * ```ts
- * import { clerkAuthConfig } from "@vvedantb/server/convex";
+ * import { clerkAuthConfig } from "@vvedantb/server";
  * export default clerkAuthConfig();
  * ```
  */

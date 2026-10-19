@@ -1,7 +1,7 @@
 // Reference port of app-c packages/backend/convex/mcp/native.ts (origin/main,
 // read 2026-10-12). Code is verbatim except: `httpAction(...)` is dropped and
 // `ctx.runAction(internal.mcp.nodeActions.X, args)` is `ctx.deps.X(args)`.
-import { extractBearerToken, requiredEnvUrl } from "@vvedantb/server/convex";
+import { extractBearerToken, requiredEnvUrl } from "@vvedantb/server";
 import type { AppCtx } from "./types.js";
 
 export type AppCCredentials = { clerkUserId: string };

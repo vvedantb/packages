@@ -1,4 +1,4 @@
-# Migrating the apps to `@vvedantb/server/mcp`
+# Migrating the apps to the MCP kit in `@vvedantb/server`
 
 Read-only sources: `/workspace/cvx/<app>/packages/backend` at origin/main on 12 October 2026 (app-a `8c972b1a`, app-b `f7b61259`, app-c `4d0ab45`, app-d `3bdce79`, app-e `7077eaf`). All paths below are relative to `packages/backend` in each app.
 
@@ -10,10 +10,32 @@ There are two phases per app. Ship them as separate PRs.
 Add the dependency in each app's `packages/backend/package.json` (after `@vvedantb/server` is published):
 
 ```json
-"@vvedantb/server": "^0.1.0"
+"@vvedantb/server": "^0.2.0"
 ```
 
-`http.ts` route tables do not change in any app: the exported names stay the same.
+`http.ts` route tables do not change in phase 1 or 2: the exported names stay the same. From 0.2.0, `registerMcpRoutes` can replace the MCP route block (see below).
+
+## Upgrading to 0.2.0
+
+0.2.0 removes the `@vvedantb/server/convex` and `@vvedantb/server/mcp` subpaths. Everything is exported from the package root.
+
+1. Bump the dependency to `"@vvedantb/server": "^0.2.0"`.
+2. Replace both subpath imports with the root, for example `grep -rl "@vvedantb/server/" convex tests | xargs sed -i -E 's#@vvedantb/server/(convex|mcp)"#@vvedantb/server"#'`. Merge duplicate import statements from the same file if your linter asks. No export was renamed.
+3. Optional, behaviour-preserving adoption of the new helpers. Each item can ship on its own:
+
+| App | Helper | Replaces | Notes |
+| --- | --- | --- | --- |
+| all but app-e | `verifyClerkAccessToken` | the Clerk core of `verifyAccessToken` in `convex/mcp/nodeActions.ts` | Options per app in [convex.md](convex.md#how-each-app-maps-onto-the-options). Pass a client factory so missing env stays inside the `try`. |
+| app-e | `verifyClerkAccessToken` | the loop body of `verifyClerkBearer` in `convex/mcp/clerkAuth.ts` | No options (silent). Keep the loop and its own `getClerkClient(clerkApp)`. |
+| all | `registerMcpRoutes` | the MCP `http.route` calls in `convex/http.ts` | Configs in [mcp.md](mcp.md#route-registration). Keep the other routes. |
+| app-c, app-d | `jsonResponse`, `createOriginAllowlistCors` | the local `jsonResponse`, `getCorsHeaders`, `getPreflightHeaders` in `convex/http.ts` | `const cors = createOriginAllowlistCors(ALLOWED_ORIGINS)`; `cors.headers(origin)`, `cors.preflightHeaders(origin)`. |
+| app-c | `timingSafeEqual` | the local copy in `convex/http.ts` | Same semantics. |
+| app-b | `timingSafeEqual`, `sha256Hex`, `randomToken`, `bytesToBase64Url`, `bytesToHex` | the local helpers in `convex/routines/triggerEvents.ts` | `generateTriggerSecret = () => randomToken(32, "base64url")`; `generateEventBoundary = () => randomToken(12, "hex")`. `githubSignature` keeps its HMAC call and uses `bytesToHex`. |
+| app-b | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes`, `hexToBytes` | the body of `convex/vhubCredentials/seal.ts` | Keep `secretBytes` (env name, trim, hex-or-raw rule) and the `{ ciphertext, nonce }` shape. |
+| app-a | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes(v, { strict: true })`, `bytesToBase64Url(b, { padding: true })`, `sha256Hex`, `randomToken` | `convex/lib/crypto.ts`, `convex/lib/base64.ts`, `generateApiKey`/`hashApiKey` in `convex/apiKeys.ts` | `strict` and `padding` keep `@scure/base` behaviour; then `@scure/base` can go if nothing else uses it. Keep the `v1:` format and `ENCRYPTION_KEY`. |
+| app-e | `aesGcmEncrypt`, `aesGcmDecrypt`, `bytesToBase64`, `base64ToBytes`, `randomBytes`, `randomToken`, `sha256Hex` | the WebCrypto calls and encoders in `convex/crypto.ts` | Keep `enc:`/`enc2:`, the AAD label functions, key versions, `masterKeyBytes` checks and `WrappedDek`. |
+
+Each mapping is proven in tests: `tests/convex/verifyClerkAccessToken.test.ts`, `tests/mcp/routes.test.ts`, `tests/convex/httpHelpers.test.ts` and `tests/crypto/appFormats.test.ts`. The differences between the app copies are listed in [convex.md](convex.md#differences-between-the-five-copies) and [crypto.md](crypto.md#differences-between-the-app-copies).
 
 ## app-a
 
@@ -93,7 +115,7 @@ Checklist:
 
 ## app-e (partial)
 
-app-e's `/mcp` handler stays: it checks methods before auth, reads the body with a 1 MiB limit (413), authenticates API keys and Clerk JWTs inside the node action, maps 401/429 results to `WWW-Authenticate`/`Retry-After`, and answers 202 without a `Content-Type`. The gateway (`gateway.ts`, `protocol.ts`, `proxy.ts`, `oauth.ts`, `clerkAuth.ts`, `clerkJwt.ts`) stays. app-e already took `extractBearerToken` and `requiredEnvUrl` from `@vvedantb/server/convex` in `7077eaf`.
+app-e's `/mcp` handler stays: it checks methods before auth, reads the body with a 1 MiB limit (413), authenticates API keys and Clerk JWTs inside the node action, maps 401/429 results to `WWW-Authenticate`/`Retry-After`, and answers 202 without a `Content-Type`. The gateway (`gateway.ts`, `protocol.ts`, `proxy.ts`, `oauth.ts`, `clerkAuth.ts`, `clerkJwt.ts`) stays. app-e already took `extractBearerToken` and `requiredEnvUrl` from the package in `7077eaf` (then the `/convex` subpath; from 0.2.0 import them from `@vvedantb/server`).
 
 1. In `convex/mcp/native.ts`, replace `optionsHandler`, `oauthMetadata`, `protectedResourceMetadata` and `health` with [migrated/app-e/native.partial.ts](migrated/app-e/native.partial.ts). `corsHeaders(request)` stays and is passed as the `cors` function. `assertOutboundUrl` moves into the proxy's `fetch` hook. It checks protocol, credentials, host and port, which the full metadata URL shares with the issuer base URL.
 2. Optional: `negotiateProtocolVersion(requested, { versions: SUPPORTED_PROTOCOL_VERSIONS, fallback: PROTOCOL_VERSION })` can replace the 6-line function in `protocol.ts`. It is not counted below.

@@ -62,6 +62,14 @@ export {
   type ProtectedResourceMetadataOptions,
 } from "./metadata.js";
 export {
+  registerMcpRoutes,
+  type McpEndpointRoutes,
+  type McpRouteMethod,
+  type McpRouter,
+  type McpRouteSpec,
+  type McpRoutesConfig,
+} from "./routes.js";
+export {
   runSdkMcpRequest,
   type RunSdkMcpRequestOptions,
   type SdkServerLike,

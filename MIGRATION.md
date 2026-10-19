@@ -75,12 +75,12 @@ The `./tokens/css/*.css` pattern also resolves any future CSS file added to that
 
 | Old | New |
 | --- | --- |
-| `import { … } from "@vvedantb/convex-kit"` | `import { … } from "@vvedantb/server/convex"` |
-| `import { … } from "@vvedantb/mcp-kit"` | `import { … } from "@vvedantb/server/mcp"` |
-| `"@vvedantb/convex-kit": "^0.1.0"` in `package.json` | `"@vvedantb/server": "^0.1.0"` |
-| `"@vvedantb/mcp-kit": "^0.1.1"` in `package.json` | `"@vvedantb/server": "^0.1.0"` |
+| `import { … } from "@vvedantb/convex-kit"` | `import { … } from "@vvedantb/server"` |
+| `import { … } from "@vvedantb/mcp-kit"` | `import { … } from "@vvedantb/server"` |
+| `"@vvedantb/convex-kit": "^0.1.0"` in `package.json` | `"@vvedantb/server": "^0.2.0"` |
+| `"@vvedantb/mcp-kit": "^0.1.1"` in `package.json` | `"@vvedantb/server": "^0.2.0"` |
 
-Install `@vvedantb/server` once. It has no `.` export, so import from a subpath. `@clerk/backend` and `zod` stay optional peers. The MCP kit no longer has a runtime dependency on the Convex helpers as a separate package.
+Install `@vvedantb/server` once and import everything from the root. `0.1.x` used `/convex` and `/mcp` subpaths, which `0.2.0` removed (see `packages/server/CHANGELOG.md`). `@clerk/backend` and `zod` stay optional peers. The MCP kit no longer has a runtime dependency on the Convex helpers as a separate package.
 
 ### Native (`@vvedantb/native-ui`)
 

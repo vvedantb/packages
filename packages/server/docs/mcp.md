@@ -1,8 +1,8 @@
-# `@vvedantb/server/mcp`
+# MCP scaffolding (`@vvedantb/server`)
 
-MCP server scaffolding for Convex `httpAction`s: the `/mcp` bearer-auth handler, OAuth metadata endpoints, a pure JSON-RPC dispatcher, tool helpers and user-scoped explorer tools. Web-standard `Request`/`Response` only, no Node APIs, no MCP SDK dependency. Compiled ESM with types. Import it as `@vvedantb/server/mcp`.
+MCP server scaffolding for Convex `httpAction`s: the `/mcp` bearer-auth handler, OAuth metadata endpoints, a pure JSON-RPC dispatcher, tool helpers and user-scoped explorer tools. Web-standard `Request`/`Response` only, no Node APIs, no MCP SDK dependency. Compiled ESM with types. Import everything from the package root, `@vvedantb/server`.
 
-It replaces the near-copies of `convex/mcp/native.ts`, the `handleMcpRequest` body and the explorer tools in app-a, app-b, app-c and app-d. app-e uses only the metadata, CORS and protocol-version helpers. See [docs/migration.md](docs/migration.md) for per-app steps and measured line counts.
+It replaces the near-copies of `convex/mcp/native.ts`, the MCP route block in `convex/http.ts`, the `handleMcpRequest` body and the explorer tools in app-a, app-b, app-c and app-d. app-e uses only the metadata, CORS, route and protocol-version helpers. See [migration.md](migration.md) for per-app steps and measured line counts.
 
 ## Install
 
@@ -12,7 +12,7 @@ npm install @vvedantb/server
 
 ## Dependencies and peers
 
-- `@vvedantb/server/convex` ships in the same package. The MCP kit imports its `extractBearerToken`, `requiredEnvUrl`, `mcpCorsHeaders`, `McpServerInfo` and `EnvSource` through relative imports, so there is no second install step and no version to match.
+- The Convex helpers ([convex.md](convex.md)) ship in the same package and the same root export. The MCP kit imports `extractBearerToken`, `requiredEnvUrl`, `mcpCorsHeaders`, `McpServerInfo` and `EnvSource` from `src/convex` by relative path.
 - `zod` is an optional peer (`^3.25.0 || ^4.0.0`). The kit never imports zod. `defineTool` accepts any object with zod's `safeParse` (zod 3.25+ or 4), and calls the schema's own `toJSONSchema()` (zod 4) for `tools/list`. With zod 3, pass `jsonSchema` per tool or a `toJsonSchema` converter (see below).
 - Nothing else. The MCP SDK is optional and stays in the app (`runSdkMcpRequest` takes its classes as arguments).
 
@@ -29,7 +29,7 @@ import {
   createHealthHandler,
   createMcpHttpHandler,
   createProtectedResourceMetadata,
-} from "@vvedantb/server/mcp";
+} from "@vvedantb/server";
 
 export const oauthMetadata = httpAction(createAuthorizationServerMetadataProxy());
 export const protectedResourceMetadata = httpAction(createProtectedResourceMetadata());
@@ -47,7 +47,7 @@ export const mcpHandler = httpAction(
 
 ```ts
 // convex/mcp/nodeActions.ts ("use node")
-import { runSdkMcpRequest } from "@vvedantb/server/mcp";
+import { runSdkMcpRequest } from "@vvedantb/server";
 
 export const handleMcpRequest = internalAction({
   args: { clerkUserId: v.string(), body: v.string() },
@@ -89,9 +89,10 @@ export const mcpHandler = httpAction(
 | `createProtectedResourceMetadata(options)` | `{ resource, authorization_servers, bearer_methods_supported: ["header"], resource_documentation }`. |
 | `createHealthHandler(options)` | 200 `{"status":"ok"}` (body configurable). |
 | `createOptionsHandler({ cors })` | 204 preflight with only the CORS headers. |
-| `mcpCors(overrides?, origin?)` | `mcpCorsHeaders(origin)` from `@vvedantb/server/convex` with overrides on top. |
-| `readEnvUrl(source, env?)` | Env URL with optional fallback var, through `requiredEnvUrl` from `@vvedantb/server/convex`. |
+| `mcpCors(overrides?, origin?)` | `mcpCorsHeaders(origin)` (see [convex.md](convex.md)) with overrides on top. |
+| `readEnvUrl(source, env?)` | Env URL with optional fallback var, through `requiredEnvUrl` (see [convex.md](convex.md)). |
 | `consoleMcpLogger` | Default log hook with the app-a strings. |
+| `registerMcpRoutes(http, config)` | Registers the well-known, `/mcp`, token and health routes on a Convex `httpRouter()`. See [Route registration](#route-registration). |
 | `runSdkMcpRequest(options)` | The apps' `handleMcpRequest` body: stateless JSON-response SDK transport, 500 JSON-RPC -32603 on any throw. SDK classes are passed in. |
 | `mcpInternalError(err)` | `{ status: 500, body: '{"jsonrpc":"2.0","error":{"code":-32603,"message":...},"id":null}' }`. |
 
@@ -120,6 +121,75 @@ Env fallback modes (`EnvUrl = string | { name, fallback?, fallbackMode? }`). The
 | `"nullish"` | `env[name] ?? env[fallback]`, read as `name` (an empty primary does not fall back) | app-b |
 | plain string | no fallback | app-a, app-e |
 
+### Route registration
+
+`registerMcpRoutes(http, config)` registers the MCP route block of `convex/http.ts` on a Convex `httpRouter()`. `http` is typed structurally (`{ route({ path, method, handler }) }`), so the package does not depend on `convex`; the handler type is inferred from the router. Only what the config names is registered. Convex matches exact paths regardless of order and throws on a duplicate path and method.
+
+| Config key | Routes |
+| --- | --- |
+| `authorizationServerMetadata` (required) | `GET /.well-known/oauth-authorization-server` |
+| `protectedResourceMetadata` (required) | `GET /.well-known/oauth-protected-resource` |
+| `endpoints[]`: `{ path = "/mcp", handler }` | `POST`, `GET`, `DELETE` on `path` |
+| `endpoints[].options` | `OPTIONS` on `path` |
+| `endpoints[].protectedResourceMetadata` | `GET /.well-known/oauth-protected-resource<path>` (RFC 9728 path form) |
+| `endpoints[].authorizationServerMetadata` | `GET /.well-known/oauth-authorization-server<path>` (RFC 8414 path form) |
+| `tokenProxy: { path, handler, options? }` | `POST <path>`, plus `OPTIONS <path>` with `options` |
+| `health: { path = "/health", handler }` | `GET <path>` |
+
+Each app's route block today, as a config (`tests/mcp/routes.test.ts` checks the registered table against each app's `http.ts`). Other routes in `http.ts` stay as they are.
+
+```ts
+// app-a: two scopes, the team scope with its own path-suffixed metadata
+registerMcpRoutes(http, {
+  authorizationServerMetadata: oauthMetadata,
+  protectedResourceMetadata,
+  endpoints: [
+    { handler: mcpHandler },
+    { path: "/mcp/team", handler: mcpTeamHandler, protectedResourceMetadata: protectedResourceMetadataTeam },
+  ],
+  health: { handler: mcpHealth },
+});
+
+// app-b: OPTIONS and /.well-known/oauth-protected-resource/mcp; no health route
+registerMcpRoutes(http, {
+  authorizationServerMetadata: oauthMetadata,
+  protectedResourceMetadata,
+  endpoints: [{ handler: mcpHandler, options: mcpOptions, protectedResourceMetadata }],
+});
+
+// app-c
+registerMcpRoutes(http, {
+  authorizationServerMetadata: oauthMetadata,
+  protectedResourceMetadata,
+  endpoints: [{ handler: mcpHandler }],
+  health: { handler: health },
+});
+
+// app-d: both well-known documents also under /mcp, the refresh endpoint, health under /mcp
+registerMcpRoutes(http, {
+  authorizationServerMetadata: oauthMetadata,
+  protectedResourceMetadata,
+  endpoints: [
+    {
+      handler: mcpHandler,
+      options,
+      authorizationServerMetadata: oauthMetadata,
+      protectedResourceMetadata,
+    },
+  ],
+  tokenProxy: { path: "/mcp/oauth/token", handler: legacyRefreshToken, options },
+  health: { path: "/mcp/health", handler: health },
+});
+
+// app-e
+registerMcpRoutes(http, {
+  authorizationServerMetadata: oauthMetadata,
+  protectedResourceMetadata,
+  endpoints: [{ handler: mcpHandler, options: optionsHandler }],
+  health: { handler: health },
+});
+```
+
 ### JSON-RPC dispatcher
 
 | Export | What it does |
@@ -139,7 +209,7 @@ Config: `serverInfo` (or a function of the scope), `tools`, `protocol` (`version
 | `defineTool({ name, description, inputSchema, handler, annotations?, scopes?, title?, jsonSchema? })` | zod schema (3.25+ or 4), or a raw JSON Schema plus `parseArgs`. `description` may be a function of the scope. `call()` validates, runs the handler, and shapes errors like MCP SDK 1.30+. |
 | `toolTextResult(text)`, `toolJsonResult(data)`, `toolErrorResult(message)` | `{content:[{type:"text",text}]}`, pretty JSON text, and `{content:[...], isError:true}`, as in the apps. |
 | `runTool(fn, { errorLabel? })` | app-d `jsonTool`: value as pretty JSON, a throw as an error result. |
-| `createToolRegistry(tools)`, `toolsToList`, `assertUniqueToolNames` | Duplicate names throw. Scope filtering (app-a `scopes`). `registry.names(scope)` feeds `assertMcpTools` from `@vvedantb/server/convex`. |
+| `createToolRegistry(tools)`, `toolsToList`, `assertUniqueToolNames` | Duplicate names throw. Scope filtering (app-a `scopes`). `registry.names(scope)` feeds `assertMcpTools`. |
 | `formatIssues`, `invalidArgumentsResult` | SDK-style validation messages. |
 
 zod 3 converter, typed without a cast:
@@ -214,7 +284,7 @@ pnpm --filter @vvedantb/server test
 pnpm --filter @vvedantb/server typecheck
 ```
 
-Tests and typecheck read `@vvedantb/server/convex` and `@vvedantb/server/mcp` from source (`vitest.config.ts` alias, `tsconfig.test.json` paths), so they run without building first. `zod` (4) and `zod3` (`npm:zod@^3.25.76`) are dev dependencies so both zod majors are tested.
+Tests and typecheck read `@vvedantb/server` from `src/index.ts` (`vitest.config.ts` alias, `tsconfig.test.json` paths), so they run without building first. `zod` (4) and `zod3` (`npm:zod@^3.25.76`) are dev dependencies so both zod majors are tested.
 
 To recapture SDK fixtures from an installed SDK (read-only):
 

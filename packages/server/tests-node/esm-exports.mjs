@@ -1,5 +1,5 @@
 // Plain Node ESM check of the published package. Not run by vitest, which
-// aliases @vvedantb/server/* to src/*.ts and would hide missing extensions.
+// aliases @vvedantb/server to src/index.ts and would hide missing extensions.
 // Run with: node --test tests-node/esm-exports.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -34,24 +34,42 @@ after(() => {
   if (fixtureDir) rmSync(fixtureDir, { recursive: true, force: true });
 });
 
-const subpaths = Object.entries(pkg.exports)
-  .filter(([, target]) => typeof target === "object" && target.import)
-  .map(([subpath]) => subpath);
+function runImport(name, source) {
+  const file = join(fixtureDir, `${name}.mjs`);
+  writeFileSync(file, source);
+  return spawnSync(process.execPath, [file], { cwd: fixtureDir, encoding: "utf8" });
+}
 
-test("package exports at least one JS subpath", () => {
-  assert.ok(subpaths.length > 0);
+test("exports map has only the root and package.json", () => {
+  assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./package.json"]);
+  assert.deepEqual(pkg.exports["."], { types: "./dist/index.d.ts", import: "./dist/index.js" });
 });
 
-for (const subpath of subpaths) {
-  const specifier = `${pkg.name}/${subpath.slice(2)}`;
-  test(`plain Node ESM can import ${specifier}`, () => {
-    const file = join(fixtureDir, `import-${subpath.slice(2).replace(/\W/g, "_")}.mjs`);
-    writeFileSync(
-      file,
-      `const m = await import(${JSON.stringify(specifier)});\n` +
-        `if (Object.keys(m).length === 0) throw new Error("no exports");\n`,
+test(`plain Node ESM can import ${pkg.name}`, () => {
+  const run = runImport(
+    "import-root",
+    `const m = await import(${JSON.stringify(pkg.name)});\n` +
+      // One export from each internal folder.
+      `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken"]) {\n` +
+      `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
+      `}\n`,
+  );
+  assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
+});
+
+for (const removed of ["convex", "mcp"]) {
+  const specifier = `${pkg.name}/${removed}`;
+  test(`${specifier} no longer resolves`, () => {
+    const run = runImport(
+      `import-${removed}`,
+      `try {\n` +
+        `  await import(${JSON.stringify(specifier)});\n` +
+        `} catch (err) {\n` +
+        `  if (err.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") process.exit(0);\n` +
+        `  throw err;\n` +
+        `}\n` +
+        `process.exit(1);\n`,
     );
-    const run = spawnSync(process.execPath, [file], { cwd: fixtureDir, encoding: "utf8" });
-    assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
+    assert.equal(run.status, 0, `expected ERR_PACKAGE_PATH_NOT_EXPORTED:\n${run.stderr}`);
   });
 }

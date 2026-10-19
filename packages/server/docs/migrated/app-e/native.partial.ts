@@ -3,7 +3,7 @@ import {
   createHealthHandler,
   createOptionsHandler,
   createProtectedResourceMetadata,
-} from "@vvedantb/server/mcp";
+} from "@vvedantb/server";
 
 export const optionsHandler = httpAction(createOptionsHandler({ cors: corsHeaders }));
 export const oauthMetadata = httpAction(
