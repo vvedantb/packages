@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: one JavaScript entry (primitives, shell pieces, app helpers, native tokens), design-token CSS, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",

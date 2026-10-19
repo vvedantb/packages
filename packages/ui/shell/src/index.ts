@@ -45,7 +45,10 @@ export {
   railBadgeClass,
   railTileClass,
   railTileStateClass,
+  sidebarNavIconClass,
+  sidebarNavItemClass,
   sidebarNavLinkTextClass,
   sidebarNavRowClass,
   sidebarSectionLabelClass,
 } from "./app-shell-classes.js";
+export type { SidebarNavItemClassOptions } from "./app-shell-classes.js";

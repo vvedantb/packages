@@ -94,6 +94,22 @@
   --font-instrumentSans: "Instrument Sans", system-ui, sans-serif;
 }
 
+/* Radius utilities that follow the theme `--radius` (values at the default
+   1rem in brackets). Surfaces: kept between 0.75rem and 1rem (16px). Menu
+   items and sidebar nav rows: capped at 0.5rem (8px) so they sit inside the
+   surface corner. Controls: capped at 0.625rem (10px). */
+@utility rounded-surface {
+  border-radius: clamp(0.75rem, var(--radius), 1rem);
+}
+
+@utility rounded-menu-item {
+  border-radius: min(var(--radius), 0.5rem);
+}
+
+@utility rounded-control {
+  border-radius: min(var(--radius), 0.625rem);
+}
+
 @layer base {
   :root,
   .light,

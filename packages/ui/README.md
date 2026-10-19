@@ -299,7 +299,7 @@ import {
 - `SidebarPanel`: legacy (still supported) `headerTrailing`, `onClose`, `closeLabel` and `closeButtonClassName`; compose `Sidebar.Panel` parts instead. `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
 - `SidebarAccountMenu`: legacy (still supported) `badge`, `triggerProps`, `contentProps` and `stackedLabel`; compose `Sidebar.Account*` parts instead. `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
 - `SignOutDialog`: legacy (still supported) `question` and `title`; compose `ConfirmDialog` parts with `alert={false}` for other copy. `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
-- Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarSectionLabelClass`.
+- Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarNavItemClass({ active, iconOnly })`, `sidebarNavIconClass(active)`, `sidebarSectionLabelClass`. See [Menu item corners and sidebar nav rows (0.7.1)](#menu-item-corners-and-sidebar-nav-rows-071).
 
 ### Header actions and account badge (0.5.2)
 
@@ -434,6 +434,7 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | `PanelHeader` | Padded header row for `PanelTitle` and `PanelActions`. |
 | `PanelTitle` / `PanelActions` | The `<h2>` and the trailing actions. |
 | `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. |
+| `NavItem` | Panel nav row (`sidebarNavItemClass`). `active` (fill, `font-medium`, `aria-current="page"`), `iconOnly`, `icon` (element; gets `sidebarNavIconClass`), `asChild` for a router link. A `<button type="button">` without `asChild`. |
 | `AccountMenu` | Dropdown root. `badge` adds the unread dot (`AccountBadge`) in a `relative` wrapper. |
 | `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props; native `name` goes to the button. |
 | `AccountAvatar` | Avatar image or initials. `userName`, `imageUrl`. |
@@ -618,6 +619,86 @@ import {
 - `Badge` `variant="destructive-soft"`: neutral border with a faint danger tint (`border-border bg-danger/10 text-danger`). Resolves to the same classes as a default badge with `className="bg-danger/10 text-danger"`. `variant="success"` already resolves to the same classes as a default badge with `className="border-success/25 bg-success/12 text-success"`.
 - `Kbd` `variant="subtle"`: a plain filled key for inline hints, `rounded bg-surface-secondary px-1.5 py-0.5 text-foreground`. No fixed height, font or size, so it follows the surrounding text.
 
+## Menu item corners and sidebar nav rows (0.7.1)
+
+Visual change. Values in brackets are at the default `--radius: 1rem` and `--spacing: 0.25rem`.
+
+The radius utilities now come with `tokens.css` (and `compat-shadcn-rgb.css`), so an app that imports `@vvedantb/ui/tokens` has them without another import:
+
+| Utility | Value | Used by |
+| --- | --- | --- |
+| `rounded-surface` | `clamp(0.75rem, var(--radius), 1rem)` (16px) | Opt-in surfaces (Toaster `toastRadius="surface"`, `SessionsHoverCard`). Was in `utilities.css`. |
+| `rounded-menu-item` | `min(var(--radius), 0.5rem)` (8px) | Menu items and sidebar nav rows. |
+| `rounded-control` | `min(var(--radius), 0.625rem)` (10px) | Apps. |
+
+The root `cn` knows these are radius classes, so `cn("rounded-lg", "rounded-menu-item")` keeps only the last one.
+
+### Menu items
+
+| Piece | Before | From 0.7.1 |
+| --- | --- | --- |
+| `DropdownMenu` and `ContextMenu` item, sub-trigger, checkbox item and radio item | `rounded-md`, `calc(var(--radius) - 2px)` (14px) | `rounded-menu-item` (8px) |
+| Menu surface | `rounded-lg` (16px) | unchanged |
+
+### Sidebar panel nav rows
+
+Rows in the panel beside the rail. Rail tiles are unchanged.
+
+| Piece | Before | From 0.7.1 |
+| --- | --- | --- |
+| Radius | none in the helper (apps added `rounded-lg`, 16px) | `rounded-menu-item` (8px) |
+| Padding | `px-3 py-1.5` (12px / 6px) | `px-4 py-1.5` (16px / 6px) |
+| Icon gap | `gap-3` (12px) | `gap-2` (8px) |
+| Text | none in the helper (apps added `text-sm`, 14px / 20px) | `text-[0.8125rem] leading-[18px] tracking-[0.005em]` (13px / 18px) |
+| Row height | 32px with `text-sm` | 30px |
+| Width | none in the helper | `flex w-full items-center` |
+| Idle text | `text-muted`, `hover:text-foreground` | `font-normal text-foreground/80`, `hover:text-foreground` |
+| Active text | `text-foreground` | `font-medium text-foreground` |
+| Hover and active fill | none in the helper | `hover:bg-surface-tertiary` (idle rows), `bg-surface-tertiary` (active row), same radius |
+| Press | none | `active:scale-[0.99]`, `transition-[scale,background-color,color] duration-150 ease-smooth` |
+| Focus ring | none | `focus-visible:ring-2 focus-visible:ring-foreground/35`, no outline |
+| Icon-only row | `justify-center px-0 py-1.5` | same, plus the radius, text, fill and focus classes above |
+| Icon (`sidebarNavIconClass`) | none (apps used 18px in a 20px box) | `size-[19px] shrink-0`; `text-muted-foreground` idle, `text-foreground` active |
+| Section label | `px-3 py-1 text-[11px]` | `px-4 py-1 text-[11px] leading-4` (16px line). Colour still comes from the app's `.sidebar-section-label` rule. |
+
+The hover fill is static: it does not slide between rows. While another row is hovered, the active row keeps its fill.
+
+One call per row:
+
+```tsx
+<nav className="px-2">
+  <p className={sidebarSectionLabelClass}>Library</p>
+  <div className="space-y-1">
+    <Link to="/home" aria-current={active ? "page" : undefined} className={sidebarNavItemClass({ active, iconOnly })}>
+      <IconHome size={19} className={sidebarNavIconClass(active)} />
+      {iconOnly ? null : <span className="truncate">Home</span>}
+    </Link>
+  </div>
+</nav>
+```
+
+Or the part, with the router link as the child:
+
+```tsx
+<Sidebar.NavItem asChild active={active} iconOnly={iconOnly} icon={<IconHome />}>
+  <Link to="/home">{iconOnly ? null : <span className="truncate">Home</span>}</Link>
+</Sidebar.NavItem>
+```
+
+- `px-2` on the list is the panel inset: rows are full width inside it. `space-y-1` (4px) separates rows.
+- `sidebarNavRowClass(isIconOnly)` and `sidebarNavLinkTextClass(isActive)` now return the classes above, so existing calls change look. `sidebarNavItemClass` is the two merged.
+- Classes an app added beside the helpers, such as `rounded-lg text-sm font-medium tracking-normal transition-colors duration-200`, are now redundant. Through the root `cn` they lose to the helper when passed before it. Passed after it, or joined without `cn`, they override the new radius, size and weight. Remove them, and remove app-side active fills such as `bg-surface-tertiary`.
+
+Colour mapping. The package has no sidebar colour tokens, so the rows use the nearest general token:
+
+| Role | Reference look (light / dark, sRGB) | Package token (light / dark, sRGB) |
+| --- | --- | --- |
+| Hover and active fill | 233 234 236 / 28 28 28 | `surface-tertiary`: 234 234 234 / about 39 39 39. Light matches; dark is a step lighter. It is the rail tile's active fill too, so a rail tile and a nav row stay the same. |
+| Active text and icon | 9 9 11 / 250 250 250 | `foreground`: 24 24 24 / 252 252 252 |
+| Idle text (80%) | 24 24 25 / 251 252 253 | `foreground` at 80% |
+| Idle icon | 100 101 103 / 159 160 162 | `muted-foreground` (`--muted`): 114 114 114 / 160 160 160 |
+| Focus ring (35%) | 9 9 11 / 250 250 250 | `foreground` at 35% |
+
 ## Toaster
 
 ```tsx
@@ -643,7 +724,7 @@ Opt-in props (all default to the current look):
 
 | Prop | Values | Effect |
 | --- | --- | --- |
-| `toastRadius` | `"lg"` (default), `"surface"`, `"control"` | `rounded-lg`, `rounded-surface` (from `tokens/css/utilities.css`) or `rounded-field` (the input radius). |
+| `toastRadius` | `"lg"` (default), `"surface"`, `"control"` | `rounded-lg`, `rounded-surface` (from `tokens.css`, or the compat file) or `rounded-field` (the input radius). |
 | `density` | `"default"`, `"compact"` | Current padding and text, or `gap-2 px-3 py-2 text-xs` with `text-xs` descriptions. |
 | `toastIcons` | `"default"`, `"filled24"` | Sonner icons or 24px filled success, info, warning and error icons, a matching loader and a 14px close cross. |
 | `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |

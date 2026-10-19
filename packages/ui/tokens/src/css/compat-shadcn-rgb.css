@@ -65,6 +65,20 @@
   --radius-field: min(calc(var(--radius) + 0.25rem), 1.25rem);
 }
 
+/* The radius utilities from tokens.css, which this file replaces. They read
+   the app's `--radius`. */
+@utility rounded-surface {
+  border-radius: clamp(0.75rem, var(--radius), 1rem);
+}
+
+@utility rounded-menu-item {
+  border-radius: min(var(--radius), 0.5rem);
+}
+
+@utility rounded-control {
+  border-radius: min(var(--radius), 0.625rem);
+}
+
 :root {
   --scrollbar: rgb(var(--muted-foreground) / 0.35);
   --field-radius: min(calc(var(--radius) + 0.25rem), 1.25rem);

@@ -15,6 +15,7 @@ test("root exposes former subpath APIs", () => {
     "SidebarPanel", "SidebarAccountMenu", "SidebarAccountMenuPlaceholder", "SignOutDialog",
     "railTileClass", "railTileStateClass", "railBadgeClass",
     "sidebarNavRowClass", "sidebarNavLinkTextClass", "sidebarSectionLabelClass",
+    "sidebarNavItemClass", "sidebarNavIconClass",
     "Sidebar", "useConfirmDialog",
   ]) {
     expect(root, name).toHaveProperty(name);
@@ -30,7 +31,7 @@ test("root exposes the composable parts as namespace members", () => {
     ["Sidebar", root.Sidebar, [
       "Root", "MobileHeader", "MobileMenuButton", "MobileTitle", "MobileActions", "Backdrop", "Aside",
       "Rail", "RailHeader", "RailBody", "RailFooter", "Footer", "RailItem", "RailSeparator", "Tooltip",
-      "Panel", "PanelHeader", "PanelTitle", "PanelActions", "PanelClose", "ResizeHandle",
+      "Panel", "PanelHeader", "PanelTitle", "PanelActions", "PanelClose", "NavItem", "ResizeHandle",
       "AccountMenu", "AccountTrigger", "AccountAvatar", "AccountContent", "AccountLabel",
       "AccountSeparator", "AccountBadge",
     ]],
