@@ -14,7 +14,7 @@ There are no subpath exports (0.2.0 removed `/convex` and `/mcp`; see [CHANGELOG
 
 | Area | What it holds | Docs |
 | --- | --- | --- |
-| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification, bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
+| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification, Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
 | MCP scaffolding | For Convex `httpAction`s: bearer-auth handler, OAuth metadata, route registration, a pure JSON-RPC dispatcher, tool helpers and explorer tools. | [docs/mcp.md](docs/mcp.md) |
 | Crypto | WebCrypto-only base64/base64url/hex, SHA-256, random tokens, `timingSafeEqual`, AES-GCM. Convex default runtime and Node 20+. | [docs/crypto.md](docs/crypto.md) |
 
@@ -27,7 +27,7 @@ Both are optional.
 - `@clerk/backend` `>=1`: only for `getClerkClient` and `verifyClerkAccessToken`, which take its client or factory as an argument.
 - `zod` `^3.25.0 || ^4.0.0`: only if you pass zod schemas to `defineTool`.
 
-`convex` is not a dependency: `registerMcpRoutes` types the router structurally. No React, no web dependencies. Compiled ESM with types in `dist`, built on pack.
+`convex` is not a dependency: `registerMcpRoutes` and `createClerkUserAuth` type the router and ctx structurally (`convex` is a dev dependency, used to check that real Convex types fit). No React, no web dependencies. Compiled ESM with types in `dist`, built on pack.
 
 ## Layout
 

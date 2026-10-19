@@ -1,12 +1,13 @@
 # packages
 
-Shared packages for vvedantb apps. Three public npm packages and one private config package.
+Shared packages for vvedantb apps. Four public npm packages and one private config package.
 
 | Package | Version | What it is |
 | --- | --- | --- |
 | `@vvedantb/ui` | `0.3.2` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./sonner`: `SonnerToaster` and `toast`. `./audio`: chime, `playTone` and the shared audio floor. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
 | `@vvedantb/native-ui` | `0.2.0` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Has no dependency on `@vvedantb/ui`; it carries its own copy of the JS tokens. |
-| `@vvedantb/server` | `0.2.0` | Convex backend helpers from one root export (`.` only): query-limit errors, Clerk auth and token verification, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, and WebCrypto primitives. Compiled. |
+| `@vvedantb/server` | `0.3.0` | Convex backend helpers from one root export (`.` only): query-limit errors, Clerk auth and token verification, Clerk-user lookups and `ensureUser`, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, and WebCrypto primitives. Compiled. |
+| `@vvedantb/convex-client` | `0.1.0` | Browser and React Convex helpers from one root export (`.` only): optimistic-update helpers, an in-memory optimistic store for tests, `ConvexClerkProvider`, `parseClientEnv` and `useEnsureUser`. Compiled. |
 | `@vvedantb/config` | `0.1.1` | Private, not on npm. tsconfig bases, an oxlint base, pinned tool versions and the `vvedantb-config sync` CLI, used inside this repository. |
 
 Moving from the earlier packages (`@vvedantb/tokens`, `shell`, `app-kit`, `convex-kit`, `mcp-kit`)? See [MIGRATION.md](MIGRATION.md).
@@ -17,6 +18,7 @@ Moving from the earlier packages (`@vvedantb/tokens`, `shell`, `app-kit`, `conve
 npm install @vvedantb/ui                 # web
 npm install @vvedantb/native-ui          # Expo / React Native
 npm install @vvedantb/server             # Convex backends
+npm install @vvedantb/convex-client      # Convex web clients (React)
 ```
 
 For a local checkout of this repo:
@@ -27,7 +29,7 @@ For a local checkout of this repo:
 }
 ```
 
-`@vvedantb/ui` and `@vvedantb/native-ui` ship source and need no compile step. `@vvedantb/server` publishes compiled `dist` (built on pack); after a path or git install, run `pnpm build` first.
+`@vvedantb/ui` and `@vvedantb/native-ui` ship source and need no compile step. `@vvedantb/server` and `@vvedantb/convex-client` publish compiled `dist` (built on pack); after a path or git install, run `pnpm build` first.
 
 `@vvedantb/ui` expects the baseline peer stack (React 19, Radix, CVA, cmdk, motion, sonner, clsx, tailwind-merge, Tabler icons) plus the extras' peers (`radix-ui`, accordion/scroll-area/visually-hidden, vaul, embla, shiki, `ai`, streamdown, nanoid, use-stick-to-bottom). Install those in the app. The `./app` subpath also uses `@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod`. These three are optional peers: install them only if you import `@vvedantb/ui/app`.
 
@@ -36,6 +38,7 @@ For a local checkout of this repo:
 - `@vvedantb/ui/app`: `ConfirmSkipHint`, `useRequestConfirm`, `useAltHeld`, `startUpdateAvailableWatcher`, `SettingsPage` and friends, `useStableAuth`. See `packages/ui/app/README.md`.
 - `@vvedantb/ui/tokens`: see `packages/ui/tokens/README.md`.
 - `@vvedantb/server`: see `packages/server/README.md`, `packages/server/docs/convex.md`, `packages/server/docs/mcp.md` and `packages/server/docs/crypto.md`. Per-app migration steps and measured line counts for the MCP kit are in `packages/server/docs/migration.md`.
+- `@vvedantb/convex-client`: see `packages/convex-client/README.md`.
 - `@vvedantb/config`: `@vvedantb/config/tsconfig/{base,web,convex,react-native}.json`, `@vvedantb/config/oxlint/base.json`, `@vvedantb/config/versions`, and `vvedantb-config sync [--check]`. See `packages/config/README.md`.
 
 ## Use in a Tailwind v4 app

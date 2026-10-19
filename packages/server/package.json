@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
-  "description": "Shared Convex backend helpers and MCP server scaffolding from one root import: query-limit errors, Clerk auth and token verification, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools and WebCrypto primitives.",
+  "description": "Shared Convex backend helpers and MCP server scaffolding from one root import: query-limit errors, Clerk auth and token verification, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools and WebCrypto primitives.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "convex": "^1.47.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0",
     "zod": "^4.0.0",

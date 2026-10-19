@@ -59,8 +59,9 @@ expectMcpToolCount(toolNames, 2);
 | `jsonResponse(data, status, extraHeaders?)` | `JSON.stringify(data)` with `Content-Type: application/json`; `extraHeaders` spread after it. |
 | `createOriginAllowlistCors(allowedOrigins)` | `{ headers(origin), preflightHeaders(origin) }` for credentialed browser CORS on a fixed origin list. |
 | `verifyClerkAccessToken(clerk, token, options?)`, `consoleClerkVerifyLogger` | Clerk bearer verification core: `{ userId, tokenType, auth }` or `null`. See below. |
+| `createClerkUserAuth<DataModel>()(config)` | Clerk-user lookups for queries and mutations: `getCurrentUserId`, `requireCurrentUserId`, `getCurrentUser`, `isCurrentUserAdmin`, `getUserByClerkId`, `ensureUser`. See below. |
 
-Crypto primitives are in [crypto.md](crypto.md); MCP scaffolding in [mcp.md](mcp.md). Not included: Clerk user helpers, `ensureUserExists`, rate limits.
+Crypto primitives are in [crypto.md](crypto.md); MCP scaffolding in [mcp.md](mcp.md). Not included: rate limits.
 
 ## `jsonResponse`
 
@@ -155,6 +156,79 @@ App-specific claims (a Pro flag, scopes, legacy tokens, user upserts) stay in th
 - **Token-type check.** app-a calls a helper that loops over `["oauth_token", "session_token"]`; the others inline `!== "oauth_token" && !== "session_token"`; app-e splits the checks into separate `continue`s. All equivalent.
 - **Return shape.** `{ clerkUserId }` in app-a, app-c, app-d and app-e; `{ clerkUserId, isPro }` in app-b.
 - Wrong token types and missing user ids are silent in every app.
+
+## `createClerkUserAuth`
+
+The caller's identity `subject`, resolved to a users row through one index. Curried so you pass your generated `DataModel` and the config keys are inferred and checked against it (unknown table, an index not on the table, a field that is not the index's first field, or an admin field not on the document are type errors).
+
+```ts
+// convex/userAuth.ts
+import { createClerkUserAuth } from "@vvedantb/server";
+import type { DataModel } from "./_generated/dataModel";
+
+export const userAuth = createClerkUserAuth<DataModel>()({
+  table: "users",
+  index: "by_clerk_id",
+  field: "clerkId",
+  adminField: "admin", // optional; needed only for isCurrentUserAdmin
+  // lookup: "unique",              // default "first"
+  // unauthenticatedMessage: "...", // default "Not authenticated"
+});
+
+export const { getCurrentUserId, requireCurrentUserId, getCurrentUser, getUserByClerkId } = userAuth;
+```
+
+```ts
+// convex/users.ts
+export const ensureUserExists = mutation({
+  args: {},
+  returns: v.object({ userId: v.id("users"), wasCreated: v.boolean() }),
+  handler: async (ctx) => {
+    const result = await userAuth.ensureUser(
+      ctx,
+      (identity) => ({ clerkId: identity.subject, email: identity.email ?? "" }),
+      { patch: (existing, identity) => (identity.email && existing.email !== identity.email ? { email: identity.email } : undefined) },
+    );
+    if (result.wasCreated) await createDefaults(ctx, result.userId); // app-specific
+    return result;
+  },
+});
+```
+
+`ctx` is typed structurally (the package never imports `convex`). A generated `QueryCtx`, `MutationCtx` or `QueryCtx | MutationCtx` fits without a cast; an `ActionCtx` does not (no `db`). `tests/convex/clerkUserAuth.types.ts` checks this against `convex/server` 1.47.
+
+| Function | Semantics |
+| --- | --- |
+| `getUserByClerkId(ctx, clerkId)` | `ctx.db.query(table).withIndex(index, (q) => q.eq(field, clerkId))`, then `.first()` (or `.unique()` with `lookup: "unique"`, which throws on duplicates). Only needs `ctx.db`. |
+| `getCurrentUser(ctx)` | `null` when there is no identity or `subject` is empty; otherwise `getUserByClerkId(ctx, identity.subject)`. |
+| `getCurrentUserId(ctx)` | `(await getCurrentUser(ctx))?._id ?? null`. |
+| `requireCurrentUserId(ctx, message?)` | `getCurrentUserId`, but throws `new Error(message)` instead of returning `null`. `message` defaults to the config's `unauthenticatedMessage`, default `"Not authenticated"` (the message in about 120 throw sites across the apps). |
+| `isCurrentUserAdmin(ctx)` | `user[adminField] === true`; `false` with no identity or no row. Throws if `adminField` is not set. |
+| `ensureUser(ctx, buildFields, options?)` | No identity: throws `options.unauthenticatedMessage` (default the config's). Empty `subject`: throws `options.missingSubjectMessage` (default `"Clerk user ID is required"`). Existing row: `ctx.db.patch(row._id, fields)` when `options.patch(row, identity)` returns fields, then `{ userId, wasCreated: false }`. No row: `ctx.db.insert(table, buildFields(identity))` and `{ userId, wasCreated: true }`. `buildFields` must set the Clerk id field itself. `identity` is your ctx's identity type (Convex `UserIdentity`). |
+
+Stays in the apps: legacy email lookups, migration-table lookups, API-key actors and scopes, admission checks, `customQuery`/`customMutation` builders, action helpers (`ctx.runQuery`), internal by-id upserts, and anything done after a user is created (default profiles, skills).
+
+### How each app maps onto the config
+
+| App | Config | Uses | Stays in the app |
+| --- | --- | --- | --- |
+| app-a | `users` / `by_clerk_id` / `clerkId`, `first` | `getUserByClerkId`; its throwing `getCurrentUserId` is `requireCurrentUserId`; `ensureUserExists` is `ensureUser` with `patch` (normalised email, only when defined and changed) and `buildFields` (`givenName`/`familyName`/`name`), then the "Personal" profile insert when `wasCreated` | `authQuery`/`authMutation`/`authAction`, `requireClerkId`, `ensureUserForClerkIdInternal`, `me` |
+| app-b | `users` / `by_clerk_id` / `clerkId`, `first`, `adminField: "admin"` | `ensureUserExists` (`users.ts`) is `ensureUser` without `patch` (`email: identity.email \|\| ""`, `firstName`/`lastName` claims, `updatedAt`), then the default skills install | the email fallback: `getCurrentUserId = (await userAuth.getCurrentUserId(ctx)) ?? emailLookup(ctx)`; `getCurrentUser` and `checkIsAdmin` read through that, so they stay as today unless the fallback is dropped (then they are `getCurrentUser` and `isCurrentUserAdmin`) |
+| app-c | `users` / `by_clerk_id` / `clerkUserId`, `first`, `adminField: "isAdmin"` | `getUserByClerkId` for the non-migrated branch of `currentUser` and `isCurrentUserAdmin` | email-keyed `getCurrentUserId`, the `userMigrations` lookups, `createOrMigrateUser` |
+| app-d | `users` / `by_clerk_id` / `clerkId`, `first`, `adminField: "isAdmin"` | `getCurrentUserId` before its email fallback | `requireCurrentUserId` (an upsert that also finds by email and patches `clerkId`), `createOrMigrateUser`, `isCurrentUserAdmin` (reads through the email fallback) |
+| app-e | `users` / `by_clerk_user` / `clerkUserId`, `lookup: "unique"`, `unauthenticatedMessage: "Sign in to continue"` | `getUserByClerkId` / `getCurrentUser` in `users.current` and `users.ensureUser` | `requireUser`/`requireSession` (admission, API keys, scopes); `ensureUser` keeps its own body because the admission check runs between the identity check and the lookup and it returns `{ clerkUserId, createdAt, isNew }` (with `ensureUser` it would need an extra `ctx.db.get`) |
+
+### Differences between the copies
+
+- **Lookup end.** app-a to app-d use `.first()`; app-e uses `.unique()`.
+- **Missing identity.** app-a's `getCurrentUserId` throws `"Not authenticated"` for no identity, empty `subject` and no row; app-b, app-c, app-d and app-e return `null`. The kit has both (`requireCurrentUserId`, `getCurrentUserId`).
+- **Empty `subject`.** app-b still tries its email lookup; app-d and app-e return `null`; app-a throws. Convex always sets `subject`, so this is unreachable; the kit returns `null`.
+- **Email fallback.** app-b and app-d look up `by_email` when the Clerk id finds nothing (app-c looks up by email only). Legacy, so it stays in the apps; compose it after `getCurrentUserId`.
+- **Admin flag.** app-b `admin === true`, app-d `isAdmin === true`, app-c `user?.isAdmin || false` (the same for a `boolean | undefined` field). A non-boolean truthy value is not admin in the kit.
+- **ensure-user errors.** app-a and app-b throw `"Not authenticated"` (no identity) and `"Clerk user ID is required"` (empty `subject`); app-d throws `"Not authenticated"` for both; app-e `"Sign in to continue"` for both. Set `missingSubjectMessage` to match.
+- **ensure-user patch.** app-a patches the normalised email when it is defined and changed; app-b never patches; app-d patches `clerkId` (only possible after an email match); app-e touches `lastSeenAt` after 60 s.
+
+`tests/convex/clerkUserAuth.test.ts` ports each app's code and runs it next to the kit on the same fake ctx over each identity case (none, empty subject, known, duplicate, unknown, legacy email): return values, thrown messages, rows and writes match.
 
 ## Develop
 
