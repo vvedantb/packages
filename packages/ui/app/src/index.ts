@@ -41,3 +41,34 @@ export {
   type ClerkAuthSlice,
   type StableAuthOptions,
 } from "./auth/useStableAuth.js";
+
+export {
+  applyThemeClass,
+  createThemeProvider,
+  getSystemTheme,
+  type ThemeAttribute,
+  type ThemeProviderKit,
+  type ThemeProviderOptions,
+  type ThemeProviderProps,
+  type ThemeState,
+} from "./theme/createThemeProvider.js";
+
+export {
+  createPageTitleContext,
+  type DocumentTitleOptions,
+  type PageTitleContextKit,
+  type PageTitleContextOptions,
+  type PageTitleValue,
+} from "./page-title/createPageTitleContext.js";
+
+export {
+  PageMotionProvider,
+  useDisablePageMotion,
+  type PageMotionConfigProps,
+  type PageMotionProviderProps,
+} from "./page-motion/PageMotionProvider.js";
+
+export {
+  formatCompactRelativeTime,
+  type CompactRelativeTimeOptions,
+} from "./time/compactRelativeTime.js";

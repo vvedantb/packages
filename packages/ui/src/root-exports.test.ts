@@ -19,6 +19,8 @@ test("root exposes former subpath APIs", () => {
     "sidebarNavItemLeadingClass", "sidebarNavItemLabelClass", "sidebarNavItemSubtitleClass",
     "sidebarNavItemTrailingClass", "sidebarNavItemActionsClass",
     "Sidebar", "useConfirmDialog",
+    "createThemeProvider", "getSystemTheme", "applyThemeClass", "createPageTitleContext",
+    "PageMotionProvider", "useDisablePageMotion", "formatCompactRelativeTime",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

@@ -56,7 +56,7 @@
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
     "build": "node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json && tsc -p tokens/tsconfig.json",
-    "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs",
+    "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
     "analyze": "node tokens/verify/analyze.mjs",
     "prepack": "node tokens/scripts/check-exports.mjs"
