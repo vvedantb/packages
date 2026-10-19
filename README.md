@@ -4,7 +4,7 @@ Shared packages for vvedantb apps. Six public npm packages.
 
 | Package | Version | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui` | `0.3.2` | Shared React 19 web UI. `.`: primitives, `playChime` and `useReplyChime`. `./sonner`: `SonnerToaster` and `toast`. `./audio`: chime, `playTone` and the shared audio floor. `./shell`: router-free `SidebarHeader`, `PillTabs` and `SessionsHoverCard`. `./app`: Alt-click confirm skip, update watcher, settings chrome, stable Clerk auth hook. `./tokens`: CSS tokens, shared app CSS (`./tokens/css/*.css`), a Tailwind preset and `./tokens/native` JS tokens. Source-exported. |
+| `@vvedantb/ui` | `0.8.0` | Shared React 19 web UI from one JavaScript entry (`.`): primitives, AI elements, audio, `toast` and `SonnerToaster`, the composer, the app shell, app helpers (confirm skip, update watcher, settings chrome, stable Clerk auth, theme provider, page title context, page motion provider, compact relative time) and the native tokens. CSS subpaths: `./tokens` and `./tokens/css/*.css`; plus the `./tokens/tailwind-preset` build-tool entry. Source-exported. |
 | `@vvedantb/native-ui` | `0.2.0` | React Native + Expo primitives (floating surfaces, forms, tab bar, settings chrome). Source-exported. Has no dependency on `@vvedantb/ui`; it carries its own copy of the JS tokens. |
 | `@vvedantb/server` | `0.3.0` | Convex backend helpers from one root export (`.` only): query-limit errors, Clerk auth and token verification, Clerk-user lookups and `ensureUser`, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding and route registration for Convex `httpAction`s, and WebCrypto primitives. Compiled. |
 | `@vvedantb/convex-client` | `0.1.0` | Browser and React Convex helpers from one root export (`.` only): optimistic-update helpers, an in-memory optimistic store for tests, `ConvexClerkProvider`, `parseClientEnv` and `useEnsureUser`. Compiled. |
@@ -34,11 +34,11 @@ For a local checkout of this repo:
 
 `@vvedantb/ui` and `@vvedantb/native-ui` ship source and need no compile step. `@vvedantb/server`, `@vvedantb/convex-client`, `@vvedantb/mcp-client` and `@vvedantb/config` publish compiled `dist` (built on pack); after a path or git install, run `pnpm build` first.
 
-`@vvedantb/ui` expects the baseline peer stack (React 19, Radix, CVA, cmdk, motion, sonner, clsx, tailwind-merge, Tabler icons) plus the extras' peers (`radix-ui`, accordion/scroll-area/visually-hidden, vaul, embla, shiki, `ai`, streamdown, nanoid, use-stick-to-bottom). Install those in the app. The `./app` subpath also uses `@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod`. These three are optional peers: install them only if you import `@vvedantb/ui/app`.
+`@vvedantb/ui` expects the baseline peer stack (React 19, Radix, CVA, cmdk, motion, sonner, clsx, tailwind-merge, Tabler icons) plus the extras' peers (`radix-ui`, accordion/scroll-area/visually-hidden, vaul, embla, shiki, `ai`, streamdown, nanoid, use-stick-to-bottom). Install those in the app. The app helpers also use `@clerk/clerk-react`, `@tanstack/react-hotkeys` and `zod`. These three are optional peers: install them only if you use those helpers.
 
 ## Package notes
 
-- `@vvedantb/ui/app`: `ConfirmSkipHint`, `useRequestConfirm`, `useAltHeld`, `startUpdateAvailableWatcher`, `SettingsPage` and friends, `useStableAuth`. See `packages/ui/app/README.md`.
+- `@vvedantb/ui` app helpers: `ConfirmSkipHint`, `useRequestConfirm`, `useAltHeld`, `startUpdateAvailableWatcher`, `SettingsPage` and friends, `useStableAuth`, `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider`, `formatCompactRelativeTime`. See `packages/ui/app/README.md`.
 - `@vvedantb/ui/tokens`: see `packages/ui/tokens/README.md`.
 - `@vvedantb/server`: see `packages/server/README.md`, `packages/server/docs/convex.md`, `packages/server/docs/mcp.md` and `packages/server/docs/crypto.md`. Per-app migration steps and measured line counts for the MCP kit are in `packages/server/docs/migration.md`.
 - `@vvedantb/convex-client`: see `packages/convex-client/README.md`.
