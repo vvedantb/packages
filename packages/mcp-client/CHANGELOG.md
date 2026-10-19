@@ -1,5 +1,9 @@
 # Changelog
 
+## Moved
+
+- No further releases. Every export moved to `@vvedantb/server` 0.4.0 under the same name. One behaviour change: a non-interactive provider's `redirectToAuthorization` rejects with the SDK's `UnauthorizedError` instead of throwing it synchronously. `@modelcontextprotocol/sdk` is an optional peer of `@vvedantb/server`. 0.1.0 stays on npm, to be marked deprecated there.
+
 ## 0.1.0
 
 - First release, one root export. Node-side MCP client OAuth (2.1, PKCE, dynamic client registration) for desktop apps:

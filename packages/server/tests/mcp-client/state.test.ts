@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { z as z3 } from "zod3";
-import { createMcpOAuthStateSchema, type McpOAuthState } from "@vvedantb/mcp-client";
+import { createMcpOAuthStateSchema, type McpOAuthState } from "@vvedantb/server";
 
 const stored = {
   tokens: { access_token: "a", token_type: "Bearer", refresh_token: "r", expires_in: 60, obtained_at: 5, issuer: "https://as.test", extra: 1 },

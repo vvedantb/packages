@@ -1,9 +1,12 @@
-import { cleanup, render } from "@testing-library/react";
+// @vitest-environment happy-dom
 import { useConvexAuth, useMutation } from "convex/react";
 import { makeFunctionReference } from "convex/server";
-import { useEffect } from "react";
+import { act, useEffect } from "react";
+import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useEnsureUser } from "@vvedantb/convex-client";
+import { useEnsureUser } from "../../src/index.js";
+
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
 // Convex auth and the mutation are mocked: the test drives `isAuthenticated`
 // and counts mutation calls for the hook and for app-a's and app-b's effect.
@@ -47,7 +50,6 @@ function KitEnsureUser() {
 }
 
 afterEach(() => {
-  cleanup();
   state.isAuthenticated = false;
   state.calls.length = 0;
   state.result = () => Promise.resolve(null);
@@ -60,14 +62,15 @@ async function run(Component: () => null, sequence: boolean[]) {
   state.calls.length = 0;
   const [first = false, ...rest] = sequence;
   state.isAuthenticated = first;
-  const view = render(<Component />);
+  const root = createRoot(document.createElement("div"));
+  act(() => root.render(<Component />));
   for (const next of rest) {
     state.isAuthenticated = next;
-    view.rerender(<Component />);
+    act(() => root.render(<Component />));
   }
   await Promise.resolve();
   await Promise.resolve();
-  view.unmount();
+  act(() => root.unmount());
   const result = { calls: [...state.calls], errors: errors.mock.calls.map((call) => call.map(String)) };
   errors.mockRestore();
   return result;

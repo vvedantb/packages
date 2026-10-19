@@ -72,3 +72,20 @@ export {
   formatCompactRelativeTime,
   type CompactRelativeTimeOptions,
 } from "./time/compactRelativeTime.js";
+
+export {
+  ConvexClerkProvider,
+  type ConvexClerkProviderProps,
+  type ConvexClerkUseAuth,
+} from "./convex/ConvexClerkProvider.js";
+export {
+  parseClientEnv,
+  VITE_ENV_NAMES,
+  type ClientEnv,
+  type ClientEnvOptions,
+  type ClientEnvSource,
+  type ClientEnvWithoutViteEnv,
+  type ViteEnvMode,
+  type ViteEnvName,
+} from "./convex/env.js";
+export { useEnsureUser, type EnsureUserMutation } from "./convex/useEnsureUser.js";

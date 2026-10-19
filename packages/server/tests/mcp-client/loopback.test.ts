@@ -1,6 +1,6 @@
 // Ported from both apps' loopback tests, plus the page options.
 import { describe, expect, it } from "vitest";
-import { LOOPBACK_PATH, LOOPBACK_TIMEOUT_MS, startLoopback } from "@vvedantb/mcp-client";
+import { LOOPBACK_PATH, LOOPBACK_TIMEOUT_MS, startLoopback } from "@vvedantb/server";
 
 describe("MCP sign-in loopback", () => {
   it("keeps the shared defaults", () => {

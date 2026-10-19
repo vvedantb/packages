@@ -10,7 +10,7 @@ import {
   refreshMcpOAuth,
   revokeMcpOAuth,
   startLoopback,
-} from "@vvedantb/mcp-client";
+} from "@vvedantb/server";
 import { connectAs, connectFirst, directAuth, memoryStorage } from "./helpers.js";
 
 function readBody(req: IncomingMessage): Promise<string> {

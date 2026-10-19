@@ -1,7 +1,7 @@
 import type { OptimisticLocalStore } from "convex/browser";
-import { getFunctionName, makeFunctionReference, type FunctionArgs, type FunctionReference, type FunctionReturnType } from "convex/server";
+import { anyApi, getFunctionName, makeFunctionReference, type FunctionArgs, type FunctionReference, type FunctionReturnType } from "convex/server";
 import { describe, expect, it } from "vitest";
-import { createMemoryOptimisticStore } from "@vvedantb/convex-client";
+import { createMemoryOptimisticStore } from "@vvedantb/server";
 
 // ---- Ports of the two test stores ------------------------------------------
 
@@ -126,4 +126,39 @@ describe("createMemoryOptimisticStore", () => {
     expect(ours.getQuery(pair, { b: 2, a: 1 })).toBeUndefined();
     expect(ours.getQuery(pair, { a: 1, b: 2 })).toBe(3);
   });
+
+  // The store carries its own copy of Convex's getFunctionName (the package never imports convex at runtime).
+  it("names and rejects references exactly as Convex's getFunctionName", () => {
+    const store = createMemoryOptimisticStore();
+    const references = [
+      list,
+      anyApi.tasks.list,
+      "tasks:list",
+      "",
+      "function://handle-1",
+      { [Symbol.for("toReferencePath")]: "_reference/childComponent/tasks/list" },
+      {},
+    ];
+    for (const reference of references) {
+      const viaConvex = settle(() => Reflect.apply(getFunctionName, undefined, [reference]));
+      const set = settle(() => Reflect.apply(store.setQuery, store, [reference, {}, viaConvex.value ?? "x"]));
+      const get = settle(() => Reflect.apply(store.getQuery, store, [reference, {}]));
+      if ("error" in viaConvex) {
+        expect(set).toEqual(viaConvex);
+        expect(get).toEqual(viaConvex);
+      } else {
+        expect(set).toEqual({ value: undefined });
+        // Stored under Convex's name: read back through a reference Convex names the same.
+        expect(get).toEqual({ value: viaConvex.value });
+      }
+    }
+  });
 });
+
+function settle(run: () => string | void) {
+  try {
+    return { value: run() };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}

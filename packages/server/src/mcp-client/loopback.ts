@@ -1,6 +1,8 @@
-import { createServer, type Server } from "node:http";
+import type { Server } from "node:http";
 
 // The redirect target for sign-in: a one-shot HTTP server on 127.0.0.1 with a random port.
+// Node only. `node:http` is imported when the server starts, never at module
+// load, so the package root stays loadable in Convex's V8 runtime.
 
 export const LOOPBACK_PATH = "/callback";
 export const LOOPBACK_TIMEOUT_MS = 5 * 60_000;
@@ -47,6 +49,7 @@ export async function startLoopback(options: LoopbackOptions = {}): Promise<Loop
   let expected: () => string | undefined = () => undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const html = { "content-type": "text/html; charset=utf-8" };
+  const { createServer } = await loadNodeHttp();
   const server: Server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     if (req.method !== "GET" || url.pathname !== LOOPBACK_PATH) {
@@ -95,4 +98,14 @@ export async function startLoopback(options: LoopbackOptions = {}): Promise<Loop
       });
     },
   };
+}
+
+// The import sits directly in a try block: esbuild (Convex's bundler) and Metro
+// then treat `node:http` as optional instead of failing a non-Node build.
+async function loadNodeHttp() {
+  try {
+    return await import("node:http");
+  } catch (error) {
+    throw new Error("startLoopback needs Node.js (node:http)", { cause: error });
+  }
 }

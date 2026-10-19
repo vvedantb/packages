@@ -15,6 +15,10 @@ Add the dependency in each app's `packages/backend/package.json` (after `@vvedan
 
 `http.ts` route tables do not change in phase 1 or 2: the exported names stay the same. From 0.2.0, `registerMcpRoutes` can replace the MCP route block (see below).
 
+## Upgrading to 0.4.0
+
+Additive: the optimistic-update helpers from `@vvedantb/convex-client` and every export of `@vvedantb/mcp-client` join the root under the same names. Bump to `"@vvedantb/server": "^0.4.0"`; backends that used neither package change nothing else. Steps for the apps that used them: the repository `MIGRATION.md`, section "Folded packages".
+
 ## Upgrading to 0.2.0
 
 0.2.0 removes the `@vvedantb/server/convex` and `@vvedantb/server/mcp` subpaths. Everything is exported from the package root.

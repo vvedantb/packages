@@ -25,6 +25,7 @@ test("root exposes former subpath APIs", () => {
     "LandingFeatureCard", "LandingNavMenu", "LandingFooter", "landingShellClass", "landingPanelClass",
     "landingItemVariants", "landingFooterLinkClass", "landingFooterButtonClass",
     "SiteFooter", "PricingModal", "RailCollapseTile",
+    "ConvexClerkProvider", "parseClientEnv", "VITE_ENV_NAMES", "useEnsureUser",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

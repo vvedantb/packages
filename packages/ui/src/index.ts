@@ -222,7 +222,7 @@ export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./market
 export { PricingModal } from "./marketing/PricingModal";
 export type { PricingModalProps } from "./marketing/PricingModal";
 
-// App helpers: confirm skip, update watcher, settings chrome, stable auth.
+// App helpers: confirm skip, update watcher, settings chrome, stable auth, Convex provider, VITE env and ensure-user.
 export * from "../app/src/index";
 
 // Native tokens (JS values that match tokens.css).

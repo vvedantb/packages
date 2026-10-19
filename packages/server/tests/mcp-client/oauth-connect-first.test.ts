@@ -1,7 +1,7 @@
 // Ported from the connect-first app's provider tests: sign-in connects an MCP client first, any provider can save a client.
-import { auth } from "@modelcontextprotocol/sdk/client/auth.js";
+import { auth, UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { describe, expect, it } from "vitest";
-import { authorizeMcpServer, createMcpOAuthProvider, hasMcpOAuthTokens, revokeMcpOAuth, type McpOAuthState } from "@vvedantb/mcp-client";
+import { authorizeMcpServer, createMcpOAuthProvider, hasMcpOAuthTokens, revokeMcpOAuth, type McpOAuthState } from "@vvedantb/server";
 import { AS, MCP_URL, REDIRECT, asMetadata, connectAs, connectFirst, fakeFetch, json, memoryStorage } from "./helpers.js";
 
 describe("MCP OAuth sign-in (connect first)", () => {
@@ -159,7 +159,10 @@ describe("non-interactive provider (clientRegistration: always)", () => {
     const storage = memoryStorage();
     const provider = createMcpOAuthProvider({ ...connectFirst, storage });
     expect(provider.saveClientInformation).toBeDefined();
-    expect(() => provider.redirectToAuthorization(new URL(`${AS}/authorize`))).toThrow(/Connectors/);
+    // Rejects (0.1.0 of the standalone package threw synchronously) with the SDK's own UnauthorizedError.
+    const refused = provider.redirectToAuthorization(new URL(`${AS}/authorize`));
+    await expect(refused).rejects.toThrow(/Connectors/);
+    await expect(refused).rejects.toBeInstanceOf(UnauthorizedError);
     const { fetchFn, calls } = fakeFetch({
       "GET https://mcp.example.test/.well-known/oauth-protected-resource/mcp": () => json({ resource: MCP_URL, authorization_servers: [AS] }),
       [`GET ${AS}/.well-known/oauth-authorization-server`]: () => json(asMetadata),

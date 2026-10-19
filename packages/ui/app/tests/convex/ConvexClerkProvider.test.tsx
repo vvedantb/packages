@@ -1,7 +1,10 @@
-import { cleanup, render } from "@testing-library/react";
-import type { ReactNode } from "react";
+// @vitest-environment happy-dom
+import { act, type ReactNode } from "react";
+import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ConvexClerkProvider, type ConvexClerkUseAuth } from "@vvedantb/convex-client";
+import { ConvexClerkProvider, type ConvexClerkUseAuth } from "../../src/index.js";
+
+Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
 // The Convex providers are replaced by markers that record their props, so the
 // test sees which provider each variant renders and with which `useAuth`.
@@ -33,7 +36,6 @@ const clerkUseAuth = vi.hoisted(() => () => ({
 vi.mock("@clerk/clerk-react", () => ({ useAuth: clerkUseAuth }));
 
 afterEach(() => {
-  cleanup();
   seen.providers.length = 0;
 });
 
@@ -44,8 +46,13 @@ const client = new ConvexReactClient("https://example.convex.cloud");
 const useStableAuth: ConvexClerkUseAuth = () => clerkUseAuth();
 
 function rendered(element: ReactNode) {
-  const { container } = render(element);
-  return { html: container.innerHTML, providers: [...seen.providers] };
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  act(() => root.render(element));
+  const result = { html: container.innerHTML, providers: [...seen.providers] };
+  act(() => root.unmount());
+  seen.providers.length = 0;
+  return result;
 }
 
 describe("ConvexClerkProvider", () => {
@@ -79,7 +86,6 @@ describe("ConvexClerkProvider", () => {
       const { html, providers } = rendered(<ConvexClerkProvider client={none}>child</ConvexClerkProvider>);
       expect(providers).toEqual([]);
       expect(html).toBe("child");
-      cleanup();
     }
   });
 });

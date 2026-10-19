@@ -1,18 +1,34 @@
-import { randomBytes } from "node:crypto";
-import {
-  auth,
-  discoverAuthorizationServerMetadata,
-  discoverOAuthServerInfo,
-  UnauthorizedError,
-  type OAuthClientProvider,
-} from "@modelcontextprotocol/sdk/client/auth.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { FetchLike } from "@modelcontextprotocol/sdk/shared/transport.js";
+import { randomToken } from "../crypto/random.js";
 import type { McpOAuthState } from "./state.js";
 
 // MCP authorization (OAuth 2.1 with PKCE and dynamic client registration) for desktop apps. No Electron imports:
 // the app supplies the storage, the redirect and the browser.
+
+// The SDK is an optional peer, imported on first use and never at module load, so the package root stays loadable
+// in Convex's V8 runtime without it. Each import() is awaited directly in a try block (not inside Promise.all):
+// esbuild (Convex, Electron main) and Metro then treat a missing SDK as optional, and still bundle it when it is
+// installed. tests-node/bundle.mjs checks this with Convex's esbuild.
+const SDK_MISSING = "The MCP client OAuth helpers need the @modelcontextprotocol/sdk package";
+
+async function loadSdkAuth() {
+  try {
+    return await import("@modelcontextprotocol/sdk/client/auth.js");
+  } catch (error) {
+    throw new Error(SDK_MISSING, { cause: error });
+  }
+}
+
+async function loadSdkClient() {
+  try {
+    const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
+    const { StreamableHTTPClientTransport } = await import("@modelcontextprotocol/sdk/client/streamableHttp.js");
+    return { Client, StreamableHTTPClientTransport };
+  } catch (error) {
+    throw new Error(SDK_MISSING, { cause: error });
+  }
+}
 
 export type McpOAuthStorage = {
   load: () => McpOAuthState | undefined;
@@ -102,7 +118,7 @@ export function createMcpOAuthProvider(options: McpOAuthProviderOptions): McpOAu
       return pendingState;
     },
     state() {
-      pendingState = randomBytes(16).toString("base64url");
+      pendingState = randomToken(16, "base64url");
       return pendingState;
     },
     clientInformation() {
@@ -125,7 +141,13 @@ export function createMcpOAuthProvider(options: McpOAuthProviderOptions): McpOAu
       return verifier;
     },
     redirectToAuthorization(url) {
-      if (!interactive || !redirectToAuthorization) throw new UnauthorizedError(signInRequiredMessage);
+      // Rejects rather than throws: the SDK's UnauthorizedError class is only reachable once the SDK is loaded.
+      // The SDK awaits this call, so its flows see the same error either way.
+      if (!interactive || !redirectToAuthorization) {
+        return loadSdkAuth().then(({ UnauthorizedError }) => {
+          throw new UnauthorizedError(signInRequiredMessage);
+        });
+      }
       return redirectToAuthorization(url);
     },
     invalidateCredentials(scope) {
@@ -166,6 +188,7 @@ export async function authorizeMcpServer(args: {
   // A rejection that arrives before we await it must not surface as unhandled.
   args.code.catch(() => undefined);
   if (args.connectAs) return connectThenAuthorize({ ...args, connectAs: args.connectAs });
+  const { auth } = await loadSdkAuth();
   const options = { serverUrl: args.url, scope: args.provider.clientMetadata.scope, fetchFn: args.fetch };
   const first = await auth(args.provider, options);
   if (first === "AUTHORIZED") return;
@@ -181,6 +204,7 @@ async function connectThenAuthorize(args: {
   fetch?: FetchLike;
   connectAs: McpClientInfo;
 }): Promise<void> {
+  const [{ UnauthorizedError }, { Client, StreamableHTTPClientTransport }] = await Promise.all([loadSdkAuth(), loadSdkClient()]);
   const client = new Client(args.connectAs);
   const transport = new StreamableHTTPClientTransport(new URL(args.url), { authProvider: args.provider, fetch: args.fetch });
   try {
@@ -200,6 +224,7 @@ async function connectThenAuthorize(args: {
  */
 export async function refreshMcpOAuth(args: { url: string; provider: McpOAuthProvider; fetch?: FetchLike }): Promise<boolean> {
   try {
+    const { auth } = await loadSdkAuth();
     const result = await auth(args.provider, { serverUrl: args.url, fetchFn: args.fetch });
     return result === "AUTHORIZED";
   } catch {
@@ -221,6 +246,7 @@ export async function revokeMcpOAuth(args: { url: string; state: McpOAuthState |
   const signal = AbortSignal.timeout(REVOKE_TIMEOUT_MS);
   const fetchFn: FetchLike = (input, init) => (args.fetch ?? fetch)(input, { ...init, signal });
   try {
+    const { discoverAuthorizationServerMetadata, discoverOAuthServerInfo } = await loadSdkAuth();
     // The stored issuer is the server the tokens came from; without one, discover it from the MCP server.
     const issuer = tokens.issuer ?? clientInformation?.issuer;
     const metadata = issuer

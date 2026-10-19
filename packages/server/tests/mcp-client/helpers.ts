@@ -1,4 +1,4 @@
-import type { McpOAuthProviderOptions, McpOAuthState, McpOAuthStorage } from "@vvedantb/mcp-client";
+import type { McpOAuthProviderOptions, McpOAuthState, McpOAuthStorage } from "@vvedantb/server";
 
 export const MCP_URL = "https://mcp.example.test/mcp";
 export const AS = "https://auth.example.test";

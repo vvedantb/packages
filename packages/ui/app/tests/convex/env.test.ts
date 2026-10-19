@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { z as z4 } from "zod";
 import { z as z3 } from "zod3";
-import { parseClientEnv, type ViteEnvName } from "@vvedantb/convex-client";
+import { parseClientEnv, type ViteEnvName } from "../../src/index.js";
 
 // Each app's env/client.ts, ported with its zod passed in. The apps run zod 3.25
 // (app-b, app-c) and zod 4 (app-d), so every case runs with both.

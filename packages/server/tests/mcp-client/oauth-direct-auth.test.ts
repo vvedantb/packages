@@ -1,6 +1,6 @@
 // Ported from the direct-auth app's provider tests: scoped client, `obtained_at` stamping, registration only when interactive.
 import { describe, expect, it } from "vitest";
-import { createMcpOAuthProvider, hasMcpOAuthTokens, isAccessTokenExpiring, type McpOAuthState } from "@vvedantb/mcp-client";
+import { createMcpOAuthProvider, hasMcpOAuthTokens, isAccessTokenExpiring, type McpOAuthState } from "@vvedantb/server";
 import { AS, MCP_URL, asMetadata, directAuth, fakeFetch, json, memoryStorage } from "./helpers.js";
 import { auth } from "@modelcontextprotocol/sdk/client/auth.js";
 
@@ -56,7 +56,8 @@ describe("OAuth provider storage (direct auth)", () => {
     });
     const provider = createMcpOAuthProvider({ ...directAuth, storage });
     expect((await provider.clientInformation())?.client_id).toBe("c");
-    expect(() => provider.redirectToAuthorization(new URL("https://x.test"))).toThrow(/settings window/);
+    // Rejects (0.1.0 of the standalone package threw synchronously).
+    await expect(provider.redirectToAuthorization(new URL("https://x.test"))).rejects.toThrow(/settings window/);
   });
 
   it("clears by scope", async () => {

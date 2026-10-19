@@ -14,7 +14,7 @@ import {
   patchLoadedQuery,
   updateAllCachedQueries,
   type OptimisticStore,
-} from "@vvedantb/convex-client";
+} from "@vvedantb/server";
 
 type Task = { _id: string; title: string; done: boolean };
 const listTasks = makeFunctionReference<"query", { projectId: string }, Task[]>("tasks:list");

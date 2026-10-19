@@ -1,6 +1,6 @@
 import type { GenericId } from "convex/values";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-import { tempId } from "@vvedantb/convex-client";
+import { tempId } from "@vvedantb/server";
 
 afterEach(() => {
   vi.restoreAllMocks();
