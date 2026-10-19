@@ -1,8 +1,9 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { IconX } from "@tabler/icons-react";
 import { Button, type ButtonProps } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
-import { panelCloseButtonClass, sidebarHeaderRowClass } from "./app-shell-classes";
+import { panelCloseButtonClass, sidebarHeaderRowClass, sidebarNavIconClass, sidebarNavItemClass } from "./app-shell-classes";
 import { useOptionalSidebar } from "./SidebarChrome";
 
 export type SidebarPanelProps = {
@@ -129,5 +130,40 @@ export function PanelClose({ label = "Close navigation", onClick, className, chi
     >
       {children ?? <IconX className="h-4 w-4" />}
     </Button>
+  );
+}
+
+export type SidebarNavItemProps = ComponentPropsWithoutRef<"button"> & {
+  /** Current route: static fill, `font-medium`, `aria-current="page"`. */
+  active?: boolean;
+  /** Collapsed panel: centred icon, no horizontal padding. */
+  iconOnly?: boolean;
+  /** Leading icon element; gets `sidebarNavIconClass(active)` merged onto it. */
+  icon?: ReactElement;
+  /** Render the single child element (for example a router link) as the row. */
+  asChild?: boolean;
+};
+
+/** Panel nav row (`sidebarNavItemClass`). Renders a native `<button>`, or its child with `asChild`. */
+export function NavItem({
+  active = false,
+  iconOnly = false,
+  icon,
+  asChild = false,
+  className,
+  children,
+  ...props
+}: SidebarNavItemProps) {
+  const Row = asChild ? Slot : "button";
+  return (
+    <Row
+      type={asChild ? undefined : "button"}
+      {...props}
+      aria-current={active ? "page" : undefined}
+      className={cn(sidebarNavItemClass({ active, iconOnly }), className)}
+    >
+      {icon ? <Slot className={sidebarNavIconClass(active)}>{icon}</Slot> : null}
+      <Slottable>{children}</Slottable>
+    </Row>
   );
 }

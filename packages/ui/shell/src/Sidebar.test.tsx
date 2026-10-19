@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { IconHome, IconSearch } from "@tabler/icons-react";
 import { DropdownMenuItem } from "../../src/ui/dropdown-menu";
 import { TooltipProvider } from "../../src/ui/tooltip";
+import { cn } from "../../src/utils/cn";
 import { AppShell } from "./AppShell";
+import { sidebarNavIconClass, sidebarNavItemClass } from "./app-shell-classes";
 import { AppSidebar } from "./AppSidebar";
 import { Sidebar } from "./Sidebar";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
@@ -292,5 +294,46 @@ describe("Sidebar.AccountTrigger", () => {
     expect(trigger?.getAttribute("title")).toBe("Test User");
     expect(trigger?.getAttribute("aria-label")).toBe("Account menu for Test User");
     expect(trigger?.textContent).toBe("TU");
+  });
+});
+
+describe("Sidebar nav rows", () => {
+  it("builds the whole row from one call", () => {
+    expect(sidebarNavItemClass({ active: true })).toBe(
+      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 gap-2 px-4 bg-surface-tertiary font-medium text-foreground",
+    );
+    expect(sidebarNavItemClass({ iconOnly: true })).toBe(
+      "group flex w-full items-center rounded-menu-item py-1.5 text-[0.8125rem] leading-[18px] tracking-[0.005em] transition-[scale,background-color,color] duration-150 ease-smooth active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/35 justify-center px-0 font-normal text-foreground/80 hover:bg-surface-tertiary hover:text-foreground",
+    );
+  });
+
+  it("wins over app row classes passed before it", () => {
+    const merged = cn("rounded-lg text-sm font-medium transition-colors", sidebarNavItemClass({ active: false }));
+    expect(merged).not.toMatch(/rounded-lg|text-sm|font-medium|transition-colors/);
+    expect(merged).toContain("rounded-menu-item");
+  });
+
+  it("Sidebar.NavItem renders a link row with the icon class", async () => {
+    await mount(
+      <Sidebar.NavItem asChild active icon={<IconHome size={19} />}>
+        <a href="/home">
+          <span className="truncate">Home</span>
+        </a>
+      </Sidebar.NavItem>,
+    );
+    const link = host?.querySelector("a");
+    expect(link?.getAttribute("aria-current")).toBe("page");
+    expect(link?.getAttribute("type")).toBeNull();
+    expect(link?.className).toBe(sidebarNavItemClass({ active: true }));
+    expect(link?.firstElementChild?.getAttribute("class")).toContain(sidebarNavIconClass(true));
+    expect(link?.textContent).toBe("Home");
+  });
+
+  it("Sidebar.NavItem defaults to an idle button", async () => {
+    await mount(<Sidebar.NavItem>Search</Sidebar.NavItem>);
+    const button = host?.querySelector("button");
+    expect(button?.getAttribute("type")).toBe("button");
+    expect(button?.hasAttribute("aria-current")).toBe(false);
+    expect(button?.className).toBe(sidebarNavItemClass());
   });
 });

@@ -6,17 +6,17 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps. The CSS and 
 
 | Export | File | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, `*` border and `body` defaults. In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. |
+| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, the radius utilities `rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`), `rounded-menu-item` (`min(var(--radius), 0.5rem)`) and `rounded-control` (`min(var(--radius), 0.625rem)`) (0.7.1; `rounded-surface` was in `utilities.css` before), `*` border and `body` defaults. In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. |
 | `tokens` and `Tokens` from `@vvedantb/ui` | `src/native.ts` | JS colours, radii and spacing for React Native. `@vvedantb/native-ui` keeps its own copy in `src/tokens.ts`; a test keeps the two equal. |
 | `@vvedantb/ui/tokens/css/base.css` | `src/css/base.css` | `html` touch/accent, `::selection`, control transitions, pointer cursor, range accent (`@layer base`). |
 | `@vvedantb/ui/tokens/css/dialog.css` | `src/css/dialog.css` | Unlayered `max-width: none` for `@vvedantb/ui` compact (bottom-sheet) dialogs. |
 | `@vvedantb/ui/tokens/css/modal.css` | `src/css/modal.css` | `.t-modal`, `.is-open`, `.is-closing` and `t-modal-presence-wait` (`@layer components`). |
 | `@vvedantb/ui/tokens/css/tabs.css` | `src/css/tabs.css` | `.t-tab`, active colour, `.t-tabs-pill`, small-screen `.t-tabs` scrolling. |
 | `@vvedantb/ui/tokens/css/tabs-pills.css` | `src/css/tabs-pills.css` | `--tabs-*` colour variables, `.t-tabs--segmented`, `.t-tabs--pills` and pill hover / active fills. |
-| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target`, `@utility reveal-on-hover` and `@utility rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`). |
+| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target` and `@utility reveal-on-hover`. `rounded-surface` moved to `tokens.css` in 0.7.1. |
 | `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). |
 | `@vvedantb/ui/tokens/css/animations.css` | `src/css/animations.css` | `animate-aurora`, `animate-fade-in-up`, `animate-indeterminate` as `@theme` (CSS-first apps). |
-| `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius` and a `glass-panel-strong` fallback. Import it **or** `tokens.css`, never both. |
+| `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius`, the same three radius utilities as `tokens.css` and a `glass-panel-strong` fallback. Import it **or** `tokens.css`, never both. |
 | `@vvedantb/ui/tokens/css/index.css` | `src/css/index.css` | base + dialog + utilities + scrollbar-thin + animations, for new CSS-first apps. |
 | `@vvedantb/ui/tokens/tailwind-preset` | `src/tailwind-preset.mjs` (+ `.d.mts`) | Tailwind preset for apps that load a JS config with `@config`. |
 

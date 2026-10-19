@@ -158,10 +158,13 @@ export {
   railBadgeClass,
   railTileClass,
   railTileStateClass,
+  sidebarNavIconClass,
+  sidebarNavItemClass,
   sidebarNavLinkTextClass,
   sidebarNavRowClass,
   sidebarSectionLabelClass,
 } from "../shell/src/app-shell-classes";
+export type { SidebarNavItemClassOptions } from "../shell/src/app-shell-classes";
 
 // App helpers: confirm skip, update watcher, settings chrome, stable auth.
 export * from "../app/src/index";

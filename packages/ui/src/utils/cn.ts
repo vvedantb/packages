@@ -1,12 +1,14 @@
 import { type ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
-// `rounded-field` is a custom radius token — teach twMerge it conflicts with
-// `rounded-none` / `rounded-md` / etc. so Input overrides actually win.
+// `rounded-field` and the tokens.css radii (`rounded-surface`,
+// `rounded-menu-item`, `rounded-control`) are custom radius tokens — teach
+// twMerge they conflict with `rounded-none` / `rounded-md` / etc. so the last
+// radius class wins.
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
-      borderRadius: ["field"],
+      borderRadius: ["field", "surface", "menu-item", "control"],
     },
   },
 });

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.1
+
+Intended visual change. No props removed; DOM structure unchanged. Values in brackets are at the default `--radius: 1rem`.
+
+- Visual change: `DropdownMenu` and `ContextMenu` items, sub-triggers, checkbox items and radio items use `rounded-menu-item` instead of `rounded-md`: `calc(var(--radius) - 2px)` (14px) -> `min(var(--radius), 0.5rem)` (8px). The menu surface stays `rounded-lg` (16px). Colours are unchanged.
+- Visual change: sidebar panel nav rows. `sidebarNavRowClass(isIconOnly)` was `gap-3 px-3 py-1.5` (12px gap, 12px / 6px padding) and is now the whole row layout: `group flex w-full items-center rounded-menu-item` (8px), `gap-2 px-4 py-1.5` (8px gap, 16px / 6px padding), `text-[0.8125rem] leading-[18px] tracking-[0.005em]` (13px / 18px), `active:scale-[0.99]` with a 150ms transition, and a `ring-foreground/35` focus ring. Icon-only rows keep `justify-center px-0`. Apps that added `rounded-lg text-sm` go from 16px corners, 14px / 20px text and a 32px row to 8px, 13px / 18px and 30px.
+- Visual change: `sidebarNavLinkTextClass(isActive)`: active `text-foreground` -> `bg-surface-tertiary font-medium text-foreground`; idle `text-muted hover:text-foreground` -> `font-normal text-foreground/80 hover:bg-surface-tertiary hover:text-foreground`. The hover and active fill is a static rounded rectangle.
+- Visual change: `sidebarSectionLabelClass`: `px-3` -> `px-4` (12px -> 16px, aligned with the rows) and `leading-4` (16px line). Colour still comes from the app's `.sidebar-section-label` rule.
+- New: `sidebarNavItemClass({ active, iconOnly })` (the whole row in one call), `sidebarNavIconClass(active)` (`size-[19px] shrink-0`, `text-muted-foreground` idle, `text-foreground` active) and `Sidebar.NavItem` (`active`, `iconOnly`, `icon`, `asChild`). Type `SidebarNavItemClassOptions`, `SidebarNavItemProps`.
+- `tokens.css` and `compat-shadcn-rgb.css` define `@utility rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`, moved from `utilities.css`), `rounded-menu-item` (`min(var(--radius), 0.5rem)`) and `rounded-control` (`min(var(--radius), 0.625rem)`), so apps get them through the file they already import.
+- `cn` treats `rounded-surface`, `rounded-menu-item` and `rounded-control` as radius classes, so a later radius class replaces an earlier one.
+
 ## 0.7.0
 
 Additive. With the new props unset every existing component renders as in 0.6.1.

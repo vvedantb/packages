@@ -29,7 +29,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "modal.css": [".t-modal.is-closing", "@keyframes t-modal-presence-wait"],
     "tabs.css": [".t-tabs-pill", ".t-tab"],
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
-    "utilities.css": [".hit-target:after", ".reveal-on-hover", ".rounded-surface"],
+    "utilities.css": [".hit-target:after", ".reveal-on-hover"],
     "scrollbar-thin.css": [".scrollbar-thin::-webkit-scrollbar-thumb:hover"],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
     "index.css": ["::selection", ".hit-target", ".scrollbar-thin", "@keyframes fade-in-up"],
@@ -37,6 +37,16 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
   for (const [file, needles] of Object.entries(expect)) {
     const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "rounded-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
     for (const n of needles) assert.ok(out.includes(n), `${file}: missing ${n}`);
+  }
+});
+
+test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { skip }, async () => {
+  const candidates = ["rounded-surface", "rounded-menu-item", "rounded-control"];
+  for (const file of ["./src/tokens.css", "./src/css/compat-shadcn-rgb.css"]) {
+    const out = await build(`@import "tailwindcss"; @import "${file}";`, candidates);
+    assert.match(out, /\.rounded-surface\s*\{\s*border-radius: clamp\(\.75rem, var\(--radius\), 1rem\)/, file);
+    assert.match(out, /\.rounded-menu-item\s*\{\s*border-radius: min\(var\(--radius\), \.5rem\)/, file);
+    assert.match(out, /\.rounded-control\s*\{\s*border-radius: min\(var\(--radius\), \.625rem\)/, file);
   }
 });
 
