@@ -50,6 +50,17 @@ test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { s
   }
 });
 
+test("bg-sidebar-accent comes with tokens.css and with compat-shadcn-rgb.css", { skip }, async () => {
+  const fromTokens = await build(head, ["bg-sidebar-accent"]);
+  assert.match(fromTokens, /--color-sidebar-accent: var\(--sidebar-accent\)/);
+  assert.match(fromTokens, /\.bg-sidebar-accent\s*\{\s*background-color: var\(--color-sidebar-accent\)/);
+  const css = readFileSync(join(PKG, "src/tokens.css"), "utf8");
+  assert.match(css, /--sidebar-accent: var\(--surface-tertiary\);/, "light fill matches surface-tertiary");
+  assert.match(css, /--sidebar-accent: oklch\(22\.64% 0 0\);/, "dark fill is sRGB 28 28 28");
+  const fromCompat = await build(`@import "tailwindcss"; @import "./src/css/compat-shadcn-rgb.css";`, ["bg-sidebar-accent"]);
+  assert.match(fromCompat, /\.bg-sidebar-accent\s*\{\s*background-color: rgb\(var\(--sidebar-accent, var\(--secondary\)\)\)/);
+});
+
 test("preset loads through @config and generates its theme", { skip }, async () => {
   const { default: preset, tokensPreset, cssVar } = await import("../src/tailwind-preset.mjs");
   assert.equal(preset.darkMode, "class");

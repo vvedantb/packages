@@ -56,6 +56,7 @@
   --color-surface-tertiary: var(--surface-tertiary);
   --color-surface-tertiary-foreground: var(--surface-tertiary-foreground);
   --color-surface-card: var(--surface-card);
+  --color-sidebar-accent: var(--sidebar-accent);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
 
@@ -155,6 +156,8 @@
     --surface-tertiary: oklch(93.73% 0 0);
     --surface-tertiary-foreground: oklch(21.03% 0 0);
     --surface-card: oklch(98% 0 0);
+    /* Sidebar nav row hover, active and selected fill. */
+    --sidebar-accent: var(--surface-tertiary);
     --warning: oklch(78.19% 0.159 72.33);
     --warning-foreground: oklch(21.03% 0.0059 72.33);
     --radius: 1rem;
@@ -202,6 +205,8 @@
     --surface-tertiary: oklch(27.21% 0.0023 0);
     --surface-tertiary-foreground: oklch(99.11% 0 0);
     --surface-card: oklch(25.7% 0.0023 0);
+    /* sRGB 28 28 28: a step darker than --surface-tertiary. */
+    --sidebar-accent: oklch(22.64% 0 0);
     --warning: oklch(82.03% 0.1392 76.34);
     --warning-foreground: oklch(21.03% 0.0059 76.34);
     --radius: 1rem;

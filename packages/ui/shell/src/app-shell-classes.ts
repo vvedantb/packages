@@ -28,13 +28,14 @@ export const sidebarSectionLabelClass =
   "sidebar-section-label px-4 py-1 text-[11px] leading-4 font-medium tracking-[-0.01em]";
 
 /**
- * Nav row state: idle rows are `foreground/80` and get the fill on hover;
- * the active row is `font-medium text-foreground` on a static fill.
+ * Nav row state: idle rows are `foreground/80` and get the `sidebar-accent`
+ * fill on hover; the active row is `font-medium text-foreground` on a static
+ * fill.
  */
 export function sidebarNavLinkTextClass(isActive: boolean): string {
   return isActive
-    ? "bg-surface-tertiary font-medium text-foreground"
-    : "font-normal text-foreground/80 hover:bg-surface-tertiary hover:text-foreground";
+    ? "bg-sidebar-accent font-medium text-foreground"
+    : "font-normal text-foreground/80 hover:bg-sidebar-accent hover:text-foreground";
 }
 
 /**
@@ -53,12 +54,72 @@ export type SidebarNavItemClassOptions = {
   active?: boolean;
   /** Collapsed panel: centred icon, no horizontal padding. */
   iconOnly?: boolean;
+  /** Picked (for example in a multi-select list): the active fill, without `font-medium`. Same as `data-selected="true"`. */
+  selected?: boolean;
+  /** Row being dragged: `opacity-40 cursor-grabbing`. Same as `data-dragging="true"`. */
+  dragging?: boolean;
+  /** Row under a drag: fill plus an inset `ring-focus` ring. Same as `data-drop-target="true"`. */
+  dropTarget?: boolean;
 };
 
-/** Whole panel nav row: `sidebarNavRowClass` plus `sidebarNavLinkTextClass`. */
-export function sidebarNavItemClass({ active = false, iconOnly = false }: SidebarNavItemClassOptions = {}): string {
-  return cn(sidebarNavRowClass(iconOnly), sidebarNavLinkTextClass(active));
+// Row states an app can also set as data attributes on the row itself.
+const sidebarNavItemDataStateClass =
+  "data-[selected=true]:bg-sidebar-accent data-[selected=true]:text-foreground data-[dragging=true]:cursor-grabbing data-[dragging=true]:opacity-40 data-[drop-target=true]:bg-sidebar-accent data-[drop-target=true]:text-foreground data-[drop-target=true]:ring-2 data-[drop-target=true]:ring-inset data-[drop-target=true]:ring-focus";
+
+/**
+ * Whole panel nav row: `sidebarNavRowClass` plus `sidebarNavLinkTextClass`,
+ * plus `data-selected`, `data-dragging` and `data-drop-target` (`="true"`)
+ * styles. The `selected`, `dragging` and `dropTarget` options apply the same
+ * styles without the attributes.
+ */
+export function sidebarNavItemClass({
+  active = false,
+  iconOnly = false,
+  selected = false,
+  dragging = false,
+  dropTarget = false,
+}: SidebarNavItemClassOptions = {}): string {
+  return cn(
+    sidebarNavRowClass(iconOnly),
+    sidebarNavLinkTextClass(active),
+    sidebarNavItemDataStateClass,
+    selected && "bg-sidebar-accent text-foreground",
+    dragging && "cursor-grabbing opacity-40",
+    dropTarget && "bg-sidebar-accent text-foreground ring-2 ring-inset ring-focus",
+  );
 }
+
+/**
+ * Nested row padding: each `indent` level adds 12px to the row's 16px
+ * (`px-4`) left padding. Put it on the row's `style`.
+ */
+export function sidebarNavItemIndentStyle(indent: number): { paddingLeft: string } {
+  return { paddingLeft: `calc(1rem + ${indent * 12}px)` };
+}
+
+/** Row part: leading checkbox, icon, avatar or status dot. */
+export const sidebarNavItemLeadingClass = "flex shrink-0 items-center";
+
+/**
+ * Row part: the label, which takes the free width and truncates. For two
+ * lines, put `block truncate` spans inside (subtitle: `sidebarNavItemSubtitleClass`).
+ */
+export const sidebarNavItemLabelClass = "min-w-0 flex-1 truncate";
+
+/** Second, muted line inside the label. */
+export const sidebarNavItemSubtitleClass = "block truncate text-xs text-muted-foreground";
+
+/** Row part: always-visible trailing content (counts, badges, spinners). */
+export const sidebarNavItemTrailingClass = "ml-auto flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground";
+
+/**
+ * Row part: actions such as a `...` menu button. In the row flow at the end,
+ * 24px tall without growing the row. Hidden until the row is hovered or has
+ * focus, or a menu trigger inside it (or the part itself) is
+ * `data-state="open"`.
+ */
+export const sidebarNavItemActionsClass =
+  "-my-1 ml-auto flex h-6 shrink-0 items-center opacity-0 transition-opacity duration-75 group-hover:opacity-100 group-focus-within:opacity-100 has-[[data-state=open]]:opacity-100 data-[state=open]:opacity-100";
 
 /** Nav row icon (put it on the `<svg>`): 19px, muted until active. */
 export function sidebarNavIconClass(active: boolean): string {
