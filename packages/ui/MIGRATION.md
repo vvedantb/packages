@@ -1,3 +1,20 @@
+# Composable parts (0.6.0, optional)
+
+Nothing to change. The 0.5.x components keep their props and render the same DOM. Adopt the parts where a prop-driven component is too rigid, one component at a time:
+
+| Legacy | Parts |
+| --- | --- |
+| `ConfirmDialog` with `size`, `variant` and label props | `ConfirmDialog.Root` > `.Content` > `.Header` / `.Footer` > `.Cancel` / `.Action` |
+| `SignOutDialog` | The same parts with `alert={false}` and `pending` |
+| `AppShell` with `sidebar`, `skipLinkLabel` and `*ClassName` | `AppShell.Root` > `.SkipLink`, your sidebar, `.Main` > `.Content` |
+| `AppSidebar` with `rail`, `panel` and `mobile*` | `Sidebar.Root` > `.MobileHeader`, `.Backdrop`, `.Aside` |
+| `SidebarRail` with `top`, `footer`, `bodyAsChild`, `tabs` and `*ClassName` | `Sidebar.Rail` > `.RailHeader`, `.RailBody`, `.RailFooter` |
+| `RailTile`, `RailDivider` | `Sidebar.RailItem`, `Sidebar.RailSeparator` |
+| `SidebarPanel` with `headerTrailing` and `onClose` | `Sidebar.Panel` > `.PanelHeader` > `.PanelTitle`, `.PanelActions` > `.PanelClose` |
+| `SidebarAccountMenu` with `badge`, `triggerProps` and `contentProps` | `Sidebar.AccountMenu` > `.AccountTrigger`, `.AccountContent` > `.AccountLabel`, `.AccountSeparator` |
+
+Two behaviours differ from the legacy wrappers by design. `Sidebar.Panel` reads `collapsed` and `panelHidden` from `Sidebar.Root` (legacy `SidebarPanel` does not). `Sidebar.PanelClose` closes the drawer without an `onClick`.
+
 # Migrating to the single JavaScript entry (0.4.0-rc.1)
 
 From 0.4.0-rc.1, `@vvedantb/ui` has one JavaScript entry: the root (`.`). Every JS subpath is removed from `exports`. Change each import to `@vvedantb/ui`. CSS and Tailwind preset paths do not change.

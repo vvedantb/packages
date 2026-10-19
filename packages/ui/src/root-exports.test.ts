@@ -15,9 +15,31 @@ test("root exposes former subpath APIs", () => {
     "SidebarPanel", "SidebarAccountMenu", "SidebarAccountMenuPlaceholder", "SignOutDialog",
     "railTileClass", "railTileStateClass", "railBadgeClass",
     "sidebarNavRowClass", "sidebarNavLinkTextClass", "sidebarSectionLabelClass",
+    "Sidebar", "useConfirmDialog",
   ]) {
     expect(root, name).toHaveProperty(name);
   }
+});
+
+test("root exposes the composable parts as namespace members", () => {
+  const parts: [string, object, string[]][] = [
+    ["ConfirmDialog", root.ConfirmDialog, [
+      "Root", "Content", "Header", "Title", "Description", "Body", "Footer", "Cancel", "Action", "Field",
+    ]],
+    ["AppShell", root.AppShell, ["Root", "SkipLink", "Main", "Content"]],
+    ["Sidebar", root.Sidebar, [
+      "Root", "MobileHeader", "MobileMenuButton", "MobileTitle", "MobileActions", "Backdrop", "Aside",
+      "Rail", "RailHeader", "RailBody", "RailFooter", "Footer", "RailItem", "RailSeparator", "Tooltip",
+      "Panel", "PanelHeader", "PanelTitle", "PanelActions", "PanelClose", "ResizeHandle",
+      "AccountMenu", "AccountTrigger", "AccountAvatar", "AccountContent", "AccountLabel",
+      "AccountSeparator", "AccountBadge",
+    ]],
+  ];
+  for (const [namespace, value, names] of parts) {
+    for (const name of names) expect(value, `${namespace}.${name}`).toHaveProperty(name);
+  }
+  expect(typeof root.ConfirmDialog).toBe("function");
+  expect(typeof root.AppShell).toBe("function");
 });
 
 test("root cn merges conflicting Tailwind classes", () => {

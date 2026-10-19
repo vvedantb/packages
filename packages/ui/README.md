@@ -215,6 +215,7 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
 - `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
 - `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
 - `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it. `"md"` (0.5.2) is dismissible like `"sm"`, with the title in a header (`pb-4`), the description in its own section (`py-6`) and a footer (`pt-4`) with default-size buttons. It has the same Cancel and confirm behaviour as `"sm"`.
+- Legacy (still supported): the `ConfirmDialog` `size`, `variant`, `cancelLabel` and `confirmLabel` props. For anything they do not cover, compose the parts (see [Composable parts](#composable-parts-060)).
 
 ## Buttons, menus and fields (0.4.4)
 
@@ -291,13 +292,13 @@ import {
 
 - Widths: `AppShell` sets `--app-shell-rail-width` (default `4rem`), `--app-shell-sidebar-width` (rail plus panel, default `20rem`) and `--app-shell-mobile-header-height` (default `calc(3.5rem + env(safe-area-inset-top, 0px))`) as inline style. Change them with `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. The other pieces read these variables. Outside `AppShell`, set the variables yourself or pass a width class with `className`.
 - `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
-- `AppSidebar`: `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app. The mobile header is a three-column grid, so the title and trailing actions stay on one row and a long title truncates (0.5.4).
-- `SidebarRail`: `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
+- `AppSidebar`: legacy (still supported) `rail`, `panel` and `mobile*` props; compose `Sidebar.*` instead. `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app. The mobile header is a three-column grid, so the title and trailing actions stay on one row and a long title truncates (0.5.4).
+- `SidebarRail`: legacy (still supported) `top`, `footer`, `bodyAsChild`, `tabs` and `*ClassName` props; compose `Sidebar.Rail` parts instead. `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
 - `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `className`. Without `asChild` it is a native `<button type="button">` (0.5.3), so icons keep their authored size; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
 - `RailDivider`, `SidebarIconTooltip` (`label`, `enabled`, `side` `"right"`, `sideOffset` 8).
-- `SidebarPanel`: `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
-- `SidebarAccountMenu`: `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
-- `SignOutDialog`: `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
+- `SidebarPanel`: legacy (still supported) `headerTrailing`, `onClose`, `closeLabel` and `closeButtonClassName`; compose `Sidebar.Panel` parts instead. `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
+- `SidebarAccountMenu`: legacy (still supported) `badge`, `triggerProps`, `contentProps` and `stackedLabel`; compose `Sidebar.Account*` parts instead. `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
+- `SignOutDialog`: legacy (still supported) `question` and `title`; compose `ConfirmDialog` parts with `alert={false}` for other copy. `open`, `onOpenChange` (not called with `false` while `pending`), `pending`, `onConfirm`, `description`, `contentClassName`, `title` (`"Sign out"`), `question` (`"Sign out of your account?"`).
 - Class helpers: `railTileClass`, `railTileStateClass(active)`, `railBadgeClass`, `sidebarNavRowClass(isIconOnly)`, `sidebarNavLinkTextClass(isActive)`, `sidebarSectionLabelClass`.
 
 ### Header actions and account badge (0.5.2)
@@ -378,6 +379,163 @@ function PanelWidth() {
     }
   />
 </Tabs>
+```
+
+## Composable parts (0.6.0)
+
+Shadcn-style building blocks. The prop-driven components above are thin compositions of them and render the same DOM.
+
+Convention: compound parts are static members of a namespace object, `<Namespace>.<Part>`. There are three namespaces: `ConfirmDialog.*`, `AppShell.*` and `Sidebar.*`. `ConfirmDialog` and `AppShell` stay callable with their legacy props. `Sidebar` is a plain object. Prop types are exported flat, for example `ConfirmDialogRootProps`, `AppShellMainProps` and `SidebarRailItemProps`. Every part that renders an element merges `className` last and forwards native props.
+
+### `ConfirmDialog.*`
+
+| Part | Purpose |
+| --- | --- |
+| `Root` | Radix dialog root. `size` (`"default"`, `"sm"`, `"md"`: layout slot for the other parts), `alert` (blocking alert dialog; default `size === "default"`), `pending` (swallows close requests, disables Cancel, Action shows its pending state), `confirmPhrase` (type-to-confirm; the typed text resets each time the dialog opens). |
+| `Content` | `AlertDialogContent` with `alert`, else `DialogContent`. `sm` and `md` add `sm:max-w-96`. Takes every `DialogContent` prop (`role`, `hideCloseButton`, ...). |
+| `Header` | `DialogHeader`; `md` adds `pb-4`. |
+| `Title` | `DialogTitle`; `sm` adds `mb-2 text-sm font-medium`. |
+| `Description` | `DialogDescription`; `sm` and `md` add their spacing. |
+| `Body` | Plain `<div>` for extra content. No default classes. |
+| `Footer` | `DialogFooter` (`md` adds `pt-4`); `sm` renders a `flex justify-end gap-2` row. |
+| `Cancel` | Alert: the outline `AlertDialogCancel` (closes through Radix). Otherwise a ghost `Button` that runs `onClick`, then (unless it called `preventDefault()`) the Root `onOpenChange(false)`. Disabled while pending. Default text `"Cancel"`. |
+| `Action` | Confirm button. Never closes the dialog. Disabled while `disabled`, pending, or until `confirmPhrase` matches. `pendingLabel` replaces the children with a spinner (`spinnerSize`, default 14) and the label while pending. |
+| `Field` | Type-to-confirm input bound to `confirmPhrase` (trimmed, case-insensitive). `label` replaces the label content, `onEnter` runs on Enter while the phrase matches, `inputProps` go to the `Input`. |
+
+`useConfirmDialog()` returns `{ size, alert, pending, phraseMatches, typed, setTyped, requestClose }` for custom parts.
+
+### `AppShell.*`
+
+| Part | Purpose |
+| --- | --- |
+| `Root` | Frame `<div>`. Sets the `--app-shell-*` variables (`railWidth`, `sidebarWidth`, `mobileHeaderHeight`), owns the `resizable` state, and passes `panelHidden` and `mainId` to the parts. `style` merges over the variables. |
+| `SkipLink` | Visually hidden link to `<main>`. `label` (`"Skip to main content"`), `targetId` (default the Root `mainId`). |
+| `Main` | The `<main>`. Offsets by the sidebar width, or the rail width while `panelHidden`. `id` defaults to the Root `mainId` (`"main-content"`). |
+| `Content` | The content card inside `<main>`. |
+
+### `Sidebar.*`
+
+| Part | Purpose |
+| --- | --- |
+| `Root` | No DOM. Holds `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `collapsed`, `panelHidden` and the drawer `id`. Closes the drawer at the desktop breakpoint. The chrome parts need it. |
+| `MobileHeader` | Fixed header below `md`, a three-column grid (menu button, title, actions). Escape closes the drawer. Keep all three children so the columns line up. |
+| `MobileMenuButton` | Opens the drawer. `label`, `icon` (`(open) => node`). |
+| `MobileTitle` | Centred `<h1>` that truncates. Without children, an empty `<span>` keeps the middle column. |
+| `MobileActions` | Trailing header actions. Without children, a spacer that keeps the title centred. |
+| `Backdrop` | Drawer backdrop; a click closes the drawer. `label` (`"Close navigation"`). |
+| `Aside` | The `<aside>`: fixed on desktop, a swipe-to-close drawer below it. `id` overrides the Root id. |
+| `ResizeHandle` | `SidebarResizeHandle` in a resizable `AppShell`, shown on desktop while the panel shows. Place it inside `Aside`. |
+| `Rail` | Rail column. `showDivider`. |
+| `RailHeader` / `RailBody` / `RailFooter` | Top block, scroll body (`asChild`, `tabs` for a Radix tabs list) and bottom block. `Footer` is an alias of `RailFooter`. |
+| `RailItem` | Rail tile with tooltip (`RailTile`): `label`, `active`, `tooltip`, `showTooltip`, `badge`, `asChild`, `tabValue`. |
+| `RailSeparator` | Short rule between rail items (`RailDivider`). |
+| `Tooltip` | Right-side icon tooltip (`SidebarIconTooltip`). |
+| `Panel` | Panel column. `collapsed` (`md:hidden`) and `panelHidden` (renders nothing) default to the Root values. |
+| `PanelHeader` | Padded header row for `PanelTitle` and `PanelActions`. |
+| `PanelTitle` / `PanelActions` | The `<h2>` and the trailing actions. |
+| `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. |
+| `AccountMenu` | Dropdown root. `badge` adds the unread dot (`AccountBadge`) in a `relative` wrapper. |
+| `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props; native `name` goes to the button. |
+| `AccountAvatar` | Avatar image or initials. `userName`, `imageUrl`. |
+| `AccountContent` | Menu content. Defaults `align="center"`, `side="right"`, `sideOffset={8}`, `w-56`. |
+| `AccountLabel` | Identity label: avatar, `userName`, optional `email`, `stacked`. |
+| `AccountSeparator` | Separator after the label. Kept separate so the label can stand alone. |
+| `AccountBadge` | Unread dot. `visible` (default `true`; `false` fades it out). |
+
+### Examples
+
+A destructive confirm with a pending state and type-to-confirm:
+
+```tsx
+<ConfirmDialog.Root open={open} onOpenChange={setOpen} pending={deleting} confirmPhrase={item.name}>
+  <ConfirmDialog.Content>
+    <ConfirmDialog.Header>
+      <ConfirmDialog.Title>Delete item?</ConfirmDialog.Title>
+      <ConfirmDialog.Description>This cannot be undone.</ConfirmDialog.Description>
+    </ConfirmDialog.Header>
+    <ConfirmDialog.Field onEnter={remove} />
+    <ConfirmDialog.Footer>
+      <ConfirmDialog.Cancel />
+      <ConfirmDialog.Action variant="destructive" pendingLabel="Deleting..." onClick={remove}>
+        Delete
+      </ConfirmDialog.Action>
+    </ConfirmDialog.Footer>
+  </ConfirmDialog.Content>
+</ConfirmDialog.Root>
+```
+
+A dismissible rename dialog:
+
+```tsx
+<ConfirmDialog.Root open={open} onOpenChange={setOpen} alert={false}>
+  <ConfirmDialog.Content>
+    <ConfirmDialog.Header>
+      <ConfirmDialog.Title>Rename</ConfirmDialog.Title>
+    </ConfirmDialog.Header>
+    <ConfirmDialog.Body>
+      <Input value={name} onChange={(event) => setName(event.target.value)} aria-label="Name" />
+    </ConfirmDialog.Body>
+    <ConfirmDialog.Footer>
+      <ConfirmDialog.Cancel />
+      <ConfirmDialog.Action disabled={!name.trim()} onClick={save}>Save</ConfirmDialog.Action>
+    </ConfirmDialog.Footer>
+  </ConfirmDialog.Content>
+</ConfirmDialog.Root>
+```
+
+A full shell:
+
+```tsx
+<AppShell.Root panelHidden={collapsed || !hasPanel} resizable={resizeOptions}>
+  <AppShell.SkipLink />
+  <Sidebar.Root
+    isDesktop={isDesktop}
+    mobileOpen={open}
+    onMobileOpenChange={setOpen}
+    collapsed={collapsed}
+    panelHidden={!hasPanel}
+  >
+    <Sidebar.MobileHeader>
+      <Sidebar.MobileMenuButton />
+      <Sidebar.MobileTitle>{pageTitle}</Sidebar.MobileTitle>
+      <Sidebar.MobileActions />
+    </Sidebar.MobileHeader>
+    <Sidebar.Backdrop />
+    <Sidebar.Aside>
+      <Sidebar.Rail showDivider>
+        <Sidebar.RailHeader>
+          <Sidebar.RailItem asChild label="Home" active={isHome}>
+            <Link to="/"><IconHome size={22} /></Link>
+          </Sidebar.RailItem>
+        </Sidebar.RailHeader>
+        <Sidebar.RailBody>
+          <Sidebar.RailItem label="Search"><IconSearch size={22} /></Sidebar.RailItem>
+        </Sidebar.RailBody>
+        <Sidebar.RailFooter>
+          <Sidebar.AccountMenu>
+            <Sidebar.AccountTrigger userName={name} imageUrl={avatarUrl} />
+            <Sidebar.AccountContent>
+              <Sidebar.AccountLabel userName={name} email={email} imageUrl={avatarUrl} />
+              <Sidebar.AccountSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+            </Sidebar.AccountContent>
+          </Sidebar.AccountMenu>
+        </Sidebar.RailFooter>
+      </Sidebar.Rail>
+      <Sidebar.Panel>
+        <Sidebar.PanelHeader>
+          <Sidebar.PanelTitle>Library</Sidebar.PanelTitle>
+          <Sidebar.PanelActions>{isDesktop ? null : <Sidebar.PanelClose />}</Sidebar.PanelActions>
+        </Sidebar.PanelHeader>
+        {nav}
+      </Sidebar.Panel>
+      <Sidebar.ResizeHandle />
+    </Sidebar.Aside>
+  </Sidebar.Root>
+  <AppShell.Main>
+    <AppShell.Content>{page}</AppShell.Content>
+  </AppShell.Main>
+</AppShell.Root>
 ```
 
 ## Toaster

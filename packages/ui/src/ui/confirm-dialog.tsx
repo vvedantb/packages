@@ -1,34 +1,39 @@
 import * as React from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "./alert-dialog";
-import { Button } from "./button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./dialog";
+import { ConfirmDialogParts as Parts, type ConfirmDialogRootProps } from "./confirm-dialog-parts";
 
-export type ConfirmDialogProps = React.ComponentProps<typeof AlertDialog> & {
+export { useConfirmDialog } from "./confirm-dialog-parts";
+export type {
+  ConfirmDialogActionProps,
+  ConfirmDialogBodyProps,
+  ConfirmDialogCancelProps,
+  ConfirmDialogContentProps,
+  ConfirmDialogDescriptionProps,
+  ConfirmDialogFieldProps,
+  ConfirmDialogFooterProps,
+  ConfirmDialogHeaderProps,
+  ConfirmDialogRootProps,
+  ConfirmDialogSize,
+  ConfirmDialogTitleProps,
+} from "./confirm-dialog-parts";
+
+export type ConfirmDialogProps = Omit<
+  ConfirmDialogRootProps,
+  "size" | "alert" | "pending" | "confirmPhrase"
+> & {
   title: React.ReactNode;
   description?: React.ReactNode;
+  /** Legacy (still supported): compose `ConfirmDialog.Cancel` instead. */
   cancelLabel?: React.ReactNode;
+  /** Legacy (still supported): compose `ConfirmDialog.Action` instead. */
   confirmLabel?: React.ReactNode;
   onCancel?: () => void;
   onConfirm?: () => void;
+  /** Legacy (still supported): pass `variant` to `ConfirmDialog.Action` instead. */
   variant?: "default" | "destructive";
   confirmDisabled?: boolean;
   /**
+   * Legacy (still supported): use `ConfirmDialog.Root size` with the parts.
+   *
    * `"default"`: blocking alert dialog that closes on either button.
    * `"sm"`: compact dismissible dialog (outside click, Escape and the close
    * button close it). Confirm does not close it; the caller controls `open`.
@@ -38,7 +43,7 @@ export type ConfirmDialogProps = React.ComponentProps<typeof AlertDialog> & {
   size?: "default" | "sm" | "md";
 };
 
-function ConfirmDialog({
+function LegacyConfirmDialog({
   title,
   description,
   cancelLabel = "Cancel",
@@ -51,95 +56,49 @@ function ConfirmDialog({
   children,
   ...props
 }: ConfirmDialogProps) {
-  if (size === "sm") {
-    return (
-      <Dialog {...props}>
-        {children}
-        <DialogContent className="sm:max-w-96">
-          <DialogTitle className="mb-2 text-sm font-medium">{title}</DialogTitle>
-          {description != null ? (
-            <DialogDescription className="mb-4 text-sm text-muted-foreground">
-              {description}
-            </DialogDescription>
-          ) : null}
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onCancel?.();
-                props.onOpenChange?.(false);
-              }}
-            >
-              {cancelLabel}
-            </Button>
-            <Button
-              variant={variant}
-              size="sm"
-              disabled={confirmDisabled}
-              onClick={onConfirm}
-            >
-              {confirmLabel}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (size === "md") {
-    return (
-      <Dialog {...props}>
-        {children}
-        <DialogContent className="sm:max-w-96">
-          <DialogHeader className="pb-4">
-            <DialogTitle>{title}</DialogTitle>
-          </DialogHeader>
-          {description != null ? (
-            <DialogDescription className="py-6 text-muted-foreground">{description}</DialogDescription>
-          ) : null}
-          <DialogFooter className="pt-4">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                onCancel?.();
-                props.onOpenChange?.(false);
-              }}
-            >
-              {cancelLabel}
-            </Button>
-            <Button variant={variant} disabled={confirmDisabled} onClick={onConfirm}>
-              {confirmLabel}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+  const titleNode = <Parts.Title>{title}</Parts.Title>;
+  const descriptionNode =
+    description != null ? <Parts.Description>{description}</Parts.Description> : null;
   return (
-    <AlertDialog {...props}>
+    <Parts.Root {...props} size={size}>
       {children}
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description != null ? (
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          ) : null}
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction
-            variant={variant}
-            disabled={confirmDisabled}
-            onClick={onConfirm}
-          >
+      <Parts.Content>
+        {size === "sm" ? (
+          <>
+            {titleNode}
+            {descriptionNode}
+          </>
+        ) : size === "md" ? (
+          <>
+            <Parts.Header>{titleNode}</Parts.Header>
+            {descriptionNode}
+          </>
+        ) : (
+          <Parts.Header>
+            {titleNode}
+            {descriptionNode}
+          </Parts.Header>
+        )}
+        <Parts.Footer>
+          {/* The alert cancel passes the click event on; sm and md call onCancel bare. */}
+          <Parts.Cancel onClick={size === "default" ? onCancel : () => onCancel?.()}>
+            {cancelLabel}
+          </Parts.Cancel>
+          <Parts.Action variant={variant} disabled={confirmDisabled} onClick={onConfirm}>
             {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Parts.Action>
+        </Parts.Footer>
+      </Parts.Content>
+    </Parts.Root>
   );
 }
+LegacyConfirmDialog.displayName = "ConfirmDialog";
+
+/**
+ * Confirm dialog. Call it with props (the legacy prop-driven API), or compose
+ * the parts: `ConfirmDialog.Root`, `.Content`, `.Header`, `.Title`,
+ * `.Description`, `.Body`, `.Footer`, `.Cancel`, `.Action` and `.Field`.
+ */
+const ConfirmDialog = Object.assign(LegacyConfirmDialog, Parts);
 
 export { ConfirmDialog };

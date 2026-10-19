@@ -143,11 +143,13 @@ export function treeHasDialogDescription(
     if (!React.isValidElement(child)) return false;
     const type = child.type;
     if (type === descriptionType) return true;
+    // Wrappers named like `ConfirmDialog.Description` count too.
     const displayName =
-      typeof type === "object" && type !== null
-        ? (type as { displayName?: string }).displayName
+      (typeof type === "function" || (typeof type === "object" && type !== null)) &&
+      "displayName" in type
+        ? type.displayName
         : undefined;
-    if (displayName === "DialogDescription") return true;
+    if (typeof displayName === "string" && /Dialog\.?Description$/.test(displayName)) return true;
     const props = child.props as { children?: React.ReactNode };
     return treeHasDialogDescription(props.children, descriptionType);
   });
