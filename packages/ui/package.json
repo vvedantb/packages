@@ -35,6 +35,7 @@
       "types": "./tokens/src/tailwind-preset.d.mts",
       "default": "./tokens/src/tailwind-preset.mjs"
     },
+    "./landing.css": "./src/marketing/landing.css",
     "./package.json": "./package.json"
   },
   "types": "./src/index.ts",
@@ -50,7 +51,8 @@
     "!**/*.test.tsx"
   ],
   "sideEffects": [
-    "./src/ui/sonner.css"
+    "./src/ui/sonner.css",
+    "./src/marketing/landing.css"
   ],
   "scripts": {
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",

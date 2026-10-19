@@ -1,14 +1,19 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { IconLogout, IconMoon, IconSun } from "@tabler/icons-react";
+import { ConfirmSkipHint, skipConfirmTitle } from "../../app/src/confirm/ConfirmSkipHint";
+import { useRequestConfirm } from "../../app/src/confirm/useRequestConfirm";
 import { Button, type ButtonProps } from "../../src/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../src/ui/dropdown-menu";
 import { cn } from "../../src/utils/cn";
 import { accountEmailClass, railTileClass, railTileStateClass } from "./app-shell-classes";
+import { SignOutDialog } from "./SignOutDialog";
 
 type ContentProps = ComponentPropsWithoutRef<typeof DropdownMenuContent>;
 
@@ -45,6 +50,20 @@ export type SidebarAccountMenuProps = {
   >;
   /** Menu items after the label and separator. */
   children?: ReactNode;
+  /** Adds a "Light mode" / "Dark mode" item after `children`. */
+  themeToggle?: { isDark: boolean; onToggle: () => void };
+  /**
+   * Adds a separator and a danger "Sign out" item last. Selecting it opens
+   * `SignOutDialog` (Alt-click skips it, with `ConfirmSkipHint`). The menu owns
+   * the dialog state; `onSignOut` failing re-enables the dialog.
+   */
+  signOut?: {
+    onSignOut: () => Promise<void>;
+    /** Second line of the dialog. */
+    description?: string;
+  };
+  /** `size` of the theme and sign-out item icons. Default: the icon's own size (24). */
+  itemIconSize?: number;
 };
 
 /** Account menu on a rail tile: avatar trigger, identity label, then the app's items. Composed from `Sidebar.Account*` parts. */
@@ -62,8 +81,25 @@ export function SidebarAccountMenu({
   triggerProps,
   contentProps,
   children,
+  themeToggle,
+  signOut,
+  itemIconSize,
 }: SidebarAccountMenuProps) {
-  return (
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const { request } = useRequestConfirm();
+
+  const handleSignOut = async () => {
+    if (!signOut) return;
+    setSigningOut(true);
+    try {
+      await signOut.onSignOut();
+    } catch {
+      setSigningOut(false);
+    }
+  };
+
+  const menu = (
     <AccountMenu badge={badge}>
       <AccountTrigger {...triggerProps} userName={name} imageUrl={imageUrl} />
       <AccountContent
@@ -77,8 +113,48 @@ export function SidebarAccountMenu({
         <AccountLabel userName={name} email={email} imageUrl={imageUrl} stacked={stackedLabel} />
         <AccountSeparator />
         {children}
+        {themeToggle ? (
+          <DropdownMenuItem onSelect={() => themeToggle.onToggle()}>
+            {themeToggle.isDark ? <IconSun size={itemIconSize} /> : <IconMoon size={itemIconSize} />}
+            {themeToggle.isDark ? "Light mode" : "Dark mode"}
+          </DropdownMenuItem>
+        ) : null}
+        {signOut ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() =>
+                request(
+                  () => setSignOutOpen(true),
+                  () => {
+                    void handleSignOut();
+                  },
+                )
+              }
+              className="text-danger focus:text-danger data-[highlighted]:text-danger"
+              title={skipConfirmTitle("Sign out")}
+            >
+              <IconLogout size={itemIconSize} />
+              Sign out
+              <ConfirmSkipHint />
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </AccountContent>
     </AccountMenu>
+  );
+  if (!signOut) return menu;
+  return (
+    <>
+      {menu}
+      <SignOutDialog
+        open={signOutOpen}
+        onOpenChange={setSignOutOpen}
+        pending={signingOut}
+        onConfirm={handleSignOut}
+        description={signOut.description}
+      />
+    </>
   );
 }
 

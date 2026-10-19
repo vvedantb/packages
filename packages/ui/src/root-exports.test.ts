@@ -21,6 +21,10 @@ test("root exposes former subpath APIs", () => {
     "Sidebar", "useConfirmDialog",
     "createThemeProvider", "getSystemTheme", "applyThemeClass", "createPageTitleContext",
     "PageMotionProvider", "useDisablePageMotion", "formatCompactRelativeTime",
+    "createLandingKit", "LandingPageLayout", "LandingSection", "LandingSectionHeading", "LandingLattice",
+    "LandingFeatureCard", "LandingNavMenu", "LandingFooter", "landingShellClass", "landingPanelClass",
+    "landingItemVariants", "landingFooterLinkClass", "landingFooterButtonClass",
+    "SiteFooter", "PricingModal", "RailCollapseTile",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

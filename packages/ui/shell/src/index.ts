@@ -22,8 +22,8 @@ export { AppSidebar } from "./AppSidebar.js";
 export type { AppSidebarProps } from "./AppSidebar.js";
 // Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
 export * from "./Sidebar.js";
-export { SidebarRail, RailTile, RailDivider } from "./SidebarRail.js";
-export type { SidebarRailProps, RailTileProps, RailDividerProps } from "./SidebarRail.js";
+export { SidebarRail, RailTile, RailDivider, RailCollapseTile } from "./SidebarRail.js";
+export type { SidebarRailProps, RailTileProps, RailDividerProps, RailCollapseTileProps } from "./SidebarRail.js";
 export { SidebarResizeHandle, useAppShellResize } from "./SidebarResize.js";
 export type {
   AppShellResize,
