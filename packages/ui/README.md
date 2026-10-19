@@ -943,6 +943,6 @@ The compat file includes a fallback `glass-panel-strong` (`rgb(var(--card) / 0.9
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
 
-`@clerk/clerk-react`, `@tanstack/react-hotkeys`, `motion` and `zod` are optional peers (`peerDependenciesMeta`). Install `@clerk/clerk-react` only to use `useStableAuth`, `@tanstack/react-hotkeys` and `zod` only for the features that use them, and `motion` only to use the motion presets, `InputArea`, the 0.3 `Composer` or the AI elements and primitives that animate.
+`@clerk/clerk-react`, `convex`, `@tanstack/react-hotkeys`, `motion` and `zod` are optional peers (`peerDependenciesMeta`), so the package manager does not install or warn about them. The root still imports each of them statically from some module (`useStableAuth` and `ConvexClerkProvider` import Clerk; `ConvexClerkProvider` and `useEnsureUser` import `convex/react`; the motion presets, `ConfirmSkipHint` and others import the rest). So an app that imports `@vvedantb/ui` must have all five resolvable, even if it uses none of those exports: a bundler resolves every import before it tree-shakes. `app/tests-node/convex-esm.test.mjs` pins which root modules import `convex` and Clerk.
 
 Full documentation: the repository `README.md`. Upgrading from `@vvedantb/tokens`, `@vvedantb/shell` or `@vvedantb/app-kit`: `MIGRATION.md`.

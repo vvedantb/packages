@@ -10,7 +10,7 @@ npm install @vvedantb/ui
 
 ## Peers
 
-Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui`, needed only for the app helpers: `@clerk/clerk-react` (`useStableAuth`), `@tanstack/react-hotkeys` and `zod`.
+Required: `react` and `react-dom` (>=19). Optional peers of `@vvedantb/ui` used by the app helpers: `@clerk/clerk-react` (`useStableAuth`, `ConvexClerkProvider`), `convex` (`ConvexClerkProvider`, `useEnsureUser`), `@tanstack/react-hotkeys` and `zod` (your `z` for `parseClientEnv`). The root imports Clerk and `convex/react` statically, so they must be installed even if you do not use these helpers; see the package README.
 
 `sonner` is not a dependency. The update watcher takes the toast API as an option. The app source uses a local class join, which the root does not export (the root `cn` is the clsx and tailwind-merge one). Tailwind must scan `node_modules/@vvedantb/ui/app/src/**/*.{ts,tsx}` so the class names are generated, and the app needs the `@vvedantb/ui/tokens` names (`bg-surface-card`, `divide-separator`, `text-muted-foreground` and so on).
 
@@ -191,3 +191,69 @@ Pure TypeScript, no dependencies. Options:
 - `calendar`: `false` (default) counts elapsed time: a day is 24 hours, a month 30 days, a year 12 such months. `true` counts as `dayjs().diff(date, unit)` does: days by the local calendar across DST changes, and calendar months and years.
 
 Strings are parsed with `new Date(string)`. dayjs parses a date-only string such as `"2026-03-01"` as local midnight, `new Date` as UTC midnight; numbers, `Date` objects and ISO strings with a time give the same result either way. An invalid date gives `"NaNy"` (`"0mo"` with `calendar`).
+
+## Convex provider, VITE env and ensure-user (0.10.0)
+
+Moved from `@vvedantb/convex-client` 0.1.0 with the same names and behaviour. Its non-React helpers (`mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `createMemoryOptimisticStore`) moved to `@vvedantb/server` instead, so backend packages, tests and React Native can use them without loading this package.
+
+### `ConvexClerkProvider`
+
+```tsx
+import { ConvexClerkProvider, useStableAuth } from "@vvedantb/ui";
+import { ConvexReactClient } from "convex/react";
+
+const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
+
+<ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+  <ConvexClerkProvider client={convex} useAuth={useStableAuth}>
+    <App />
+  </ConvexClerkProvider>
+</ClerkProvider>;
+```
+
+| Props | Renders |
+| --- | --- |
+| `client` is `null` or `undefined` | `children` alone (no provider). |
+| `clerk={false}` | `<ConvexProvider client={client}>`. |
+| otherwise | `<ConvexProviderWithClerk client={client} useAuth={useAuth}>`; `useAuth` defaults to `@clerk/clerk-react`'s. |
+
+`clerk` defaults to `true`. Render it inside `ClerkProvider` unless `clerk` is `false`. Types: `ConvexClerkProviderProps`, `ConvexClerkUseAuth`.
+
+### `parseClientEnv`
+
+```ts
+import { z } from "zod";
+import { parseClientEnv } from "@vvedantb/ui";
+
+export const clientEnv = parseClientEnv(import.meta.env, { z, viteEnv: "fallback" });
+// { VITE_CONVEX_URL: string; VITE_CLERK_PUBLISHABLE_KEY: string; VITE_ENV: "development" | "staging" | "production" }
+
+export const extensionEnv = parseClientEnv(import.meta.env, {
+  z,
+  viteEnv: false,
+  extend: { VITE_CLERK_SYNC_HOST: z.string().url() },
+});
+```
+
+The schema is `z.object({ VITE_CONVEX_URL: z.string().min(1), VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1), VITE_ENV: z.enum(["development", "staging", "production"]), ...extend })`, built with your `z` (zod 3.25+ or 4; the package never imports zod at runtime). Only the schema's keys are read from `rawEnv`. Failure throws the `ZodError` from `.parse`.
+
+| `viteEnv` | `VITE_ENV` |
+| --- | --- |
+| `"strict"` (default) | Must be one of `VITE_ENV_NAMES`. |
+| `"fallback"` | Any other value, or none, becomes `"development"` before parsing. |
+| `false` | Not in the schema or the result. |
+
+Types: `ClientEnv`, `ClientEnvWithoutViteEnv`, `ClientEnvOptions`, `ClientEnvSource`, `ViteEnvMode`, `ViteEnvName`.
+
+### `useEnsureUser`
+
+```tsx
+function EnsureUser() {
+  useEnsureUser(api.users.ensureUserExists);
+  return null;
+}
+```
+
+Calls `mutation({})` every time `useConvexAuth().isAuthenticated` becomes `true` (once on mount if already signed in), and logs a rejection with `console.error`. Needs a Convex auth provider above it (`ConvexClerkProvider` with Clerk on). Pair it with `ensureUser` from `@vvedantb/server`. Type: `EnsureUserMutation`.
+
+Tests: `app/tests/convex/` ports each app's copy and runs it beside the helper (env with zod 4 and zod 3.25; provider variants; ensure-user calls over auth sequences). `app/tests-node/convex-esm.test.mjs` loads the helpers in plain Node.
