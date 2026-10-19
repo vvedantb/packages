@@ -11,33 +11,33 @@ The repository now publishes three packages and keeps one private package.
 
 ## Folded packages (ui 0.10.0 and server 0.4.0)
 
-`@vvedantb/convex-client` and `@vvedantb/mcp-client` are folded into existing packages. Every export keeps its name. Only the package in the import changes.
+Two former client packages are folded into existing packages: the Convex client helpers and the MCP client OAuth helpers. Both are gone from npm. Every export keeps its name. Only the package in the import changes. Below, "the Convex client package" and "the MCP client package" mean those two former packages.
 
 | Old | New |
 | --- | --- |
-| `@vvedantb/convex-client`: `ConvexClerkProvider`, `ConvexClerkProviderProps`, `ConvexClerkUseAuth`, `parseClientEnv`, `VITE_ENV_NAMES`, `ClientEnv`, `ClientEnvOptions`, `ClientEnvSource`, `ClientEnvWithoutViteEnv`, `ViteEnvMode`, `ViteEnvName`, `useEnsureUser`, `EnsureUserMutation` | `@vvedantb/ui` `^0.10.0` |
-| `@vvedantb/convex-client`: `mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `TempIdFormat`, `TempIdOptions`, `createMemoryOptimisticStore` | `@vvedantb/server` `^0.4.0` |
-| `@vvedantb/mcp-client`: every export | `@vvedantb/server` `^0.4.0` |
+| Convex client package: `ConvexClerkProvider`, `ConvexClerkProviderProps`, `ConvexClerkUseAuth`, `parseClientEnv`, `VITE_ENV_NAMES`, `ClientEnv`, `ClientEnvOptions`, `ClientEnvSource`, `ClientEnvWithoutViteEnv`, `ViteEnvMode`, `ViteEnvName`, `useEnsureUser`, `EnsureUserMutation` | `@vvedantb/ui` `^0.10.0` |
+| Convex client package: `mapLoadedQuery`, `forEachLoadedQuery`, `updateAllCachedQueries`, `patchLoadedQuery`, `OptimisticStore`, `tempId`, `TempIdFormat`, `TempIdOptions`, `createMemoryOptimisticStore` | `@vvedantb/server` `^0.4.0` |
+| MCP client package: every export | `@vvedantb/server` `^0.4.0` |
 
-Behaviour is unchanged except one detail: a non-interactive MCP OAuth provider's `redirectToAuthorization` now rejects with the SDK's `UnauthorizedError` instead of throwing it synchronously. The SDK awaits that call, so no app flow changes. `@vvedantb/ui` needs React 19 (convex-client allowed React 18); every app already runs 19.
+Behaviour is unchanged except one detail: a non-interactive MCP OAuth provider's `redirectToAuthorization` now rejects with the SDK's `UnauthorizedError` instead of throwing it synchronously. The SDK awaits that call, so no app flow changes. `@vvedantb/ui` needs React 19 (the Convex client package allowed React 18); every app already runs 19.
 
 Steps per app. Paths are relative to each app's repository root.
 
 | App | Package | `package.json` | Import rewrites |
 | --- | --- | --- | --- |
-| app-a | `apps/web` | remove `@vvedantb/convex-client`; `@vvedantb/ui` to `^0.10.0`; add `@vvedantb/server` `^0.4.0` | `src/lib/convex-optimistic.ts`: `tempId`, `updateAllCachedQueries` from `@vvedantb/server`. `src/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`) and `src/providers/EnsureUser.tsx` (`useEnsureUser`) from `@vvedantb/ui` |
+| app-a | `apps/web` | remove the Convex client package; `@vvedantb/ui` to `^0.10.0`; add `@vvedantb/server` `^0.4.0` | `src/lib/convex-optimistic.ts`: `tempId`, `updateAllCachedQueries` from `@vvedantb/server`. `src/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`) and `src/providers/EnsureUser.tsx` (`useEnsureUser`) from `@vvedantb/ui` |
 | app-a | `packages/backend` | `@vvedantb/server` to `^0.4.0` | none |
-| app-f (app-a desktop) | `apps/desktop` | remove `@vvedantb/mcp-client`; add `@vvedantb/server` `^0.4.0`; keep `@modelcontextprotocol/sdk`; `@vvedantb/ui` to `^0.10.0` (renderer) | `src/mcp-oauth.ts`, `src/mcp-oauth-loopback.ts`: `@vvedantb/mcp-client` to `@vvedantb/server`. The esbuild main bundle still carries the SDK (tested without `node_modules`) |
-| app-b | `apps/web` | remove `@vvedantb/convex-client`; `@vvedantb/ui` to `^0.10.0` | `src/env/client.ts` (`parseClientEnv`), `src/providers/ClientProvider.tsx` (`ConvexClerkProvider`), `src/routes/_authed.tsx` (`useEnsureUser`) from `@vvedantb/ui` |
+| app-f (app-a desktop) | `apps/desktop` | remove the MCP client package; add `@vvedantb/server` `^0.4.0`; keep `@modelcontextprotocol/sdk`; `@vvedantb/ui` to `^0.10.0` (renderer) | `src/mcp-oauth.ts`, `src/mcp-oauth-loopback.ts`: MCP client package to `@vvedantb/server`. The esbuild main bundle still carries the SDK (tested without `node_modules`) |
+| app-b | `apps/web` | remove the Convex client package; `@vvedantb/ui` to `^0.10.0` | `src/env/client.ts` (`parseClientEnv`), `src/providers/ClientProvider.tsx` (`ConvexClerkProvider`), `src/routes/_authed.tsx` (`useEnsureUser`) from `@vvedantb/ui` |
 | app-b | `packages/backend` | `@vvedantb/server` to `^0.4.0` | none |
-| app-c | `apps/web` | remove `@vvedantb/convex-client`; `@vvedantb/ui` to `^0.10.0` | `src/lib/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`), `src/env/client.ts` (`parseClientEnv`) from `@vvedantb/ui`. `vitest.config.ts`: `inline: ["@vvedantb/convex-client"]` becomes `inline: ["@vvedantb/ui"]` if a test loads those modules (the package ships TypeScript), else drop it |
+| app-c | `apps/web` | remove the Convex client package; `@vvedantb/ui` to `^0.10.0` | `src/lib/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`), `src/env/client.ts` (`parseClientEnv`) from `@vvedantb/ui`. `vitest.config.ts`: the Convex client package in `inline` becomes `inline: ["@vvedantb/ui"]` if a test loads those modules (the package ships TypeScript), else drop it |
 | app-c | `packages/backend` | `@vvedantb/server` to `^0.4.0` | none |
-| app-d | `apps/web` | remove `@vvedantb/convex-client`; `@vvedantb/ui` to `^0.10.0` | `src/env/client.ts` (`parseClientEnv`), `src/lib/components/ClientProvider.tsx` (`ConvexClerkProvider`) from `@vvedantb/ui`. `vitest.config.ts`: as app-c |
-| app-d | `packages/backend` | remove `@vvedantb/convex-client`; `@vvedantb/server` to `^0.4.0` | `client/optimistic/store.ts` (`forEachLoadedQuery`), `client/optimistic/id.ts` (`tempId`), `tests/optimisticMemoryStore.ts` (`createMemoryOptimisticStore`) from `@vvedantb/server`. The mobile app reaches these through `./optimistic`; Metro bundles the whole server root, and its lazy `node:http` and SDK imports sit in `try` blocks, which Expo's Metro config (`allowOptionalDependencies: true`) treats as optional |
-| app-e | `apps/web` | remove `@vvedantb/convex-client`; `@vvedantb/ui` to `^0.10.0` | `src/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`) from `@vvedantb/ui` |
+| app-d | `apps/web` | remove the Convex client package; `@vvedantb/ui` to `^0.10.0` | `src/env/client.ts` (`parseClientEnv`), `src/lib/components/ClientProvider.tsx` (`ConvexClerkProvider`) from `@vvedantb/ui`. `vitest.config.ts`: as app-c |
+| app-d | `packages/backend` | remove the Convex client package; `@vvedantb/server` to `^0.4.0` | `client/optimistic/store.ts` (`forEachLoadedQuery`), `client/optimistic/id.ts` (`tempId`), `tests/optimisticMemoryStore.ts` (`createMemoryOptimisticStore`) from `@vvedantb/server`. The mobile app reaches these through `./optimistic`; Metro bundles the whole server root, and its lazy `node:http` and SDK imports sit in `try` blocks, which Expo's Metro config (`allowOptionalDependencies: true`) treats as optional |
+| app-e | `apps/web` | remove the Convex client package; `@vvedantb/ui` to `^0.10.0` | `src/providers/ConvexClientProvider.tsx` (`ConvexClerkProvider`) from `@vvedantb/ui` |
 | app-e | `packages/backend` | `@vvedantb/server` to `^0.4.0` | none |
 
-A one-line rewrite where every name in a file moves to the same package: `sed -i 's#"@vvedantb/convex-client"#"@vvedantb/ui"#'` (web providers and env) or `sed -i 's#"@vvedantb/\(convex\|mcp\)-client"#"@vvedantb/server"#'` (optimistic helpers, MCP OAuth). Merge duplicate imports from the same package afterwards.
+Where every name in a file moves to the same package, replace the old package specifier with `"@vvedantb/ui"` (web providers and env) or `"@vvedantb/server"` (optimistic helpers, MCP OAuth). Merge duplicate imports from the same package afterwards.
 
 ## Breaking change
 
@@ -126,23 +126,23 @@ Install `@vvedantb/server` once and import everything from the root. `0.1.x` use
 
 ## Removed aliases
 
-The 13 deprecated aliases are deleted, along with `packages/ui/src/deprecated.ts`. Use the `Alt` names. They were already exported.
+The 13 deprecated aliases are deleted, along with `packages/ui/src/deprecated.ts`. Each was the `Alt` name with an app name in place of `Alt` (written `<App>` below). Use the `Alt` names. They were already exported.
 
 | Removed | Use |
 | --- | --- |
-| `AccordionVerve` | `AccordionAlt` |
-| `AccordionItemVerve` | `AccordionItemAlt` |
-| `AccordionTriggerVerve` | `AccordionTriggerAlt` |
-| `AccordionContentVerve` | `AccordionContentAlt` |
-| `ClearInputVibot` | `ClearInputAlt` |
-| `InputGroupVerve` | `InputGroupAlt` |
-| `InputGroupAddonVerve` | `InputGroupAddonAlt` |
-| `InputGroupButtonVerve` | `InputGroupButtonAlt` |
-| `InputGroupTextVerve` | `InputGroupTextAlt` |
-| `InputGroupInputVerve` | `InputGroupInputAlt` |
-| `InputGroupTextareaVerve` | `InputGroupTextareaAlt` |
-| `ScrollAreaVerve` | `ScrollAreaAlt` |
-| `ScrollBarVerve` | `ScrollBarAlt` |
+| `Accordion<App>` | `AccordionAlt` |
+| `AccordionItem<App>` | `AccordionItemAlt` |
+| `AccordionTrigger<App>` | `AccordionTriggerAlt` |
+| `AccordionContent<App>` | `AccordionContentAlt` |
+| `ClearInput<App>` | `ClearInputAlt` |
+| `InputGroup<App>` | `InputGroupAlt` |
+| `InputGroupAddon<App>` | `InputGroupAddonAlt` |
+| `InputGroupButton<App>` | `InputGroupButtonAlt` |
+| `InputGroupText<App>` | `InputGroupTextAlt` |
+| `InputGroupInput<App>` | `InputGroupInputAlt` |
+| `InputGroupTextarea<App>` | `InputGroupTextareaAlt` |
+| `ScrollArea<App>` | `ScrollAreaAlt` |
+| `ScrollBar<App>` | `ScrollBarAlt` |
 
 ## Other changes
 

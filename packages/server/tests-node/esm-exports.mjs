@@ -36,7 +36,7 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
     bare,
     "import-root",
     `const m = await import(${JSON.stringify(pkg.name)});\n` +
-      // One export from each internal folder, and every former @vvedantb/mcp-client and convex-client runtime export.
+      // One export from each internal folder, and every optimistic-update and MCP client OAuth runtime export.
       `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken", "createClerkUserAuth",\n` +
       `  "createMemoryOptimisticStore", "forEachLoadedQuery", "mapLoadedQuery", "patchLoadedQuery", "updateAllCachedQueries", "tempId",\n` +
       `  "authorizeMcpServer", "createMcpOAuthProvider", "createMcpOAuthStateSchema", "hasMcpOAuthTokens", "isAccessTokenExpiring",\n` +
@@ -114,7 +114,7 @@ for (const removed of ["convex", "mcp"]) {
   });
 }
 
-// From @vvedantb/mcp-client's consumer check, plus the former convex-client helpers' Convex types.
+// A consumer of the MCP client OAuth helpers, plus the optimistic-update helpers' Convex types.
 const consumer = `
 import { z } from "zod";
 import { makeFunctionReference } from "convex/server";
