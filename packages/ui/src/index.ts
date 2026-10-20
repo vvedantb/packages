@@ -61,6 +61,9 @@ export * from "./ui/sheet";
 export * from "./ui/visually-hidden";
 export * from "./ui/clearInputDissolve";
 
+// Animated nav icons. Styles: `@vvedantb/ui/tokens/css/nav-icons.css`.
+export * from "./icons";
+
 // Dual copies: the richer file uses the plain name; the other keeps an `Alt` suffix.
 export * from "./ui/accordion";
 export {

@@ -1,0 +1,755 @@
+/*
+ * @vvedantb/ui/tokens/css/nav-icons.css: hover animations for the animated nav
+ * icons (`MemoryIcon`, `BoardIcon`, ...). Also part of tokens/css/index.css.
+ *
+ *   @import "@vvedantb/ui/tokens/css/nav-icons.css";
+ *
+ * Every icon is an `svg.vv-icon` with:
+ *   data-animate="hover"  animate while an ancestor with the `group` class is hovered (default)
+ *   data-animate="true"   animate all the time
+ *   data-animate="false"  never animate, no hover scale
+ *   data-hover-scale      root scale on group hover: "1.15" (spring) or "1.12" (ease out)
+ *
+ * Parameters (all optional):
+ *   --vv-icon-duration-scale  multiplies every animation duration and delay
+ *                             (set inline by the `duration` prop; default 1)
+ *   --motion-ease-out         default cubic-bezier(0.22, 1, 0.36, 1)
+ *   --motion-ease-emphasized  default cubic-bezier(0.2, 0.8, 0.2, 1)
+ *
+ * No reduced-motion overrides: the icons this file was ported from had none.
+ */
+
+/* ── Root: scale up on group hover */
+.vv-icon {
+  transform-origin: center;
+}
+.vv-icon[data-hover-scale="1.15"] {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.vv-icon[data-hover-scale="1.12"] {
+  transition: transform 0.25s var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.group:hover .vv-icon[data-hover-scale="1.15"]:not([data-animate="false"]) {
+  transform: scale(1.15);
+}
+.group:hover .vv-icon[data-hover-scale="1.12"]:not([data-animate="false"]) {
+  transform: scale(1.12);
+}
+
+/* ── SVG transforms need an explicit box and origin */
+.vv-icon-files-back,
+.vv-icon-bolt,
+.vv-icon-inbox-letter,
+.vv-icon-gear,
+.vv-icon-memory-core,
+.vv-icon-memory-ring,
+.vv-icon-board-card,
+.vv-icon-flask-bubble,
+.vv-icon-chart-bar,
+.vv-icon-document-line,
+.vv-icon-document-corner,
+.vv-icon-checklist-check,
+.vv-icon-checklist-ring,
+.vv-icon-checklist-line,
+.vv-icon-terminal-cursor,
+.vv-icon-terminal-prompt,
+.vv-icon-terminal-typed,
+.vv-icon-inbox-arrow,
+.vv-icon-inbox-notif,
+.vv-icon-automation-orbit,
+.vv-icon-automation-play,
+.vv-icon-automation-sparks,
+.vv-icon-flask,
+.vv-icon-board-traveler,
+.vv-icon-chart-trend,
+.vv-icon-search,
+.vv-icon-search-glint,
+.vv-icon-sidebar-panel,
+.vv-icon-sidebar-chevron {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.vv-icon-chart-bar {
+  transform-origin: bottom center;
+}
+
+.vv-icon-document-line,
+.vv-icon-checklist-line,
+.vv-icon-chart-trend {
+  transform-origin: left center;
+}
+
+.vv-icon-document-corner {
+  transform-origin: top right;
+}
+
+/* ── MemoryIcon: synapse core pulses, ring pings outward */
+.vv-icon-memory-ring {
+  opacity: 0;
+}
+@keyframes vv-icon-memory-core {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.6);
+  }
+}
+@keyframes vv-icon-memory-ring {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-memory-core,
+.vv-icon[data-animate="true"] .vv-icon-memory-core {
+  animation: vv-icon-memory-core calc(1s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-memory-ring,
+.vv-icon[data-animate="true"] .vv-icon-memory-ring {
+  animation: vv-icon-memory-ring calc(1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
+}
+
+/* ── BuildingIcon: windows blink in turn */
+.vv-icon-building-window {
+  opacity: 0.3;
+}
+@keyframes vv-icon-building-window-blink {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+  }
+  20%,
+  50% {
+    opacity: 1;
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-1,
+.vv-icon[data-animate="true"] .vv-icon-building-window-1 {
+  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-2,
+.vv-icon[data-animate="true"] .vv-icon-building-window-2 {
+  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.18s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-3,
+.vv-icon[data-animate="true"] .vv-icon-building-window-3 {
+  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.36s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-4,
+.vv-icon[data-animate="true"] .vv-icon-building-window-4 {
+  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.54s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── FilesIcon: back file slides out and back */
+@keyframes vv-icon-files-slide {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2.5px, -2.5px);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-files-back,
+.vv-icon[data-animate="true"] .vv-icon-files-back {
+  animation: vv-icon-files-slide calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+
+/* ── BoltIcon: flashes big then settles */
+@keyframes vv-icon-bolt-flash {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22);
+  }
+  65% {
+    transform: scale(0.94);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-bolt,
+.vv-icon[data-animate="true"] .vv-icon-bolt {
+  animation: vv-icon-bolt-flash calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+
+/* ── InboxIcon: letter drops into the tray */
+.vv-icon-inbox-letter {
+  opacity: 0;
+}
+@keyframes vv-icon-inbox-drop {
+  0% {
+    transform: translateY(-7px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(1px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-letter,
+.vv-icon[data-animate="true"] .vv-icon-inbox-letter {
+  animation: vv-icon-inbox-drop calc(1.3s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+
+/* ── SettingsIcon: continuous spin */
+@keyframes vv-icon-gear-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-gear,
+.vv-icon[data-animate="true"] .vv-icon-gear {
+  animation: vv-icon-gear-spin calc(2.5s * var(--vv-icon-duration-scale, 1)) linear infinite;
+}
+
+/* ── BoardIcon: cards drop in, bounce, then bob while a traveller card
+ *    sweeps across all columns. */
+@keyframes vv-icon-board-card-drop {
+  0% {
+    transform: translateY(-9px) scaleY(0.5);
+    opacity: 0;
+  }
+  45% {
+    transform: translateY(2.5px) scaleY(1.4);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-1.5px) scaleY(0.9);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes vv-icon-board-card-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1.2px) scale(1.18);
+  }
+}
+@keyframes vv-icon-board-traveler {
+  0% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(0, 0) scale(1);
+  }
+  45% {
+    transform: translate(6.25px, 0) scale(1);
+  }
+  62% {
+    transform: translate(6.25px, 0) scale(1);
+  }
+  82% {
+    transform: translate(12.5px, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(12.5px, 0) scale(0);
+    opacity: 0;
+  }
+}
+.vv-icon-board-traveler {
+  opacity: 0;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-1,
+.vv-icon[data-animate="true"] .vv-icon-board-card-1 {
+  animation:
+    vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
+      var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) both,
+    vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
+      calc(0.55s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-2,
+.vv-icon[data-animate="true"] .vv-icon-board-card-2 {
+  animation:
+    vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
+      var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.1s * var(--vv-icon-duration-scale, 1)) both,
+    vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
+      calc(0.75s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-3,
+.vv-icon[data-animate="true"] .vv-icon-board-card-3 {
+  animation:
+    vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
+      var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.2s * var(--vv-icon-duration-scale, 1)) both,
+    vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
+      calc(0.95s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-traveler,
+.vv-icon[data-animate="true"] .vv-icon-board-traveler {
+  animation: vv-icon-board-traveler calc(1.8s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.5s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── ChecklistIcon: checks redraw on a loop, rings burst outward, lines sweep. */
+.vv-icon-checklist-check {
+  stroke-dasharray: 9;
+  stroke-dashoffset: 0;
+}
+.vv-icon-checklist-ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  opacity: 0;
+}
+@keyframes vv-icon-checklist-check-loop {
+  0%,
+  20% {
+    stroke-dashoffset: 9;
+  }
+  60%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes vv-icon-checklist-ring-burst {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+@keyframes vv-icon-checklist-line-sweep {
+  0%,
+  20% {
+    transform: scaleX(0);
+  }
+  60%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-check-1,
+.vv-icon[data-animate="true"] .vv-icon-checklist-check-1 {
+  animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-check-2,
+.vv-icon[data-animate="true"] .vv-icon-checklist-check-2 {
+  animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.25s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-ring-1,
+.vv-icon[data-animate="true"] .vv-icon-checklist-ring-1 {
+  animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-ring-2,
+.vv-icon[data-animate="true"] .vv-icon-checklist-ring-2 {
+  animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.65s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-line-1,
+.vv-icon[data-animate="true"] .vv-icon-checklist-line-1 {
+  animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-line-2,
+.vv-icon[data-animate="true"] .vv-icon-checklist-line-2 {
+  animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.25s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── TerminalIcon: prompt nudges, cursor blinks, three typed characters pop in. */
+@keyframes vv-icon-terminal-prompt-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+@keyframes vv-icon-terminal-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50%,
+  100% {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+@keyframes vv-icon-terminal-typed {
+  0%,
+  100% {
+    transform: scale(0) translateY(2px);
+    opacity: 0;
+  }
+  18%,
+  82% {
+    transform: scale(1.6) translateY(0);
+    opacity: 1;
+  }
+}
+.vv-icon-terminal-typed {
+  transform: scale(0);
+  opacity: 0;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-prompt,
+.vv-icon[data-animate="true"] .vv-icon-terminal-prompt {
+  animation: vv-icon-terminal-prompt-nudge calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-cursor,
+.vv-icon[data-animate="true"] .vv-icon-terminal-cursor {
+  animation: vv-icon-terminal-cursor-blink calc(0.45s * var(--vv-icon-duration-scale, 1)) steps(2, end) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-1,
+.vv-icon[data-animate="true"] .vv-icon-terminal-typed-1 {
+  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) 0s infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-2,
+.vv-icon[data-animate="true"] .vv-icon-terminal-typed-2 {
+  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.2s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-3,
+.vv-icon[data-animate="true"] .vv-icon-terminal-typed-3 {
+  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── DocumentIcon, DraftIcon and ReviewIcon: lines draw on a loop, page corner
+ *    folds. ReviewIcon's marks carry only the -1 and -2 classes, so they keep the
+ *    svg's own transform box. */
+@keyframes vv-icon-document-line-draw {
+  0%,
+  18% {
+    transform: scaleX(0);
+  }
+  55%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+@keyframes vv-icon-document-corner-fold {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  50% {
+    transform: rotate(-25deg) scale(0.78);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-1,
+.vv-icon[data-animate="true"] .vv-icon-document-line-1 {
+  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-2,
+.vv-icon[data-animate="true"] .vv-icon-document-line-2 {
+  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.15s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-3,
+.vv-icon[data-animate="true"] .vv-icon-document-line-3 {
+  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.3s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-corner,
+.vv-icon[data-animate="true"] .vv-icon-document-corner {
+  animation: vv-icon-document-corner-fold calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.2s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── FlaskIcon: flask sloshes, bubbles rise. */
+@keyframes vv-icon-flask-bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-1.5px) scale(1.6);
+  }
+  60% {
+    transform: translateY(-7px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-13px) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes vv-icon-flask-slosh {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask,
+.vv-icon[data-animate="true"] .vv-icon-flask {
+  animation: vv-icon-flask-slosh calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-1,
+.vv-icon[data-animate="true"] .vv-icon-flask-bubble-1 {
+  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-2,
+.vv-icon[data-animate="true"] .vv-icon-flask-bubble-2 {
+  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+    calc(0.27s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-3,
+.vv-icon[data-animate="true"] .vv-icon-flask-bubble-3 {
+  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+    calc(0.55s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-4,
+.vv-icon[data-animate="true"] .vv-icon-flask-bubble-4 {
+  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+    calc(0.82s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── InboxArrowIcon: arrow drops into the tray, notification dot pulses. */
+@keyframes vv-icon-inbox-arrow-drop {
+  0% {
+    transform: translateY(-7px) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1);
+  }
+  55% {
+    transform: translateY(7px) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(7px) scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes vv-icon-inbox-notif-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.4;
+  }
+}
+.vv-icon-inbox-notif {
+  opacity: 0;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-arrow,
+.vv-icon[data-animate="true"] .vv-icon-inbox-arrow {
+  animation: vv-icon-inbox-arrow-drop calc(1.1s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-notif,
+.vv-icon[data-animate="true"] .vv-icon-inbox-notif {
+  animation: vv-icon-inbox-notif-pulse calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out
+    calc(0.3s * var(--vv-icon-duration-scale, 1)) infinite;
+  opacity: 1;
+}
+
+/* ── AutomationIcon: orbit spins, sparks burst, play triangle pumps. */
+@keyframes vv-icon-automation-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes vv-icon-automation-play-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+}
+@keyframes vv-icon-automation-sparks-burst {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+}
+.vv-icon-automation-sparks {
+  opacity: 0;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-orbit,
+.vv-icon[data-animate="true"] .vv-icon-automation-orbit {
+  animation: vv-icon-automation-orbit-spin calc(1.8s * var(--vv-icon-duration-scale, 1)) linear infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-play,
+.vv-icon[data-animate="true"] .vv-icon-automation-play {
+  animation: vv-icon-automation-play-pulse calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-sparks,
+.vv-icon[data-animate="true"] .vv-icon-automation-sparks {
+  animation: vv-icon-automation-sparks-burst calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+
+/* ── BarChartIcon: bars grow with a bounce, trend line draws. */
+@keyframes vv-icon-chart-bar-grow {
+  0%,
+  10% {
+    transform: scaleY(0.05);
+  }
+  55% {
+    transform: scaleY(1.3);
+  }
+  75% {
+    transform: scaleY(0.88);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+.vv-icon-chart-trend {
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  fill: none;
+}
+@keyframes vv-icon-chart-trend-draw {
+  0%,
+  20% {
+    stroke-dashoffset: 16;
+  }
+  55%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-1,
+.vv-icon[data-animate="true"] .vv-icon-chart-bar-1 {
+  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-2,
+.vv-icon[data-animate="true"] .vv-icon-chart-bar-2 {
+  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.12s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-3,
+.vv-icon[data-animate="true"] .vv-icon-chart-bar-3 {
+  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.24s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-trend,
+.vv-icon[data-animate="true"] .vv-icon-chart-trend {
+  animation: vv-icon-chart-trend-draw calc(1.6s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
+}
+
+/* ── SearchIcon: glass scans, lens glint pops. */
+.vv-icon-search-glint {
+  opacity: 0;
+}
+@keyframes vv-icon-search-scan {
+  0%,
+  100% {
+    transform: rotate(-8deg) translate(0, 0);
+  }
+  50% {
+    transform: rotate(8deg) translate(0.6px, -0.8px);
+  }
+}
+@keyframes vv-icon-search-glint {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-search,
+.vv-icon[data-animate="true"] .vv-icon-search {
+  animation: vv-icon-search-scan calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-search-glint,
+.vv-icon[data-animate="true"] .vv-icon-search-glint {
+  animation: vv-icon-search-glint calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+
+/* ── SidebarToggleIcon: panel squeezes, chevron nudges the way it points. */
+.vv-icon-sidebar-panel {
+  transform-origin: left center;
+}
+@keyframes vv-icon-sidebar-squeeze {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.7);
+  }
+}
+@keyframes vv-icon-sidebar-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-2.5px);
+  }
+}
+@keyframes vv-icon-sidebar-nudge-out {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2.5px);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-sidebar-panel,
+.vv-icon[data-animate="true"] .vv-icon-sidebar-panel {
+  animation: vv-icon-sidebar-squeeze calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-sidebar-chevron,
+.vv-icon[data-animate="true"] .vv-icon-sidebar-chevron {
+  animation: vv-icon-sidebar-nudge calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}
+.group:hover .vv-icon[data-animate="hover"].vv-icon-sidebar-collapsed .vv-icon-sidebar-chevron,
+.vv-icon[data-animate="true"].vv-icon-sidebar-collapsed .vv-icon-sidebar-chevron {
+  animation: vv-icon-sidebar-nudge-out calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+}

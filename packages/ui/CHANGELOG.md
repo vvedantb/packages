@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.0
+
+Additive: animated nav icons from two apps' sidebars. No existing export changes, and no name collides.
+
+- Icons: `MemoryIcon`, `BoltIcon`, `FilesIcon`, `InboxIcon`, `BuildingIcon`, `SettingsIcon` (stroke 1.7, hover scale 1.15 with a spring ease) and `BoardIcon`, `ChecklistIcon`, `TerminalIcon`, `DocumentIcon`, `ReviewIcon`, `FlaskIcon`, `InboxArrowIcon`, `DraftIcon`, `AutomationIcon`, `BarChartIcon`, `SearchIcon`, `SidebarToggleIcon` (stroke 1.75, hover scale 1.12). Geometry, keyframes, timings and easing are copied from the source icons.
+- `SettingsIcon`: both apps had one; one source kept, the continuous 2.5 s spin with stroke 1.7. The stepped 2.4 s turn is not ported.
+- Shared props (`IconProps`): `size` (default 20), `color`, `strokeWidth`, `className`, `style`, `title`, `animate` (`"hover"` default, `true`, `false`), `active`, `duration`, and any other SVG prop including `ref`. `TerminalIcon`, `InboxArrowIcon` and `AutomationIcon` render their solid variant while `active`, with cut-out details in `cutoutColor` (`CutoutIconProps`; default the sidebar accent). `SidebarToggleIcon` takes `collapsed` (`SidebarToggleIconProps`). Other icons only set `data-active`.
+- `NavIconBase` (`NavIconBaseProps`): the svg wrapper every icon renders. `IconAnimate` is the `animate` type.
+- New stylesheet `tokens/css/nav-icons.css` (`vv-icon-*` classes), included in `tokens/css/index.css` and listed in `exports` like the other CSS files. No JS module imports it, so `sideEffects` is unchanged. Easing reads `--motion-ease-out` and `--motion-ease-emphasized` with the source values as fallbacks. `duration` sets `--vv-icon-duration-scale`, which every duration and delay multiplies by. No reduced-motion override, as in the sources.
+- Tests: `src/icons/icons.test.tsx` covers defaults and every prop for each icon, and checks that each animated class in the components has a rule and keyframes in `nav-icons.css`.
+
 ## 0.10.1
 
 Docs only; no runtime change.
