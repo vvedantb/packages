@@ -32,7 +32,8 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "utilities.css": [".hit-target:after", ".reveal-on-hover"],
     "scrollbar-thin.css": [".scrollbar-thin::-webkit-scrollbar-thumb:hover"],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
-    "index.css": ["::selection", ".hit-target", ".scrollbar-thin", "@keyframes fade-in-up"],
+    "nav-icons.css": [".vv-icon[data-hover-scale", "@keyframes vv-icon-gear-spin"],
+    "index.css": ["::selection", ".hit-target", ".scrollbar-thin", "@keyframes fade-in-up", "@keyframes vv-icon-gear-spin"],
   };
   for (const [file, needles] of Object.entries(expect)) {
     const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "rounded-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);

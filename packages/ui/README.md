@@ -4,10 +4,10 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
-| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `compat-shadcn-rgb`. CSS. |
+| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
 | `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
@@ -879,6 +879,61 @@ shown in that colour mode), `wordmark`, `price`, `tagline`,
 - `itemIconSize`: `size` of those two items' icons. Default: the icon's own size.
 
 `RailCollapseTile({ collapsed, onToggle })`: the rail tile that shows or hides the sidebar panel ("Show sidebar" with the expand icon, or "Hide sidebar").
+
+## Animated nav icons (0.11.0)
+
+Eighteen 24x24 stroked icons that animate while their row or tile is hovered. Animation is plain CSS:
+
+```css
+@import "@vvedantb/ui/tokens/css/nav-icons.css"; /* or tokens/css/index.css, which includes it */
+```
+
+Hover needs an ancestor with the `group` class (rail tiles and nav rows have one):
+
+```tsx
+import { MemoryIcon, TerminalIcon } from "@vvedantb/ui";
+
+<a className="group" href="/memory"><MemoryIcon /> Memory</a>
+<button className="group"><TerminalIcon active={isCurrent} /></button>
+```
+
+| Icon | Shows | Stroke | Longest loop |
+| --- | --- | --- | --- |
+| `MemoryIcon` | Brain; the synapse fires | 1.7 | 1000 ms |
+| `BoltIcon` | Lightning bolt; flashes | 1.7 | 900 ms |
+| `FilesIcon` | Two stacked files; the back one slides | 1.7 | 1400 ms |
+| `InboxIcon` | Tray; a letter drops in | 1.7 | 1300 ms |
+| `BuildingIcon` | Building; windows blink | 1.7 | 1600 ms |
+| `SettingsIcon` | Gear; spins | 1.7 | 2500 ms |
+| `BoardIcon` | Three-column board; cards drop, one travels | 1.75 | 1800 ms |
+| `ChecklistIcon` | Two checked tasks; checks redraw | 1.75 | 1600 ms |
+| `TerminalIcon` | Terminal; prompt, typing, cursor. Has `active` | 1.75 | 1400 ms |
+| `DocumentIcon` | Page; lines draw, corner folds | 1.75 | 1500 ms |
+| `ReviewIcon` | Circle with a check | 1.75 | 1500 ms |
+| `FlaskIcon` | Flask; sloshes, bubbles rise | 1.75 | 1400 ms |
+| `InboxArrowIcon` | Tray with an arrow and a dot. Has `active` | 1.75 | 1100 ms |
+| `DraftIcon` | Page with a pencil nib | 1.75 | 1500 ms |
+| `AutomationIcon` | Orbit around a play button. Has `active` | 1.75 | 1800 ms |
+| `BarChartIcon` | Bars and a trend line | 1.75 | 1600 ms |
+| `SearchIcon` | Magnifying glass; scans | 1.75 | 1200 ms |
+| `SidebarToggleIcon` | Window with a side panel. Has `collapsed` | 1.75 | 900 ms |
+
+Props (type `IconProps`; all optional):
+
+| Prop | Default | Behaviour |
+| --- | --- | --- |
+| `size` | `20` | `width` and `height`. Number or string. |
+| `color` | `"currentColor"` | Any other value sets the svg's inline `color`; every part follows it. The default sets nothing, so `text-*` classes work. |
+| `strokeWidth` | icon's own (table) | Shapes with their own stroke width (the bar chart trend line, the inbox arrow halo) keep it. |
+| `className`, `style` | | Merged onto the svg (`vv-icon` class first). |
+| `title` | | Renders `<title>`, `role="img"` and `aria-labelledby`. Without it the svg is `aria-hidden="true"`. |
+| `animate` | `"hover"` | `"hover"`: animate while a `.group` ancestor is hovered. `true`: always. `false`: never, and no hover scale. Sets `data-animate`. |
+| `duration` | | Length in ms of the icon's longest loop (table). Sets `--vv-icon-duration-scale` to `duration / longest loop`; every duration and delay in the icon is multiplied by it, so staggers keep their proportions. |
+| `active` | `false` | `TerminalIcon`, `InboxArrowIcon`, `AutomationIcon`: solid variant with cut-out details. Other icons: `data-active="true"` only. |
+| `cutoutColor` | sidebar accent | Cut-out tone while `active` (`CutoutIconProps`). Default `var(--color-sidebar-accent, var(--sidebar-accent))`, so the solid icon suits a `bg-sidebar-accent` tile. |
+| `collapsed` | `false` | `SidebarToggleIcon` only: chevron points out (`SidebarToggleIconProps`). |
+
+Other SVG props (`id`, `data-*`, handlers, `ref`) go to the svg. On group hover the svg scales to 1.15 (the first six icons, spring ease) or 1.12 (the rest). `NavIconBase` is the shared svg wrapper, for icons drawn in the same style. The stylesheet has no reduced-motion override.
 
 ## Toaster
 
