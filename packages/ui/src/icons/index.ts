@@ -7,6 +7,7 @@ export { FilesIcon } from "./files-icon";
 export { InboxIcon } from "./inbox-icon";
 export { BuildingIcon } from "./building-icon";
 export { SettingsIcon } from "./settings-icon";
+export type { SettingsIconProps } from "./settings-icon";
 export { BoardIcon } from "./board-icon";
 export { ChecklistIcon } from "./checklist-icon";
 export { TerminalIcon } from "./terminal-icon";

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.0
+
+Additive. Every icon without the new prop renders the same DOM and CSS behaviour as 0.11.0.
+
+- `SettingsIcon` `variant` (`SettingsIconProps`): `"spin"` (default) is the 0.11.0 icon. `"turn"` is the second source's gear: hub drawn before the teeth, its own path, stroke 1.75, 1.12 eased hover scale, and a 2400 ms stepped turn (one 60deg notch at a time) on `var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1))`. `duration` scales against 2500 ms for `"spin"` and 2400 ms for `"turn"`.
+- `nav-icons.css`: new `vv-icon-gear-turn` class and keyframes, with `transform-box: fill-box`. Existing rules are unchanged.
+- Audit: the other twelve ported icons match their source shape for shape (geometry, order, attributes, `active` and `collapsed` output) and rule for rule (keyframes, durations, delays, easing, transform origins, hover scale). No other change was needed.
+- README: `cutoutColor` note for apps whose `--sidebar-accent` holds bare RGB channels; the default fallback is then not a colour, so pass `cutoutColor="rgb(var(--sidebar-accent))"`.
+- Tests: the default `SettingsIcon` markup is pinned to the 0.11.0 output; the `"turn"` geometry, attributes and `duration` are covered; the CSS check also renders `variant="turn"` and requires every animated shape to have `transform-box: fill-box` (except `ReviewIcon`'s marks, which keep the svg box as in the source).
+
 ## 0.11.0
 
 Additive: animated nav icons from two apps' sidebars. No existing export changes, and no name collides.

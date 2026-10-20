@@ -41,6 +41,7 @@
 .vv-icon-bolt,
 .vv-icon-inbox-letter,
 .vv-icon-gear,
+.vv-icon-gear-turn,
 .vv-icon-memory-core,
 .vv-icon-memory-ring,
 .vv-icon-board-card,
@@ -210,7 +211,7 @@
   animation: vv-icon-inbox-drop calc(1.3s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
-/* ── SettingsIcon: continuous spin */
+/* ── SettingsIcon (default variant="spin"): continuous spin */
 @keyframes vv-icon-gear-spin {
   to {
     transform: rotate(360deg);
@@ -219,6 +220,42 @@
 .group:hover .vv-icon[data-animate="hover"] .vv-icon-gear,
 .vv-icon[data-animate="true"] .vv-icon-gear {
   animation: vv-icon-gear-spin calc(2.5s * var(--vv-icon-duration-scale, 1)) linear infinite;
+}
+
+/* ── SettingsIcon variant="turn": six-tooth gear clicks round one notch at a time */
+@keyframes vv-icon-gear-turn {
+  0% {
+    transform: rotate(0deg);
+  }
+  10%,
+  16.66% {
+    transform: rotate(60deg);
+  }
+  26.66%,
+  33.33% {
+    transform: rotate(120deg);
+  }
+  43.33%,
+  50% {
+    transform: rotate(180deg);
+  }
+  60%,
+  66.66% {
+    transform: rotate(240deg);
+  }
+  76.66%,
+  83.33% {
+    transform: rotate(300deg);
+  }
+  93.33%,
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.group:hover .vv-icon[data-animate="hover"] .vv-icon-gear-turn,
+.vv-icon[data-animate="true"] .vv-icon-gear-turn {
+  animation: vv-icon-gear-turn calc(2.4s * var(--vv-icon-duration-scale, 1))
+    var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
 }
 
 /* ── BoardIcon: cards drop in, bounce, then bob while a traveller card
