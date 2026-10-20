@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.1
+
+Fix: the package source now typechecks inside strict consuming apps. No runtime change.
+
+- `SpeechInput` no longer augments the global `Window`. It reads `SpeechRecognition` or `webkitSpeechRecognition` through a module-scoped typed helper, so an app's own `Window` declarations (for example optional constructors) and the DOM lib no longer clash with the package. The local instance type lists only the members the component uses, and the effect returns early if neither constructor is set.
+- `Pagination`: removed an unused `React` import that failed under `noUnusedLocals`.
+- New `tsconfig.consumer.json` (strict, `noUnusedLocals`, `noUnusedParameters`, DOM lib, `skipLibCheck`) checks `src/index.ts` next to `consumer/window-speech.d.ts`, a fixture that declares optional `Window` speech recognition constructors the way apps do. `typecheck` runs it.
+
 ## 0.12.0
 
 Additive. Every icon without the new prop renders the same DOM and CSS behaviour as 0.11.0.

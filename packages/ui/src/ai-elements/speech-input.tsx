@@ -5,21 +5,16 @@ import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
 import { cn } from "../utils/cn";
 import { useEffect, useRef, useState } from "react";
-interface SpeechRecognition extends EventTarget {
+// Only the members this component uses, so an app's own (wider or narrower)
+// speech recognition typings stay assignable to it.
+interface SpeechRecognitionInstance extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   start(): void;
   stop(): void;
-  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onresult:
-    | ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void)
-    | null;
-  onerror:
-    | ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void)
-    | null;
 }
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
@@ -39,15 +34,18 @@ interface SpeechRecognitionAlternative {
   transcript: string;
   confidence: number;
 }
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-}
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
+// Read the constructors through a local type: a package must not augment the
+// global Window, which would clash with apps and the DOM lib.
+type SpeechRecognitionWindow = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+};
+const getSpeechRecognitionConstructor = ():
+  | SpeechRecognitionConstructor
+  | undefined => {
+  const speechWindow: SpeechRecognitionWindow = window;
+  return speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+};
 type SpeechInputMode = "speech-recognition" | "media-recorder" | "none";
 export type SpeechInputProps = ComponentProps<typeof Button> & {
   onTranscriptionChange?: (text: string) => void;
@@ -77,7 +75,7 @@ export const SpeechInput = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [mode] = useState<SpeechInputMode>(detectSpeechInputMode);
   const [isRecognitionReady, setIsRecognitionReady] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -92,8 +90,10 @@ export const SpeechInput = ({
     if (mode !== "speech-recognition") {
       return;
     }
-    const SpeechRecognitionCtor =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionCtor = getSpeechRecognitionConstructor();
+    if (!SpeechRecognitionCtor) {
+      return;
+    }
     const speechRecognition = new SpeechRecognitionCtor();
     speechRecognition.continuous = true;
     speechRecognition.interimResults = true;
