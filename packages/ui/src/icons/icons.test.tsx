@@ -175,6 +175,59 @@ describe("duration", () => {
     svg = await render(<SettingsIcon duration={1250} />);
     expect(svg.style.getPropertyValue("--vv-icon-duration-scale")).toBe("0.5");
   });
+
+  it("uses each SettingsIcon variant's own loop", async () => {
+    let svg = await render(<SettingsIcon variant="spin" duration={1250} />);
+    expect(svg.style.getPropertyValue("--vv-icon-duration-scale")).toBe("0.5");
+    svg = await render(<SettingsIcon variant="turn" duration={1200} />);
+    expect(svg.style.getPropertyValue("--vv-icon-duration-scale")).toBe("0.5");
+    svg = await render(<SettingsIcon variant="turn" duration={2400} />);
+    expect(svg.style.getPropertyValue("--vv-icon-duration-scale")).toBe("1");
+  });
+});
+
+/** `<SettingsIcon />` as 0.11.0 rendered it. */
+const SETTINGS_0_11_0 =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="vv-icon" data-animate="hover" data-hover-scale="1.15" aria-hidden="true"><g class="vv-icon-gear"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"></path><circle cx="12" cy="12" r="3"></circle></g></svg>';
+
+const TURN_GEAR =
+  "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065";
+
+describe("SettingsIcon variant", () => {
+  it("renders the 0.11.0 markup by default and with variant=\"spin\"", async () => {
+    expect((await render(<SettingsIcon />)).outerHTML).toBe(SETTINGS_0_11_0);
+    expect((await render(<SettingsIcon variant="spin" />)).outerHTML).toBe(SETTINGS_0_11_0);
+  });
+
+  it("turn draws the hub-first gear with its own stroke and hover scale", async () => {
+    const svg = await render(<SettingsIcon variant="turn" />);
+    expect(svg.getAttribute("stroke-width")).toBe("1.75");
+    expect(svg.getAttribute("data-hover-scale")).toBe("1.12");
+    expect(svg.getAttribute("data-animate")).toBe("hover");
+    expect(svg.getAttribute("class")).toBe("vv-icon");
+    expect(svg.hasAttribute("style")).toBe(false);
+    expect(svg.querySelector(".vv-icon-gear")).toBeNull();
+    expect(svg.children).toHaveLength(1);
+    const gear = svg.firstElementChild;
+    expect(gear?.tagName.toLowerCase()).toBe("g");
+    expect(gear?.getAttribute("class")).toBe("vv-icon-gear-turn");
+    expect([...(gear?.children ?? [])].map((el) => el.tagName.toLowerCase())).toEqual(["circle", "path"]);
+    const circle = gear?.querySelector("circle");
+    expect([circle?.getAttribute("cx"), circle?.getAttribute("cy"), circle?.getAttribute("r")]).toEqual(["12", "12", "3"]);
+    expect(gear?.querySelector("path")?.getAttribute("d")).toBe(TURN_GEAR);
+  });
+
+  it("turn takes the shared props", async () => {
+    let svg = await render(<SettingsIcon variant="turn" strokeWidth={2} animate size={24} className="extra" />);
+    expect(svg.getAttribute("stroke-width")).toBe("2");
+    expect(svg.getAttribute("data-animate")).toBe("true");
+    expect(svg.getAttribute("width")).toBe("24");
+    expect(svg.getAttribute("class")).toBe("vv-icon extra");
+    const idle = svg.innerHTML;
+    svg = await render(<SettingsIcon variant="turn" strokeWidth={2} animate size={24} className="extra" active />);
+    expect(svg.getAttribute("data-active")).toBe("true");
+    expect(svg.innerHTML).toBe(idle);
+  });
 });
 
 describe("inner stroke widths", () => {
@@ -275,7 +328,11 @@ describe("nav-icons.css", () => {
     }
 
     const used = new Set<string>();
-    const variants = [...ICONS.flatMap(([, Icon]) => [<Icon />, <Icon active />]), <SidebarToggleIcon collapsed />];
+    const variants = [
+      ...ICONS.flatMap(([name, Icon]) => [<Icon key={name} />, <Icon key={`${name}-active`} active />]),
+      <SidebarToggleIcon key="collapsed" collapsed />,
+      <SettingsIcon key="turn" variant="turn" />,
+    ];
     for (const node of variants) {
       const svg = await render(node);
       for (const el of [svg, ...svg.querySelectorAll("*")]) {
@@ -284,5 +341,36 @@ describe("nav-icons.css", () => {
     }
     for (const c of used) if (!hooks.has(c)) expect(animated, c).toContain(c);
     for (const c of animated) expect(used, c).toContain(c);
+  });
+
+  it("gives every shape it transforms its own transform box", async () => {
+    const fillBox = new Set(
+      [...css.matchAll(/([^{}]+)\{[^{}]*transform-box: fill-box;[^{}]*\}/g)].flatMap(([, selectors]) =>
+        (selectors ?? "").split(",").map((sel) => sel.trim().replace(/^\./, "")),
+      ),
+    );
+    const transforming = new Set<string>();
+    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const name = body?.match(/animation:\s*(vv-icon-[\w-]+)/)?.[1];
+      const keyframes = name ? css.match(new RegExp(`@keyframes ${name} \\{((?:[^{}]*\\{[^{}]*\\})*)`))?.[1] : undefined;
+      if (!selectors || !keyframes?.includes("transform:")) continue;
+      for (const sel of selectors.split(",")) {
+        const last = sel.trim().match(/\.(vv-icon-[\w-]+)$/)?.[1];
+        if (last) transforming.add(last);
+      }
+    }
+    expect(transforming).toContain("vv-icon-gear-turn");
+    // ReviewIcon's marks keep the svg's box on purpose (see review-icon.tsx).
+    const icons = [
+      ...ICONS.filter(([name]) => name !== "ReviewIcon").map(([name, Icon]) => <Icon key={name} active />),
+      <SettingsIcon key="turn" variant="turn" />,
+    ];
+    for (const node of icons) {
+      const svg = await render(node);
+      for (const el of svg.querySelectorAll("*")) {
+        const classes = [...el.classList];
+        if (classes.some((c) => transforming.has(c))) expect(classes.some((c) => fillBox.has(c)), classes.join(" ")).toBe(true);
+      }
+    }
   });
 });

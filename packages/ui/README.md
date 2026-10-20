@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. |
@@ -904,7 +904,7 @@ import { MemoryIcon, TerminalIcon } from "@vvedantb/ui";
 | `FilesIcon` | Two stacked files; the back one slides | 1.7 | 1400 ms |
 | `InboxIcon` | Tray; a letter drops in | 1.7 | 1300 ms |
 | `BuildingIcon` | Building; windows blink | 1.7 | 1600 ms |
-| `SettingsIcon` | Gear; spins | 1.7 | 2500 ms |
+| `SettingsIcon` | Gear; spins. `variant="turn"`: clicks round a notch at a time | 1.7 (`turn`: 1.75) | 2500 ms (`turn`: 2400 ms) |
 | `BoardIcon` | Three-column board; cards drop, one travels | 1.75 | 1800 ms |
 | `ChecklistIcon` | Two checked tasks; checks redraw | 1.75 | 1600 ms |
 | `TerminalIcon` | Terminal; prompt, typing, cursor. Has `active` | 1.75 | 1400 ms |
@@ -930,8 +930,9 @@ Props (type `IconProps`; all optional):
 | `animate` | `"hover"` | `"hover"`: animate while a `.group` ancestor is hovered. `true`: always. `false`: never, and no hover scale. Sets `data-animate`. |
 | `duration` | | Length in ms of the icon's longest loop (table). Sets `--vv-icon-duration-scale` to `duration / longest loop`; every duration and delay in the icon is multiplied by it, so staggers keep their proportions. |
 | `active` | `false` | `TerminalIcon`, `InboxArrowIcon`, `AutomationIcon`: solid variant with cut-out details. Other icons: `data-active="true"` only. |
-| `cutoutColor` | sidebar accent | Cut-out tone while `active` (`CutoutIconProps`). Default `var(--color-sidebar-accent, var(--sidebar-accent))`, so the solid icon suits a `bg-sidebar-accent` tile. |
+| `cutoutColor` | sidebar accent | Cut-out tone while `active` (`CutoutIconProps`). Default `var(--color-sidebar-accent, var(--sidebar-accent))`, so the solid icon suits a `bg-sidebar-accent` tile. If neither variable holds a full colour (for example `--sidebar-accent` holds bare RGB channels such as `233 234 236` and there is no `--color-sidebar-accent`), the cut-outs lose their tone and vanish into the solid shape; pass the colour, e.g. `cutoutColor="rgb(var(--sidebar-accent))"`. |
 | `collapsed` | `false` | `SidebarToggleIcon` only: chevron points out (`SidebarToggleIconProps`). |
+| `variant` | `"spin"` | `SettingsIcon` only (`SettingsIconProps`, 0.12.0). `"spin"`: continuous linear spin, stroke 1.7, 1.15 spring hover scale. `"turn"`: a second gear drawing (hub first) that turns 60deg at a time with the emphasized ease over 2400 ms, stroke 1.75, 1.12 hover scale like the other 1.75-stroke icons. `duration` scales against the variant's own loop. |
 
 Other SVG props (`id`, `data-*`, handlers, `ref`) go to the svg. On group hover the svg scales to 1.15 (the first six icons, spring ease) or 1.12 (the rest). `NavIconBase` is the shared svg wrapper, for icons drawn in the same style. The stylesheet has no reduced-motion override.
 
