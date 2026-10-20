@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: one JavaScript entry (primitives, shell pieces, app helpers including the Convex and Clerk provider, VITE env parsing and ensure-user, native tokens), design-token CSS, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
@@ -58,7 +58,7 @@
   "scripts": {
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
     "build": "node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tokens/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.consumer.json && tsc -p tokens/tsconfig.json",
     "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
     "analyze": "node tokens/verify/analyze.mjs",
