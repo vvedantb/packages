@@ -1,8 +1,8 @@
 // Bundles a Convex function file that imports the package root the way
 // `convex deploy` bundles for the default (V8) runtime: Convex's own esbuild
 // with the options from convex/dist/esm/bundler/debugBundle.js (1.47). The
-// root also carries Node-only MCP client OAuth (node:http, the MCP SDK), so
-// this checks none of it reaches a V8 bundle.
+// root also carries Node-only MCP client OAuth (node:http, the MCP SDK) and the
+// QuickJS code sandbox, so this checks none of it reaches a V8 bundle.
 // Run with: node --test tests-node/bundle.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -91,6 +91,26 @@ function assertNoMcpClientRuntime(text) {
   }
 }
 
+// The sandbox imports QuickJS (and its embedded WASM) on first call. The package's "browser" field maps both
+// QuickJS packages to empty modules for platform "browser" bundles such as Convex V8, so they never get there:
+// esbuild leaves one empty chunk per mapped package, and nothing else.
+const quickJsMarkers = ["quickjs-emscripten-core", "quickjs-singlefile", "newQuickJSWASMModuleFromVariant", "QTS_"];
+
+function assertNoQuickJs(result) {
+  for (const file of result.outputFiles) {
+    for (const marker of quickJsMarkers) {
+      assert.ok(!file.text.includes(marker), `${file.path} contains ${marker}`);
+    }
+  }
+}
+
+/** Outputs besides the entry and the two empty QuickJS stand-ins. */
+function extraOutputs(result) {
+  const stubs = result.outputFiles.filter((file) => file.path.includes("_deps") && file.text.trim() === "");
+  assert.equal(stubs.length, 2, "one empty chunk per QuickJS package");
+  return result.outputFiles.length - 1 - stubs.length;
+}
+
 before(() => build());
 
 test("no module in dist has a static import of a Node built-in", () => {
@@ -111,8 +131,9 @@ test("a Convex V8 bundle of the root, without the MCP SDK installed (most backen
     assert.deepEqual(result.errors, []);
     assertNoNode(result);
     assertNoMcpClientRuntime(entryOutput(result));
-    assert.equal(result.outputFiles.length, 1, "no extra chunks");
-    t.diagnostic(`1 output, ${result.outputFiles[0].text.length} bytes`);
+    assertNoQuickJs(result);
+    assert.equal(extraOutputs(result), 0, "no extra chunks");
+    t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -130,10 +151,71 @@ test("a Convex V8 bundle of the root, with the MCP SDK installed, has no Node bu
     assertNoNode(result);
     assertNoMcpClientRuntime(entryOutput(result));
     // esbuild still emits the lazily imported SDK modules as chunks. Nothing imports them at runtime.
-    const chunks = result.outputFiles.filter((file) => file.path.includes("_deps"));
+    assertNoQuickJs(result);
+    const chunks = result.outputFiles.filter((file) => file.path.includes("_deps") && file.text.trim() !== "");
     t.diagnostic(`${result.outputFiles.length} outputs; ${chunks.length} unused SDK chunks, ${chunks.reduce((n, f) => n + f.text.length, 0)} bytes`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a Convex V8 bundle of the root, with QuickJS installed, has no QuickJS in any output", async (t) => {
+  const dir = installFixture("convex-v8-quickjs", {
+    convex: "convex",
+    "quickjs-emscripten-core": "quickjs-emscripten-core",
+    "@jitl/quickjs-singlefile-cjs-release-sync": "@jitl/quickjs-singlefile-cjs-release-sync",
+  });
+  try {
+    const result = await convexBundle(dir);
+    assert.deepEqual(result.errors, []);
+    assertNoNode(result);
+    assertNoQuickJs(result);
+    assert.equal(extraOutputs(result), 0, "no extra chunks");
+    t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// A Node bundle (a Convex "use node" action, an Electron main process): esbuild for Node with nothing external and no
+// node_modules shipped. The lazily imported QuickJS must be bundled in, and the sandbox must run. The QuickJS variant
+// is CommonJS and requires Node built-ins, so ESM output needs the usual createRequire banner.
+test("a Node bundle carries QuickJS and runs the sandbox without node_modules", async () => {
+  const dir = installFixture("node-quickjs", {
+    "quickjs-emscripten-core": "quickjs-emscripten-core",
+    "@jitl/quickjs-singlefile-cjs-release-sync": "@jitl/quickjs-singlefile-cjs-release-sync",
+  });
+  const out = mkdtempSync(join(tmpdir(), "vvedantb-server-node-quickjs-out-"));
+  try {
+    const entry = join(dir, "main.ts");
+    writeFileSync(
+      entry,
+      `import assert from "node:assert/strict";
+import { runSandboxedScript } from ${JSON.stringify(pkg.name)};
+const tools = [{ name: "double", mutating: false, invoke: async (json: string) => String(JSON.parse(json).n * 2) }];
+const outcome = await runSandboxedScript("return await tools.double({ n: args.n });", tools, {}, { globals: { args: { n: 21 } } });
+assert.deepEqual({ ok: outcome.ok, result: outcome.ok ? outcome.result : outcome.error }, { ok: true, result: 42 });
+`,
+    );
+    const result = await esbuild.build({
+      entryPoints: [entry],
+      absWorkingDir: dir,
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node22",
+      splitting: true,
+      outdir: out,
+      banner: { js: `import { createRequire } from "node:module"; const require = createRequire(import.meta.url);` },
+      logLevel: "silent",
+    });
+    assert.deepEqual(result.errors, []);
+    writeFileSync(join(out, "package.json"), JSON.stringify({ type: "module" }));
+    const run = spawnSync(process.execPath, [join(out, "main.js")], { cwd: out, encoding: "utf8" });
+    assert.equal(run.status, 0, `bundle failed:\n${run.stdout}${run.stderr}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(out, { recursive: true, force: true });
   }
 });
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0
+
+Additive: a QuickJS code sandbox joins the root. Nothing in 0.4.1 changes.
+
+### Added
+
+- `runSandboxedScript(code, tools, limits?, options?)`: runs untrusted JavaScript (the body of an async function) in a fresh QuickJS runtime. The script calls host tools with `await tools.<name>(args)`, logs with `console`, and returns a JSON value. Never throws; resolves to `{ ok, result | error, logs, calls, ms }`. See `docs/sandbox.md`.
+- `DEFAULT_EXECUTE_LIMITS`: 60 s wall clock, 64 MB heap, 1 MB stack, 50 tool calls of which at most 10 mutating, logs capped at 200 lines of 2,000 characters. Every field can be overridden per run.
+- `options.globals`: JSON-serialisable values set as VM globals, for example `{ args }`. Names that would replace an existing global are refused.
+- `options.onCall`: called before each tool call with `{ name, args, mutating }`. Returns `{ allow: true }`, `{ allow: false, error }` (the script's call rejects; the tool does not run) or `{ stub }` (the call resolves to the stub; the tool does not run and the call is recorded with `skipped: true`). Refused and stubbed calls count against the call caps.
+- `serializeExecuteOutcome(outcome, maxChars?)` and `DEFAULT_RESULT_CHAR_CAP` (100,000): pretty JSON of an outcome for a tool reply; a larger successful result becomes `{ truncated, note, resultPreview }`.
+- Types: `SandboxTool`, `ExecuteLimits`, `ExecuteOutcome`, `SandboxOptions`, `SandboxCall`, `SandboxCallDecision`, `SandboxCallRecord`.
+- New optional peers: `quickjs-emscripten-core` and `@jitl/quickjs-singlefile-cjs-release-sync` `^0.32.0`. They load on the first `runSandboxedScript` call, never when the root is imported. Without them the call returns `ok: false` with `Sandbox unavailable: …`.
+- `package.json` `browser` field: maps both QuickJS packages to empty modules, so browser-platform bundles of the root (Convex V8) never include QuickJS or its Node built-ins, even when it is installed.
+- Tests: `tests/sandbox` runs against real QuickJS (limits, deadline, out of memory, stack overflow, stalled promise, error mapping, disposal after a timeout, log caps, result preview, globals, `onCall` refusal and stubs, call caps). `tests-node/bundle.mjs` bundles the root for Convex V8 with QuickJS installed and checks no output contains it, and runs a Node bundle of the sandbox with no `node_modules`. `tests-node/esm-exports.mjs` covers the new exports and types, and the sandbox with and without QuickJS installed.
+
 ## 0.4.1
 
 Docs and comments only; no runtime change.
