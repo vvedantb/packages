@@ -12,7 +12,7 @@ let bare;
 
 before(() => {
   build();
-  // No peer installed: no zod, convex, @clerk/backend or @modelcontextprotocol/sdk.
+  // No peer installed: no zod, convex, @clerk/backend, @modelcontextprotocol/sdk or QuickJS.
   bare = installFixture("esm");
 });
 
@@ -36,14 +36,15 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
     bare,
     "import-root",
     `const m = await import(${JSON.stringify(pkg.name)});\n` +
-      // One export from each internal folder, and every optimistic-update and MCP client OAuth runtime export.
+      // One export from each internal folder, and every optimistic-update, MCP client OAuth and sandbox runtime export.
       `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken", "createClerkUserAuth",\n` +
       `  "createMemoryOptimisticStore", "forEachLoadedQuery", "mapLoadedQuery", "patchLoadedQuery", "updateAllCachedQueries", "tempId",\n` +
       `  "authorizeMcpServer", "createMcpOAuthProvider", "createMcpOAuthStateSchema", "hasMcpOAuthTokens", "isAccessTokenExpiring",\n` +
-      `  "refreshMcpOAuth", "revokeMcpOAuth", "startLoopback"]) {\n` +
+      `  "refreshMcpOAuth", "revokeMcpOAuth", "startLoopback", "runSandboxedScript", "serializeExecuteOutcome"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n` +
-      `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n`,
+      `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n` +
+      `if (m.DEFAULT_EXECUTE_LIMITS.deadlineMs !== 60000 || m.DEFAULT_RESULT_CHAR_CAP !== 100000) throw new Error("sandbox constants");\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });
@@ -74,6 +75,47 @@ test("without the SDK: the pure MCP client helpers, the store and the loopback w
       `assert.equal(await m.revokeMcpOAuth({ url: "https://mcp.example.test/mcp", state: { tokens: { access_token: "a", token_type: "bearer" } } }), false);\n`,
   );
   assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+});
+
+test("without QuickJS: the sandbox reports itself unavailable instead of throwing", () => {
+  const run = runIn(
+    bare,
+    "no-quickjs",
+    `import assert from "node:assert/strict";\n` +
+      `import { runSandboxedScript } from ${JSON.stringify(pkg.name)};\n` +
+      `await assert.rejects(import("quickjs-emscripten-core"), /Cannot find package/);\n` +
+      `const outcome = await runSandboxedScript("return 1;", []);\n` +
+      `assert.equal(outcome.ok, false);\n` +
+      `assert.match(outcome.error, /^Sandbox unavailable: The code sandbox needs the quickjs-emscripten-core and @jitl\\/quickjs-singlefile-cjs-release-sync packages/);\n`,
+  );
+  assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+});
+
+test("with QuickJS installed, the sandbox runs from the built package", () => {
+  const dir = installFixture("quickjs", {
+    "quickjs-emscripten-core": "quickjs-emscripten-core",
+    "@jitl/quickjs-singlefile-cjs-release-sync": "@jitl/quickjs-singlefile-cjs-release-sync",
+  });
+  try {
+    const run = runIn(
+      dir,
+      "quickjs",
+      `import assert from "node:assert/strict";\n` +
+        `import { runSandboxedScript } from ${JSON.stringify(pkg.name)};\n` +
+        `const tools = [{ name: "add", mutating: true, invoke: async (json) => String(JSON.parse(json).a + 1) }];\n` +
+        `const outcome = await runSandboxedScript("console.log(args.a); return await tools.add({ a: args.a });", tools, {}, {\n` +
+        `  globals: { args: { a: 1 } },\n` +
+        `  onCall: (call) => (call.mutating ? { stub: 99 } : { allow: true }),\n` +
+        `});\n` +
+        `assert.equal(outcome.ok, true);\n` +
+        `assert.equal(outcome.result, 99);\n` +
+        `assert.deepEqual(outcome.logs, ["1"]);\n` +
+        `assert.deepEqual(outcome.calls.map(({ name, ok, skipped }) => ({ name, ok, skipped })), [{ name: "add", ok: true, skipped: true }]);\n`,
+    );
+    assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("with the SDK installed, a non-interactive provider rejects with the SDK's UnauthorizedError", () => {
@@ -121,11 +163,18 @@ import { makeFunctionReference } from "convex/server";
 import {
   createMcpOAuthProvider,
   createMcpOAuthStateSchema,
+  DEFAULT_EXECUTE_LIMITS,
   mapLoadedQuery,
+  runSandboxedScript,
+  serializeExecuteOutcome,
   startLoopback,
   tempId,
+  type ExecuteLimits,
+  type ExecuteOutcome,
   type McpOAuthState,
   type OptimisticStore,
+  type SandboxCallDecision,
+  type SandboxTool,
 } from "@vvedantb/server";
 
 const schema = createMcpOAuthStateSchema(z);
@@ -146,7 +195,16 @@ const list = makeFunctionReference<"query", { projectId: string }, Task[]>("task
 const id: string = tempId("tasks");
 declare const store: OptimisticStore;
 mapLoadedQuery(store, list, (tasks) => [...tasks, { _id: id, title: "new" }]);
-export { pending };
+
+const sandboxTools: SandboxTool[] = [{ name: "get", mutating: false, invoke: async (json) => json }];
+const limits: Partial<ExecuteLimits> = { deadlineMs: DEFAULT_EXECUTE_LIMITS.deadlineMs / 2 };
+const outcome: ExecuteOutcome = await runSandboxedScript("return args;", sandboxTools, limits, {
+  globals: { args: { id: "t1", tags: ["a"], when: null } },
+  onCall: async (call): Promise<SandboxCallDecision> =>
+    call.mutating ? { allow: false, error: \`\${call.name} refused\` } : { stub: { args: call.args } },
+});
+const reply: string = serializeExecuteOutcome(outcome);
+export { pending, reply };
 `;
 
 for (const [label, zodDir] of [
