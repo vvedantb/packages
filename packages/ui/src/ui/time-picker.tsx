@@ -2,6 +2,11 @@ import * as React from "react";
 import { IconClock } from "@tabler/icons-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { cn } from "../utils/cn";
+import {
+  pickerItemHoverClass,
+  pickerSelectedClass,
+  pickerTriggerClass,
+} from "./_picker-classes";
 
 // custom 24, hour "hh:mm" time picker replaces `<input type="time">` because the native picker varies wildly
 // across browsers and platforms (chrome/firefox/safari each render a
@@ -15,7 +20,8 @@ interface TimePickerProps {
   className?: string;
   disabled?: boolean;
   ariaLabel?: string;
-  // width of the trigger button defaults to a compact 110px
+  // merged onto the trigger (width defaults to a compact 110px; height,
+  // radius, padding and text size override cleanly)
   triggerClassName?: string;
 }
 
@@ -88,8 +94,9 @@ const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
             disabled={disabled}
             aria-label={ariaLabel}
             className={cn(
-              "inline-flex h-8 items-center justify-between gap-2 rounded-field border border-border bg-field-background px-2.5 text-xs font-medium tabular-nums transition-[border-color,box-shadow,background-color] duration-200 ease-smooth hover:bg-field-background/90 focus-visible:border-focus-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50",
-              triggerClassName ?? "w-[110px]",
+              pickerTriggerClass,
+              "w-[110px]",
+              triggerClassName,
               className,
             )}
           >
@@ -152,8 +159,8 @@ const TimeColumn = React.forwardRef<HTMLDivElement, TimeColumnProps>(
                 className={cn(
                   "flex h-7 w-full items-center justify-center text-xs tabular-nums transition-colors",
                   isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground/80 hover:bg-surface-tertiary/50",
+                    ? pickerSelectedClass
+                    : cn("text-foreground/80", pickerItemHoverClass),
                 )}
               >
                 {v}

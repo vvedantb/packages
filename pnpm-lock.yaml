@@ -75,6 +75,10 @@ importers:
         version: zod@3.25.76
 
   packages/ui:
+    dependencies:
+      react-day-picker:
+        specifier: ^9.14.0
+        version: 9.14.0(react@19.3.0)
     devDependencies:
       '@clerk/clerk-react':
         specifier: ^5.0.0
@@ -288,6 +292,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  '@date-fns/tz@1.5.0':
+    resolution: {integrity: sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg==}
 
   '@electron/asar@4.3.1':
     resolution: {integrity: sha512-6pI64z/tMSBkUTZLQFYhs2YiB7fS9sKA6gy7/2nH1Ju7GGwT32UPsj4Mxsws5NMmtR6C0zYdXVxEU/rGqJRCJA==}
@@ -1686,6 +1693,10 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
+  '@tabby_ai/hijri-converter@1.0.5':
+    resolution: {integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==}
+    engines: {node: '>=16.0.0'}
+
   '@tabler/icons-react@3.48.0':
     resolution: {integrity: sha512-OCeAlpaWHEMV+EsgdVeGQ3YuKfmfnThZhc++CaZ/ujYzi5+/DONDQlX4OGvH1ikYhIfmc0grI4otJgHy7QAvng==}
     peerDependencies:
@@ -2237,6 +2248,12 @@ packages:
 
   dagre-d3-es@7.0.14:
     resolution: {integrity: sha512-P4rFMVq9ESWqmOgK+dlXvOtLwYg0i7u0HBGJER0LZDJT2VHIPAMZ/riPxqJceWMStH5+E61QxFra9kIS3AqdMg==}
+
+  date-fns-jalali@4.1.0-0:
+    resolution: {integrity: sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==}
+
+  date-fns@4.4.0:
+    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   dayjs@1.11.19:
     resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
@@ -3181,6 +3198,12 @@ packages:
     resolution: {integrity: sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA==}
     engines: {node: '>= 0.10'}
 
+  react-day-picker@9.14.0:
+    resolution: {integrity: sha512-tBaoDWjPwe0M5pGrum4H0SR6Lyk+BO9oHnp9JbKpGKW2mlraNPgP9BMfsg5pWpwrssARmeqk7YBl2oXutZTaHA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '>=16.8.0'
+
   react-dom@19.3.0:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
@@ -3776,6 +3799,8 @@ snapshots:
     optionalDependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
+
+  '@date-fns/tz@1.5.0': {}
 
   '@electron/asar@4.3.1':
     dependencies:
@@ -5002,6 +5027,8 @@ snapshots:
       mermaid: 11.17.2
       react: 19.3.0
 
+  '@tabby_ai/hijri-converter@1.0.5': {}
+
   '@tabler/icons-react@3.48.0(react@19.3.0)':
     dependencies:
       '@tabler/icons': 3.48.0
@@ -5606,6 +5633,10 @@ snapshots:
     dependencies:
       d3: 7.9.0
       lodash-es: 4.18.1
+
+  date-fns-jalali@4.1.0-0: {}
+
+  date-fns@4.4.0: {}
 
   dayjs@1.11.19: {}
 
@@ -6872,6 +6903,14 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.3
       unpipe: 1.0.0
+
+  react-day-picker@9.14.0(react@19.3.0):
+    dependencies:
+      '@date-fns/tz': 1.5.0
+      '@tabby_ai/hijri-converter': 1.0.5
+      date-fns: 4.4.0
+      date-fns-jalali: 4.1.0-0
+      react: 19.3.0
 
   react-dom@19.3.0(react@19.3.0):
     dependencies:

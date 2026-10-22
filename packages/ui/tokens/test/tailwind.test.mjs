@@ -91,3 +91,16 @@ test("animations.css and the preset define the same keyframes and timings", { sk
   const css = readFileSync(join(PKG, "src/css/animations.css"), "utf8");
   for (const [name, value] of Object.entries(animation)) assert.ok(css.includes(`--animate-${name}: ${value};`), name);
 });
+
+test("calendar day colours: today and outside rules never apply to the selected day", { skip }, async () => {
+  const source = readFileSync(join(PKG, "../src/ui/calendar.tsx"), "utf8");
+  const candidates = [...new Set(source.split(/[\s"'`]+/).filter((c) => c.includes("group-data-")))];
+  const out = await build(head, candidates);
+  const notSelected = ":not(:is(:where(.group\\/day)[data-selected] *))";
+  const colourRules = out.split("}").filter((r) => /\[data-(today|outside)\]/.test(r) && /(^|[\s{;])color:/.test(r));
+  assert.ok(colourRules.length >= 2, "today and outside colour rules are generated");
+  for (const rule of colourRules) assert.ok(rule.includes(notSelected), `rule can beat the selected colour:\n${rule}`);
+  assert.match(out, /\[data-selected\][^{]*\{\s*color: var\(--color-primary-foreground\)/);
+  // the today dot follows the text colour, so it is primary-foreground when selected
+  assert.match(out, /\[data-today\][^{]*:after\s*\{[^}]*background-color: currentcolor/i);
+});

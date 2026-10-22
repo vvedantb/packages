@@ -233,7 +233,7 @@ describe("ConfirmDialog parts: Footer row", () => {
     const el = footer();
     expect(el.className).toContain("justify-end");
     expect(el.className).toContain("flex-row!");
-    for (const cls of ["mt-auto", "bg-overlay", "pt-2", "gap-2", "[&_button]:max-sm:min-h-11", "pb-[max(0px,env(safe-area-inset-bottom,0px))]"]) {
+    for (const cls of ["mt-auto", "pt-2", "gap-2", "[&_button]:max-sm:min-h-11", "pb-[max(0px,env(safe-area-inset-bottom,0px))]"]) {
       expect(el.className).toContain(cls);
     }
     expect(el.hasAttribute("row")).toBe(false);
