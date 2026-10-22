@@ -31,8 +31,10 @@ export const ARTIFACT_ALIASES_GLOBAL = "__ARTIFACT_ALIASES__";
  * `window[alias].state` for each alias in `window.__ARTIFACT_ALIASES__`.
  * Replaces `localStorage` and `sessionStorage` with shims over the same state
  * (keys prefixed `ls:` and `ss:`). Writes over the state limits fail in the
- * guest before they reach the host. Talks to the host over a MessagePort, or
- * `window.ReactNativeWebView.postMessage` in a React Native WebView.
+ * guest before they reach the host. In an iframe it posts `artifact:ready` to
+ * the parent window, then talks over the MessagePort the host sends back and
+ * queues requests made before the port arrives. In a React Native WebView it
+ * uses `window.ReactNativeWebView.postMessage`.
  */
 export const GUEST_BOOTSTRAP_SCRIPT = `(function(){
   var port=null;
@@ -64,12 +66,18 @@ export const GUEST_BOOTSTRAP_SCRIPT = `(function(){
     }
     return total<=${String(ARTIFACT_STATE_MAX_TOTAL_BYTES)};
   }
+  var queued=[];
+  function nativeView(){
+    return window.ReactNativeWebView&&typeof window.ReactNativeWebView.postMessage==="function"?window.ReactNativeWebView:null;
+  }
   function send(msg){
-    if(window.ReactNativeWebView&&typeof window.ReactNativeWebView.postMessage==="function"){
-      window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+    var native=nativeView();
+    if(native){
+      native.postMessage(JSON.stringify(msg));
       return;
     }
-    if(port){port.postMessage(msg);}
+    if(port){port.postMessage(msg);return;}
+    queued.push(msg);
   }
   function call(op,extra){
     return new Promise(function(resolve,reject){
@@ -191,11 +199,16 @@ export const GUEST_BOOTSTRAP_SCRIPT = `(function(){
         var msg=e.data;
         if(msg&&msg.type==="${ARTIFACT_STATE_RESULT_TYPE}")handleResult(msg);
       };
+      for(var q=0;q<queued.length;q++)port.postMessage(queued[q]);
+      queued=[];
       return;
     }
     if(data.type==="${ARTIFACT_STATE_RESULT_TYPE}")handleResult(data);
   });
-  send({type:"${ARTIFACT_READY_TYPE}"});
+  var ready={type:"${ARTIFACT_READY_TYPE}"};
+  var native=nativeView();
+  if(native)native.postMessage(JSON.stringify(ready));
+  else if(window.parent&&window.parent!==window)window.parent.postMessage(ready,"*");
 })();`;
 
 export type ArtifactGuestOptions = {

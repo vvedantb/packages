@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. |
@@ -936,6 +936,55 @@ Props (type `IconProps`; all optional):
 
 Other SVG props (`id`, `data-*`, handlers, `ref`) go to the svg. On group hover the svg scales to 1.15 (the first six icons, spring ease) or 1.12 (the rest). `NavIconBase` is the shared svg wrapper, for icons drawn in the same style. The stylesheet has no reduced-motion override.
 
+## Artifact viewers (0.13.0)
+
+Web viewers for artifacts: standalone HTML, Markdown, SVG, code or typed JSON (quiz, flashcards) documents with per-user state. The pure core (schemas, state limits and ops, the document wrapper, the guest bridge) lives in `@vvedantb/server` (see its `docs/artifacts.md`); install `@vvedantb/server` 0.6.1 or later next to this package. The components hold no data: rows come in through props and changes leave through callbacks, so any backend works.
+
+```tsx
+import { ArtifactList, ArtifactListToolbar, ArtifactViewer, type ArtifactStateStore } from "@vvedantb/ui";
+
+<ArtifactListToolbar query={query} onQueryChange={setQuery} type={type} onTypeChange={setType} layout={layout} onLayoutChange={setLayout} />
+<ArtifactList
+  artifacts={rows}
+  layout={layout}
+  getHref={(a) => `/artifacts/${a.id}`}
+  onOpen={(a) => navigate(a.id)}
+  getBody={(a) => fetchBody(a.id)}
+  onRename={(a, title) => rename(a.id, title)}
+  onDelete={(a) => remove(a.id)}
+/>
+
+const store: ArtifactStateStore = {
+  load: async () => (await getState(id))?.data ?? {},
+  save: (data) => putState({ id, sets: data, reset: true }),
+  onError: (error) => toast.error(error.message),
+};
+<ArtifactViewer
+  artifact={detail}
+  store={store}
+  stateGlobalAliases={["app"]}
+  versions={history}
+  viewingVersion={version}
+  onViewVersion={setVersion}
+  onRestoreVersion={(v) => restore(id, v)}
+  href={`/artifacts/${id}`}
+  headerStart={<BackLink />}
+  onRename={(title) => rename(id, title)}
+  onDelete={() => remove(id)}
+/>
+```
+
+- `ArtifactFrame`: the body in an iframe with `sandbox="allow-scripts"` (never `allow-same-origin`) and the CSP from `wrapArtifactDocument`. Props `body`, `format`, `title` (the iframe name, and a template's heading), `template` (`stateSpec.template`), `store`, `stateGlobalAliases`, `saveDelayMs` (5 s) and `saveMaxWaitMs` (30 s); other iframe props pass through. It calls `store.load()` once per document and writes the snapshot into the `srcdoc`, answers the guest's `window.artifactState` requests over a `MessageChannel` with the core's ops and limits, and calls `store.save(data)` with the whole map (replace, not merge) after the debounce, on `pagehide`, when the page is hidden and on unmount. A reload waits for a save in flight. If `load` fails, the frame starts empty and never saves, so it cannot overwrite stored state; `store.onError(error, "load" | "save")` hears about failures. Without a store, state lives until unmount. Keep `store` stable per artifact (a new object reloads the frame); a new `stateGlobalAliases` array with the same names does not.
+- `ArtifactStateStore`: `{ load(): Promise<Record<string, string>>, save(data): Promise<void>, onError?(error, phase) }`.
+- `ArtifactRender`: the body by format. Markdown renders with Streamdown, code with `CodeBlock` (`language`), and HTML, SVG and JSON in an `ArtifactFrame`.
+- `ArtifactCard`: a grid tile (type icon, title, description, compact updated time) or a `layout="list"` row. With `getHref` it is an `<a>`; a plain left click then calls `onOpen` instead of following the link, and modified clicks stay native. The actions menu (dots button and right-click) lists Open (`onOpen`), Open in new tab (`getHref`), Rename (`onRename`), Copy and Download (`getBody`, since list rows carry no body) and Delete (`onDelete`). Each shows only when its callback is set; with none, there is no menu.
+- `ArtifactList`: `ArtifactCard`s in a grid (one to three columns) or a list, with the card callbacks passed through. With no artifacts it shows an `EmptyState` (`emptyTitle`, `emptyDescription`, `emptyActions`).
+- `ArtifactListToolbar`: controlled `ToolbarSearchInput` (`query`, `onQueryChange`), a type filter menu (`type`, `onTypeChange`, `types`; `undefined` is "All types") and a grid or list toggle (`layout`, `onLayoutChange`). The filter and the toggle show only with their callbacks. `children` go at the end.
+- `ArtifactViewer`: the ai-elements `Artifact` container with a header (`headerStart`, type icon, title) and actions: versions menu (`versions`), Rename, Copy, Download (the format's extension and MIME type from `ARTIFACT_FORMAT_FILES`), Open in new tab (`href`), your `actions`, and Delete. Below it, `ArtifactRender` of `artifact.body`. Pass the body of the version on screen.
+- `ArtifactVersionsMenu`: a "vN" button listing `versions` newest first, with the current one marked. With `onViewVersion`, picking a version shows it, and "Restore vN" (`onRestoreVersion`) appears while an older version is on screen. Without it, picking an older version restores it.
+- Rename and delete use `ConfirmDialog` (`ArtifactRenameDialog`, `ArtifactDeleteDialog`, and `useArtifactEditDialogs` for custom surfaces). Rename sends the trimmed title, and does nothing when it is unchanged. Alt-click on Delete skips the dialog, as with `useRequestConfirm`. A callback that rejects keeps its dialog open and shows an error toast; copy and load failures toast too, so mount `SonnerToaster`.
+- `ArtifactTypeIcon` (`type`, `size`, `stroke`) and `ARTIFACT_TYPE_LABELS` (`mindmap` is "Mind map"). Helpers `downloadArtifactBody(title, format, body)`, `copyArtifactBody(body)`, `openArtifactInNewTab(href)`. Row types: `ArtifactSummary` (any `ArtifactListRow` fits), `ArtifactDocument`, `ArtifactVersionSummary`.
+
 ## Toaster
 
 ```tsx
@@ -999,6 +1048,6 @@ The compat file includes a fallback `glass-panel-strong` (`rgb(var(--card) / 0.9
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
 
-`@clerk/clerk-react`, `convex`, `@tanstack/react-hotkeys`, `motion` and `zod` are optional peers (`peerDependenciesMeta`), so the package manager does not install or warn about them. The root still imports each of them statically from some module (`useStableAuth` and `ConvexClerkProvider` import Clerk; `ConvexClerkProvider` and `useEnsureUser` import `convex/react`; the motion presets, `ConfirmSkipHint` and others import the rest). So an app that imports `@vvedantb/ui` must have all five resolvable, even if it uses none of those exports: a bundler resolves every import before it tree-shakes. `app/tests-node/convex-esm.test.mjs` pins which root modules import `convex` and Clerk.
+`@clerk/clerk-react`, `convex`, `@tanstack/react-hotkeys`, `motion`, `zod` and `@vvedantb/server` (0.13.0) are optional peers (`peerDependenciesMeta`), so the package manager does not install or warn about them. The root still imports each of them statically from some module (`useStableAuth` and `ConvexClerkProvider` import Clerk; `ConvexClerkProvider` and `useEnsureUser` import `convex/react`; the artifact viewers import `@vvedantb/server`; the motion presets, `ConfirmSkipHint` and others import the rest). So an app that imports `@vvedantb/ui` must have all six resolvable, even if it uses none of those exports: a bundler resolves every import before it tree-shakes. `app/tests-node/convex-esm.test.mjs` pins which root modules import `convex` and Clerk, and `app/tests-node/artifacts-esm.test.mjs` which import `@vvedantb/server`.
 
 Full documentation: the repository `README.md`. Upgrading from `@vvedantb/tokens`, `@vvedantb/shell` or `@vvedantb/app-kit`: `MIGRATION.md`.

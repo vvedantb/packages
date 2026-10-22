@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.13.0
+
+Additive: artifact viewers join the root, built on the artifacts core in `@vvedantb/server`. No existing export changes, and no name collides with the ai-elements `Artifact*` parts.
+
+- `ArtifactFrame` and `ArtifactStateStore`: the body in an iframe with `sandbox="allow-scripts"` (never `allow-same-origin`) and the core's CSP, plus the MessageChannel state bridge. It takes a backend-agnostic store (`load`, `save`, optional `onError`) and `stateGlobalAliases`, writes the loaded snapshot into the `srcdoc`, applies the guest's requests with the core's ops and limits, and saves the whole map 5 s after the last change (at least every 30 s), on `pagehide`, when the page is hidden and on unmount. After a failed load it never saves. Guest messages are parsed with zod at the boundary.
+- `ArtifactCard`, `ArtifactList` (grid or list, empty state), `ArtifactListToolbar` (search, type filter, layout toggle), `ArtifactViewer` (header, versions, rename, copy, download by format, open in new tab, delete), `ArtifactVersionsMenu`, `ArtifactRender`, `ArtifactTypeIcon` and `ARTIFACT_TYPE_LABELS`. Rename and delete go through `ConfirmDialog` (`ArtifactRenameDialog`, `ArtifactDeleteDialog`, `useArtifactEditDialogs`); Alt-click skips the delete dialog. Data comes in through props and leaves through callbacks (`onOpen`, `getHref`, `getBody`, `onRename`, `onDelete`, `onViewVersion`, `onRestoreVersion`).
+- Helpers `downloadArtifactBody`, `copyArtifactBody`, `openArtifactInNewTab`. Types `ArtifactSummary`, `ArtifactDocument`, `ArtifactVersionSummary`, `ArtifactLayout`, `ArtifactCardActions` and each component's props.
+- New optional peer: `@vvedantb/server` `>=0.6.1`, imported statically by the root like `convex` (README, optional peers). 0.6.1 is the first version whose guest connects in a browser iframe; with 0.6.0 the bridge never connects. In this repository it is a workspace dev dependency, so build it before typechecking or testing this package (`pnpm build` at the root does).
+- Tests: `src/artifacts/artifact-frame.test.tsx` plays the guest against a fake store (snapshot in `srcdoc`, debounced and max-wait saves, limit and malformed-request errors, `pagehide`, hidden and unmount flushes, a failed load that never saves, a reload that waits for the save in flight). `src/artifacts/artifacts.test.tsx` covers the empty state, list rows, card links and menu actions, rename and delete dialogs, toolbar search, filter and layout callbacks, the versions menu, the viewer actions, and a check that the source names no app. `app/tests-node/artifacts-esm.test.mjs` pins which root modules import `@vvedantb/server` and server-renders the frame in plain Node.
+
 ## 0.12.1
 
 Fix: the package source now typechecks inside strict consuming apps. No runtime change.
