@@ -51,16 +51,25 @@ export type ArtifactDeleteDialogProps = {
   title: string;
   onConfirm: () => void;
   pending?: boolean;
+  /** Text under the title. Defaults to "This cannot be undone." */
+  description?: ReactNode;
 };
 
 /** "Delete <title>?" confirmation. Cancel is focused on open. */
-export function ArtifactDeleteDialog({ open, onOpenChange, title, onConfirm, pending }: ArtifactDeleteDialogProps) {
+export function ArtifactDeleteDialog({
+  open,
+  onOpenChange,
+  title,
+  onConfirm,
+  pending,
+  description = "This cannot be undone.",
+}: ArtifactDeleteDialogProps) {
   return (
     <ConfirmDialog.Root alert={false} focusCancel pending={pending} open={open} onOpenChange={onOpenChange}>
       <ConfirmDialog.Content className="max-w-sm" role="alertdialog">
         <ConfirmDialog.Header>
           <ConfirmDialog.Title>Delete &quot;{title}&quot;?</ConfirmDialog.Title>
-          <ConfirmDialog.Description>This cannot be undone.</ConfirmDialog.Description>
+          <ConfirmDialog.Description>{description}</ConfirmDialog.Description>
         </ConfirmDialog.Header>
         <ConfirmDialog.Footer>
           <ConfirmDialog.Cancel variant="secondary" />
@@ -78,13 +87,15 @@ export type ArtifactEditCallbacks = {
   onRename?: (title: string) => void | Promise<void>;
   /** Called after the delete dialog, or straight away on an Alt-click. */
   onDelete?: () => void | Promise<void>;
+  /** Text under the delete dialog's title, e.g. for a host that can undo. Defaults to "This cannot be undone." */
+  deleteDescription?: ReactNode;
 };
 
 /**
  * Rename and delete dialog state shared by the card and the viewer. `dialogs`
  * must be rendered; `requestDelete(event)` skips the dialog on an Alt-click.
  */
-export function useArtifactEditDialogs({ title, onRename, onDelete }: ArtifactEditCallbacks & { title: string }) {
+export function useArtifactEditDialogs({ title, onRename, onDelete, deleteDescription }: ArtifactEditCallbacks & { title: string }) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(title);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -137,6 +148,7 @@ export function useArtifactEditDialogs({ title, onRename, onDelete }: ArtifactEd
           title={title}
           onConfirm={remove}
           pending={pending}
+          description={deleteDescription}
         />
       ) : null}
     </>
