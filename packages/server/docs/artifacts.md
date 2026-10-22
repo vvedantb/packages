@@ -93,7 +93,7 @@ Download helpers: `ARTIFACT_FORMAT_FILES[format]` gives `{ extension, mime }`, a
 
 ## Bridge protocol
 
-1. The guest bootstrap runs first. It reads `window.__ARTIFACT_SNAPSHOT__` and `window.__ARTIFACT_ALIASES__` (set by `artifactGuestScript`), deletes them, and posts `{ type: "artifact:ready" }` to the parent.
+1. The guest bootstrap runs first. It reads `window.__ARTIFACT_SNAPSHOT__` and `window.__ARTIFACT_ALIASES__` (set by `artifactGuestScript`), deletes them, and posts `{ type: "artifact:ready" }` to the parent. Requests the page makes before the port arrives are queued and sent once it does.
 2. The host checks `event.source` is its frame, creates a `MessageChannel`, and posts `{ type: "artifact:port" }` with `port2`.
 3. The guest sends `{ type: "artifact:state", requestId, op, key?, value? }` on the port. The host parses it with `parseArtifactStateOp`, applies it with `applyArtifactStateOp`, schedules a save after `set`, `remove` or `reset`, and answers `{ type: "artifact:state-result", requestId, ok, value?, error? }`.
 

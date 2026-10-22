@@ -106,6 +106,10 @@ export * from "./ai-elements/sources";
 export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
 
+// Artifact viewers: frame with the state bridge, card, list, toolbar, viewer.
+// The core (schemas, state ops, document wrapper) comes from `@vvedantb/server`.
+export * from "./artifacts";
+
 export * from "./audio";
 
 export * from "./composer";

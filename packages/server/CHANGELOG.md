@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+
+Fix: the artifact guest bridge now connects in a browser iframe. No API change.
+
+- The 0.6.0 guest sent `artifact:ready` only through a port it did not have yet, so the host never sent one. State requests went nowhere, and the built-in quiz and flashcards pages waited forever on `getAll()`. The guest now posts `artifact:ready` to `window.parent`, queues requests made before the port arrives, and sends them when it does. React Native WebViews are unchanged.
+- Tests: the guest run in a VM realm with a parent window and no `ReactNativeWebView`: ready goes to the parent, a `getAll()` made before the port is sent once the port arrives, and its result resolves.
+
 ## 0.6.0
 
 Additive: a pure artifacts core joins the root. Nothing in 0.5.0 changes. See `docs/artifacts.md`.

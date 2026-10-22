@@ -146,6 +146,36 @@ describe("guest runtime", () => {
     ]);
   });
 
+  it("in an iframe, posts ready to the parent and queues requests until the port arrives", async () => {
+    const toParent: object[] = [];
+    const listeners: ((event: { data: object; ports?: object[] }) => void)[] = [];
+    const context = createContext({
+      TextEncoder,
+      DOMException,
+      parent: { postMessage: (message: object, targetOrigin: string) => toParent.push({ message, targetOrigin }) },
+      addEventListener: (_type: string, listener: (event: { data: object; ports?: object[] }) => void) =>
+        listeners.push(listener),
+    });
+    runInContext("var window = globalThis;", context);
+    runInContext(artifactGuestScript({}), context);
+    expect(toParent).toEqual([{ message: { type: ARTIFACT_READY_TYPE }, targetOrigin: "*" }]);
+
+    const pending = runInContext("window.artifactState.getAll()", context);
+    const onPort: object[] = [];
+    const port: { postMessage: (message: object) => void; onmessage: ((event: { data: object }) => void) | null } = {
+      postMessage: (message) => onPort.push(message),
+      onmessage: null,
+    };
+    for (const listener of listeners) listener({ data: { type: ARTIFACT_PORT_TYPE }, ports: [port] });
+    expect(onPort).toEqual([{ type: ARTIFACT_STATE_TYPE, requestId: 1, op: "getAll" }]);
+
+    port.onmessage?.({ data: { type: ARTIFACT_STATE_RESULT_TYPE, requestId: 1, ok: true, value: { a: "1" } } });
+    await expect(pending).resolves.toEqual({ a: "1" });
+    runInContext("window.artifactState.set('b', 2)", context);
+    expect(onPort.at(-1)).toEqual({ type: ARTIFACT_STATE_TYPE, requestId: 2, op: "set", key: "b", value: "2" });
+    expect(toParent).toHaveLength(1);
+  });
+
   it("refuses writes over the limits before they reach the host", async () => {
     const guest = runGuest({}, []);
     expect(() => guest.run("localStorage.setItem('blob', 'x'.repeat(16 * 1024 + 1))")).toThrow("quota");

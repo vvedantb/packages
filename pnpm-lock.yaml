@@ -163,6 +163,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.3.0(@types/react@19.3.0)
+      '@vvedantb/server':
+        specifier: workspace:*
+        version: link:../server
       ai:
         specifier: ^5.0.0
         version: 5.0.271(zod@4.6.6)
