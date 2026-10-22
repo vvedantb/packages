@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.1
+
+Additive: the artifact delete dialog text is configurable. Without the new prop nothing changes.
+
+- `deleteDescription` (`ReactNode`) on `ArtifactViewer`, `ArtifactCard`, `ArtifactList` (through `ArtifactCardActions`) and `useArtifactEditDialogs`, and `description` on `ArtifactDeleteDialog`. It replaces the text under the delete dialog's title, for hosts that soft-delete with undo. The default stays "This cannot be undone."
+- Tests: `src/artifacts/artifacts.test.tsx` checks the default text on the card and the viewer, and custom text through `ArtifactList` and `ArtifactViewer`.
+
 ## 0.13.0
 
 Additive: artifact viewers join the root, built on the artifacts core in `@vvedantb/server`. No existing export changes, and no name collides with the ai-elements `Artifact*` parts.

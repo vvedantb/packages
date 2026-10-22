@@ -45,11 +45,12 @@ export function ArtifactViewer({
   href,
   onRename,
   onDelete,
+  deleteDescription,
   headerStart,
   actions,
   className,
 }: ArtifactViewerProps) {
-  const edit = useArtifactEditDialogs({ title: artifact.title, onRename, onDelete });
+  const edit = useArtifactEditDialogs({ title: artifact.title, onRename, onDelete, deleteDescription });
   const extension = ARTIFACT_FORMAT_FILES[artifact.format].extension;
   const actionClass = "h-8 min-w-8";
 

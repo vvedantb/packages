@@ -250,9 +250,18 @@ describe("ArtifactCard menu", () => {
     await pointerOpen(byLabel("Artifact actions"));
     await click(menuItem("Delete"));
     expect(document.body.textContent).toContain('Delete "Cell biology quiz"?');
+    expect(document.body.textContent).toContain("This cannot be undone.");
     expect(onDelete).not.toHaveBeenCalled();
     await click(buttonByText("Delete"));
     expect(onDelete).toHaveBeenCalledWith(quiz);
+  });
+
+  it("shows a custom delete description passed through the list", async () => {
+    await mount(<ArtifactList artifacts={[quiz]} onDelete={vi.fn()} deleteDescription="You can undo this for 30 seconds." />);
+    await pointerOpen(byLabel("Artifact actions"));
+    await click(menuItem("Delete"));
+    expect(document.body.textContent).toContain("You can undo this for 30 seconds.");
+    expect(document.body.textContent).not.toContain("This cannot be undone.");
   });
 
   it("copies and downloads the body it loads", async () => {
@@ -435,12 +444,20 @@ describe("ArtifactViewer", () => {
 
     await click(byLabel("Delete"));
     expect(document.body.textContent).toContain('Delete "Q3 report"?');
+    expect(document.body.textContent).toContain("This cannot be undone.");
     await click(buttonByText("Cancel"));
     expect(onDelete).not.toHaveBeenCalled();
 
     await click(byLabel("Delete"), { altKey: true });
     expect(onDelete).toHaveBeenCalledTimes(1);
     expect(document.body.textContent).not.toContain('Delete "Q3 report"?');
+  });
+
+  it("shows a custom delete description", async () => {
+    await mount(<ArtifactViewer artifact={doc} onDelete={vi.fn()} deleteDescription={<span>Moved to trash.</span>} />);
+    await click(byLabel("Delete"));
+    expect(document.body.textContent).toContain("Moved to trash.");
+    expect(document.body.textContent).not.toContain("This cannot be undone.");
   });
 
   it("shows the versions menu when given versions", async () => {

@@ -33,6 +33,8 @@ export type ArtifactCardActions = {
   onRename?: (artifact: ArtifactSummary, title: string) => void | Promise<void>;
   /** Called after the delete dialog, or straight away on an Alt-click. */
   onDelete?: (artifact: ArtifactSummary) => void | Promise<void>;
+  /** Text under the delete dialog's title, e.g. for a host that can undo. Defaults to "This cannot be undone." */
+  deleteDescription?: ReactNode;
 };
 
 export type ArtifactCardProps = ArtifactCardActions & {
@@ -69,12 +71,14 @@ export function ArtifactCard({
   getBody,
   onRename,
   onDelete,
+  deleteDescription,
   className,
 }: ArtifactCardProps) {
   const edit = useArtifactEditDialogs({
     title: artifact.title,
     onRename: onRename && ((title) => onRename(artifact, title)),
     onDelete: onDelete && (() => onDelete(artifact)),
+    deleteDescription,
   });
   const href = getHref?.(artifact);
 
