@@ -55,6 +55,8 @@ export * from "./ui/tabs";
 export * from "./ui/textarea";
 export * from "./ui/toolbar-search-input";
 export * from "./ui/time-picker";
+export * from "./ui/calendar";
+export * from "./ui/date-picker";
 export * from "./ui/tooltip";
 export * from "./ui/kbd";
 export * from "./ui/sheet";

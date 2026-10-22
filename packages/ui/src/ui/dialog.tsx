@@ -211,6 +211,10 @@ const DialogBody = ({
 );
 DialogBody.displayName = "DialogBody";
 
+// no fill of its own: the footer is not sticky, so it shows the content's
+// surface. a token here (it was `bg-overlay`) showed as an inset block when
+// that surface differs (`glass-panel-strong` from the app, or `bg-*` on the
+// content)
 const DialogFooter = ({
   className,
   ...props
@@ -218,7 +222,7 @@ const DialogFooter = ({
   <div
     data-slot="dialog-footer"
     className={cn(
-      "mt-auto flex flex-col-reverse gap-2 bg-overlay pt-2 sm:flex-row sm:justify-end",
+      "mt-auto flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end",
       "pb-[max(0px,env(safe-area-inset-bottom,0px))]",
       "[&_button]:max-sm:min-h-11",
       className,

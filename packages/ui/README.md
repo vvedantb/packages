@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. |
@@ -984,6 +984,23 @@ const store: ArtifactStateStore = {
 - `ArtifactVersionsMenu`: a "vN" button listing `versions` newest first, with the current one marked. With `onViewVersion`, picking a version shows it, and "Restore vN" (`onRestoreVersion`) appears while an older version is on screen. Without it, picking an older version restores it.
 - Rename and delete use `ConfirmDialog` (`ArtifactRenameDialog`, `ArtifactDeleteDialog`, and `useArtifactEditDialogs` for custom surfaces). Rename sends the trimmed title, and does nothing when it is unchanged. Alt-click on Delete skips the dialog, as with `useRequestConfirm`. The delete dialog says "This cannot be undone."; pass `deleteDescription` to `ArtifactViewer`, `ArtifactCard` or `ArtifactList` to change it (0.13.1), for example when your delete can be undone. A callback that rejects keeps its dialog open and shows an error toast; copy and load failures toast too, so mount `SonnerToaster`.
 - `ArtifactTypeIcon` (`type`, `size`, `stroke`) and `ARTIFACT_TYPE_LABELS` (`mindmap` is "Mind map"). Helpers `downloadArtifactBody(title, format, body)`, `copyArtifactBody(body)`, `openArtifactInNewTab(href)`. Row types: `ArtifactSummary` (any `ArtifactListRow` fits), `ArtifactDocument`, `ArtifactVersionSummary`.
+
+## Date pickers (0.14.0)
+
+Controlled pickers that read and write the native input strings, as local calendar dates with no timezone logic. They need `react-day-picker` 9, a dependency of this package.
+
+```tsx
+import { DatePicker, DateTimePicker, MonthPicker } from "@vvedantb/ui";
+
+<DatePicker value={due} onChange={setDue} min="2026-01-01" clearable name="due" ariaLabel="Due date" />
+<DateTimePicker value={startsAt} onChange={setStartsAt} defaultTime="09:00" name="startsAt" />
+<MonthPicker value={month} onChange={setMonth} max="2026-12" />
+```
+
+- `DatePicker`: `value` "YYYY-MM-DD" or "". The trigger matches `TimePicker` and shows the date with `dateStyle: "medium"` (`locale`) or `placeholder` ("Pick a date"). `min` and `max` disable days; `clearable` adds a clear control (`onChange("")`); `name` adds a hidden input. `className` goes on the wrapper, `triggerClassName` merges onto the button (default `w-40`). A width on either sizes the field, and `w-full` on either fills the row; pill inputs can pass `triggerClassName="h-10 w-full rounded-full px-4 text-sm"`. `ariaLabel` names the trigger, followed by the shown text.
+- `DateTimePicker`: `value` "YYYY-MM-DDTHH:mm" or "". A date with no time uses `defaultTime` ("00:00"); a time with no date uses today. Only the date part of `min` and `max` applies. `triggerClassName` goes to both triggers, a width only to the date.
+- `MonthPicker`: `value` "YYYY-MM" or "", with year navigation and a month grid. `min` and `max` are "YYYY-MM".
+- `Calendar`: the styled `DayPicker` for custom layouts (every `DayPicker` prop). `parseDateValue` and `formatDateValue` convert between "YYYY-MM-DD" and a local `Date`.
 
 ## Toaster
 
