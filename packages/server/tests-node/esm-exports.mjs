@@ -40,11 +40,14 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `for (const name of ["extractBearerToken", "createMcpHttpHandler", "sha256Hex", "registerMcpRoutes", "verifyClerkAccessToken", "createClerkUserAuth",\n` +
       `  "createMemoryOptimisticStore", "forEachLoadedQuery", "mapLoadedQuery", "patchLoadedQuery", "updateAllCachedQueries", "tempId",\n` +
       `  "authorizeMcpServer", "createMcpOAuthProvider", "createMcpOAuthStateSchema", "hasMcpOAuthTokens", "isAccessTokenExpiring",\n` +
-      `  "refreshMcpOAuth", "revokeMcpOAuth", "startLoopback", "runSandboxedScript", "serializeExecuteOutcome"]) {\n` +
+      `  "refreshMcpOAuth", "revokeMcpOAuth", "startLoopback", "runSandboxedScript", "serializeExecuteOutcome",\n` +
+      `  "createArtifactSchemas", "applyArtifactStateOp", "applyArtifactStatePatch", "createTrailingMaxDebounce", "utcDayKey",\n` +
+      `  "buildQuizHtml", "buildFlashcardsHtml", "htmlFromArtifactTemplate", "wrapArtifactDocument", "artifactGuestScript"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n` +
       `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n` +
-      `if (m.DEFAULT_EXECUTE_LIMITS.deadlineMs !== 60000 || m.DEFAULT_RESULT_CHAR_CAP !== 100000) throw new Error("sandbox constants");\n`,
+      `if (m.DEFAULT_EXECUTE_LIMITS.deadlineMs !== 60000 || m.DEFAULT_RESULT_CHAR_CAP !== 100000) throw new Error("sandbox constants");\n` +
+      `if (m.ARTIFACT_READY_TYPE !== "artifact:ready" || m.ARTIFACT_STATE_MAX_KEYS !== 32) throw new Error("artifact constants");\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });
@@ -73,6 +76,21 @@ test("without the SDK: the pure MCP client helpers, the store and the loopback w
       `assert.equal(await m.refreshMcpOAuth({ url: "https://mcp.example.test/mcp", provider }), false);\n` +
       `await assert.rejects(provider.redirectToAuthorization(new URL("https://as.example.test/authorize")), /need the @modelcontextprotocol\\/sdk package/);\n` +
       `assert.equal(await m.revokeMcpOAuth({ url: "https://mcp.example.test/mcp", state: { tokens: { access_token: "a", token_type: "bearer" } } }), false);\n`,
+  );
+  assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+});
+
+test("without zod: the artifacts state ops and rendering work", () => {
+  const run = runIn(
+    bare,
+    "artifacts",
+    `import assert from "node:assert/strict";\n` +
+      `import * as m from ${JSON.stringify(pkg.name)};\n` +
+      `await assert.rejects(import("zod"), /Cannot find package/);\n` +
+      `assert.deepEqual(m.applyArtifactStatePatch({ a: "1" }, { sets: { b: "2" }, removes: ["a"] }).data, { b: "2" });\n` +
+      `const quiz = JSON.stringify({ title: "T", questions: [{ id: "q", prompt: "P", options: ["a", "b"], correctIndex: 0 }] });\n` +
+      `const doc = m.wrapArtifactDocument(quiz, "json", { score: "1" }, { stateGlobalAliases: ["app"] });\n` +
+      `assert.ok(doc.includes(m.ARTIFACT_CSP) && doc.includes("T quiz") && doc.includes('window.__ARTIFACT_ALIASES__=["app"];'));\n`,
   );
   assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
 });
@@ -161,6 +179,7 @@ const consumer = `
 import { z } from "zod";
 import { makeFunctionReference } from "convex/server";
 import {
+  createArtifactSchemas,
   createMcpOAuthProvider,
   createMcpOAuthStateSchema,
   DEFAULT_EXECUTE_LIMITS,
@@ -169,9 +188,12 @@ import {
   serializeExecuteOutcome,
   startLoopback,
   tempId,
+  wrapArtifactDocument,
+  type ArtifactListRow,
   type ExecuteLimits,
   type ExecuteOutcome,
   type McpOAuthState,
+  type QuizBodyV1,
   type OptimisticStore,
   type SandboxCallDecision,
   type SandboxTool,
@@ -204,7 +226,15 @@ const outcome: ExecuteOutcome = await runSandboxedScript("return args;", sandbox
     call.mutating ? { allow: false, error: \`\${call.name} refused\` } : { stub: { args: call.args } },
 });
 const reply: string = serializeExecuteOutcome(outcome);
-export { pending, reply };
+
+const artifacts = createArtifactSchemas(z);
+const saveArgs = z.object({ type: artifacts.artifactType, format: artifacts.artifactFormat, stateSpec: artifacts.stateSpec.optional() });
+const save = saveArgs.parse({ type: "quiz", format: "json" });
+const rows: ArtifactListRow[] = z.array(artifacts.listRow).parse([]);
+const checked = artifacts.validateArtifactBody(save.type, save.format, "{}");
+const quiz: QuizBodyV1 | undefined = checked.ok && checked.json && "questions" in checked.json ? checked.json : undefined;
+const srcdoc: string = wrapArtifactDocument("<p>x</p>", rows[0]?.format ?? "html", {}, { template: save.stateSpec?.template });
+export { pending, quiz, reply, srcdoc };
 `;
 
 for (const [label, zodDir] of [

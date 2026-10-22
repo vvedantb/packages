@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0
+
+Additive: a pure artifacts core joins the root. Nothing in 0.5.0 changes. See `docs/artifacts.md`.
+
+### Added
+
+- `createArtifactSchemas(z)` (zod 3.25+ or 4, passed in): `artifactType`, `artifactFormat`, `stateSpec`, `quizBodyV1`, `flashcardsBodyV1`, `listRow`, `detailRow`, and `validateArtifactBody(type, format, body, schemaVersion?)`, which caps bodies at 400,000 characters and allows `json` only for quiz and flashcards v1. Constants `ARTIFACT_TYPES`, `ARTIFACT_FORMATS`, `ARTIFACT_JSON_TYPES`, `ARTIFACT_TITLE_MAX_CHARS`, `ARTIFACT_DESCRIPTION_MAX_CHARS`, `ARTIFACT_BODY_MAX_CHARS`. Types `ArtifactType`, `ArtifactFormat`, `ArtifactStateSpec`, `QuizBodyV1`, `FlashcardsBodyV1`, `ArtifactOrigin`, `ArtifactListRow`, `ArtifactDetailRow`, `ArtifactSchemas`, `ArtifactBodyValidation`.
+- State: limits (32 keys, 64-character keys, 16 KiB per value, 64 KiB in total, 1 s between writes, 400/4,000 daily writes, 5 s/30 s save debounce, 10 versions kept), `applyArtifactStateOp`, `applyArtifactStatePatch`, `validateArtifactStateMap`, `parseArtifactStateOp`, `utcDayKey`, `utf8ByteLength`, `createTrailingMaxDebounce`, and the storage-shim prefixes and helpers (`ls:`, `ss:`).
+- Rendering: `buildQuizHtml`, `buildFlashcardsHtml`, `htmlFromArtifactTemplate` with lenient `parseQuizTemplate` and `parseFlashcardsTemplate`, `wrapArtifactDocument(body, format, snapshot?, { title?, template?, stateGlobalAliases? })`, `wrapArtifactHtml`, `artifactGuestScript`, `GUEST_BOOTSTRAP_SCRIPT`, `ARTIFACT_CSP`, `formatFromLanguage`, `ARTIFACT_FORMAT_FILES` and `artifactFileName`.
+- Bridge messages with neutral names: `artifact:ready`, `artifact:port`, `artifact:state`, `artifact:state-result`. The guest exposes `window.artifactState`, plus `window[alias].state` for each alias the host passes (`assertStateGlobalAliases` refuses non-identifiers and globals such as `document`). The built-in pages use `window.artifactState`.
+- Tests: `tests/artifacts` (protocol and alias injection, the guest run in a VM realm, state limit edges, debounce, templates, document formats, schema v1 round trips under zod 4 and 3.25, and a check that no app name appears in the source or shipped docs). `tests-node` imports the new exports from the built package with no peer installed, type-checks them for zod 4 and 3.25 consumers, and bundles them for Convex V8.
+
+### Changed (from the app code this came from)
+
+- The snapshot global is `__ARTIFACT_SNAPSHOT__`. The guest limit checks use the exported constants.
+- `applyArtifactStatePatch` returns the current data unchanged when any set or remove fails. Before, a failing set returned the partly applied data.
+- The quiz and flashcards builders are `buildQuizHtml` and `buildFlashcardsHtml`; their card and question types are `Flashcard` and `QuizQuestion`.
+
 ## 0.5.0
 
 Additive: a QuickJS code sandbox joins the root. Nothing in 0.4.1 changes.

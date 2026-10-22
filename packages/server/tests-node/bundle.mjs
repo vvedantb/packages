@@ -17,10 +17,19 @@ import { build, installFixture, pkg, pkgDir } from "./installed.mjs";
 const convexPackageJson = realpathSync(join(pkgDir, "node_modules", "convex", "package.json"));
 const { default: esbuild } = await import(pathToFileURL(createRequire(convexPackageJson).resolve("esbuild")).href);
 
-// Server root exports a Convex backend uses, plus pure MCP client OAuth ones.
+// Server root exports a Convex backend uses, plus pure MCP client OAuth and artifacts ones.
 const functionFile = `
 import { httpActionGeneric } from "convex/server";
-import { extractBearerToken, hasMcpOAuthTokens, isAccessTokenExpiring, jsonResponse, sha256Hex } from ${JSON.stringify(pkg.name)};
+import {
+  applyArtifactStatePatch,
+  extractBearerToken,
+  hasMcpOAuthTokens,
+  isAccessTokenExpiring,
+  jsonResponse,
+  sha256Hex,
+  utcDayKey,
+  wrapArtifactDocument,
+} from ${JSON.stringify(pkg.name)};
 
 export const status = httpActionGeneric(async (_ctx, request) => {
   const token = extractBearerToken(request.headers.get("authorization"));
@@ -29,6 +38,8 @@ export const status = httpActionGeneric(async (_ctx, request) => {
     signedIn: hasMcpOAuthTokens(state),
     expiring: isAccessTokenExpiring(state, Date.now()),
     hash: token ? await sha256Hex(token) : null,
+    state: applyArtifactStatePatch({}, { sets: { day: String(utcDayKey(Date.now())) } }),
+    srcdoc: wrapArtifactDocument("<p>x</p>", "html"),
   });
 });
 `;
@@ -131,6 +142,8 @@ test("a Convex V8 bundle of the root, without the MCP SDK installed (most backen
     assert.deepEqual(result.errors, []);
     assertNoNode(result);
     assertNoMcpClientRuntime(entryOutput(result));
+    // The artifacts core is pure strings and data, so it bundles into the entry as is.
+    assert.match(entryOutput(result), /artifact:ready/);
     assertNoQuickJs(result);
     assert.equal(extraOutputs(result), 0, "no extra chunks");
     t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);
