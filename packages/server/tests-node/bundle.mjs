@@ -17,11 +17,12 @@ import { build, installFixture, pkg, pkgDir } from "./installed.mjs";
 const convexPackageJson = realpathSync(join(pkgDir, "node_modules", "convex", "package.json"));
 const { default: esbuild } = await import(pathToFileURL(createRequire(convexPackageJson).resolve("esbuild")).href);
 
-// Server root exports a Convex backend uses, plus pure MCP client OAuth and artifacts ones.
+// Server root exports a Convex backend uses (the MCP token cache among them), plus pure MCP client OAuth and artifacts ones.
 const functionFile = `
 import { httpActionGeneric } from "convex/server";
 import {
   applyArtifactStatePatch,
+  authenticateWithTokenCache,
   extractBearerToken,
   hasMcpOAuthTokens,
   isAccessTokenExpiring,
@@ -38,6 +39,9 @@ export const status = httpActionGeneric(async (_ctx, request) => {
     signedIn: hasMcpOAuthTokens(state),
     expiring: isAccessTokenExpiring(state, Date.now()),
     hash: token ? await sha256Hex(token) : null,
+    principal: token
+      ? await authenticateWithTokenCache({ token, get: async () => null, put: async () => null, verify: async () => null })
+      : null,
     state: applyArtifactStatePatch({}, { sets: { day: String(utcDayKey(Date.now())) } }),
     srcdoc: wrapArtifactDocument("<p>x</p>", "html"),
   });

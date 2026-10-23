@@ -26,6 +26,34 @@ export {
   isConvexResourceLimitError,
 } from "./convexQueryLimits.js";
 export { jsonResponse } from "./jsonResponse.js";
+export {
+  authenticateWithTokenCache,
+  createMcpTokenCacheFunctions,
+  hashMcpToken,
+  jwtExpiryMs,
+  MCP_TOKEN_CACHE_EXPIRES_INDEX,
+  MCP_TOKEN_CACHE_HASH_INDEX,
+  MCP_TOKEN_CACHE_PURGE_BATCH,
+  MCP_TOKEN_CACHE_TABLE,
+  MCP_TOKEN_CACHE_TTL_MS,
+  mcpTokenCacheFields,
+  mcpTokenCacheTable,
+  tokenCacheExpiresAt,
+  type AuthenticateWithTokenCacheOptions,
+  type McpTokenCacheDoc,
+  type McpTokenCacheEntry,
+  type McpTokenCacheFunctionsConfig,
+  type McpTokenCacheGetDef,
+  type McpTokenCacheMutationBuilder,
+  type McpTokenCacheMutationCtx,
+  type McpTokenCachePrincipal,
+  type McpTokenCachePurgeDef,
+  type McpTokenCachePurgeRef,
+  type McpTokenCachePutDef,
+  type McpTokenCacheQueryBuilder,
+  type McpTokenCacheQueryCtx,
+  type McpTokenCacheRow,
+} from "./mcpTokenCache.js";
 export { createMemoryOptimisticStore } from "./memoryStore.js";
 export {
   forEachLoadedQuery,

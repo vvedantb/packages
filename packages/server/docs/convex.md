@@ -12,7 +12,7 @@ npm install @vvedantb/server
 
 None required. `@clerk/backend` is an optional peer. The package never imports it: `getClerkClient` takes its `createClerkClient`, and `verifyClerkAccessToken` takes a client (or a function that builds one).
 
-`convex` is an optional peer for types only: the optimistic-update helpers below name Convex's `FunctionReference`, `OptimisticLocalStore` and `GenericId` types. The package never imports `convex` at runtime.
+`convex` is an optional peer for types only: the optimistic-update helpers and the MCP token cache below name Convex types (`FunctionReference`, `OptimisticLocalStore`, `GenericId`, `RegisteredQuery`, the type of `v`). The package never imports `convex` at runtime; the token cache takes `v`, `defineTable` and your function builders as arguments.
 
 ## Usage
 
@@ -231,6 +231,68 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 - **ensure-user patch.** app-a patches the normalised email when it is defined and changed; app-b never patches; app-d patches `clerkId` (only possible after an email match); app-e touches `lastSeenAt` after 60 s.
 
 `tests/convex/clerkUserAuth.test.ts` ports each app's code and runs it next to the kit on the same fake ctx over each identity case (none, empty subject, known, duplicate, unknown, legacy email): return values, thrown messages, rows and writes match.
+
+## MCP token cache
+
+Caches verified MCP bearer tokens, so most requests skip the verify step (for Clerk: a network call, often from a cold Node action). Rows hold the SHA-256 hex of the token (`hashMcpToken`), never the token. Only successful verifications are cached, so a revoked token keeps working until its row expires: at most `MCP_TOKEN_CACHE_TTL_MS` (5 minutes).
+
+The package cannot own a table, so add it to your schema and register the three internal functions in one module:
+
+```ts
+// convex/schema.ts
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+import { mcpTokenCacheTable } from "@vvedantb/server";
+
+export default defineSchema({
+  mcpTokenCache: mcpTokenCacheTable(defineTable, v), // indexes by_token_hash and by_expires
+});
+```
+
+```ts
+// convex/mcp/tokenCache.ts
+import { v } from "convex/values";
+import { createMcpTokenCacheFunctions, type McpTokenCachePurgeRef } from "@vvedantb/server";
+import { internal } from "../_generated/api";
+import { internalMutation, internalQuery } from "../_generated/server";
+
+export const { getInternal, putInternal, purgeExpired } = createMcpTokenCacheFunctions({
+  v,
+  internalQuery,
+  internalMutation,
+  // tableName: "authCache", // default "mcpTokenCache"; the table needs both indexes
+  purgeSelf: (): McpTokenCachePurgeRef => internal.mcp.tokenCache.purgeExpired,
+});
+```
+
+Keep the `McpTokenCachePurgeRef` return annotation on `purgeSelf`. Without it TypeScript infers the thunk's type from `internal`, which is built from this module, and reports a circular type (TS7022).
+
+```ts
+// in the MCP bearer-auth action
+const principal = await authenticateWithTokenCache({
+  token,
+  get: (tokenHash) => ctx.runQuery(internal.mcp.tokenCache.getInternal, { tokenHash }),
+  put: (row) => ctx.runMutation(internal.mcp.tokenCache.putInternal, row),
+  verify: (token) => verifyWithClerk(token), // your verify; null means invalid
+});
+```
+
+```ts
+// convex/crons.ts
+crons.hourly("purge MCP token cache", { minuteUTC: 0 }, internal.mcp.tokenCache.purgeExpired, {});
+```
+
+| Export | Semantics |
+| --- | --- |
+| `authenticateWithTokenCache({ token, get, put, verify, now? })` | Hit when a row exists and `expiresAt > now`: returns `{ clerkUserId }` only, without `verify`. Miss: runs `verify`. A `null` from `verify` is returned and never cached. Otherwise writes `{ tokenHash, clerkUserId, expiresAt }` through `put`; a `put` failure is logged with `console.warn` and ignored. Logs `[MCP][auth] {"authCached":…,"authMs":…}` each call. Errors from `get` and `verify` are not caught. |
+| `tokenCacheExpiresAt(token, nowMs)` | `min(now + TTL, JWT exp)`; `now + TTL` for an opaque token or an unreadable payload; `null` (not cached) when the JWT `exp` is not after `now`. |
+| `jwtExpiryMs(token)` | The payload `exp` × 1000 when the token has three parts and `exp` is a finite number; otherwise `null`. Does not check the signature. |
+| `getInternal` | Internal query `{ tokenHash }` → `{ clerkUserId, expiresAt } \| null` via `by_token_hash`. Does not check expiry, so the query stays cacheable. |
+| `putInternal` | Internal mutation. Inserts a new row; patches an existing one only when `clerkUserId` differs or the new `expiresAt` is later. |
+| `purgeExpired` | Internal mutation. Deletes up to `MCP_TOKEN_CACHE_PURGE_BATCH` (500) rows with `expiresAt < now` via `by_expires`, and reschedules itself (`runAfter(0)`) when it deleted a full batch. Returns the count. |
+| `mcpTokenCacheFields(v)`, `mcpTokenCacheTable(defineTable, v)` | The fields `tokenHash`, `clerkUserId` (strings) and `expiresAt` (number), and the table with `MCP_TOKEN_CACHE_HASH_INDEX` (`by_token_hash`) and `MCP_TOKEN_CACHE_EXPIRES_INDEX` (`by_expires`). |
+
+The ctx types are structural, so the factory checks that the table exists and has both indexes. `getInternal`, `putInternal` and `purgeExpired` are real registered functions, so `ctx.runQuery(internal.mcp.tokenCache.getInternal, …)` is typed. `tests/convex/mcpTokenCache.types.ts` checks this against a codegen-shaped app with `convex/server` 1.47.
 
 ## Optimistic updates (client side)
 

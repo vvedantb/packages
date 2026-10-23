@@ -42,12 +42,16 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `  "authorizeMcpServer", "createMcpOAuthProvider", "createMcpOAuthStateSchema", "hasMcpOAuthTokens", "isAccessTokenExpiring",\n` +
       `  "refreshMcpOAuth", "revokeMcpOAuth", "startLoopback", "runSandboxedScript", "serializeExecuteOutcome",\n` +
       `  "createArtifactSchemas", "applyArtifactStateOp", "applyArtifactStatePatch", "createTrailingMaxDebounce", "utcDayKey",\n` +
-      `  "buildQuizHtml", "buildFlashcardsHtml", "htmlFromArtifactTemplate", "wrapArtifactDocument", "artifactGuestScript"]) {\n` +
+      `  "buildQuizHtml", "buildFlashcardsHtml", "htmlFromArtifactTemplate", "wrapArtifactDocument", "artifactGuestScript",\n` +
+      `  "authenticateWithTokenCache", "createMcpTokenCacheFunctions", "hashMcpToken", "jwtExpiryMs", "tokenCacheExpiresAt",\n` +
+      `  "mcpTokenCacheFields", "mcpTokenCacheTable"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n` +
       `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n` +
       `if (m.DEFAULT_EXECUTE_LIMITS.deadlineMs !== 60000 || m.DEFAULT_RESULT_CHAR_CAP !== 100000) throw new Error("sandbox constants");\n` +
-      `if (m.ARTIFACT_READY_TYPE !== "artifact:ready" || m.ARTIFACT_STATE_MAX_KEYS !== 32) throw new Error("artifact constants");\n`,
+      `if (m.ARTIFACT_READY_TYPE !== "artifact:ready" || m.ARTIFACT_STATE_MAX_KEYS !== 32) throw new Error("artifact constants");\n` +
+      `if (m.MCP_TOKEN_CACHE_TTL_MS !== 300000 || m.MCP_TOKEN_CACHE_PURGE_BATCH !== 500 || m.MCP_TOKEN_CACHE_TABLE !== "mcpTokenCache") throw new Error("token cache constants");\n` +
+      `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });
@@ -60,6 +64,12 @@ test("without the SDK: the pure MCP client helpers, the store and the loopback w
       `import * as m from ${JSON.stringify(pkg.name)};\n` +
       `await assert.rejects(import("@modelcontextprotocol/sdk/client/auth.js"), /Cannot find package/);\n` +
       `await assert.rejects(import("convex/server"), /Cannot find package/);\n` +
+      // The token cache needs no convex at runtime: a miss verifies and writes the hash, a hit skips verify.
+      `const cache = new Map();\n` +
+      `const tokenAuth = { token: "oat_1", get: async (h) => cache.get(h) ?? null, put: async (row) => cache.set(row.tokenHash, row), verify: async () => ({ clerkUserId: "u" }) };\n` +
+      `assert.deepEqual(await m.authenticateWithTokenCache(tokenAuth), { clerkUserId: "u" });\n` +
+      `assert.deepEqual([...cache.keys()], [await m.sha256Hex("oat_1")]);\n` +
+      `assert.deepEqual(await m.authenticateWithTokenCache({ ...tokenAuth, verify: async () => null }), { clerkUserId: "u" });\n` +
       `assert.equal(m.hasMcpOAuthTokens({ tokens: { access_token: "a", token_type: "bearer" } }), true);\n` +
       `assert.equal(m.isAccessTokenExpiring({ tokens: { access_token: "a", token_type: "bearer", expires_in: 60, obtained_at: 0 } }, 0), true);\n` +
       `const store = m.createMemoryOptimisticStore();\n` +
@@ -177,8 +187,11 @@ for (const removed of ["convex", "mcp"]) {
 // A consumer of the MCP client OAuth helpers, plus the optimistic-update helpers' Convex types.
 const consumer = `
 import { z } from "zod";
-import { makeFunctionReference } from "convex/server";
+import { defineSchema, defineTable, makeFunctionReference } from "convex/server";
+import { v } from "convex/values";
 import {
+  authenticateWithTokenCache,
+  mcpTokenCacheTable,
   createArtifactSchemas,
   createMcpOAuthProvider,
   createMcpOAuthStateSchema,
@@ -234,7 +247,15 @@ const rows: ArtifactListRow[] = z.array(artifacts.listRow).parse([]);
 const checked = artifacts.validateArtifactBody(save.type, save.format, "{}");
 const quiz: QuizBodyV1 | undefined = checked.ok && checked.json && "questions" in checked.json ? checked.json : undefined;
 const srcdoc: string = wrapArtifactDocument("<p>x</p>", rows[0]?.format ?? "html", {}, { template: save.stateSpec?.template });
-export { pending, quiz, reply, srcdoc };
+const appSchema = defineSchema({ mcpTokenCache: mcpTokenCacheTable(defineTable, v) });
+const principal = await authenticateWithTokenCache({
+  token: "oat_1",
+  get: async () => null,
+  put: async () => null,
+  verify: async () => ({ clerkUserId: "u" }),
+});
+const clerkUserId: string | undefined = principal?.clerkUserId;
+export { appSchema, clerkUserId, pending, quiz, reply, srcdoc };
 `;
 
 for (const [label, zodDir] of [
