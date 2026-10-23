@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.16.3
+
+Visual change: text fields now use 10px corners, matching `rounded-control`. Values are at the default `--radius: 1rem`. No export changes.
+
+- `tokens.css`: `--field-radius` (light and dark) `1.25rem` (20px) -> `min(var(--radius), 0.625rem)` (10px). `--radius-field: var(--field-radius)` in `@theme` is unchanged, so `rounded-field` follows.
+- `compat-shadcn-rgb.css`: `--radius-field` and `--field-radius` `min(calc(var(--radius) + 0.25rem), 1.25rem)` (20px) -> `min(var(--radius), 0.625rem)` (10px).
+- Affected: `Input`, `Textarea`, `Select` and `RadixSelect` triggers, `ClearInput` (+ `.alt`) and its `.t-clear` / `.t-clear-clip` CSS, `InputGroup` (+ `.alt`), `DatePicker` and `TimePicker` triggers (`_picker-classes.ts`), `Calendar` caption dropdowns, `SearchInput` (via `ClearInput`; `ToolbarSearchInput` keeps its `rounded-lg`), `SonnerToaster` `toastRadius="control"`, and the tailwind preset `rounded-field`. The `ring-2` focus ring is a `box-shadow`, so it follows the new radius.
+- Unchanged: buttons (`rounded-lg`), surfaces (`rounded-surface`), menu items (`rounded-menu-item`) and the chat `InputArea` (it sets `rounded-full` / `rounded-surface` on its `InputGroup`).
+- `Composer` (`data-slot="composer"`) root: `rounded-field` -> `rounded-[1.25rem]`, pinned to its old 20px so chat composers look the same.
+- Tests: `tokens/test/package.test.mjs` checks version 0.16.3 and the new `--field-radius` / `--radius-field` values in `tokens.css` and `compat-shadcn-rgb.css`.
+
 ## 0.16.2
 
 Visual change: `Select`, `RadixSelect`, `Command` and `ComposerSlashMenu` item rows now use `rounded-menu-item` (`min(var(--radius), 0.5rem)`, 8px) corners, like `DropdownMenu` and `ContextMenu` items. Values are at the default `--radius: 1rem`. No export changes.

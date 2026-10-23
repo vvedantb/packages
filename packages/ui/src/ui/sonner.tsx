@@ -28,7 +28,8 @@ type ToasterStyle = CSSProperties & Record<`--${string}`, string>;
 type SonnerToasterOptions = {
   /**
    * `"lg"` (default) uses `rounded-lg`. `"surface"` uses `rounded-surface`.
-   * `"control"` uses `rounded-field`, the radius of inputs and selects.
+   * `"control"` uses `rounded-field`, the radius of inputs and selects
+   * (`min(var(--radius), 0.625rem)`, 10px, from 0.16.3).
    */
   toastRadius?: "lg" | "surface" | "control";
   /** `"default"` keeps the current padding and text size. `"compact"` tightens padding, gap and text. */

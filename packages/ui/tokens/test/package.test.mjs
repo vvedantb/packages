@@ -16,8 +16,18 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.16.2", () => {
-  assert.equal(pkg.version, "0.16.2");
+test("version is 0.16.3", () => {
+  assert.equal(pkg.version, "0.16.3");
+});
+
+test("field radius matches rounded-control (10px cap)", () => {
+  const cap = "min(var(--radius), 0.625rem)";
+  const tokens = readFileSync(join(TOKENS, "src/tokens.css"), "utf8");
+  const compat = readFileSync(join(TOKENS, "src/css/compat-shadcn-rgb.css"), "utf8");
+  assert.deepEqual([...tokens.matchAll(/--field-radius:\s*([^;]+);/g)].map((m) => m[1]), [cap, cap]);
+  assert.match(tokens, /--radius-field: var\(--field-radius\);/);
+  assert.match(compat, /--radius-field: min\(var\(--radius\), 0\.625rem\);/);
+  assert.match(compat, /--field-radius: min\(var\(--radius\), 0\.625rem\);/);
 });
 
 test("every export resolves to an existing file", () => {
