@@ -1,19 +1,24 @@
 /** transitions.dev input clear with dissolve — see 13-input-clear-dissolve.md */
 
-function readCssNumber(
+// Times come back in ms. CSS minifiers rewrite `1000ms` as `1s`, so a value
+// in seconds is converted rather than read as 1.
+export function readCssNumber(
   root: HTMLElement,
   name: string,
   fallback: number,
 ): number {
-  const raw = getComputedStyle(root).getPropertyValue(name);
+  const raw = getComputedStyle(root).getPropertyValue(name).trim();
   const parsed = parseFloat(raw);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return /\ds$/.test(raw) ? parsed * 1000 : parsed;
 }
 
-function readCssEase(root: HTMLElement, name: string): (t: number) => number {
+export function readCssEase(root: HTMLElement, name: string): (t: number) => number {
   const raw = getComputedStyle(root).getPropertyValue(name);
   const match = raw.match(
-    /cubic-bezier\(([-\d.]+),([-\d.]+),([-\d.]+),([-\d.]+)\)/,
+    /cubic-bezier\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)/,
   );
   if (!match) {
     return (t) => t;

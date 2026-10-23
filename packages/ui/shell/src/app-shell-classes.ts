@@ -21,8 +21,8 @@ export const railBadgeClass = "absolute -bottom-0.5 -right-0.5 flex h-4 min-w-4 
 
 /**
  * Static section label above a group of panel nav rows. `px-4` lines the text
- * up with the nav row icons; the colour comes from the app's
- * `.sidebar-section-label` rule.
+ * up with the nav row icons; the colour comes from `.sidebar-section-label` in
+ * tokens.css.
  */
 export const sidebarSectionLabelClass =
   "sidebar-section-label px-4 py-1 text-[11px] leading-4 font-medium tracking-[-0.01em]";

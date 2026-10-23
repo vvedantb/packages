@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.14.0", () => {
-  assert.equal(pkg.version, "0.14.0");
+test("version is 0.15.0", () => {
+  assert.equal(pkg.version, "0.15.0");
 });
 
 test("every export resolves to an existing file", () => {
@@ -53,11 +53,58 @@ test("shared CSS has balanced braces and parentheses", () => {
 });
 
 test("@import lines in shared CSS resolve", () => {
-  for (const f of cssFiles) {
+  for (const f of [...cssFiles, join(TOKENS, "src/tokens.css")]) {
     for (const m of readFileSync(f, "utf8").matchAll(/^@import\s+"([^"]+)"/gm)) {
       assert.ok(existsSync(join(dirname(f), m[1])), `${f}: ${m[1]}`);
     }
   }
+});
+
+// Browsers and bundlers drop an @import that follows any other rule.
+test("no @import follows a rule in shared CSS", () => {
+  for (const f of [...cssFiles, join(TOKENS, "src/tokens.css")]) {
+    const statements = structure(readFileSync(f, "utf8")).split(/[;{}]/).map((s) => s.trim()).filter(Boolean);
+    const firstRule = statements.findIndex((s) => !s.startsWith("@import"));
+    const lastImport = statements.findLastIndex((s) => s.startsWith("@import"));
+    assert.ok(firstRule === -1 || lastImport < firstRule, `${f}: @import after a rule`);
+  }
+});
+
+test("tokens.css brings the 0.15.0 app CSS by default", () => {
+  const css = readFileSync(join(TOKENS, "src/tokens.css"), "utf8");
+  for (const file of ["clear-input.css", "scrollbar-thin.css", "motion.css"]) assert.match(css, new RegExp(`^@import "\\./css/${file.replace(".", "\\.")}";`, "m"), file);
+  for (const [name, value] of [
+    ["--modal-open-dur", "180ms"],
+    ["--modal-close-dur", "120ms"],
+    ["--modal-scale", "0.96"],
+    ["--modal-scale-close", "0.96"],
+    ["--modal-ease", "cubic-bezier(0.22, 1, 0.36, 1)"],
+    ["--tabs-dur", "200ms"],
+    ["--tabs-ease", "cubic-bezier(0.22, 1, 0.36, 1)"],
+  ]) assert.ok(css.includes(`${name}: ${value};`), name);
+  assert.match(css, /\.glass-panel-strong \{\s*background-color: var\(--overlay\);\s*\}/);
+  assert.match(css, /\.sidebar-section-label \{[^}]*var\(--muted\) var\(--sidebar-section-label-mix\)/);
+  assert.match(css, /--sidebar-section-label-mix: 55%;/);
+  assert.match(css, /--sidebar-section-label-hover-mix: 80%;/);
+});
+
+test("compat glass-panel-strong is the solid popover fill", () => {
+  const css = readFileSync(join(TOKENS, "src/css/compat-shadcn-rgb.css"), "utf8");
+  assert.match(css, /\.glass-panel-strong \{\s*background-color: rgb\(var\(--popover\)\);\s*\}/);
+  assert.doesNotMatch(css, /@utility glass-panel-strong/);
+});
+
+test("ClearInput CSS defaults match what clearInputDissolve reads", () => {
+  const css = readFileSync(join(TOKENS, "src/css/clear-input.css"), "utf8");
+  const ts = readFileSync(join(PKG, "src/ui/clearInputDissolve.ts"), "utf8");
+  const read = [...ts.matchAll(/readCss(?:Number|Ease)\(root, "(--[\w-]+)"(?:, ([\d.]+))?\)/g)];
+  assert.ok(read.length >= 10, "dissolve variables found");
+  for (const [, name, fallback] of read) {
+    const m = css.match(new RegExp(`${name}: ([^;]+);`));
+    assert.ok(m, `${name} has a default`);
+    if (fallback) assert.equal(parseFloat(m[1]), parseFloat(fallback), `${name} matches the code fallback`);
+  }
+  for (const sel of [".t-clear ", ".t-clear-mirror", ".t-clear-placeholder", ".t-clear-glow", ".t-clear.has-value > input"]) assert.ok(css.includes(sel), sel);
 });
 
 test("css parameters are documented in the file header", () => {

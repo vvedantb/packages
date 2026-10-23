@@ -27,18 +27,55 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "base.css": ["::selection", "a[href]", "--tokens-control-transition-duration"],
     "dialog.css": ['[role="dialog"][data-compact="true"]'],
     "modal.css": [".t-modal.is-closing", "@keyframes t-modal-presence-wait"],
-    "tabs.css": [".t-tabs-pill", ".t-tab"],
+    "tabs.css": [".t-tabs-pill", ".t-tab", ".t-tab:active", "transform .1s ease-out"],
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
     "utilities.css": [".hit-target:after", ".reveal-on-hover"],
-    "scrollbar-thin.css": [".scrollbar-thin::-webkit-scrollbar-thumb:hover"],
+    "scrollbar-thin.css": [".scrollbar-thin:hover::-webkit-scrollbar-thumb", "--scrollbar-thin-rest: 40%", "--scrollbar-thin-hover: 80%"],
+    "clear-input.css": [".t-clear-glow", ".t-clear.has-value > input", "--clear-dur: 1s"],
+    "motion.css": ["@keyframes ui-enter-up", '[data-page-motion="off"] .t-tabs-pill'],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
     "nav-icons.css": [".vv-icon[data-hover-scale", "@keyframes vv-icon-gear-spin"],
-    "index.css": ["::selection", ".hit-target", ".scrollbar-thin", "@keyframes fade-in-up", "@keyframes vv-icon-gear-spin"],
+    "index.css": ["::selection", ".hit-target", ".scrollbar-thin", ".t-modal.is-open", ".t-tabs--pills", "@keyframes fade-in-up", "@keyframes vv-icon-gear-spin"],
   };
   for (const [file, needles] of Object.entries(expect)) {
     const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "rounded-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
     for (const n of needles) assert.ok(out.includes(n), `${file}: missing ${n}`);
   }
+});
+
+test("tokens.css alone emits the app CSS moved in 0.15.0", { skip }, async () => {
+  const out = await build(head, []);
+  assert.doesNotMatch(out, /@import/, "every @import is inlined");
+  for (const n of [
+    "--modal-open-dur: .18s",
+    "--tabs-ease: cubic-bezier(.22, 1, .36, 1)",
+    ".glass-panel-strong",
+    "background-color: var(--overlay)",
+    ".sidebar-section-label:hover",
+    ".scrollbar-thin:hover",
+    ".t-clear-glow",
+    "--glow-spread: 1.5",
+    ".ui-stagger > :nth-child(8)",
+    "@keyframes ui-page-enter",
+    "@keyframes ui-fade-only",
+    '[data-page-motion="off"] .t-modal',
+    '[data-page-motion="off"]::view-transition-group(*)',
+  ]) {
+    assert.ok(out.includes(n), `tokens.css: missing ${n}`);
+  }
+  // Each layer keeps app rules on top: nothing new is unlayered.
+  for (const sel of [".glass-panel-strong", ".t-clear {", ".ui-enter,", ".scrollbar-thin {"]) {
+    const at = out.indexOf(sel);
+    const before = out.slice(0, at);
+    assert.ok(/@layer (base|components|utilities) \{/.test(before.slice(before.lastIndexOf("@layer"))), `${sel} is layered`);
+  }
+});
+
+test("motion.css keyframe names do not clash with animations.css or the preset", { skip }, async () => {
+  const names = (css) => new Set([...css.matchAll(/@keyframes ([\w-]+)/g)].map((m) => m[1]));
+  const motion = names(readFileSync(join(PKG, "src/css/motion.css"), "utf8"));
+  const others = new Set([...names(readFileSync(join(PKG, "src/css/animations.css"), "utf8")), ...Object.keys((await import("../src/tailwind-preset.mjs")).default.theme.extend.keyframes)]);
+  assert.deepEqual([...motion].filter((n) => others.has(n)), []);
 });
 
 test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { skip }, async () => {

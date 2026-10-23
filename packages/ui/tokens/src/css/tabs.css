@@ -1,13 +1,19 @@
 /*
  * @vvedantb/ui/tokens/css/tabs.css: sliding tab bar (.t-tab, .t-tabs-pill)
- * used by @vvedantb/ui tabsSliding (transitions.dev pattern). The .t-tabs
- * container rule stays in the app; it differs per app.
+ * used by @vvedantb/ui tabsSliding (transitions.dev pattern), and the .t-tabs
+ * container. An app rule for any of them wins (@layer components).
  *
- * Needs: --tabs-dur, --tabs-ease, --tabs-text-muted, --tabs-text-active,
- * --tabs-pill-bg. tabs-pills.css sets the three colour variables.
+ * Needs: --tabs-dur, --tabs-ease (defaults in tokens.css), --tabs-text-muted,
+ * --tabs-text-active, --tabs-pill-bg. tabs-pills.css sets the three colour
+ * variables.
  */
 
 @layer components {
+  .t-tabs {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
   @media (max-width: 639px) {
     .t-tabs {
       justify-content: safe center;
@@ -29,7 +35,12 @@
     cursor: pointer;
     border-radius: 48px;
     z-index: 1;
-    transition: color var(--tabs-dur) var(--tabs-ease);
+    transition:
+      color var(--tabs-dur) var(--tabs-ease),
+      transform 100ms ease-out;
+  }
+  .t-tab:active {
+    transform: scale(0.97);
   }
   .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover,
   .t-tab[aria-selected="true"],

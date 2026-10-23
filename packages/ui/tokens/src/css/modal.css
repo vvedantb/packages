@@ -2,8 +2,9 @@
  * @vvedantb/ui/tokens/css/modal.css: .t-modal open / close transition used by
  * @vvedantb/ui Dialog (transitions.dev pattern).
  *
- * Needs on :root: --modal-open-dur, --modal-close-dur, --modal-scale,
- * --modal-scale-close, --modal-ease.
+ * Reads --modal-open-dur, --modal-close-dur, --modal-scale,
+ * --modal-scale-close and --modal-ease. tokens.css sets them on :root; set
+ * them on the app :root to change them (apps on compat-shadcn-rgb.css must).
  */
 
 @layer components {

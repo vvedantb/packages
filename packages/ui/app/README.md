@@ -160,7 +160,7 @@ import { PageMotionProvider, useDisablePageMotion } from "@vvedantb/ui";
 </PageMotionProvider>;
 ```
 
-- Sets `html[data-page-motion]` to `"off"` or `"on"` in a layout effect (CSS can skip page and route transitions on `"off"`). The attribute stays after unmount.
+- Sets `html[data-page-motion]` to `"off"` or `"on"` in a layout effect. The attribute stays after unmount. From 0.15.0 `tokens.css` (through `tokens/css/motion.css`) ships the `"off"` rules: `.ui-page-enter`, `.ui-enter`, `.ui-enter-up` and `.ui-stagger` fade only, `animate-in` / `animate-out`, `.t-modal` and `.t-tabs-pill` stop transitioning, and view transitions stop.
 - Renders `motionConfig` with `reducedMotion` `"always"` when disabled, else `"never"`.
 - `useDisablePageMotion()`: the `disabled` value, `false` outside the provider.
 - This module does not import `motion`. Pass `MotionConfig`, or an app component that wraps it, defined at module level, for example with `LazyMotion`:
