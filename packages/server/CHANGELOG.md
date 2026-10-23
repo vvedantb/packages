@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0
+
+Additive: MCP bearer-token cache for Convex backends. Nothing in 0.6.1 changes. See `docs/convex.md`.
+
+### Added
+
+- `authenticateWithTokenCache({ token, get, put, verify, now? })`: cache lookup by SHA-256 of the token, then `verify` on a miss. Only successful verifications are cached; a hit returns `{ clerkUserId }`; a failed cache write logs a warning and is ignored. Logs `[MCP][auth]` with `authCached` and `authMs`.
+- `createMcpTokenCacheFunctions({ v, internalQuery, internalMutation, tableName?, purgeSelf })`: the internal `getInternal`, `putInternal` and `purgeExpired` functions, typed as real registered functions. `purgeExpired` deletes expired rows in batches of 500 and reschedules itself after a full batch.
+- `mcpTokenCacheFields(v)` and `mcpTokenCacheTable(defineTable, v)` for the schema, with indexes `by_token_hash` and `by_expires`.
+- `jwtExpiryMs`, `tokenCacheExpiresAt` (expiry is `min(now + 5 min, JWT exp)`; an expired JWT is not cached) and `hashMcpToken`.
+- Constants `MCP_TOKEN_CACHE_TTL_MS`, `MCP_TOKEN_CACHE_PURGE_BATCH`, `MCP_TOKEN_CACHE_TABLE`, `MCP_TOKEN_CACHE_HASH_INDEX`, `MCP_TOKEN_CACHE_EXPIRES_INDEX`. Types `AuthenticateWithTokenCacheOptions`, `McpTokenCacheEntry`, `McpTokenCacheRow`, `McpTokenCachePrincipal`, `McpTokenCacheDoc`, `McpTokenCachePurgeRef`, the ctx, def and builder types, and `McpTokenCacheFunctionsConfig`.
+- Tests: `tests/convex/mcpTokenCache.test.ts` (hit, miss, hash only, failed verify, expired row, expired JWT, TTL capped at `exp`, put patch rules, purge batching and reschedule, swallowed write failure) on a fake backend, and `tests/convex/mcpTokenCache.types.ts` against a codegen-shaped app. `tests-node` runs the cache with no peer installed, type-checks it from the published types, and bundles it for Convex V8.
+
+### Changed (from the app code this came from)
+
+- No runtime `convex` or `zod` import: the app passes `v`, `defineTable` and its builders. `jwtExpiryMs` checks `exp` with plain code (a finite number) instead of a zod schema.
+- `authenticateWithTokenCache` takes `get` and `put` functions instead of an action ctx, and an optional `now`.
+- `purgeSelf` must be annotated `(): McpTokenCachePurgeRef => …` to avoid a circular `internal` type.
+
 ## 0.6.1
 
 Fix: the artifact guest bridge now connects in a browser iframe. No API change.
