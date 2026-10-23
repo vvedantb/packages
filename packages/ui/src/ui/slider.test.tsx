@@ -42,6 +42,14 @@ function thumbAt(host: HTMLElement, index = 0) {
   return thumb;
 }
 
+// Root > Track > Range; Radix renders no role or data-part on either.
+function parts(host: HTMLElement) {
+  const track = host.firstElementChild?.firstElementChild;
+  const range = track?.firstElementChild;
+  if (!(track instanceof HTMLElement) || !(range instanceof HTMLElement)) throw new Error("no track or range");
+  return { track, range };
+}
+
 async function press(el: HTMLElement, key: string) {
   await act(async () => {
     el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
@@ -106,6 +114,41 @@ describe("Slider", () => {
     expect(first.getAttribute("aria-valuetext")).toBe("1 to 2");
     expect(second.id).toBe("");
     expect(host.firstElementChild?.id).toBe("");
+  });
+
+  it("keeps the light classes and adds dark-only track and thumb contrast", async () => {
+    const host = await render(<Slider defaultValue={[50]} aria-label="Level" />);
+    const track = parts(host).track;
+    expect(track.classList).toContain("bg-default");
+    expect(track.classList).toContain("dark:bg-muted/40");
+    expect(parts(host).range.classList).toContain("bg-primary");
+    const thumb = thumbAt(host);
+    expect(thumb.classList).toContain("bg-background");
+    expect(thumb.classList).toContain("border-border");
+    expect(thumb.classList).toContain("dark:bg-foreground");
+    expect(thumb.classList).toContain("dark:border-muted");
+  });
+
+  it("merges trackClassName, rangeClassName and thumbClassName over the defaults", async () => {
+    const host = await render(
+      <Slider
+        defaultValue={[20, 80]}
+        trackClassName="bg-border"
+        rangeClassName="bg-foreground"
+        thumbClassName="bg-primary"
+      />,
+    );
+    const { track, range } = parts(host);
+    expect(track.classList).toContain("bg-border");
+    expect(track.classList).not.toContain("bg-default");
+    expect(track.classList).toContain("dark:bg-muted/40");
+    expect(range.classList).toContain("bg-foreground");
+    expect(range.classList).not.toContain("bg-primary");
+    for (const thumb of thumbs(host)) {
+      expect(thumb.classList).toContain("bg-primary");
+      expect(thumb.classList).not.toContain("bg-background");
+      expect(thumb.classList).toContain("dark:bg-foreground");
+    }
   });
 });
 

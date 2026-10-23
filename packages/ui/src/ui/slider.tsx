@@ -5,6 +5,12 @@ import { cn } from "../utils/cn";
 type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
   /** Accessible name per thumb, by index. Wins over `aria-label` on the first thumb. */
   thumbLabels?: string[];
+  /** Classes for the track, merged after the defaults so they win (`bg-default dark:bg-muted/40`). */
+  trackClassName?: string;
+  /** Classes for the filled range, merged after the defaults so they win (`bg-primary`). */
+  rangeClassName?: string;
+  /** Classes for every thumb, merged after the defaults so they win (`bg-background dark:bg-foreground dark:border-muted`). */
+  thumbClassName?: string;
 };
 
 // `id`, `aria-label`, `aria-labelledby` and `aria-valuetext` go to the first
@@ -19,6 +25,9 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
       "aria-labelledby": ariaLabelledBy,
       "aria-valuetext": ariaValueText,
       thumbLabels,
+      trackClassName,
+      rangeClassName,
+      thumbClassName,
       ...props
     },
     ref,
@@ -33,8 +42,18 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
         {...props}
         ref={ref}
       >
-        <SliderPrimitive.Track className="relative grow overflow-hidden rounded-full bg-default data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5">
-          <SliderPrimitive.Range className="absolute bg-primary data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full" />
+        <SliderPrimitive.Track
+          className={cn(
+            "relative grow overflow-hidden rounded-full bg-default dark:bg-muted/40 data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5",
+            trackClassName,
+          )}
+        >
+          <SliderPrimitive.Range
+            className={cn(
+              "absolute bg-primary data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
+              rangeClassName,
+            )}
+          />
         </SliderPrimitive.Track>
         {Array.from({ length: count }, (_, i) => (
           <SliderPrimitive.Thumb
@@ -43,7 +62,10 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
             aria-label={thumbLabels?.[i] ?? (i === 0 ? ariaLabel : undefined)}
             aria-labelledby={i === 0 ? ariaLabelledBy : undefined}
             aria-valuetext={i === 0 ? ariaValueText : undefined}
-            className="block size-4 shrink-0 rounded-full border border-border bg-background shadow-sm transition-[box-shadow] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[disabled]:cursor-not-allowed"
+            className={cn(
+              "block size-4 shrink-0 rounded-full border border-border bg-background shadow-sm transition-[box-shadow] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[disabled]:cursor-not-allowed dark:border-muted dark:bg-foreground",
+              thumbClassName,
+            )}
           />
         ))}
       </SliderPrimitive.Root>
