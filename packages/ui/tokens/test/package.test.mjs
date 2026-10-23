@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.15.0", () => {
-  assert.equal(pkg.version, "0.15.0");
+test("version is 0.15.1", () => {
+  assert.equal(pkg.version, "0.15.1");
 });
 
 test("every export resolves to an existing file", () => {
@@ -105,6 +105,37 @@ test("ClearInput CSS defaults match what clearInputDissolve reads", () => {
     if (fallback) assert.equal(parseFloat(m[1]), parseFloat(fallback), `${name} matches the code fallback`);
   }
   for (const sel of [".t-clear ", ".t-clear-mirror", ".t-clear-placeholder", ".t-clear-glow", ".t-clear.has-value > input"]) assert.ok(css.includes(sel), sel);
+});
+
+// [selectors, declarations] for each innermost rule in clear-input.css.
+function clearInputRules() {
+  const css = structure(readFileSync(join(TOKENS, "src/css/clear-input.css"), "utf8"));
+  return [...css.matchAll(/([^{};]+)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel.split(",").map((s) => s.trim()), body]);
+}
+
+test("ClearInput: .t-clear does not clip the input's focus ring", () => {
+  const rules = clearInputRules().filter(([sels]) => sels.includes(".t-clear"));
+  assert.ok(rules.length > 0, ".t-clear rule found");
+  for (const [, body] of rules) {
+    if (/overflow(-[xy])?:\s*(hidden|clip)/.test(body)) assert.match(body, /overflow-clip-margin:\s*[1-9]/, ".t-clear clips with no margin for the ring");
+  }
+  // The layers are clipped by .t-clear-clip, which the dissolve never moves.
+  const clip = clearInputRules().find(([sels]) => sels.includes(".t-clear-clip"));
+  assert.ok(clip && /overflow:\s*hidden/.test(clip[1]), ".t-clear-clip clips the layers");
+  assert.doesNotMatch(readFileSync(join(PKG, "src/ui/clearInputDissolve.ts"), "utf8"), /t-clear-clip/);
+});
+
+test("ClearInput: the placeholder layer shows only while clearing", () => {
+  const rules = clearInputRules();
+  const rest = rules.filter(([sels]) => sels.includes(".t-clear-placeholder")).map(([, body]) => body.match(/opacity:\s*([\d.]+)/)?.[1]);
+  assert.deepEqual(rest.filter(Boolean), ["0"], "hidden at rest");
+  for (const [sels, body] of rules) {
+    const opacity = body.match(/opacity:\s*([\d.]+)/);
+    if (!opacity || parseFloat(opacity[1]) === 0) continue;
+    for (const sel of sels.filter((s) => s.includes(".t-clear-placeholder"))) assert.ok(sel.includes(".is-clearing"), `${sel} shows the layer outside .is-clearing`);
+  }
+  // While the layer is shown, the input's own placeholder is not.
+  assert.ok(rules.some(([sels, body]) => sels.includes(".t-clear.is-clearing > input::placeholder") && /opacity:\s*0/.test(body)));
 });
 
 test("css parameters are documented in the file header", () => {

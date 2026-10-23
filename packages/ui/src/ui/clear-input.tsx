@@ -130,25 +130,25 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
           )}
           {...props}
         />
-        <div
-          ref={mirrorRef}
-          className={cn(
-            "t-clear-mirror border-0 bg-transparent text-foreground shadow-none",
-            fieldClassName,
-          )}
-          aria-hidden="true"
-        />
-        <div
-          ref={placeholderRef}
-          className={cn(
-            "t-clear-placeholder border-0 bg-transparent text-field-placeholder shadow-none",
-            fieldClassName,
-          )}
-          aria-hidden="true"
-        >
-          {placeholder}
+        <div className="t-clear-clip" aria-hidden="true">
+          <div
+            ref={mirrorRef}
+            className={cn(
+              "t-clear-mirror border-0 bg-transparent text-foreground shadow-none",
+              fieldClassName,
+            )}
+          />
+          <div
+            ref={placeholderRef}
+            className={cn(
+              "t-clear-placeholder border-0 bg-transparent text-field-placeholder shadow-none",
+              fieldClassName,
+            )}
+          >
+            {placeholder}
+          </div>
+          <div ref={glowRef} className="t-clear-glow" />
         </div>
-        <div ref={glowRef} className="t-clear-glow" aria-hidden="true" />
         {value.length > 0 && !clearing ? (
           <button
             type="button"

@@ -31,7 +31,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
     "utilities.css": [".hit-target:after", ".reveal-on-hover"],
     "scrollbar-thin.css": [".scrollbar-thin:hover::-webkit-scrollbar-thumb", "--scrollbar-thin-rest: 40%", "--scrollbar-thin-hover: 80%"],
-    "clear-input.css": [".t-clear-glow", ".t-clear.has-value > input", "--clear-dur: 1s"],
+    "clear-input.css": [".t-clear-glow", ".t-clear-clip", ".t-clear.is-clearing > input::placeholder", ".t-clear.has-value > input", "--clear-dur: 1s"],
     "motion.css": ["@keyframes ui-enter-up", '[data-page-motion="off"] .t-tabs-pill'],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
     "nav-icons.css": [".vv-icon[data-hover-scale", "@keyframes vv-icon-gear-spin"],

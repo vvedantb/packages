@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.1
+
+Fix: two bugs in the `ClearInput` CSS shipped in 0.15.0. One DOM change (a clip wrapper around the layers). No export changes.
+
+- Placeholder shown twice: at rest, `.t-clear-placeholder` sat on top of the input's own placeholder, about 1px apart. The layer is now `opacity: 0` unless `.t-clear` has `.is-clearing`, which is when `clearInputDissolve` drops it in. While clearing, the input's own placeholder is hidden (`.t-clear.is-clearing > input::placeholder { opacity: 0 }`). Exactly one placeholder shows at rest, with a value, while clearing and after clearing. Apps can delete any `.t-clear-placeholder { opacity: 0 }` workaround.
+- Focus ring clipped: `.t-clear { overflow: hidden }` cut the input's `ring-2`. `.t-clear` no longer clips. The mirror, placeholder and glow layers now sit in a new `.t-clear-clip` (`aria-hidden`, `position: absolute; inset: 0; overflow: hidden; border-radius: inherit`), so the glow and the flying text stay inside the field. The clip has to be a parent that never moves: the dissolve sets `transform` on the mirror and placeholder layers, so their own `overflow` would move with them. `.t-clear` now takes `border-radius: var(--radius-field)`, so the clip matches the default field. For an input with another radius, put the same `rounded-*` class on `wrapperClassName`.
+- Tests: `tokens/test/package.test.mjs` checks that `.t-clear` sets no `overflow: hidden` or `clip` without an `overflow-clip-margin`, that `.t-clear-clip` clips and `clearInputDissolve` never styles it, that the placeholder layer is `opacity: 0` at rest and only shown under `.is-clearing`, and that the native placeholder hides while clearing. `tokens/test/tailwind.test.mjs` checks the new rules compile. `src/ui/clear-input.test.tsx` checks the three layers render inside `.t-clear-clip`.
+
 ## 0.15.0
 
 CSS that every consuming app re-defined now ships in `@vvedantb/ui/tokens`, so apps get it by default. Every rule sits in a Tailwind layer (`base`, `components` or `utilities`) and every timing or strength is a `:root` variable, so an app rule or an app `:root` value still wins. No JS export changes.

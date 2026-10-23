@@ -1,6 +1,6 @@
 /*
  * @vvedantb/ui/tokens/css/clear-input.css: layers for @vvedantb/ui
- * ClearInput (`.t-clear`, mirror, placeholder and glow), the transitions.dev
+ * ClearInput (`.t-clear`, clip, mirror, placeholder and glow), the transitions.dev
  * input clear with dissolve. tokens.css imports it.
  *
  * clearInputDissolve reads the variables below from `html`. Set any of them
@@ -27,39 +27,50 @@
 }
 
 @layer components {
+  /* No overflow clip on .t-clear: it would cut the input's focus ring.
+     .t-clear-clip clips the layers to the field instead. It never moves, so
+     the mirror and placeholder can fly in and out under it. Its radius
+     follows .t-clear; put a rounded-* class on wrapperClassName to match an
+     input with another radius. */
   .t-clear {
     position: relative;
+    border-radius: var(--radius-field, 0);
+  }
+  .t-clear-clip,
+  .t-clear-mirror,
+  .t-clear-placeholder,
+  .t-clear-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
     overflow: hidden;
+  }
+  .t-clear-clip {
+    border-radius: inherit;
   }
   .t-clear-mirror,
   .t-clear-placeholder {
-    position: absolute;
-    inset: 0;
     display: flex;
     align-items: center;
-    pointer-events: none;
     white-space: nowrap;
-    overflow: hidden;
+    opacity: 0;
     z-index: 2;
   }
-  .t-clear-mirror {
-    opacity: 0;
-  }
+  /* The input's own placeholder shows at rest. The layer only shows while
+     clearInputDissolve drops it in, and the native one hides meanwhile. */
   .t-clear.has-value .t-clear-mirror,
-  .t-clear.is-clearing .t-clear-mirror {
+  .t-clear.is-clearing .t-clear-mirror,
+  .t-clear.is-clearing .t-clear-placeholder {
     opacity: 1;
+  }
+  .t-clear.is-clearing > input::placeholder {
+    opacity: 0;
   }
   .t-clear.has-value > input,
   .t-clear.is-clearing > input {
     -webkit-text-fill-color: transparent;
   }
-  .t-clear.has-value .t-clear-placeholder {
-    opacity: 0;
-  }
   .t-clear-glow {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
     opacity: 0;
     z-index: 3;
     mix-blend-mode: multiply;
