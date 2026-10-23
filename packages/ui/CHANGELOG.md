@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.16.0
+
+Additive: `Slider` and `LabeledSliderRow`. No other export changes.
+
+- `Slider`: shadcn's slider on `@radix-ui/react-slider`, with package tokens: a `h-1.5` `bg-default` track, a `bg-primary` range and a `size-4` `bg-background` thumb with a border, `shadow-sm` and the `Switch` focus ring (`ring-2 ring-focus-ring`). Disabled dims to 50% with `cursor-not-allowed`. Horizontal and vertical. One thumb per value in `value` or `defaultValue`, so it covers single values and ranges. Every Radix `Root` prop passes through.
+- `id`, `aria-label`, `aria-labelledby` and `aria-valuetext` go to the first thumb, the focusable `role="slider"` element, not `Root`. `thumbLabels` sets `aria-label` per thumb.
+- `LabeledSliderRow`: the `LabeledSwitchRow` layout with a right-aligned value (`formatValue`), the slider below and optional `minLabel` / `maxLabel` captions. The label names the thumb through `aria-labelledby`, because `htmlFor` cannot name a `<span>`.
+- New peer dependency: `@radix-ui/react-slider` `^1.4.7` (also a dev dependency, as with the other `@radix-ui/*` packages).
+- Tests: `src/ui/slider.test.tsx` covers single and range thumbs, `aria-valuenow` / `aria-valuemin` / `aria-valuemax`, ArrowRight, ArrowLeft, Home and End with `onValueChange`, the disabled state, where `id` and the ARIA props land, and `LabeledSliderRow`. `src/root-exports.test.ts` checks both exports.
+
 ## 0.15.1
 
 Fix: two bugs in the `ClearInput` CSS shipped in 0.15.0. One DOM change (a clip wrapper around the layers). No export changes.
