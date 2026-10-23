@@ -132,7 +132,7 @@ describe("DatePicker", () => {
     expect(t.type).toBe("button");
     expect(t.id).toBe("due");
     expect(t.getAttribute("aria-label")).toBe("Due, Pick a date");
-    for (const cls of ["h-8", "rounded-field", "border-border", "bg-field-background", "focus-visible:ring-focus-ring", "w-40"]) {
+    for (const cls of ["h-8", "rounded-field", "border-border", "bg-field-background", "focus-visible:ring-1", "focus-visible:ring-focus-ring", "w-40"]) {
       expect(t.className).toContain(cls);
     }
   });
@@ -236,7 +236,7 @@ describe("DatePicker layout and overrides", () => {
     const list = classes(trigger());
     expect(list).toEqual(expect.arrayContaining(["h-10", "w-full", "rounded-full", "px-4", "text-sm"]));
     for (const gone of ["h-8", "w-40", "rounded-field", "px-2.5", "text-xs"]) expect(list).not.toContain(gone);
-    expect(list).toEqual(expect.arrayContaining(["border-border", "bg-field-background", "focus-visible:ring-focus-ring"]));
+    expect(list).toEqual(expect.arrayContaining(["border-border", "bg-field-background", "focus-visible:ring-1", "focus-visible:ring-focus-ring"]));
   });
 
   it("DateTimePicker passes overrides to both triggers, but a width only to the date", async () => {

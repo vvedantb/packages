@@ -23,23 +23,28 @@ afterEach(async () => {
 });
 
 describe("ToolbarSearchInput", () => {
+  it("renders SearchInput variant toolbar with its old defaults and class props", async () => {
+    const ref = createRef<HTMLInputElement>();
+    await mount(
+      <ToolbarSearchInput ref={ref} value="" onChange={() => {}} className="wrap-x" inputClassName="input-x" />,
+    );
+    const input = ref.current;
+    expect(input).toBeInstanceOf(HTMLInputElement);
+    expect(input?.getAttribute("aria-label")).toBe("Search");
+    expect(input?.placeholder).toBe("Search...");
+    expect(input?.className).toContain("rounded-field");
+    expect(input?.className).toContain("bg-transparent");
+    expect(input?.className).toContain("input-x");
+    expect(input?.parentElement?.className).toContain("wrap-x");
+  });
+
   it("clears via onChange without focusing the input", async () => {
     const onChange = vi.fn();
     const ref = createRef<HTMLInputElement>();
     await mount(<ToolbarSearchInput ref={ref} value="abc" onChange={onChange} />);
     const clear = document.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]');
-    expect(clear?.getAttribute("aria-hidden")).toBe("false");
     await act(async () => clear?.click());
     expect(onChange).toHaveBeenCalledWith("");
-    expect(ref.current).toBeInstanceOf(HTMLInputElement);
     expect(document.activeElement).not.toBe(ref.current);
-  });
-
-  it("hides the clear button while the value is blank", async () => {
-    await mount(<ToolbarSearchInput value="  " onChange={() => {}} />);
-    const clear = document.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]');
-    expect(clear?.getAttribute("aria-hidden")).toBe("true");
-    expect(clear?.tabIndex).toBe(-1);
-    expect(clear?.className).toContain("pointer-events-none opacity-0");
   });
 });

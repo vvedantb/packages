@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { ToolbarSearchInput } from "../ui/toolbar-search-input";
+import { SearchInput } from "../ui/search-input";
 import { cn } from "../utils/cn";
 import type { ArtifactLayout } from "./artifact-card";
 import { ARTIFACT_TYPE_LABELS, ArtifactTypeIcon } from "./artifact-type-icon";
@@ -52,7 +52,8 @@ export function ArtifactListToolbar({
 }: ArtifactListToolbarProps) {
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      <ToolbarSearchInput
+      <SearchInput
+        variant="toolbar"
         value={query}
         onChange={onQueryChange}
         placeholder={searchPlaceholder}

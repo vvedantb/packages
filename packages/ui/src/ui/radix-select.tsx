@@ -3,6 +3,7 @@ import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Select as SelectPrimitive } from "radix-ui";
 
 import { cn } from "../utils/cn";
+import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
   floatingSurfaceClass,
@@ -40,7 +41,8 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-2 rounded-field border border-border bg-field-background px-3.5 py-2 text-sm whitespace-nowrap ring-offset-background transition-[border-color,box-shadow,background-color,transform] duration-200 ease-smooth active:duration-100 active:ease-out active:scale-[0.98] placeholder:text-field-placeholder focus-visible:border-focus-border focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger data-placeholder:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground data-[size=default]:h-10 data-[size=sm]:h-8 data-[slot=select-value]:*:line-clamp-1 data-[slot=select-value]:*:flex data-[slot=select-value]:*:items-center data-[slot=select-value]:*:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-fit items-center justify-between gap-2 rounded-field border border-border bg-field-background px-3.5 py-2 text-sm whitespace-nowrap ring-offset-background transition-[border-color,box-shadow,background-color,transform] duration-200 ease-smooth active:duration-100 active:ease-out active:scale-[0.98] placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger data-placeholder:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground data-[size=default]:h-10 data-[size=sm]:h-8 data-[slot=select-value]:*:line-clamp-1 data-[slot=select-value]:*:flex data-[slot=select-value]:*:items-center data-[slot=select-value]:*:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        fieldFocusClass,
         className,
       )}
       {...props}

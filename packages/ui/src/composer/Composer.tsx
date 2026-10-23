@@ -229,7 +229,7 @@ function ComposerShell({
       data-stop-mode={stopMode}
       className={cn(
         "group/composer relative flex w-full min-w-0 flex-col rounded-[1.25rem] border border-border bg-field-background text-sm transition-[border-color,box-shadow] duration-200 ease-smooth",
-        "has-[[data-composer-input]:focus-visible]:border-focus-border has-[[data-composer-input]:focus-visible]:ring-2 has-[[data-composer-input]:focus-visible]:ring-focus-ring",
+        "has-[[data-composer-input]:focus-visible]:border-focus-border has-[[data-composer-input]:focus-visible]:ring-1 has-[[data-composer-input]:focus-visible]:ring-focus-ring",
         disabled && "opacity-60",
         className,
       )}

@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { cn } from "../utils/cn";
+import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
   floatingSurfaceClass,
@@ -18,7 +19,8 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full max-sm:min-w-0 items-center justify-between whitespace-nowrap rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm ring-offset-background placeholder:text-field-placeholder transition-[border-color,box-shadow,background-color] duration-200 ease-smooth focus-visible:border-focus-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex h-10 w-full max-sm:min-w-0 items-center justify-between whitespace-nowrap rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm ring-offset-background placeholder:text-field-placeholder transition-[border-color,box-shadow,background-color] duration-200 ease-smooth disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      fieldFocusClass,
       className,
     )}
     {...props}

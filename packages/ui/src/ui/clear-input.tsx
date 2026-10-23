@@ -3,6 +3,7 @@
 import * as React from "react";
 import { IconX } from "@tabler/icons-react";
 import { cn } from "../utils/cn";
+import { fieldFocusClass } from "./_field-classes";
 import { runClearInputDissolve } from "./clearInputDissolve";
 
 export interface ClearInputProps extends Omit<
@@ -125,7 +126,8 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
           }}
           placeholder={placeholder}
           className={cn(
-            "flex h-10 w-full rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder focus-visible:border-focus-border focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50",
+            fieldFocusClass,
             fieldClassName,
           )}
           {...props}
