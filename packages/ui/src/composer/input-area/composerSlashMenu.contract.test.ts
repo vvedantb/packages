@@ -21,6 +21,7 @@ test("composer slash popup keeps its panel chrome", () => {
   expect(menu).toContain("origin-bottom");
   expect(menu).toContain("bg-primary/15");
   expect(menu).toContain("max-sm:py-2.5");
+  expect(menu).toContain("rounded-menu-item");
   expect(menu).toContain('role="listbox"');
 });
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.16.2
+
+Visual change: `Select`, `RadixSelect`, `Command` and `ComposerSlashMenu` item rows now use `rounded-menu-item` (`min(var(--radius), 0.5rem)`, 8px) corners, like `DropdownMenu` and `ContextMenu` items. Values are at the default `--radius: 1rem`. No export changes.
+
+- `SelectItem` (`select.tsx`): `rounded-lg` (16px) -> `rounded-menu-item`. It also gains `max-sm:min-h-10`, as dropdown items have.
+- `SelectItem` (`radix-select.tsx`): `rounded-lg` (16px) -> `rounded-menu-item`.
+- `CommandItem`: `rounded-md` (`calc(var(--radius) - 2px)`, 14px) -> `rounded-menu-item`. `CommandDialog` sets `[&_[cmdk-item]]:rounded-menu-item` in place of `[&_[cmdk-item]]:rounded-md`.
+- `ComposerSlashMenu` item rows: `rounded-lg` (16px) -> `rounded-menu-item`.
+- With a large `--radius`, the highlight fill on these rows was close to a pill. It now matches the dropdown item. Menu surfaces (`rounded-lg`), triggers and colours are unchanged.
+- Tests: `src/composer/input-area/composerSlashMenu.contract.test.ts` checks the slash menu rows use `rounded-menu-item`. `tokens/test/package.test.mjs` checks version 0.16.2.
+
 ## 0.16.1
 
 Fix: `Slider` contrast in dark mode. Light mode is unchanged. Additive props, no export changes.

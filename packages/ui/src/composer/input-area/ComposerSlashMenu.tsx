@@ -108,7 +108,7 @@ export function ComposerSlashMenu({
                         onSelectItem(item);
                       }}
                       className={
-                        "mx-1 flex w-[calc(100%-0.5rem)] min-w-0 items-center rounded-lg px-2 py-1.5 text-left text-sm max-sm:py-2.5 " +
+                        "mx-1 flex w-[calc(100%-0.5rem)] min-w-0 items-center rounded-menu-item px-2 py-1.5 text-left text-sm max-sm:py-2.5 " +
                         "transition-[background-color] active:scale-[0.99] active:duration-100 active:ease-out " +
                         (isSelected
                           ? "bg-primary/15 font-medium text-foreground dark:bg-primary/25"
