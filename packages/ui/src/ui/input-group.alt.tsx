@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn";
+import { fieldFocusWithinClass } from "./_field-classes";
 import { Button, type ButtonProps } from "./button";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
@@ -19,7 +20,7 @@ const InputGroup = React.forwardRef<
       "has-[textarea]:h-auto",
       "has-data-[slot=input-group-control]:h-auto",
       "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col",
-      "has-focus-visible:border-focus-border has-focus-visible:outline-hidden has-focus-visible:ring-2 has-focus-visible:ring-focus-ring",
+      fieldFocusWithinClass,
       error &&
         "border-danger-border has-focus-visible:border-danger has-focus-visible:ring-danger-ring",
       className,

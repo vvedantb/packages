@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.17.0
+
+One search field, and a lighter focus style on every field.
+
+Added
+
+- `SearchInput` props: `label` (default `"Search"`; the `aria-label`, and the placeholder when `placeholder` is not set), `clearLabel` default `"Clear search"`, `shortcut` (a `Kbd` hint on the right, shown only while the value is empty), `size` (`"sm"` `h-8`, default; `"md"` `h-10`) and `variant` (`"default"`; `"toolbar"`: `bg-transparent hover:bg-default focus-visible:bg-default`, `flex-1` on mobile, `sm:w-44 md:w-52`, `rounded-field`). It sets `enterKeyHint="search"`. Other input props and the ref still go to the `<input>`.
+- `fieldFocusClass` and `fieldFocusWithinClass` (`src/ui/_field-classes.ts`), exported from the root.
+
+Changed
+
+- Field focus: `focus-visible:border-focus-border focus-visible:ring-2 focus-visible:ring-focus-ring` -> `fieldFocusClass` (`focus-visible:outline-hidden focus-visible:border-focus-border focus-visible:ring-1 focus-visible:ring-focus-ring`). Applies to `Input`, `Textarea`, `Select` and `RadixSelect` triggers, `ClearInput` (+ `.alt`), `SearchInput`, `pickerTriggerClass` (`DatePicker`, `TimePicker`). `InputGroup.alt` uses `fieldFocusWithinClass`. `InputGroup`, the `Calendar` caption dropdowns and the `Composer` shell keep their own `has-[...]` selectors with `ring-1`. Invalid `InputGroup` (+ `.alt`) keeps `danger` colours at 1px. Tokens, buttons, tabs, checkboxes, switches, sliders and clear buttons are unchanged.
+- `ArtifactListToolbar` uses `<SearchInput variant="toolbar">`.
+
+Deprecated
+
+- `ToolbarSearchInput`: now a wrapper over `<SearchInput variant="toolbar">` with the same props (`placeholder` still defaults to `"Search..."`). Visual and behaviour changes: `rounded-lg` -> `rounded-field`; focus is `fieldFocusClass` (border colour and a 1px ring) instead of `ring-2` with `ring-offset-2`; the clear button is the `ClearInput` one (mounted only while the value is non-empty, including whitespace, with the dissolve on clear) instead of an always-mounted ghost `Button`.
+
+Tests: new `src/ui/search-input.test.tsx` (label to `aria-label` and placeholder, ref and prop pass-through, clear, shortcut hint only while empty, sizes, toolbar classes). `toolbar-search-input.test.tsx` checks the wrapper. `date-picker.test.tsx` checks `focus-visible:ring-1`. `root-exports.test.ts` adds `SearchInput`, `fieldFocusClass` and `fieldFocusWithinClass`. `tokens/test/package.test.mjs` checks version 0.17.0.
+
 ## 0.16.4
 
 Fix: `Switch` contrast in dark mode when unchecked, like the 0.16.1 `Slider` fix. Light mode and the checked state are unchanged in both modes. No export or prop changes.

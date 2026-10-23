@@ -198,7 +198,7 @@ import { SessionsHoverCard } from "@vvedantb/ui";
 ## Panels, search and confirm
 
 ```tsx
-import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui";
+import { ConfirmDialog, SearchInput, SlideOverPanel } from "@vvedantb/ui";
 
 <div className="relative">
   <SlideOverPanel open={open} onClose={() => setOpen(false)} header={<h2>Details</h2>}>
@@ -206,7 +206,9 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
   </SlideOverPanel>
 </div>
 
-<ToolbarSearchInput value={query} onChange={setQuery} />
+<SearchInput value={query} onChange={setQuery} label="Search files" shortcut="/" />
+
+<SearchInput variant="toolbar" value={query} onChange={setQuery} />
 
 <ConfirmDialog size="sm" open={open} onOpenChange={setOpen} title="Delete item?" variant="destructive" onConfirm={remove} />
 
@@ -214,7 +216,9 @@ import { ConfirmDialog, SlideOverPanel, ToolbarSearchInput } from "@vvedantb/ui"
 ```
 
 - `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
-- `ToolbarSearchInput`: a compact `h-8` search field for toolbars, with a search icon and a clear button. The clear button stays mounted and is hidden while the value is blank. Clearing calls `onChange("")` and does not move focus. Defaults: `placeholder="Search..."`, `label="Search"` (the `aria-label`), `clearLabel="Clear search"`. The ref goes to the `<input>`.
+- `SearchInput`: the search field. A `ClearInput` with a search icon on the left and the clear button on the right (shown while there is text; clearing calls `onChange("")`). `label` (default `"Search"`) is the `aria-label` and, without `placeholder`, the placeholder. `clearLabel` defaults to `"Clear search"`. `shortcut` (such as `"/"` or `"⌘K"`) shows a `Kbd` hint on the right while the value is empty. `size`: `"sm"` (`h-8`, default) or `"md"` (`h-10`). `variant`: `"default"` or `"toolbar"` (transparent until hover or focus, `rounded-field`, full width on mobile and `sm:w-44 md:w-52`). Other input props pass through; `enterKeyHint="search"`. `className` goes to the `<input>`, `wrapperClassName` to the wrapper, the ref to the `<input>`.
+- `ToolbarSearchInput` (deprecated in 0.17.0): a wrapper over `<SearchInput variant="toolbar">` with `placeholder="Search..."`. `className` goes to the wrapper, `inputClassName` to the `<input>`.
+- Field focus: every field (`Input`, `Textarea`, `Select` and `RadixSelect` triggers, `ClearInput`, `SearchInput`, `InputGroup`, date and time picker triggers) uses `fieldFocusClass`: the border turns `focus-border` and a 1px `ring-focus-ring` shows. Wrappers use `fieldFocusWithinClass` (`has-focus-visible:`). Both are exported for app fields.
 - `ConfirmDialog` `size`: `"default"` keeps the alert dialog. `"sm"` renders a compact, dismissible dialog (outside click, Escape and the close button close it) with small Cancel and confirm buttons. Cancel calls `onCancel` and then `onOpenChange(false)`. Confirm calls `onConfirm` only, so the caller closes it. `"md"` (0.5.2) is dismissible like `"sm"`, with the title in a header (`pb-4`), the description in its own section (`py-6`) and a footer (`pt-4`) with default-size buttons. It has the same Cancel and confirm behaviour as `"sm"`.
 - Legacy (still supported): the `ConfirmDialog` `size`, `variant`, `cancelLabel` and `confirmLabel` props. For anything they do not cover, compose the parts (see [Composable parts](#composable-parts-060-options-061)).
 
@@ -981,7 +985,7 @@ const store: ArtifactStateStore = {
 - `ArtifactRender`: the body by format. Markdown renders with Streamdown, code with `CodeBlock` (`language`), and HTML, SVG and JSON in an `ArtifactFrame`.
 - `ArtifactCard`: a grid tile (type icon, title, description, compact updated time) or a `layout="list"` row. With `getHref` it is an `<a>`; a plain left click then calls `onOpen` instead of following the link, and modified clicks stay native. The actions menu (dots button and right-click) lists Open (`onOpen`), Open in new tab (`getHref`), Rename (`onRename`), Copy and Download (`getBody`, since list rows carry no body) and Delete (`onDelete`). Each shows only when its callback is set; with none, there is no menu.
 - `ArtifactList`: `ArtifactCard`s in a grid (one to three columns) or a list, with the card callbacks passed through. With no artifacts it shows an `EmptyState` (`emptyTitle`, `emptyDescription`, `emptyActions`).
-- `ArtifactListToolbar`: controlled `ToolbarSearchInput` (`query`, `onQueryChange`), a type filter menu (`type`, `onTypeChange`, `types`; `undefined` is "All types") and a grid or list toggle (`layout`, `onLayoutChange`). The filter and the toggle show only with their callbacks. `children` go at the end.
+- `ArtifactListToolbar`: controlled `SearchInput variant="toolbar"` (`query`, `onQueryChange`), a type filter menu (`type`, `onTypeChange`, `types`; `undefined` is "All types") and a grid or list toggle (`layout`, `onLayoutChange`). The filter and the toggle show only with their callbacks. `children` go at the end.
 - `ArtifactViewer`: the ai-elements `Artifact` container with a header (`headerStart`, type icon, title) and actions: versions menu (`versions`), Rename, Copy, Download (the format's extension and MIME type from `ARTIFACT_FORMAT_FILES`), Open in new tab (`href`), your `actions`, and Delete. Below it, `ArtifactRender` of `artifact.body`. Pass the body of the version on screen.
 - `ArtifactVersionsMenu`: a "vN" button listing `versions` newest first, with the current one marked. With `onViewVersion`, picking a version shows it, and "Restore vN" (`onRestoreVersion`) appears while an older version is on screen. Without it, picking an older version restores it.
 - Rename and delete use `ConfirmDialog` (`ArtifactRenameDialog`, `ArtifactDeleteDialog`, and `useArtifactEditDialogs` for custom surfaces). Rename sends the trimmed title, and does nothing when it is unchanged. Alt-click on Delete skips the dialog, as with `useRequestConfirm`. The delete dialog says "This cannot be undone."; pass `deleteDescription` to `ArtifactViewer`, `ArtifactCard` or `ArtifactList` to change it (0.13.1), for example when your delete can be undone. A callback that rejects keeps its dialog open and shows an error toast; copy and load failures toast too, so mount `SonnerToaster`.

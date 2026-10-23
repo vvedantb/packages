@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.16.4", () => {
-  assert.equal(pkg.version, "0.16.4");
+test("version is 0.17.0", () => {
+  assert.equal(pkg.version, "0.17.0");
 });
 
 test("field radius matches rounded-control (10px cap)", () => {
