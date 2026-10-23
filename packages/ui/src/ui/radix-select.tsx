@@ -117,7 +117,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-pointer select-none items-center gap-2 rounded-lg py-2 pl-2.5 pr-8 text-sm outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 last:[span]:*:flex last:[span]:*:items-center last:[span]:*:gap-2",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-pointer select-none items-center gap-2 rounded-menu-item py-2 pl-2.5 pr-8 text-sm outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 last:[span]:*:flex last:[span]:*:items-center last:[span]:*:gap-2",
         menuItemClass,
         className,
       )}

@@ -642,6 +642,8 @@ The root `cn` knows these are radius classes, so `cn("rounded-lg", "rounded-menu
 | `DropdownMenu` and `ContextMenu` item, sub-trigger, checkbox item and radio item | `rounded-md`, `calc(var(--radius) - 2px)` (14px) | `rounded-menu-item` (8px) |
 | Menu surface | `rounded-lg` (16px) | unchanged |
 
+From 0.16.2, `Select` and `RadixSelect` items (`rounded-lg`, 16px), `CommandItem` (`rounded-md`, 14px) and `ComposerSlashMenu` rows (`rounded-lg`, 16px) also use `rounded-menu-item` (8px).
+
 ### Sidebar panel nav rows
 
 Rows in the panel beside the rail. Rail tiles are unchanged.
