@@ -21,6 +21,7 @@ import {
   type McpTokenCachePurgeRef,
   type McpTokenCachePutDef,
 } from "@vvedantb/server";
+import appSchema from "./mcpTokenCacheApp/schema.js";
 
 // A fake Convex backend: the builders keep each handler, and the ctx serves the
 // two cache indexes from an array (by_token_hash in insertion order, by_expires
@@ -365,6 +366,14 @@ describe("mcpTokenCache schema", () => {
       { indexDescriptor: "by_token_hash", fields: ["tokenHash"] },
       { indexDescriptor: "by_expires", fields: ["expiresAt"] },
     ]);
+  });
+
+  it("matches the local tables in the test app's schema", () => {
+    const expected = mcpTokenCacheTable(defineTable, v);
+    for (const table of [appSchema.tables.mcpTokenCache, appSchema.tables.authCache]) {
+      expect(table.validator).toEqual(v.object(mcpTokenCacheFields(v)));
+      expect(table[" indexes"]()).toEqual(expected[" indexes"]());
+    }
   });
 });
 
