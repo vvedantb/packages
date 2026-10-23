@@ -66,7 +66,7 @@
   --color-segment-foreground: rgb(var(--foreground));
   --color-backdrop: rgb(0 0 0 / 0.5);
   --color-scrollbar: rgb(var(--muted-foreground) / 0.35);
-  --radius-field: min(calc(var(--radius) + 0.25rem), 1.25rem);
+  --radius-field: min(var(--radius), 0.625rem);
 }
 
 /* The radius utilities from tokens.css, which this file replaces. They read
@@ -85,7 +85,7 @@
 
 :root {
   --scrollbar: rgb(var(--muted-foreground) / 0.35);
-  --field-radius: min(calc(var(--radius) + 0.25rem), 1.25rem);
+  --field-radius: min(var(--radius), 0.625rem);
 }
 
 /*

@@ -1045,7 +1045,7 @@ Opt-in props (all default to the current look):
 
 | Prop | Values | Effect |
 | --- | --- | --- |
-| `toastRadius` | `"lg"` (default), `"surface"`, `"control"` | `rounded-lg`, `rounded-surface` (from `tokens.css`, or the compat file) or `rounded-field` (the input radius). |
+| `toastRadius` | `"lg"` (default), `"surface"`, `"control"` | `rounded-lg`, `rounded-surface` (from `tokens.css`, or the compat file) or `rounded-field` (the input radius, `min(var(--radius), 0.625rem)`, 10px). |
 | `density` | `"default"`, `"compact"` | Current padding and text, or `gap-2 px-3 py-2 text-xs` with `text-xs` descriptions. |
 | `toastIcons` | `"default"`, `"filled24"` | Sonner icons or 24px filled success, info, warning and error icons, a matching loader and a 14px close cross. |
 | `closeButtonStyle` | `"default"`, `"hoverChip"` | Text-style close button or a round chip at the top-right, shown on hover and always on small screens. It turns on `closeButton` unless you set it. |

@@ -172,7 +172,7 @@
     --warning: oklch(78.19% 0.159 72.33);
     --warning-foreground: oklch(21.03% 0.0059 72.33);
     --radius: 1rem;
-    --field-radius: 1.25rem;
+    --field-radius: min(var(--radius), 0.625rem);
   }
 
   .dark,
@@ -221,7 +221,7 @@
     --warning: oklch(82.03% 0.1392 76.34);
     --warning-foreground: oklch(21.03% 0.0059 76.34);
     --radius: 1rem;
-    --field-radius: 1.25rem;
+    --field-radius: min(var(--radius), 0.625rem);
   }
 }
 
