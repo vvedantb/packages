@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.16.4
+
+Fix: `Switch` contrast in dark mode when unchecked, like the 0.16.1 `Slider` fix. Light mode and the checked state are unchanged in both modes. No export or prop changes.
+
+- Track (unchecked): `border-border bg-default data-[state=unchecked]:bg-default` -> the same plus `dark:data-[state=unchecked]:border-muted/60 dark:data-[state=unchecked]:bg-muted/40`. In dark mode `--default` (oklch 27.4%) almost matched `--surface-card` (oklch 25.7%) and the background, so an off switch disappeared on a dark card.
+- Thumb (unchecked): `bg-background` -> `bg-background dark:data-[state=unchecked]:bg-foreground`. The dark thumb was `--background` (oklch 12%); it is now light.
+- Checked: `data-[state=checked]:border-primary data-[state=checked]:bg-primary` and the `data-[state=checked]:bg-primary-foreground` thumb, unchanged. The new `dark:` classes only match `[data-state="unchecked"]`, so they never apply to a checked switch. Focus ring and disabled styles are unchanged.
+- A caller `className` still merges with `cn` after the defaults (`className="bg-border"` drops `bg-default` and keeps the `dark:` classes).
+- Tests: new `src/ui/switch.test.tsx` checks the light, checked and `dark:` classes on the track and thumb, that every `dark:` class is scoped to the unchecked state, and that `className` merges after the defaults. `tokens/test/package.test.mjs` checks version 0.16.4.
+
 ## 0.16.3
 
 Visual change: text fields now use 10px corners, matching `rounded-control`. Values are at the default `--radius: 1rem`. No export changes.
