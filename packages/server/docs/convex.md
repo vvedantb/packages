@@ -236,16 +236,37 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 
 Caches verified MCP bearer tokens, so most requests skip the verify step (for Clerk: a network call, often from a cold Node action). Rows hold the SHA-256 hex of the token (`hashMcpToken`), never the token. Only successful verifications are cached, so a revoked token keeps working until its row expires: at most `MCP_TOKEN_CACHE_TTL_MS` (5 minutes).
 
-The package cannot own a table, so add it to your schema and register the three internal functions in one module:
+The package cannot own a table, so define it in your schema and register the three internal functions in one module.
+
+Define the table locally. `convex/schema.ts` cannot import runtime code from a package: `convex deploy` fails with `NoImportModuleInSchema`. So do not call `mcpTokenCacheTable` or `mcpTokenCacheFields` there.
 
 ```ts
 // convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { mcpTokenCacheTable } from "@vvedantb/server";
 
 export default defineSchema({
-  mcpTokenCache: mcpTokenCacheTable(defineTable, v), // indexes by_token_hash and by_expires
+  // the fields of mcpTokenCacheFields; schema.test.ts checks they match
+  mcpTokenCache: defineTable({ tokenHash: v.string(), clerkUserId: v.string(), expiresAt: v.number() })
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_expires", ["expiresAt"]),
+});
+```
+
+Check the local table against the package in a test, outside `convex/schema.ts`, so a change to the fields or indexes fails the test:
+
+```ts
+// convex/schema.test.ts
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
+import { expect, test } from "vitest";
+import { mcpTokenCacheFields, mcpTokenCacheTable } from "@vvedantb/server";
+import schema from "./schema";
+
+test("mcpTokenCache matches @vvedantb/server", () => {
+  const table = schema.tables.mcpTokenCache;
+  expect(table.validator).toEqual(v.object(mcpTokenCacheFields(v)));
+  expect(table[" indexes"]()).toEqual(mcpTokenCacheTable(defineTable, v)[" indexes"]());
 });
 ```
 
@@ -290,7 +311,7 @@ crons.hourly("purge MCP token cache", { minuteUTC: 0 }, internal.mcp.tokenCache.
 | `getInternal` | Internal query `{ tokenHash }` → `{ clerkUserId, expiresAt } \| null` via `by_token_hash`. Does not check expiry, so the query stays cacheable. |
 | `putInternal` | Internal mutation. Inserts a new row; patches an existing one only when `clerkUserId` differs or the new `expiresAt` is later. |
 | `purgeExpired` | Internal mutation. Deletes up to `MCP_TOKEN_CACHE_PURGE_BATCH` (500) rows with `expiresAt < now` via `by_expires`, and reschedules itself (`runAfter(0)`) when it deleted a full batch. Returns the count. |
-| `mcpTokenCacheFields(v)`, `mcpTokenCacheTable(defineTable, v)` | The fields `tokenHash`, `clerkUserId` (strings) and `expiresAt` (number), and the table with `MCP_TOKEN_CACHE_HASH_INDEX` (`by_token_hash`) and `MCP_TOKEN_CACHE_EXPIRES_INDEX` (`by_expires`). |
+| `mcpTokenCacheFields(v)`, `mcpTokenCacheTable(defineTable, v)` | The fields `tokenHash`, `clerkUserId` (strings) and `expiresAt` (number), and the table with `MCP_TOKEN_CACHE_HASH_INDEX` (`by_token_hash`) and `MCP_TOKEN_CACHE_EXPIRES_INDEX` (`by_expires`). For tests only: do not import them in `convex/schema.ts` (`NoImportModuleInSchema`). `mcpTokenCacheTable` is `@deprecated` to flag schema use. |
 
 The ctx types are structural, so the factory checks that the table exists and has both indexes. `getInternal`, `putInternal` and `purgeExpired` are real registered functions, so `ctx.runQuery(internal.mcp.tokenCache.getInternal, …)` is typed. `tests/convex/mcpTokenCache.types.ts` checks this against a codegen-shaped app with `convex/server` 1.47.
 

@@ -6,7 +6,8 @@
  * `MCP_TOKEN_CACHE_TTL_MS`).
  *
  * The package cannot own a Convex table and never imports `convex` at
- * runtime, so the app passes in `v`, `defineTable` and its function builders.
+ * runtime, so the app defines the table in its own schema and passes in `v`
+ * and its function builders.
  */
 import type {
   defineTable as convexDefineTable,
@@ -64,14 +65,22 @@ export function hashMcpToken(token: string): Promise<string> {
   return sha256Hex(token);
 }
 
-/** The table's fields, for `defineTable` or your own table definition. */
+/**
+ * The table's fields: `tokenHash`, `clerkUserId` (strings) and `expiresAt` (number).
+ *
+ * Do not import in `convex/schema.ts` (NoImportModuleInSchema). Use in tests to
+ * check your local table matches. See `docs/convex.md`.
+ */
 export function mcpTokenCacheFields(v: ConvexV) {
   return { tokenHash: v.string(), clerkUserId: v.string(), expiresAt: v.number() };
 }
 
 /**
- * The cache table with both indexes. In your schema:
- * `mcpTokenCache: mcpTokenCacheTable(defineTable, v)`.
+ * The cache table with both indexes (`by_token_hash`, `by_expires`).
+ *
+ * @deprecated Do not call in `convex/schema.ts`: a schema cannot import the
+ * package (NoImportModuleInSchema). Define the table locally and use this in
+ * tests to check your local table matches. See `docs/convex.md`.
  */
 export function mcpTokenCacheTable(defineTable: typeof convexDefineTable, v: ConvexV) {
   return defineTable(mcpTokenCacheFields(v))

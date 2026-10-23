@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1
+
+Docs fix: do not import `mcpTokenCacheTable` or `mcpTokenCacheFields` in `convex/schema.ts`. A Convex schema cannot import runtime code from a package, so `convex deploy` fails with `NoImportModuleInSchema`. No runtime change; every export stays.
+
+### Changed
+
+- `docs/convex.md`: define the cache table locally in `convex/schema.ts` (same fields, indexes `by_token_hash` and `by_expires`), and check it against `mcpTokenCacheFields` and `mcpTokenCacheTable` in an app test. Both have an example.
+- JSDoc: `mcpTokenCacheFields` and `mcpTokenCacheTable` say not to import them in `convex/schema.ts` and to use them in tests. `mcpTokenCacheTable` is marked `@deprecated` for schema use; it still works.
+- The 0.7.0 entry below wrongly said the two are "for the schema".
+- Tests: the test app in `tests/convex/mcpTokenCacheApp/schema.ts` defines its tables locally, and `tests/convex/mcpTokenCache.test.ts` checks they match `mcpTokenCacheFields` and the indexes from `mcpTokenCacheTable`.
+
 ## 0.7.0
 
 Additive: MCP bearer-token cache for Convex backends. Nothing in 0.6.1 changes. See `docs/convex.md`.

@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/server",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "description": "Shared Convex backend helpers, MCP server scaffolding and Node-side MCP OAuth client helpers from one root import: query-limit errors, Clerk auth and token verification, an MCP bearer-token cache, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools, WebCrypto primitives, Convex optimistic-update helpers, MCP OAuth client helpers (provider, sign-in, refresh, revocation, loopback redirect server) for desktop apps, a QuickJS code sandbox that bridges script tool calls to host handlers, and a pure artifacts core (Zod contract, state limits and ops, quiz and flashcards pages, a sandboxed document wrapper with CSP and a guest state bridge).",
   "type": "module",
