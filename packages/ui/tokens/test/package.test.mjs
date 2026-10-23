@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.16.0", () => {
-  assert.equal(pkg.version, "0.16.0");
+test("version is 0.16.1", () => {
+  assert.equal(pkg.version, "0.16.1");
 });
 
 test("every export resolves to an existing file", () => {

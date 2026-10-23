@@ -1002,7 +1002,7 @@ import { DatePicker, DateTimePicker, MonthPicker } from "@vvedantb/ui";
 - `MonthPicker`: `value` "YYYY-MM" or "", with year navigation and a month grid. `min` and `max` are "YYYY-MM".
 - `Calendar`: the styled `DayPicker` for custom layouts (every `DayPicker` prop). `parseDateValue` and `formatDateValue` convert between "YYYY-MM-DD" and a local `Date`.
 
-## Slider (0.16.0)
+## Slider (0.16.0, dark contrast and className props 0.16.1)
 
 shadcn's slider on `@radix-ui/react-slider` (a peer dependency), with package tokens.
 
@@ -1014,7 +1014,7 @@ import { LabeledSliderRow, Slider } from "@vvedantb/ui";
 <LabeledSliderRow id="temperature" label="Temperature" value={temp} onValueChange={setTemp} max={2} step={0.1} formatValue={(v) => v.map((n) => n.toFixed(1)).join("–")} minLabel="Precise" maxLabel="Creative" />
 ```
 
-- `Slider`: every Radix `Root` prop (`value`, `defaultValue`, `min`, `max`, `step`, `orientation`, `disabled`, `onValueChange`, `onValueCommit`, and so on). It renders one thumb per value, so `[n]` gives one thumb and `[a, b]` a range. The track is `bg-default`, the range `bg-primary`, and the thumb a `size-4` circle on `bg-background` with the `Switch` focus ring. Disabled dims to 50%. A vertical slider needs a height from its parent or `className` (default `min-h-40`). The ref goes to `Root`.
+- `Slider`: every Radix `Root` prop (`value`, `defaultValue`, `min`, `max`, `step`, `orientation`, `disabled`, `onValueChange`, `onValueCommit`, and so on). It renders one thumb per value, so `[n]` gives one thumb and `[a, b]` a range. The track is `bg-default` (`dark:bg-muted/40`), the range `bg-primary`, and the thumb a `size-4` circle on `bg-background` with `border-border` (`dark:bg-foreground dark:border-muted`, a light thumb in dark mode) and the `Switch` focus ring. `trackClassName`, `rangeClassName` and `thumbClassName` merge after the defaults, so caller classes win; override a `dark:` default with a `dark:` class. Disabled dims to 50%. A vertical slider needs a height from its parent or `className` (default `min-h-40`). The ref goes to `Root`.
 - Names: `id`, `aria-label`, `aria-labelledby` and `aria-valuetext` go to the first thumb, the focusable `role="slider"` element, not `Root`. `thumbLabels` sets `aria-label` per thumb and wins over `aria-label` on the first. Without a name, Radix labels a two-thumb range "Minimum" and "Maximum". The thumb is a `<span>`, so `<Label htmlFor>` does not name it; pass `aria-labelledby` with the label's `id`.
 - `LabeledSliderRow`: the `LabeledSwitchRow` layout with the slider below. `id`, `label`, `description`, `icon`, `value`, `onValueChange`, `onValueCommit`, `min`, `max`, `step`, `disabled`, `thumbLabels`, `className`. `formatValue` sets the right-aligned value (default: values joined by an en dash). `minLabel` and `maxLabel` add captions under the ends. The label names the first thumb through `aria-labelledby`, unless `thumbLabels` is set.
 

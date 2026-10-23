@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.16.1
+
+Fix: `Slider` contrast in dark mode. Light mode is unchanged. Additive props, no export changes.
+
+- Track: `bg-default` -> `bg-default dark:bg-muted/40`. In dark mode `--default` (oklch 27.4%) almost matched `--surface-card` (oklch 25.7%) and the background, so the track disappeared. `muted` at 40% shows on both.
+- Range: `bg-primary`, unchanged in both modes.
+- Thumb: `border-border bg-background` -> `border-border bg-background dark:border-muted dark:bg-foreground`. The dark thumb was `--background` (oklch 12%); it is now light with a visible border. `shadow-sm` and the focus ring (`ring-2 ring-focus-ring`) are unchanged.
+- New optional props `trackClassName`, `rangeClassName` and `thumbClassName`, merged with `cn` after the defaults, so a caller class wins through tailwind-merge (`thumbClassName="bg-primary"` drops `bg-background`). A caller replaces a `dark:` default with its own `dark:` class. `thumbClassName` goes to every thumb.
+- `Switch` is not changed. It shares part of the issue: its unchecked track is `bg-default` and its thumb `bg-background`, so in dark mode the unchecked state has low contrast. Its border (`border-border`) helps, and the checked state uses `bg-primary` with a `bg-primary-foreground` thumb.
+- Tests: `src/ui/slider.test.tsx` checks the light and `dark:` classes on the track, range and thumb, and that the three className props apply and override the defaults. `tokens/test/package.test.mjs` checks version 0.16.1.
+
 ## 0.16.0
 
 Additive: `Slider` and `LabeledSliderRow`. No other export changes.
