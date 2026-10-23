@@ -7,7 +7,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
-| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. |
+| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
 | `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
@@ -661,7 +661,7 @@ Rows in the panel beside the rail. Rail tiles are unchanged.
 | Focus ring | none | `focus-visible:ring-2 focus-visible:ring-foreground/35`, no outline |
 | Icon-only row | `justify-center px-0 py-1.5` | same, plus the radius, text, fill and focus classes above |
 | Icon (`sidebarNavIconClass`) | none (apps used 18px in a 20px box) | `size-[19px] shrink-0`; `text-muted-foreground` idle, `text-foreground` active |
-| Section label | `px-3 py-1 text-[11px]` | `px-4 py-1 text-[11px] leading-4` (16px line). Colour still comes from the app's `.sidebar-section-label` rule. |
+| Section label | `px-3 py-1 text-[11px]` | `px-4 py-1 text-[11px] leading-4` (16px line). Colour comes from `.sidebar-section-label` in `tokens.css` (0.15.0; `--muted` at `--sidebar-section-label-mix` 55%, 80% on hover). |
 
 The hover fill is static: it does not slide between rows. While another row is hovered, the active row keeps its fill.
 
@@ -1059,9 +1059,9 @@ Use this when the app defines shadcn-style variables as space-separated channels
 @source "../node_modules/@vvedantb/ui/src/**/*.{ts,tsx}";
 ```
 
-Shared CSS that is safe without `tokens.css`: `compat-shadcn-rgb.css`, `dialog.css`, `utilities.css`, `scrollbar-thin.css` (reads `--scrollbar`, which the compat file defines), `modal.css` and `tabs.css` (both need the app motion variables listed in `tokens/README.md`), and `animations.css` (not with the Tailwind preset). `base.css` and `tabs-pills.css` read raw `--accent`, `--foreground`, `--muted`, `--segment` and `--default`; skip them unless the app defines those as full colour values.
+Shared CSS that is safe without `tokens.css`: `compat-shadcn-rgb.css`, `dialog.css`, `utilities.css`, `scrollbar-thin.css` (reads `--scrollbar`, which the compat file defines), `clear-input.css` and `motion.css` (import them yourself; `tokens.css` is what imports them otherwise), `modal.css` and `tabs.css` (both need the motion variables listed in `tokens/README.md` on the app `:root`, because `tokens.css` sets them), and `animations.css` (not with the Tailwind preset). `base.css` and `tabs-pills.css` read raw `--accent`, `--foreground`, `--muted`, `--segment` and `--default`; skip them unless the app defines those as full colour values.
 
-The compat file includes a fallback `glass-panel-strong` (`rgb(var(--card) / 0.95)` with a 12px blur) for toasts and dialogs. Declare your own `@utility glass-panel-strong` after the import to override it.
+The compat file defines `.glass-panel-strong` for toasts, dialogs and hover cards as the solid popover colour (`rgb(var(--popover))`, as `bg-overlay`), the same as `tokens.css`. Before 0.15.0 it was `rgb(var(--card) / 0.95)` with a 12px blur. The rule is in `@layer components`, so an app `.glass-panel-strong` rule after the import wins.
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
 

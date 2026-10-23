@@ -62,15 +62,14 @@ Rules that 3 or more apps had copied are now opt-in files. Import only the ones 
 ```css
 @import "@vvedantb/ui/tokens/css/base.css";        /* html, ::selection, control transitions, cursor, range accent */
 @import "@vvedantb/ui/tokens/css/dialog.css";      /* compact Dialog max-width fix (unlayered) */
-@import "@vvedantb/ui/tokens/css/modal.css";       /* .t-modal, .is-open, .is-closing; needs --modal-* on :root */
-@import "@vvedantb/ui/tokens/css/tabs.css";        /* .t-tab, .t-tabs-pill; needs --tabs-dur, --tabs-ease */
+@import "@vvedantb/ui/tokens/css/modal.css";       /* .t-modal, .is-open, .is-closing; --modal-* from tokens.css */
+@import "@vvedantb/ui/tokens/css/tabs.css";        /* .t-tabs, .t-tab, .t-tabs-pill; --tabs-* from tokens.css */
 @import "@vvedantb/ui/tokens/css/tabs-pills.css";  /* --tabs-* colours, .t-tabs--segmented / --pills */
 @import "@vvedantb/ui/tokens/css/utilities.css";   /* @utility hit-target, reveal-on-hover */
-@import "@vvedantb/ui/tokens/css/scrollbar-thin.css";
 @import "@vvedantb/ui/tokens/css/animations.css";  /* CSS-first apps only; @config apps use the preset */
 ```
 
-`@vvedantb/ui/tokens/css/index.css` imports base, dialog, utilities, scrollbar-thin and animations for a new app. Apps that load a `tailwind.config.ts` through `@config` add `presets: [tokensPreset()]` from `@vvedantb/ui/tokens/tailwind-preset` (shared colours, radii, shadows, `ease-smooth`, px screens, keyframes). app-c passes its color-mix wrapper: `tokensPreset({ color: v })`.
+From 0.15.0 `@vvedantb/ui/tokens` itself brings `.scrollbar-thin`, the `ClearInput` layers (`.t-clear*`), `.glass-panel-strong`, `.sidebar-section-label`, the `.ui-enter` family with the `PageMotionProvider` overrides, and default `--modal-*` / `--tabs-*` variables. Override any of them with app rules or `:root` variables (see `packages/ui/tokens/README.md`, Parameters). `@vvedantb/ui/tokens/css/index.css` imports base, dialog, modal, tabs, tabs-pills, utilities, animations and nav-icons for a new app. Apps that load a `tailwind.config.ts` through `@config` add `presets: [tokensPreset()]` from `@vvedantb/ui/tokens/tailwind-preset` (shared colours, radii, shadows, `ease-smooth`, px screens, keyframes). app-c passes its color-mix wrapper: `tokensPreset({ color: v })`.
 
 The per-app steps (which blocks to delete, where each import goes, which `:root` parameters to add) are in `packages/ui/tokens/examples/migration.md`, generated and checked by `pnpm --filter @vvedantb/ui verify`.
 
@@ -80,10 +79,9 @@ The per-app steps (which blocks to delete, where each import goes, which `:root`
 
 - `@import "shadow-plugin";` for `smooth-shadow-ring-*`, the edge and shadow of dialogs, sheets, menus, popovers, tooltips and toasts.
 - `@plugin "tailwindcss-animate";` (or `tw-animate-css`) for `animate-in`/`fade-*`/`zoom-*`/`slide-in-*` on overlays. `animate-accordion-down`/`-up` also need `accordion-down`/`accordion-up` keyframes (in `@vvedantb/ui/tokens/tailwind-preset`, or in the app) and an `animation` timing in the app.
-- `.t-modal` with `.is-open`/`.is-closing`: import `@vvedantb/ui/tokens/css/modal.css` and set `--modal-open-dur`, `--modal-close-dur`, `--modal-scale`, `--modal-scale-close` and `--modal-ease` on `:root`, or keep an app copy (app-b and app-c do; theirs differ).
-- `.t-tab` and `.t-tabs-pill`: import `@vvedantb/ui/tokens/css/tabs.css` (+ `tabs-pills.css` for the `--tabs-*` colours and the segmented/pills variants) and set `--tabs-dur` and `--tabs-ease`. The `.t-tabs` container rule is still app CSS.
+- `.t-modal` with `.is-open`/`.is-closing`: import `@vvedantb/ui/tokens/css/modal.css` (or `index.css`), or keep an app copy (app-b and app-c do; theirs differ). `tokens.css` sets the `--modal-*` variables.
+- `.t-tabs`, `.t-tab` and `.t-tabs-pill`: import `@vvedantb/ui/tokens/css/tabs.css` (+ `tabs-pills.css` for the `--tabs-*` colours and the segmented/pills variants). `tokens.css` sets `--tabs-dur` and `--tabs-ease`.
 - `hit-target` and `reveal-on-hover`: import `@vvedantb/ui/tokens/css/utilities.css` (or keep plain `@layer utilities` rules, as app-a and app-e do).
-- App-local CSS: `.glass-panel-strong` (dialog and toast fill), the `.t-tabs` container, `.t-clear*` (ClearInput dissolve layers).
 
 ### Font
 
@@ -125,7 +123,7 @@ import { SidebarHeader, PillTabs } from "@vvedantb/ui/shell";
 
 ## What stays app-local
 
-Navigation layout (icon rails, sidebars, sidebar and header size variables), page layouts, segmented controls, motion variables (`--modal-*`, `--tabs-dur`, `--tabs-ease`, view-transition timings), the `.t-tabs` container and any tab or modal rules that differ from the shared files, `.t-clear*`, `glass-panel-*` / `smooth-shadow-ring-*` utilities, app colours and fonts (app-d's pink accent, app-c's chart colours, app-b's feature colours), Tailwind plugins, marketing fonts, page animations, markdown/editor styles and landing CSS. `packages/ui/tokens/verify/ANALYSIS.md` lists every duplicated block that was left in the apps and why.
+Navigation layout (icon rails, sidebars, sidebar and header size variables), page layouts, segmented controls, view-transition names and timings, any tab or modal rules that differ from the shared files, `smooth-shadow-ring-*` and app `glass-panel-*` variants other than `glass-panel-strong`, the `[cmdk-*]` look of an app's own command menu, app colours and fonts (app-d's pink accent, app-c's chart colours, app-b's feature colours), Tailwind plugins, marketing fonts, page animations, markdown/editor styles and landing CSS. `packages/ui/tokens/verify/ANALYSIS.md` lists every duplicated block that was left in the apps and why.
 
 ## Develop
 

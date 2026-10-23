@@ -16,7 +16,18 @@
  *   @import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap");
  *
  * Without it, --font-sans falls back to system-ui.
+ *
+ * From 0.15.0 this file also brings, on by default: the ClearInput layers,
+ * `.scrollbar-thin`, the `.ui-enter` family with the PageMotionProvider
+ * overrides, `.glass-panel-strong`, `.sidebar-section-label` and the
+ * modal / tabs motion variables. Every rule sits in a Tailwind layer and the
+ * timings and strengths are `:root` variables, so app rules and app `:root`
+ * values win.
  */
+
+@import "./css/clear-input.css";
+@import "./css/scrollbar-thin.css";
+@import "./css/motion.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -224,5 +235,46 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Motion for css/modal.css (`.t-modal`) and css/tabs.css (`.t-tab`,
+   `.t-tabs-pill`). Set any of them on the app `:root` to change it. */
+@layer base {
+  :root {
+    --modal-open-dur: 180ms;
+    --modal-close-dur: 120ms;
+    --modal-scale: 0.96;
+    --modal-scale-close: 0.96;
+    --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --tabs-dur: 200ms;
+    --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sidebar-section-label-mix: 55%;
+    --sidebar-section-label-hover-mix: 80%;
+  }
+}
+
+@layer components {
+  /* Solid overlay fill for Dialog, SonnerToaster, SlideOverPanel and
+     SessionsHoverCard `surface="glass"`. Same as `bg-overlay`. */
+  .glass-panel-strong {
+    background-color: var(--overlay);
+  }
+
+  /* Shell section label (`sidebarSectionLabelClass`). */
+  .sidebar-section-label {
+    color: color-mix(
+      in oklch,
+      var(--muted) var(--sidebar-section-label-mix),
+      transparent
+    );
+  }
+
+  .sidebar-section-label:hover {
+    color: color-mix(
+      in oklch,
+      var(--muted) var(--sidebar-section-label-hover-mix),
+      transparent
+    );
   }
 }

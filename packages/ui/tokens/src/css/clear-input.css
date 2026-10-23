@@ -1,0 +1,71 @@
+/*
+ * @vvedantb/ui/tokens/css/clear-input.css: layers for @vvedantb/ui
+ * ClearInput (`.t-clear`, mirror, placeholder and glow), the transitions.dev
+ * input clear with dissolve. tokens.css imports it.
+ *
+ * clearInputDissolve reads the variables below from `html`. Set any of them
+ * on the app `:root` to change the timing (numbers in ms or px):
+ *   --clear-dur, --clear-out-dur, --clear-in-dur, --clear-out-fly,
+ *   --clear-in-fly, --clear-out-ease, --clear-in-ease, --glow-delay,
+ *   --glow-peak-at, --glow-opacity, --glow-spread
+ */
+
+@layer base {
+  :root {
+    --clear-dur: 1000ms;
+    --clear-out-dur: 400ms;
+    --clear-in-dur: 400ms;
+    --clear-out-fly: 12px;
+    --clear-in-fly: 12px;
+    --clear-out-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --clear-in-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --glow-delay: 50ms;
+    --glow-peak-at: 0.15;
+    --glow-opacity: 0.85;
+    --glow-spread: 1.5;
+  }
+}
+
+@layer components {
+  .t-clear {
+    position: relative;
+    overflow: hidden;
+  }
+  .t-clear-mirror,
+  .t-clear-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    z-index: 2;
+  }
+  .t-clear-mirror {
+    opacity: 0;
+  }
+  .t-clear.has-value .t-clear-mirror,
+  .t-clear.is-clearing .t-clear-mirror {
+    opacity: 1;
+  }
+  .t-clear.has-value > input,
+  .t-clear.is-clearing > input {
+    -webkit-text-fill-color: transparent;
+  }
+  .t-clear.has-value .t-clear-placeholder {
+    opacity: 0;
+  }
+  .t-clear-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 3;
+    mix-blend-mode: multiply;
+  }
+  .dark .t-clear-glow,
+  [data-theme="dark"] .t-clear-glow {
+    mix-blend-mode: screen;
+  }
+}

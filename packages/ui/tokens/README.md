@@ -6,18 +6,20 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps. The CSS and 
 
 | Export | File | What it is |
 | --- | --- | --- |
-| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, the radius utilities `rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`), `rounded-menu-item` (`min(var(--radius), 0.5rem)`) and `rounded-control` (`min(var(--radius), 0.625rem)`) (0.7.1; `rounded-surface` was in `utilities.css` before), `*` border and `body` defaults. 0.7.2 adds `--sidebar-accent` / `sidebar-accent` (sidebar nav row fill: light `var(--surface-tertiary)`, dark `oklch(22.64% 0 0)`). In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. |
+| `@vvedantb/ui/tokens`, `@vvedantb/ui/tokens/tokens.css` | `src/tokens.css` | Colour, radius, shadow, ease and font tokens (`@theme`), light/dark variables, `dark` variant, the radius utilities `rounded-surface` (`clamp(0.75rem, var(--radius), 1rem)`), `rounded-menu-item` (`min(var(--radius), 0.5rem)`) and `rounded-control` (`min(var(--radius), 0.625rem)`) (0.7.1; `rounded-surface` was in `utilities.css` before), `*` border and `body` defaults. 0.7.2 adds `--sidebar-accent` / `sidebar-accent` (sidebar nav row fill: light `var(--surface-tertiary)`, dark `oklch(22.64% 0 0)`). In 0.2.1 it also defines shadcn-style aliases (`primary`, `muted-foreground`, `secondary`, `destructive`, `card`, `popover`, `input`, `ring`) that point at the same tokens. From 0.15.0 it imports `clear-input.css`, `scrollbar-thin.css` and `motion.css`, sets the `--modal-*` and `--tabs-*` motion variables on `:root`, and defines `.glass-panel-strong` (`var(--overlay)`) and `.sidebar-section-label`. |
 | `tokens` and `Tokens` from `@vvedantb/ui` | `src/native.ts` | JS colours, radii and spacing for React Native. `@vvedantb/native-ui` keeps its own copy in `src/tokens.ts`; a test keeps the two equal. |
 | `@vvedantb/ui/tokens/css/base.css` | `src/css/base.css` | `html` touch/accent, `::selection`, control transitions, pointer cursor, range accent (`@layer base`). |
 | `@vvedantb/ui/tokens/css/dialog.css` | `src/css/dialog.css` | Unlayered `max-width: none` for `@vvedantb/ui` compact (bottom-sheet) dialogs. |
 | `@vvedantb/ui/tokens/css/modal.css` | `src/css/modal.css` | `.t-modal`, `.is-open`, `.is-closing` and `t-modal-presence-wait` (`@layer components`). |
-| `@vvedantb/ui/tokens/css/tabs.css` | `src/css/tabs.css` | `.t-tab`, active colour, `.t-tabs-pill`, small-screen `.t-tabs` scrolling. |
+| `@vvedantb/ui/tokens/css/tabs.css` | `src/css/tabs.css` | `.t-tabs` container (0.15.0), `.t-tab` with its press scale, active colour, `.t-tabs-pill`, small-screen `.t-tabs` scrolling. |
 | `@vvedantb/ui/tokens/css/tabs-pills.css` | `src/css/tabs-pills.css` | `--tabs-*` colour variables, `.t-tabs--segmented`, `.t-tabs--pills` and pill hover / active fills. |
 | `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target` and `@utility reveal-on-hover`. `rounded-surface` moved to `tokens.css` in 0.7.1. |
-| `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). |
+| `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). Imported by `tokens.css` from 0.15.0. |
+| `@vvedantb/ui/tokens/css/clear-input.css` | `src/css/clear-input.css` | `ClearInput` layers (`.t-clear*`) and the `--clear-*` / `--glow-*` timings. Imported by `tokens.css`. |
+| `@vvedantb/ui/tokens/css/motion.css` | `src/css/motion.css` | `.ui-page-enter`, `.ui-enter`, `.ui-enter-up`, `.ui-stagger`, their keyframes and reduced-motion rules, and the `html[data-page-motion="off"]` overrides for `PageMotionProvider`. Imported by `tokens.css`. |
 | `@vvedantb/ui/tokens/css/animations.css` | `src/css/animations.css` | `animate-aurora`, `animate-fade-in-up`, `animate-indeterminate` as `@theme` (CSS-first apps). |
-| `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius`, the same three radius utilities as `tokens.css` and a `glass-panel-strong` fallback. Import it **or** `tokens.css`, never both. |
-| `@vvedantb/ui/tokens/css/index.css` | `src/css/index.css` | base + dialog + utilities + scrollbar-thin + animations, for new CSS-first apps. |
+| `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius`, the same three radius utilities as `tokens.css` and `.glass-panel-strong` (solid `--popover` from 0.15.0). Import it **or** `tokens.css`, never both. |
+| `@vvedantb/ui/tokens/css/index.css` | `src/css/index.css` | base + dialog + modal + tabs + tabs-pills + utilities + animations + nav-icons, for new CSS-first apps (`tokens.css` brings scrollbar-thin). |
 | `@vvedantb/ui/tokens/tailwind-preset` | `src/tailwind-preset.mjs` (+ `.d.mts`) | Tailwind preset for apps that load a JS config with `@config`. |
 
 Every file was extracted because the same rule (same at-rule context, selector and body) sits in 3 or more of the five apps. The measured duplication is in `verify/ANALYSIS.md`, and the proof that each app compiles to the same CSS after migrating is in `verify/RESULTS.md`. Blocks that only 2 apps share, or that drift in a way that would change an app's CSS, stay in the apps; `verify/ANALYSIS.md` lists them.
@@ -35,6 +37,7 @@ CSS-first app (no `tailwind.config`):
 @import "@vvedantb/ui/tokens/css/modal.css";
 @import "@vvedantb/ui/tokens/css/tabs.css";
 /* ...app @layer components rules... */
+/* no --modal-* / --tabs-* needed: tokens.css sets them */
 ```
 
 App with a JS config (`@config "../tailwind.config.ts"`):
@@ -65,17 +68,18 @@ Tailwind inlines an `@import` where it sits, even in the middle of a file (it mu
 | --- | --- | --- |
 | `base.css` | `--accent`, `--foreground` | tokens.css or the app theme |
 | `dialog.css` | none | |
-| `modal.css` | `--modal-open-dur`, `--modal-close-dur`, `--modal-scale`, `--modal-scale-close`, `--modal-ease` | app `:root` |
-| `tabs.css` | `--tabs-dur`, `--tabs-ease` (app `:root`); `--tabs-text-muted`, `--tabs-text-active`, `--tabs-pill-bg` | colours: tabs-pills.css or the app theme |
+| `modal.css` | `--modal-open-dur`, `--modal-close-dur`, `--modal-scale`, `--modal-scale-close`, `--modal-ease` | tokens.css (0.15.0), or app `:root` with the compat file |
+| `tabs.css` | `--tabs-dur`, `--tabs-ease` (tokens.css, or app `:root` with the compat file); `--tabs-text-muted`, `--tabs-text-active`, `--tabs-pill-bg` | colours: tabs-pills.css or the app theme |
 | `tabs-pills.css` | `--muted`, `--segment`, `--segment-foreground`, `--default` | tokens.css or the app theme |
 | `utilities.css` | `--breakpoint-sm` (Tailwind default or app theme) | Tailwind |
 | `scrollbar-thin.css` | `--scrollbar` | tokens.css or the app theme |
+| `clear-input.css`, `motion.css` | none (own `:root` defaults) | |
 | `animations.css` | none | |
 | `tailwind-preset` | the CSS variables named in its colour map, `--radius`, `--field-radius` | tokens.css or the app theme |
 
 ### Using an existing shadcn RGB theme
 
-See the package `README.md`. With the compat file, `base.css`, `scrollbar-thin.css`, `utilities.css`, `dialog.css`, `modal.css` and `tabs.css` need no `tokens.css`. `base.css` reads `--accent` and `--foreground` and `tabs-pills.css` reads `--muted`, `--segment` and `--default`. Those are not channel-compatible, so skip `tabs-pills.css` and `index.css` (which includes `base.css`) unless the app defines those variables as full colours.
+See the package `README.md`. With the compat file, `base.css`, `scrollbar-thin.css`, `clear-input.css`, `motion.css`, `utilities.css`, `dialog.css`, `modal.css` and `tabs.css` need no `tokens.css` (`modal.css` and `tabs.css` then need the `--modal-*` / `--tabs-*` values on the app `:root`). `base.css` reads `--accent` and `--foreground` and `tabs-pills.css` reads `--muted`, `--segment` and `--default`. Those are not channel-compatible, so skip `tabs-pills.css` and `index.css` (which includes `base.css`) unless the app defines those variables as full colours.
 
 ### Parameters
 
@@ -85,6 +89,24 @@ Where apps share a rule but drifted in one value, the value is a custom property
 | --- | --- | --- | --- |
 | `base.css` | `--tokens-control-transition-property` | `background-color, border-color, color, box-shadow, transform, opacity` | app-c: `background-color, color, transform, opacity` |
 | `base.css` | `--tokens-control-transition-duration` | `240ms` | app-c: `100ms` |
+
+From 0.15.0 the files that moved out of the apps take `:root` variables too. Every rule is in a Tailwind layer, so an app rule for the same selector (unlayered, or later in the same layer) also wins.
+
+| File | Property | Default |
+| --- | --- | --- |
+| `tokens.css` | `--modal-open-dur`, `--modal-close-dur` | `180ms`, `120ms` |
+| `tokens.css` | `--modal-scale`, `--modal-scale-close` | `0.96`, `0.96` |
+| `tokens.css` | `--modal-ease`, `--tabs-ease` | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| `tokens.css` | `--tabs-dur` | `200ms` |
+| `tokens.css` | `--sidebar-section-label-mix`, `--sidebar-section-label-hover-mix` | `55%`, `80%` (share of `--muted`) |
+| `scrollbar-thin.css` | `--scrollbar-thin-rest`, `--scrollbar-thin-hover` | `40%`, `80%` (share of `--scrollbar`) |
+| `clear-input.css` | `--clear-dur`, `--clear-out-dur`, `--clear-in-dur` | `1000ms`, `400ms`, `400ms` |
+| `clear-input.css` | `--clear-out-fly`, `--clear-in-fly` | `12px`, `12px` |
+| `clear-input.css` | `--clear-out-ease`, `--clear-in-ease` | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| `clear-input.css` | `--glow-delay`, `--glow-peak-at`, `--glow-opacity`, `--glow-spread` | `50ms`, `0.15`, `0.85`, `1.5` |
+| `motion.css` | `--ui-enter-ease` | `cubic-bezier(0.22, 1, 0.36, 1)` |
+| `motion.css` | `--ui-page-enter-dur`, `--ui-enter-dur`, `--ui-enter-up-dur` | `160ms`, `200ms`, `220ms` |
+| `motion.css` | `--ui-stagger-step` | `40ms` (children 1 to 8) |
 
 ## Develop
 

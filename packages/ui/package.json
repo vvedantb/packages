@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: one JavaScript entry (primitives, shell pieces, app helpers including the Convex and Clerk provider, VITE env parsing and ensure-user, artifact viewers over the @vvedantb/server artifacts core, native tokens), design-token CSS, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
@@ -27,6 +27,8 @@
     "./tokens/css/tabs-pills.css": "./tokens/src/css/tabs-pills.css",
     "./tokens/css/utilities.css": "./tokens/src/css/utilities.css",
     "./tokens/css/scrollbar-thin.css": "./tokens/src/css/scrollbar-thin.css",
+    "./tokens/css/clear-input.css": "./tokens/src/css/clear-input.css",
+    "./tokens/css/motion.css": "./tokens/src/css/motion.css",
     "./tokens/css/animations.css": "./tokens/src/css/animations.css",
     "./tokens/css/nav-icons.css": "./tokens/src/css/nav-icons.css",
     "./tokens/css/compat-shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",

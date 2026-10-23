@@ -213,7 +213,7 @@ DialogBody.displayName = "DialogBody";
 
 // no fill of its own: the footer is not sticky, so it shows the content's
 // surface. a token here (it was `bg-overlay`) showed as an inset block when
-// that surface differs (`glass-panel-strong` from the app, or `bg-*` on the
+// that surface differs (an app's own `glass-panel-strong`, or `bg-*` on the
 // content)
 const DialogFooter = ({
   className,

@@ -89,12 +89,13 @@
 }
 
 /*
- * Fallback fill for toasts, dialogs and hover cards (`glass-panel-strong`).
- * Equivalent to `bg-card/95 backdrop-blur-md`. An app may override it by
- * declaring its own `@utility glass-panel-strong` after this import.
+ * Fill for toasts, dialogs and hover cards (`glass-panel-strong`): the solid
+ * popover colour, as `bg-overlay`, matching tokens.css. Any app
+ * `.glass-panel-strong` rule (unlayered, or in @layer components after this
+ * import) wins.
  */
-@utility glass-panel-strong {
-  background-color: rgb(var(--card) / 0.95);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+@layer components {
+  .glass-panel-strong {
+    background-color: rgb(var(--popover));
+  }
 }
