@@ -112,7 +112,7 @@ export function ComposerSlashMenu({
                         "transition-[background-color] active:scale-[0.99] active:duration-100 active:ease-out " +
                         (isSelected
                           ? "bg-primary/15 font-medium text-foreground dark:bg-primary/25"
-                          : "text-foreground/90 hover:bg-muted")
+                          : "text-foreground/90 hover:bg-muted") // check-tokens-allow: muted
                       }
                     >
                       {renderItem ? (

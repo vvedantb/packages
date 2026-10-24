@@ -10,11 +10,11 @@ export interface SliderConfig {
 type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
   /** Accessible name per thumb, by index. Wins over `aria-label` on the first thumb. */
   thumbLabels?: string[];
-  /** Classes for the track, merged after the defaults so they win (`bg-default dark:bg-muted/40`). */
+  /** Classes for the track, merged after the defaults so they win (`bg-default dark:bg-muted/40`). check-tokens-allow: muted */
   trackClassName?: string;
   /** Classes for the filled range, merged after the defaults so they win (`bg-primary`). */
   rangeClassName?: string;
-  /** Classes for every thumb, merged after the defaults so they win (`bg-background dark:bg-foreground dark:border-muted`). */
+  /** Classes for every thumb, merged after the defaults so they win (`bg-background dark:bg-foreground dark:border-muted`). check-tokens-allow: muted */
   thumbClassName?: string;
 };
 
@@ -55,7 +55,7 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
         <SliderPrimitive.Track
           className={cn(
             classes?.track ??
-              "relative grow overflow-hidden rounded-full bg-default dark:bg-muted/40 data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5",
+              "relative grow overflow-hidden rounded-full bg-default dark:bg-muted/40 data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5", // check-tokens-allow: muted
             trackClassName,
           )}
         >
@@ -77,7 +77,7 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
             aria-valuetext={i === 0 ? ariaValueText : undefined}
             className={cn(
               classes?.thumb ??
-                "block size-4 shrink-0 rounded-full border border-border bg-background shadow-sm transition-[box-shadow] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[disabled]:cursor-not-allowed dark:border-muted dark:bg-foreground",
+                "block size-4 shrink-0 rounded-full border border-border bg-background shadow-sm transition-[box-shadow] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring data-[disabled]:cursor-not-allowed dark:border-muted dark:bg-foreground", // check-tokens-allow: muted
               thumbClassName,
             )}
           />

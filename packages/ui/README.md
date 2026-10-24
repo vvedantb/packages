@@ -7,7 +7,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
-| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
+| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `border-beam` (opt-in, for `BorderBeam`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
 | `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
@@ -1080,7 +1080,7 @@ Defaults are unchanged. Without a provider, or with an empty entry, every compon
 - Root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types.
 - An entry's `classes` replace built-in classes part by part. A part left out keeps its default, and a caller `className` still merges after it. Other keys are default prop values. An explicit prop always wins.
 - `cn`: the class merger that components use in place of the built-in `cn` when they merge a caller `className`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead. Components read it with the internal `useCn` hook.
-- Component entries and opt-in props are in the sections below: "App config: existing primitives".
+- Component entries and opt-in props are in the sections below: "App config: existing primitives", "Loaders, rows, status, sortable list and helpers".
 
 ## App config: existing primitives
 
@@ -1159,9 +1159,62 @@ New props and exports:
 
 New exports: `CardTitle`, `CardDescription`, `CardFooter`, `CardAction`.
 
+## Loaders, rows, status, sortable list and helpers
+
+Basic components and helpers that came from an app, all exported from the root, with `UiConfig` entries for the ones that have app-specific looks. Existing components keep their defaults. Every component here merges a caller `className` with `UiConfig.cn` when it is set.
+
+### Components
+
+- `Spinner` `variant?: "icon" | "circle" | "ring"`: without it the spinner draws the `mark` (prop, else `UiConfig.Spinner.mark`), else the loader icon as before; an explicit `variant` wins over the configured mark. `"icon"` is the loader icon. `"circle"` is a faint ring with a two-tone arc (Web Animations, paused off screen), for slots too small for a mark; `colors` (`{ track?, arc?, lead? }`, default `UiConfig.Spinner.circle`, else `currentColor`) sets its strokes. `"ring"` is the `Button` loading ring (fixed `h-4 w-4`, `currentColor`, unlabelled; `size`, `tone`, `stroke` and `decorative` do not apply). `Button loading` now renders `<Spinner variant="ring" />`, with the same DOM as before.
+- `Spinner` `mark?: SpinnerMark` (`{ viewBox, shapes, strokeWidth, dashArray }`; each shape is `{ points, stroke }` (a `<polygon>`) or `{ d, stroke }` (a `<path>`)). With a mark the spinner draws the outline with a dash that runs around each shape (Web Animations, 2s a lap, paused off screen and in hidden tabs). `tone` and `stroke` do not apply; `decorative` and numeric `size` (as `width`/`height`) do.
+- `CenteredSpinner` (`label`): a `Spinner` centred in its box (`flex-1`, `p-6`, `aria-busy`).
+- `LoadingState` (`variant` `Drive | Dots | Orbit`, `size` `default | sm`, `iconOnly`, `label`, `colors`, `labelStyle`): a 3×3 pulsing grid with a label and an elapsed timer (one shared 100ms clock, asleep in hidden tabs).
+- `RefreshSpinIcon` (`busy`, `className`): a refresh glyph that crossfades to `<Spinner variant="circle" />`.
+- `CrossfadeIcon` (`show`, `whenTrue`, `whenFalse`, keys, `variant` `default | soft`) and `CrossfadeIconSlot` (`iconKey`): keyed icon swaps on `motion` `m` (needs the app's `LazyMotion`).
+- `BorderBeam` (`active`, `size`, `colorVariant` `mono | progress | colorful`): a light that travels around the wrapper's border. Import `@vvedantb/ui/tokens/css/border-beam.css` for the `.beam-*` rules; colours are `--beam-color`, `--beam-progress-color`, `--beam-colorful-from` and `--beam-colorful-to`.
+- `StatusDot` (`tone`, `size`): a small coloured status dot; forwards `ref`.
+- `Surface` (`density` `tight | default | comfortable | none`) and `surfaceVariants`: a card-filled box with one padding.
+- `ListRow` (`link`, `href`, `onClick`, `selected`, `accentClassName`, `contentClassName`, `decoration`) and `LIST_ROW_CONTROL_CLASS`: a selectable row with a stretched native overlay; nested controls take `LIST_ROW_CONTROL_CLASS` to sit above it.
+- `Avatar`, `AvatarImage`, `AvatarFallback` (Radix Avatar from `radix-ui`).
+- Sortable list (built on [Kibo UI](https://www.kibo-ui.com) and dnd-kit): `SortableListProvider` (`onDragEnd` gets a `SortableListDragEndEvent`, vertical drag), `SortableListGroup`, `SortableListHeader` (`name` + `color`, or `children`), `SortableListItems`, `SortableListItem`. For a static selectable row use `ListRow`.
+- `useDragSensors({ sortable? })`: the dnd-kit sensor set for drag surfaces (mouse arms on distance, touch on a 200ms hold, keyboard; `sortable` adds sortable keyboard coordinates).
+
+`Avatar`, the `ListRow` idle hover and the sortable list drop highlight fill with `surface-secondary` (the same colour as `muted` under `compat-shadcn-rgb.css`).
+
+New dependencies (installed with the package): `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers` and `@dnd-kit/utilities`.
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `Spinner` | `mark` (default for the `mark` prop), `circle` (`{ track?, arc?, lead? }`, default for `colors` of the `circle` variant). |
+| `LoadingState` | `label`, `colors` (three column colours), `labelStyle`, `classes.label`. |
+| `StatusDot` | `classes.tone` (fill class per tone; tones left out keep theirs). |
+| `ListRow` | `classes.root`, `interactive`, `selected`, `idle`, `accent`, `overlay`, `content`. |
+
+```tsx
+<UiConfigProvider
+  config={{
+    Spinner: {
+      mark: { viewBox: "0 0 24 24", strokeWidth: 2, dashArray: "0.3 0.7", shapes: [{ d: LOGO_PATH, stroke: "#635bff" }] },
+      circle: { track: "#635bff", arc: "#635bff", lead: "#00d4ff" },
+    },
+  }}
+>
+```
+
+### Helpers
+
+- Motion (in the motion presets): `tokenTransition.fast` (150ms), `tokenTransition.base` (220ms), `tokenTransition.slow` (320ms), all `motionEase` like the CSS `--motion-fast/base/slow` tokens, and `staggerDelay(index, step = motionTiming.stagger, max = 0.2)`. The spring is the existing `springTransition`.
+- Gesture physics: `rubberband(overshoot, dimension, constant = 0.55)`, `projectVelocity(velocity, decelerationRate = 0.998)`, `DRAG_ACTIVATION_DISTANCE_PX` (8). `SidebarResize` now uses the shared `rubberband` (same maths).
+- Animation budget: `ensureRuntimeVisibility()` (sets `html[data-page-hidden]`), `observeAnimVisibility(el, onChange?)` and `useAnimOffscreenRef()` (set `data-anim-offscreen`), `bindRuntimeAnimation(el, animation)` (pauses a WAAPI loop while hidden, off screen or in a parked `aria-hidden` subtree; decorative chrome marked `data-anim-chrome` does not count).
+- Shared clock: `subscribeQuantized(intervalMs, onChange)`, `quantizedSnapshot(intervalMs)`, `msUntilNextBoundary(intervalMs)`.
+- Identity colours: `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT` (class names `text-cat-N`, `bg-cat-N`, `bg-cat-N/12`, `border-cat-N`; the app defines the `cat` colours).
+- Radius classes: `SURFACE_RADIUS_CLASS` (`rounded-surface`), `CONTROL_RADIUS_CLASS` (`rounded-control`).
+
 ## Colour names in components
 
-Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
+Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`). It also fails on fill-type `muted` (`bg-`, `from-`, `via-`, `to-`, `fill-`, `stroke-`, `border-`, `ring-`, `divide-` and `outline-muted`, with variants and opacity; not `*-muted-foreground`): `muted` is a text colour in `tokens.css` and a fill in shadcn, so components fill with `surface-secondary`, which is the same fill under `compat-shadcn-rgb.css`. The dark-mode `Switch` off state, the `Slider` track and thumb and the slash menu row hover keep their `muted` fills on purpose, each line marked `check-tokens-allow: muted`.
 
 ## Using an existing shadcn RGB theme
 
