@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.8.0
+
+Additive: V8-safe verification of Clerk OAuth access tokens that are JWTs. Nothing in 0.7.1 is removed or changed. No new dependency (WebCrypto and `fetch` only).
+
+### Added
+
+- `authenticateClerkBearer({ token, issuer, verifyOpaque, jwksUrl?, fetch?, now?, clockSkewMs?, onReject?, onError? })`: a three-segment base64url bearer is verified locally; anything else goes to `verifyOpaque` (your Node `verifyClerkAccessToken` action). Returns `{ clerkUserId }` or `null`. A JWT that fails local checks is rejected, not retried through `verifyOpaque`. `verifyOpaque` may return `{ clerkUserId }` or `{ userId }`.
+- `verifyClerkOAuthJwt(token, options)`: RS256 signature against the issuer JWKS (`${issuer}/.well-known/jwks.json` by default), `iss`, `exp` and `nbf` (5 s skew by default), header `typ` of `at+jwt` or `application/at+jwt` (session JWTs are rejected) and a non-empty `sub`. Returns `{ clerkUserId, claims }` or `null`; silent unless `onReject` or `onError` is set.
+- The JWKS is cached in module scope for `CLERK_JWKS_TTL_MS` (1 hour). An unknown `kid` refetches at most once per `CLERK_JWKS_REFETCH_MIN_MS` (1 minute), so key rotation works. `clearClerkJwksCache()` empties it.
+- `looksLikeJwt(token)`, types `AuthenticateClerkBearerOptions`, `ClerkOAuthJwtRejection`, `VerifiedClerkOAuthJwt`, `VerifyClerkOAuthJwtOptions`.
+- Tests: `tests/convex/verifyClerkOAuthJwt.test.ts` with generated RSA keys and a mocked JWKS `fetch`. `tests-node` checks the exports and bundles `authenticateClerkBearer` for Convex V8.
+
+### Deprecated
+
+- `authenticateWithTokenCache` and `createMcpTokenCacheFunctions` (and with them the `mcpTokenCache` table and its purge cron). JWT tokens no longer need a Node action or the cache. They still work. Remove them from your app once old opaque tokens expire: Clerk OAuth access tokens last 1 day ([Clerk docs](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth)), so about 1 day after the instance switched to JWTs.
+
+### Migration
+
+```ts
+// convex/mcp/http.ts (httpAction, default runtime)
+import { authenticateClerkBearer } from "@vvedantb/server";
+
+const authenticate = (ctx: ActionCtx, token: string) =>
+  authenticateClerkBearer({
+    token,
+    issuer: "https://clerk.example.com", // your Clerk Frontend API URL
+    verifyOpaque: (t) => ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token: t }),
+  });
+```
+
+Keep the Node `verifyAccessToken` action for opaque tokens. After about 1 day, remove `verifyOpaque`'s Node action, the `mcpTokenCache` table and the purge cron.
+
 ## 0.7.1
 
 Docs fix: do not import `mcpTokenCacheTable` or `mcpTokenCacheFields` in `convex/schema.ts`. A Convex schema cannot import runtime code from a package, so `convex deploy` fails with `NoImportModuleInSchema`. No runtime change; every export stays.

@@ -104,6 +104,11 @@ export type AuthenticateWithTokenCacheOptions<Principal extends McpTokenCachePri
  * Cache lookup, then `verify` on a miss. A null from `verify` is returned
  * as is and never cached, so invalid tokens behave exactly as before. A hit
  * returns `{ clerkUserId }` only; a failed cache write is logged and ignored.
+ *
+ * @deprecated Since 0.8.0. Clerk OAuth access tokens are JWTs now; use
+ * `authenticateClerkBearer`, which verifies them in V8 without this cache.
+ * Remove the cache from apps once old opaque tokens expire (Clerk OAuth access
+ * tokens last 1 day, so about 1 day after the switch to JWTs).
  */
 export async function authenticateWithTokenCache<Principal extends McpTokenCachePrincipal>(
   options: AuthenticateWithTokenCacheOptions<Principal>,
@@ -237,6 +242,11 @@ export type McpTokenCacheFunctionsConfig<Table extends string, Id = GenericId<Ta
  *   purgeSelf: (): McpTokenCachePurgeRef => internal.mcp.tokenCache.purgeExpired,
  * });
  * ```
+ *
+ * @deprecated Since 0.8.0. Clerk OAuth access tokens are JWTs now; use
+ * `authenticateClerkBearer`, which verifies them in V8 without this cache.
+ * Remove the cache from apps once old opaque tokens expire (Clerk OAuth access
+ * tokens last 1 day, so about 1 day after the switch to JWTs).
  */
 export function createMcpTokenCacheFunctions<
   Table extends string = typeof MCP_TOKEN_CACHE_TABLE,

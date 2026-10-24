@@ -22,6 +22,7 @@ const functionFile = `
 import { httpActionGeneric } from "convex/server";
 import {
   applyArtifactStatePatch,
+  authenticateClerkBearer,
   authenticateWithTokenCache,
   extractBearerToken,
   hasMcpOAuthTokens,
@@ -39,6 +40,9 @@ export const status = httpActionGeneric(async (_ctx, request) => {
     signedIn: hasMcpOAuthTokens(state),
     expiring: isAccessTokenExpiring(state, Date.now()),
     hash: token ? await sha256Hex(token) : null,
+    jwtPrincipal: token
+      ? await authenticateClerkBearer({ token, issuer: "https://clerk.example.test", verifyOpaque: async () => null })
+      : null,
     principal: token
       ? await authenticateWithTokenCache({ token, get: async () => null, put: async () => null, verify: async () => null })
       : null,

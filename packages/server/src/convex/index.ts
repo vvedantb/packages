@@ -81,3 +81,15 @@ export {
   type VerifiedClerkToken,
   type VerifyClerkAccessTokenOptions,
 } from "./verifyClerkAccessToken.js";
+export {
+  authenticateClerkBearer,
+  CLERK_JWKS_REFETCH_MIN_MS,
+  CLERK_JWKS_TTL_MS,
+  clearClerkJwksCache,
+  looksLikeJwt,
+  verifyClerkOAuthJwt,
+  type AuthenticateClerkBearerOptions,
+  type ClerkOAuthJwtRejection,
+  type VerifiedClerkOAuthJwt,
+  type VerifyClerkOAuthJwtOptions,
+} from "./verifyClerkOAuthJwt.js";
