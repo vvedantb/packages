@@ -216,7 +216,6 @@ const cases: Record<string, ReactNode> = {
       <UI.Message from="assistant"><UI.MessageContent>Hello</UI.MessageContent></UI.Message>
     </>
   ),
-  Shimmer: <UI.Shimmer>Thinking</UI.Shimmer>,
   Artifact: (
     <UI.Artifact>
       <UI.ArtifactHeader>
