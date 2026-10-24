@@ -1,5 +1,34 @@
 import type * as React from "react";
 
+/**
+ * App defaults shared by `DropdownMenu*` and `ContextMenu*` (see
+ * `UiConfigProvider`); each menu has its own entry.
+ */
+export interface MenuConfig {
+  /** Replaces the built-in classes of a part. */
+  classes?: {
+    trigger?: string;
+    content?: string;
+    subContent?: string;
+    subTrigger?: string;
+    item?: string;
+    checkboxItem?: string;
+    radioItem?: string;
+    label?: string;
+    separator?: string;
+    shortcut?: string;
+  };
+  /** Replace the built-in icons. */
+  icons?: {
+    /** `CheckboxItem` indicator. */
+    check?: React.ReactNode;
+    /** `RadioItem` indicator. */
+    radio?: React.ReactNode;
+  };
+  /** Default for `Content` `collisionPadding`. */
+  collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
+}
+
 /** `--vv-height` is optional: apps may set it to the visual viewport height. */
 export const fitViewportClass =
   "max-sm:max-h-[min(70dvh,var(--vv-height,70dvh))] max-sm:overflow-y-auto";

@@ -113,9 +113,9 @@ import { SidebarHeader, PillTabs } from "@vvedantb/ui/shell";
 
 ### Drift (two copies existed)
 
-- `accordion`: the default (`accordion.tsx`) uses the unified `radix-ui` package, a local chevron, and `data-slot` plus height animation. The second copy stays as `accordion.alt.tsx` (`@radix-ui/react-accordion`, Tabler chevron, `forwardRef`), exported as `AccordionAlt`, `AccordionItemAlt`, `AccordionTriggerAlt` and `AccordionContentAlt`.
-- `clear-input`: the default runs the dissolve animation via `clearInputDissolve`. The simpler clear button stays as `clear-input.alt.tsx`, exported as `ClearInputAlt`.
-- `input-group`: the default has `data-slot` variants and more addon/button sizes. The copy with an `error` prop and `forwardRef` stays as `input-group.alt.tsx`, exported as `InputGroupAlt`, `InputGroupAddonAlt`, `InputGroupButtonAlt`, `InputGroupTextAlt`, `InputGroupInputAlt` and `InputGroupTextareaAlt`.
+- `accordion`: the default (`accordion.tsx`) uses the unified `radix-ui` package, a local chevron, and `data-slot` plus height animation. `accordion.alt.tsx` wraps it with the old markup (Tabler chevron, no `data-slot`), exported as the deprecated `AccordionAlt`, `AccordionItemAlt`, `AccordionTriggerAlt` and `AccordionContentAlt`.
+- `clear-input`: the default runs the dissolve animation via `clearInputDissolve`. `clear-input.alt.tsx` wraps its `animation="none"` path with the old markup (an always-mounted clear button), exported as the deprecated `ClearInputAlt`.
+- `input-group`: the default has `data-slot` variants and more addon/button sizes. `input-group.alt.tsx` wraps its parts with the old markup (the root with an `error` prop and the button stay their own), exported as the deprecated `InputGroupAlt`, `InputGroupAddonAlt`, `InputGroupButtonAlt`, `InputGroupTextAlt`, `InputGroupInputAlt` and `InputGroupTextareaAlt`.
 - `scroll-area`: the default uses `radix-ui`, `data-slot` and a hover thumb. The `@radix-ui/react-scroll-area` `forwardRef` copy stays as `scroll-area.alt.tsx`, exported as `ScrollAreaAlt` and `ScrollBarAlt`.
 
 

@@ -11,6 +11,22 @@ Defaults are unchanged: without a `UiConfigProvider`, every component renders ex
 - Default DOM guard: `src/default-dom.test.tsx` renders 53 primitives and AI elements with no provider and compares `document.body` (portals included) with `tokens/test/fixtures/default-dom.json`, byte for byte. Regenerate it only for an intended default change.
 - No new dependencies.
 
+### App config and opt-in props for existing primitives
+
+Defaults are unchanged: without an entry or a new prop, each component renders its 0.17.1 DOM (`src/default-dom.test.tsx`), except that `Slider` now renders its `children` (see below).
+
+- `UiConfig` entries, controls: `Button`, `Badge`, `Input`, `Textarea`, `Checkbox`, `Switch`, `Slider`, `ButtonGroup`, `InputGroup`, `ClearInput`, `SearchInput`, `Calendar`, `Carousel`, `Tabs`, `Accordion`, `Collapsible`.
+- `UiConfig` entries, overlays: `Dialog`, `Popover`, `HoverCard`, `Tooltip`, `DropdownMenu`, `ContextMenu`, `Select`, `Command` (part `classes`, `icons` and prop defaults).
+- `UiConfig` entries, layout: `Card`, `Table`, `Progress`, `Separator`, `Label`.
+- Every component above merges a caller `className` with `UiConfig.cn` when it is set.
+- New opt-in props: `Button` size `xs`; `Checkbox` `icon`; `AccordionTrigger` `icon`; per-instance `classes` on `AccordionItem`, `AccordionTrigger`, `AccordionContent`, `InputGroupAddon`, `InputGroupText`, `InputGroupInput` and `InputGroupTextarea` (they win over the entry); `ClearInput` `animation` (`"none"`: clear at once, plain markup), `clearButton` (`"always"`: the button stays mounted, hidden while empty) and `classes`; `SearchInput` `onClear` and `inputClassName`; `TabsList` `size`; `DialogContent` `viewportAware`; `HoverCardContent`, `TooltipContent` and `ContextMenuSubContent` `portal`. `syncTabsPill` takes an optional `"xy"` motion.
+- New exports: `CardTitle`, `CardDescription`, `CardFooter`, `CardAction`, `CarouselDots`, `useCarousel` (its context adds `selectedIndex`, `scrollSnaps` and `scrollTo`), `CalendarDayButton`, `TabsBar`, `PopoverAnchor`, the `CheckboxProps` and `CollapsibleContentProps` types, and one `*Config` type per entry.
+- `Slider`: `children` render inside the track, after the range (before, they were dropped). No change for callers without children.
+- Thin wrappers with the same DOM and props: `CollapsibleTrigger`, `CollapsibleContent`, `DialogTrigger`, `PopoverTrigger`, `DropdownMenuTrigger` and `ContextMenuTrigger` (refs still reach the element). `HoverCard` and `TooltipProvider` are function components that read the configured delays.
+- Deprecated: `AccordionAlt*`, `InputGroupAlt*` and `ClearInputAlt` are now thin wrappers over `Accordion*`, `InputGroup*` and `ClearInput` with the old props and markup (pinned by `src/ui/alt-wrappers.test.tsx`; `InputGroupAlt` and `InputGroupButtonAlt` stay a `<div>` and a `Button`). They go in a later minor release once consumers move.
+- No new dependencies.
+- Tests: `src/ui/controls-config.test.tsx`, `src/ui/overlay-config.test.tsx`, `src/ui/alt-wrappers.test.tsx`, `src/ui/foundations.test.tsx` (Card, Table, Progress, Separator, Label) and a `Slider` children case in `src/ui/slider.test.tsx`.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.
