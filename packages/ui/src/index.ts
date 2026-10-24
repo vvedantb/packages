@@ -24,12 +24,12 @@ export type { CatColorClasses, CatSlot } from "./utils/cat-color";
 export { CONTROL_RADIUS_CLASS, SURFACE_RADIUS_CLASS } from "./utils/surface-radius";
 export { restoreModalScrollLock } from "./ui/overlay-a11y";
 
-export * from "./ui/badge";
 export * from "./ui/alert";
 export * from "./ui/avatar";
+export * from "./ui/badge";
+export * from "./ui/border-beam";
 export * from "./ui/breadcrumb";
 export * from "./ui/button";
-export * from "./ui/border-beam";
 export * from "./ui/button-group";
 export * from "./ui/card";
 export * from "./ui/carousel";

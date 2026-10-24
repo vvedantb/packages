@@ -50,8 +50,7 @@ import {
   type CommandVisualKind,
 } from "./activity-step-label";
 import { ActivityStepDetail } from "./activity-step-detail";
-// Local copy of eva's FileChip until the chat core's FileChip lands; dedupe then.
-import { FileChip } from "./_activity-local";
+import { FileChip } from "./file-chip";
 import {
   Trace,
   TraceCollapsible,

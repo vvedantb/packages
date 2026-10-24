@@ -49,7 +49,9 @@ import {
 } from "./message";
 import {
   PromptInput,
+  PromptInputActionAddAttachments,
   PromptInputActionMenu,
+  PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
   PromptInputFooter,
   PromptInputProvider,
@@ -446,6 +448,31 @@ describe("PromptInput", () => {
     expect(el(host, "button").getAttribute("aria-haspopup")).toBe("menu");
   });
 
+  it.each(["mouse", "Enter", " "])("add attachments opens the file picker and keeps the menu open (%j)", async (how) => {
+    const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => {});
+    const host = await mount(
+      <PromptInput onSubmit={noop}>
+        <PromptInputActionMenu>
+          <PromptInputActionMenuTrigger />
+          <PromptInputActionMenuContent>
+            <PromptInputActionAddAttachments />
+          </PromptInputActionMenuContent>
+        </PromptInputActionMenu>
+      </PromptInput>,
+    );
+    await act(async () =>
+      el(host, "button[aria-haspopup=menu]").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })),
+    );
+    const item = el(document, "[role=menuitem]");
+    await act(async () => {
+      if (how === "mouse") item.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      else item.dispatchEvent(new KeyboardEvent("keydown", { key: how, bubbles: true }));
+    });
+    expect(click).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("[role=menu]")).not.toBeNull();
+    click.mockRestore();
+  });
+
   it("replaces an attachment in place and accepts extension patterns", async () => {
     const createObjectURL = vi.fn(() => "blob:new");
     Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
@@ -522,6 +549,30 @@ describe("CodeBlock", () => {
     expect(cls(own, "button")).toContain("copy");
     expect(el(own, "button svg").getAttribute("class")).toContain("size-3.5");
     expect(el(own, "button .sr-only").textContent).toBe("Copy code");
+  });
+
+  it("copies once per check by default; copyEveryClick copies on every click", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    const block = (
+      <CodeBlock code="a" plain>
+        <CodeBlockCopyButton />
+      </CodeBlock>
+    );
+    const clickTwice = async (host: HTMLElement) => {
+      for (let i = 0; i < 2; i++) {
+        await act(async () => el(host, "button").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+      }
+    };
+    try {
+      await clickTwice(await mount(block));
+      expect(writeText).toHaveBeenCalledTimes(1);
+      writeText.mockClear();
+      await clickTwice(await mount(block, { CodeBlock: { copyEveryClick: true } }));
+      expect(writeText).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("highlights without plain and takes plain from the prop", async () => {

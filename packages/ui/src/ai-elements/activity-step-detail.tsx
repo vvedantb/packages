@@ -3,8 +3,8 @@
 import { Badge } from "../ui/badge";
 import { useCn } from "../ui/ui-config";
 import type { ActivityStep } from "./activity-shared";
-// Local copies of eva's CodeBlock and FileChip until the chat core lands; dedupe then.
-import { CodeFrame, CodeFrameCopyButton, FileChip } from "./_activity-local";
+import { CodeBlock, CodeBlockCopyButton } from "./code-block";
+import { FileChip } from "./file-chip";
 
 function basename(value: string): string {
   const slash = Math.max(value.lastIndexOf("/"), value.lastIndexOf("\\"));
@@ -63,12 +63,12 @@ export function ActivityStepDetail({
       )}
 
       {transcript ? (
-        <CodeFrame code={transcript} className="text-xs">
-          <CodeFrameCopyButton />
+        <CodeBlock code={transcript} language="shell" plain className="text-xs">
+          <CodeBlockCopyButton className="absolute right-2 top-2" />
           <pre className="overflow-x-auto p-3 text-xs">
             <code>{transcript}</code>
           </pre>
-        </CodeFrame>
+        </CodeBlock>
       ) : null}
 
       {step.edits && step.edits.length > 0 ? (
@@ -103,12 +103,12 @@ export function ActivityStepDetail({
       ) : null}
 
       {step.contentPreview ? (
-        <CodeFrame code={step.contentPreview} className="text-xs">
-          <CodeFrameCopyButton />
+        <CodeBlock code={step.contentPreview} language="text" plain className="text-xs">
+          <CodeBlockCopyButton className="absolute right-2 top-2" />
           <pre className="overflow-x-auto p-3 text-xs">
             <code>{step.contentPreview}</code>
           </pre>
-        </CodeFrame>
+        </CodeBlock>
       ) : null}
     </div>
   );

@@ -1094,6 +1094,7 @@ New props and exports:
 - `ContextMenuSubContent` `portal`.
 - Config `Select.triggerSlot`: adds `data-slot="select-trigger"`, which the `ButtonGroup` selectors read.
 - Config `Command.emptyClassNameReplaces`: a `className` on `CommandEmpty` (even `""`) replaces its classes instead of merging.
+
 ## Loaders, rows, status and app config (Unreleased)
 
 Components and helpers that came from an app, plus `UiConfig` entries (`UiConfigProvider`) for existing components. Without a provider every existing component renders as before.
@@ -1155,6 +1156,7 @@ Components and helpers that came from an app, plus `UiConfig` entries (`UiConfig
 - Shared clock: `subscribeQuantized(intervalMs, onChange)`, `quantizedSnapshot(intervalMs)`, `msUntilNextBoundary(intervalMs)`.
 - Identity colours: `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT` (class names `text-cat-N`, `bg-cat-N`, `bg-cat-N/12`, `border-cat-N`; the app defines the `cat` colours).
 - Radius classes: `SURFACE_RADIUS_CLASS` (`rounded-surface`), `CONTROL_RADIUS_CLASS` (`rounded-control`).
+
 ## App config: controls (Unreleased)
 
 `UiConfigProvider` entries for buttons, badges, fields, toggles, tabs, accordion, collapsible, calendar and carousel. Without an entry each one renders its built-in DOM. A `classes` part replaces that part's built-in classes (a part left out keeps them); the caller `className` merges last. Other keys are prop defaults; an explicit prop wins.
@@ -1194,11 +1196,29 @@ AI surfaces that came from an app, exported from the root. They use the shadcn c
 
 - `ActivityTasks` (`steps`, `isStreaming`, `name`, `startedAt`, `duration`, `layout` `folded | inline`, `onOpenFile`, `onRequestFullDetail`): an agent turn as a timeline. Tool runs fold behind one summary line, reasoning and mid-turn text render as Markdown, subtasks nest their steps, long timelines cap behind "Show N more". `OpenSubagentContext` gives subtask rows a "View" link.
 - The step model: `ActivityStep`, `TodoItem`, `ActivityQuestion`, `ActivityQuestionOption`, `ActivityStepOutput`, `ActivityStepEdit`, `stepHasRichDetail`, `activityStepConfig` (glyph and fallback label per step type), `ActivityThinkingIcon`, `useSpinnerVerb`, `getRandomVerb`, `useElapsedSeconds`, `formatElapsed`, `useStreamingDisclosure`.
+- Tool-call details show files with `FileChip` and output in a `CodeBlock` (`plain`) with its copy button, so the `CodeBlock` entry (see "App config: AI chat") styles those frames too.
 - `ActivityQuestionCard` (`questions`, `answers`): the read-only record of a multiple-choice question and its answer.
 - `Trace`, `TraceLine` (`status` `running | error | pending`), `TraceIcon` (`iconKey` crossfades a swap), `TraceTitle` (`shimmer`), `TraceDescription`, `TraceCollapsible`, `TraceCollapsibleTrigger` (`trailing`: controls beside the trigger), `TraceCollapsibleContent`: one agent step as one line, with an optional fold.
 - `Plan*`, `TestResults*` / `TestSuite*` / `Test*`, `WebPreview*` (with `useWebPreview`), `Context*` (context window usage in a hover card).
 - `ModelSelect` (button and popover; `simpleLadder` opens on a discrete slider), `ModelPickerContent` (the searchable model and account list, for menus; pair it with `modelPickerSurfaceClass`), `ModelOption`, `ModelAccount`, `findModelOption`, `formatModelDisplayLabel`, `getProviderLabel`, `ProviderIcon` (`claude`, `codex`, `opencode`, `cursor`).
 - `Slider`: `children` now render inside the track, after the range (tick marks). Before, they were dropped.
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `ActivityTasks` | `name` (agent name in the streaming header, default `"Agent"`; the `name` prop wins), `markdown` (a component that takes `{ className, mode, children }` and renders reasoning and reply text; default `Streamdown` with the cjk, code, math and mermaid plugins), `thinkingIcon` (`{ src, alt }`: `ActivityThinkingIcon` shows this image, 16px and round, instead of the brain glyph). |
+| `ActivityQuestionCard` | `classes.selectedOption` (fill of the picked option, default `bg-surface-tertiary`). |
+| `ModelPicker` | `classes.trigger` (replaces the `ModelSelect` trigger classes), `badgeRing.trigger` / `badgeRing.panel` (ring colour around the account initials badge on the trigger and in the panel; default `var(--color-border)` / `var(--color-muted)`). |
+
+```tsx
+const config = {
+  ActivityTasks: { name: "Ada", markdown: AppMarkdown, thinkingIcon: { src: "/logo.svg", alt: "Ada" } },
+  ActivityQuestionCard: { classes: { selectedOption: "bg-accent" } },
+  ModelPicker: { badgeRing: { trigger: "rgb(var(--input))", panel: "rgb(var(--muted))" } },
+} satisfies UiConfig;
+```
+
 ## Kibo blocks and markdown (Unreleased)
 
 Blocks that came from an app (built on [Kibo UI](https://www.kibo-ui.com)) and its markdown renderer. All exported from the root.
@@ -1220,15 +1240,6 @@ New dependencies (installed with the package): `@dnd-kit/core`, `@dnd-kit/sortab
 
 | Entry | Keys |
 | --- | --- |
-| `ActivityTasks` | `name` (agent name in the streaming header, default `"Agent"`; the `name` prop wins), `markdown` (a component that takes `{ className, mode, children }` and renders reasoning and reply text; default `Streamdown` with the cjk, code, math and mermaid plugins), `thinkingIcon` (`{ src, alt }`: `ActivityThinkingIcon` shows this image, 16px and round, instead of the brain glyph). |
-| `ActivityQuestionCard` | `classes.selectedOption` (fill of the picked option, default `bg-surface-tertiary`). |
-| `ModelPicker` | `classes.trigger` (replaces the `ModelSelect` trigger classes), `badgeRing.trigger` / `badgeRing.panel` (ring colour around the account initials badge on the trigger and in the panel; default `var(--color-border)` / `var(--color-muted)`). |
-
-```tsx
-const config = {
-  ActivityTasks: { name: "Ada", markdown: AppMarkdown, thinkingIcon: { src: "/logo.svg", alt: "Ada" } },
-  ActivityQuestionCard: { classes: { selectedOption: "bg-accent" } },
-  ModelPicker: { badgeRing: { trigger: "rgb(var(--input))", panel: "rgb(var(--muted))" } },
 | `Gantt` | `classes.root` (scroll container), `today` (today pill), `todayDate` (the date under it), `dragHandle` (resize grip), `offscreenIndicator` (edge date chip). |
 | `Kanban` | `classes.card` (`KanbanCard` cursor, transitions and press), `cardTransition` (CSS `transition` list appended to dnd-kit's inline reorder transition; default 150ms `scale` and `opacity`). |
 | `ThemeSwitcher` | `classes.button` (each theme button). |
@@ -1265,7 +1276,7 @@ const config = {
 - `PromptInputSpeech`, `useSpeechRecognition`, `getSpeechRecognition` (new): Web Speech API dictation; the button renders nothing without the API.
 - `QueuePanel`, `QueuePanelList`, `QueuePanelItem`, `QueueSection`, `QueueSectionTrigger`, `QueueSectionLabel`, `QueueSectionContent`, `QueueItemIndicator`, `QueueItemContent`, `QueueItemActions`, `QueueItemAction` (new): a composable queue in collapsible sections (the AI Elements `Queue` parts; `Queue`, `QueueList` and `QueueItem` stay the queued-messages widget). Entry: `classes.sectionTrigger`.
 - `Shimmer`: `mode`, `as`, `classes.base`, `classes.overlay`, `classes.band`, `classes.copy`. New prop `mode`: `"gradient"` (default) or `"mask"`, which sweeps a masked copy of the text with transforms only (no repaint, paused offscreen). `mask` needs the app to define `.shimmer-overlay`, `.shimmer-band` and `.shimmer-copy` (or the `classes` it names).
-- `CodeBlock`: `plain`, `copyButtonSize`, `copyLabel` (a screen-reader label on the copy button), `classes.container`, `classes.pre`, `classes.copyButton`, `classes.copyIcon` (a class in place of `size={14}`). New props: `plain` (no shiki: a `pre` with the code, and `children` replace that `pre` instead of sitting above it); `language` is now optional.
+- `CodeBlock`: `plain`, `copyButtonSize`, `copyLabel` (a screen-reader label on the copy button), `copyEveryClick` (the copy button copies on every click, also while it shows the check; by default those clicks do nothing until it resets after `timeout`), `classes.container`, `classes.pre`, `classes.copyButton`, `classes.copyIcon` (a class in place of `size={14}`). New props: `plain` (no shiki: a `pre` with the code, and `children` replace that `pre` instead of sitting above it); `language` is now optional.
 - `Artifact`: `classes.root`, `classes.header`, `classes.title`, `classes.description`, `classes.actions`, `classes.action` (`ArtifactAction` and `ArtifactClose`), `classes.actionIcon`, `classes.content`, `actionSize`, `actionLabel` (`"sr-only"` names actions with a hidden span instead of `aria-label`). `ArtifactAction`: `tooltip` is optional (no tooltip, no wrapper) and `icon` also takes an icon component (`icon={IconCopy}`). New `ArtifactClose` (an action with an X, `label` default `"Close"`).
 - `Attachments`: `classes.item.<variant>`, `classes.preview.<variant>`, `classes.remove.<variant>` replace the variant classes of `Attachment`, `AttachmentPreview` and `AttachmentRemove`.
 - `FileChip`, `Confirmation*` and `Sandbox*` (new, no entry): a file name chip that opens the file, an approve/reject prompt by state, and a sandbox run with tabs and a state badge.

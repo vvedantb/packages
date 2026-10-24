@@ -102,9 +102,12 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
  * `UiConfig.CodeBlock`: `plain` default, and classes that replace the
  * container, the plain-mode `pre`, the copy button and its icon. A
  * `copyLabel` adds a screen-reader label to the copy button.
+ * `copyEveryClick` makes the copy button copy again while it still shows
+ * the check; by default those clicks do nothing until it resets.
  */
 export interface CodeBlockConfig {
   plain?: boolean;
+  copyEveryClick?: boolean;
   copyButtonSize?: ComponentProps<typeof Button>["size"];
   copyLabel?: string;
   classes?: {
@@ -453,7 +456,7 @@ export const CodeBlockCopyButton = ({
       return;
     }
     try {
-      if (!isCopied) {
+      if (!isCopied || config?.copyEveryClick) {
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();

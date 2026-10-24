@@ -192,7 +192,7 @@ describe("root entry", () => {
     ]) {
       expect(rootEntry, name).toHaveProperty(name);
     }
-    // The local FileChip / code frame copies stay private.
+    // The old private code frame copy is gone (CodeBlock `plain` replaced it).
     expect(rootEntry).not.toHaveProperty("CodeFrame");
   });
 });
