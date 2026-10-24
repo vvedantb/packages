@@ -14,7 +14,7 @@ There are no subpath exports (0.2.0 removed `/convex` and `/mcp`; see [CHANGELOG
 
 | Area | What it holds | Docs |
 | --- | --- | --- |
-| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification (Node `verifyClerkAccessToken`, V8 `authenticateClerkBearer` for OAuth JWTs; the MCP token cache is deprecated), Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
+| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification (Node `verifyClerkAccessToken`, V8 `authenticateClerkBearer` for OAuth access token JWTs, with `verifyFallback` for opaque tokens and session JWTs; the MCP token cache is deprecated), Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
 | MCP scaffolding | For Convex `httpAction`s: bearer-auth handler, OAuth metadata, route registration, a pure JSON-RPC dispatcher, tool helpers and explorer tools. | [docs/mcp.md](docs/mcp.md) |
 | Crypto | WebCrypto-only base64/base64url/hex, SHA-256, random tokens, `timingSafeEqual`, AES-GCM. Convex default runtime and Node 20+. | [docs/crypto.md](docs/crypto.md) |
 | Optimistic updates | `mapLoadedQuery` (also `forEachLoadedQuery`, `updateAllCachedQueries`), `patchLoadedQuery`, `tempId`, `createMemoryOptimisticStore`. Client-side, no React. | [docs/convex.md](docs/convex.md#optimistic-updates-client-side) |

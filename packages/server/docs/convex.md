@@ -234,7 +234,7 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 
 ## Clerk OAuth JWT verification (V8)
 
-Clerk OAuth access tokens are JWTs now. `authenticateClerkBearer` verifies them in the Convex default runtime (`httpAction`): WebCrypto and `fetch`, no Node action, no token cache. Opaque tokens issued earlier still work through `verifyOpaque`, your Node `verifyClerkAccessToken` action. Clerk OAuth access tokens last 1 day ([Clerk docs](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth)), so opaque tokens stop arriving about 1 day after the switch.
+Clerk OAuth access tokens are JWTs now. `authenticateClerkBearer` verifies them in the Convex default runtime (`httpAction`): WebCrypto and `fetch`, no Node action, no token cache. Tokens that are not OAuth access token JWTs go to `verifyFallback`, your Node `verifyClerkAccessToken` action: opaque tokens issued earlier, and JWTs with another or no header `typ`, such as Clerk session tokens (`acceptsToken: ["oauth_token", "session_token"]`). `verifyOpaque` is a deprecated alias of `verifyFallback`. Clerk OAuth access tokens last 1 day ([Clerk docs](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth)), so opaque tokens stop arriving about 1 day after the switch.
 
 ```ts
 import { authenticateClerkBearer } from "@vvedantb/server";
@@ -242,19 +242,19 @@ import { authenticateClerkBearer } from "@vvedantb/server";
 const principal = await authenticateClerkBearer({
   token,
   issuer: "https://clerk.example.com", // Clerk Frontend API URL
-  verifyOpaque: (token) => ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token }),
+  verifyFallback: (token) => ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token }),
 });
 // { clerkUserId } | null
 ```
 
 | Export | Semantics |
 | --- | --- |
-| `authenticateClerkBearer({ token, issuer, verifyOpaque, jwksUrl?, fetch?, now?, clockSkewMs?, onReject?, onError? })` | Three base64url segments: `verifyClerkOAuthJwt`, never retried through `verifyOpaque`. Otherwise `verifyOpaque(token)`, mapped from `{ clerkUserId }` or `{ userId }` to `{ clerkUserId }`. `null` on rejection. |
+| `authenticateClerkBearer({ token, issuer, verifyFallback, jwksUrl?, fetch?, now?, clockSkewMs?, onReject?, onError? })` | Three base64url segments with header `typ` `at+jwt` or `application/at+jwt`: `verifyClerkOAuthJwt`, never retried through `verifyFallback`. Everything else (opaque tokens, session JWTs, other or missing `typ`): `verifyFallback(token)`, mapped from `{ clerkUserId }` or `{ userId }` to `{ clerkUserId }`. `null` on rejection. |
 | `verifyClerkOAuthJwt(token, options)` | Checks RS256 signature (JWKS from `${issuer}/.well-known/jwks.json` unless `jwksUrl`), `iss` (trailing slash ignored), `exp` and `nbf` with `clockSkewMs` (default 5000), header `typ` `at+jwt` or `application/at+jwt`, and non-empty `sub`. Returns `{ clerkUserId, claims }` or `null`. Silent unless `onReject({ kind })` or `onError` is set. It does not check `aud`; check `claims` yourself if you need it. |
 | `clearClerkJwksCache()` | The JWKS and imported keys are cached in module scope per isolate for `CLERK_JWKS_TTL_MS` (1 hour); an unknown `kid` refetches at most once per `CLERK_JWKS_REFETCH_MIN_MS` (1 minute). Revocation is not checked: a JWT is valid until `exp`. |
 | `looksLikeJwt(token)` | Three non-empty base64url segments. |
 
-Migration: change `authenticate` in your http/mcp files to call `authenticateClerkBearer`, keep the Node `verifyAccessToken` action for opaque tokens, then (about 1 day later) drop the Node action, the `mcpTokenCache` table and the purge cron.
+Migration: change `authenticate` in your http/mcp files to call `authenticateClerkBearer`, rename `verifyOpaque` to `verifyFallback`, keep the Node `verifyAccessToken` action for opaque tokens and session tokens, then (about 1 day later) drop the Node action, the `mcpTokenCache` table and the purge cron.
 
 ## MCP token cache
 

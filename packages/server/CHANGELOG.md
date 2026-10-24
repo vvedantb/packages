@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.8.1
+
+Fix: 0.8.0 sent every JWT-shaped bearer to `verifyClerkOAuthJwt`, which rejects any header `typ` other than `at+jwt` or `application/at+jwt`. Clerk session tokens (RS256, `typ` `JWT` or none), which apps accept on `/mcp` with `acceptsToken: ["oauth_token", "session_token"]`, were rejected with no retry. No new dependency.
+
+### Fixed
+
+- `authenticateClerkBearer` verifies locally only a JWT whose header `typ` is `at+jwt` or `application/at+jwt` (case-insensitive). A failure there is still final: `verifyFallback` is not called. Every other token goes to `verifyFallback`: opaque OAuth tokens, session JWTs, JWTs with another or no `typ`, and JWTs with an undecodable header. `verifyClerkOAuthJwt` is unchanged and still rejects session JWTs when called directly.
+
+### Added
+
+- `verifyFallback` option on `authenticateClerkBearer`. It replaces `verifyOpaque` and receives non-access-token JWTs as well as opaque tokens. `verifyFallback` wins when both are set.
+- `isOAuthAccessTokenJwt(token)`.
+
+### Deprecated
+
+- `verifyOpaque` option: alias of `verifyFallback`. Callers that pass only `verifyOpaque` still compile and work. Rename it when convenient.
+
+### Tests
+
+- `tests/convex/verifyClerkOAuthJwt.test.ts`: session JWT, missing `typ`, undecodable header and opaque token go to the fallback; a valid `at+jwt` verifies locally; a bad `at+jwt` returns `null` without the fallback; the `verifyOpaque` alias works.
+
 ## 0.8.0
 
 Additive: V8-safe verification of Clerk OAuth access tokens that are JWTs. Nothing in 0.7.1 is removed or changed. No new dependency (WebCrypto and `fetch` only).

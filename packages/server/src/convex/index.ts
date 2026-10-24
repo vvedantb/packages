@@ -86,6 +86,7 @@ export {
   CLERK_JWKS_REFETCH_MIN_MS,
   CLERK_JWKS_TTL_MS,
   clearClerkJwksCache,
+  isOAuthAccessTokenJwt,
   looksLikeJwt,
   verifyClerkOAuthJwt,
   type AuthenticateClerkBearerOptions,

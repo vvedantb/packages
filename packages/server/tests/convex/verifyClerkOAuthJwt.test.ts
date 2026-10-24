@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   authenticateClerkBearer,
   clearClerkJwksCache,
+  isOAuthAccessTokenJwt,
   verifyClerkOAuthJwt,
   type ClerkOAuthJwtRejection,
 } from "@vvedantb/server";
@@ -165,43 +166,93 @@ describe("verifyClerkOAuthJwt", () => {
   });
 });
 
+describe("isOAuthAccessTokenJwt", () => {
+  it("accepts at+jwt only", () => {
+    expect(isOAuthAccessTokenJwt(sign())).toBe(true);
+    expect(isOAuthAccessTokenJwt(sign({ header: { typ: "application/at+jwt" } }))).toBe(true);
+    expect(isOAuthAccessTokenJwt(sign({ header: { typ: "JWT" } }))).toBe(false);
+    expect(isOAuthAccessTokenJwt("oat_opaque_token")).toBe(false);
+  });
+});
+
 describe("authenticateClerkBearer", () => {
-  it("verifies a JWT locally without calling verifyOpaque", async () => {
-    const verifyOpaque = vi.fn();
-    const principal = await authenticateClerkBearer({
-      token: sign(),
-      issuer: ISSUER,
-      fetch: fakeFetch(),
-      now: () => NOW,
-      verifyOpaque,
-    });
+  const base = () => ({ issuer: ISSUER, fetch: fakeFetch(), now: () => NOW });
+
+  it("verifies an at+jwt locally without calling the fallback", async () => {
+    const verifyFallback = vi.fn();
+    const principal = await authenticateClerkBearer({ ...base(), token: sign(), verifyFallback });
     expect(principal).toEqual({ clerkUserId: "user_1" });
-    expect(verifyOpaque).not.toHaveBeenCalled();
+    expect(verifyFallback).not.toHaveBeenCalled();
   });
 
-  it("does not fall back for a JWT that fails", async () => {
-    const verifyOpaque = vi.fn(async () => ({ clerkUserId: "user_2" }));
+  it("verifies application/at+jwt locally, case-insensitive", async () => {
+    const verifyFallback = vi.fn();
+    const token = sign({ header: { typ: "Application/AT+JWT" } });
+    expect(await authenticateClerkBearer({ ...base(), token, verifyFallback })).toEqual({ clerkUserId: "user_1" });
+    expect(verifyFallback).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back for an at+jwt that fails", async () => {
+    const verifyFallback = vi.fn(async () => ({ clerkUserId: "user_2" }));
     const principal = await authenticateClerkBearer({
+      ...base(),
       token: sign({ key: other.privateKey }),
-      issuer: ISSUER,
-      fetch: fakeFetch(),
-      now: () => NOW,
-      verifyOpaque,
+      verifyFallback,
     });
     expect(principal).toBeNull();
-    expect(verifyOpaque).not.toHaveBeenCalled();
+    expect(verifyFallback).not.toHaveBeenCalled();
   });
 
-  it("sends an opaque token to verifyOpaque and maps the result", async () => {
+  it("sends a session JWT (typ JWT) to the fallback, not local verification", async () => {
+    const verifyFallback = vi.fn(async () => ({ clerkUserId: "user_2" }));
     const fetchFn = fakeFetch();
-    const base = { issuer: ISSUER, fetch: fetchFn, now: () => NOW };
+    const token = sign({ header: { typ: "JWT" } });
+    const principal = await authenticateClerkBearer({ ...base(), fetch: fetchFn, token, verifyFallback });
+    expect(principal).toEqual({ clerkUserId: "user_2" });
+    expect(verifyFallback).toHaveBeenCalledWith(token);
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("sends a JWT with no typ to the fallback", async () => {
+    const verifyFallback = vi.fn(async () => ({ clerkUserId: "user_2" }));
+    const token = sign({ header: { typ: undefined } });
+    expect(await authenticateClerkBearer({ ...base(), token, verifyFallback })).toEqual({ clerkUserId: "user_2" });
+    expect(verifyFallback).toHaveBeenCalledOnce();
+  });
+
+  it("sends a JWT-shaped token with an undecodable header to the fallback", async () => {
+    const verifyFallback = vi.fn(async () => null);
+    const token = `${b64u("not json")}.${b64u("{}")}.sig`;
+    expect(await authenticateClerkBearer({ ...base(), token, verifyFallback })).toBeNull();
+    expect(verifyFallback).toHaveBeenCalledWith(token);
+  });
+
+  it("sends an opaque token to the fallback and maps the result", async () => {
+    const fetchFn = fakeFetch();
+    const options = { ...base(), fetch: fetchFn, token: "oat_abc123" };
     const a = vi.fn(async () => ({ clerkUserId: "user_2" }));
     const b = vi.fn(async () => ({ userId: "user_3" }));
     const c = vi.fn(async () => null);
-    expect(await authenticateClerkBearer({ ...base, token: "oat_abc123", verifyOpaque: a })).toEqual({ clerkUserId: "user_2" });
-    expect(await authenticateClerkBearer({ ...base, token: "oat_abc123", verifyOpaque: b })).toEqual({ clerkUserId: "user_3" });
-    expect(await authenticateClerkBearer({ ...base, token: "oat_abc123", verifyOpaque: c })).toBeNull();
+    expect(await authenticateClerkBearer({ ...options, verifyFallback: a })).toEqual({ clerkUserId: "user_2" });
+    expect(await authenticateClerkBearer({ ...options, verifyFallback: b })).toEqual({ clerkUserId: "user_3" });
+    expect(await authenticateClerkBearer({ ...options, verifyFallback: c })).toBeNull();
     expect(a).toHaveBeenCalledWith("oat_abc123");
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("still accepts the deprecated verifyOpaque alias", async () => {
+    const verifyOpaque = vi.fn(async () => ({ clerkUserId: "user_2" }));
+    expect(await authenticateClerkBearer({ ...base(), token: "oat_abc123", verifyOpaque })).toEqual({ clerkUserId: "user_2" });
+    const session = sign({ header: { typ: "JWT" } });
+    expect(await authenticateClerkBearer({ ...base(), token: session, verifyOpaque })).toEqual({ clerkUserId: "user_2" });
+    expect(verifyOpaque).toHaveBeenCalledTimes(2);
+  });
+
+  it("prefers verifyFallback when both are set", async () => {
+    const verifyFallback = vi.fn(async () => ({ clerkUserId: "user_new" }));
+    const verifyOpaque = vi.fn(async () => ({ clerkUserId: "user_old" }));
+    const principal = await authenticateClerkBearer({ ...base(), token: "oat_abc123", verifyFallback, verifyOpaque });
+    expect(principal).toEqual({ clerkUserId: "user_new" });
+    expect(verifyOpaque).not.toHaveBeenCalled();
   });
 });
