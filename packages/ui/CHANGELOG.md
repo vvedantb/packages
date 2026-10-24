@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.18.1
+
+- `SpeechInput` reads `window` SpeechRecognition constructors via `as unknown as` (same as `PromptInputSpeech` in 0.18.0), so apps that declare their own global Speech API types (e.g. Verve) typecheck against this package. Covered by `tsconfig.consumer-speech.json` / `consumer/window-speech-global.d.ts`.
+
 ## 0.18.0
 
 App config (`UiConfigProvider`) and the components that came from an app, in six parts below. Without a provider every existing component renders as in 0.17.1.

@@ -35,15 +35,17 @@ interface SpeechRecognitionAlternative {
   confidence: number;
 }
 // Read the constructors through a local type: a package must not augment the
-// global Window, which would clash with apps and the DOM lib.
-type SpeechRecognitionWindow = Window & {
+// global Window. Apps often declare their own `Window.SpeechRecognition`, so
+// `window` is cast to this shape rather than assigned (see
+// consumer/window-speech-global.d.ts).
+type SpeechRecognitionWindow = {
   SpeechRecognition?: SpeechRecognitionConstructor;
   webkitSpeechRecognition?: SpeechRecognitionConstructor;
 };
 const getSpeechRecognitionConstructor = ():
   | SpeechRecognitionConstructor
   | undefined => {
-  const speechWindow: SpeechRecognitionWindow = window;
+  const speechWindow = window as unknown as SpeechRecognitionWindow;
   return speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
 };
 type SpeechInputMode = "speech-recognition" | "media-recorder" | "none";
