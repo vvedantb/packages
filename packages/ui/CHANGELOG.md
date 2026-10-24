@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.18.0
+
+App config (`UiConfigProvider`) and the components that came from an app, in six parts below. Without a provider every existing component renders as in 0.17.1.
+
+**Peer requirement:** `streamdown` must be `>=2.3.0` (`^2.3.0`). `Markdown` uses `useIsCodeFenceIncomplete`, which 2.2 lacks; apps on streamdown 1.x or 2.2 must upgrade before taking 0.18.0.
+
+New dependencies installed with the package: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `katex`, `media-chrome`, `dayjs`.
 
 ### App config provider
 
