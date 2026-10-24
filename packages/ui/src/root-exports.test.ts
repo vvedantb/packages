@@ -30,7 +30,7 @@ test("root exposes former subpath APIs", () => {
     "ModelPicker", "AgentTrace", "AgentPlan", "TestResult", "TestResultErrorStack", "ContextUsage",
     "ContextUsageCacheRead", "getRandomActivityVerb", "activityStepHasRichDetail",
     "JumpRail", "ChatJumpRail", "buildChatJumpRailItems", "buildChatJumpRailTicks",
-    "JUMP_RAIL_ITEM_SPACING_PX", "resolveJumpRailHeightStyle", "resolveJumpRailTopPercent",
+    "JUMP_RAIL_ITEM_SPACING_PX", "JUMP_RAIL_MIN_HEIGHT_PX", "resolveJumpRailHeightStyle", "resolveJumpRailTopPercent",
     "resolveJumpRailIndexFromPointer", "resolveJumpRailTickWidthClass", "resolveJumpRailTickLevelStyle",
     "SortableListProvider", "SortableListItem", "LiveCursor", "LiveCursorPointer",
   ]) {
