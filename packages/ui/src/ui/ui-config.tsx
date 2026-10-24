@@ -1,4 +1,22 @@
 import * as React from "react";
+import type { ClassValue } from "clsx";
+import { cn } from "../utils/cn";
+import type { AccordionConfig } from "./accordion";
+import type { BadgeConfig } from "./badge";
+import type { ButtonConfig } from "./button";
+import type { ButtonGroupConfig } from "./button-group";
+import type { CalendarConfig } from "./calendar";
+import type { CarouselConfig } from "./carousel";
+import type { CheckboxConfig } from "./checkbox";
+import type { ClearInputConfig } from "./clear-input";
+import type { CollapsibleConfig } from "./collapsible";
+import type { InputConfig } from "./input";
+import type { InputGroupConfig } from "./input-group";
+import type { SearchInputConfig } from "./search-input";
+import type { SliderConfig } from "./slider";
+import type { SwitchConfig } from "./switch";
+import type { TabsConfig } from "./tabs";
+import type { TextareaConfig } from "./textarea";
 
 // App-level component defaults. An app wraps its tree in `UiConfigProvider`
 // to give components its own classes and behaviour without passing props at
@@ -11,7 +29,31 @@ import * as React from "react";
 // - Other keys are default prop values. An explicit prop always wins.
 //
 // Each component declares its entry type next to its code and adds it here.
-export interface UiConfig {}
+export interface UiConfig {
+  /**
+   * Class merger used in place of the built-in `cn` by components that read
+   * it. Set it when the app's own tailwind-merge setup differs (for example
+   * when it does not treat `rounded-surface` as a radius class), so a caller
+   * `className` merges with the app's classes the way it always has.
+   */
+  cn?: (...inputs: ClassValue[]) => string;
+  Accordion?: AccordionConfig;
+  Badge?: BadgeConfig;
+  Button?: ButtonConfig;
+  ButtonGroup?: ButtonGroupConfig;
+  Calendar?: CalendarConfig;
+  Carousel?: CarouselConfig;
+  Checkbox?: CheckboxConfig;
+  ClearInput?: ClearInputConfig;
+  Collapsible?: CollapsibleConfig;
+  Input?: InputConfig;
+  InputGroup?: InputGroupConfig;
+  SearchInput?: SearchInputConfig;
+  Slider?: SliderConfig;
+  Switch?: SwitchConfig;
+  Tabs?: TabsConfig;
+  Textarea?: TextareaConfig;
+}
 
 const UiConfigContext = React.createContext<UiConfig>({});
 
@@ -29,4 +71,9 @@ function useUiConfig<K extends keyof UiConfig>(name: K): UiConfig[K] | undefined
   return React.useContext(UiConfigContext)[name];
 }
 
-export { UiConfigProvider, useUiConfig };
+/** The app's class merger (`UiConfig.cn`), or the built-in `cn`. */
+function useCn(): (...inputs: ClassValue[]) => string {
+  return React.useContext(UiConfigContext).cn ?? cn;
+}
+
+export { UiConfigProvider, useCn, useUiConfig };

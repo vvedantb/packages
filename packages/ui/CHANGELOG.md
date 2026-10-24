@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Controls: `UiConfig` entries for `Button`, `Badge`, `Input`, `Textarea`, `Checkbox`, `Switch`, `Slider`, `ButtonGroup`, `InputGroup`, `ClearInput`, `SearchInput`, `Calendar`, `Carousel`, `Tabs`, `Accordion` and `Collapsible` (see the README "App config: controls" section), and `UiConfig.cn`, an app class merger the components use in place of `cn`. No entry: the default DOM is unchanged.
+- Controls, new opt-in props and exports: `Button` size `xs`; `Checkbox` `icon`; `AccordionTrigger` `icon`; `ClearInput` `animation` (`"none"`: clear at once, plain markup); `SearchInput` `onClear` and `inputClassName`; `TabsList` `size`; `TabsBar`; `CalendarDayButton`; `CarouselDots`, `useCarousel` (context adds `selectedIndex`, `scrollSnaps`, `scrollTo`); `syncTabsPill` takes an optional `"xy"` motion; `CollapsibleContentProps` type. `CollapsibleTrigger` and `CollapsibleContent` are now thin wrappers (same DOM, refs still reach the element).
+- Tests: `src/ui/controls-config.test.tsx`.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.

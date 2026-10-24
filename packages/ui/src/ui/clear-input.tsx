@@ -2,9 +2,23 @@
 
 import * as React from "react";
 import { IconX } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
+import { assignRef } from "../utils/ref";
 import { fieldFocusClass } from "./_field-classes";
 import { runClearInputDissolve } from "./clearInputDissolve";
+import { useCn, useUiConfig } from "./ui-config";
+
+type ClearInputAnimation = "dissolve" | "none";
+
+/**
+ * `UiConfig.ClearInput`: `animation` is the default for the prop. `classes`
+ * replace the built-in input and button classes, and the wrapper's `relative`
+ * in the `none` layout (the `dissolve` wrapper keeps its `t-clear` hooks and
+ * adds `classes.wrapper`).
+ */
+export interface ClearInputConfig {
+  animation?: ClearInputAnimation;
+  classes?: { wrapper?: string; input?: string; button?: string };
+}
 
 export interface ClearInputProps extends Omit<
   React.ComponentProps<"input">,
@@ -16,9 +30,36 @@ export interface ClearInputProps extends Omit<
   /** Icon or adornment positioned in the field's left gutter. */
   leading?: React.ReactNode;
   clearLabel?: string;
+  /**
+   * `dissolve` (default): the text dissolves before the value clears (needs
+   * `clear-input.css`). `none`: clear at once, focus the input, and render
+   * only the wrapper, input and clear button.
+   */
+  animation?: ClearInputAnimation;
 }
 
+const inputClasses =
+  "flex h-10 w-full rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50";
+
+const buttonClasses =
+  "absolute right-2 top-1/2 z-4 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.92] hover:bg-surface-tertiary/50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring";
+
 const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
+  ({ animation, ...props }, ref) => {
+    const config = useUiConfig("ClearInput");
+    if ((animation ?? config?.animation) === "none") {
+      return <PlainClearInput ref={ref} classes={config?.classes} {...props} />;
+    }
+    return <DissolveClearInput ref={ref} classes={config?.classes} {...props} />;
+  },
+);
+ClearInput.displayName = "ClearInput";
+
+type ClearInputPartsProps = Omit<ClearInputProps, "animation"> & {
+  classes: ClearInputConfig["classes"];
+};
+
+const PlainClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsProps>(
   (
     {
       value,
@@ -28,10 +69,77 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
       clearLabel = "Clear",
       className,
       placeholder = "",
+      classes,
       ...props
     },
     ref,
   ) => {
+    const merge = useCn();
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const preventFocusSteal = (event: React.SyntheticEvent) => {
+      if (document.activeElement === inputRef.current) {
+        event.preventDefault();
+      }
+    };
+
+    return (
+      <div className={merge(classes?.wrapper ?? "relative", wrapperClassName)}>
+        {leading}
+        <input
+          ref={(node) => {
+            inputRef.current = node;
+            assignRef(ref, node);
+          }}
+          type="text"
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+          }}
+          placeholder={placeholder}
+          className={merge(
+            classes?.input ?? [inputClasses, fieldFocusClass],
+            value.length > 0 && "pr-9",
+            className,
+          )}
+          {...props}
+        />
+        {value.length > 0 ? (
+          <button
+            type="button"
+            className={classes?.button ?? buttonClasses}
+            aria-label={clearLabel}
+            onPointerDown={preventFocusSteal}
+            onMouseDown={preventFocusSteal}
+            onClick={() => {
+              onChange("");
+              inputRef.current?.focus();
+            }}
+          >
+            <IconX size={14} stroke={1.75} />
+          </button>
+        ) : null}
+      </div>
+    );
+  },
+);
+
+const DissolveClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsProps>(
+  (
+    {
+      value,
+      onChange,
+      wrapperClassName,
+      leading,
+      clearLabel = "Clear",
+      className,
+      placeholder = "",
+      classes,
+      ...props
+    },
+    ref,
+  ) => {
+    const merge = useCn();
     const wrapRef = React.useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     const mirrorRef = React.useRef<HTMLDivElement>(null);
@@ -42,11 +150,7 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
 
     function mergedRef(node: HTMLInputElement | null) {
       inputRef.current = node;
-      if (typeof ref === "function") {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
+      assignRef(ref, node);
     }
 
     const hasValue = value.length > 0 || clearing;
@@ -104,15 +208,16 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
       );
     };
 
-    const fieldClassName = cn(hasValue && "pr-9", className);
+    const fieldClassName = merge(hasValue && "pr-9", className);
 
     return (
       <div
         ref={wrapRef}
-        className={cn(
+        className={merge(
           "t-clear",
           hasValue && "has-value",
           clearing && "is-clearing",
+          classes?.wrapper,
           wrapperClassName,
         )}
       >
@@ -125,9 +230,8 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
             onChange(event.target.value);
           }}
           placeholder={placeholder}
-          className={cn(
-            "flex h-10 w-full rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50",
-            fieldFocusClass,
+          className={merge(
+            classes?.input ?? [inputClasses, fieldFocusClass],
             fieldClassName,
           )}
           {...props}
@@ -135,14 +239,14 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
         <div className="t-clear-clip" aria-hidden="true">
           <div
             ref={mirrorRef}
-            className={cn(
+            className={merge(
               "t-clear-mirror border-0 bg-transparent text-foreground shadow-none",
               fieldClassName,
             )}
           />
           <div
             ref={placeholderRef}
-            className={cn(
+            className={merge(
               "t-clear-placeholder border-0 bg-transparent text-field-placeholder shadow-none",
               fieldClassName,
             )}
@@ -154,7 +258,7 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
         {value.length > 0 && !clearing ? (
           <button
             type="button"
-            className="t-clear-btn absolute right-2 top-1/2 z-4 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.92] hover:bg-surface-tertiary/50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring"
+            className={classes?.button ? `t-clear-btn ${classes.button}` : `t-clear-btn ${buttonClasses}`}
             aria-label={clearLabel}
             onPointerDown={preventFocusSteal}
             onMouseDown={preventFocusSteal}
@@ -167,6 +271,5 @@ const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
     );
   },
 );
-ClearInput.displayName = "ClearInput";
 
 export { ClearInput };

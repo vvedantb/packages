@@ -6,6 +6,12 @@ import useEmblaCarousel, {
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { cn } from "../utils/cn";
 import { Button } from "./button";
+import { useCn, useUiConfig } from "./ui-config";
+
+/** `UiConfig.Carousel`: `classes` replace the built-in `CarouselDots` part classes. */
+export interface CarouselConfig {
+  classes?: { dots?: string; dot?: string; dotActive?: string; dotInactive?: string };
+}
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
 type CarouselOptions = UseCarouselParameters[0];
@@ -23,6 +29,11 @@ type CarouselContextProps = {
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
+  /** Index of the selected snap. */
+  selectedIndex: number;
+  /** Embla's snap positions, one per page. */
+  scrollSnaps: number[];
+  scrollTo: (index: number) => void;
 } & CarouselProps;
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
 function useCarousel() {
@@ -50,16 +61,27 @@ function Carousel({
   );
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
   const [canScrollNext, setCanScrollNext] = React.useState(false);
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [scrollSnaps, setScrollSnaps] = React.useState<number[]>([]);
   const onSelect = (api: CarouselApi) => {
     if (!api) return;
     setCanScrollPrev(api.canScrollPrev());
     setCanScrollNext(api.canScrollNext());
+    setSelectedIndex(api.selectedScrollSnap());
+    // keep the old array when nothing moved, so this can run on every render
+    const next = api.scrollSnapList();
+    setScrollSnaps((prev) =>
+      prev.length === next.length && prev.every((snap, i) => snap === next[i]) ? prev : next,
+    );
   };
   const scrollPrev = () => {
     api?.scrollPrev();
   };
   const scrollNext = () => {
     api?.scrollNext();
+  };
+  const scrollTo = (index: number) => {
+    api?.scrollTo(index);
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowLeft") {
@@ -95,6 +117,9 @@ function Carousel({
         scrollNext,
         canScrollPrev,
         canScrollNext,
+        selectedIndex,
+        scrollSnaps,
+        scrollTo,
       }}
     >
       <div
@@ -201,6 +226,39 @@ function CarouselNext({
     </Button>
   );
 }
+/** One dot per snap; the selected one is wider. Renders nothing for a single page. */
+function CarouselDots({ className }: { className?: string }) {
+  const { scrollSnaps, selectedIndex, scrollTo } = useCarousel();
+  const classes = useUiConfig("Carousel")?.classes;
+  const merge = useCn();
+
+  if (scrollSnaps.length <= 1) return null;
+
+  return (
+    <div
+      data-slot="carousel-dots"
+      className={merge(classes?.dots ?? "flex justify-center gap-1.5 pt-2", className)}
+    >
+      {scrollSnaps.map((_, index) => (
+        <button
+          key={index}
+          type="button"
+          className={merge(
+            classes?.dot ??
+              "h-1.5 cursor-pointer rounded-full transition-[background-color,transform] duration-150 ease-out active:scale-90",
+            index === selectedIndex
+              ? (classes?.dotActive ?? "w-4 bg-primary")
+              : (classes?.dotInactive ??
+                  "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"),
+          )}
+          onClick={() => scrollTo(index)}
+          aria-label={`Go to slide ${index + 1}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export {
   type CarouselApi,
   Carousel,
@@ -208,4 +266,6 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselDots,
+  useCarousel,
 };
