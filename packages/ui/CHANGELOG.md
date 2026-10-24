@@ -27,6 +27,20 @@ Defaults are unchanged: without an entry or a new prop, each component renders i
 - No new dependencies.
 - Tests: `src/ui/controls-config.test.tsx`, `src/ui/overlay-config.test.tsx`, `src/ui/alt-wrappers.test.tsx`, `src/ui/foundations.test.tsx` (Card, Table, Progress, Separator, Label) and a `Slider` children case in `src/ui/slider.test.tsx`.
 
+### Basic components (spinners, ListRow, Surface, BorderBeam, Avatar, SortableList) and the muted token rule
+
+Defaults are unchanged: existing components render as in 0.17.1. `Button loading` now renders `<Spinner variant="ring" />`, with the same DOM as the old private spinner.
+
+- New components (from an app): `CenteredSpinner`, `LoadingState`, `RefreshSpinIcon`, `CrossfadeIcon`, `CrossfadeIconSlot`, `BorderBeam`, `StatusDot`, `Surface` / `surfaceVariants`, `ListRow` / `LIST_ROW_CONTROL_CLASS`, `Avatar`, `AvatarImage`, `AvatarFallback`, and the sortable list `SortableListProvider`, `SortableListGroup`, `SortableListHeader`, `SortableListItems`, `SortableListItem` (with `SortableListDragEndEvent`) and `useDragSensors`.
+- New opt-in `Spinner` props: `variant` (`"icon"`, `"circle"`: a faint ring with a two-tone arc, `"ring"`: the `Button` loading ring), `mark` (an outline with a running dash instead of the loader icon) and `colors` (the `circle` strokes). An explicit `variant` wins over the configured mark.
+- `UiConfig` entries: `Spinner` (`mark`, `circle`), `LoadingState` (`label`, `colors`, `labelStyle`, `classes.label`), `StatusDot` (`classes.tone`), `ListRow` (`classes.*`). Every new component merges a caller `className` with `UiConfig.cn`.
+- New helpers: `tokenTransition` (`fast` / `base` / `slow`, matching the CSS `--motion-*` tokens) and `staggerDelay` in the motion presets; `rubberband`, `projectVelocity`, `DRAG_ACTIVATION_DISTANCE_PX`; `ensureRuntimeVisibility`, `observeAnimVisibility`, `useAnimOffscreenRef`, `bindRuntimeAnimation`; `subscribeQuantized`, `quantizedSnapshot`, `msUntilNextBoundary`; `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT`; `SURFACE_RADIUS_CLASS`, `CONTROL_RADIUS_CLASS`. `SidebarResize` now imports the shared `rubberband` (same maths).
+- New opt-in stylesheet `@vvedantb/ui/tokens/css/border-beam.css` (the `.beam-*` rules for `BorderBeam`).
+- Tokens: `check-component-tokens.mjs` now fails on fill-type `muted` (`bg-`, `from-`, `via-`, `to-`, `fill-`, `stroke-`, `border-`, `ring-`, `divide-`, `outline-muted`, with variants and opacity; not `*-muted-foreground`). The existing `Switch`, `Slider` and slash-menu fills stay, with a `check-tokens-allow: muted` marker. `Avatar`, the `ListRow` idle hover and the sortable list drop highlight fill with `surface-secondary` (the same colour under `compat-shadcn-rgb.css`).
+- Renames versus #63: `CircleSpinner` is `<Spinner variant="circle" />`; the separate transitions module (`transitionFast`, `transitionBase`, `transitionSlow`) is `tokenTransition.fast` / `.base` / `.slow` in the motion presets; `ListProvider`, `ListGroup`, `ListHeader`, `ListItems`, `ListItem` and `ListDragEndEvent` are `SortableList*`.
+- New dependencies: `@dnd-kit/core` ^6.3.1, `@dnd-kit/sortable` ^10.0.0, `@dnd-kit/modifiers` ^9.0.0, `@dnd-kit/utilities` ^3.2.2.
+- Tests: the rest of `src/ui/foundations.test.tsx`, `src/ui/loading-state.clocks.test.ts`, `src/utils/gesture.test.ts`, `src/utils/sharedClock.test.ts`, `src/utils/runtimeVisibility.test.ts`, `src/utils/useDragSensors.test.ts`.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.
