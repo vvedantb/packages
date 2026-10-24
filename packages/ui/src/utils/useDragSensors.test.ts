@@ -105,9 +105,13 @@ describe("every shared drag surface uses the split", () => {
     .filter(([, source]) => source.includes("<DndContext"));
 
   test("the surfaces this pins still exist", () => {
-    // The sortable list — a drop here means it was removed or renamed, not
-    // that the contract got easier.
-    expect(surfaces.map(([name]) => name).sort()).toEqual(["list.tsx"]);
+    // list, kanban and gantt-features — a drop here means one was removed or
+    // renamed, not that the contract got easier.
+    expect(surfaces.map(([name]) => name).sort()).toEqual([
+      "gantt-features.tsx",
+      "kanban.tsx",
+      "list.tsx",
+    ]);
   });
 
   test.each(surfaces)("%s takes its sensors from the hook", (_name, source) => {
