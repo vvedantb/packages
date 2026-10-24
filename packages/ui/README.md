@@ -7,7 +7,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
-| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`. CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
+| `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `markdown` (opt-in, for `Markdown`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
 | `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
@@ -1187,6 +1187,41 @@ const config = {
 - `Tabs`: `variant` (default for the `TabsList` prop), `pillMotion` (`"x"` default; `"xy"` moves the segmented pill on both axes with `transform`, for lists that wrap or run in a column), `classes.list` (replaces the list classes of every variant), `classes.size.<default|sm>`, `classes.pill`, `classes.trigger` (every trigger), `classes.content`. New `TabsList` prop `size`: `"sm"` shrinks the triggers (`[&_.t-tab]:px-2.5 py-1 text-xs`); `"default"` adds no classes. New `TabsBar`: a tab strip on a bottom hairline (`border-b border-border`, `px-3 py-2`; `size="sm"` `px-2 py-1.5`) with an `actions` slot on the right.
 - `Accordion`: `classes.item`, `classes.header`, `classes.trigger`, `classes.content` (the animated panel), `classes.contentInner` (the padded box inside it), `icon`. New `AccordionTrigger` prop `icon`: shown after the children (default the chevron).
 - `Collapsible`: `classes.trigger`, `classes.content`. The parts have no built-in classes, so without an entry `className` passes through untouched.
+
+## Kibo blocks and markdown (Unreleased)
+
+Blocks that came from an app (built on [Kibo UI](https://www.kibo-ui.com)) and its markdown renderer. All exported from the root.
+
+### New components
+
+- Gantt: `GanttProvider` (`range` `daily | monthly | quarterly`, `zoom`, `onZoomChange` for Ctrl/Cmd + wheel, `onAddItem`), `GanttSidebar` (`headerTitle`, `headerMeta`), `GanttSidebarGroup`, `GanttSidebarItem` (`icon`, `meta`, `selected`, `onSelectItem`), `GanttSidebarHeader`, `GanttTimeline`, `GanttHeader`, `GanttContentHeader`, `GanttColumns`, `GanttColumn`, `GanttFeatureList`, `GanttFeatureListGroup`, `GanttFeatureRow`, `GanttFeatureItem` (`onMove`, `onClick`), `GanttFeatureItemCard`, `GanttFeatureDragHelper`, `GanttToday`, `GanttContext` / `useGanttContext`. The canvas pans on drag, centres on today and grows by a year at either edge.
+- Kanban: `KanbanProvider` (`columns`, `data`, `overlay`, drag callbacks, `collisionDetection`), `KanbanBoard` (`disabled`; highlights while a card is over it or over one of its cards), `KanbanHeader`, `KanbanCards` (render prop per item), `KanbanCard`, `useKanbanContext`.
+- List: `ListProvider` (`onDragEnd`, vertical drag), `ListGroup`, `ListHeader` (`name` + `color`, or `children`), `ListItems`, `ListItem`.
+- `ContributionGraph` with `ContributionGraphCalendar`, `ContributionGraphBlock`, `ContributionGraphFooter`, `ContributionGraphTotalCount`, `ContributionGraphLegend`.
+- `VideoPlayer` (media-chrome `MediaController`, dark control styling) with `VideoPlayerContent`, `VideoPlayerControlBar` and the `VideoPlayer*Button`, `VideoPlayerTimeRange`, `VideoPlayerTimeDisplay` and `VideoPlayerVolumeRange` controls.
+- `Cursor`, `CursorPointer`, `CursorBody`, `CursorName`; `AvatarStack` (`size`); `ThemeSwitcher` (`value`, `defaultValue`, `onChange`; system, light, dark).
+- `useDragSensors({ sortable? })`: the dnd-kit sensor set the drag surfaces share (mouse arms on distance, touch on a 200ms hold, keyboard; `sortable` adds sortable keyboard coordinates).
+- `Markdown` (Streamdown with GFM, KaTeX math, CJK, Shiki code blocks with a wrap toggle and copy button, mermaid diagrams loaded on first use, GitHub alerts `> [!NOTE]`, links with the site favicon, file paths in inline code, copy as markdown) and `MarkdownLink`. `components` and `remarkPlugins` extend the defaults. It imports KaTeX's stylesheet; import `@vvedantb/ui/tokens/css/markdown.css` for the typography. That file reads the shadcn channel variables (`rgb(var(--foreground))`, `--muted`, `--muted-foreground`, `--border`, `--primary`, `--success`, `--warning`, `--destructive`), as with `compat-shadcn-rgb.css`; `--markdown-alert-important` (RGB channels, default `var(--primary)`) colours `[!IMPORTANT]`.
+
+New dependencies (installed with the package): `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `dayjs`, `media-chrome` and `katex`. `streamdown` and the `@streamdown/*` plugins stay peers.
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `Gantt` | `classes.root` (scroll container), `today` (today pill), `todayDate` (the date under it), `dragHandle` (resize grip), `offscreenIndicator` (edge date chip). |
+| `Kanban` | `classes.card` (`KanbanCard` cursor, transitions and press), `cardTransition` (CSS `transition` list appended to dnd-kit's inline reorder transition; default 150ms `scale` and `opacity`). |
+| `ThemeSwitcher` | `classes.button` (each theme button). |
+| `VideoPlayer` | `classes.root` (`VideoPlayer`), `classes.controlBar` (`VideoPlayerControlBar`). |
+
+The defaults use plain Tailwind (`duration-150`, `text-[0.625rem]`, `shadow-lg`, `[scrollbar-width:none]`). Apps with their own motion or shadow utilities put them here. Every kibo part and `Markdown` merge a caller `className` with `UiConfig.cn`.
+
+```tsx
+const config = {
+  Kanban: { cardTransition: "scale var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out" },
+  VideoPlayer: { classes: { root: "overflow-hidden rounded-surface shadow-xl" } },
+} satisfies UiConfig;
+```
 
 ## Colour names in components
 

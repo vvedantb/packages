@@ -142,6 +142,16 @@ export * from "./ai-elements/suggestion";
 // The core (schemas, state ops, document wrapper) comes from `@vvedantb/server`.
 export * from "./artifacts";
 
+// Kibo UI blocks: gantt, kanban, list, contribution graph, video player,
+// cursor, avatar stack, theme switcher. Kanban, list and gantt drag with
+// `useDragSensors`, the shared dnd-kit sensor split.
+export * from "./kibo";
+export { useDragSensors } from "./utils/useDragSensors";
+
+// Markdown renderer (Streamdown + code blocks, callouts, links, KaTeX).
+// Styles: `@vvedantb/ui/tokens/css/markdown.css`.
+export * from "./markdown";
+
 export * from "./audio";
 
 export * from "./composer";
