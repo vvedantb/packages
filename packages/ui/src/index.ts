@@ -65,6 +65,7 @@ export * from "./ui/date-picker";
 export * from "./ui/tooltip";
 export * from "./ui/kbd";
 export * from "./ui/sheet";
+export * from "./ui/side-sheet";
 export * from "./ui/visually-hidden";
 export * from "./ui/clearInputDissolve";
 

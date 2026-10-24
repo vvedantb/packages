@@ -1,4 +1,13 @@
 import * as React from "react";
+import type { CommandConfig } from "./command";
+import type { ContextMenuConfig } from "./context-menu";
+import type { DialogConfig } from "./dialog";
+import type { DropdownMenuConfig } from "./dropdown-menu";
+import type { HoverCardConfig } from "./hover-card";
+import type { PopoverConfig } from "./popover";
+import type { SelectConfig } from "./select";
+import type { SideSheetConfig } from "./side-sheet";
+import type { TooltipConfig } from "./tooltip";
 
 // App-level component defaults. An app wraps its tree in `UiConfigProvider`
 // to give components its own classes and behaviour without passing props at
@@ -11,7 +20,17 @@ import * as React from "react";
 // - Other keys are default prop values. An explicit prop always wins.
 //
 // Each component declares its entry type next to its code and adds it here.
-export interface UiConfig {}
+export interface UiConfig {
+  Command?: CommandConfig;
+  ContextMenu?: ContextMenuConfig;
+  Dialog?: DialogConfig;
+  DropdownMenu?: DropdownMenuConfig;
+  HoverCard?: HoverCardConfig;
+  Popover?: PopoverConfig;
+  Select?: SelectConfig;
+  SideSheet?: SideSheetConfig;
+  Tooltip?: TooltipConfig;
+}
 
 const UiConfigContext = React.createContext<UiConfig>({});
 

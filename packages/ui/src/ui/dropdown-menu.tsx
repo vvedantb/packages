@@ -17,14 +17,34 @@ import {
 } from "./_menu-classes";
 import {
   fitViewportClass,
+  type MenuConfig,
   MenuItemRow,
   SubTriggerRow,
   suppressAltKeyDown,
 } from "./_menu-parts";
 import { restoreModalScrollLock } from "./overlay-a11y";
+import { useUiConfig } from "./ui-config";
+
+/** App defaults for `DropdownMenu*` (see `UiConfigProvider`). */
+export interface DropdownMenuConfig extends MenuConfig {
+  /** Default for `DropdownMenuContent` `sideOffset`. */
+  sideOffset?: number;
+}
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+
+const DropdownMenuTrigger = React.forwardRef<
+  React.ComponentRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>((props, ref) => {
+  const trigger = useUiConfig("DropdownMenu")?.classes?.trigger;
+  // Without config, pass props untouched: Radix's Slot turns an explicit
+  // `className={undefined}` into `class=""`.
+  if (trigger === undefined) return <DropdownMenuPrimitive.Trigger ref={ref} {...props} />;
+  const { className, ...rest } = props;
+  return <DropdownMenuPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+});
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
 const DropdownMenuSub = DropdownMenuPrimitive.Sub;
@@ -37,33 +57,39 @@ const DropdownMenuSubTrigger = React.forwardRef<
     /** Leading icon or mark. The label then fills the row. */
     startContent?: React.ReactNode;
   }
->(({ className, inset, startContent, children, ...props }, ref) => (
-  <DropdownMenuPrimitive.SubTrigger
-    ref={ref}
-    className={cn(menuSubTriggerClass, inset && "pl-8", className)}
-    {...props}
-  >
-    {startContent === undefined ? children : (
-      <SubTriggerRow startContent={startContent}>{children}</SubTriggerRow>
-    )}
-    <IconChevronRight className="ml-auto" />
-  </DropdownMenuPrimitive.SubTrigger>
-));
+>(({ className, inset, startContent, children, ...props }, ref) => {
+  const classes = useUiConfig("DropdownMenu")?.classes;
+  return (
+    <DropdownMenuPrimitive.SubTrigger
+      ref={ref}
+      className={cn(classes?.subTrigger ?? menuSubTriggerClass, inset && "pl-8", className)}
+      {...props}
+    >
+      {startContent === undefined ? children : (
+        <SubTriggerRow startContent={startContent}>{children}</SubTriggerRow>
+      )}
+      <IconChevronRight className="ml-auto" />
+    </DropdownMenuPrimitive.SubTrigger>
+  );
+});
 DropdownMenuSubTrigger.displayName =
   DropdownMenuPrimitive.SubTrigger.displayName;
 
 const DropdownMenuSubContent = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
->(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Portal>
-    <DropdownMenuPrimitive.SubContent
-      ref={ref}
-      className={cn(menuContentClass, className)}
-      {...props}
-    />
-  </DropdownMenuPrimitive.Portal>
-));
+>(({ className, ...props }, ref) => {
+  const classes = useUiConfig("DropdownMenu")?.classes;
+  return (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.SubContent
+        ref={ref}
+        className={cn(classes?.subContent ?? menuContentClass, className)}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  );
+});
 DropdownMenuSubContent.displayName =
   DropdownMenuPrimitive.SubContent.displayName;
 
@@ -81,7 +107,8 @@ const DropdownMenuContent = React.forwardRef<
   (
     {
       className,
-      sideOffset = 4,
+      sideOffset,
+      collisionPadding,
       fitViewport,
       suppressAltKey,
       restoreScrollLockOnClose,
@@ -90,26 +117,34 @@ const DropdownMenuContent = React.forwardRef<
       ...props
     },
     ref,
-  ) => (
-    <DropdownMenuPrimitive.Portal>
-      <DropdownMenuPrimitive.Content
-        ref={ref}
-        sideOffset={sideOffset}
-        className={cn(menuContentClass, fitViewport && fitViewportClass, className)}
-        onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
-        onCloseAutoFocus={
-          restoreScrollLockOnClose
-            ? (event) => {
-                restoreModalScrollLock();
-                window.setTimeout(restoreModalScrollLock, 0);
-                onCloseAutoFocus?.(event);
-              }
-            : onCloseAutoFocus
-        }
-        {...props}
-      />
-    </DropdownMenuPrimitive.Portal>
-  ),
+  ) => {
+    const config = useUiConfig("DropdownMenu");
+    return (
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          ref={ref}
+          sideOffset={sideOffset ?? config?.sideOffset ?? 4}
+          collisionPadding={collisionPadding ?? config?.collisionPadding}
+          className={cn(
+            config?.classes?.content ?? menuContentClass,
+            fitViewport && fitViewportClass,
+            className,
+          )}
+          onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
+          onCloseAutoFocus={
+            restoreScrollLockOnClose
+              ? (event) => {
+                  restoreModalScrollLock();
+                  window.setTimeout(restoreModalScrollLock, 0);
+                  onCloseAutoFocus?.(event);
+                }
+              : onCloseAutoFocus
+          }
+          {...props}
+        />
+      </DropdownMenuPrimitive.Portal>
+    );
+  },
 );
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
 
@@ -128,77 +163,86 @@ const DropdownMenuItem = React.forwardRef<
   (
     { className, inset, startContent, description, endContent, children, asChild, ...props },
     ref,
-  ) => (
-    <DropdownMenuPrimitive.Item
-      ref={ref}
-      asChild={asChild}
-      className={cn(menuItemClass, inset && "pl-8", className)}
-      {...props}
-    >
-      {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
-        children
-      ) : endContent !== undefined ? (
-        <MenuItemRow startContent={startContent} description={description} endContent={endContent}>
-          {children}
-        </MenuItemRow>
-      ) : (
-        <>
-          {startContent}
-          {description === undefined ? (
-            children
-          ) : (
-            <span className="flex min-w-0 flex-col">
-              <span>{children}</span>
-              <span className="text-xs text-muted-foreground">
-                {description}
+  ) => {
+    const item = useUiConfig("DropdownMenu")?.classes?.item;
+    return (
+      <DropdownMenuPrimitive.Item
+        ref={ref}
+        asChild={asChild}
+        className={cn(item ?? menuItemClass, inset && "pl-8", className)}
+        {...props}
+      >
+        {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
+          children
+        ) : endContent !== undefined ? (
+          <MenuItemRow startContent={startContent} description={description} endContent={endContent}>
+            {children}
+          </MenuItemRow>
+        ) : (
+          <>
+            {startContent}
+            {description === undefined ? (
+              children
+            ) : (
+              <span className="flex min-w-0 flex-col">
+                <span>{children}</span>
+                <span className="text-xs text-muted-foreground">
+                  {description}
+                </span>
               </span>
-            </span>
-          )}
-        </>
-      )}
-    </DropdownMenuPrimitive.Item>
-  ),
+            )}
+          </>
+        )}
+      </DropdownMenuPrimitive.Item>
+    );
+  },
 );
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
-  <DropdownMenuPrimitive.CheckboxItem
-    ref={ref}
-    className={cn(menuCheckboxRadioItemClass, className)}
-    checked={checked}
-    {...props}
-  >
-    <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
-      <DropdownMenuPrimitive.ItemIndicator>
-        <IconCheck className="h-4 w-4" />
-      </DropdownMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </DropdownMenuPrimitive.CheckboxItem>
-));
+>(({ className, children, checked, ...props }, ref) => {
+  const config = useUiConfig("DropdownMenu");
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      ref={ref}
+      className={cn(config?.classes?.checkboxItem ?? menuCheckboxRadioItemClass, className)}
+      checked={checked}
+      {...props}
+    >
+      <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          {config?.icons?.check ?? <IconCheck className="h-4 w-4" />}
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.CheckboxItem>
+  );
+});
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName;
 
 const DropdownMenuRadioItem = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => (
-  <DropdownMenuPrimitive.RadioItem
-    ref={ref}
-    className={cn(menuCheckboxRadioItemClass, className)}
-    {...props}
-  >
-    <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
-      <DropdownMenuPrimitive.ItemIndicator>
-        <IconCircleFilled className="h-2 w-2 fill-current" />
-      </DropdownMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </DropdownMenuPrimitive.RadioItem>
-));
+>(({ className, children, ...props }, ref) => {
+  const config = useUiConfig("DropdownMenu");
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      ref={ref}
+      className={cn(config?.classes?.radioItem ?? menuCheckboxRadioItemClass, className)}
+      {...props}
+    >
+      <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          {config?.icons?.radio ?? <IconCircleFilled className="h-2 w-2 fill-current" />}
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  );
+});
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;
 
 const DropdownMenuLabel = React.forwardRef<
@@ -206,32 +250,39 @@ const DropdownMenuLabel = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
     inset?: boolean;
   }
->(({ className, inset, ...props }, ref) => (
-  <DropdownMenuPrimitive.Label
-    ref={ref}
-    className={cn(menuLabelClass, inset && "pl-8", className)}
-    {...props}
-  />
-));
+>(({ className, inset, ...props }, ref) => {
+  const label = useUiConfig("DropdownMenu")?.classes?.label;
+  return (
+    <DropdownMenuPrimitive.Label
+      ref={ref}
+      className={cn(label ?? menuLabelClass, inset && "pl-8", className)}
+      {...props}
+    />
+  );
+});
 DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
 const DropdownMenuSeparator = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Separator
-    ref={ref}
-    className={cn(menuSeparatorClass, className)}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const separator = useUiConfig("DropdownMenu")?.classes?.separator;
+  return (
+    <DropdownMenuPrimitive.Separator
+      ref={ref}
+      className={cn(separator ?? menuSeparatorClass, className)}
+      {...props}
+    />
+  );
+});
 DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
 
 const DropdownMenuShortcut = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) => {
-  return <span className={cn(menuShortcutClass, className)} {...props} />;
+  const shortcut = useUiConfig("DropdownMenu")?.classes?.shortcut;
+  return <span className={cn(shortcut ?? menuShortcutClass, className)} {...props} />;
 };
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut";
 
