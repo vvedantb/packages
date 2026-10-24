@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.18.0
+
+App config (`UiConfigProvider`) and the components that came from an app, in six parts below. Without a provider every existing component renders as in 0.17.1.
+
+**Peer requirement:** `streamdown` must be `>=2.3.0` (`^2.3.0`). `Markdown` uses `useIsCodeFenceIncomplete`, which 2.2 lacks; apps on streamdown 1.x or 2.2 must upgrade before taking 0.18.0.
+
+New dependencies installed with the package: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`, `@dnd-kit/utilities`, `katex`, `media-chrome`, `dayjs`.
 
 ### App config provider
 
@@ -75,6 +81,18 @@ Defaults are unchanged for existing components, with one exception: `ModelSelect
 - Renames versus #63: `ModelSelect` is `ModelPicker` (`ModelPickerProps`). Generic names carry a prefix so they do not clash in the single entry: `Trace*` is `AgentTrace*`, `Plan*` is `AgentPlan*`, `Test` / `TestStatusIndicator` / `TestName` / `TestDuration` / `TestError` / `TestErrorMessage` / `TestErrorStack` are `TestResult*`, `Context*` is `ContextUsage*` (`ContextInputUsage` is `ContextUsageInput`, `ContextOutputUsage` is `ContextUsageOutput`, `ContextCacheReadUsage` is `ContextUsageCacheRead`, `ContextCacheWriteUsage` is `ContextUsageCacheWrite`, `ContextCacheUsage` is `ContextUsageCache`), `TodoItem` is `ActivityTodoItem`, and `stepHasRichDetail`, `useSpinnerVerb`, `getRandomVerb`, `useElapsedSeconds` and `formatElapsed` take the `activity` names above. `TestResults*` and `TestSuite*` keep their names.
 - No new dependencies.
 - Tests: `src/ai-elements/activity-config.test.tsx`, `src/ai-elements/model-selector.test.tsx`, `src/ai-elements/activity-question-utils.test.ts`, `src/ai-elements/activity-step-label.test.ts`, `src/ai-elements/activity-tasks-utils.test.ts`, `src/ai-elements/activity-tasks.clocks.test.ts`; `src/root-exports.test.ts` checks the unprefixed names are not exported.
+
+### Kanban, gantt, contribution graph, video player, live cursors
+
+Defaults are unchanged: existing components render as in 0.17.1.
+
+- New components (from an app, built on Kibo UI): `Gantt*` (with `GanttContext` and `useGanttContext`), `Kanban*` (with `useKanbanContext`), `ContributionGraph*`, `VideoPlayer*`, `LiveCursor*`, `AvatarStack` and `ThemeSwitcher`. Kanban and the gantt bars drag with `useDragSensors`, like the sortable list.
+- `UiConfig` entries: `Gantt` (`classes.root`, `today`, `todayDate`, `dragHandle`, `offscreenIndicator`), `Kanban` (`classes.card`, `cardTransition`), `ThemeSwitcher` (`classes.button`), `VideoPlayer` (`classes.root`, `controlBar`). Every kibo part merges a caller `className` with `UiConfig.cn`.
+- Fills use `surface-secondary`, not `muted` (`Kanban`, `GanttSidebarItem`, `GanttColumn`, `GanttFeatureRow`, `ContributionGraph` level 0). The same colour under `compat-shadcn-rgb.css`.
+- Renames versus #63: `Cursor`, `CursorPointer`, `CursorBody`, `CursorName` are `LiveCursor*`; `Range` is `GanttRange` and `TimelineData` is `GanttTimelineData`; `Activity` is `ContributionGraphActivity` (it also clashed with React's `<Activity>`) and `Labels` is `ContributionGraphLabels`. `Props` types follow. The gantt maths helpers (`getOffset`, `getWidth`, `getDifferenceIn`, `getAddRange`, `calculateInnerOffset`) stay internal.
+- `tokens/examples/tokens-moved/` renders the components that came from the app on plain `tokens.css`, light and dark.
+- New dependencies: `media-chrome` ^4.14.0 and `dayjs` ^1.11.13 (was a dev dependency).
+- Tests: `src/kibo/kibo.test.tsx`, `src/kibo/kanbanDropTarget.test.ts`; `src/utils/useDragSensors.test.ts` also pins the kanban and gantt sensors.
 
 ## 0.17.1
 

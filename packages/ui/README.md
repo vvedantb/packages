@@ -1080,7 +1080,7 @@ Defaults are unchanged. Without a provider, or with an empty entry, every compon
 - Root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types.
 - An entry's `classes` replace built-in classes part by part. A part left out keeps its default, and a caller `className` still merges after it. Other keys are default prop values. An explicit prop always wins.
 - `cn`: the class merger that components use in place of the built-in `cn` when they merge a caller `className`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead. Components read it with the internal `useCn` hook.
-- Component entries and opt-in props are in the sections below: "App config: existing primitives", "Loaders, rows, status, sortable list and helpers", "App config: AI chat", "Agent activity, plan, tests, preview and model picker".
+- Component entries and opt-in props are in the sections below: "App config: existing primitives", "Loaders, rows, status, sortable list and helpers", "App config: AI chat", "Agent activity, plan, tests, preview and model picker", "Kibo blocks".
 
 ## App config: existing primitives
 
@@ -1275,6 +1275,40 @@ const config = {
 } satisfies UiConfig;
 ```
 
+## Kibo blocks
+
+Blocks that came from an app, built on [Kibo UI](https://www.kibo-ui.com). All exported from the root, next to the sortable list.
+
+### New components
+
+- Gantt: `GanttProvider` (`range`: `GanttRange`, `daily | monthly | quarterly`, `zoom`, `onZoomChange` for Ctrl/Cmd + wheel, `onAddItem`), `GanttSidebar` (`headerTitle`, `headerMeta`), `GanttSidebarGroup`, `GanttSidebarItem` (`icon`, `meta`, `selected`, `onSelectItem`), `GanttSidebarHeader`, `GanttTimeline`, `GanttHeader`, `GanttContentHeader`, `GanttColumns`, `GanttColumn`, `GanttFeatureList`, `GanttFeatureListGroup`, `GanttFeatureRow`, `GanttFeatureItem` (`onMove`, `onClick`), `GanttFeatureItemCard`, `GanttFeatureDragHelper`, `GanttToday`, `GanttContext` / `useGanttContext`. The canvas pans on drag, centres on today and grows by a year at either edge.
+- Kanban: `KanbanProvider` (`columns`, `data`, `overlay`, drag callbacks, `collisionDetection`), `KanbanBoard` (`disabled`; highlights while a card is over it or over one of its cards), `KanbanHeader`, `KanbanCards` (render prop per item), `KanbanCard`, `useKanbanContext`.
+- `ContributionGraph` (`data`: `ContributionGraphActivity[]`, `labels`: `ContributionGraphLabels`) with `ContributionGraphCalendar`, `ContributionGraphBlock`, `ContributionGraphFooter`, `ContributionGraphTotalCount`, `ContributionGraphLegend`.
+- `VideoPlayer` (media-chrome `MediaController`, dark control styling) with `VideoPlayerContent`, `VideoPlayerControlBar` and the `VideoPlayer*Button`, `VideoPlayerTimeRange`, `VideoPlayerTimeDisplay` and `VideoPlayerVolumeRange` controls.
+- `LiveCursor`, `LiveCursorPointer`, `LiveCursorBody`, `LiveCursorName` (a collaborator's pointer and name tag); `AvatarStack` (`size`); `ThemeSwitcher` (`value`, `defaultValue`, `onChange`; system, light, dark).
+
+Kanban, the sortable list and the gantt bars drag with `useDragSensors`.
+
+New dependencies (installed with the package): `media-chrome` and `dayjs` (a dev dependency before).
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `Gantt` | `classes.root` (scroll container), `today` (today pill), `todayDate` (the date under it), `dragHandle` (resize grip), `offscreenIndicator` (edge date chip). |
+| `Kanban` | `classes.card` (`KanbanCard` cursor, transitions and press), `cardTransition` (CSS `transition` list appended to dnd-kit's inline reorder transition; default 150ms `scale` and `opacity`). |
+| `ThemeSwitcher` | `classes.button` (each theme button). |
+| `VideoPlayer` | `classes.root` (`VideoPlayer`), `classes.controlBar` (`VideoPlayerControlBar`). |
+
+The defaults use plain Tailwind (`duration-150`, `text-[0.625rem]`, `shadow-lg`, `[scrollbar-width:none]`). Fills use `surface-secondary` (with `compat-shadcn-rgb.css` that is `--muted`). Apps with their own motion or shadow utilities put them here. Every kibo part merges a caller `className` with `UiConfig.cn`.
+
+```tsx
+const config = {
+  Kanban: { cardTransition: "scale var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out" },
+  VideoPlayer: { classes: { root: "overflow-hidden rounded-surface shadow-xl" } },
+} satisfies UiConfig;
+```
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`). It also fails on fill-type `muted` (`bg-`, `from-`, `via-`, `to-`, `fill-`, `stroke-`, `border-`, `ring-`, `divide-` and `outline-muted`, with variants and opacity; not `*-muted-foreground`): `muted` is a text colour in `tokens.css` and a fill in shadcn, so components fill with `surface-secondary`, which is the same fill under `compat-shadcn-rgb.css`. The dark-mode `Switch` off state, the `Slider` track and thumb and the slash menu row hover keep their `muted` fills on purpose, each line marked `check-tokens-allow: muted`. The package CSS (`tokens/src/css` and any `.css` under `src`) is checked too: a background, fill, stroke, border or outline colour, shadow or `--*-bg`-style variable that reads `--muted` or `--color-muted` fails; fill with `var(--color-surface-secondary)`.
@@ -1300,6 +1334,8 @@ Shared CSS that is safe without `tokens.css`: `compat-shadcn-rgb.css`, `dialog.c
 The compat file defines `.glass-panel-strong` for toasts, dialogs and hover cards as the solid popover colour (`rgb(var(--popover))`, as `bg-overlay`), the same as `tokens.css`. Before 0.15.0 it was `rgb(var(--card) / 0.95)` with a 12px blur. The rule is in `@layer components`, so an app `.glass-panel-strong` rule after the import wins.
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
+
+The components that came from the app (loaders, `ListRow`, `Surface`, `BorderBeam`, `Avatar`, `StatusDot`, kanban and the sortable list, activity, agent trace, agent plan, test results, the model picker and markdown) render on plain `tokens.css` in light and dark in `tokens/examples/tokens-moved/`.
 
 `@clerk/clerk-react`, `convex`, `@tanstack/react-hotkeys`, `motion`, `zod` and `@vvedantb/server` (0.13.0) are optional peers (`peerDependenciesMeta`), so the package manager does not install or warn about them. The root still imports each of them statically from some module (`useStableAuth` and `ConvexClerkProvider` import Clerk; `ConvexClerkProvider` and `useEnsureUser` import `convex/react`; the artifact viewers import `@vvedantb/server`; the motion presets, `ConfirmSkipHint` and others import the rest). So an app that imports `@vvedantb/ui` must have all six resolvable, even if it uses none of those exports: a bundler resolves every import before it tree-shakes. `app/tests-node/convex-esm.test.mjs` pins which root modules import `convex` and Clerk, and `app/tests-node/artifacts-esm.test.mjs` which import `@vvedantb/server`.
 

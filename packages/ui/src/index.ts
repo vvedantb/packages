@@ -159,8 +159,9 @@ export * from "./ai-elements/provider-icon";
 // The core (schemas, state ops, document wrapper) comes from `@vvedantb/server`.
 export * from "./artifacts";
 
-// Kibo UI blocks: the sortable list. It drags with `useDragSensors`, the
-// shared dnd-kit sensor split.
+// Kibo UI blocks: gantt, kanban, list, contribution graph, video player,
+// cursor, avatar stack, theme switcher. Kanban, list and gantt drag with
+// `useDragSensors`, the shared dnd-kit sensor split.
 export * from "./kibo";
 export { useDragSensors } from "./utils/useDragSensors";
 
