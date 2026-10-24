@@ -1,5 +1,8 @@
 import * as React from "react";
 import type { ClassValue } from "clsx";
+import type { ActivityQuestionCardConfig } from "../ai-elements/activity-question";
+import type { ActivityTasksConfig } from "../ai-elements/activity-shared";
+import type { ModelPickerConfig } from "../ai-elements/model-picker";
 import { cn } from "../utils/cn";
 import type { AccordionConfig } from "./accordion";
 import type { BadgeConfig } from "./badge";
@@ -57,6 +60,8 @@ export interface UiConfig {
    */
   cn?: (...inputs: ClassValue[]) => string;
   Accordion?: AccordionConfig;
+  ActivityQuestionCard?: ActivityQuestionCardConfig;
+  ActivityTasks?: ActivityTasksConfig;
   Badge?: BadgeConfig;
   Button?: ButtonConfig;
   ButtonGroup?: ButtonGroupConfig;
@@ -77,6 +82,7 @@ export interface UiConfig {
   Label?: LabelConfig;
   ListRow?: ListRowConfig;
   LoadingState?: LoadingStateConfig;
+  ModelPicker?: ModelPickerConfig;
   Popover?: PopoverConfig;
   Progress?: ProgressConfig;
   SearchInput?: SearchInputConfig;

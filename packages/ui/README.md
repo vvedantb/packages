@@ -1188,6 +1188,34 @@ const config = {
 - `Accordion`: `classes.item`, `classes.header`, `classes.trigger`, `classes.content` (the animated panel), `classes.contentInner` (the padded box inside it), `icon`. New `AccordionTrigger` prop `icon`: shown after the children (default the chevron).
 - `Collapsible`: `classes.trigger`, `classes.content`. The parts have no built-in classes, so without an entry `className` passes through untouched.
 
+## Agent activity, plan, tests, preview and model picker (Unreleased)
+
+AI surfaces that came from an app, exported from the root. They use the shadcn colour names (`bg-muted`, `bg-secondary`, `bg-popover`, `bg-card`) and a few app utilities (`motion-press`, `smooth-shadow-*`, `scrollbar`, `scrollbar-none`, `text-2xs`, `text-3xs`), so they look as intended with `compat-shadcn-rgb.css` and an app that defines those utilities. They merge a caller `className` with `UiConfig.cn` when set.
+
+- `ActivityTasks` (`steps`, `isStreaming`, `name`, `startedAt`, `duration`, `layout` `folded | inline`, `onOpenFile`, `onRequestFullDetail`): an agent turn as a timeline. Tool runs fold behind one summary line, reasoning and mid-turn text render as Markdown, subtasks nest their steps, long timelines cap behind "Show N more". `OpenSubagentContext` gives subtask rows a "View" link.
+- The step model: `ActivityStep`, `TodoItem`, `ActivityQuestion`, `ActivityQuestionOption`, `ActivityStepOutput`, `ActivityStepEdit`, `stepHasRichDetail`, `activityStepConfig` (glyph and fallback label per step type), `ActivityThinkingIcon`, `useSpinnerVerb`, `getRandomVerb`, `useElapsedSeconds`, `formatElapsed`, `useStreamingDisclosure`.
+- `ActivityQuestionCard` (`questions`, `answers`): the read-only record of a multiple-choice question and its answer.
+- `Trace`, `TraceLine` (`status` `running | error | pending`), `TraceIcon` (`iconKey` crossfades a swap), `TraceTitle` (`shimmer`), `TraceDescription`, `TraceCollapsible`, `TraceCollapsibleTrigger` (`trailing`: controls beside the trigger), `TraceCollapsibleContent`: one agent step as one line, with an optional fold.
+- `Plan*`, `TestResults*` / `TestSuite*` / `Test*`, `WebPreview*` (with `useWebPreview`), `Context*` (context window usage in a hover card).
+- `ModelSelect` (button and popover; `simpleLadder` opens on a discrete slider), `ModelPickerContent` (the searchable model and account list, for menus; pair it with `modelPickerSurfaceClass`), `ModelOption`, `ModelAccount`, `findModelOption`, `formatModelDisplayLabel`, `getProviderLabel`, `ProviderIcon` (`claude`, `codex`, `opencode`, `cursor`).
+- `Slider`: `children` now render inside the track, after the range (tick marks). Before, they were dropped.
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `ActivityTasks` | `name` (agent name in the streaming header, default `"Agent"`; the `name` prop wins), `markdown` (a component that takes `{ className, mode, children }` and renders reasoning and reply text; default `Streamdown` with the cjk, code, math and mermaid plugins), `thinkingIcon` (`{ src, alt }`: `ActivityThinkingIcon` shows this image, 16px and round, instead of the brain glyph). |
+| `ActivityQuestionCard` | `classes.selectedOption` (fill of the picked option, default `bg-surface-tertiary`). |
+| `ModelPicker` | `classes.trigger` (replaces the `ModelSelect` trigger classes), `badgeRing.trigger` / `badgeRing.panel` (ring colour around the account initials badge on the trigger and in the panel; default `var(--color-border)` / `var(--color-muted)`). |
+
+```tsx
+const config = {
+  ActivityTasks: { name: "Ada", markdown: AppMarkdown, thinkingIcon: { src: "/logo.svg", alt: "Ada" } },
+  ActivityQuestionCard: { classes: { selectedOption: "bg-accent" } },
+  ModelPicker: { badgeRing: { trigger: "rgb(var(--input))", panel: "rgb(var(--muted))" } },
+} satisfies UiConfig;
+```
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).

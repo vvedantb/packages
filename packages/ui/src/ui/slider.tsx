@@ -21,6 +21,7 @@ type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> &
 // `id`, `aria-label`, `aria-labelledby` and `aria-valuetext` go to the first
 // Thumb, not Root: the thumb is the focusable role="slider" element, so
 // `<Label htmlFor={id}>` and the accessible name land on it. The ref stays on Root.
+// `children` render inside the track, after the range (for example tick marks).
 const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>, SliderProps>(
   (
     {
@@ -33,6 +34,7 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
       trackClassName,
       rangeClassName,
       thumbClassName,
+      children,
       ...props
     },
     ref,
@@ -64,6 +66,7 @@ const Slider = React.forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>,
               rangeClassName,
             )}
           />
+          {children}
         </SliderPrimitive.Track>
         {Array.from({ length: count }, (_, i) => (
           <SliderPrimitive.Thumb
