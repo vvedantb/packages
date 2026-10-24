@@ -1095,7 +1095,7 @@ New props and exports:
 - Config `Select.triggerSlot`: adds `data-slot="select-trigger"`, which the `ButtonGroup` selectors read.
 - Config `Command.emptyClassNameReplaces`: a `className` on `CommandEmpty` (even `""`) replaces its classes instead of merging.
 
-## Loaders, rows, status and app config (Unreleased)
+## Loaders, rows, status and app config (0.18.0)
 
 Components and helpers that came from an app, plus `UiConfig` entries (`UiConfigProvider`) for existing components. Without a provider every existing component renders as before.
 
@@ -1157,7 +1157,7 @@ Components and helpers that came from an app, plus `UiConfig` entries (`UiConfig
 - Identity colours: `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT` (class names `text-cat-N`, `bg-cat-N`, `bg-cat-N/12`, `border-cat-N`; the app defines the `cat` colours).
 - Radius classes: `SURFACE_RADIUS_CLASS` (`rounded-surface`), `CONTROL_RADIUS_CLASS` (`rounded-control`).
 
-## App config: controls (Unreleased)
+## App config: controls (0.18.0)
 
 `UiConfigProvider` entries for buttons, badges, fields, toggles, tabs, accordion, collapsible, calendar and carousel. Without an entry each one renders its built-in DOM. A `classes` part replaces that part's built-in classes (a part left out keeps them); the caller `className` merges last. Other keys are prop defaults; an explicit prop wins.
 
@@ -1190,7 +1190,7 @@ const config = {
 - `Accordion`: `classes.item`, `classes.header`, `classes.trigger`, `classes.content` (the animated panel), `classes.contentInner` (the padded box inside it), `icon`. New `AccordionTrigger` prop `icon`: shown after the children (default the chevron).
 - `Collapsible`: `classes.trigger`, `classes.content`. The parts have no built-in classes, so without an entry `className` passes through untouched.
 
-## Agent activity, plan, tests, preview and model picker (Unreleased)
+## Agent activity, plan, tests, preview and model picker (0.18.0)
 
 AI surfaces that came from an app, exported from the root. They use the shadcn colour names (`bg-muted`, `bg-secondary`, `bg-popover`, `bg-card`) and a few app utilities (`motion-press`, `smooth-shadow-*`, `scrollbar`, `scrollbar-none`, `text-2xs`, `text-3xs`), so they look as intended with `compat-shadcn-rgb.css` and an app that defines those utilities. They merge a caller `className` with `UiConfig.cn` when set.
 
@@ -1219,7 +1219,7 @@ const config = {
 } satisfies UiConfig;
 ```
 
-## Kibo blocks and markdown (Unreleased)
+## Kibo blocks and markdown (0.18.0)
 
 Blocks that came from an app (built on [Kibo UI](https://www.kibo-ui.com)) and its markdown renderer. All exported from the root.
 
@@ -1254,7 +1254,7 @@ const config = {
 } satisfies UiConfig;
 ```
 
-## App config: AI chat (Unreleased)
+## App config: AI chat (0.18.0)
 
 `UiConfigProvider` entries for the AI chat elements. Without an entry each one renders its built-in DOM; `classes` parts replace built-in classes and the caller `className` merges last (with `UiConfig.cn`); other keys are prop defaults, and an explicit prop wins.
 
