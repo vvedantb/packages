@@ -26,6 +26,11 @@
  * `--color-sidebar-accent` (sidebar nav row fill) reads the app's
  * `--sidebar-accent` when it is defined, else `--secondary`.
  *
+ * `text-muted` is grey text in tokens.css, but shadcn's `--muted` is a fill.
+ * `--text-color-muted` points the text utility (and its variants and opacity
+ * modifiers) at `--muted-foreground`. `bg-muted` and `border-muted` keep
+ * `--muted`.
+ *
  * `--color-card` and `--color-muted` are references to `--card` and `--muted`.
  * `SonnerToaster sonnerVars` reads them, along with `--color-border` and
  * `--color-foreground`. An app that already maps those names keeps its own
@@ -38,6 +43,7 @@
 @theme inline {
   --color-card: rgb(var(--card));
   --color-muted: rgb(var(--muted));
+  --text-color-muted: rgb(var(--muted-foreground));
   --color-default: rgb(var(--secondary));
   --color-default-foreground: rgb(var(--secondary-foreground));
   --color-surface: rgb(var(--card));

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.1
+
+Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.
+
+- `compat-shadcn-rgb.css`: adds `--text-color-muted: rgb(var(--muted-foreground))` to its `@theme inline`. The compat file maps `--color-muted` to the app's `--muted`, which in a shadcn theme is a fill (for example 239 239 240), so `text-muted` came out as light grey on white. Tailwind reads `--text-color-*` before `--color-*` for `text-*` only, so `text-muted`, its variants (`hover:`, `[&_...]:`) and opacity modifiers (`text-muted/80`) now resolve to `--muted-foreground`.
+- Affected: the `text-muted` exceptions (`InputArea` ghost text, `Button` `flat`, `CommandDialog` `listLayout="auto"` headings, the app shell rail tiles, account and sign-out classes, the landing kit and site footer classes).
+- Unchanged: `bg-muted`, `border-muted` and the `dark:` `muted` classes on `Switch` and `Slider` still read `--muted`. Apps on `tokens.css` see no change: there `--muted` is already the grey text colour.
+- Tests: `tokens/test/tailwind.test.mjs` compiles the compat file and checks `text-muted`, `hover:text-muted`, `text-muted/80` and an arbitrary-variant `text-muted` read `--muted-foreground`, while `bg-muted` and `border-muted` read `--muted`. `tokens/test/package.test.mjs` checks version 0.17.1.
+
 ## 0.17.0
 
 One search field, and a lighter focus style on every field.

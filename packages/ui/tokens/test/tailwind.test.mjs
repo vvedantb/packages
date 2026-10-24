@@ -99,6 +99,24 @@ test("bg-sidebar-accent comes with tokens.css and with compat-shadcn-rgb.css", {
   assert.match(fromCompat, /\.bg-sidebar-accent\s*\{\s*background-color: rgb\(var\(--sidebar-accent, var\(--secondary\)\)\)/);
 });
 
+test("compat text-muted is muted-foreground text; bg-muted stays the --muted fill", { skip }, async () => {
+  const out = await build(`@import "tailwindcss"; @import "./src/css/compat-shadcn-rgb.css";`, [
+    "text-muted",
+    "hover:text-muted",
+    "text-muted/80",
+    "[&_[cmdk-group-heading]]:text-muted",
+    "bg-muted",
+    "border-muted",
+  ]);
+  // The optimiser merges `.text-muted` and `.text-muted\/80` into one selector list.
+  assert.match(out, /\.text-muted(?:, [^{]+)?\s*\{\s*color: rgb\(var\(--muted-foreground\)\)/);
+  assert.match(out, /\.hover\\:text-muted:hover\s*\{\s*color: rgb\(var\(--muted-foreground\)\)/);
+  assert.match(out, /\.text-muted\\\/80\s*\{\s*color: color-mix\(in oklab, rgb\(var\(--muted-foreground\)\) 80%, transparent\)/);
+  assert.match(out, /\[cmdk-group-heading\][^{]*\{\s*color: rgb\(var\(--muted-foreground\)\)/);
+  assert.match(out, /\.bg-muted\s*\{\s*background-color: rgb\(var\(--muted\)\)/);
+  assert.match(out, /\.border-muted\s*\{\s*border-color: rgb\(var\(--muted\)\)/);
+});
+
 test("preset loads through @config and generates its theme", { skip }, async () => {
   const { default: preset, tokensPreset, cssVar } = await import("../src/tailwind-preset.mjs");
   assert.equal(preset.darkMode, "class");
