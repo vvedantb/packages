@@ -18,7 +18,7 @@ const Switch = React.forwardRef<
     <SwitchPrimitive.Root
       className={merge(
         classes?.root ??
-          "peer relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-border bg-default transition-[background-color,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:bg-default dark:data-[state=unchecked]:border-muted/60 dark:data-[state=unchecked]:bg-muted/40 before:absolute before:inset-[-8px] before:content-['']",
+          "peer relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-border bg-default transition-[background-color,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:bg-default dark:data-[state=unchecked]:border-muted/60 dark:data-[state=unchecked]:bg-muted/40 before:absolute before:inset-[-8px] before:content-['']", // check-tokens-allow: muted
         className,
       )}
       {...props}

@@ -1,6 +1,7 @@
 // Fails when package components read colour names that clash with shadcn:
-// `text-muted`, accent-as-brand utilities, or raw `var(--<colour>)` reads.
-// Components must use `text-muted-foreground`, `primary` and `--color-*`.
+// `text-muted`, accent-as-brand utilities, fill-type `muted` (`bg-muted`,
+// `border-muted`, …), or raw `var(--<colour>)` reads. Components must use
+// `text-muted-foreground`, `primary`, `surface-secondary` and `--color-*`.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +21,21 @@ const rules = [
     re: /(?<!var\(--color-[\w-]+,\s*)var\(--(?:muted|accent|accent-foreground|overlay|overlay-foreground|foreground|background|border|surface|surface-foreground)\)/g,
     msg: "read var(--color-*) instead of the raw variable",
     tsOnly: true,
+  },
+  {
+    // `muted` is a text colour in tokens.css and a fill in shadcn; under
+    // compat-shadcn-rgb.css `surface-secondary` is the same fill. Variants
+    // (`dark:`, `hover:`) and opacity (`/40`) included; `*-muted-foreground` is not.
+    re: /(?<![\w-])(?:bg|from|via|to|fill|stroke|border|ring|divide|outline)-muted(?:\/[\w.[\]]+)?(?![\w-])/g,
+    msg: "use the surface-secondary equivalent",
+    allow: "check-tokens-allow: muted",
+    files: new Set([
+      // Fills kept on purpose: the stronger dark-mode Switch off
+      // state, the Slider track and thumb, the slash menu row hover.
+      "src/ui/switch.tsx",
+      "src/ui/slider.tsx",
+      "src/composer/input-area/ComposerSlashMenu.tsx",
+    ]),
   },
 ];
 
@@ -52,7 +68,7 @@ for (const d of dirs) {
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
-        if (r.allow && line.includes(r.allow) && ALLOW_FILES.has(relative(root, file))) continue;
+        if (r.allow && line.includes(r.allow) && (r.files ?? ALLOW_FILES).has(relative(root, file))) continue;
         for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }
     });

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { animate } from "motion";
 import { cn } from "../../src/utils/cn";
+import { rubberband } from "../../src/utils/gesture";
 
 /** Opt-in resizable sidebar panel. Widths are panel px, rail excluded. */
 export type SidebarResizeOptions = {
@@ -44,10 +45,6 @@ const SidebarResizeContext = createContext<SidebarResizeState | null>(null);
 export const SidebarResizeProvider = SidebarResizeContext.Provider;
 
 const KEYBOARD_STEP = 16;
-
-function rubberband(overshoot: number, dimension: number, constant = 0.55): number {
-  return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
-}
 
 type Sample = { x: number; t: number };
 

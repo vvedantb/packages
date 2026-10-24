@@ -8,18 +8,35 @@ export { fieldFocusClass, fieldFocusWithinClass } from "./ui/_field-classes";
 export * from "./ui/surface-classes";
 export * from "./motion/presets";
 export * from "./motion/panel-transition";
+// Gesture physics and animation budget helpers (shared clock, on-screen and
+// page-visibility pausing for infinite animations).
+export { DRAG_ACTIVATION_DISTANCE_PX, projectVelocity, rubberband } from "./utils/gesture";
+export {
+  bindRuntimeAnimation,
+  ensureRuntimeVisibility,
+  observeAnimVisibility,
+  useAnimOffscreenRef,
+} from "./utils/runtimeVisibility";
+export { msUntilNextBoundary, quantizedSnapshot, subscribeQuantized } from "./utils/sharedClock";
+export { CAT_SLOT_COUNT, catColorForId, catColorForSlot, catSlotForId } from "./utils/cat-color";
+export type { CatColorClasses, CatSlot } from "./utils/cat-color";
+export { CONTROL_RADIUS_CLASS, SURFACE_RADIUS_CLASS } from "./utils/surface-radius";
 export { restoreModalScrollLock } from "./ui/overlay-a11y";
 
+export * from "./ui/avatar";
 export * from "./ui/badge";
+export * from "./ui/border-beam";
 export * from "./ui/breadcrumb";
 export * from "./ui/button";
 export * from "./ui/button-group";
 export * from "./ui/card";
 export * from "./ui/carousel";
+export * from "./ui/centered-spinner";
 export * from "./ui/checkbox";
 export * from "./ui/collapsible";
 export * from "./ui/command";
 export * from "./ui/context-menu";
+export * from "./ui/crossfade-icon";
 export * from "./ui/dialog";
 export * from "./ui/alert-dialog";
 export * from "./ui/confirm-dialog";
@@ -30,9 +47,12 @@ export * from "./ui/input";
 export * from "./ui/label";
 export * from "./ui/labeled-slider-row";
 export * from "./ui/labeled-switch-row";
+export * from "./ui/list-row";
+export * from "./ui/loading-state";
 export * from "./ui/pagination";
 export * from "./ui/popover";
 export * from "./ui/progress";
+export * from "./ui/refresh-spin-icon";
 export {
   Select as RadixSelect,
   SelectContent as RadixSelectContent,
@@ -54,6 +74,8 @@ export * from "./ui/slide-over-panel";
 export * from "./ui/slider";
 export * from "./ui/sonner";
 export * from "./ui/spinner";
+export * from "./ui/status-dot";
+export * from "./ui/surface";
 export * from "./ui/switch";
 export * from "./ui/table";
 export * from "./ui/tabs";
@@ -117,6 +139,11 @@ export * from "./ai-elements/suggestion";
 // Artifact viewers: frame with the state bridge, card, list, toolbar, viewer.
 // The core (schemas, state ops, document wrapper) comes from `@vvedantb/server`.
 export * from "./artifacts";
+
+// Kibo UI blocks: the sortable list. It drags with `useDragSensors`, the
+// shared dnd-kit sensor split.
+export * from "./kibo";
+export { useDragSensors } from "./utils/useDragSensors";
 
 export * from "./audio";
 

@@ -1,20 +1,37 @@
 // @vitest-environment happy-dom
-// The `UiConfig` entries of Card, Table, Progress, Separator and Label:
-// config absent = built-in output, config present = replaced part, explicit
-// className still merges last.
+// Components moved from eva (spinners, loaders, status dot, list row, beam,
+// surface, avatar) and the `UiConfig` entries of Card, Table, Progress,
+// Separator and Label: config absent = built-in output, config present =
+// replaced part, explicit prop wins.
 import { act, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { clsx } from "clsx";
 import * as rootExports from "../index";
+import { Avatar, AvatarFallback } from "./avatar";
+import { BorderBeam } from "./border-beam";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card";
+import { CenteredSpinner } from "./centered-spinner";
+import { CrossfadeIcon, CrossfadeIconSlot } from "./crossfade-icon";
 import { Label } from "./label";
+import { LIST_ROW_CONTROL_CLASS, ListRow } from "./list-row";
+import { LoadingState } from "./loading-state";
 import { Progress } from "./progress";
+import { RefreshSpinIcon } from "./refresh-spin-icon";
 import { Separator } from "./separator";
+import { Button } from "./button";
+import { Spinner, type SpinnerMark } from "./spinner";
+import { StatusDot } from "./status-dot";
+import { Surface, surfaceVariants } from "./surface";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 import { UiConfigProvider, type UiConfig } from "./ui-config";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+// happy-dom has no Web Animations API; the spinners and LoadingState start
+// their loops with `element.animate()` from a ref callback.
+const animate = vi.fn(() => ({ playState: "running", pause() {}, play() {}, cancel() {} }));
+Object.defineProperty(Element.prototype, "animate", { configurable: true, value: animate });
 
 let root: Root | null = null;
 
@@ -33,6 +50,7 @@ afterEach(async () => {
   await act(async () => root?.unmount());
   document.body.innerHTML = "";
   root = null;
+  animate.mockClear();
 });
 
 function el(host: ParentNode, selector: string): Element {
@@ -51,12 +69,274 @@ function classes(element: Element): string[] {
   return [...element.classList].sort();
 }
 
+const mark: SpinnerMark = {
+  viewBox: "0 0 10 10",
+  strokeWidth: 2,
+  dashArray: "0.3 0.7",
+  shapes: [
+    { points: "0,0 10,0 5,10", stroke: "#f00" },
+    { d: "M0 5h10", stroke: "#00f" },
+  ],
+};
+
 describe("root exports", () => {
-  it("exposes the new Card parts", () => {
-    for (const name of ["CardTitle", "CardDescription", "CardFooter", "CardAction"]) {
+  it("exposes the moved components and utils", () => {
+    for (const name of [
+      "Avatar", "AvatarImage", "AvatarFallback",
+      "BorderBeam", "CenteredSpinner", "CrossfadeIcon", "CrossfadeIconSlot",
+      "ListRow", "LIST_ROW_CONTROL_CLASS", "LoadingState", "RefreshSpinIcon", "StatusDot",
+      "Surface", "surfaceVariants", "SonnerToaster", "CardTitle", "CardDescription", "CardFooter", "CardAction",
+      "tokenTransition", "staggerDelay",
+      "rubberband", "projectVelocity", "DRAG_ACTIVATION_DISTANCE_PX",
+      "ensureRuntimeVisibility", "observeAnimVisibility", "bindRuntimeAnimation", "useAnimOffscreenRef",
+      "quantizedSnapshot", "subscribeQuantized", "msUntilNextBoundary",
+      "catColorForId", "catColorForSlot", "catSlotForId", "CAT_SLOT_COUNT",
+      "SURFACE_RADIUS_CLASS", "CONTROL_RADIUS_CLASS",
+    ]) {
       expect(rootExports, name).toHaveProperty(name);
     }
   });
+
+  it("keeps the motion tokens on the CSS durations", () => {
+    expect(rootExports.tokenTransition.fast).toMatchObject({ duration: 0.15 });
+    expect(rootExports.tokenTransition.base).toMatchObject({ duration: 0.22 });
+    expect(rootExports.tokenTransition.slow).toMatchObject({ duration: 0.32 });
+    expect(rootExports.staggerDelay(2)).toBeCloseTo(0.06);
+    expect(rootExports.staggerDelay(100)).toBe(0.2);
+  });
+});
+
+describe("Spinner mark", () => {
+  it("renders the loader icon without a mark", async () => {
+    const host = await mount(<Spinner />);
+    expect(classes(first(host))).toContain("animate-spin");
+    expect(host.querySelector("polygon")).toBeNull();
+  });
+
+  it("draws UiConfig.Spinner.mark with a running dash per shape", async () => {
+    const host = await mount(<Spinner size="sm" className="mr-1" />, { Spinner: { mark } });
+    const svg = first(host);
+    expect(svg.getAttribute("viewBox")).toBe("0 0 10 10");
+    expect(svg.getAttribute("role")).toBe("status");
+    expect(svg.getAttribute("aria-label")).toBe("Loading");
+    expect(classes(svg)).toEqual(["mr-1", "size-4"]);
+    const polygon = el(svg, "polygon");
+    expect(polygon.getAttribute("points")).toBe("0,0 10,0 5,10");
+    expect(polygon.getAttribute("stroke")).toBe("#f00");
+    expect(polygon.getAttribute("stroke-dasharray")).toBe("0.3 0.7");
+    expect(polygon.getAttribute("pathLength")).toBe("1");
+    expect(el(svg, "path").getAttribute("d")).toBe("M0 5h10");
+    expect(animate).toHaveBeenCalledTimes(2);
+  });
+
+  it("lets the mark prop win and honours decorative and pixel sizes", async () => {
+    const other: SpinnerMark = { ...mark, viewBox: "0 0 20 20" };
+    const host = await mount(<Spinner mark={other} decorative size={12} />, { Spinner: { mark } });
+    const svg = first(host);
+    expect(svg.getAttribute("viewBox")).toBe("0 0 20 20");
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
+    expect(svg.getAttribute("role")).toBeNull();
+    expect(svg.getAttribute("width")).toBe("12");
+    expect(svg.getAttribute("class")).toBe("");
+  });
+});
+
+describe("Spinner circle variant", () => {
+  const strokes = (host: HTMLElement) => [...host.querySelectorAll("circle")].map((c) => c.getAttribute("stroke"));
+
+  it("uses currentColor without config", async () => {
+    const host = await mount(<Spinner variant="circle" />);
+    expect(strokes(host)).toEqual(["currentColor", "currentColor", "currentColor"]);
+    expect(classes(first(host))).toEqual(["size-6"]);
+    expect(first(host).getAttribute("role")).toBe("status");
+  });
+
+  it("reads UiConfig.Spinner.circle; the colors prop wins", async () => {
+    const config = { Spinner: { circle: { track: "red", arc: "green", lead: "blue" } } };
+    expect(strokes(await mount(<Spinner variant="circle" />, config))).toEqual(["red", "green", "blue"]);
+    expect(strokes(await mount(<Spinner variant="circle" colors={{ lead: "black" }} />, config))).toEqual([
+      "currentColor",
+      "currentColor",
+      "black",
+    ]);
+  });
+
+  it("an explicit variant wins over the configured mark", async () => {
+    const config = { Spinner: { mark } };
+    expect((await mount(<Spinner />, config)).querySelector("polygon")).not.toBeNull();
+    expect((await mount(<Spinner variant="circle" />, config)).querySelector("polygon")).toBeNull();
+    expect(classes(first(await mount(<Spinner variant="icon" />, config)))).toContain("animate-spin");
+  });
+});
+
+it("Spinner ring variant is the Button loading ring", async () => {
+  const ring = first(await mount(<Spinner variant="ring" />));
+  const inButton = el(first(await mount(<Button loading>Go</Button>)), "svg");
+  expect(ring.outerHTML).toBe(inButton.outerHTML);
+  expect(ring.getAttribute("class")).toBe("h-4 w-4 animate-spin");
+  expect(ring.getAttribute("role")).toBeNull();
+});
+
+it("CenteredSpinner labels the spinner and centres it", async () => {
+  const host = await mount(<CenteredSpinner label="Opening" className="h-full" />);
+  const box = first(host);
+  expect(box.getAttribute("aria-busy")).toBe("true");
+  expect(classes(box)).toContain("h-full");
+  expect(el(box, "svg").getAttribute("aria-label")).toBe("Opening");
+});
+
+describe("LoadingState", () => {
+  it("uses neutral defaults", async () => {
+    const host = await mount(<LoadingState />);
+    const label = el(host, "span.font-medium");
+    expect(label.textContent).toBe("Working");
+    expect(label.getAttribute("class")).toBe("text-sm font-medium text-muted-foreground");
+    expect(label.getAttribute("style")).toBeNull();
+    const cell = el(host, "[data-anim-chrome] > span");
+    expect(cell.getAttribute("style")).toContain("background-color: currentcolor");
+  });
+
+  it("reads label, colors, label classes and labelStyle from UiConfig.LoadingState", async () => {
+    const host = await mount(<LoadingState />, {
+      LoadingState: {
+        label: "Thinking",
+        colors: ["red", "green", "blue"],
+        classes: { label: "shimmer font-medium" },
+        labelStyle: { letterSpacing: "1px" },
+      },
+    });
+    const label = el(host, "span.font-medium");
+    expect(label.textContent).toBe("Thinking");
+    expect(label.getAttribute("class")).toBe("shimmer font-medium");
+    expect(label.getAttribute("style")).toBe("letter-spacing: 1px;");
+    const cells = [...host.querySelectorAll("[data-anim-chrome] > span")];
+    expect(cells.map((c) => c.getAttribute("style")?.match(/background-color: (\w+)/)?.[1]).slice(0, 3)).toEqual([
+      "red",
+      "green",
+      "blue",
+    ]);
+  });
+
+  it("lets props win and names the iconOnly grid", async () => {
+    const host = await mount(<LoadingState label="Now" iconOnly colors={["a", "b", "c"]} />, {
+      LoadingState: { label: "Thinking" },
+    });
+    expect(first(host).getAttribute("aria-label")).toBe("Now");
+    expect(first(host).getAttribute("role")).toBe("status");
+  });
+});
+
+describe("StatusDot", () => {
+  it("replaces only the configured tone classes", async () => {
+    const config = { StatusDot: { classes: { tone: { done: "bg-app-done" } } } };
+    expect(classes(first(await mount(<StatusDot tone="done" />, config)))).toEqual(["bg-app-done", "rounded-full", "shrink-0", "size-1.5"]);
+    expect(classes(first(await mount(<StatusDot tone="critical" size="md" />, config)))).toEqual([
+      "bg-destructive",
+      "rounded-full",
+      "shrink-0",
+      "size-2",
+    ]);
+    expect(first(await mount(<StatusDot tone="done" />)).getAttribute("aria-hidden")).toBe("true");
+  });
+});
+
+describe("ListRow", () => {
+  it("renders a static row without an overlay", async () => {
+    const host = await mount(<ListRow>body</ListRow>);
+    expect(host.querySelector("[data-slot=row-control]")).toBeNull();
+    expect(classes(first(host))).toContain("bg-card");
+    expect(classes(first(host))).not.toContain("active:scale-[0.99]");
+  });
+
+  it("stretches a button for onClick and owns the click", async () => {
+    const onClick = vi.fn();
+    const parent = vi.fn();
+    const host = await mount(
+      <div onClick={parent}>
+        <ListRow onClick={onClick} aria-label="Open" selected accentClassName="bg-warning">
+          <button className={LIST_ROW_CONTROL_CLASS}>x</button>
+        </ListRow>
+      </div>,
+    );
+    const overlay = el(host, "button[data-slot=row-control]");
+    expect(overlay.getAttribute("aria-label")).toBe("Open");
+    await act(async () => (overlay as HTMLElement).click());
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(parent).not.toHaveBeenCalled();
+    const row = el(host, ".group");
+    expect(classes(row)).toEqual(expect.arrayContaining(["active:scale-[0.99]", "bg-primary/5", "ring-primary/30"]));
+    expect(classes(el(row, ".bg-warning"))).toContain("rounded-r-full");
+  });
+
+  it("lets modified clicks on an href row through", async () => {
+    const onClick = vi.fn();
+    const host = await mount(<ListRow href="/x" onClick={onClick}>b</ListRow>);
+    const link = el(host, "a[data-slot=row-control]");
+    const plain = new MouseEvent("click", { bubbles: true, cancelable: true });
+    await act(async () => link.dispatchEvent(plain));
+    expect(plain.defaultPrevented).toBe(true);
+    const modified = new MouseEvent("click", { bubbles: true, cancelable: true, metaKey: true });
+    await act(async () => link.dispatchEvent(modified));
+    expect(modified.defaultPrevented).toBe(false);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("replaces parts from UiConfig.ListRow.classes", async () => {
+    const host = await mount(
+      <ListRow link={<a href="/in" />} className="shrink-0" contentClassName="p-1">
+        b
+      </ListRow>,
+      { ListRow: { classes: { root: "app-row", interactive: "app-press", overlay: "app-overlay" } } },
+    );
+    expect(classes(first(host))).toEqual(["app-press", "app-row", "bg-card", "hover:bg-surface-secondary", "shrink-0"]);
+    expect(el(host, "a").getAttribute("class")).toBe("app-overlay");
+    expect(el(host, "a").getAttribute("href")).toBe("/in");
+    expect(classes(el(host, ".p-1"))).toEqual(["p-1", "relative", "text-left"]);
+  });
+});
+
+describe("BorderBeam", () => {
+  it("adds the beam overlay only while active", async () => {
+    expect((await mount(<BorderBeam active={false}>x</BorderBeam>)).querySelector(".beam-root")).toBeNull();
+    const host = await mount(
+      <BorderBeam active size="lg" colorVariant="colorful" className="rounded-surface" data-x="1">
+        x
+      </BorderBeam>,
+    );
+    expect(first(host).getAttribute("data-x")).toBe("1");
+    const overlay = el(host, ".beam-root");
+    expect(classes(overlay)).toEqual(["beam-colorful", "beam-lg", "beam-root"]);
+    expect(overlay.getAttribute("data-anim-chrome")).toBe("");
+    expect(overlay.querySelector(".beam")).not.toBeNull();
+  });
+});
+
+describe("CrossfadeIcon", () => {
+  it("shows one keyed icon at a time", async () => {
+    const host = await mount(<CrossfadeIcon show whenTrue={<b>on</b>} whenFalse={<i>off</i>} />);
+    expect(host.textContent).toBe("on");
+    expect(first(host).getAttribute("class")).toBe("relative flex size-5 items-center justify-center");
+    const slot = await mount(<CrossfadeIconSlot iconKey="a">A</CrossfadeIconSlot>);
+    expect(slot.textContent).toBe("A");
+  });
+
+  it("RefreshSpinIcon swaps the refresh glyph for a circle Spinner while busy", async () => {
+    expect((await mount(<RefreshSpinIcon busy={false} />)).querySelector("[role=status]")).toBeNull();
+    expect((await mount(<RefreshSpinIcon busy />)).querySelector("[role=status]")).not.toBeNull();
+  });
+});
+
+it("Surface and Avatar render their classes", async () => {
+  expect(classes(first(await mount(<Surface density="tight">x</Surface>)))).toEqual(
+    surfaceVariants({ density: "tight" }).split(" ").sort(),
+  );
+  const avatar = await mount(
+    <Avatar>
+      <AvatarFallback>AB</AvatarFallback>
+    </Avatar>,
+  );
+  expect(classes(first(avatar))).toContain("rounded-full");
+  expect(avatar.textContent).toBe("AB");
 });
 
 describe("UiConfig class replacement", () => {
@@ -151,6 +431,21 @@ describe("UiConfig.cn", () => {
     Progress: <Progress value={10} />,
     Separator: <Separator />,
     Label: <Label>L</Label>,
+    Spinner: <Spinner />,
+    MarkSpinner: <Spinner mark={mark} />,
+    SpinnerCircle: <Spinner variant="circle" />,
+    SpinnerRing: <Spinner variant="ring" />,
+    StatusDot: <StatusDot tone="done" />,
+    ListRow: <ListRow>Row</ListRow>,
+    Avatar: (
+      <Avatar>
+        <AvatarFallback>A</AvatarFallback>
+      </Avatar>
+    ),
+    BorderBeam: <BorderBeam active={false}>x</BorderBeam>,
+    Surface: <Surface />,
+    CenteredSpinner: <CenteredSpinner label="Loading" />,
+    RefreshSpinIcon: <RefreshSpinIcon busy={false} />,
   };
 
   it.each(Object.keys(nodes))("%s merges with the app merger", async (name) => {

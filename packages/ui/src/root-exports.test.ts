@@ -27,6 +27,7 @@ test("root exposes former subpath APIs", () => {
     "SiteFooter", "PricingModal", "RailCollapseTile",
     "ConvexClerkProvider", "parseClientEnv", "VITE_ENV_NAMES", "useEnsureUser",
     "Slider", "LabeledSliderRow", "SearchInput", "fieldFocusClass", "fieldFocusWithinClass",
+    "SortableListProvider", "SortableListItem",
   ]) {
     expect(root, name).toHaveProperty(name);
   }
