@@ -11,7 +11,7 @@ import {
   treeHasDialogDescription,
   useCompactOverlay,
 } from "./overlay-a11y";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `Dialog*` (see `UiConfigProvider`). */
 export interface DialogConfig {
@@ -45,11 +45,12 @@ const DialogTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
 >((props, ref) => {
   const trigger = useUiConfig("Dialog")?.classes?.trigger;
+  const merge = useCn();
   // Without config, pass props untouched: Radix's Slot turns an explicit
   // `className={undefined}` into `class=""`.
   if (trigger === undefined) return <DialogPrimitive.Trigger ref={ref} {...props} />;
   const { className, ...rest } = props;
-  return <DialogPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+  return <DialogPrimitive.Trigger ref={ref} className={merge(trigger, className)} {...rest} />;
 });
 DialogTrigger.displayName = DialogPrimitive.Trigger.displayName;
 
@@ -61,10 +62,11 @@ const DialogOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
   const overlay = useUiConfig("Dialog")?.classes?.overlay;
+  const merge = useCn();
   return (
     <DialogPrimitive.Overlay
       ref={ref}
-      className={cn(
+      className={merge(
         overlay ?? ["fixed inset-0 z-50 bg-backdrop backdrop-blur-md", overlayMotionClass],
         className,
       )}
@@ -103,6 +105,7 @@ const DialogContent = React.forwardRef<
   ) => {
     const config = useUiConfig("Dialog");
     const classes = config?.classes;
+    const merge = useCn();
     const viewportAware = viewportAwareProp ?? config?.viewportAware ?? true;
     const compactViewport = useCompactOverlay();
     const compact = viewportAware && compactViewport;
@@ -187,7 +190,7 @@ const DialogContent = React.forwardRef<
               : {})}
           onOpenAutoFocus={handleOpenAutoFocus}
           data-compact={compact ? "true" : undefined}
-          className={cn(
+          className={merge(
             classes?.content ??
               "glass-panel-strong z-50 flex w-full flex-col gap-4 p-6 text-overlay-foreground smooth-shadow-ring-xl",
             compact
@@ -249,9 +252,10 @@ const DialogHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
   const header = useUiConfig("Dialog")?.classes?.header;
+  const merge = useCn();
   return (
     <div
-      className={cn(header ?? "flex flex-col gap-1.5 pr-10 text-left", className)}
+      className={merge(header ?? "flex flex-col gap-1.5 pr-10 text-left", className)}
       {...props}
     />
   );
@@ -263,9 +267,10 @@ const DialogBody = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
   const body = useUiConfig("Dialog")?.classes?.body;
+  const merge = useCn();
   return (
     <div
-      className={cn(
+      className={merge(
         body ?? "min-h-11 flex-1 overflow-y-auto overscroll-contain",
         className,
       )}
@@ -284,10 +289,11 @@ const DialogFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
   const footer = useUiConfig("Dialog")?.classes?.footer;
+  const merge = useCn();
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
+      className={merge(
         footer ?? [
           "mt-auto flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end",
           "pb-[max(0px,env(safe-area-inset-bottom,0px))]",
@@ -306,10 +312,11 @@ const DialogTitle = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => {
   const title = useUiConfig("Dialog")?.classes?.title;
+  const merge = useCn();
   return (
     <DialogPrimitive.Title
       ref={ref}
-      className={cn(
+      className={merge(
         title ?? "text-lg font-semibold tracking-normal text-foreground text-balance",
         className,
       )}
@@ -324,10 +331,11 @@ const DialogDescription = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => {
   const description = useUiConfig("Dialog")?.classes?.description;
+  const merge = useCn();
   return (
     <DialogPrimitive.Description
       ref={ref}
-      className={cn(
+      className={merge(
         description ??
           // `--muted` is ~3.5:1 on overlay; mix toward overlay-foreground for 4.5:1.
           "text-sm leading-relaxed text-[color-mix(in_oklch,var(--color-popover-foreground,var(--overlay-foreground))_72%,var(--color-popover,var(--overlay)))]",

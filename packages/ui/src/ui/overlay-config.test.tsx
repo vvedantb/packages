@@ -5,6 +5,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
+import { clsx } from "clsx";
 import * as UI from "../index";
 import { UiConfigProvider, type UiConfig } from "./ui-config";
 
@@ -519,5 +520,49 @@ describe("Command config", () => {
     expect(el('[role="dialog"]').className).toContain("c-dialog");
     expect(el('[role="dialog"]').className).not.toContain("sm:max-w-xl");
     expect(el("[cmdk-root]").className).toContain("c-command");
+  });
+});
+
+describe("UiConfig.cn", () => {
+  // joins without resolving conflicts, so a built-in class survives a caller one
+  const config: UiConfig = { cn: (...inputs) => clsx(inputs, "merged") };
+
+  it("Command merges a caller className with the app merger", async () => {
+    const tree = <UI.Command className="rounded-none">x</UI.Command>;
+    // the built-in cn treats `rounded-lg` and `rounded-none` as one group
+    await mount(tree);
+    expect(el("[cmdk-root]").classList.contains("rounded-lg")).toBe(false);
+    await act(async () => root?.unmount());
+    document.body.innerHTML = "";
+    await mount(tree, config);
+    expect(el("[cmdk-root]").classList.contains("rounded-lg")).toBe(true);
+    expect(el("[cmdk-root]").classList.contains("merged")).toBe(true);
+  });
+
+  it("the overlay parts merge with the app merger", async () => {
+    await mount(
+      <>
+        <UI.Dialog open>
+          <UI.DialogContent className="extra">
+            <UI.DialogTitle className="extra">T</UI.DialogTitle>
+            <UI.DialogDescription>D</UI.DialogDescription>
+          </UI.DialogContent>
+        </UI.Dialog>
+        <UI.Select open defaultValue="a">
+          <UI.SelectTrigger className="extra">
+            <UI.SelectValue />
+          </UI.SelectTrigger>
+          <UI.SelectContent>
+            <UI.SelectItem value="a">A</UI.SelectItem>
+          </UI.SelectContent>
+        </UI.Select>
+      </>,
+      config,
+    );
+    expect(el('[role="dialog"]').classList.contains("merged")).toBe(true);
+    expect(el('[role="dialog"] h2').classList.contains("merged")).toBe(true);
+    expect(el('[role="combobox"]').classList.contains("merged")).toBe(true);
+    expect(el('[role="listbox"]').classList.contains("merged")).toBe(true);
+    expect(el('[role="option"]').classList.contains("merged")).toBe(true);
   });
 });

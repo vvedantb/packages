@@ -6,6 +6,7 @@
 import { act, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { clsx } from "clsx";
 import { toast } from "sonner";
 import * as rootExports from "../index";
 import { Alert, AlertDescription } from "./alert";
@@ -404,6 +405,49 @@ describe("UiConfig class replacement", () => {
     expect(el(host, "label").getAttribute("class")).toBe("app-label x");
     const plain = await mount(<Separator />);
     expect(first(plain).getAttribute("class")).toBe("shrink-0 bg-separator h-px w-full");
+  });
+});
+
+describe("UiConfig.cn", () => {
+  const config: UiConfig = { cn: (...inputs) => clsx(inputs, "merged") };
+  const nodes: Record<string, ReactElement> = {
+    Card: <Card className="extra" />,
+    Table: (
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell className="extra">C</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    ),
+    Progress: <Progress value={10} />,
+    Separator: <Separator />,
+    Label: <Label>L</Label>,
+    Spinner: <Spinner />,
+    MarkSpinner: <Spinner mark={mark} />,
+    CircleSpinner: <CircleSpinner />,
+    StatusDot: <StatusDot tone="done" />,
+    ListRow: <ListRow>Row</ListRow>,
+    Alert: (
+      <Alert>
+        <AlertDescription>D</AlertDescription>
+      </Alert>
+    ),
+    Avatar: (
+      <Avatar>
+        <AvatarFallback>A</AvatarFallback>
+      </Avatar>
+    ),
+    BorderBeam: <BorderBeam active={false}>x</BorderBeam>,
+    Surface: <Surface />,
+    CenteredSpinner: <CenteredSpinner label="Loading" />,
+    RefreshSpinIcon: <RefreshSpinIcon busy={false} />,
+  };
+
+  it.each(Object.keys(nodes))("%s merges with the app merger", async (name) => {
+    const host = await mount(nodes[name], config);
+    expect(host.querySelector(".merged")).not.toBeNull();
   });
 });
 

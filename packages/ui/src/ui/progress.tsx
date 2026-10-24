@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 export interface ProgressConfig {
   /** Replaces the built-in classes of a part. A part left out keeps its default. */
@@ -13,10 +12,11 @@ const Progress = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
 >(({ className, value, ...props }, ref) => {
   const classes = useUiConfig("Progress")?.classes;
+  const merge = useCn();
   return (
     <ProgressPrimitive.Root
       ref={ref}
-      className={cn(
+      className={merge(
         classes?.root ?? "relative h-2.5 w-full overflow-hidden rounded-full bg-default/85",
         className,
       )}

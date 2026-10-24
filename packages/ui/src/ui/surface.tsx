@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "../utils/cn";
+import { useCn } from "./ui-config";
 import { SURFACE_RADIUS_CLASS } from "../utils/surface-radius";
 
 /**
@@ -39,13 +39,10 @@ export interface SurfaceProps
     VariantProps<typeof surfaceVariants> {}
 
 const Surface = React.forwardRef<HTMLDivElement, SurfaceProps>(
-  ({ className, density, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(surfaceVariants({ density }), className)}
-      {...props}
-    />
-  ),
+  ({ className, density, ...props }, ref) => {
+    const merge = useCn();
+    return <div ref={ref} className={merge(surfaceVariants({ density }), className)} {...props} />;
+  },
 );
 Surface.displayName = "Surface";
 

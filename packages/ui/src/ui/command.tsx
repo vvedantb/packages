@@ -8,8 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./dialog";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `Command*` (see `UiConfigProvider`). */
 export interface CommandConfig {
@@ -43,10 +42,11 @@ const Command = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
 >(({ className, ...props }, ref) => {
   const root = useUiConfig("Command")?.classes?.root;
+  const merge = useCn();
   return (
     <CommandPrimitive
       ref={ref}
-      className={cn(
+      className={merge(
         root ??
           "flex h-full w-full flex-col overflow-hidden rounded-lg bg-overlay text-overlay-foreground",
         className,
@@ -89,9 +89,10 @@ function CommandDialog({
   ...props
 }: CommandDialogProps) {
   const classes = useUiConfig("Command")?.classes;
+  const merge = useCn();
   return (
     <Dialog {...props}>
-      <DialogContent className={cn(classes?.dialogContent ?? "overflow-hidden p-0 sm:max-w-xl", className)}>
+      <DialogContent className={merge(classes?.dialogContent ?? "overflow-hidden p-0 sm:max-w-xl", className)}>
         {title !== undefined || description !== undefined ? (
           <DialogHeader className="sr-only">
             <DialogTitle>{title}</DialogTitle>
@@ -117,6 +118,7 @@ const CommandInput = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => {
   const config = useUiConfig("Command");
+  const merge = useCn();
   return (
     <div
       className={config?.classes?.inputWrapper ?? "flex items-center border-b border-separator px-3.5"}
@@ -127,7 +129,7 @@ const CommandInput = React.forwardRef<
       )}
       <CommandPrimitive.Input
         ref={ref}
-        className={cn(
+        className={merge(
           config?.classes?.input ??
             "flex h-11 w-full max-sm:min-w-0 bg-transparent text-base sm:text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className,
@@ -144,10 +146,11 @@ const CommandList = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => {
   const list = useUiConfig("Command")?.classes?.list;
+  const merge = useCn();
   return (
     <CommandPrimitive.List
       ref={ref}
-      className={cn(list ?? "max-h-80 overflow-y-auto overflow-x-hidden pb-2", className)}
+      className={merge(list ?? "max-h-80 overflow-y-auto overflow-x-hidden pb-2", className)}
       {...props}
     />
   );
@@ -159,6 +162,7 @@ const CommandEmpty = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
 >(({ className, ...props }, ref) => {
   const config = useUiConfig("Command");
+  const merge = useCn();
   const classes = config?.classes?.empty ?? "py-8 text-center text-sm text-muted-foreground";
   return (
     <CommandPrimitive.Empty
@@ -166,7 +170,7 @@ const CommandEmpty = React.forwardRef<
       className={
         config?.emptyClassNameReplaces && className !== undefined
           ? className
-          : cn(classes, className)
+          : merge(classes, className)
       }
       {...props}
     />
@@ -179,10 +183,11 @@ const CommandGroup = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, ...props }, ref) => {
   const group = useUiConfig("Command")?.classes?.group;
+  const merge = useCn();
   return (
     <CommandPrimitive.Group
       ref={ref}
-      className={cn(
+      className={merge(
         group ??
           "overflow-hidden p-1.5 text-foreground [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground",
         className,
@@ -198,10 +203,11 @@ const CommandSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const separator = useUiConfig("Command")?.classes?.separator;
+  const merge = useCn();
   return (
     <CommandPrimitive.Separator
       ref={ref}
-      className={cn(separator ?? "-mx-1.5 h-px bg-separator", className)}
+      className={merge(separator ?? "-mx-1.5 h-px bg-separator", className)}
       {...props}
     />
   );
@@ -213,10 +219,11 @@ const CommandItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
 >(({ className, ...props }, ref) => {
   const item = useUiConfig("Command")?.classes?.item;
+  const merge = useCn();
   return (
     <CommandPrimitive.Item
       ref={ref}
-      className={cn(
+      className={merge(
         item ??
           "relative flex cursor-default gap-2 select-none items-center rounded-menu-item px-2.5 py-2 text-sm outline-none transition-colors data-[disabled=true]:pointer-events-none data-[selected=true]:bg-surface-tertiary/80 data-[selected=true]:text-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
@@ -232,9 +239,10 @@ function CommandShortcut({
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) {
   const shortcut = useUiConfig("Command")?.classes?.shortcut;
+  const merge = useCn();
   return (
     <span
-      className={cn(shortcut ?? "ml-auto text-xs tracking-wide text-muted-foreground/90", className)}
+      className={merge(shortcut ?? "ml-auto text-xs tracking-wide text-muted-foreground/90", className)}
       {...props}
     />
   );

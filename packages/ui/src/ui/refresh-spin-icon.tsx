@@ -1,7 +1,7 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { CrossfadeIcon } from "./crossfade-icon";
 import { CircleSpinner } from "./spinner";
-import { cn } from "../utils/cn";
+import { useCn } from "./ui-config";
 
 /**
  * Refresh glyph for a control that reloads something: it crossfades to
@@ -21,13 +21,14 @@ function RefreshSpinIcon({
   busy: boolean;
   className?: string;
 }) {
+  const merge = useCn();
   return (
     <CrossfadeIcon
       show={busy}
       trueKey="busy"
       falseKey="idle"
       variant="soft"
-      className={cn(
+      className={merge(
         "relative flex shrink-0 items-center justify-center",
         className,
       )}

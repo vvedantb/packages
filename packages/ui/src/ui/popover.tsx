@@ -1,12 +1,11 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { cn } from "../utils/cn";
 import {
   floatingSurfaceAnimateClass,
   floatingSurfaceClass,
 } from "./_menu-classes";
 import { fitViewportClass } from "./_menu-parts";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 type PopoverContentProps = React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
 
@@ -28,11 +27,12 @@ const PopoverTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>
 >((props, ref) => {
   const trigger = useUiConfig("Popover")?.classes?.trigger;
+  const merge = useCn();
   // Without config, pass props untouched: Radix's Slot turns an explicit
   // `className={undefined}` into `class=""`.
   if (trigger === undefined) return <PopoverPrimitive.Trigger ref={ref} {...props} />;
   const { className, ...rest } = props;
-  return <PopoverPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+  return <PopoverPrimitive.Trigger ref={ref} className={merge(trigger, className)} {...rest} />;
 });
 PopoverTrigger.displayName = PopoverPrimitive.Trigger.displayName;
 
@@ -47,6 +47,7 @@ const PopoverContent = React.forwardRef<
   }
 >(({ className, align = "center", sideOffset, fitViewport, collisionPadding, ...props }, ref) => {
   const config = useUiConfig("Popover");
+  const merge = useCn();
   const padding = collisionPadding ?? config?.collisionPadding;
   return (
     <PopoverPrimitive.Portal>
@@ -55,7 +56,7 @@ const PopoverContent = React.forwardRef<
         align={align}
         sideOffset={sideOffset ?? config?.sideOffset ?? 6}
         collisionPadding={fitViewport ? (padding ?? 8) : padding}
-        className={cn(
+        className={merge(
           config?.classes?.content ?? [
             "z-50 w-72 max-sm:max-w-[calc(100vw-2rem)] max-sm:max-h-[85dvh] max-sm:overflow-y-auto p-4 outline-none",
             floatingSurfaceClass,

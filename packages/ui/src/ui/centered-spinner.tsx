@@ -1,5 +1,5 @@
-import { cn } from "../utils/cn";
 import { Spinner } from "./spinner";
+import { useCn } from "./ui-config";
 
 /**
  * A loading state for a pane, list or page: {@link Spinner} (with the app's
@@ -14,10 +14,11 @@ export function CenteredSpinner({
   className,
   ...props
 }: React.ComponentProps<"div"> & { label: string }) {
+  const merge = useCn();
   return (
     <div
       aria-busy="true"
-      className={cn(
+      className={merge(
         "flex min-h-0 w-full flex-1 items-center justify-center p-6",
         className,
       )}

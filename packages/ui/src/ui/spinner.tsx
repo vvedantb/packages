@@ -1,7 +1,6 @@
 import { IconLoader2 } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
 import { bindRuntimeAnimation } from "../utils/runtimeVisibility";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 const sizeClasses = {
   sm: "size-4",
@@ -70,13 +69,14 @@ function MarkSpinner({
   ...props
 }: Omit<SpinnerProps, "mark" | "stroke" | "tone"> & { mark: SpinnerMark }) {
   const pixels = typeof size === "number" ? size : undefined;
+  const merge = useCn();
   return (
     <svg
       viewBox={mark.viewBox}
       {...(decorative ? { "aria-hidden": true } : { role: "status", "aria-label": "Loading" })}
       width={pixels}
       height={pixels}
-      className={cn(typeof size === "number" ? undefined : sizeClasses[size], className)}
+      className={merge(typeof size === "number" ? undefined : sizeClasses[size], className)}
       {...props}
     >
       {mark.shapes.map((shape, i) =>
@@ -114,6 +114,7 @@ function MarkSpinner({
 
 function Spinner({ mark, ...rest }: SpinnerProps) {
   const config = useUiConfig("Spinner");
+  const merge = useCn();
   const resolvedMark = mark ?? config?.mark;
   if (resolvedMark) {
     const { stroke: _stroke, tone: _tone, ...props } = rest;
@@ -124,7 +125,7 @@ function Spinner({ mark, ...rest }: SpinnerProps) {
     <IconLoader2
       {...(decorative ? { "aria-hidden": true } : { role: "status", "aria-label": "Loading" })}
       size={typeof size === "number" ? size : undefined}
-      className={cn(
+      className={merge(
         "animate-spin",
         tone === "muted" && "text-muted-foreground",
         typeof size === "number" ? undefined : sizeClasses[size],
@@ -182,6 +183,7 @@ function spinArc(arc: SVGGElement): () => void {
  */
 function CircleSpinner({ size = "md", colors, className, ...props }: CircleSpinnerProps) {
   const config = useUiConfig("CircleSpinner");
+  const merge = useCn();
   const { track = "currentColor", arc = "currentColor", lead = "currentColor" } =
     colors ?? config?.colors ?? {};
   return (
@@ -189,7 +191,7 @@ function CircleSpinner({ size = "md", colors, className, ...props }: CircleSpinn
       viewBox="0 0 24 24"
       role="status"
       aria-label="Loading"
-      className={cn(sizeClasses[size], className)}
+      className={merge(sizeClasses[size], className)}
       {...props}
     >
       <circle cx="12" cy="12" r="9" fill="none" stroke={track} strokeWidth={3} opacity={0.2} />

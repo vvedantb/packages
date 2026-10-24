@@ -1171,7 +1171,7 @@ const config = {
 <UiConfigProvider config={config}>{app}</UiConfigProvider>
 ```
 
-- `cn`: the class merger the components use instead of the built-in `cn`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead.
+- `cn`: the class merger the components use instead of the built-in `cn` when they merge a caller `className` (controls, overlays and foundations). Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead.
 - `Button`: `classes.base`, `classes.variant.<variant>`, `classes.size.<size>`. New size `xs` (`h-7 rounded-md px-2 text-xs hit-target`, 14px icons).
 - `Badge`: `classes.base`, `classes.variant.<variant>`.
 - `Input`, `Textarea`: `classes.base`.

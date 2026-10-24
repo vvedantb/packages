@@ -1,8 +1,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { IconX } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 // A modal panel pinned to the left or right edge, built on Radix Dialog. Unlike
 // `Sheet` (vaul) it has no drag gesture or handle: it slides in with CSS and
@@ -39,11 +38,12 @@ const SideSheetTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
 >((props, ref) => {
   const trigger = useUiConfig("SideSheet")?.classes?.trigger;
+  const merge = useCn();
   // Without config, pass props untouched: Radix's Slot turns an explicit
   // `className={undefined}` into `class=""`.
   if (trigger === undefined) return <DialogPrimitive.Trigger ref={ref} {...props} />;
   const { className, ...rest } = props;
-  return <DialogPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+  return <DialogPrimitive.Trigger ref={ref} className={merge(trigger, className)} {...rest} />;
 });
 SideSheetTrigger.displayName = "SideSheetTrigger";
 
@@ -52,10 +52,11 @@ const SideSheetOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
   const overlay = useUiConfig("SideSheet")?.classes?.overlay;
+  const merge = useCn();
   return (
     <DialogPrimitive.Overlay
       ref={ref}
-      className={cn(
+      className={merge(
         overlay ??
           "fixed inset-0 z-50 bg-backdrop backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
         className,
@@ -80,6 +81,7 @@ const SideSheetContent = React.forwardRef<
   }
 >(({ className, children, side: sideProp, hideCloseButton, ...props }, ref) => {
   const config = useUiConfig("SideSheet");
+  const merge = useCn();
   const classes = config?.classes;
   const side = sideProp ?? config?.side ?? "left";
   return (
@@ -87,7 +89,7 @@ const SideSheetContent = React.forwardRef<
       <SideSheetOverlay />
       <DialogPrimitive.Content
         ref={ref}
-        className={cn(
+        className={merge(
           classes?.content ??
             "fixed top-0 z-50 flex h-dvh w-80 max-w-[88vw] flex-col bg-overlay text-overlay-foreground smooth-shadow-ring-xl outline-hidden duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out motion-reduce:animate-none motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
           classes?.[side] ?? sideClass[side],

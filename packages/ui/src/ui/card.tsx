@@ -1,6 +1,5 @@
 import * as React from "react";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 export interface CardConfig {
   /** Replaces the built-in classes of a part. A part left out keeps its default. */
@@ -15,9 +14,14 @@ export interface CardConfig {
   };
 }
 
-/** The app's class string for `part`, else `fallback`. */
-function useCardClass(part: keyof NonNullable<CardConfig["classes"]>, fallback: string): string {
-  return useUiConfig("Card")?.classes?.[part] ?? fallback;
+/** The app's class string for `part` (else `fallback`), merged with the caller `className`. */
+function useCardClass(
+  part: keyof NonNullable<CardConfig["classes"]>,
+  fallback: string,
+  className: string | undefined,
+): string {
+  const merge = useCn();
+  return merge(useUiConfig("Card")?.classes?.[part] ?? fallback, className);
 }
 
 const Card = React.forwardRef<
@@ -26,10 +30,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      useCardClass("root", "rounded-lg bg-surface-card text-surface-foreground"),
-      className,
-    )}
+    className={useCardClass("root", "rounded-lg bg-surface-card text-surface-foreground", className)}
     {...props}
   />
 ));
@@ -41,7 +42,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(useCardClass("header", "flex flex-col space-y-1.5 p-6"), className)}
+    className={useCardClass("header", "flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
 ));
@@ -53,7 +54,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(useCardClass("title", "font-semibold leading-none tracking-[-0.02em]"), className)}
+    className={useCardClass("title", "font-semibold leading-none tracking-[-0.02em]", className)}
     {...props}
   />
 ));
@@ -65,7 +66,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(useCardClass("description", "text-sm text-muted-foreground"), className)}
+    className={useCardClass("description", "text-sm text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -75,7 +76,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn(useCardClass("content", "p-6 pt-0"), className)} {...props} />
+  <div ref={ref} className={useCardClass("content", "p-6 pt-0", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
@@ -85,7 +86,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(useCardClass("footer", "flex items-center p-6 pt-0"), className)}
+    className={useCardClass("footer", "flex items-center p-6 pt-0", className)}
     {...props}
   />
 ));
@@ -98,10 +99,7 @@ const CardAction = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      useCardClass("action", "col-start-2 row-span-2 row-start-1 self-start justify-self-end"),
-      className,
-    )}
+    className={useCardClass("action", "col-start-2 row-span-2 row-start-1 self-start justify-self-end", className)}
     {...props}
   />
 ));

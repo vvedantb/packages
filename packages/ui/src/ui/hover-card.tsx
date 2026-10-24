@@ -1,11 +1,10 @@
 import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import { cn } from "../utils/cn";
 import {
   floatingSurfaceAnimateClass,
   floatingSurfaceClass,
 } from "./_menu-classes";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `HoverCard*` (see `UiConfigProvider`). */
 export interface HoverCardConfig {
@@ -45,13 +44,14 @@ const HoverCardContent = React.forwardRef<
     portal?: boolean;
   }
 >(({ className, align = "center", sideOffset, portal, ...props }, ref) => {
+  const merge = useCn();
   const config = useUiConfig("HoverCard");
   const content = (
     <HoverCardPrimitive.Content
       ref={ref}
       align={align}
       sideOffset={sideOffset ?? config?.sideOffset ?? 4}
-      className={cn(
+      className={merge(
         config?.classes?.content ?? [
           "z-50 w-72 max-sm:max-w-[calc(100vw-2rem)] max-sm:max-h-[85dvh] max-sm:overflow-y-auto p-4 outline-none",
           floatingSurfaceClass,

@@ -5,7 +5,6 @@ import {
   IconChevronRight,
   IconCircleFilled,
 } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
 import {
   menuCheckboxRadioItemClass,
   menuContentClass,
@@ -21,7 +20,7 @@ import {
   SubTriggerRow,
   suppressAltKeyDown,
 } from "./_menu-parts";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `ContextMenu*` (see `UiConfigProvider`). */
 export interface ContextMenuConfig extends MenuConfig {
@@ -35,11 +34,12 @@ const ContextMenuTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Trigger>
 >((props, ref) => {
   const trigger = useUiConfig("ContextMenu")?.classes?.trigger;
+  const merge = useCn();
   // Without config, pass props untouched: Radix's Slot turns an explicit
   // `className={undefined}` into `class=""`.
   if (trigger === undefined) return <ContextMenuPrimitive.Trigger ref={ref} {...props} />;
   const { className, ...rest } = props;
-  return <ContextMenuPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+  return <ContextMenuPrimitive.Trigger ref={ref} className={merge(trigger, className)} {...rest} />;
 });
 ContextMenuTrigger.displayName = ContextMenuPrimitive.Trigger.displayName;
 const ContextMenuGroup = ContextMenuPrimitive.Group;
@@ -56,10 +56,11 @@ const ContextMenuSubTrigger = React.forwardRef<
   }
 >(({ className, inset, startContent, children, ...props }, ref) => {
   const classes = useUiConfig("ContextMenu")?.classes;
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.SubTrigger
       ref={ref}
-      className={cn(classes?.subTrigger ?? menuSubTriggerClass, inset && "pl-8", className)}
+      className={merge(classes?.subTrigger ?? menuSubTriggerClass, inset && "pl-8", className)}
       {...props}
     >
       {startContent === undefined ? children : (
@@ -79,10 +80,11 @@ const ContextMenuSubContent = React.forwardRef<
   }
 >(({ className, portal, ...props }, ref) => {
   const config = useUiConfig("ContextMenu");
+  const merge = useCn();
   const content = (
     <ContextMenuPrimitive.SubContent
       ref={ref}
-      className={cn(config?.classes?.subContent ?? [menuContentClass, "w-40"], className)}
+      className={merge(config?.classes?.subContent ?? [menuContentClass, "w-40"], className)}
       {...props}
     />
   );
@@ -102,12 +104,13 @@ const ContextMenuContent = React.forwardRef<
   }
 >(({ className, suppressAltKey, collisionPadding, onKeyDown, ...props }, ref) => {
   const config = useUiConfig("ContextMenu");
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
         ref={ref}
         collisionPadding={collisionPadding ?? config?.collisionPadding}
-        className={cn(config?.classes?.content ?? [menuContentClass, "w-40"], className)}
+        className={merge(config?.classes?.content ?? [menuContentClass, "w-40"], className)}
         onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
         {...props}
       />
@@ -133,11 +136,12 @@ const ContextMenuItem = React.forwardRef<
     ref,
   ) => {
     const item = useUiConfig("ContextMenu")?.classes?.item;
+    const merge = useCn();
     return (
       <ContextMenuPrimitive.Item
         ref={ref}
         asChild={asChild}
-        className={cn(item ?? menuItemClass, inset && "pl-8", className)}
+        className={merge(item ?? menuItemClass, inset && "pl-8", className)}
         {...props}
       >
         {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
@@ -158,10 +162,11 @@ const ContextMenuCheckboxItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => {
   const config = useUiConfig("ContextMenu");
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.CheckboxItem
       ref={ref}
-      className={cn(config?.classes?.checkboxItem ?? menuCheckboxRadioItemClass, className)}
+      className={merge(config?.classes?.checkboxItem ?? menuCheckboxRadioItemClass, className)}
       checked={checked}
       {...props}
     >
@@ -182,10 +187,11 @@ const ContextMenuRadioItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => {
   const config = useUiConfig("ContextMenu");
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.RadioItem
       ref={ref}
-      className={cn(config?.classes?.radioItem ?? menuCheckboxRadioItemClass, className)}
+      className={merge(config?.classes?.radioItem ?? menuCheckboxRadioItemClass, className)}
       {...props}
     >
       <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
@@ -206,10 +212,11 @@ const ContextMenuLabel = React.forwardRef<
   }
 >(({ className, inset, ...props }, ref) => {
   const label = useUiConfig("ContextMenu")?.classes?.label;
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.Label
       ref={ref}
-      className={cn(label ?? menuLabelClass, inset && "pl-8", className)}
+      className={merge(label ?? menuLabelClass, inset && "pl-8", className)}
       {...props}
     />
   );
@@ -221,10 +228,11 @@ const ContextMenuSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const separator = useUiConfig("ContextMenu")?.classes?.separator;
+  const merge = useCn();
   return (
     <ContextMenuPrimitive.Separator
       ref={ref}
-      className={cn(separator ?? menuSeparatorClass, className)}
+      className={merge(separator ?? menuSeparatorClass, className)}
       {...props}
     />
   );
@@ -236,7 +244,8 @@ const ContextMenuShortcut = ({
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) => {
   const shortcut = useUiConfig("ContextMenu")?.classes?.shortcut;
-  return <span className={cn(shortcut ?? menuShortcutClass, className)} {...props} />;
+  const merge = useCn();
+  return <span className={merge(shortcut ?? menuShortcutClass, className)} {...props} />;
 };
 ContextMenuShortcut.displayName = "ContextMenuShortcut";
 

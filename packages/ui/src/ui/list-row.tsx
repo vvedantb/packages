@@ -3,7 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "../utils/cn";
 import { SURFACE_RADIUS_CLASS } from "../utils/surface-radius";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /**
  * Apply to any interactive control nested inside a `<ListRow>` — a checkbox, a
@@ -152,6 +152,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(function ListRow(
   ref,
 ) {
   const classes = { ...defaultClasses, ...useUiConfig("ListRow")?.classes };
+  const merge = useCn();
   const interactive =
     link !== undefined || href !== undefined || onClick !== undefined;
 
@@ -161,7 +162,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(function ListRow(
     <div
       ref={ref}
       {...props}
-      className={cn(
+      className={merge(
         classes.root,
         interactive && classes.interactive,
         selected ? classes.selected : classes.idle,
@@ -171,7 +172,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(function ListRow(
       {decoration}
       {accentClassName ? (
         <div
-          className={cn(classes.accent, accentClassName)}
+          className={merge(classes.accent, accentClassName)}
         />
       ) : null}
       {link !== undefined ? (
@@ -221,7 +222,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(function ListRow(
           className={overlayClasses}
         />
       ) : null}
-      <div className={cn(classes.content, contentClassName)}>
+      <div className={merge(classes.content, contentClassName)}>
         {children}
       </div>
     </div>

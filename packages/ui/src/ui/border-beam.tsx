@@ -5,6 +5,7 @@ import { cn } from "../utils/cn";
 import { transitionSlow } from "../motion/transitions";
 import { assignRef } from "../utils/ref";
 import { useAnimOffscreenRef } from "../utils/runtimeVisibility";
+import { useCn } from "./ui-config";
 
 export type BorderBeamSize = "sm" | "md" | "lg";
 
@@ -65,9 +66,10 @@ export function BorderBeam({
   ...rest
 }: BorderBeamProps) {
   const setOffscreen = useAnimOffscreenRef<HTMLDivElement>();
+  const merge = useCn();
   return (
     <div
-      className={cn("relative", className)}
+      className={merge("relative", className)}
       ref={(node) => {
         setOffscreen(node);
         assignRef(ref, node);

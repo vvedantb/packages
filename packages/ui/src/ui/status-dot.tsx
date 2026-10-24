@@ -1,7 +1,6 @@
 import type { HTMLAttributes, Ref } from "react";
 
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 export type StatusTone =
   | "progress"
@@ -68,11 +67,12 @@ export function StatusDot({
   ...props
 }: StatusDotProps) {
   const config = useUiConfig("StatusDot");
+  const merge = useCn();
   return (
     <span
       ref={ref}
       aria-hidden={ariaHidden}
-      className={cn(
+      className={merge(
         "rounded-full shrink-0",
         SIZE_CLASS[size],
         config?.classes?.tone?.[tone] ?? TONE_CLASS[tone],

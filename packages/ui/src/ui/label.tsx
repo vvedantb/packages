@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 export interface LabelConfig {
   /** Replaces the built-in classes of a part. */
@@ -14,13 +13,11 @@ const labelClass =
 const Label = React.forwardRef<
   React.ComponentRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root
-    ref={ref}
-    className={cn(useUiConfig("Label")?.classes?.root ?? labelClass, className)}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const root = useUiConfig("Label")?.classes?.root;
+  const merge = useCn();
+  return <LabelPrimitive.Root ref={ref} className={merge(root ?? labelClass, className)} {...props} />;
+});
 Label.displayName = LabelPrimitive.Root.displayName;
 
 export { Label };

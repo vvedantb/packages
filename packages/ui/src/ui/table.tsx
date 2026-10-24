@@ -1,6 +1,5 @@
 import * as React from "react";
-import { cn } from "../utils/cn";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 export interface TableConfig {
   /** Replaces the built-in classes of a part. A part left out keeps its default. */
@@ -18,19 +17,24 @@ export interface TableConfig {
   };
 }
 
-/** The app's class string for `part`, else `fallback`. */
-function useTableClass(part: keyof NonNullable<TableConfig["classes"]>, fallback: string): string {
-  return useUiConfig("Table")?.classes?.[part] ?? fallback;
+/** The app's class string for `part` (else `fallback`), merged with the caller `className`. */
+function useTableClass(
+  part: keyof NonNullable<TableConfig["classes"]>,
+  fallback: string,
+  className: string | undefined,
+): string {
+  const merge = useCn();
+  return merge(useUiConfig("Table")?.classes?.[part] ?? fallback, className);
 }
 
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className={useTableClass("wrapper", "relative w-full overflow-auto rounded-lg max-sm:min-w-0 max-sm:max-w-full")}>
+  <div className={useUiConfig("Table")?.classes?.wrapper ?? "relative w-full overflow-auto rounded-lg max-sm:min-w-0 max-sm:max-w-full"}>
     <table
       ref={ref}
-      className={cn(useTableClass("table", "w-full caption-bottom text-sm"), className)}
+      className={useTableClass("table", "w-full caption-bottom text-sm", className)}
       {...props}
     />
   </div>
@@ -43,7 +47,7 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn(useTableClass("header", "[&_tr]:border-b [&_tr]:border-separator"), className)}
+    className={useTableClass("header", "[&_tr]:border-b [&_tr]:border-separator", className)}
     {...props}
   />
 ));
@@ -55,7 +59,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={cn(useTableClass("body", "[&_tr:last-child]:border-0"), className)}
+    className={useTableClass("body", "[&_tr:last-child]:border-0", className)}
     {...props}
   />
 ));
@@ -67,10 +71,7 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn(
-      useTableClass("footer", "border-t border-separator bg-surface-secondary/30 font-medium [&>tr]:last:border-b-0"),
-      className,
-    )}
+    className={useTableClass("footer", "border-t border-separator bg-surface-secondary/30 font-medium [&>tr]:last:border-b-0", className)}
     {...props}
   />
 ));
@@ -82,11 +83,9 @@ const TableRow = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tr
     ref={ref}
-    className={cn(
-      useTableClass(
-        "row",
-        "border-b border-separator transition-colors duration-200 ease-smooth hover:bg-surface-tertiary/50 data-[state=selected]:bg-surface-secondary",
-      ),
+    className={useTableClass(
+      "row",
+      "border-b border-separator transition-colors duration-200 ease-smooth hover:bg-surface-tertiary/50 data-[state=selected]:bg-surface-secondary",
       className,
     )}
     {...props}
@@ -100,11 +99,9 @@ const TableHead = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <th
     ref={ref}
-    className={cn(
-      useTableClass(
-        "head",
-        "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-widest text-muted-foreground [&:has([role=checkbox])]:pr-0",
-      ),
+    className={useTableClass(
+      "head",
+      "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-widest text-muted-foreground [&:has([role=checkbox])]:pr-0",
       className,
     )}
     {...props}
@@ -118,7 +115,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn(useTableClass("cell", "p-4 align-middle text-sm [&:has([role=checkbox])]:pr-0"), className)}
+    className={useTableClass("cell", "p-4 align-middle text-sm [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ));
@@ -130,7 +127,7 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn(useTableClass("caption", "mt-4 text-sm text-muted-foreground"), className)}
+    className={useTableClass("caption", "mt-4 text-sm text-muted-foreground", className)}
     {...props}
   />
 ));

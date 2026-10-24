@@ -7,7 +7,7 @@ import {
   floatingSurfaceAnimateClass,
   floatingSurfaceClass,
 } from "./_menu-classes";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `Select*` (see `UiConfigProvider`). */
 export interface SelectConfig {
@@ -48,11 +48,12 @@ const SelectTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => {
   const config = useUiConfig("Select");
+  const merge = useCn();
   return (
     <SelectPrimitive.Trigger
       ref={ref}
       data-slot={config?.triggerSlot ? "select-trigger" : undefined}
-      className={cn(
+      className={merge(
         config?.classes?.trigger ?? [
           "flex h-10 w-full max-sm:min-w-0 items-center justify-between whitespace-nowrap rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm ring-offset-background placeholder:text-field-placeholder transition-[border-color,box-shadow,background-color] duration-200 ease-smooth disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
           fieldFocusClass,
@@ -75,10 +76,11 @@ const SelectScrollUpButton = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
 >(({ className, ...props }, ref) => {
   const config = useUiConfig("Select");
+  const merge = useCn();
   return (
     <SelectPrimitive.ScrollUpButton
       ref={ref}
-      className={cn(
+      className={merge(
         config?.classes?.scrollButton ??
           "flex cursor-default items-center justify-center py-1 text-muted-foreground",
         className,
@@ -96,10 +98,11 @@ const SelectScrollDownButton = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
 >(({ className, ...props }, ref) => {
   const config = useUiConfig("Select");
+  const merge = useCn();
   return (
     <SelectPrimitive.ScrollDownButton
       ref={ref}
-      className={cn(
+      className={merge(
         config?.classes?.scrollButton ??
           "flex cursor-default items-center justify-center py-1 text-muted-foreground",
         className,
@@ -118,13 +121,14 @@ const SelectContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", collisionPadding, ...props }, ref) => {
   const config = useUiConfig("Select");
+  const merge = useCn();
   const classes = config?.classes;
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={ref}
         collisionPadding={collisionPadding ?? config?.collisionPadding}
-        className={cn(
+        className={merge(
           classes?.content ?? [
             "relative z-50 max-h-96 min-w-32 overflow-hidden outline-none",
             floatingSurfaceClass,
@@ -160,10 +164,11 @@ const SelectLabel = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
 >(({ className, ...props }, ref) => {
   const label = useUiConfig("Select")?.classes?.label;
+  const merge = useCn();
   return (
     <SelectPrimitive.Label
       ref={ref}
-      className={cn(
+      className={merge(
         label ??
           "px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground",
         className,
@@ -179,10 +184,11 @@ const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
   const config = useUiConfig("Select");
+  const merge = useCn();
   return (
     <SelectPrimitive.Item
       ref={ref}
-      className={cn(
+      className={merge(
         config?.classes?.item ??
           "relative flex w-full cursor-pointer select-none items-center rounded-menu-item py-2 max-sm:min-h-10 pl-2.5 pr-8 text-sm outline-none transition-[background-color,color] focus:bg-default focus:text-foreground data-[highlighted]:bg-default data-[highlighted]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
         className,
@@ -205,10 +211,11 @@ const SelectSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const separator = useUiConfig("Select")?.classes?.separator;
+  const merge = useCn();
   return (
     <SelectPrimitive.Separator
       ref={ref}
-      className={cn(separator ?? "-mx-1.5 my-1 h-px bg-separator", className)}
+      className={merge(separator ?? "-mx-1.5 my-1 h-px bg-separator", className)}
       {...props}
     />
   );

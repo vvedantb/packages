@@ -13,6 +13,7 @@
 - Controls: `UiConfig` entries for `Button`, `Badge`, `Input`, `Textarea`, `Checkbox`, `Switch`, `Slider`, `ButtonGroup`, `InputGroup`, `ClearInput`, `SearchInput`, `Calendar`, `Carousel`, `Tabs`, `Accordion` and `Collapsible` (see the README "App config: controls" section), and `UiConfig.cn`, an app class merger the components use in place of `cn`. No entry: the default DOM is unchanged.
 - Controls, new opt-in props and exports: `Button` size `xs`; `Checkbox` `icon`; `AccordionTrigger` `icon`; `ClearInput` `animation` (`"none"`: clear at once, plain markup); `SearchInput` `onClear` and `inputClassName`; `TabsList` `size`; `TabsBar`; `CalendarDayButton`; `CarouselDots`, `useCarousel` (context adds `selectedIndex`, `scrollSnaps`, `scrollTo`); `syncTabsPill` takes an optional `"xy"` motion; `CollapsibleContentProps` type. `CollapsibleTrigger` and `CollapsibleContent` are now thin wrappers (same DOM, refs still reach the element).
 - Tests: `src/ui/controls-config.test.tsx`.
+- `UiConfig.cn` now also reaches the overlay components (`Dialog*`, `SideSheet*`, `Popover*`, `HoverCardContent`, `TooltipContent`, `DropdownMenu*`, `ContextMenu*`, `Select*`, `Command*`) and the foundations (`Card*`, `Table*`, `Progress`, `Separator`, `Label`, `Spinner`, `CircleSpinner`, `StatusDot`, `ListRow`, `Alert*`, `Avatar*`, `BorderBeam`, `Surface`, `CenteredSpinner`, `RefreshSpinIcon`): a caller `className` merges with the app merger. No provider: unchanged output.
 
 ## 0.17.1
 

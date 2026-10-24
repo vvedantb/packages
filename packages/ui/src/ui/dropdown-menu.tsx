@@ -5,7 +5,6 @@ import {
   IconChevronRight,
   IconCircleFilled,
 } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
 import {
   menuCheckboxRadioItemClass,
   menuContentClass,
@@ -23,7 +22,7 @@ import {
   suppressAltKeyDown,
 } from "./_menu-parts";
 import { restoreModalScrollLock } from "./overlay-a11y";
-import { useUiConfig } from "./ui-config";
+import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `DropdownMenu*` (see `UiConfigProvider`). */
 export interface DropdownMenuConfig extends MenuConfig {
@@ -38,11 +37,12 @@ const DropdownMenuTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
 >((props, ref) => {
   const trigger = useUiConfig("DropdownMenu")?.classes?.trigger;
+  const merge = useCn();
   // Without config, pass props untouched: Radix's Slot turns an explicit
   // `className={undefined}` into `class=""`.
   if (trigger === undefined) return <DropdownMenuPrimitive.Trigger ref={ref} {...props} />;
   const { className, ...rest } = props;
-  return <DropdownMenuPrimitive.Trigger ref={ref} className={cn(trigger, className)} {...rest} />;
+  return <DropdownMenuPrimitive.Trigger ref={ref} className={merge(trigger, className)} {...rest} />;
 });
 DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
@@ -59,10 +59,11 @@ const DropdownMenuSubTrigger = React.forwardRef<
   }
 >(({ className, inset, startContent, children, ...props }, ref) => {
   const classes = useUiConfig("DropdownMenu")?.classes;
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
-      className={cn(classes?.subTrigger ?? menuSubTriggerClass, inset && "pl-8", className)}
+      className={merge(classes?.subTrigger ?? menuSubTriggerClass, inset && "pl-8", className)}
       {...props}
     >
       {startContent === undefined ? children : (
@@ -80,11 +81,12 @@ const DropdownMenuSubContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => {
   const classes = useUiConfig("DropdownMenu")?.classes;
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.SubContent
         ref={ref}
-        className={cn(classes?.subContent ?? menuContentClass, className)}
+        className={merge(classes?.subContent ?? menuContentClass, className)}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -119,13 +121,14 @@ const DropdownMenuContent = React.forwardRef<
     ref,
   ) => {
     const config = useUiConfig("DropdownMenu");
+    const merge = useCn();
     return (
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           ref={ref}
           sideOffset={sideOffset ?? config?.sideOffset ?? 4}
           collisionPadding={collisionPadding ?? config?.collisionPadding}
-          className={cn(
+          className={merge(
             config?.classes?.content ?? menuContentClass,
             fitViewport && fitViewportClass,
             className,
@@ -165,11 +168,12 @@ const DropdownMenuItem = React.forwardRef<
     ref,
   ) => {
     const item = useUiConfig("DropdownMenu")?.classes?.item;
+    const merge = useCn();
     return (
       <DropdownMenuPrimitive.Item
         ref={ref}
         asChild={asChild}
-        className={cn(item ?? menuItemClass, inset && "pl-8", className)}
+        className={merge(item ?? menuItemClass, inset && "pl-8", className)}
         {...props}
       >
         {asChild || (startContent === undefined && description === undefined && endContent === undefined) ? (
@@ -204,10 +208,11 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => {
   const config = useUiConfig("DropdownMenu");
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
-      className={cn(config?.classes?.checkboxItem ?? menuCheckboxRadioItemClass, className)}
+      className={merge(config?.classes?.checkboxItem ?? menuCheckboxRadioItemClass, className)}
       checked={checked}
       {...props}
     >
@@ -228,10 +233,11 @@ const DropdownMenuRadioItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => {
   const config = useUiConfig("DropdownMenu");
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
-      className={cn(config?.classes?.radioItem ?? menuCheckboxRadioItemClass, className)}
+      className={merge(config?.classes?.radioItem ?? menuCheckboxRadioItemClass, className)}
       {...props}
     >
       <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
@@ -252,10 +258,11 @@ const DropdownMenuLabel = React.forwardRef<
   }
 >(({ className, inset, ...props }, ref) => {
   const label = useUiConfig("DropdownMenu")?.classes?.label;
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.Label
       ref={ref}
-      className={cn(label ?? menuLabelClass, inset && "pl-8", className)}
+      className={merge(label ?? menuLabelClass, inset && "pl-8", className)}
       {...props}
     />
   );
@@ -267,10 +274,11 @@ const DropdownMenuSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => {
   const separator = useUiConfig("DropdownMenu")?.classes?.separator;
+  const merge = useCn();
   return (
     <DropdownMenuPrimitive.Separator
       ref={ref}
-      className={cn(separator ?? menuSeparatorClass, className)}
+      className={merge(separator ?? menuSeparatorClass, className)}
       {...props}
     />
   );
@@ -282,7 +290,8 @@ const DropdownMenuShortcut = ({
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) => {
   const shortcut = useUiConfig("DropdownMenu")?.classes?.shortcut;
-  return <span className={cn(shortcut ?? menuShortcutClass, className)} {...props} />;
+  const merge = useCn();
+  return <span className={merge(shortcut ?? menuShortcutClass, className)} {...props} />;
 };
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut";
 
