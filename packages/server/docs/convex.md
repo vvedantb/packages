@@ -232,7 +232,33 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 
 `tests/convex/clerkUserAuth.test.ts` ports each app's code and runs it next to the kit on the same fake ctx over each identity case (none, empty subject, known, duplicate, unknown, legacy email): return values, thrown messages, rows and writes match.
 
+## Clerk OAuth JWT verification (V8)
+
+Clerk OAuth access tokens are JWTs now. `authenticateClerkBearer` verifies them in the Convex default runtime (`httpAction`): WebCrypto and `fetch`, no Node action, no token cache. Opaque tokens issued earlier still work through `verifyOpaque`, your Node `verifyClerkAccessToken` action. Clerk OAuth access tokens last 1 day ([Clerk docs](https://clerk.com/docs/guides/configure/auth-strategies/oauth/how-clerk-implements-oauth)), so opaque tokens stop arriving about 1 day after the switch.
+
+```ts
+import { authenticateClerkBearer } from "@vvedantb/server";
+
+const principal = await authenticateClerkBearer({
+  token,
+  issuer: "https://clerk.example.com", // Clerk Frontend API URL
+  verifyOpaque: (token) => ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token }),
+});
+// { clerkUserId } | null
+```
+
+| Export | Semantics |
+| --- | --- |
+| `authenticateClerkBearer({ token, issuer, verifyOpaque, jwksUrl?, fetch?, now?, clockSkewMs?, onReject?, onError? })` | Three base64url segments: `verifyClerkOAuthJwt`, never retried through `verifyOpaque`. Otherwise `verifyOpaque(token)`, mapped from `{ clerkUserId }` or `{ userId }` to `{ clerkUserId }`. `null` on rejection. |
+| `verifyClerkOAuthJwt(token, options)` | Checks RS256 signature (JWKS from `${issuer}/.well-known/jwks.json` unless `jwksUrl`), `iss` (trailing slash ignored), `exp` and `nbf` with `clockSkewMs` (default 5000), header `typ` `at+jwt` or `application/at+jwt`, and non-empty `sub`. Returns `{ clerkUserId, claims }` or `null`. Silent unless `onReject({ kind })` or `onError` is set. It does not check `aud`; check `claims` yourself if you need it. |
+| `clearClerkJwksCache()` | The JWKS and imported keys are cached in module scope per isolate for `CLERK_JWKS_TTL_MS` (1 hour); an unknown `kid` refetches at most once per `CLERK_JWKS_REFETCH_MIN_MS` (1 minute). Revocation is not checked: a JWT is valid until `exp`. |
+| `looksLikeJwt(token)` | Three non-empty base64url segments. |
+
+Migration: change `authenticate` in your http/mcp files to call `authenticateClerkBearer`, keep the Node `verifyAccessToken` action for opaque tokens, then (about 1 day later) drop the Node action, the `mcpTokenCache` table and the purge cron.
+
 ## MCP token cache
+
+> **Deprecated since 0.8.0.** JWT tokens do not need this cache; use [`authenticateClerkBearer`](#clerk-oauth-jwt-verification-v8). Remove the cache once old opaque tokens expire (about 1 day after the switch to JWTs).
 
 Caches verified MCP bearer tokens, so most requests skip the verify step (for Clerk: a network call, often from a cold Node action). Rows hold the SHA-256 hex of the token (`hashMcpToken`), never the token. Only successful verifications are cached, so a revoked token keeps working until its row expires: at most `MCP_TOKEN_CACHE_TTL_MS` (5 minutes).
 
