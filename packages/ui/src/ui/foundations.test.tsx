@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 // Components moved from eva (spinners, loaders, status dot, list row, beam,
 // surface, avatar) and the `UiConfig` entries of Card, Table, Progress,
-// Separator and Label: config absent = built-in output, config present =
-// replaced part, explicit prop wins.
+// Separator, Label and the toaster: config absent = built-in output, config
+// present = replaced part, explicit prop wins.
 import { act, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { clsx } from "clsx";
+import { toast } from "sonner";
 import * as rootExports from "../index";
 import { Avatar, AvatarFallback } from "./avatar";
 import { BorderBeam } from "./border-beam";
@@ -19,6 +20,7 @@ import { LoadingState } from "./loading-state";
 import { Progress } from "./progress";
 import { RefreshSpinIcon } from "./refresh-spin-icon";
 import { Separator } from "./separator";
+import { SonnerToaster } from "./sonner";
 import { Button } from "./button";
 import { Spinner, type SpinnerMark } from "./spinner";
 import { StatusDot } from "./status-dot";
@@ -451,5 +453,46 @@ describe("UiConfig.cn", () => {
   it.each(Object.keys(nodes))("%s merges with the app merger", async (name) => {
     const host = await mount(nodes[name], config);
     expect(host.querySelector(".merged")).not.toBeNull();
+  });
+});
+
+describe("SonnerToaster config", () => {
+  async function mountToast(node: ReactNode, config?: UiConfig) {
+    const host = await mount(node, config);
+    await act(async () => {
+      toast("Hello");
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    return host;
+  }
+
+  it("classes replace toast parts and the toaster class", async () => {
+    const host = await mountToast(<SonnerToaster classes={{ toaster: "", toast: "app-toast", success: "" }} />);
+    expect(el(host, "ol").getAttribute("class")).toBeNull();
+    expect(el(host, "li").getAttribute("class")).toBe("app-toast");
+    expect(el(host, "[data-title]").getAttribute("class")).toBe("font-medium leading-snug");
+    const appended = await mountToast(<SonnerToaster classes={{ toaster: "app" }} className="x" />);
+    expect(el(appended, "ol").getAttribute("class")).toBe("app x");
+  });
+
+  it("takes prop defaults and classes from UiConfig.SonnerToaster", async () => {
+    const host = await mountToast(<SonnerToaster theme="light" gap={10} />, {
+      SonnerToaster: { gap: 4, closeButton: true, classes: { toaster: "", toast: "app-toast" } },
+    });
+    const list = el(host, "ol");
+    expect(list.getAttribute("class")).toBeNull();
+    expect(list.getAttribute("style")).toContain("--gap: 10px");
+    const item = el(host, "li");
+    expect(item.getAttribute("class")).toContain("app-toast");
+    expect(item.querySelector("[data-close-button]")).not.toBeNull();
+  });
+
+  it("keeps the config value when a prop is passed as undefined", async () => {
+    const host = await mountToast(<SonnerToaster gap={undefined} closeButton={undefined} classes={undefined} />, {
+      SonnerToaster: { gap: 4, closeButton: true, classes: { toast: "app-toast" } },
+    });
+    expect(el(host, "ol").getAttribute("style")).toContain("--gap: 4px");
+    expect(el(host, "li").getAttribute("class")).toContain("app-toast");
+    expect(el(host, "li").querySelector("[data-close-button]")).not.toBeNull();
   });
 });

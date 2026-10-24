@@ -12,6 +12,7 @@ import {
   flatElevatedSurfaceHoverClass,
   flatPanelSubtleClass,
 } from "../ui/surface-classes";
+import { useCn, useUiConfig } from "../ui/ui-config";
 import {
   IconFileText,
   IconMusic,
@@ -40,6 +41,18 @@ export type AttachmentMediaCategory =
   | "source"
   | "unknown";
 export type AttachmentVariant = "grid" | "inline" | "list";
+/**
+ * `UiConfig.Attachments`: per-variant classes that replace the variant part
+ * of an `Attachment`, its `AttachmentPreview` and its `AttachmentRemove`.
+ * The shared base classes stay.
+ */
+export interface AttachmentsConfig {
+  classes?: {
+    item?: Partial<Record<AttachmentVariant, string>>;
+    preview?: Partial<Record<AttachmentVariant, string>>;
+    remove?: Partial<Record<AttachmentVariant, string>>;
+  };
+}
 const mediaCategoryIcons: Record<AttachmentMediaCategory, typeof IconPhoto> = {
   audio: IconMusic,
   document: IconFileText,
@@ -139,11 +152,12 @@ export const Attachments = ({
   children,
   ...props
 }: AttachmentsProps) => {
+  const merge = useCn();
   const contextValue = { variant };
   return (
     <AttachmentsContext.Provider value={contextValue}>
       <div
-        className={cn(
+        className={merge(
           "flex items-start",
           variant === "list" ? "flex-col gap-2" : "flex-wrap gap-2",
           variant === "grid" && "ml-auto w-fit",
@@ -171,21 +185,24 @@ export const Attachment = ({
   ...props
 }: AttachmentProps) => {
   const { variant } = useAttachmentsContext();
+  const item = useUiConfig("Attachments")?.classes?.item?.[variant];
+  const merge = useCn();
   const mediaCategory = getMediaCategory(data);
   const contextValue = { data, mediaCategory, onRemove, variant };
   return (
     <AttachmentContext.Provider value={contextValue}>
       <div
-        className={cn(
+        className={merge(
           "group relative",
-          variant === "grid" && "size-24 overflow-hidden rounded-lg",
-          variant === "inline" && [
+          item,
+          item === undefined && variant === "grid" && "size-24 overflow-hidden rounded-lg",
+          item === undefined && variant === "inline" && [
             "flex h-8 cursor-pointer select-none items-center gap-1.5",
             "rounded-md px-1.5",
             "font-medium text-sm transition-[background-color,color,transform] duration-150 ease-out",
             "active:scale-[0.97] hover:bg-surface-secondary hover:text-foreground",
           ],
-          variant === "list" && [
+          item === undefined && variant === "list" && [
             "flex w-full items-center gap-3 rounded-lg p-3",
             "transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] hover:bg-surface-secondary",
           ],
@@ -210,6 +227,8 @@ export const AttachmentPreview = ({
   ...props
 }: AttachmentPreviewProps) => {
   const { data, mediaCategory, variant } = useAttachmentContext();
+  const preview = useUiConfig("Attachments")?.classes?.preview?.[variant];
+  const merge = useCn();
   const iconSize = variant === "inline" ? "size-3" : "size-4";
   const renderIcon = (Icon: typeof IconPhoto) => (
     <Icon className={cn(iconSize, "text-muted-foreground")} />
@@ -226,11 +245,12 @@ export const AttachmentPreview = ({
   };
   return (
     <div
-      className={cn(
+      className={merge(
         "flex shrink-0 items-center justify-center overflow-hidden",
-        variant === "grid" && cn("size-full", flatPanelSubtleClass),
-        variant === "inline" && cn("size-5 rounded", flatPanelSubtleClass),
-        variant === "list" && cn("size-12 rounded", flatPanelSubtleClass),
+        preview,
+        preview === undefined && variant === "grid" && cn("size-full", flatPanelSubtleClass),
+        preview === undefined && variant === "inline" && cn("size-5 rounded", flatPanelSubtleClass),
+        preview === undefined && variant === "list" && cn("size-12 rounded", flatPanelSubtleClass),
         className,
       )}
       {...props}
@@ -251,12 +271,13 @@ export const AttachmentInfo = ({
   ...props
 }: AttachmentInfoProps) => {
   const { data, variant } = useAttachmentContext();
+  const merge = useCn();
   const label = getAttachmentLabel(data);
   if (variant === "grid") {
     return null;
   }
   return (
-    <div className={cn("min-w-0 flex-1", className)} {...props}>
+    <div className={merge("min-w-0 flex-1", className)} {...props}>
       <span className="block truncate">{label}</span>
       {showMediaType && data.mediaType && (
         <span className="block truncate text-muted-foreground text-xs">
@@ -279,6 +300,8 @@ export const AttachmentRemove = ({
   ...props
 }: AttachmentRemoveProps) => {
   const { onRemove, variant } = useAttachmentContext();
+  const remove = useUiConfig("Attachments")?.classes?.remove?.[variant];
+  const merge = useCn();
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onRemove?.();
@@ -289,19 +312,20 @@ export const AttachmentRemove = ({
   return (
     <Button
       aria-label={label}
-      className={cn(
-        variant === "grid" && [
+      className={merge(
+        remove,
+        remove === undefined && variant === "grid" && [
           "absolute top-2 right-2 size-6 rounded-full p-0",
           cn(flatPanelSubtleClass, flatElevatedSurfaceHoverClass),
           "opacity-0 transition-opacity group-hover:opacity-100",
           "[&>svg]:size-3",
         ],
-        variant === "inline" && [
+        remove === undefined && variant === "inline" && [
           "size-5 rounded p-0",
           "opacity-0 transition-opacity group-hover:opacity-100",
           "[&>svg]:size-2.5",
         ],
-        variant === "list" && ["size-8 shrink-0 rounded p-0", "[&>svg]:size-4"],
+        remove === undefined && variant === "list" && ["size-8 shrink-0 rounded p-0", "[&>svg]:size-4"],
         className,
       )}
       onClick={handleClick}
@@ -338,13 +362,16 @@ export const AttachmentHoverCardContent = ({
   align = "start",
   className,
   ...props
-}: AttachmentHoverCardContentProps) => (
-  <HoverCardContent
-    align={align}
-    className={cn("w-auto p-2", className)}
-    {...props}
-  />
-);
+}: AttachmentHoverCardContentProps) => {
+  const merge = useCn();
+  return (
+    <HoverCardContent
+      align={align}
+      className={merge("w-auto p-2", className)}
+      {...props}
+    />
+  );
+};
 // ============================================================================
 // AttachmentEmpty - Empty state
 // ============================================================================
@@ -353,14 +380,17 @@ export const AttachmentEmpty = ({
   className,
   children,
   ...props
-}: AttachmentEmptyProps) => (
-  <div
-    className={cn(
-      "flex items-center justify-center p-4 text-muted-foreground text-sm",
-      className,
-    )}
-    {...props}
-  >
-    {children ?? "No attachments"}
-  </div>
-);
+}: AttachmentEmptyProps) => {
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        "flex items-center justify-center p-4 text-muted-foreground text-sm",
+        className,
+      )}
+      {...props}
+    >
+      {children ?? "No attachments"}
+    </div>
+  );
+};

@@ -9,62 +9,99 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { cn } from "../utils/cn";
+import { useCn, useUiConfig } from "../ui/ui-config";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { createContext, useContext, useEffect, useState } from "react";
+/**
+ * `UiConfig.Message`: classes replace a part's built-in classes (`root`, and
+ * the `user` / `assistant` role classes of `Message`; `content` is the whole
+ * `MessageContent` list). `lazyActionTooltips` mounts a `MessageAction`
+ * tooltip on first hover or focus instead of with the button.
+ */
+export interface MessageConfig {
+  lazyActionTooltips?: boolean;
+  classes?: {
+    root?: string;
+    user?: string;
+    assistant?: string;
+    content?: string;
+    branchSelector?: string;
+    /** Replaces the branch arrows' `size={14}` with a class. */
+    branchIcon?: string;
+  };
+}
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
 };
-export const Message = ({ className, from, ...props }: MessageProps) => (
-  <div
-    className={cn(
-      "group flex w-full max-w-[95%] flex-col gap-2",
-      from === "user" ? "is-user ml-auto justify-end" : "is-assistant",
-      className,
-    )}
-    {...props}
-  />
-);
+export const Message = ({ className, from, ...props }: MessageProps) => {
+  const classes = useUiConfig("Message")?.classes;
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        classes?.root ?? "group flex w-full max-w-[95%] flex-col gap-2",
+        from === "user"
+          ? (classes?.user ?? "is-user ml-auto justify-end")
+          : (classes?.assistant ?? "is-assistant"),
+        className,
+      )}
+      {...props}
+    />
+  );
+};
 export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
 export const MessageContent = ({
   children,
   className,
   ...props
-}: MessageContentProps) => (
-  <div
-    className={cn(
-      "flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
-      "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:bg-primary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-primary-foreground",
-      "group-[.is-assistant]:px-0 group-[.is-assistant]:text-foreground",
-      className,
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: MessageContentProps) => {
+  const content = useUiConfig("Message")?.classes?.content;
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        content ?? [
+          "flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
+          "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:bg-primary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-primary-foreground",
+          "group-[.is-assistant]:px-0 group-[.is-assistant]:text-foreground",
+        ],
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 export type MessageActionsBarProps = ComponentProps<"div">;
 export const MessageActionsBar = ({
   className,
   children,
   ...props
-}: MessageActionsBarProps) => (
-  <div className={cn("flex items-center gap-1", className)} {...props}>
-    {children}
-  </div>
-);
+}: MessageActionsBarProps) => {
+  const merge = useCn();
+  return (
+    <div className={merge("flex items-center gap-1", className)} {...props}>
+      {children}
+    </div>
+  );
+};
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };
-export const MessageAction = ({
+export const MessageAction = (props: MessageActionProps) => {
+  const lazy = useUiConfig("Message")?.lazyActionTooltips;
+  return lazy ? <LazyMessageAction {...props} /> : <EagerMessageAction {...props} />;
+};
+function EagerMessageAction({
   tooltip,
   children,
   label,
   variant = "ghost",
   size = "icon-sm",
   ...props
-}: MessageActionProps) => {
+}: MessageActionProps) {
   const button = (
     <Button size={size} type="button" variant={variant} {...props}>
       {children}
@@ -84,7 +121,60 @@ export const MessageAction = ({
     );
   }
   return button;
-};
+}
+/**
+ * The tooltip mounts on first hover or focus, not with the button. Each Radix
+ * tooltip is a dozen components plus a re-render once it has measured its
+ * anchor; a long chat has hundreds of these buttons.
+ */
+function LazyMessageAction({
+  tooltip,
+  children,
+  label,
+  variant = "ghost",
+  size = "icon-sm",
+  onPointerEnter,
+  onFocus,
+  ...props
+}: MessageActionProps) {
+  const [armedBy, setArmedBy] = useState<"pointer" | "focus" | null>(null);
+  const button = (
+    <Button
+      size={size}
+      type="button"
+      variant={variant}
+      onPointerEnter={(event) => {
+        onPointerEnter?.(event);
+        if (tooltip && armedBy === null) setArmedBy("pointer");
+      }}
+      onFocus={(event) => {
+        onFocus?.(event);
+        if (tooltip && armedBy === null) setArmedBy("focus");
+      }}
+      // Arming remounts the button inside the tooltip trigger; a keyboard
+      // user keeps focus on it (and so sees the tooltip).
+      autoFocus={armedBy === "focus"}
+      {...props}
+    >
+      {children}
+      <span className="sr-only">{label || tooltip}</span>
+    </Button>
+  );
+  if (tooltip && armedBy !== null) {
+    return (
+      <TooltipProvider>
+        {/* The focus that armed it landed before the tooltip existed. */}
+        <Tooltip defaultOpen={armedBy === "focus"}>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  return button;
+}
 interface MessageBranchContextType {
   currentBranch: number;
   totalBranches: number;
@@ -131,6 +221,7 @@ export const MessageBranch = ({
       currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
     handleBranchChange(newBranch);
   };
+  const merge = useCn();
   const contextValue = {
     branches,
     currentBranch,
@@ -142,7 +233,7 @@ export const MessageBranch = ({
   return (
     <MessageBranchContext.Provider value={contextValue}>
       <div
-        className={cn("grid w-full gap-2 [&>div]:pb-0", className)}
+        className={merge("grid w-full gap-2 [&>div]:pb-0", className)}
         {...props}
       />
     </MessageBranchContext.Provider>
@@ -154,6 +245,7 @@ export const MessageBranchContent = ({
   ...props
 }: MessageBranchContentProps) => {
   const { currentBranch, setBranches, branches } = useMessageBranch();
+  const merge = useCn();
   const childrenArray = Array.isArray(children) ? children : [children];
   useEffect(() => {
     if (branches.length !== childrenArray.length) {
@@ -162,7 +254,7 @@ export const MessageBranchContent = ({
   }, [childrenArray, branches, setBranches]);
   return childrenArray.map((branch, index) => (
     <div
-      className={cn(
+      className={merge(
         "grid gap-2 overflow-hidden [&>div]:pb-0",
         index === currentBranch ? "block" : "hidden",
       )}
@@ -179,13 +271,16 @@ export const MessageBranchSelector = ({
   ...props
 }: MessageBranchSelectorProps) => {
   const { totalBranches } = useMessageBranch();
+  const branchSelector = useUiConfig("Message")?.classes?.branchSelector;
+  const merge = useCn();
   if (totalBranches <= 1) {
     return null;
   }
   return (
     <ButtonGroup
-      className={cn(
-        "[&>*:not(:first-child)]:rounded-l-md [&>*:not(:last-child)]:rounded-r-md",
+      className={merge(
+        branchSelector ??
+          "[&>*:not(:first-child)]:rounded-l-md [&>*:not(:last-child)]:rounded-r-md",
         className,
       )}
       orientation="horizontal"
@@ -199,6 +294,7 @@ export const MessageBranchPrevious = ({
   ...props
 }: MessageBranchPreviousProps) => {
   const { goToPrevious, totalBranches } = useMessageBranch();
+  const branchIcon = useUiConfig("Message")?.classes?.branchIcon;
   return (
     <Button
       aria-label="Previous branch"
@@ -209,7 +305,12 @@ export const MessageBranchPrevious = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <IconChevronLeft size={14} />}
+      {children ??
+        (branchIcon === undefined ? (
+          <IconChevronLeft size={14} />
+        ) : (
+          <IconChevronLeft className={branchIcon} />
+        ))}
     </Button>
   );
 };
@@ -219,6 +320,7 @@ export const MessageBranchNext = ({
   ...props
 }: MessageBranchNextProps) => {
   const { goToNext, totalBranches } = useMessageBranch();
+  const branchIcon = useUiConfig("Message")?.classes?.branchIcon;
   return (
     <Button
       aria-label="Next branch"
@@ -229,7 +331,12 @@ export const MessageBranchNext = ({
       variant="ghost"
       {...props}
     >
-      {children ?? <IconChevronRight size={14} />}
+      {children ??
+        (branchIcon === undefined ? (
+          <IconChevronRight size={14} />
+        ) : (
+          <IconChevronRight className={branchIcon} />
+        ))}
     </Button>
   );
 };
@@ -239,9 +346,10 @@ export const MessageBranchPage = ({
   ...props
 }: MessageBranchPageProps) => {
   const { currentBranch, totalBranches } = useMessageBranch();
+  const merge = useCn();
   return (
     <ButtonGroupText
-      className={cn(
+      className={merge(
         "border-none bg-transparent text-muted-foreground shadow-none",
         className,
       )}
@@ -256,14 +364,17 @@ export const MessageToolbar = ({
   className,
   children,
   ...props
-}: MessageToolbarProps) => (
-  <div
-    className={cn(
-      "mt-4 flex w-full items-center justify-between gap-4",
-      className,
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-);
+}: MessageToolbarProps) => {
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        "mt-4 flex w-full items-center justify-between gap-4",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};

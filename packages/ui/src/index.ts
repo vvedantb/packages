@@ -124,11 +124,15 @@ export * from "./ai-elements/attachments";
 export * from "./ai-elements/chain-of-thought";
 export * from "./ai-elements/code-block";
 export * from "./ai-elements/conversation";
+export * from "./ai-elements/file-chip";
 export * from "./ai-elements/image";
 export * from "./ai-elements/inline-citation";
 export * from "./ai-elements/message";
 export * from "./ai-elements/model-selector";
 export * from "./ai-elements/prompt-input";
+export * from "./ai-elements/prompt-input-settings";
+export * from "./ai-elements/prompt-input-speech";
+export * from "./ai-elements/prompt-input-traits";
 export * from "./ai-elements/queue";
 export * from "./ai-elements/reasoning";
 export * from "./ai-elements/shimmer";
@@ -144,6 +148,10 @@ export * from "./artifacts";
 // shared dnd-kit sensor split.
 export * from "./kibo";
 export { useDragSensors } from "./utils/useDragSensors";
+
+// Markdown renderer (Streamdown + code blocks, callouts, links, KaTeX).
+// Styles: `@vvedantb/ui/tokens/css/markdown.css`.
+export * from "./markdown";
 
 export * from "./audio";
 
