@@ -193,6 +193,48 @@ describe("JumpRail", () => {
     expect(order).toEqual(["before", "reveal:a"]);
   });
 
+  it("calls onSelect after the scroll on Enter and Space", async () => {
+    const order: string[] = [];
+    scrollIntoView.mockImplementation(() => order.push("scroll"));
+    const onSelect = vi.fn((id: string) => order.push(`select:${id}`));
+    const host = await mount(<Page present={["a", "b", "c"]} onSelect={onSelect} />);
+    const btn = button(host);
+    await act(async () => btn.focus());
+    await key(btn, "ArrowDown");
+    await key(btn, "Enter");
+    await key(btn, "End");
+    await key(btn, " ");
+    expect(order).toEqual(["scroll", "select:b", "scroll", "select:c"]);
+  });
+
+  it("calls onSelect after the scroll on click", async () => {
+    const onSelect = vi.fn();
+    const host = await mount(<Page present={["a", "b", "c"]} onSelect={onSelect} />);
+    const btn = button(host);
+    btn.getBoundingClientRect = () => ({ top: 0, height: 16, left: 0, width: 10, right: 10, bottom: 16, x: 0, y: 0, toJSON() {} });
+    await act(async () => {
+      btn.dispatchEvent(new MouseEvent("click", { bubbles: true, clientY: 16 }));
+    });
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith("c");
+  });
+
+  it("calls onSelect after onReveal when the target is missing", async () => {
+    const order: string[] = [];
+    const host = await mount(
+      <Page
+        present={["b", "c"]}
+        onBeforeScroll={() => order.push("before")}
+        onReveal={(id) => order.push(`reveal:${id}`)}
+        onSelect={(id) => order.push(`select:${id}`)}
+      />,
+    );
+    const btn = button(host);
+    await act(async () => btn.focus());
+    await key(btn, "Enter");
+    expect(order).toEqual(["before", "reveal:a", "select:a"]);
+  });
+
   it("re-observes when observeKey changes", async () => {
     const host = document.createElement("div");
     document.body.appendChild(host);

@@ -49,6 +49,12 @@ export interface JumpRailProps {
   /** Called just before `onReveal`, for example `stopScroll` from use-stick-to-bottom. */
   onBeforeScroll?: () => void;
   /**
+   * Called after the user picks an item by click or Enter/Space, once the
+   * scroll has started or `onReveal` has run. For example, to move focus to the
+   * target for keyboard users.
+   */
+  onSelect?: (id: string) => void;
+  /**
    * Changing this re-observes the targets. Use it when rows render later or
    * the window grows, for example the first rendered id.
    */
@@ -98,6 +104,7 @@ export function JumpRail({
   resolveTarget,
   onReveal,
   onBeforeScroll,
+  onSelect,
   observeKey,
   minVisibleItems = JUMP_RAIL_MIN_VISIBLE_ITEMS,
   className,
@@ -161,12 +168,14 @@ export function JumpRail({
       : null;
     if (target) {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
+      onSelect?.(id);
       return;
     }
     // Rendering earlier rows grows the content; a reader stuck to the bottom
     // would be pulled back down instead of reaching the item.
     onBeforeScroll?.();
     onReveal?.(id);
+    onSelect?.(id);
   };
 
   const indexFromPointer = (event: MouseEvent<HTMLElement>) => {
