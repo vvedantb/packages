@@ -60,6 +60,20 @@ Defaults are unchanged: without an entry or a new prop, each AI chat element and
 - New dependency: `katex` ^0.16.45.
 - Tests: `src/ai-elements/aichat-config.test.tsx`, `src/ai-elements/queue.test.tsx`, `src/ui/sonner-dom.test.tsx`, the `SonnerToaster` config cases in `src/ui/foundations.test.tsx`, `src/ui/sonner.test.tsx` (renders `SonnerToaster` now that it reads the config), `src/markdown/markdown.test.ts`, `src/markdown/incrementalBlocks.test.ts`.
 
+### Agent activity and ModelPicker (old pickers deprecated)
+
+Defaults are unchanged for existing components, with one exception: `ModelSelectorLogo` renders a local `ProviderIcon` instead of loading a remote image (see below).
+
+- New components (from an app): `ActivityTasks`, `ActivityQuestionCard`, `ActivityThinkingIcon`, `OpenSubagentContext`, the `ActivityStep` model and helpers (`ActivityTodoItem`, `activityStepConfig`, `activityStepHasRichDetail`, `useActivitySpinnerVerb`, `getRandomActivityVerb`, `useActivityElapsedSeconds`, `formatActivityElapsed`, `useStreamingDisclosure`), `AgentTrace*` (with `AgentTraceStatus`), `AgentPlan*`, `TestResults*` / `TestSuite*` / `TestResult*`, `WebPreview*` (with `useWebPreview`), `ContextUsage*`, `ModelPicker`, `ModelPickerContent`, `modelPickerSurfaceClass`, `ProviderIcon` and the model option helpers (`ModelOption`, `ModelAccount`, `findModelOption`, `formatModelDisplayLabel`, `getProviderLabel`).
+- `UiConfig` entries: `ActivityTasks` (`name`, `markdown`, `thinkingIcon`), `ActivityQuestionCard` (`classes.selectedOption`), `ModelPicker` (`classes.trigger`, `badgeRing`). Every new component merges a caller `className` with `UiConfig.cn`.
+- `ModelPicker` is the one model picker. Deprecated, removed in the next minor release: `ModelSelector*` and `PromptInputModelSelect*`, with the same behaviour.
+- `ModelSelectorLogo` now renders `ProviderIcon` instead of fetching `https://models.dev/logos/<provider>.svg`: `anthropic`, `google-vertex-anthropic`, `claude` show the Claude mark; `openai`, `codex` the OpenAI mark; `opencode`, `cursor` their marks; any other id a neutral CPU glyph. It takes SVG props and `size` (default 12). `ModelSelectorLogoGroup` styles `svg` children.
+- Tool-call details use the shared `FileChip` and `CodeBlock` (`plain`), so `UiConfig.CodeBlock` also styles their code frames.
+- Fills use `surface-secondary`, not `muted` (the same colour under `compat-shadcn-rgb.css`).
+- Renames versus #63: `ModelSelect` is `ModelPicker` (`ModelPickerProps`). Generic names carry a prefix so they do not clash in the single entry: `Trace*` is `AgentTrace*`, `Plan*` is `AgentPlan*`, `Test` / `TestStatusIndicator` / `TestName` / `TestDuration` / `TestError` / `TestErrorMessage` / `TestErrorStack` are `TestResult*`, `Context*` is `ContextUsage*` (`ContextInputUsage` is `ContextUsageInput`, `ContextOutputUsage` is `ContextUsageOutput`, `ContextCacheReadUsage` is `ContextUsageCacheRead`, `ContextCacheWriteUsage` is `ContextUsageCacheWrite`, `ContextCacheUsage` is `ContextUsageCache`), `TodoItem` is `ActivityTodoItem`, and `stepHasRichDetail`, `useSpinnerVerb`, `getRandomVerb`, `useElapsedSeconds` and `formatElapsed` take the `activity` names above. `TestResults*` and `TestSuite*` keep their names.
+- No new dependencies.
+- Tests: `src/ai-elements/activity-config.test.tsx`, `src/ai-elements/model-selector.test.tsx`, `src/ai-elements/activity-question-utils.test.ts`, `src/ai-elements/activity-step-label.test.ts`, `src/ai-elements/activity-tasks-utils.test.ts`, `src/ai-elements/activity-tasks.clocks.test.ts`; `src/root-exports.test.ts` checks the unprefixed names are not exported.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.
