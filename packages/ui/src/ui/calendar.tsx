@@ -6,6 +6,9 @@ import {
 } from "@tabler/icons-react";
 import {
   type Chevron,
+  type ClassNames,
+  type CustomComponents,
+  type DayButton,
   DayPicker,
   type Root,
   getDefaultClassNames,
@@ -14,6 +17,18 @@ import { cn } from "../utils/cn";
 import {
   pickerFocusClass,
 } from "./_picker-classes";
+import { useCn, useUiConfig } from "./ui-config";
+
+/**
+ * `UiConfig.Calendar`. `classes.base` replaces the built-in root `className`
+ * classes; every other key replaces the built-in value of that DayPicker
+ * `classNames` key (a caller `classNames` still wins). `components` is the
+ * default for the prop, applied over the built-in Root and Chevron.
+ */
+export interface CalendarConfig {
+  classes?: Partial<ClassNames> & { base?: string };
+  components?: Partial<CustomComponents>;
+}
 
 // shadcn's v9 calendar on package tokens: no background of its own (it takes
 // the popover or card surface it sits on), selected days use the picker
@@ -57,14 +72,19 @@ function Calendar({
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
   const defaultClassNames = getDefaultClassNames();
+  const config = useUiConfig("Calendar");
+  const merge = useCn();
+  const { base, ...configClassNames } = config?.classes ?? {};
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn(
-        "group/calendar p-1 text-foreground [--cell-size:--spacing(8)]",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+      className={merge(
+        base ?? [
+          "group/calendar p-1 text-foreground [--cell-size:--spacing(8)]",
+          String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
+          String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        ],
         className,
       )}
       captionLayout={captionLayout}
@@ -146,11 +166,13 @@ function Calendar({
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn("rounded-r-lg", defaultClassNames.range_end),
         hidden: cn("invisible", defaultClassNames.hidden),
+        ...configClassNames,
         ...classNames,
       }}
       components={{
         Root: CalendarRoot,
         Chevron: CalendarChevron,
+        ...config?.components,
         ...components,
       }}
       {...props}
@@ -158,4 +180,25 @@ function Calendar({
   );
 }
 
-export { Calendar };
+/**
+ * DayPicker's day button plus `data-selected`, so its classes can style the
+ * selected day on the button itself (`data-[selected=true]:bg-primary`).
+ * Pass it as `components.DayButton` (or through `UiConfig.Calendar.components`).
+ */
+function CalendarDayButton({
+  day: _day,
+  modifiers,
+  ...props
+}: React.ComponentProps<typeof DayButton>) {
+  const ref = React.useRef<HTMLButtonElement>(null);
+
+  // DayPicker decides which day has focus; moving DOM focus to match is what
+  // its own DayButton does.
+  React.useEffect(() => {
+    if (modifiers.focused) ref.current?.focus();
+  }, [modifiers.focused]);
+
+  return <button ref={ref} data-selected={modifiers.selected} {...props} />;
+}
+
+export { Calendar, CalendarDayButton };

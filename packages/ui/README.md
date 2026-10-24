@@ -1155,6 +1155,38 @@ Components and helpers that came from an app, plus `UiConfig` entries (`UiConfig
 - Shared clock: `subscribeQuantized(intervalMs, onChange)`, `quantizedSnapshot(intervalMs)`, `msUntilNextBoundary(intervalMs)`.
 - Identity colours: `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT` (class names `text-cat-N`, `bg-cat-N`, `bg-cat-N/12`, `border-cat-N`; the app defines the `cat` colours).
 - Radius classes: `SURFACE_RADIUS_CLASS` (`rounded-surface`), `CONTROL_RADIUS_CLASS` (`rounded-control`).
+## App config: controls (Unreleased)
+
+`UiConfigProvider` entries for buttons, badges, fields, toggles, tabs, accordion, collapsible, calendar and carousel. Without an entry each one renders its built-in DOM. A `classes` part replaces that part's built-in classes (a part left out keeps them); the caller `className` merges last. Other keys are prop defaults; an explicit prop wins.
+
+```tsx
+import { UiConfigProvider, type UiConfig } from "@vvedantb/ui";
+
+const config = {
+  Button: { classes: { variant: { default: "bg-brand text-white" }, size: { xs: "h-7 px-2 text-2xs" } } },
+  Tabs: { variant: "segmented", pillMotion: "xy" },
+  ClearInput: { animation: "none" },
+} satisfies UiConfig;
+
+<UiConfigProvider config={config}>{app}</UiConfigProvider>
+```
+
+- `cn`: the class merger the components use instead of the built-in `cn`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead.
+- `Button`: `classes.base`, `classes.variant.<variant>`, `classes.size.<size>`. New size `xs` (`h-7 rounded-md px-2 text-xs hit-target`, 14px icons).
+- `Badge`: `classes.base`, `classes.variant.<variant>`.
+- `Input`, `Textarea`: `classes.base`.
+- `Checkbox`: `classes.root`, `classes.indicator`, `icon`. New prop `icon`: the indicator content (default a 14px check).
+- `Switch`: `classes.root`, `classes.thumb`.
+- `Slider`: `classes.root`, `classes.track`, `classes.range`, `classes.thumb`. `trackClassName`, `rangeClassName` and `thumbClassName` still merge after them.
+- `ButtonGroup`: `classes.base`, `classes.orientation.<horizontal|vertical>`, `classes.text` (`ButtonGroupText`), `classes.separator` (`ButtonGroupSeparator`).
+- `InputGroup`: `classes.root`, `classes.addon.base`, `classes.addon.align.<align>`, `classes.button.base`, `classes.button.size.<size>`, `classes.text`, `classes.input`, `classes.textarea`.
+- `ClearInput`: `animation`, `classes.wrapper`, `classes.input`, `classes.button`. New prop `animation`: `"dissolve"` (default) or `"none"`, which clears at once, focuses the input and renders only the wrapper (`relative`), the input and the clear button. The `dissolve` wrapper keeps its `t-clear` classes and adds `classes.wrapper`.
+- `SearchInput`: `classes.wrapper` (a base for the wrapper), `classes.input` (replaces the size classes), `classes.icon` (replaces the icon classes), `iconSize` (default 16), `label`, `placeholder`, `clearLabel`, `enterKeyHint` (`false` leaves `aria-label` or `enterkeyhint` off), and `classNameTarget: "wrapper"` to send `className` to the wrapper instead of the input. New props: `onClear` (called after `onChange` when the value becomes empty) and `inputClassName` (merged into the input last).
+- `Calendar`: `classes.base` replaces the root `className` classes; every other key replaces that DayPicker `classNames` key (a caller `classNames` still wins). `components` is the default for the prop, applied over the built-in `Root` and `Chevron`. New export `CalendarDayButton`: DayPicker's day button plus `data-selected`, for classes such as `data-[selected=true]:bg-primary` on the button; pass it as `components.DayButton`.
+- `Carousel`: `classes.dots`, `classes.dot`, `classes.dotActive`, `classes.dotInactive` for the new `CarouselDots` (one button per snap, nothing for a single page). `useCarousel` is exported and its context adds `selectedIndex`, `scrollSnaps` and `scrollTo`.
+- `Tabs`: `variant` (default for the `TabsList` prop), `pillMotion` (`"x"` default; `"xy"` moves the segmented pill on both axes with `transform`, for lists that wrap or run in a column), `classes.list` (replaces the list classes of every variant), `classes.size.<default|sm>`, `classes.pill`, `classes.trigger` (every trigger), `classes.content`. New `TabsList` prop `size`: `"sm"` shrinks the triggers (`[&_.t-tab]:px-2.5 py-1 text-xs`); `"default"` adds no classes. New `TabsBar`: a tab strip on a bottom hairline (`border-b border-border`, `px-3 py-2`; `size="sm"` `px-2 py-1.5`) with an `actions` slot on the right.
+- `Accordion`: `classes.item`, `classes.header`, `classes.trigger`, `classes.content` (the animated panel), `classes.contentInner` (the padded box inside it), `icon`. New `AccordionTrigger` prop `icon`: shown after the children (default the chevron).
+- `Collapsible`: `classes.trigger`, `classes.content`. The parts have no built-in classes, so without an entry `className` passes through untouched.
 
 ## Colour names in components
 
