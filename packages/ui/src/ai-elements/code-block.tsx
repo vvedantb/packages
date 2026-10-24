@@ -16,6 +16,7 @@ import {
 } from "../ui/radix-select";
 import { cn } from "../utils/cn";
 import { flatPanelSubtleClass } from "../ui/surface-classes";
+import { useCn, useUiConfig } from "../ui/ui-config";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { bundledLanguages, createHighlighter } from "shiki";
@@ -87,9 +88,38 @@ const LineSpan = ({
 // Types
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
-  language: string;
+  /** Shiki language id. Without it the code renders unhighlighted. */
+  language?: string;
   showLineNumbers?: boolean;
+  /**
+   * Plain text, no shiki: a `pre` with the code. `children`, when given,
+   * replace that `pre` (and carry their own copy button) instead of sitting
+   * above the highlighted body.
+   */
+  plain?: boolean;
 };
+/**
+ * `UiConfig.CodeBlock`: `plain` default, and classes that replace the
+ * container, the plain-mode `pre`, the copy button and its icon. A
+ * `copyLabel` adds a screen-reader label to the copy button.
+ * `copyEveryClick` makes the copy button copy again while it still shows
+ * the check; by default those clicks do nothing until it resets.
+ */
+export interface CodeBlockConfig {
+  plain?: boolean;
+  copyEveryClick?: boolean;
+  copyButtonSize?: ComponentProps<typeof Button>["size"];
+  copyLabel?: string;
+  classes?: {
+    container?: string;
+    pre?: string;
+    copyButton?: string;
+    /** Replaces the icon's `size={14}` with a class. */
+    copyIcon?: string;
+  };
+}
+const containerClasses =
+  "relative w-full overflow-hidden rounded-lg bg-surface-secondary/60 text-foreground";
 interface TokenizedCode {
   tokens: ThemedToken[][];
   fg: string;
@@ -261,21 +291,22 @@ export const CodeBlockContainer = ({
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   language: string;
-}) => (
-  <div
-    className={cn(
-      "relative w-full overflow-hidden rounded-lg bg-surface-secondary/60 text-foreground",
-      className,
-    )}
-    data-language={language}
-    style={{
-      containIntrinsicSize: "auto 200px",
-      contentVisibility: "auto",
-      ...style,
-    }}
-    {...props}
-  />
-);
+}) => {
+  const container = useUiConfig("CodeBlock")?.classes?.container;
+  const merge = useCn();
+  return (
+    <div
+      className={merge(container ?? containerClasses, className)}
+      data-language={language}
+      style={{
+        containIntrinsicSize: "auto 200px",
+        contentVisibility: "auto",
+        ...style,
+      }}
+      {...props}
+    />
+  );
+};
 export const CodeBlockHeader = ({
   children,
   className,
@@ -363,18 +394,37 @@ export const CodeBlock = ({
   code,
   language,
   showLineNumbers = false,
+  plain,
   className,
   children,
   ...props
 }: CodeBlockProps) => {
+  const config = useUiConfig("CodeBlock");
+  const merge = useCn();
   const contextValue = { code };
+  if (plain ?? config?.plain) {
+    return (
+      <CodeBlockContext.Provider value={contextValue}>
+        <div
+          className={merge(config?.classes?.container ?? containerClasses, className)}
+          {...props}
+        >
+          {children ?? (
+            <pre className={config?.classes?.pre ?? "m-0 overflow-x-auto p-4 text-sm"}>
+              <code data-language={language}>{code}</code>
+            </pre>
+          )}
+        </div>
+      </CodeBlockContext.Provider>
+    );
+  }
   return (
     <CodeBlockContext.Provider value={contextValue}>
-      <CodeBlockContainer className={className} language={language} {...props}>
+      <CodeBlockContainer className={className} language={language ?? "text"} {...props}>
         {children}
         <CodeBlockContent
           code={code}
-          language={language}
+          language={language ?? "text"}
           showLineNumbers={showLineNumbers}
         />
       </CodeBlockContainer>
@@ -397,13 +447,16 @@ export const CodeBlockCopyButton = ({
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef<number>(0);
   const { code } = useContext(CodeBlockContext);
+  const config = useUiConfig("CodeBlock");
+  const merge = useCn();
+  const iconClass = config?.classes?.copyIcon;
   const copyToClipboard = async () => {
     if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
       onError?.(new Error("Clipboard API not available"));
       return;
     }
     try {
-      if (!isCopied) {
+      if (!isCopied || config?.copyEveryClick) {
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();
@@ -425,13 +478,14 @@ export const CodeBlockCopyButton = ({
   const Icon = isCopied ? IconCheck : IconCopy;
   return (
     <Button
-      className={cn("shrink-0", className)}
+      className={merge(config?.classes?.copyButton ?? "shrink-0", className)}
       onClick={copyToClipboard}
-      size="icon"
+      size={config?.copyButtonSize ?? "icon"}
       variant="ghost"
       {...props}
     >
-      {children ?? <Icon size={14} />}
+      {children ?? (iconClass === undefined ? <Icon size={14} /> : <Icon className={iconClass} />)}
+      {config?.copyLabel ? <span className="sr-only">{config.copyLabel}</span> : null}
     </Button>
   );
 };

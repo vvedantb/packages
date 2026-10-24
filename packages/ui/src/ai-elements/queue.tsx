@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../utils/cn";
 import {
@@ -9,10 +15,17 @@ import {
 } from "../ui/surface-classes";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 import { ScrollArea } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
+import { useCn, useUiConfig } from "../ui/ui-config";
 import {
   IconChevronDown,
+  IconChevronRight,
   IconEdit,
   IconTrash,
   IconCheck,
@@ -20,13 +33,65 @@ import {
   IconStack2,
 } from "@tabler/icons-react";
 
+// One Queue family, used in one of two ways:
+// - The queued-messages widget: `Queue` with `count`, `QueueHeader`,
+//   `QueueList` and `QueueItem` with `text`. It animates with `motion.*`.
+// - Composable parts (the AI Elements `Queue`): `Queue` without `count`, the
+//   `QueueSection*` parts, `QueueList`, `QueueItem` with children and the
+//   `QueueItem*` parts. Plain elements only, no `motion.*`, so it renders
+//   under a strict `LazyMotion`.
+// `QueueList` inside a composable `Queue` is the plain list; anywhere else it
+// is the widget's animated list.
+//
+// The widget keeps its own markup: its rows, actions and list have other
+// elements and classes than the parts, so building it on them would change
+// its DOM.
+
+/** `UiConfig.Queue`: `classes.sectionTrigger` replaces the section header's classes. */
+export interface QueueConfig {
+  classes?: {
+    sectionTrigger?: string;
+  };
+}
+
+/** True inside a composable `Queue` (one without `count`). */
+const QueuePartsContext = createContext(false);
+
+/** The queued-messages widget: animates in while `count > 0`. */
 export interface QueueProps {
   className?: string;
   children?: ReactNode;
   count: number;
 }
 
-export function Queue({ className, children, count }: QueueProps) {
+/** The composable root: a plain container for `QueueSection`s. */
+export type QueueDivProps = ComponentProps<"div"> & { count?: never };
+
+/**
+ * With `count`, the queued-messages widget. Without it, the root container
+ * of a collapsible queue of pending items.
+ */
+export function Queue(props: QueueProps | QueueDivProps) {
+  if (props.count === undefined) return <QueueRoot {...props} />;
+  return <QueueWidget {...props} />;
+}
+
+function QueueRoot({ className, count: _count, ...props }: QueueDivProps) {
+  const merge = useCn();
+  return (
+    <QueuePartsContext.Provider value>
+      <div
+        className={merge(
+          "flex flex-col rounded-xl border border-border bg-card/40 px-2.5 py-2",
+          className,
+        )}
+        {...props}
+      />
+    </QueuePartsContext.Provider>
+  );
+}
+
+function QueueWidget({ className, children, count }: QueueProps) {
   return (
     <AnimatePresence initial={false}>
       {count > 0 ? (
@@ -52,6 +117,7 @@ export interface QueueHeaderProps {
   className?: string;
 }
 
+/** The widget's header: a toggle with the message count. */
 export function QueueHeader({
   count,
   isOpen,
@@ -92,16 +158,41 @@ export function QueueHeader({
   );
 }
 
-export interface QueueListProps {
-  className?: string;
-  children?: ReactNode;
+export interface QueueListProps extends ComponentProps<"div"> {
+  /** Widget list only: animates the list in and out. Default `true`. */
   open?: boolean;
 }
 
-export function QueueList({
+/**
+ * Inside a composable `Queue`, a scrollable list capped at `max-h-48`.
+ * Anywhere else, the widget's animated list capped at 240px.
+ */
+export function QueueList({ open = true, ...props }: QueueListProps) {
+  const inParts = useContext(QueuePartsContext);
+  if (inParts) return <QueuePartsList {...props} />;
+  return <QueueWidgetList open={open} {...props} />;
+}
+
+function QueuePartsList({
+  children,
+  className,
+  ...props
+}: ComponentProps<"div">) {
+  const merge = useCn();
+  return (
+    <div className={merge("mt-1", className)} {...props}>
+      <div className="max-h-48 overflow-y-auto">
+        <ul className="flex flex-col gap-1">{children}</ul>
+      </div>
+    </div>
+  );
+}
+
+function QueueWidgetList({
   className,
   children,
-  open = true,
+  open,
+  ...props
 }: QueueListProps) {
   return (
     <AnimatePresence initial={false}>
@@ -114,7 +205,10 @@ export function QueueList({
           transition={{ type: "spring", bounce: 0, duration: 0.35 }}
           className="overflow-hidden"
         >
-          <div className={cn(flatPanelSubtleClass, "rounded-b-2xl", className)}>
+          <div
+            className={cn(flatPanelSubtleClass, "rounded-b-2xl", className)}
+            {...props}
+          >
             <ScrollArea className="max-h-[240px]">
               <div className="p-2 space-y-1.5">{children}</div>
             </ScrollArea>
@@ -125,6 +219,7 @@ export function QueueList({
   );
 }
 
+/** A widget row: one queued message with edit and remove. */
 export interface QueueItemProps {
   text: string;
   model?: string;
@@ -136,7 +231,29 @@ export interface QueueItemProps {
   className?: string;
 }
 
-export function QueueItem({
+/** A composable row: an `li` for your own content and the `QueueItem*` parts. */
+export type QueueItemLiProps = ComponentProps<"li"> & { text?: never };
+
+/** With `text`, a widget row. Without it, a plain `li` row. */
+export function QueueItem(props: QueueItemProps | QueueItemLiProps) {
+  if (props.text === undefined) return <QueuePartsItem {...props} />;
+  return <QueueWidgetItem {...props} />;
+}
+
+function QueuePartsItem({ className, text: _text, ...props }: QueueItemLiProps) {
+  const merge = useCn();
+  return (
+    <li
+      className={merge(
+        "group flex flex-col gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-surface-secondary/50",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function QueueWidgetItem({
   text,
   model,
   personalityName,
@@ -249,3 +366,170 @@ export function QueueItem({
     </div>
   );
 }
+
+export type QueueSectionProps = ComponentProps<typeof Collapsible>;
+
+export const QueueSection = ({
+  className,
+  defaultOpen = true,
+  ...props
+}: QueueSectionProps) => {
+  const merge = useCn();
+  return <Collapsible className={merge(className)} defaultOpen={defaultOpen} {...props} />;
+};
+
+export type QueueSectionTriggerProps = ComponentProps<"button">;
+
+export const QueueSectionTrigger = ({
+  children,
+  className,
+  ...props
+}: QueueSectionTriggerProps) => {
+  const sectionTrigger = useUiConfig("Queue")?.classes?.sectionTrigger;
+  const merge = useCn();
+  return (
+    <CollapsibleTrigger asChild>
+      <button
+        className={merge(
+          sectionTrigger ??
+            "group flex w-full items-center rounded-md px-1 py-1 text-left text-xs font-medium text-muted-foreground transition-[color,scale] duration-150 ease-out hover:text-foreground active:scale-[0.99]",
+          className,
+        )}
+        type="button"
+        {...props}
+      >
+        {children}
+      </button>
+    </CollapsibleTrigger>
+  );
+};
+
+export type QueueSectionLabelProps = ComponentProps<"span"> & {
+  count?: number;
+  label: string;
+  icon?: ReactNode;
+};
+
+export const QueueSectionLabel = ({
+  count,
+  label,
+  icon,
+  className,
+  ...props
+}: QueueSectionLabelProps) => {
+  const merge = useCn();
+  return (
+    <span className={merge("flex items-center gap-1.5", className)} {...props}>
+      {icon}
+      <span>
+        {count} {label}
+      </span>
+      {/* After the text, pointing right, turning 90° when the section is open. */}
+      <IconChevronRight className="-ml-0.5 size-3.5 opacity-70 transition-transform group-data-[state=open]:rotate-90" />
+    </span>
+  );
+};
+
+export type QueueSectionContentProps = ComponentProps<
+  typeof CollapsibleContent
+>;
+
+export const QueueSectionContent = ({
+  className,
+  ...props
+}: QueueSectionContentProps) => {
+  const merge = useCn();
+  return <CollapsibleContent className={merge(className)} {...props} />;
+};
+
+export type QueueItemIndicatorProps = ComponentProps<"span"> & {
+  completed?: boolean;
+};
+
+export const QueueItemIndicator = ({
+  completed = false,
+  className,
+  ...props
+}: QueueItemIndicatorProps) => {
+  const merge = useCn();
+  return (
+    <span
+      className={merge(
+        "mt-1 inline-block size-2.5 shrink-0 rounded-full border",
+        completed
+          ? "border-muted-foreground/20 bg-muted-foreground/10"
+          : "border-muted-foreground/45",
+        className,
+      )}
+      {...props}
+    />
+  );
+};
+
+export type QueueItemContentProps = ComponentProps<"span"> & {
+  completed?: boolean;
+};
+
+export const QueueItemContent = ({
+  completed = false,
+  className,
+  ...props
+}: QueueItemContentProps) => {
+  const merge = useCn();
+  return (
+    <span
+      className={merge(
+        "line-clamp-2 min-w-0 grow wrap-break-word leading-snug",
+        completed
+          ? "text-muted-foreground/50 line-through"
+          : "text-foreground/90",
+        className,
+      )}
+      {...props}
+    />
+  );
+};
+
+export type QueueItemActionsProps = ComponentProps<"div">;
+
+export const QueueItemActions = ({
+  className,
+  ...props
+}: QueueItemActionsProps) => {
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        // `reveal-on-hover`: hidden until row hover on pointer devices, always
+        // visible below `sm` where there is no hover.
+        "flex shrink-0 items-start gap-0.5 reveal-on-hover transition-opacity",
+        className,
+      )}
+      {...props}
+    />
+  );
+};
+
+export type QueueItemActionProps = Omit<
+  ComponentProps<typeof Button>,
+  "variant" | "size"
+>;
+
+export const QueueItemAction = ({
+  className,
+  ...props
+}: QueueItemActionProps) => {
+  const merge = useCn();
+  return (
+    <Button
+      className={merge(
+        "size-auto rounded-md p-1 text-muted-foreground hover:bg-surface-secondary hover:text-foreground",
+        className,
+      )}
+      size="icon"
+      type="button"
+      variant="ghost"
+      {...props}
+    />
+  );
+};

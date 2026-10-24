@@ -47,9 +47,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/radix-select";
+import { CrossfadeIconSlot } from "../ui/crossfade-icon";
 import { Spinner } from "../ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { cn } from "../utils/cn";
+import { useCn, useUiConfig } from "../ui/ui-config";
 import { segmentExpandedStateClass } from "../ui/surface-classes";
 import {
   IconCornerDownLeft,
@@ -67,6 +68,21 @@ import {
   useRef,
   useState,
 } from "react";
+/** `existing` with `file` in its place when the ids match (old blob URL revoked). */
+const replaceFile = (
+  existing: FileUIPart & { id: string },
+  id: string,
+  file: File,
+): FileUIPart & { id: string } => {
+  if (existing.id !== id) return existing;
+  if (existing.url) URL.revokeObjectURL(existing.url);
+  return {
+    ...existing,
+    filename: file.name,
+    mediaType: file.type,
+    url: URL.createObjectURL(file),
+  };
+};
 const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
   try {
     const response = await fetch(url);
@@ -81,12 +97,39 @@ const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
     return null;
   }
 };
+/**
+ * `UiConfig.PromptInput`. `classes` replace built-in classes: `group` (the
+ * input group, default `overflow-hidden`), `groupIdle` / `groupDragOver`
+ * (added while no drag / an accepted drag is over the form), `groupDefault`
+ * (added when no `containerClassName` is given), `textarea`, `footer`,
+ * `submit` and `tabItem`. `submitIcons` replace the submit
+ * button's icon per status; `submitCrossfade` cross-fades between them.
+ * `menuTriggerAsChild` makes `PromptInputActionMenuTrigger` the trigger
+ * itself rather than a button inside the menu's trigger button.
+ */
+export interface PromptInputConfig {
+  classes?: {
+    group?: string;
+    groupIdle?: string;
+    groupDragOver?: string;
+    groupDefault?: string;
+    textarea?: string;
+    footer?: string;
+    submit?: string;
+    tabItem?: string;
+  };
+  submitIcons?: Partial<Record<"send" | "submitted" | "streaming" | "error", ReactNode>>;
+  submitCrossfade?: boolean;
+  menuTriggerAsChild?: boolean;
+}
 export interface AttachmentsContext {
   files: (FileUIPart & {
     id: string;
   })[];
   add: (files: File[] | FileList) => void;
   remove: (id: string) => void;
+  /** Replace one attachment in place (same id and position). No re-validation. */
+  replace: (id: string, file: File) => void;
   clear: () => void;
   openFileDialog: () => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -119,7 +162,8 @@ export const usePromptInputController = () => {
   }
   return ctx;
 };
-const useOptionalPromptInputController = () =>
+/** The provider's controller, or `null` outside `PromptInputProvider`. */
+export const useOptionalPromptInputController = () =>
   useContext(PromptInputController);
 export const useProviderAttachments = () => {
   const ctx = useContext(ProviderAttachmentsContext);
@@ -169,6 +213,9 @@ export const PromptInputProvider = ({
       return prev.filter((f) => f.id !== id);
     });
   };
+  const replace = (id: string, file: File) => {
+    setAttachmentFiles((prev) => prev.map((existing) => replaceFile(existing, id, file)));
+  };
   const clear = () => {
     setAttachmentFiles((prev) => {
       for (const f of prev) {
@@ -199,6 +246,7 @@ export const PromptInputProvider = ({
     files: attachmentFiles,
     openFileDialog,
     remove,
+    replace,
   };
   const __registerFileInput = (
     ref: RefObject<HTMLInputElement | null>,
@@ -289,7 +337,16 @@ export type PromptInputProps = Omit<
   syncHiddenInput?: boolean;
   maxFiles?: number;
   maxFileSize?: number;
+  /** Merged onto the inner `InputGroup`. */
   containerClassName?: string;
+  /** Same as `containerClassName`. */
+  inputGroupClassName?: string;
+  /**
+   * Accepts a non-file drag of this MIME type: it counts as a drag over the
+   * form (the `groupDragOver` classes) and `onDrop` receives its string
+   * payload. Other types keep the browser's default drop.
+   */
+  dataDrop?: { type: string; onDrop: (payload: string) => void };
   onError?: (err: {
     code: "max_files" | "max_file_size" | "accept";
     message: string;
@@ -308,15 +365,23 @@ export const PromptInput = ({
   maxFiles,
   maxFileSize,
   containerClassName,
+  inputGroupClassName,
+  dataDrop,
   onError,
   onSubmit,
   children,
   ...props
 }: PromptInputProps) => {
+  const classes = useUiConfig("PromptInput")?.classes;
+  const merge = useCn();
   const controller = useOptionalPromptInputController();
   const usingProvider = !!controller;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  // Enter/leave pairs, not a boolean: `dragleave` also fires when the pointer
+  // moves onto a child of the form.
+  const dragEnterDepth = useRef(0);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [items, setItems] = useState<
     (FileUIPart & {
       id: string;
@@ -345,6 +410,10 @@ export const PromptInput = ({
       if (pattern.endsWith("/*")) {
         const prefix = pattern.slice(0, -1);
         return f.type.startsWith(prefix);
+      }
+      // Extension patterns (`.html`): browsers often omit the MIME type.
+      if (pattern.startsWith(".")) {
+        return f.name.toLowerCase().endsWith(pattern.toLowerCase());
       }
       return f.type === pattern;
     });
@@ -403,6 +472,8 @@ export const PromptInput = ({
       if (found?.url) URL.revokeObjectURL(found.url);
       return prev.filter((file) => file.id !== id);
     });
+  const replaceLocal = (id: string, file: File) =>
+    setItems((prev) => prev.map((existing) => replaceFile(existing, id, file)));
   const addWithProviderValidation = (fileList: File[] | FileList) => {
     const incoming = [...fileList];
     const accepted = incoming.filter((f) => matchesAccept(f));
@@ -452,6 +523,7 @@ export const PromptInput = ({
   const clearReferencedSources = () => setReferencedSources([]);
   const add = usingProvider ? addWithProviderValidation : addLocal;
   const remove = usingProvider ? controller.attachments.remove : removeLocal;
+  const replace = usingProvider ? controller.attachments.replace : replaceLocal;
   const openFileDialog = usingProvider
     ? controller.attachments.openFileDialog
     : openFileDialogLocal;
@@ -468,44 +540,54 @@ export const PromptInput = ({
       inputRef.current.value = "";
     }
   }, [files, syncHiddenInput]);
+  // Drops land on the form, or anywhere in the document with `globalDrop`.
   useEffect(() => {
-    const form = formRef.current;
-    if (!form) return;
-    if (globalDrop) return;
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
+    const target: EventTarget | null = globalDrop ? document : formRef.current;
+    if (!target) return;
+    // Types are readable during the drag; the payload only on drop.
+    const carriesData = (event: DragEvent) =>
+      dataDrop !== undefined &&
+      event.dataTransfer?.types?.includes(dataDrop.type) === true;
+    const isAcceptedDrag = (event: DragEvent) =>
+      event.dataTransfer?.types?.includes("Files") === true || carriesData(event);
+    const onDragEnter = (event: Event) => {
+      if (!(event instanceof DragEvent) || !isAcceptedDrag(event)) return;
+      dragEnterDepth.current += 1;
+      setIsDragOver(true);
     };
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files);
+    const onDragOver = (event: Event) => {
+      if (event instanceof DragEvent && isAcceptedDrag(event)) event.preventDefault();
+    };
+    const onDragLeave = (event: Event) => {
+      if (!(event instanceof DragEvent) || !isAcceptedDrag(event)) return;
+      dragEnterDepth.current = Math.max(0, dragEnterDepth.current - 1);
+      if (dragEnterDepth.current === 0) setIsDragOver(false);
+    };
+    const onDrop = (event: Event) => {
+      if (!(event instanceof DragEvent)) return;
+      if (isAcceptedDrag(event)) event.preventDefault();
+      dragEnterDepth.current = 0;
+      setIsDragOver(false);
+      if (dataDrop !== undefined && carriesData(event)) {
+        const payload = event.dataTransfer?.getData(dataDrop.type);
+        if (payload) dataDrop.onDrop(payload);
+        return;
+      }
+      if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+        add(event.dataTransfer.files);
       }
     };
-    form.addEventListener("dragover", onDragOver);
-    form.addEventListener("drop", onDrop);
+    target.addEventListener("dragenter", onDragEnter);
+    target.addEventListener("dragover", onDragOver);
+    target.addEventListener("dragleave", onDragLeave);
+    target.addEventListener("drop", onDrop);
     return () => {
-      form.removeEventListener("dragover", onDragOver);
-      form.removeEventListener("drop", onDrop);
+      target.removeEventListener("dragenter", onDragEnter);
+      target.removeEventListener("dragover", onDragOver);
+      target.removeEventListener("dragleave", onDragLeave);
+      target.removeEventListener("drop", onDrop);
     };
-  }, [add, globalDrop]);
-  useEffect(() => {
-    if (!globalDrop) return;
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
-    };
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files);
-      }
-    };
-    document.addEventListener("dragover", onDragOver);
-    document.addEventListener("drop", onDrop);
-    return () => {
-      document.removeEventListener("dragover", onDragOver);
-      document.removeEventListener("drop", onDrop);
-    };
-  }, [add, globalDrop]);
+  }, [add, globalDrop, dataDrop]);
   useEffect(
     () => () => {
       if (!usingProvider) {
@@ -527,6 +609,7 @@ export const PromptInput = ({
     files: files.map((item) => ({ ...item, id: item.id })),
     openFileDialog,
     remove,
+    replace,
   };
   const refsCtx = {
     add: (incoming: SourceDocumentUIPart[] | SourceDocumentUIPart) => {
@@ -592,12 +675,18 @@ export const PromptInput = ({
         type="file"
       />
       <form
-        className={cn("w-full", className)}
+        className={merge("w-full", className)}
         onSubmit={handleSubmit}
         ref={formRef}
         {...props}
       >
-        <InputGroup className={cn("overflow-hidden", containerClassName)}>
+        <InputGroup
+          className={merge(
+            classes?.group ?? "overflow-hidden",
+            isDragOver ? classes?.groupDragOver : classes?.groupIdle,
+            containerClassName ?? inputGroupClassName ?? classes?.groupDefault,
+          )}
+        >
           {children}
         </InputGroup>
       </form>
@@ -618,9 +707,12 @@ export type PromptInputBodyProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputBody = ({
   className,
   ...props
-}: PromptInputBodyProps) => (
-  <div className={cn("contents", className)} {...props} />
-);
+}: PromptInputBodyProps) => {
+  const merge = useCn();
+  return (
+    <div className={merge("contents", className)} {...props} />
+  );
+};
 export type PromptInputTextareaProps = ComponentProps<
   typeof InputGroupTextarea
 >;
@@ -633,6 +725,8 @@ export const PromptInputTextarea = ({
 }: PromptInputTextareaProps) => {
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
+  const textarea = useUiConfig("PromptInput")?.classes?.textarea;
+  const merge = useCn();
   const [isComposing, setIsComposing] = useState(false);
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
     onKeyDown?.(e);
@@ -686,7 +780,7 @@ export const PromptInputTextarea = ({
     : { onChange };
   return (
     <InputGroupTextarea
-      className={cn("field-sizing-content max-h-48 min-h-16", className)}
+      className={merge(textarea ?? "field-sizing-content max-h-48 min-h-16", className)}
       name="message"
       onCompositionEnd={handleCompositionEnd}
       onCompositionStart={handleCompositionStart}
@@ -705,13 +799,16 @@ export type PromptInputHeaderProps = Omit<
 export const PromptInputHeader = ({
   className,
   ...props
-}: PromptInputHeaderProps) => (
-  <InputGroupAddon
-    align="block-end"
-    className={cn("order-first flex-wrap gap-1", className)}
-    {...props}
-  />
-);
+}: PromptInputHeaderProps) => {
+  const merge = useCn();
+  return (
+    <InputGroupAddon
+      align="block-end"
+      className={merge("order-first flex-wrap gap-1", className)}
+      {...props}
+    />
+  );
+};
 export type PromptInputFooterProps = Omit<
   ComponentProps<typeof InputGroupAddon>,
   "align"
@@ -719,23 +816,30 @@ export type PromptInputFooterProps = Omit<
 export const PromptInputFooter = ({
   className,
   ...props
-}: PromptInputFooterProps) => (
-  <InputGroupAddon
-    align="block-end"
-    className={cn("justify-between gap-1", className)}
-    {...props}
-  />
-);
+}: PromptInputFooterProps) => {
+  const footer = useUiConfig("PromptInput")?.classes?.footer;
+  const merge = useCn();
+  return (
+    <InputGroupAddon
+      align="block-end"
+      className={merge(footer ?? "justify-between gap-1", className)}
+      {...props}
+    />
+  );
+};
 export type PromptInputToolsProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTools = ({
   className,
   ...props
-}: PromptInputToolsProps) => (
-  <div
-    className={cn("flex min-w-0 items-center gap-1", className)}
-    {...props}
-  />
-);
+}: PromptInputToolsProps) => {
+  const merge = useCn();
+  return (
+    <div
+      className={merge("flex min-w-0 items-center gap-1", className)}
+      {...props}
+    />
+  );
+};
 export type PromptInputButtonTooltip =
   | string
   | {
@@ -753,11 +857,12 @@ export const PromptInputButton = ({
   tooltip,
   ...props
 }: PromptInputButtonProps) => {
+  const merge = useCn();
   const newSize =
     size ?? (Children.count(props.children) > 1 ? "sm" : "icon-sm");
   const button = (
     <InputGroupButton
-      className={cn(className)}
+      className={merge(className)}
       size={newSize}
       type="button"
       variant={variant}
@@ -788,31 +893,39 @@ export const PromptInputActionMenuTrigger = ({
   className,
   children,
   ...props
-}: PromptInputActionMenuTriggerProps) => (
-  <DropdownTrigger>
+}: PromptInputActionMenuTriggerProps) => {
+  const asChild = useUiConfig("PromptInput")?.menuTriggerAsChild;
+  const button = (
     <PromptInputButton className={className} {...props}>
       {children ?? <IconPlus className="size-4" />}
     </PromptInputButton>
-  </DropdownTrigger>
-);
+  );
+  return asChild ? <DropdownTrigger asChild>{button}</DropdownTrigger> : <DropdownTrigger>{button}</DropdownTrigger>;
+};
 export type PromptInputActionMenuContentProps = ComponentProps<
   typeof DropdownMenu
 >;
 export const PromptInputActionMenuContent = ({
   className,
   ...props
-}: PromptInputActionMenuContentProps) => (
-  <DropdownMenu align="start" className={cn(className)} {...props} />
-);
+}: PromptInputActionMenuContentProps) => {
+  const merge = useCn();
+  return (
+    <DropdownMenu align="start" className={merge(className)} {...props} />
+  );
+};
 export type PromptInputActionMenuItemProps = ComponentProps<
   typeof DropdownItem
 >;
 export const PromptInputActionMenuItem = ({
   className,
   ...props
-}: PromptInputActionMenuItemProps) => (
-  <DropdownItem className={cn(className)} {...props} />
-);
+}: PromptInputActionMenuItemProps) => {
+  const merge = useCn();
+  return (
+    <DropdownItem className={merge(className)} {...props} />
+  );
+};
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   status?: ChatStatus;
   onStop?: () => void;
@@ -827,14 +940,21 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
+  const config = useUiConfig("PromptInput");
+  const icons = config?.submitIcons;
+  const merge = useCn();
   const isGenerating = status === "submitted" || status === "streaming";
-  let Icon = <IconCornerDownLeft className="size-4" />;
+  const iconKey =
+    status === "submitted" || status === "streaming" || status === "error"
+      ? status
+      : "send";
+  let Icon = icons?.send ?? <IconCornerDownLeft className="size-4" />;
   if (status === "submitted") {
-    Icon = <Spinner size="sm" />;
+    Icon = icons?.submitted ?? <Spinner size="sm" />;
   } else if (status === "streaming") {
-    Icon = <IconSquare className="size-4" />;
+    Icon = icons?.streaming ?? <IconSquare className="size-4" />;
   } else if (status === "error") {
-    Icon = <IconX className="size-4" />;
+    Icon = icons?.error ?? <IconX className="size-4" />;
   }
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isGenerating && onStop) {
@@ -847,14 +967,20 @@ export const PromptInputSubmit = ({
   return (
     <InputGroupButton
       aria-label={isGenerating ? "Stop" : "Submit"}
-      className={cn(className)}
+      className={merge(config?.classes?.submit, className)}
       onClick={handleClick}
       size={size}
       type={isGenerating && onStop ? "button" : "submit"}
       variant={variant}
       {...props}
     >
-      {children ?? Icon}
+      {children ??
+        (config?.submitCrossfade ? (
+          // Keyed by status, so send, spinner, stop and error cross-fade.
+          <CrossfadeIconSlot iconKey={iconKey}>{Icon}</CrossfadeIconSlot>
+        ) : (
+          Icon
+        ))}
     </InputGroupButton>
   );
 };
@@ -868,42 +994,54 @@ export type PromptInputModelSelectTriggerProps = ComponentProps<
 export const PromptInputModelSelectTrigger = ({
   className,
   ...props
-}: PromptInputModelSelectTriggerProps) => (
-  <SelectTrigger
-    className={cn(
-      "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-[color,transform] duration-150 ease-out active:scale-[0.97]",
-      "hover:bg-surface-secondary hover:text-foreground",
-      segmentExpandedStateClass,
-      className,
-    )}
-    {...props}
-  />
-);
+}: PromptInputModelSelectTriggerProps) => {
+  const merge = useCn();
+  return (
+    <SelectTrigger
+      className={merge(
+        "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-[color,transform] duration-150 ease-out active:scale-[0.97]",
+        "hover:bg-surface-secondary hover:text-foreground",
+        segmentExpandedStateClass,
+        className,
+      )}
+      {...props}
+    />
+  );
+};
 export type PromptInputModelSelectContentProps = ComponentProps<
   typeof SelectContent
 >;
 export const PromptInputModelSelectContent = ({
   className,
   ...props
-}: PromptInputModelSelectContentProps) => (
-  <SelectContent className={cn(className)} {...props} />
-);
+}: PromptInputModelSelectContentProps) => {
+  const merge = useCn();
+  return (
+    <SelectContent className={merge(className)} {...props} />
+  );
+};
 export type PromptInputModelSelectItemProps = ComponentProps<typeof SelectItem>;
 export const PromptInputModelSelectItem = ({
   className,
   ...props
-}: PromptInputModelSelectItemProps) => (
-  <SelectItem className={cn(className)} {...props} />
-);
+}: PromptInputModelSelectItemProps) => {
+  const merge = useCn();
+  return (
+    <SelectItem className={merge(className)} {...props} />
+  );
+};
 export type PromptInputModelSelectValueProps = ComponentProps<
   typeof SelectValue
 >;
 export const PromptInputModelSelectValue = ({
   className,
   ...props
-}: PromptInputModelSelectValueProps) => (
-  <SelectValue className={cn(className)} {...props} />
-);
+}: PromptInputModelSelectValueProps) => {
+  const merge = useCn();
+  return (
+    <SelectValue className={merge(className)} {...props} />
+  );
+};
 export type PromptInputHoverCardProps = ComponentProps<typeof HoverCard>;
 export const PromptInputHoverCard = ({
   openDelay = 0,
@@ -931,88 +1069,126 @@ export type PromptInputTabsListProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTabsList = ({
   className,
   ...props
-}: PromptInputTabsListProps) => <div className={cn(className)} {...props} />;
+}: PromptInputTabsListProps) => {
+  const merge = useCn();
+  return <div className={merge(className)} {...props} />;
+};
 export type PromptInputTabProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTab = ({
   className,
   ...props
-}: PromptInputTabProps) => <div className={cn(className)} {...props} />;
+}: PromptInputTabProps) => {
+  const merge = useCn();
+  return <div className={merge(className)} {...props} />;
+};
 export type PromptInputTabLabelProps = HTMLAttributes<HTMLHeadingElement>;
 export const PromptInputTabLabel = ({
   className,
   ...props
-}: PromptInputTabLabelProps) => (
-  <h3
-    className={cn("mb-2 px-3 font-medium text-muted-foreground text-xs", className)}
-    {...props}
-  />
-);
+}: PromptInputTabLabelProps) => {
+  const merge = useCn();
+  return (
+    <h3
+      className={merge("mb-2 px-3 font-medium text-muted-foreground text-xs", className)}
+      {...props}
+    />
+  );
+};
 export type PromptInputTabBodyProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTabBody = ({
   className,
   ...props
-}: PromptInputTabBodyProps) => (
-  <div className={cn("space-y-1", className)} {...props} />
-);
+}: PromptInputTabBodyProps) => {
+  const merge = useCn();
+  return (
+    <div className={merge("space-y-1", className)} {...props} />
+  );
+};
 export type PromptInputTabItemProps = HTMLAttributes<HTMLDivElement>;
 export const PromptInputTabItem = ({
   className,
   ...props
-}: PromptInputTabItemProps) => (
-  <div
-    className={cn(
-      "flex items-center gap-2 rounded-md px-3 py-2 text-xs transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] hover:bg-surface-secondary",
-      className,
-    )}
-    {...props}
-  />
-);
+}: PromptInputTabItemProps) => {
+  const tabItem = useUiConfig("PromptInput")?.classes?.tabItem;
+  const merge = useCn();
+  return (
+    <div
+      className={merge(
+        tabItem ??
+          "flex items-center gap-2 rounded-md px-3 py-2 text-xs transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] hover:bg-surface-secondary",
+        className,
+      )}
+      {...props}
+    />
+  );
+};
 export type PromptInputCommandProps = ComponentProps<typeof Command>;
 export const PromptInputCommand = ({
   className,
   ...props
-}: PromptInputCommandProps) => <Command className={cn(className)} {...props} />;
+}: PromptInputCommandProps) => {
+  const merge = useCn();
+  return <Command className={merge(className)} {...props} />;
+};
 export type PromptInputCommandInputProps = ComponentProps<typeof CommandInput>;
 export const PromptInputCommandInput = ({
   className,
   ...props
-}: PromptInputCommandInputProps) => (
-  <CommandInput className={cn(className)} {...props} />
-);
+}: PromptInputCommandInputProps) => {
+  const merge = useCn();
+  return (
+    <CommandInput className={merge(className)} {...props} />
+  );
+};
 export type PromptInputCommandListProps = ComponentProps<typeof CommandList>;
 export const PromptInputCommandList = ({
   className,
   ...props
-}: PromptInputCommandListProps) => (
-  <CommandList className={cn(className)} {...props} />
-);
+}: PromptInputCommandListProps) => {
+  const merge = useCn();
+  return (
+    <CommandList className={merge(className)} {...props} />
+  );
+};
 export type PromptInputCommandEmptyProps = ComponentProps<typeof CommandEmpty>;
 export const PromptInputCommandEmpty = ({
   className,
   ...props
-}: PromptInputCommandEmptyProps) => (
-  <CommandEmpty className={cn(className)} {...props} />
-);
+}: PromptInputCommandEmptyProps) => {
+  const merge = useCn();
+  return (
+    <CommandEmpty className={merge(className)} {...props} />
+  );
+};
 export type PromptInputCommandGroupProps = ComponentProps<typeof CommandGroup>;
 export const PromptInputCommandGroup = ({
   className,
   ...props
-}: PromptInputCommandGroupProps) => (
-  <CommandGroup className={cn(className)} {...props} />
-);
+}: PromptInputCommandGroupProps) => {
+  const merge = useCn();
+  return (
+    <CommandGroup className={merge(className)} {...props} />
+  );
+};
 export type PromptInputCommandItemProps = ComponentProps<typeof CommandItem>;
 export const PromptInputCommandItem = ({
   className,
   ...props
-}: PromptInputCommandItemProps) => (
-  <CommandItem className={cn(className)} {...props} />
-);
+}: PromptInputCommandItemProps) => {
+  const merge = useCn();
+  return (
+    <CommandItem className={merge(className)} {...props} />
+  );
+};
 export type PromptInputCommandSeparatorProps = ComponentProps<
   typeof CommandSeparator
 >;
 export const PromptInputCommandSeparator = ({
   className,
   ...props
-}: PromptInputCommandSeparatorProps) => (
-  <CommandSeparator className={cn(className)} {...props} />
-);
+}: PromptInputCommandSeparatorProps) => {
+  const merge = useCn();
+  return (
+    <CommandSeparator className={merge(className)} {...props} />
+  );
+};

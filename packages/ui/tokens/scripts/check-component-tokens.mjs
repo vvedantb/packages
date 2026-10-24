@@ -2,12 +2,14 @@
 // `text-muted`, accent-as-brand utilities, fill-type `muted` (`bg-muted`,
 // `border-muted`, …), or raw `var(--<colour>)` reads. Components must use
 // `text-muted-foreground`, `primary`, `surface-secondary` and `--color-*`.
+// The package CSS (tokens/src/css and any .css under src) is also checked for
+// fill-type `--muted` reads; there the fill is `var(--color-surface-secondary)`.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const dirs = ["src", "app/src", "shell/src"];
+const dirs = ["src", "app/src", "shell/src", "tokens/src/css"];
 const exts = /\.(ts|tsx|css)$/;
 const skip = /\.(test|spec)\.|\/__tests__\//;
 
@@ -37,6 +39,17 @@ const rules = [
       "src/composer/input-area/ComposerSlashMenu.tsx",
     ]),
   },
+  {
+    // CSS fills (backgrounds, fills, strokes, border and outline colours,
+    // shadows and `--*-bg` / `--*-surface` style variables) that read `--muted`
+    // or `--color-muted`. `--muted-foreground` is text and is not matched, and
+    // `--color-*` definitions (the compat mapping itself) are not fills.
+    re: /(?:background(?:-color)?|fill|stroke|border(?:-(?:top|right|bottom|left|block|inline))?(?:-color)?|outline(?:-color)?|box-shadow|--(?!color-)[\w-]*(?:bg|background|fill|surface)[\w-]*)\s*:[^;]*\bvar\(--(?:color-)?muted\)/g,
+    msg: "fill with var(--color-surface-secondary)",
+    allow: "check-tokens-allow: muted",
+    cssOnly: true,
+    files: new Set([]),
+  },
 ];
 
 function* walk(dir) {
@@ -65,9 +78,13 @@ const hits = [];
 for (const d of dirs) {
   for (const file of walk(join(root, d))) {
     const isTs = /\.tsx?$/.test(file);
+    const isCss = file.endsWith(".css");
+    // The token stylesheets hold CSS, not class lists: only the CSS rule applies.
+    const tokensCss = relative(root, file).startsWith("tokens/");
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
+        if (r.cssOnly ? !isCss : tokensCss) continue;
         if (r.allow && line.includes(r.allow) && (r.files ?? ALLOW_FILES).has(relative(root, file))) continue;
         for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }

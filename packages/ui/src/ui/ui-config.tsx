@@ -2,6 +2,8 @@ import * as React from "react";
 import type { ClassValue } from "clsx";
 import { cn } from "../utils/cn";
 import type { AccordionConfig } from "./accordion";
+import type { ArtifactConfig } from "../ai-elements/artifact";
+import type { AttachmentsConfig } from "../ai-elements/attachments";
 import type { BadgeConfig } from "./badge";
 import type { ButtonConfig } from "./button";
 import type { ButtonGroupConfig } from "./button-group";
@@ -11,9 +13,11 @@ import type { CarouselConfig } from "./carousel";
 import type { CheckboxConfig } from "./checkbox";
 import type { SpinnerConfig } from "./spinner";
 import type { ClearInputConfig } from "./clear-input";
+import type { CodeBlockConfig } from "../ai-elements/code-block";
 import type { CollapsibleConfig } from "./collapsible";
 import type { CommandConfig } from "./command";
 import type { ContextMenuConfig } from "./context-menu";
+import type { ConversationConfig } from "../ai-elements/conversation";
 import type { DialogConfig } from "./dialog";
 import type { DropdownMenuConfig } from "./dropdown-menu";
 import type { HoverCardConfig } from "./hover-card";
@@ -22,18 +26,25 @@ import type { InputGroupConfig } from "./input-group";
 import type { LabelConfig } from "./label";
 import type { ListRowConfig } from "./list-row";
 import type { LoadingStateConfig } from "./loading-state";
+import type { MessageConfig } from "../ai-elements/message";
 import type { PopoverConfig } from "./popover";
 import type { ProgressConfig } from "./progress";
+import type { PromptInputConfig } from "../ai-elements/prompt-input";
+import type { PromptInputSettingsConfig } from "../ai-elements/prompt-input-settings";
+import type { QueueConfig } from "../ai-elements/queue";
 import type { SearchInputConfig } from "./search-input";
 import type { SelectConfig } from "./select";
 import type { SeparatorConfig } from "./separator";
+import type { ShimmerConfig } from "../ai-elements/shimmer";
 import type { SliderConfig } from "./slider";
+import type { SonnerToasterConfig } from "./sonner";
 import type { StatusDotConfig } from "./status-dot";
 import type { SwitchConfig } from "./switch";
 import type { TableConfig } from "./table";
 import type { TabsConfig } from "./tabs";
 import type { TextareaConfig } from "./textarea";
 import type { TooltipConfig } from "./tooltip";
+import type { TraitsPanelConfig } from "../ai-elements/prompt-input-traits";
 
 // App-level component defaults. An app wraps its tree in `UiConfigProvider`
 // to give components its own classes and behaviour without passing props at
@@ -55,6 +66,8 @@ export interface UiConfig {
    */
   cn?: (...inputs: ClassValue[]) => string;
   Accordion?: AccordionConfig;
+  Artifact?: ArtifactConfig;
+  Attachments?: AttachmentsConfig;
   Badge?: BadgeConfig;
   Button?: ButtonConfig;
   ButtonGroup?: ButtonGroupConfig;
@@ -63,9 +76,11 @@ export interface UiConfig {
   Carousel?: CarouselConfig;
   Checkbox?: CheckboxConfig;
   ClearInput?: ClearInputConfig;
+  CodeBlock?: CodeBlockConfig;
   Collapsible?: CollapsibleConfig;
   Command?: CommandConfig;
   ContextMenu?: ContextMenuConfig;
+  Conversation?: ConversationConfig;
   Dialog?: DialogConfig;
   DropdownMenu?: DropdownMenuConfig;
   HoverCard?: HoverCardConfig;
@@ -74,12 +89,18 @@ export interface UiConfig {
   Label?: LabelConfig;
   ListRow?: ListRowConfig;
   LoadingState?: LoadingStateConfig;
+  Message?: MessageConfig;
   Popover?: PopoverConfig;
   Progress?: ProgressConfig;
+  PromptInput?: PromptInputConfig;
+  PromptInputSettings?: PromptInputSettingsConfig;
+  Queue?: QueueConfig;
   SearchInput?: SearchInputConfig;
   Select?: SelectConfig;
   Separator?: SeparatorConfig;
+  Shimmer?: ShimmerConfig;
   Slider?: SliderConfig;
+  SonnerToaster?: SonnerToasterConfig;
   Spinner?: SpinnerConfig;
   StatusDot?: StatusDotConfig;
   Switch?: SwitchConfig;
@@ -87,6 +108,7 @@ export interface UiConfig {
   Tabs?: TabsConfig;
   Textarea?: TextareaConfig;
   Tooltip?: TooltipConfig;
+  TraitsPanel?: TraitsPanelConfig;
 }
 
 const UiConfigContext = React.createContext<UiConfig>({});
