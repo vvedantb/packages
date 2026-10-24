@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Overlays: `UiConfig` entries `Dialog`, `SideSheet`, `Popover`, `HoverCard`, `Tooltip`, `DropdownMenu`, `ContextMenu`, `Select` and `Command` (part `classes`, `icons` and prop defaults; see the README section "Overlays: app config and opt-in props"). No output change without an entry.
+- Overlays: new `SideSheet*` (Radix Dialog side panel, `side` left or right, `hideCloseButton`) and `PopoverAnchor`. New props: `DialogContent` `viewportAware`, `HoverCardContent` / `TooltipContent` / `ContextMenuSubContent` `portal`.
+- Overlays: `DialogTrigger`, `PopoverTrigger`, `DropdownMenuTrigger` and `ContextMenuTrigger` are now thin wrappers (they read config); `HoverCard` and `TooltipProvider` are function components that read config delays. Same DOM and props without config.
+- Tests: `src/ui/overlay-config.test.tsx`.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.

@@ -1063,6 +1063,38 @@ With `closeButtonStyle="hoverChip"`, hover changes the text colour, and sonner m
 
 Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 
+## Overlays: app config and opt-in props
+
+`UiConfigProvider` entries for the overlay family. Without an entry each component renders as before. `classes` replaces a part's built-in classes (a part left out keeps them); a caller `className` still merges last with `cn`. Other keys are prop defaults; an explicit prop wins.
+
+```tsx
+<UiConfigProvider config={{ Dialog: { viewportAware: false, classes: { content: "..." } }, Tooltip: { delayDuration: 300, portal: true } }}>
+```
+
+| Entry | `classes` parts | Other keys |
+| --- | --- | --- |
+| `Dialog` | `trigger`, `overlay`, `content` (both layouts), `centered`, `compact`, `close`, `header`, `body`, `footer`, `title`, `description` | `viewportAware` |
+| `SideSheet` | `trigger`, `overlay`, `content`, `left`, `right`, `close` | `side` |
+| `Popover` | `trigger`, `content` | `sideOffset`, `collisionPadding` |
+| `HoverCard` | `content` | `openDelay`, `closeDelay`, `sideOffset`, `portal` |
+| `Tooltip` | `content` | `delayDuration` (read by `TooltipProvider`), `sideOffset`, `portal` |
+| `DropdownMenu` | `trigger`, `content`, `subContent`, `subTrigger`, `item`, `checkboxItem`, `radioItem`, `label`, `separator`, `shortcut` | `icons.check`, `icons.radio`, `sideOffset`, `collisionPadding` |
+| `ContextMenu` | same as `DropdownMenu` | `icons.check`, `icons.radio`, `collisionPadding`, `subContentPortal` |
+| `Select` | `trigger`, `scrollButton`, `content`, `viewport`, `popperViewport`, `label`, `item`, `separator` | `icons.trigger`, `icons.scrollUp`, `icons.scrollDown`, `icons.check`, `triggerSlot`, `collisionPadding` |
+| `Command` | `root`, `dialogContent`, `dialogCommand`, `inputWrapper`, `input`, `list`, `empty`, `group`, `separator`, `item`, `shortcut` | `icons.search`, `emptyClassNameReplaces` |
+
+`icons.*` take a node and replace the built-in icon. A `trigger` class is added only when set: without it the trigger renders exactly as the Radix one.
+
+New props and exports:
+
+- `DialogContent` `viewportAware` (default `true`): the bottom sheet on compact viewports, visual-viewport sizing, keyboard-aware scrolling and the body pointer-events fix. `false` keeps a centred dialog at every size and leaves the viewport and body alone.
+- `SideSheet`, `SideSheetTrigger`, `SideSheetClose`, `SideSheetPortal`, `SideSheetOverlay`, `SideSheetContent` (`side`: `"left"` default or `"right"`; `hideCloseButton`), `SideSheetTitle`, `SideSheetDescription`: a modal panel on the left or right edge, built on Radix Dialog. It slides in with CSS and has no drag gesture; use `Sheet` (vaul) for a draggable drawer.
+- `PopoverAnchor` (Radix `Popover.Anchor`).
+- `HoverCardContent` and `TooltipContent` `portal`: render into `document.body`.
+- `ContextMenuSubContent` `portal`.
+- Config `Select.triggerSlot`: adds `data-slot="select-trigger"`, which the `ButtonGroup` selectors read.
+- Config `Command.emptyClassNameReplaces`: a `className` on `CommandEmpty` (even `""`) replaces its classes instead of merging.
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
