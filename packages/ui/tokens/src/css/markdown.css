@@ -6,10 +6,12 @@
  *   @import "@vvedantb/ui/tokens/css/markdown.css";
  *
  * Reads the shadcn channel variables as `rgb(var(--name))`: --foreground,
- * --muted, --muted-foreground, --border, --primary, --success, --warning,
+ * --muted-foreground, --border, --primary, --success, --warning,
  * --destructive, and --radius, --font-mono and --motion-fast (150ms when
  * unset). The app (or compat-shadcn-rgb.css) must define them as space
- * separated RGB channels.
+ * separated RGB channels. Code block and table panels fill with
+ * `var(--color-surface-secondary)`, which tokens.css and compat-shadcn-rgb.css
+ * both define (the compat file maps it to the app's `--muted`).
  *
  * Set on :root, `.markdown` or any ancestor to change (default shown):
  *   --markdown-alert-important: var(--primary)   (RGB channels)
@@ -20,8 +22,7 @@
  * in compact rows). Everything sits in `components`, so a surface's own
  * utilities (`[&_h3]:text-xs`) still win.
  *
- * Code blocks, inline code and callouts are tone surfaces (`--muted`), never
- * hairlines.
+ * Code blocks, inline code and callouts are tone surfaces, never hairlines.
  */
 
 @layer components {
@@ -219,7 +220,7 @@
   .markdown-code {
     overflow: hidden;
     border-radius: clamp(0.75rem, var(--radius), 1rem);
-    background: rgb(var(--muted));
+    background: var(--color-surface-secondary);
     content-visibility: auto;
     contain-intrinsic-size: auto 120px;
   }
@@ -302,13 +303,13 @@
 
 /* Unlayered: Streamdown's table wrapper carries border / background / radius
  * utilities, which outrank anything in `components`. Restyled to match code
- * blocks — one muted tone surface, controls in its header row, no hairlines. */
+ * blocks — one surface-secondary tone, controls in its header row, no hairlines. */
 .markdown [data-streamdown="table-wrapper"] {
   gap: 0;
   padding: 0.25rem 0.3rem 0.4rem;
   border: 0;
   border-radius: clamp(0.75rem, var(--radius), 1rem);
-  background: rgb(var(--muted));
+  background: var(--color-surface-secondary);
 }
 .markdown [data-streamdown="table-wrapper"] > div:has([data-streamdown="table"]) {
   border: 0;
