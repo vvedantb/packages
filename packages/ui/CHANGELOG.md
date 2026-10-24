@@ -58,6 +58,8 @@ Defaults are unchanged: without an entry or a new prop, each AI chat element and
 - Renames versus #63: `QueuePanel`, `QueuePanelList` and `QueuePanelItem` are the composable `Queue`, `QueueList` and `QueueItem`, and `UiConfig.QueuePanel` is `UiConfig.Queue`. `Toaster` is `SonnerToaster`, which now reads the config itself.
 - Dropped in review, never shipped: `Toaster`, `SideSheet*` and `UiConfig.SideSheet` (use `Sheet` or `SlideOverPanel`), `Alert`, `AlertDescription` and `alertVariants`, `Sandbox*`, `Confirmation*`, and the `PromptInputSelect*` parts with `UiConfig.PromptInput.classes.selectTrigger`. `PromptInputModelSelect*` stays.
 - New dependency: `katex` ^0.16.45.
+- Peer range: `streamdown` is now `^2.3.0` (was `*`). `Markdown` uses `useIsCodeFenceIncomplete`, `parseMarkdownIntoBlocks`, `ExtraProps` and the `DiagramPlugin` / `CodeHighlighterPlugin` types; 2.2 lacks `useIsCodeFenceIncomplete` and 1.x fails to build.
+- `PromptInputSpeech`: `getSpeechRecognition` reads `window` through its local type with a cast instead of an assignment, so it typechecks in apps that declare their own `Window.SpeechRecognition` and Speech API globals. New consumer fixture `consumer/window-speech-global.d.ts` (`tsconfig.consumer-speech.json`, part of `pnpm typecheck`) pins that.
 - Tests: `src/ai-elements/aichat-config.test.tsx`, `src/ai-elements/queue.test.tsx`, `src/ui/sonner-dom.test.tsx`, the `SonnerToaster` config cases in `src/ui/foundations.test.tsx`, `src/ui/sonner.test.tsx` (renders `SonnerToaster` now that it reads the config), `src/markdown/markdown.test.ts`, `src/markdown/incrementalBlocks.test.ts`.
 
 ## 0.17.1

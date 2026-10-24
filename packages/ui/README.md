@@ -1244,7 +1244,7 @@ const config = {
 
 `Markdown` (Streamdown with GFM, KaTeX math, CJK, Shiki code blocks with a wrap toggle and copy button, mermaid diagrams loaded on first use, GitHub alerts `> [!NOTE]`, links with the site favicon, file paths in inline code, copy as markdown) and `MarkdownLink`. `components` and `remarkPlugins` extend the defaults. It imports KaTeX's stylesheet; import `@vvedantb/ui/tokens/css/markdown.css` for the typography. That file reads the shadcn channel variables (`rgb(var(--foreground))`, `--muted-foreground`, `--border`, `--primary`, `--success`, `--warning`, `--destructive`), as with `compat-shadcn-rgb.css`, and fills code block and table panels with `var(--color-surface-secondary)` (defined by `tokens.css` and by the compat file, which maps it to the app's `--muted`); `--markdown-alert-important` (RGB channels, default `var(--primary)`) colours `[!IMPORTANT]`. `Markdown` merges a caller `className` with `UiConfig.cn`.
 
-New dependency (installed with the package): `katex`. `streamdown` and the `@streamdown/*` plugins stay peers.
+New dependency (installed with the package): `katex`. `streamdown` and the `@streamdown/*` plugins stay peers; `streamdown` must be `^2.3.0` (`Markdown` uses `useIsCodeFenceIncomplete`, `parseMarkdownIntoBlocks` and the plugin types, which 2.2 and earlier lack).
 
 ## Colour names in components
 

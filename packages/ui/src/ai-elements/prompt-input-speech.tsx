@@ -39,8 +39,11 @@ interface SpeechRecognitionInstance extends EventTarget {
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 
 // Read the constructors through a local type: a package must not augment the
-// global Window.
-type SpeechRecognitionWindow = Window & {
+// global Window. Apps often declare their own `Window.SpeechRecognition` with
+// other event types, so `window` is cast to this shape rather than assigned
+// (an assignment fails to typecheck in those apps; see
+// consumer/window-speech-global.d.ts).
+type SpeechRecognitionWindow = {
   SpeechRecognition?: SpeechRecognitionConstructor;
   webkitSpeechRecognition?: SpeechRecognitionConstructor;
 };
@@ -48,7 +51,7 @@ type SpeechRecognitionWindow = Window & {
 /** The browser's `SpeechRecognition` constructor, or `null` without one. */
 export function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   if (typeof window === "undefined") return null;
-  const speechWindow: SpeechRecognitionWindow = window;
+  const speechWindow = window as unknown as SpeechRecognitionWindow;
   return speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition ?? null;
 }
 
