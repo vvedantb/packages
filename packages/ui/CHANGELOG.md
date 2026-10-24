@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.19.0
 
 - New `JumpRail`: a t3code-style timeline minimap (short rail of ticks, hover preview card, click, arrow, Home, End and Enter to jump). Props: `items` (`{ id, title, preview?, level? }`), `scrollRef` or `getScrollElement`, `targetAttribute` (default `data-message-id`), `resolveTarget`, `onReveal` (target not in the DOM), `onBeforeScroll` (called before `onReveal`), `onSelect` (called with the id after a click or Enter/Space pick, once the scroll or `onReveal` has run, for example to move focus to the target for keyboard users), `observeKey` (re-observe when rows render later), `minVisibleItems` (default 2), `className`, and the label strings `ariaLabel`, `buttonLabel`, `fallbackLabel`. Ticks for `level` above 1 are shorter and indented. Motion runs inside its own `LazyMotion`.
 - New `ChatJumpRail`: `JumpRail` for a chat inside `Conversation`. It reads `scrollRef` and `stopScroll` from `use-stick-to-bottom`. Props: `messages` (`{ id, content, reply? }`), `renderedFromId`, `onRevealMessage`, `formatPreview`, plus the other `JumpRail` props such as `onSelect`. Also `buildChatJumpRailTicks` (role-based transcript to ticks) and `buildChatJumpRailItems`.
