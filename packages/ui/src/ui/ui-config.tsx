@@ -8,6 +8,16 @@ import type { PopoverConfig } from "./popover";
 import type { SelectConfig } from "./select";
 import type { SideSheetConfig } from "./side-sheet";
 import type { TooltipConfig } from "./tooltip";
+import type { CardConfig } from "./card";
+import type { LabelConfig } from "./label";
+import type { ListRowConfig } from "./list-row";
+import type { LoadingStateConfig } from "./loading-state";
+import type { ProgressConfig } from "./progress";
+import type { SeparatorConfig } from "./separator";
+import type { SonnerToasterConfig } from "./sonner";
+import type { CircleSpinnerConfig, SpinnerConfig } from "./spinner";
+import type { StatusDotConfig } from "./status-dot";
+import type { TableConfig } from "./table";
 
 // App-level component defaults. An app wraps its tree in `UiConfigProvider`
 // to give components its own classes and behaviour without passing props at
@@ -30,6 +40,17 @@ export interface UiConfig {
   Select?: SelectConfig;
   SideSheet?: SideSheetConfig;
   Tooltip?: TooltipConfig;
+  Card?: CardConfig;
+  CircleSpinner?: CircleSpinnerConfig;
+  Label?: LabelConfig;
+  ListRow?: ListRowConfig;
+  LoadingState?: LoadingStateConfig;
+  Progress?: ProgressConfig;
+  Separator?: SeparatorConfig;
+  SonnerToaster?: SonnerToasterConfig;
+  Spinner?: SpinnerConfig;
+  StatusDot?: StatusDotConfig;
+  Table?: TableConfig;
 }
 
 const UiConfigContext = React.createContext<UiConfig>({});

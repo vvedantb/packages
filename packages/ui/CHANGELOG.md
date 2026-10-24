@@ -6,6 +6,10 @@
 - Overlays: new `SideSheet*` (Radix Dialog side panel, `side` left or right, `hideCloseButton`) and `PopoverAnchor`. New props: `DialogContent` `viewportAware`, `HoverCardContent` / `TooltipContent` / `ContextMenuSubContent` `portal`.
 - Overlays: `DialogTrigger`, `PopoverTrigger`, `DropdownMenuTrigger` and `ContextMenuTrigger` are now thin wrappers (they read config); `HoverCard` and `TooltipProvider` are function components that read config delays. Same DOM and props without config.
 - Tests: `src/ui/overlay-config.test.tsx`.
+- Foundations (moved from eva): `CircleSpinner`, `CenteredSpinner`, `LoadingState`, `RefreshSpinIcon`, `CrossfadeIcon`, `CrossfadeIconSlot`, `BorderBeam` (+ opt-in `tokens/css/border-beam.css`), `StatusDot`, `Surface`/`surfaceVariants`, `ListRow`/`LIST_ROW_CONTROL_CLASS`, `Avatar`/`AvatarImage`/`AvatarFallback`, `Alert`/`AlertDescription`/`alertVariants`, `CardTitle`, `CardDescription`, `CardFooter`, `CardAction`, and `Toaster` (`SonnerToaster` with `UiConfig.SonnerToaster` defaults).
+- Foundations helpers: `transitionFast`/`transitionBase`/`transitionSlow`, `staggerDelay`, `rubberband`, `projectVelocity`, `DRAG_ACTIVATION_DISTANCE_PX`, `ensureRuntimeVisibility`, `observeAnimVisibility`, `useAnimOffscreenRef`, `bindRuntimeAnimation`, `subscribeQuantized`, `quantizedSnapshot`, `msUntilNextBoundary`, `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT`, `SURFACE_RADIUS_CLASS`, `CONTROL_RADIUS_CLASS`. `SidebarResize` now imports the shared `rubberband` (same maths).
+- `UiConfig` entries: `Spinner` (`mark`), `CircleSpinner` (`colors`), `LoadingState`, `StatusDot`, `ListRow`, `SonnerToaster`, `Card`, `Table`, `Progress`, `Separator`, `Label`. No entry = unchanged output.
+- New props: `Spinner` `mark` (outline with a running dash instead of the loader icon), `SonnerToaster` `classes` (replace toast parts and the toaster class).
 
 ## 0.17.1
 
