@@ -1083,6 +1083,8 @@ Use this when the app defines shadcn-style variables as space-separated channels
 
 Shared CSS that is safe without `tokens.css`: `compat-shadcn-rgb.css`, `dialog.css`, `utilities.css`, `scrollbar-thin.css` (reads `--scrollbar`, which the compat file defines), `clear-input.css` and `motion.css` (import them yourself; `tokens.css` is what imports them otherwise), `modal.css` and `tabs.css` (both need the motion variables listed in `tokens/README.md` on the app `:root`, because `tokens.css` sets them), and `animations.css` (not with the Tailwind preset). `base.css` and `tabs-pills.css` read raw `--accent`, `--foreground`, `--muted`, `--segment` and `--default`; skip them unless the app defines those as full colour values.
 
+`text-muted` (the exceptions above) reads `--muted-foreground` under the compat file, so it stays grey text. `bg-muted` and `border-muted` still read the app's `--muted` fill (0.17.1).
+
 The compat file defines `.glass-panel-strong` for toasts, dialogs and hover cards as the solid popover colour (`rgb(var(--popover))`, as `bg-overlay`), the same as `tokens.css`. Before 0.15.0 it was `rgb(var(--card) / 0.95)` with a 12px blur. The rule is in `@layer components`, so an app `.glass-panel-strong` rule after the import wins.
 
 A fixture that renders the main components against sample light and dark RGB variables is in `tokens/examples/compat-shadcn-rgb/`.
