@@ -39,6 +39,10 @@ import type { TableConfig } from "./table";
 import type { TabsConfig } from "./tabs";
 import type { TextareaConfig } from "./textarea";
 import type { TooltipConfig } from "./tooltip";
+import type { GanttConfig } from "../kibo/gantt-provider";
+import type { KanbanConfig } from "../kibo/kanban";
+import type { ThemeSwitcherConfig } from "../kibo/theme-switcher";
+import type { VideoPlayerConfig } from "../kibo/video-player";
 
 // App-level component defaults. An app wraps its tree in `UiConfigProvider`
 // to give components its own classes and behaviour without passing props at
@@ -76,9 +80,11 @@ export interface UiConfig {
   ContextMenu?: ContextMenuConfig;
   Dialog?: DialogConfig;
   DropdownMenu?: DropdownMenuConfig;
+  Gantt?: GanttConfig;
   HoverCard?: HoverCardConfig;
   Input?: InputConfig;
   InputGroup?: InputGroupConfig;
+  Kanban?: KanbanConfig;
   Label?: LabelConfig;
   ListRow?: ListRowConfig;
   LoadingState?: LoadingStateConfig;
@@ -97,7 +103,9 @@ export interface UiConfig {
   Table?: TableConfig;
   Tabs?: TabsConfig;
   Textarea?: TextareaConfig;
+  ThemeSwitcher?: ThemeSwitcherConfig;
   Tooltip?: TooltipConfig;
+  VideoPlayer?: VideoPlayerConfig;
 }
 
 const UiConfigContext = React.createContext<UiConfig>({});

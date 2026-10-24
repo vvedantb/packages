@@ -18,6 +18,10 @@
 - `Slider`: `children` render inside the track after the range (they were dropped). No change for callers without children.
 - Tests: `src/ai-elements/activity-config.test.tsx`, the moved activity unit tests, and a `Slider` children case.
 - `UiConfig.cn` now also reaches the overlay components (`Dialog*`, `SideSheet*`, `Popover*`, `HoverCardContent`, `TooltipContent`, `DropdownMenu*`, `ContextMenu*`, `Select*`, `Command*`) and the foundations (`Card*`, `Table*`, `Progress`, `Separator`, `Label`, `Spinner`, `CircleSpinner`, `StatusDot`, `ListRow`, `Alert*`, `Avatar*`, `BorderBeam`, `Surface`, `CenteredSpinner`, `RefreshSpinIcon`): a caller `className` merges with the app merger. No provider: unchanged output.
+- Kibo blocks and markdown (moved from an app): `Gantt*`, `Kanban*`, `List*`, `ContributionGraph*`, `VideoPlayer*`, `Cursor*`, `AvatarStack`, `ThemeSwitcher`, `useDragSensors`, `Markdown`, `MarkdownLink`. New opt-in stylesheet `@vvedantb/ui/tokens/css/markdown.css` (`--markdown-alert-important` sets the `[!IMPORTANT]` colour). See the README section "Kibo blocks and markdown".
+- `UiConfig` entries `Gantt` (`classes.root`, `today`, `todayDate`, `dragHandle`, `offscreenIndicator`), `Kanban` (`classes.card`, `cardTransition`), `ThemeSwitcher` (`classes.button`) and `VideoPlayer` (`classes.root`, `controlBar`).
+- New dependencies: `@dnd-kit/core` ^6.3.1, `@dnd-kit/sortable` ^10.0.0, `@dnd-kit/modifiers` ^9.0.0, `@dnd-kit/utilities` ^3.2.2, `dayjs` ^1.11.13 (was a dev dependency), `media-chrome` ^4.14.0, `katex` ^0.16.45.
+- Tests: `src/kibo/kibo.test.tsx`, `src/kibo/kanbanDropTarget.test.ts`, `src/utils/useDragSensors.test.ts`, `src/markdown/markdown.test.ts`, `src/markdown/incrementalBlocks.test.ts`.
 
 ## 0.17.1
 
