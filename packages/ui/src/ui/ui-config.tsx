@@ -1,6 +1,16 @@
 import * as React from "react";
 import type { ClassValue } from "clsx";
 import { cn } from "../utils/cn";
+import type { ArtifactConfig } from "../ai-elements/artifact";
+import type { AttachmentsConfig } from "../ai-elements/attachments";
+import type { CodeBlockConfig } from "../ai-elements/code-block";
+import type { ConversationConfig } from "../ai-elements/conversation";
+import type { MessageConfig } from "../ai-elements/message";
+import type { PromptInputConfig } from "../ai-elements/prompt-input";
+import type { PromptInputSettingsConfig } from "../ai-elements/prompt-input-settings";
+import type { TraitsPanelConfig } from "../ai-elements/prompt-input-traits";
+import type { QueuePanelConfig } from "../ai-elements/queue-panel";
+import type { ShimmerConfig } from "../ai-elements/shimmer";
 import type { AccordionConfig } from "./accordion";
 import type { BadgeConfig } from "./badge";
 import type { ButtonConfig } from "./button";
@@ -57,6 +67,8 @@ export interface UiConfig {
    */
   cn?: (...inputs: ClassValue[]) => string;
   Accordion?: AccordionConfig;
+  Artifact?: ArtifactConfig;
+  Attachments?: AttachmentsConfig;
   Badge?: BadgeConfig;
   Button?: ButtonConfig;
   ButtonGroup?: ButtonGroupConfig;
@@ -66,9 +78,11 @@ export interface UiConfig {
   Checkbox?: CheckboxConfig;
   CircleSpinner?: CircleSpinnerConfig;
   ClearInput?: ClearInputConfig;
+  CodeBlock?: CodeBlockConfig;
   Collapsible?: CollapsibleConfig;
   Command?: CommandConfig;
   ContextMenu?: ContextMenuConfig;
+  Conversation?: ConversationConfig;
   Dialog?: DialogConfig;
   DropdownMenu?: DropdownMenuConfig;
   HoverCard?: HoverCardConfig;
@@ -77,11 +91,16 @@ export interface UiConfig {
   Label?: LabelConfig;
   ListRow?: ListRowConfig;
   LoadingState?: LoadingStateConfig;
+  Message?: MessageConfig;
   Popover?: PopoverConfig;
   Progress?: ProgressConfig;
+  PromptInput?: PromptInputConfig;
+  PromptInputSettings?: PromptInputSettingsConfig;
+  QueuePanel?: QueuePanelConfig;
   SearchInput?: SearchInputConfig;
   Select?: SelectConfig;
   Separator?: SeparatorConfig;
+  Shimmer?: ShimmerConfig;
   SideSheet?: SideSheetConfig;
   Slider?: SliderConfig;
   SonnerToaster?: SonnerToasterConfig;
@@ -92,6 +111,7 @@ export interface UiConfig {
   Tabs?: TabsConfig;
   Textarea?: TextareaConfig;
   Tooltip?: TooltipConfig;
+  TraitsPanel?: TraitsPanelConfig;
 }
 
 const UiConfigContext = React.createContext<UiConfig>({});

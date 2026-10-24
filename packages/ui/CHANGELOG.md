@@ -13,6 +13,12 @@
 - Controls: `UiConfig` entries for `Button`, `Badge`, `Input`, `Textarea`, `Checkbox`, `Switch`, `Slider`, `ButtonGroup`, `InputGroup`, `ClearInput`, `SearchInput`, `Calendar`, `Carousel`, `Tabs`, `Accordion` and `Collapsible` (see the README "App config: controls" section), and `UiConfig.cn`, an app class merger the components use in place of `cn`. No entry: the default DOM is unchanged.
 - Controls, new opt-in props and exports: `Button` size `xs`; `Checkbox` `icon`; `AccordionTrigger` `icon`; `ClearInput` `animation` (`"none"`: clear at once, plain markup); `SearchInput` `onClear` and `inputClassName`; `TabsList` `size`; `TabsBar`; `CalendarDayButton`; `CarouselDots`, `useCarousel` (context adds `selectedIndex`, `scrollSnaps`, `scrollTo`); `syncTabsPill` takes an optional `"xy"` motion; `CollapsibleContentProps` type. `CollapsibleTrigger` and `CollapsibleContent` are now thin wrappers (same DOM, refs still reach the element).
 - Tests: `src/ui/controls-config.test.tsx`.
+- AI chat: `UiConfig` entries `Conversation`, `Message`, `PromptInput`, `PromptInputSettings`, `TraitsPanel`, `QueuePanel`, `Shimmer`, `CodeBlock`, `Artifact` and `Attachments` (see the README "App config: AI chat" section). No output change without an entry.
+- AI chat, new opt-in props: `ConversationScrollButton` `label`, `icon`, `showDelay`, `resetKey`; `PromptInput` `dataDrop`, `inputGroupClassName`; `Shimmer` `mode` (`"mask"`); `CodeBlock` `plain` (and `language` optional); `ArtifactAction` optional `tooltip` and component `icon`. `PromptInput` attachments add `replace`; `useOptionalPromptInputController` is exported.
+- AI chat, new components (moved from eva): `ArtifactClose`, `FileChip`, `Confirmation*`, `Sandbox*`, `QueuePanel` / `QueuePanelList` / `QueuePanelItem` with `QueueSection*` and `QueueItem{Indicator,Content,Actions,Action}`, `PromptInputSelect*`, `PromptInputSpeech` (+ `useSpeechRecognition`, `getSpeechRecognition`), `PromptInputSettings`, `TraitsPanel` (+ `isUltrathinkPrompt`, `applyUltrathinkPrefix`).
+- `ConversationScrollButton` animates with `m` in its own `LazyMotion` (was `motion.div`), so it renders under an app's `<LazyMotion strict>`. Same DOM.
+- Fix: `PromptInput` `accept` matches extension patterns (`.html`) by file name; before, such files were rejected even though the picker offered them.
+- Tests: `src/ai-elements/aichat-config.test.tsx`.
 
 ## 0.17.1
 
