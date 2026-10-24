@@ -1,0 +1,116 @@
+/*
+ * @vvedantb/ui/tokens/css/border-beam.css: the `.beam-*` rules for
+ * <BorderBeam/>, a hairline of light that travels around a surface while
+ * something runs. Opt-in: neither tokens.css nor index.css imports it.
+ *
+ *   @import "@vvedantb/ui/tokens/css/border-beam.css";
+ *
+ * Set on :root, the wrapper or any ancestor to change (defaults shown):
+ *   --beam-color: color-mix(in oklab, var(--color-foreground) 75%, transparent)
+ *   --beam-progress-color: var(--color-warning)
+ *   --beam-colorful-from: var(--color-primary)
+ *   --beam-colorful-to: var(--color-primary)
+ *
+ * The overlay is inset -1px: its wrapper owns the radius, the beam inherits
+ * it, and the child's opaque background hides the gradient's interior so
+ * only the ring reads.
+ *
+ * The conic gradient's angle is not animated: a registered custom property
+ * cannot run on the compositor, so it would repaint every frame. The ring
+ * spins an oversized `from 0deg` square under a static rounded clip via
+ * `rotate`, a cached-texture compositor animation. The square is sized to
+ * its clip's diagonal (`hypot()` of the container units the clip exposes).
+ *
+ * Named `beam-*`, not `border-beam-*`: tailwind-merge reads a `border-`
+ * prefix as a border-colour utility and would drop the class.
+ *
+ * No blur halo: a live `filter: blur()` on a spinning conic gradient keeps
+ * the GPU busy for as long as the beam runs.
+ *
+ * Paused while the tab is hidden (`html[data-page-hidden]`), inside a
+ * parked `aria-hidden` subtree, or off screen (`[data-anim-offscreen]`);
+ * `ensureRuntimeVisibility` and `useAnimOffscreenRef` set those attributes.
+ */
+
+@keyframes beam-rotate {
+  to {
+    rotate: 1turn;
+  }
+}
+
+.beam-root {
+  --beam-duration: 3s;
+  --beam-spread: 12%;
+  --beam-stops:
+    transparent 0%,
+    var(--beam-color, color-mix(in oklab, var(--color-foreground) 75%, transparent)) var(--beam-spread),
+    transparent calc(var(--beam-spread) * 2);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Static rounded clip over the spinning square. `container-type: size`
+ * gives the square `cqw`/`cqh` for its diagonal. */
+.beam {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  overflow: hidden;
+  container-type: size;
+}
+
+/* Spinning gradient square, centred on the clip and sized to its diagonal.
+ * +12px of slack so the padding box stays covered. */
+.beam::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(hypot(100cqw, 100cqh) + 12px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background-image: conic-gradient(from 0deg, var(--beam-stops));
+  animation: beam-rotate var(--beam-duration) linear infinite;
+}
+
+.beam-sm {
+  --beam-duration: 2.4s;
+  --beam-spread: 8%;
+}
+
+.beam-lg {
+  --beam-duration: 3.6s;
+  --beam-spread: 18%;
+}
+
+.beam-progress {
+  --beam-stops:
+    transparent 0%,
+    var(--beam-progress-color, var(--color-warning)) var(--beam-spread),
+    transparent calc(var(--beam-spread) * 2);
+}
+
+.beam-colorful {
+  --beam-stops:
+    transparent 0%,
+    var(--beam-colorful-from, var(--color-primary)) calc(var(--beam-spread) * 0.5),
+    color-mix(
+        in oklab,
+        var(--beam-colorful-from, var(--color-primary)),
+        var(--beam-colorful-to, var(--color-primary))
+      )
+      var(--beam-spread),
+    var(--beam-colorful-to, var(--color-primary)) calc(var(--beam-spread) * 1.5),
+    transparent calc(var(--beam-spread) * 2);
+}
+
+/* `:not([data-anim-chrome])`: the beam overlay is itself `aria-hidden`
+ * (decorative), which must not count as a parked subtree. */
+html[data-page-hidden] .beam::before,
+[aria-hidden="true"]:not([data-anim-chrome]) .beam::before,
+[data-anim-offscreen] .beam::before {
+  animation-play-state: paused;
+}

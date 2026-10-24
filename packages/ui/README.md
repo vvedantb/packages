@@ -1063,6 +1063,68 @@ With `closeButtonStyle="hoverChip"`, hover changes the text colour, and sonner m
 
 Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 
+## Loaders, rows, status and app config (Unreleased)
+
+Components and helpers that came from an app, plus `UiConfig` entries (`UiConfigProvider`) for existing components. Without a provider every existing component renders as before.
+
+### App config entries
+
+`classes` replaces the built-in classes of a part; a part left out keeps its default; a caller `className` merges last with `cn`. Other keys are prop defaults; an explicit prop wins.
+
+| Entry | Keys |
+| --- | --- |
+| `Spinner` | `mark` (default for the new `mark` prop). |
+| `CircleSpinner` | `colors` (`{ track?, arc?, lead? }`). |
+| `LoadingState` | `label`, `colors` (three column colours), `labelStyle`, `classes.label`. |
+| `StatusDot` | `classes.tone` (fill class per tone; tones left out keep theirs). |
+| `ListRow` | `classes.root`, `interactive`, `selected`, `idle`, `accent`, `overlay`, `content`. |
+| `SonnerToaster` | Any `SonnerToaster` prop as a default, read by `Toaster` (not by `SonnerToaster`, which stays hook-free). |
+| `Card` | `classes.root`, `header`, `title`, `description`, `content`, `footer`, `action`. |
+| `Table` | `classes.wrapper` (the scroll `<div>`), `table`, `header`, `body`, `footer`, `row`, `head`, `cell`, `caption`. |
+| `Progress` | `classes.root`, `indicator`. |
+| `Separator` | `classes.root` (the orientation size classes stay). |
+| `Label` | `classes.root`. |
+
+```tsx
+<UiConfigProvider
+  config={{
+    Spinner: { mark: { viewBox: "0 0 24 24", strokeWidth: 2, dashArray: "0.3 0.7", shapes: [{ d: LOGO_PATH, stroke: "#635bff" }] } },
+    CircleSpinner: { colors: { track: "#635bff", arc: "#635bff", lead: "#00d4ff" } },
+    Card: { classes: { root: "rounded-surface bg-card text-card-foreground" } },
+  }}
+>
+```
+
+### New props
+
+- `Spinner` `mark?: SpinnerMark` (`{ viewBox, shapes, strokeWidth, dashArray }`; each shape is `{ points, stroke }` (a `<polygon>`) or `{ d, stroke }` (a `<path>`)). With a mark the spinner draws the outline with a dash that runs around each shape (Web Animations, 2s a lap, paused off screen and in hidden tabs). `tone` and `stroke` do not apply; `decorative` and numeric `size` (as `width`/`height`) do.
+- `SonnerToaster` `classes?: ToastClassNames & { toaster?: string }`: replaces the package `classNames` per key (`""` removes one); `toaster` replaces `toaster group !font-sans` on the list (`""` removes it). Caller `toastOptions.classNames` still merge after.
+
+### New components
+
+- `Toaster`: `SonnerToaster` with defaults from `UiConfig.SonnerToaster`. Without an entry it renders exactly `<SonnerToaster />`.
+- `CircleSpinner` (`size`, `colors`): a faint ring with a two-tone arc, for slots too small for a mark.
+- `CenteredSpinner` (`label`): a `Spinner` centred in its box (`flex-1`, `p-6`, `aria-busy`).
+- `LoadingState` (`variant` `Drive | Dots | Orbit`, `size` `default | sm`, `iconOnly`, `label`, `colors`, `labelStyle`): a 3×3 pulsing grid with a label and an elapsed timer (one shared 100ms clock, asleep in hidden tabs).
+- `RefreshSpinIcon` (`busy`, `className`): a refresh glyph that crossfades to `CircleSpinner`.
+- `CrossfadeIcon` (`show`, `whenTrue`, `whenFalse`, keys, `variant` `default | soft`) and `CrossfadeIconSlot` (`iconKey`): keyed icon swaps on `motion` `m` (needs the app's `LazyMotion`).
+- `BorderBeam` (`active`, `size`, `colorVariant` `mono | progress | colorful`): a light that travels around the wrapper's border. Import `@vvedantb/ui/tokens/css/border-beam.css` for the `.beam-*` rules; colours are `--beam-color`, `--beam-progress-color`, `--beam-colorful-from` and `--beam-colorful-to`.
+- `StatusDot` (`tone`, `size`): a small coloured status dot; forwards `ref`.
+- `Surface` (`density` `tight | default | comfortable | none`) and `surfaceVariants`: a card-filled box with one padding.
+- `ListRow` (`link`, `href`, `onClick`, `selected`, `accentClassName`, `contentClassName`, `decoration`) and `LIST_ROW_CONTROL_CLASS`: a selectable row with a stretched native overlay; nested controls take `LIST_ROW_CONTROL_CLASS` to sit above it.
+- `Avatar`, `AvatarImage`, `AvatarFallback` (Radix Avatar from `radix-ui`).
+- `Alert`, `AlertDescription`, `alertVariants` (`default | destructive`).
+- `CardTitle`, `CardDescription`, `CardFooter`, `CardAction`.
+
+### Helpers
+
+- Motion: `transitionFast` (150ms), `transitionBase` (220ms), `transitionSlow` (320ms), all ease-out like `--motion-*`, and `staggerDelay(index, step = 0.03, max = 0.2)`. The spring is the existing `springTransition`.
+- Gesture physics: `rubberband(overshoot, dimension, constant = 0.55)`, `projectVelocity(velocity, decelerationRate = 0.998)`, `DRAG_ACTIVATION_DISTANCE_PX` (8).
+- Animation budget: `ensureRuntimeVisibility()` (sets `html[data-page-hidden]`), `observeAnimVisibility(el, onChange?)` and `useAnimOffscreenRef()` (set `data-anim-offscreen`), `bindRuntimeAnimation(el, animation)` (pauses a WAAPI loop while hidden, off screen or in a parked `aria-hidden` subtree; decorative chrome marked `data-anim-chrome` does not count).
+- Shared clock: `subscribeQuantized(intervalMs, onChange)`, `quantizedSnapshot(intervalMs)`, `msUntilNextBoundary(intervalMs)`.
+- Identity colours: `catSlotForId`, `catColorForId`, `catColorForSlot`, `CAT_SLOT_COUNT` (class names `text-cat-N`, `bg-cat-N`, `bg-cat-N/12`, `border-cat-N`; the app defines the `cat` colours).
+- Radius classes: `SURFACE_RADIUS_CLASS` (`rounded-surface`), `CONTROL_RADIUS_CLASS` (`rounded-control`).
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).

@@ -32,6 +32,7 @@
     "./tokens/css/animations.css": "./tokens/src/css/animations.css",
     "./tokens/css/nav-icons.css": "./tokens/src/css/nav-icons.css",
     "./tokens/css/compat-shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",
+    "./tokens/css/border-beam.css": "./tokens/src/css/border-beam.css",
     "./tokens/compat/shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",
     "./tokens/css/*.css": "./tokens/src/css/*.css",
     "./tokens/tailwind-preset": {
