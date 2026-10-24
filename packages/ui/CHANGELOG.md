@@ -41,6 +41,25 @@ Defaults are unchanged: existing components render as in 0.17.1. `Button loading
 - New dependencies: `@dnd-kit/core` ^6.3.1, `@dnd-kit/sortable` ^10.0.0, `@dnd-kit/modifiers` ^9.0.0, `@dnd-kit/utilities` ^3.2.2.
 - Tests: the rest of `src/ui/foundations.test.tsx`, `src/ui/loading-state.clocks.test.ts`, `src/utils/gesture.test.ts`, `src/utils/sharedClock.test.ts`, `src/utils/runtimeVisibility.test.ts`, `src/utils/useDragSensors.test.ts`.
 
+### AI chat (one Queue family, SonnerToaster config, Markdown)
+
+Defaults are unchanged: without an entry or a new prop, each AI chat element and `SonnerToaster` render as in 0.17.1 (`src/default-dom.test.tsx`, `src/ui/sonner-dom.test.tsx`, `src/ai-elements/queue.test.tsx`). One fix changes behaviour: `PromptInput` `accept` now matches extension patterns.
+
+- `UiConfig` entries: `Conversation`, `Message`, `PromptInput`, `PromptInputSettings`, `TraitsPanel`, `Queue`, `Shimmer`, `CodeBlock`, `Artifact`, `Attachments` and `SonnerToaster` (see the README section "App config: AI chat"). Every element merges a caller `className` with `UiConfig.cn`.
+- New opt-in props: `ConversationScrollButton` `label`, `icon`, `showDelay`, `resetKey`; `PromptInput` `dataDrop`, `inputGroupClassName`; `Shimmer` `mode` (`"mask"`); `CodeBlock` `plain` (and `language` is optional); `ArtifactAction` optional `tooltip` and a component `icon`; `SonnerToaster` `classes` (replace toast parts and the toaster class). `UiConfig.CodeBlock.copyEveryClick` makes `CodeBlockCopyButton` copy again while it shows the check.
+- `SonnerToaster` reads `UiConfig.SonnerToaster` itself: an explicit prop wins; a prop passed as `undefined` keeps the config value.
+- One `Queue` family: `Queue`, `QueueList` and `QueueItem` are also the composable root, list and row. `Queue` without `count`, `QueueList` inside it and `QueueItem` without `text` render the plain parts (no `motion.*`, so they work under `<LazyMotion strict>`). New parts: `QueueSection`, `QueueSectionTrigger`, `QueueSectionLabel`, `QueueSectionContent`, `QueueItemIndicator`, `QueueItemContent`, `QueueItemActions`, `QueueItemAction`. The widget (`Queue` with `count`, `QueueHeader`, `QueueList`, `QueueItem` with `text`) keeps its props and DOM. The composable row and `QueueItemAction` hover fills use `surface-secondary`.
+- New components (from an app): `ArtifactClose`, `FileChip`, `PromptInputSettings`, `PromptInputSpeech` (with `useSpeechRecognition`, `getSpeechRecognition`), `TraitsPanel` (with `isUltrathinkPrompt`, `applyUltrathinkPrefix`), `Markdown` and `MarkdownLink`. `useOptionalPromptInputController` is exported, and the `PromptInput` attachments context adds `replace`.
+- New opt-in stylesheet `@vvedantb/ui/tokens/css/markdown.css` (typography for `Markdown`; `--markdown-alert-important` sets the `[!IMPORTANT]` colour).
+- `markdown.css` fills code block and table panels with `var(--color-surface-secondary)`, not `--muted`: the same colour under `compat-shadcn-rgb.css`, and the surface fill under `tokens.css`.
+- Token check: `check-component-tokens` also scans the package CSS (`tokens/src/css` and `.css` under `src`). A background, fill, stroke, border or outline colour, shadow or `--*-bg`-style variable that reads `--muted` or `--color-muted` fails.
+- `ConversationScrollButton` animates with `m` in its own `LazyMotion` (was `motion.div`), so it renders under an app's `<LazyMotion strict>`. Same DOM.
+- Fix: `PromptInput` `accept` matches extension patterns (`.html`) by file name. Before, such files were rejected even though the picker offered them.
+- Renames versus #63: `QueuePanel`, `QueuePanelList` and `QueuePanelItem` are the composable `Queue`, `QueueList` and `QueueItem`, and `UiConfig.QueuePanel` is `UiConfig.Queue`. `Toaster` is `SonnerToaster`, which now reads the config itself.
+- Dropped in review, never shipped: `Toaster`, `SideSheet*` and `UiConfig.SideSheet` (use `Sheet` or `SlideOverPanel`), `Alert`, `AlertDescription` and `alertVariants`, `Sandbox*`, `Confirmation*`, and the `PromptInputSelect*` parts with `UiConfig.PromptInput.classes.selectTrigger`. `PromptInputModelSelect*` stays.
+- New dependency: `katex` ^0.16.45.
+- Tests: `src/ai-elements/aichat-config.test.tsx`, `src/ai-elements/queue.test.tsx`, `src/ui/sonner-dom.test.tsx`, the `SonnerToaster` config cases in `src/ui/foundations.test.tsx`, `src/ui/sonner.test.tsx` (renders `SonnerToaster` now that it reads the config), `src/markdown/markdown.test.ts`, `src/markdown/incrementalBlocks.test.ts`.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.

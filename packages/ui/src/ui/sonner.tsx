@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Toaster, type ToasterProps } from "sonner";
+import { Toaster as SonnerPrimitive, type ToasterProps } from "sonner";
 import { filledToastIcons } from "./sonner-icons";
+import { useUiConfig } from "./ui-config";
 import "./sonner.css";
 
 // Sonner toaster aligned with flat tonal surfaces. `unstyled: true` strips
@@ -55,7 +56,23 @@ type SonnerToasterOptions = {
    * while the stack is collapsed. Default false. `sonner.css` has the same rule.
    */
   hideStackedContent?: boolean;
+  /**
+   * Replaces built-in classes. Toast parts (`toast`, `title`, `loader`, …)
+   * replace the package `classNames` per key (`""` removes one); caller
+   * `toastOptions.classNames` still merge after. `toaster` replaces
+   * `toaster group !font-sans` on the toaster list (`""` removes it).
+   */
+  classes?: ToastClassNames & { toaster?: string };
 };
+
+/**
+ * App defaults for `SonnerToaster` (`UiConfig.SonnerToaster`): every key is a
+ * default for the prop of the same name. An explicit prop wins; a prop passed
+ * as `undefined` keeps the config value.
+ */
+type SonnerToasterConfig = Omit<ToasterProps, "className" | "toastOptions"> & SonnerToasterOptions;
+
+const defaultToasterClassName = "toaster group !font-sans";
 
 const hideStackedContentClassName =
   "[&[data-expanded=false][data-front=false]>*]:opacity-0";
@@ -161,23 +178,37 @@ function mergeToastOptions(
   };
 }
 
-function SonnerToaster({
-  toastRadius,
-  density,
-  toastIcons = "default",
-  closeButtonStyle = "default",
-  sonnerVars = false,
-  descriptionMuted,
-  titleLeading,
-  loadingIcon,
-  hideStackedContent,
-  toastOptions,
-  icons,
-  style,
-  className,
-  closeButton,
-  ...props
-}: ToasterProps & SonnerToasterOptions) {
+/** `{ ...defaults, ...props }`, except that a prop set to `undefined` keeps its default. */
+function withConfigDefaults<T extends object>(defaults: Partial<T> | undefined, props: T): T {
+  const merged = { ...defaults, ...props };
+  for (const key in defaults) {
+    const value = defaults[key];
+    if (props[key] === undefined && value !== undefined) merged[key] = value;
+  }
+  return merged;
+}
+
+/** Defaults come from `UiConfig.SonnerToaster` when the app sets it; explicit props win. */
+function SonnerToaster(props: ToasterProps & SonnerToasterOptions) {
+  const {
+    classes,
+    toastRadius,
+    density,
+    toastIcons = "default",
+    closeButtonStyle = "default",
+    sonnerVars = false,
+    descriptionMuted,
+    titleLeading,
+    loadingIcon,
+    hideStackedContent,
+    toastOptions,
+    icons,
+    style,
+    className,
+    closeButton,
+    ...rest
+  } = withConfigDefaults(useUiConfig("SonnerToaster"), props);
+  const { toaster: toasterClassName = defaultToasterClassName, ...toastClasses } = classes ?? {};
   const loadingOverride =
     loadingIcon != null ? { loading: loadingIcon } : undefined;
   const mergedIcons =
@@ -187,26 +218,33 @@ function SonnerToaster({
         ? { ...loadingOverride, ...icons }
         : icons;
   return (
-    <Toaster
+    <SonnerPrimitive
       expand={false}
       visibleToasts={4}
       gap={12}
-      {...props}
+      {...rest}
       closeButton={closeButton ?? (closeButtonStyle === "hoverChip" ? true : undefined)}
-      className={className ? `toaster group !font-sans ${className}` : "toaster group !font-sans"}
+      className={
+        toasterClassName && className
+          ? `${toasterClassName} ${className}`
+          : toasterClassName || className || undefined
+      }
       icons={mergedIcons}
       style={mergeToasterStyle(sonnerVars ? sonnerVarsStyle : undefined, style)}
       toastOptions={mergeToastOptions(
         {
           unstyled: true,
-          classNames: createToasterClassNames({
-            toastRadius,
-            density,
-            closeButtonStyle,
-            descriptionMuted,
-            titleLeading,
-            hideStackedContent,
-          }),
+          classNames: {
+            ...createToasterClassNames({
+              toastRadius,
+              density,
+              closeButtonStyle,
+              descriptionMuted,
+              titleLeading,
+              hideStackedContent,
+            }),
+            ...toastClasses,
+          },
         },
         toastOptions,
       )}
@@ -224,4 +262,4 @@ export {
   sonnerVarsStyle,
 };
 export { filledToastIcons } from "./sonner-icons";
-export type { SonnerToasterOptions };
+export type { SonnerToasterConfig, SonnerToasterOptions };

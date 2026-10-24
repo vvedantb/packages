@@ -1,5 +1,5 @@
-import type { ReactElement } from "react";
-import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 import {
   SonnerToaster,
   createToasterClassNames,
@@ -8,9 +8,23 @@ import {
   mergeToastClassNames,
 } from "./sonner";
 
-// `SonnerToaster` has no hooks, so calling it returns the sonner element and its props can be read.
+// sonner's `Toaster` is replaced by a stub that records the props it gets, so
+// rendering `SonnerToaster` exposes what it passes to sonner.
+const sonner = vi.hoisted(() => {
+  const state: { props: Record<string, any> } = { props: {} };
+  return state;
+});
+vi.mock("sonner", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("sonner")>()),
+  Toaster: (props: Record<string, any>) => {
+    sonner.props = props;
+    return null;
+  },
+}));
+
 function render(props: Parameters<typeof SonnerToaster>[0] = {}) {
-  return (SonnerToaster(props) as ReactElement<Record<string, any>>).props;
+  renderToStaticMarkup(<SonnerToaster {...props} />);
+  return sonner.props;
 }
 
 describe("createToasterClassNames", () => {

@@ -33,6 +33,7 @@
     "./tokens/css/nav-icons.css": "./tokens/src/css/nav-icons.css",
     "./tokens/css/compat-shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",
     "./tokens/css/border-beam.css": "./tokens/src/css/border-beam.css",
+    "./tokens/css/markdown.css": "./tokens/src/css/markdown.css",
     "./tokens/compat/shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",
     "./tokens/css/*.css": "./tokens/src/css/*.css",
     "./tokens/tailwind-preset": {
@@ -72,6 +73,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "katex": "^0.16.45",
     "react-day-picker": "^9.14.0"
   },
   "peerDependencies": {
