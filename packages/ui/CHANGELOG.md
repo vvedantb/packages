@@ -22,6 +22,12 @@
 - `UiConfig` entries `Gantt` (`classes.root`, `today`, `todayDate`, `dragHandle`, `offscreenIndicator`), `Kanban` (`classes.card`, `cardTransition`), `ThemeSwitcher` (`classes.button`) and `VideoPlayer` (`classes.root`, `controlBar`).
 - New dependencies: `@dnd-kit/core` ^6.3.1, `@dnd-kit/sortable` ^10.0.0, `@dnd-kit/modifiers` ^9.0.0, `@dnd-kit/utilities` ^3.2.2, `dayjs` ^1.11.13 (was a dev dependency), `media-chrome` ^4.14.0, `katex` ^0.16.45.
 - Tests: `src/kibo/kibo.test.tsx`, `src/kibo/kanbanDropTarget.test.ts`, `src/utils/useDragSensors.test.ts`, `src/markdown/markdown.test.ts`, `src/markdown/incrementalBlocks.test.ts`.
+- AI chat: `UiConfig` entries `Conversation`, `Message`, `PromptInput`, `PromptInputSettings`, `TraitsPanel`, `QueuePanel`, `Shimmer`, `CodeBlock`, `Artifact` and `Attachments` (see the README "App config: AI chat" section). No output change without an entry.
+- AI chat, new opt-in props: `ConversationScrollButton` `label`, `icon`, `showDelay`, `resetKey`; `PromptInput` `dataDrop`, `inputGroupClassName`; `Shimmer` `mode` (`"mask"`); `CodeBlock` `plain` (and `language` optional); `ArtifactAction` optional `tooltip` and component `icon`. `PromptInput` attachments add `replace`; `useOptionalPromptInputController` is exported.
+- AI chat, new components (moved from eva): `ArtifactClose`, `FileChip`, `Confirmation*`, `Sandbox*`, `QueuePanel` / `QueuePanelList` / `QueuePanelItem` with `QueueSection*` and `QueueItem{Indicator,Content,Actions,Action}`, `PromptInputSelect*`, `PromptInputSpeech` (+ `useSpeechRecognition`, `getSpeechRecognition`), `PromptInputSettings`, `TraitsPanel` (+ `isUltrathinkPrompt`, `applyUltrathinkPrefix`).
+- `ConversationScrollButton` animates with `m` in its own `LazyMotion` (was `motion.div`), so it renders under an app's `<LazyMotion strict>`. Same DOM.
+- Fix: `PromptInput` `accept` matches extension patterns (`.html`) by file name; before, such files were rejected even though the picker offered them.
+- Tests: `src/ai-elements/aichat-config.test.tsx`.
 
 ## 0.17.1
 

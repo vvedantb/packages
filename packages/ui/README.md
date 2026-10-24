@@ -1243,6 +1243,33 @@ const config = {
 } satisfies UiConfig;
 ```
 
+## App config: AI chat (Unreleased)
+
+`UiConfigProvider` entries for the AI chat elements. Without an entry each one renders its built-in DOM; `classes` parts replace built-in classes and the caller `className` merges last (with `UiConfig.cn`); other keys are prop defaults, and an explicit prop wins.
+
+```tsx
+const config = {
+  Conversation: { scrollButton: { label: "Scroll to end", showDelay: 150, size: "sm" } },
+  Message: { lazyActionTooltips: true },
+  PromptInput: { classes: { groupDragOver: "border-primary bg-primary/5" }, submitCrossfade: true },
+  Shimmer: { mode: "mask" },
+  CodeBlock: { plain: true, copyLabel: "Copy code" },
+} satisfies UiConfig;
+```
+
+- `Conversation`: `classes.content` (`ConversationContent`), `classes.scroll` (a default `scrollClassName`, merged before the prop), `classes.download`, and for `ConversationScrollButton` `classes.scrollButton`, `classes.scrollButtonMotion` (the animated wrapper; `""` renders it without a class) and `classes.scrollButtonFrame` (a static wrapper around the presence; none by default). `scrollButton` holds defaults for `label`, `icon`, `showDelay`, `size` and the motion (`initial`, `animate`, `exit`, `transition`). New `ConversationScrollButton` props: `label` (text after the icon, also `aria-label` and `title`), `icon`, `showDelay` (ms to wait after leaving the bottom before showing; hiding stays immediate; default 0) and `resetKey` (a change hides the button and cancels a pending show). The button now animates with `m` inside its own `LazyMotion`, so it also works under an app's `<LazyMotion strict>`.
+- `Message`: `classes.root`, `classes.user`, `classes.assistant` (the role classes of `Message`), `classes.content` (all `MessageContent` classes), `classes.branchSelector`, `classes.branchIcon` (a class in place of the arrows' `size={14}`), and `lazyActionTooltips`: a `MessageAction` mounts its tooltip on first hover or focus (focus opens it), not with the button.
+- `PromptInput`: `classes.group` (the input group, default `overflow-hidden`), `classes.groupIdle` / `classes.groupDragOver` (added while no drag / an accepted drag is over the form), `classes.groupDefault` (added when no `containerClassName` is given), `classes.textarea`, `classes.footer`, `classes.submit`, `classes.selectTrigger`, `classes.tabItem`; `submitIcons.<send|submitted|streaming|error>`, `submitCrossfade` (cross-fade the submit icon on status change) and `menuTriggerAsChild` (`PromptInputActionMenuTrigger` becomes the Radix trigger instead of a button inside it). New `PromptInput` props: `dataDrop` (`{ type, onDrop }`: a non-file drag of that MIME type counts as a drag over the form and `onDrop` gets its string payload) and `inputGroupClassName` (same as `containerClassName`). The attachments context adds `replace(id, file)`; `accept` now matches extension patterns such as `.html` by file name; `useOptionalPromptInputController` is exported. New `PromptInputSelect`, `PromptInputSelectTrigger`, `PromptInputSelectContent`, `PromptInputSelectItem`, `PromptInputSelectValue`: the `PromptInputModelSelect*` parts on the configurable `Select`.
+- `PromptInputSettings` (new): an overflow menu with a "Model" submenu (one radio list, or a submenu per provider). Entry: `providerLabel(provider)` (default the id), `providerIcon(provider)` (default none), `classes.trigger`.
+- `TraitsPanel` (new, with `isUltrathinkPrompt`, `applyUltrathinkPrefix`): reasoning, speed, context and thinking segments for a model picker; inside a `PromptInputProvider` it offers "Ultrathink" by editing the prompt. Entry: `classes.label`, `classes.empty`, `classes.option`, `classes.optionSelected`, `classes.optionIdle`, `classes.note`.
+- `PromptInputSpeech`, `useSpeechRecognition`, `getSpeechRecognition` (new): Web Speech API dictation; the button renders nothing without the API.
+- `QueuePanel`, `QueuePanelList`, `QueuePanelItem`, `QueueSection`, `QueueSectionTrigger`, `QueueSectionLabel`, `QueueSectionContent`, `QueueItemIndicator`, `QueueItemContent`, `QueueItemActions`, `QueueItemAction` (new): a composable queue in collapsible sections (the AI Elements `Queue` parts; `Queue`, `QueueList` and `QueueItem` stay the queued-messages widget). Entry: `classes.sectionTrigger`.
+- `Shimmer`: `mode`, `as`, `classes.base`, `classes.overlay`, `classes.band`, `classes.copy`. New prop `mode`: `"gradient"` (default) or `"mask"`, which sweeps a masked copy of the text with transforms only (no repaint, paused offscreen). `mask` needs the app to define `.shimmer-overlay`, `.shimmer-band` and `.shimmer-copy` (or the `classes` it names).
+- `CodeBlock`: `plain`, `copyButtonSize`, `copyLabel` (a screen-reader label on the copy button), `classes.container`, `classes.pre`, `classes.copyButton`, `classes.copyIcon` (a class in place of `size={14}`). New props: `plain` (no shiki: a `pre` with the code, and `children` replace that `pre` instead of sitting above it); `language` is now optional.
+- `Artifact`: `classes.root`, `classes.header`, `classes.title`, `classes.description`, `classes.actions`, `classes.action` (`ArtifactAction` and `ArtifactClose`), `classes.actionIcon`, `classes.content`, `actionSize`, `actionLabel` (`"sr-only"` names actions with a hidden span instead of `aria-label`). `ArtifactAction`: `tooltip` is optional (no tooltip, no wrapper) and `icon` also takes an icon component (`icon={IconCopy}`). New `ArtifactClose` (an action with an X, `label` default `"Close"`).
+- `Attachments`: `classes.item.<variant>`, `classes.preview.<variant>`, `classes.remove.<variant>` replace the variant classes of `Attachment`, `AttachmentPreview` and `AttachmentRemove`.
+- `FileChip`, `Confirmation*` and `Sandbox*` (new, no entry): a file name chip that opens the file, an approve/reject prompt by state, and a sandbox run with tabs and a state badge.
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
