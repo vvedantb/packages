@@ -45,7 +45,8 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `  "buildQuizHtml", "buildFlashcardsHtml", "htmlFromArtifactTemplate", "wrapArtifactDocument", "artifactGuestScript",\n` +
       `  "authenticateWithTokenCache", "createMcpTokenCacheFunctions", "hashMcpToken", "jwtExpiryMs", "tokenCacheExpiresAt",\n` +
       `  "mcpTokenCacheFields", "mcpTokenCacheTable",\n` +
-      `  "authenticateClerkBearer", "verifyClerkOAuthJwt", "clearClerkJwksCache", "looksLikeJwt"]) {\n` +
+      `  "authenticateClerkBearer", "verifyClerkOAuthJwt", "clearClerkJwksCache", "looksLikeJwt",\n` +
+      `  "isOAuthAccessTokenJwt"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n` +
       `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n` +

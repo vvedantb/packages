@@ -184,25 +184,52 @@ export async function verifyClerkOAuthJwt(
   }
 }
 
-export type AuthenticateClerkBearerOptions = Omit<VerifyClerkOAuthJwtOptions, "onReject"> & {
+type FallbackResult = { clerkUserId: string } | { userId: string } | null | undefined;
+type VerifyFallback = (token: string) => Promise<FallbackResult>;
+
+type AuthenticateClerkBearerBaseOptions = Omit<VerifyClerkOAuthJwtOptions, "onReject"> & {
   /** The bearer token, without the `Bearer ` prefix. */
   token: string;
-  /**
-   * Verifies a token that is not a JWT (an opaque OAuth token issued before the
-   * switch to JWTs), usually `ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token })`.
-   * Returns `{ clerkUserId }`, or `{ userId }` as `verifyClerkAccessToken` does, or `null`.
-   */
-  verifyOpaque: (
-    token: string,
-  ) => Promise<{ clerkUserId: string } | { userId: string } | null | undefined>;
-  /** Called for a rejected JWT. Default: silent. */
+  /** Called for a rejected OAuth access token JWT. Default: silent. */
   onReject?: (rejection: ClerkOAuthJwtRejection) => void;
 };
 
+export type AuthenticateClerkBearerOptions = AuthenticateClerkBearerBaseOptions &
+  (
+    | {
+        /**
+         * Verifies every token that is not an OAuth access token JWT (header `typ`
+         * `at+jwt` or `application/at+jwt`): opaque OAuth tokens issued before the
+         * switch to JWTs, and other JWTs such as Clerk session tokens. Usually
+         * `ctx.runAction(internal.mcp.nodeActions.verifyAccessToken, { token })`.
+         * Returns `{ clerkUserId }`, or `{ userId }` as `verifyClerkAccessToken` does, or `null`.
+         */
+        verifyFallback: VerifyFallback;
+        /** @deprecated Use `verifyFallback`. Ignored when `verifyFallback` is set. */
+        verifyOpaque?: VerifyFallback;
+      }
+    | {
+        verifyFallback?: VerifyFallback;
+        /** @deprecated Use `verifyFallback`. Alias kept so 0.8.0 callers compile. */
+        verifyOpaque: VerifyFallback;
+      }
+  );
+
+/** True when the token is a JWT whose header `typ` is `at+jwt` or `application/at+jwt`. */
+export function isOAuthAccessTokenJwt(token: string): boolean {
+  if (!looksLikeJwt(token)) return false;
+  const header = decodeJson(token.split(".")[0] as string);
+  const typ = typeof header?.typ === "string" ? header.typ.toLowerCase() : undefined;
+  return typ === "at+jwt" || typ === "application/at+jwt";
+}
+
 /**
- * One call for an `httpAction`: a JWT bearer is verified locally in V8 (no
- * Node action, no token cache); anything else goes to `verifyOpaque`. A JWT
- * that fails local verification is not retried with `verifyOpaque`.
+ * One call for an `httpAction`: an OAuth access token JWT (header `typ`
+ * `at+jwt` or `application/at+jwt`) is verified locally in V8 (no Node action,
+ * no token cache). Every other token goes to `verifyFallback`: opaque OAuth
+ * tokens, and JWTs with another or no `typ`, such as Clerk session tokens. An
+ * access token JWT that fails local verification is not retried with
+ * `verifyFallback`. `verifyOpaque` is a deprecated alias of `verifyFallback`.
  * Returns `{ clerkUserId }` or `null`.
  *
  * Clerk OAuth access tokens last 1 day
@@ -212,12 +239,14 @@ export type AuthenticateClerkBearerOptions = Omit<VerifyClerkOAuthJwtOptions, "o
 export async function authenticateClerkBearer(
   options: AuthenticateClerkBearerOptions,
 ): Promise<{ clerkUserId: string } | null> {
-  const { token, verifyOpaque, ...jwtOptions } = options;
-  if (looksLikeJwt(token)) {
+  const { token, verifyFallback, verifyOpaque, ...jwtOptions } = options;
+  if (isOAuthAccessTokenJwt(token)) {
     const verified = await verifyClerkOAuthJwt(token, jwtOptions);
     return verified ? { clerkUserId: verified.clerkUserId } : null;
   }
-  const result = await verifyOpaque(token);
+  const fallback = verifyFallback ?? verifyOpaque;
+  if (!fallback) return null;
+  const result = await fallback(token);
   if (!result) return null;
   const id = "clerkUserId" in result ? result.clerkUserId : result.userId;
   return typeof id === "string" && id.length > 0 ? { clerkUserId: id } : null;

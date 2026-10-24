@@ -41,7 +41,7 @@ export const status = httpActionGeneric(async (_ctx, request) => {
     expiring: isAccessTokenExpiring(state, Date.now()),
     hash: token ? await sha256Hex(token) : null,
     jwtPrincipal: token
-      ? await authenticateClerkBearer({ token, issuer: "https://clerk.example.test", verifyOpaque: async () => null })
+      ? await authenticateClerkBearer({ token, issuer: "https://clerk.example.test", verifyFallback: async () => null })
       : null,
     principal: token
       ? await authenticateWithTokenCache({ token, get: async () => null, put: async () => null, verify: async () => null })
