@@ -984,13 +984,17 @@ export const PromptInputSubmit = ({
     </InputGroupButton>
   );
 };
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export type PromptInputModelSelectProps = ComponentProps<typeof Select>;
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export const PromptInputModelSelect = (props: PromptInputModelSelectProps) => (
   <Select {...props} />
 );
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export type PromptInputModelSelectTriggerProps = ComponentProps<
   typeof SelectTrigger
 >;
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export const PromptInputModelSelectTrigger = ({
   className,
   ...props
@@ -1008,9 +1012,11 @@ export const PromptInputModelSelectTrigger = ({
     />
   );
 };
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export type PromptInputModelSelectContentProps = ComponentProps<
   typeof SelectContent
 >;
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export const PromptInputModelSelectContent = ({
   className,
   ...props
@@ -1020,7 +1026,9 @@ export const PromptInputModelSelectContent = ({
     <SelectContent className={merge(className)} {...props} />
   );
 };
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export type PromptInputModelSelectItemProps = ComponentProps<typeof SelectItem>;
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export const PromptInputModelSelectItem = ({
   className,
   ...props
@@ -1030,9 +1038,11 @@ export const PromptInputModelSelectItem = ({
     <SelectItem className={merge(className)} {...props} />
   );
 };
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export type PromptInputModelSelectValueProps = ComponentProps<
   typeof SelectValue
 >;
+/** @deprecated Use `ModelPicker`. Removed in the next minor release. */
 export const PromptInputModelSelectValue = ({
   className,
   ...props

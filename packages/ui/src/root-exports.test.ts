@@ -27,6 +27,8 @@ test("root exposes former subpath APIs", () => {
     "SiteFooter", "PricingModal", "RailCollapseTile",
     "ConvexClerkProvider", "parseClientEnv", "VITE_ENV_NAMES", "useEnsureUser",
     "Slider", "LabeledSliderRow", "SearchInput", "fieldFocusClass", "fieldFocusWithinClass",
+    "ModelPicker", "AgentTrace", "AgentPlan", "TestResult", "TestResultErrorStack", "ContextUsage",
+    "ContextUsageCacheRead", "getRandomActivityVerb", "activityStepHasRichDetail",
     "SortableListProvider", "SortableListItem",
   ]) {
     expect(root, name).toHaveProperty(name);
@@ -57,4 +59,14 @@ test("root exposes the composable parts as namespace members", () => {
 
 test("root cn merges conflicting Tailwind classes", () => {
   expect(root.cn("p-2", "p-4")).toBe("p-4");
+});
+
+test("root drops the unprefixed agent activity names", () => {
+  for (const name of [
+    "ModelSelect", "Trace", "TraceLine", "Plan", "PlanHeader", "Test", "TestName", "TestError",
+    "Context", "ContextTrigger", "ContextInputUsage", "getRandomVerb", "useSpinnerVerb",
+    "useElapsedSeconds", "formatElapsed", "stepHasRichDetail",
+  ]) {
+    expect(root, name).not.toHaveProperty(name);
+  }
 });

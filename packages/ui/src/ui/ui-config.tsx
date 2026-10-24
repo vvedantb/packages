@@ -2,6 +2,8 @@ import * as React from "react";
 import type { ClassValue } from "clsx";
 import { cn } from "../utils/cn";
 import type { AccordionConfig } from "./accordion";
+import type { ActivityQuestionCardConfig } from "../ai-elements/activity-question";
+import type { ActivityTasksConfig } from "../ai-elements/activity-shared";
 import type { ArtifactConfig } from "../ai-elements/artifact";
 import type { AttachmentsConfig } from "../ai-elements/attachments";
 import type { BadgeConfig } from "./badge";
@@ -27,6 +29,7 @@ import type { LabelConfig } from "./label";
 import type { ListRowConfig } from "./list-row";
 import type { LoadingStateConfig } from "./loading-state";
 import type { MessageConfig } from "../ai-elements/message";
+import type { ModelPickerConfig } from "../ai-elements/model-picker";
 import type { PopoverConfig } from "./popover";
 import type { ProgressConfig } from "./progress";
 import type { PromptInputConfig } from "../ai-elements/prompt-input";
@@ -66,6 +69,8 @@ export interface UiConfig {
    */
   cn?: (...inputs: ClassValue[]) => string;
   Accordion?: AccordionConfig;
+  ActivityQuestionCard?: ActivityQuestionCardConfig;
+  ActivityTasks?: ActivityTasksConfig;
   Artifact?: ArtifactConfig;
   Attachments?: AttachmentsConfig;
   Badge?: BadgeConfig;
@@ -90,6 +95,7 @@ export interface UiConfig {
   ListRow?: ListRowConfig;
   LoadingState?: LoadingStateConfig;
   Message?: MessageConfig;
+  ModelPicker?: ModelPickerConfig;
   Popover?: PopoverConfig;
   Progress?: ProgressConfig;
   PromptInput?: PromptInputConfig;
