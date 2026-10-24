@@ -29,7 +29,7 @@ test("root exposes former subpath APIs", () => {
     "Slider", "LabeledSliderRow", "SearchInput", "fieldFocusClass", "fieldFocusWithinClass",
     "ModelPicker", "AgentTrace", "AgentPlan", "TestResult", "TestResultErrorStack", "ContextUsage",
     "ContextUsageCacheRead", "getRandomActivityVerb", "activityStepHasRichDetail",
-    "SortableListProvider", "SortableListItem",
+    "SortableListProvider", "SortableListItem", "LiveCursor", "LiveCursorPointer",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

@@ -74,6 +74,18 @@ Defaults are unchanged for existing components, with one exception: `ModelSelect
 - No new dependencies.
 - Tests: `src/ai-elements/activity-config.test.tsx`, `src/ai-elements/model-selector.test.tsx`, `src/ai-elements/activity-question-utils.test.ts`, `src/ai-elements/activity-step-label.test.ts`, `src/ai-elements/activity-tasks-utils.test.ts`, `src/ai-elements/activity-tasks.clocks.test.ts`; `src/root-exports.test.ts` checks the unprefixed names are not exported.
 
+### Kanban, gantt, contribution graph, video player, live cursors
+
+Defaults are unchanged: existing components render as in 0.17.1.
+
+- New components (from an app, built on Kibo UI): `Gantt*` (with `GanttContext` and `useGanttContext`), `Kanban*` (with `useKanbanContext`), `ContributionGraph*`, `VideoPlayer*`, `LiveCursor*`, `AvatarStack` and `ThemeSwitcher`. Kanban and the gantt bars drag with `useDragSensors`, like the sortable list.
+- `UiConfig` entries: `Gantt` (`classes.root`, `today`, `todayDate`, `dragHandle`, `offscreenIndicator`), `Kanban` (`classes.card`, `cardTransition`), `ThemeSwitcher` (`classes.button`), `VideoPlayer` (`classes.root`, `controlBar`). Every kibo part merges a caller `className` with `UiConfig.cn`.
+- Fills use `surface-secondary`, not `muted` (`Kanban`, `GanttSidebarItem`, `GanttColumn`, `GanttFeatureRow`, `ContributionGraph` level 0). The same colour under `compat-shadcn-rgb.css`.
+- Renames versus #63: `Cursor`, `CursorPointer`, `CursorBody`, `CursorName` are `LiveCursor*`; `Range` is `GanttRange` and `TimelineData` is `GanttTimelineData`; `Activity` is `ContributionGraphActivity` (it also clashed with React's `<Activity>`) and `Labels` is `ContributionGraphLabels`. `Props` types follow. The gantt maths helpers (`getOffset`, `getWidth`, `getDifferenceIn`, `getAddRange`, `calculateInnerOffset`) stay internal.
+- `tokens/examples/tokens-moved/` renders the components that came from the app on plain `tokens.css`, light and dark.
+- New dependencies: `media-chrome` ^4.14.0 and `dayjs` ^1.11.13 (was a dev dependency).
+- Tests: `src/kibo/kibo.test.tsx`, `src/kibo/kanbanDropTarget.test.ts`; `src/utils/useDragSensors.test.ts` also pins the kanban and gantt sensors.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.

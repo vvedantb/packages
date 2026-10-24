@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "../../src/tokens.css";
+@import "../../src/css/border-beam.css";
+@import "../../src/css/markdown.css";
+@source "../../../src/**/*.{ts,tsx}";
+@source "./*.tsx";
+
+/* Plain tokens.css: no app variables, no compat layer. */
+body {
+  margin: 0;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
