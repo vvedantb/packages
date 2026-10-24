@@ -1227,6 +1227,21 @@ const config = {
 ```
 
 - `Conversation`: `classes.content` (`ConversationContent`), `classes.scroll` (a default `scrollClassName`, merged before the prop), `classes.download`, and for `ConversationScrollButton` `classes.scrollButton`, `classes.scrollButtonMotion` (the animated wrapper; `""` renders it without a class) and `classes.scrollButtonFrame` (a static wrapper around the presence; none by default). `scrollButton` holds defaults for `label`, `icon`, `showDelay`, `size` and the motion (`initial`, `animate`, `exit`, `transition`). New `ConversationScrollButton` props: `label` (text after the icon, also `aria-label` and `title`), `icon`, `showDelay` (ms to wait after leaving the bottom before showing; hiding stays immediate; default 0) and `resetKey` (a change hides the button and cancels a pending show). The button now animates with `m` inside its own `LazyMotion`, so it also works under an app's `<LazyMotion strict>`.
+- `JumpRail`, `ChatJumpRail` (new): a timeline minimap for long scroll areas. Place it in a `relative` parent. `ChatJumpRail` goes inside `Conversation` and reads the scroll viewport and `stopScroll` from its context:
+
+  ```tsx
+  <Conversation>
+    <ConversationContent>{/* rows with data-message-id */}</ConversationContent>
+    <ChatJumpRail
+      messages={buildChatJumpRailTicks(transcript)}
+      renderedFromId={firstRenderedId}
+      onRevealMessage={revealMessage}
+      formatPreview={mentionsToText}
+    />
+  </Conversation>
+  ```
+
+  Outside a `StickToBottom` (for example a page outline) use `JumpRail` with `items` (`{ id, title, preview?, level? }`), a `scrollRef` or `getScrollElement`, and `targetAttribute="data-toc-id"` or `resolveTarget`. `onReveal` runs when a target is not in the DOM; `onBeforeScroll` runs just before it. `observeKey` re-observes when the rendered window changes. The geometry helpers (`resolveJumpRailTopPercent`, `resolveJumpRailIndexFromPointer`, `resolveJumpRailHeightStyle`, `resolveJumpRailTickWidthClass`, `resolveJumpRailTickLevelStyle`) are exported.
 - `Message`: `classes.root`, `classes.user`, `classes.assistant` (the role classes of `Message`), `classes.content` (all `MessageContent` classes), `classes.branchSelector`, `classes.branchIcon` (a class in place of the arrows' `size={14}`), and `lazyActionTooltips`: a `MessageAction` mounts its tooltip on first hover or focus (focus opens it), not with the button.
 - `PromptInput`: `classes.group` (the input group, default `overflow-hidden`), `classes.groupIdle` / `classes.groupDragOver` (added while no drag / an accepted drag is over the form), `classes.groupDefault` (added when no `containerClassName` is given), `classes.textarea`, `classes.footer`, `classes.submit`, `classes.tabItem`; `submitIcons.<send|submitted|streaming|error>`, `submitCrossfade` (cross-fade the submit icon on status change) and `menuTriggerAsChild` (`PromptInputActionMenuTrigger` becomes the Radix trigger instead of a button inside it). New `PromptInput` props: `dataDrop` (`{ type, onDrop }`: a non-file drag of that MIME type counts as a drag over the form and `onDrop` gets its string payload) and `inputGroupClassName` (same as `containerClassName`). The attachments context adds `replace(id, file)`; `accept` now matches extension patterns such as `.html` by file name; `useOptionalPromptInputController` is exported.
 - `PromptInputSettings` (new): an overflow menu with a "Model" submenu (one radio list, or a submenu per provider). Entry: `providerLabel(provider)` (default the id), `providerIcon(provider)` (default none), `classes.trigger`.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- New `JumpRail`: a t3code-style timeline minimap (short rail of ticks, hover preview card, click, arrow, Home, End and Enter to jump). Props: `items` (`{ id, title, preview?, level? }`), `scrollRef` or `getScrollElement`, `targetAttribute` (default `data-message-id`), `resolveTarget`, `onReveal` (target not in the DOM), `onBeforeScroll` (called before `onReveal`), `observeKey` (re-observe when rows render later), `minVisibleItems` (default 2), `className`, and the label strings `ariaLabel`, `buttonLabel`, `fallbackLabel`. Ticks for `level` above 1 are shorter and indented. Motion runs inside its own `LazyMotion`.
+- New `ChatJumpRail`: `JumpRail` for a chat inside `Conversation`. It reads `scrollRef` and `stopScroll` from `use-stick-to-bottom`. Props: `messages` (`{ id, content, reply? }`), `renderedFromId`, `onRevealMessage`, `formatPreview`. Also `buildChatJumpRailTicks` (role-based transcript to ticks) and `buildChatJumpRailItems`.
+- New geometry helpers: `JUMP_RAIL_ITEM_SPACING_PX`, `JUMP_RAIL_MAX_HEIGHT_CSS`, `JUMP_RAIL_MIN_VISIBLE_ITEMS`, `resolveJumpRailHeightStyle`, `resolveJumpRailTopPercent`, `resolveJumpRailIndexFromPointer`, `resolveJumpRailTooltipTranslate`, `resolveJumpRailTickWidthClass`, `resolveJumpRailTickWidthPx`, `resolveJumpRailTickLevelStyle`.
+- No new dependencies.
+
 ## 0.18.1
 
 - `SpeechInput` reads `window` SpeechRecognition constructors via `as unknown as` (same as `PromptInputSpeech` in 0.18.0), so apps that declare their own global Speech API types (e.g. Verve) typecheck against this package. Covered by `tsconfig.consumer-speech.json` / `consumer/window-speech-global.d.ts`.
