@@ -1080,7 +1080,7 @@ Defaults are unchanged. Without a provider, or with an empty entry, every compon
 - Root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types.
 - An entry's `classes` replace built-in classes part by part. A part left out keeps its default, and a caller `className` still merges after it. Other keys are default prop values. An explicit prop always wins.
 - `cn`: the class merger that components use in place of the built-in `cn` when they merge a caller `className`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead. Components read it with the internal `useCn` hook.
-- Component entries and opt-in props are in the sections below: "App config: existing primitives", "Loaders, rows, status, sortable list and helpers", "App config: AI chat".
+- Component entries and opt-in props are in the sections below: "App config: existing primitives", "Loaders, rows, status, sortable list and helpers", "App config: AI chat", "Agent activity, plan, tests, preview and model picker".
 
 ## App config: existing primitives
 
@@ -1245,6 +1245,35 @@ const config = {
 `Markdown` (Streamdown with GFM, KaTeX math, CJK, Shiki code blocks with a wrap toggle and copy button, mermaid diagrams loaded on first use, GitHub alerts `> [!NOTE]`, links with the site favicon, file paths in inline code, copy as markdown) and `MarkdownLink`. `components` and `remarkPlugins` extend the defaults. It imports KaTeX's stylesheet; import `@vvedantb/ui/tokens/css/markdown.css` for the typography. That file reads the shadcn channel variables (`rgb(var(--foreground))`, `--muted-foreground`, `--border`, `--primary`, `--success`, `--warning`, `--destructive`), as with `compat-shadcn-rgb.css`, and fills code block and table panels with `var(--color-surface-secondary)` (defined by `tokens.css` and by the compat file, which maps it to the app's `--muted`); `--markdown-alert-important` (RGB channels, default `var(--primary)`) colours `[!IMPORTANT]`. `Markdown` merges a caller `className` with `UiConfig.cn`.
 
 New dependency (installed with the package): `katex`. `streamdown` and the `@streamdown/*` plugins stay peers.
+
+## Agent activity, plan, tests, preview and model picker
+
+AI surfaces that came from an app, exported from the root. Fills use `surface-secondary` (`bg-surface-secondary`, `from-surface-secondary/40`), which is the app's `--muted` under `compat-shadcn-rgb.css` and the secondary surface under `tokens.css`. They also use the shadcn colour names `bg-secondary`, `bg-popover` and `bg-card` and a few app utilities (`motion-press`, `smooth-shadow-*`, `scrollbar`, `scrollbar-none`, `text-2xs`, `text-3xs`), so they look as intended with `compat-shadcn-rgb.css` and an app that defines those utilities. They merge a caller `className` with `UiConfig.cn` when set.
+
+- `ActivityTasks` (`steps`, `isStreaming`, `name`, `startedAt`, `duration`, `layout` `folded | inline`, `onOpenFile`, `onRequestFullDetail`): an agent turn as a timeline. Tool runs fold behind one summary line, reasoning and mid-turn text render as Markdown, subtasks nest their steps, long timelines cap behind "Show N more". `OpenSubagentContext` gives subtask rows a "View" link.
+- The step model: `ActivityStep`, `ActivityTodoItem`, `ActivityQuestion`, `ActivityQuestionOption`, `ActivityStepOutput`, `ActivityStepEdit`, `activityStepHasRichDetail`, `activityStepConfig` (glyph and fallback label per step type), `ActivityThinkingIcon`, `useActivitySpinnerVerb`, `getRandomActivityVerb`, `useActivityElapsedSeconds`, `formatActivityElapsed`, `useStreamingDisclosure`.
+- Tool-call details show files with `FileChip` and output in a `CodeBlock` (`plain`) with its copy button, so the `CodeBlock` entry (see "App config: AI chat") styles those frames too.
+- `ActivityQuestionCard` (`questions`, `answers`): the read-only record of a multiple-choice question and its answer.
+- `AgentTrace`, `AgentTraceLine` (`status`: `AgentTraceStatus`, `running | error | pending`), `AgentTraceIcon` (`iconKey` crossfades a swap), `AgentTraceTitle` (`shimmer`), `AgentTraceDescription`, `AgentTraceCollapsible`, `AgentTraceCollapsibleTrigger` (`trailing`: controls beside the trigger), `AgentTraceCollapsibleContent`: one agent step as one line, with an optional fold.
+- `AgentPlan*`, `TestResults*` / `TestSuite*` / `TestResult*` (one test: `TestResult`, `TestResultStatusIndicator`, `TestResultName`, `TestResultDuration`, `TestResultError`, `TestResultErrorMessage`, `TestResultErrorStack`), `WebPreview*` (with `useWebPreview`), `ContextUsage*` (context window usage in a hover card: `ContextUsage`, `ContextUsageTrigger`, `ContextUsageContent`, `ContextUsageContentHeader` / `Body` / `Footer`, `ContextUsageInput`, `ContextUsageOutput`, `ContextUsageCacheRead`, `ContextUsageCacheWrite`, deprecated `ContextUsageCache`).
+- `ModelPicker` (button and popover; `simpleLadder` opens on a discrete slider; the one model picker), `ModelPickerContent` (the searchable model and account list, for menus; pair it with `modelPickerSurfaceClass`), `ModelOption`, `ModelAccount`, `findModelOption`, `formatModelDisplayLabel`, `getProviderLabel`, `ProviderIcon` (`claude`, `codex`, `opencode`, `cursor`).
+- Deprecated, removed in the next minor release: `ModelSelector*` and `PromptInputModelSelect*` (use `ModelPicker`). Behaviour is unchanged, except `ModelSelectorLogo`: it now renders `ProviderIcon` and fetches nothing (it loaded `https://models.dev/logos/<provider>.svg`). `anthropic`, `google-vertex-anthropic` and `claude` show the Claude mark, `openai` and `codex` the OpenAI mark, `opencode` and `cursor` their marks; any other id shows a neutral CPU glyph. It takes SVG props and `size` (default 12) and keeps the `"<provider> logo"` name. `ModelSelectorLogoGroup` styles `svg` children.
+
+### App config entries
+
+| Entry | Keys |
+| --- | --- |
+| `ActivityTasks` | `name` (agent name in the streaming header, default `"Agent"`; the `name` prop wins), `markdown` (a component that takes `{ className, mode, children }` and renders reasoning and reply text; default `Streamdown` with the cjk, code, math and mermaid plugins), `thinkingIcon` (`{ src, alt }`: `ActivityThinkingIcon` shows this image, 16px and round, instead of the brain glyph). |
+| `ActivityQuestionCard` | `classes.selectedOption` (fill of the picked option, default `bg-surface-tertiary`). |
+| `ModelPicker` | `classes.trigger` (replaces the `ModelPicker` trigger classes), `badgeRing.trigger` / `badgeRing.panel` (ring colour around the account initials badge on the trigger and in the panel; default `var(--color-border)` / `var(--color-surface-secondary)`). |
+
+```tsx
+const config = {
+  ActivityTasks: { name: "Ada", markdown: AppMarkdown, thinkingIcon: { src: "/logo.svg", alt: "Ada" } },
+  ActivityQuestionCard: { classes: { selectedOption: "bg-accent" } },
+  ModelPicker: { badgeRing: { trigger: "rgb(var(--input))", panel: "rgb(var(--muted))" } },
+} satisfies UiConfig;
+```
 
 ## Colour names in components
 

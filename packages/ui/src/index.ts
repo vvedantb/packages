@@ -140,6 +140,21 @@ export * from "./ai-elements/sources";
 export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
 
+// Agent activity and run surfaces (moved from eva): the activity timeline and
+// its step model, Trace lines, plan, test results, web preview, context usage
+// and the model picker.
+export * from "./ai-elements/activity-shared";
+export * from "./ai-elements/activity-question";
+export * from "./ai-elements/activity-tasks";
+export * from "./ai-elements/trace";
+export * from "./ai-elements/use-streaming-disclosure";
+export * from "./ai-elements/plan";
+export * from "./ai-elements/test-results";
+export * from "./ai-elements/web-preview";
+export * from "./ai-elements/context";
+export * from "./ai-elements/model-picker";
+export * from "./ai-elements/provider-icon";
+
 // Artifact viewers: frame with the state bridge, card, list, toolbar, viewer.
 // The core (schemas, state ops, document wrapper) comes from `@vvedantb/server`.
 export * from "./artifacts";
