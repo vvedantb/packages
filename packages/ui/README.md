@@ -1080,7 +1080,84 @@ Defaults are unchanged. Without a provider, or with an empty entry, every compon
 - Root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types.
 - An entry's `classes` replace built-in classes part by part. A part left out keeps its default, and a caller `className` still merges after it. Other keys are default prop values. An explicit prop always wins.
 - `cn`: the class merger that components use in place of the built-in `cn` when they merge a caller `className`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead. Components read it with the internal `useCn` hook.
-- `UiConfig` holds only `cn` so far, and no component reads it yet. Component entries come with the components that read them.
+- Component entries and opt-in props are in the sections below: "App config: existing primitives".
+
+## App config: existing primitives
+
+`UiConfig` entries and opt-in props for components that were already in the package. Without an entry or a new prop, each one renders its built-in DOM. Every component in this section merges a caller `className` with `UiConfig.cn` when it is set.
+
+### Controls
+
+```tsx
+const config = {
+  Button: { classes: { variant: { default: "bg-brand text-white" }, size: { xs: "h-7 px-2 text-2xs" } } },
+  Tabs: { variant: "segmented", pillMotion: "xy" },
+  ClearInput: { animation: "none" },
+} satisfies UiConfig;
+```
+
+- `Button`: `classes.base`, `classes.variant.<variant>`, `classes.size.<size>`. New size `xs` (`h-7 rounded-md px-2 text-xs hit-target`, 14px icons).
+- `Badge`: `classes.base`, `classes.variant.<variant>`.
+- `Input`, `Textarea`: `classes.base`.
+- `Checkbox`: `classes.root`, `classes.indicator`, `icon`. New prop `icon`: the indicator content (default a 14px check). The `CheckboxProps` type is exported.
+- `Switch`: `classes.root`, `classes.thumb`.
+- `Slider`: `classes.root`, `classes.track`, `classes.range`, `classes.thumb`. `trackClassName`, `rangeClassName` and `thumbClassName` still merge after them. `children` now render inside the track, after the range (for example tick marks). Before, they were dropped.
+- `ButtonGroup`: `classes.base`, `classes.orientation.<horizontal|vertical>`, `classes.text` (`ButtonGroupText`), `classes.separator` (`ButtonGroupSeparator`).
+- `InputGroup`: `classes.root`, `classes.addon.base`, `classes.addon.align.<align>`, `classes.button.base`, `classes.button.size.<size>`, `classes.text`, `classes.input`, `classes.textarea`. New prop `classes` on `InputGroupAddon` (`{ addon }`), `InputGroupText` (`{ text }`), `InputGroupInput` (`{ input }`) and `InputGroupTextarea` (`{ textarea }`): the same keys for one instance; they win over the entry.
+- `ClearInput`: `animation`, `classes.wrapper`, `classes.input`, `classes.button`. New prop `animation`: `"dissolve"` (default) or `"none"`, which clears at once, focuses the input and renders only the wrapper (`relative`), the input and the clear button. The `dissolve` wrapper keeps its `t-clear` classes and adds `classes.wrapper`. New prop `classes`: the same keys for one instance, each wins over the entry. New prop `clearButton` (with `"none"`): `"filled"` (default) mounts the button while there is a value; `"always"` keeps it mounted, hidden while empty (`pointer-events-none opacity-0`, `tabIndex=-1`, `aria-hidden`), and the input always reserves `pr-9`.
+- `SearchInput`: `classes.wrapper` (a base for the wrapper), `classes.input` (replaces the size classes), `classes.icon` (replaces the icon classes), `iconSize` (default 16), `label`, `placeholder`, `clearLabel`, `enterKeyHint` (`false` leaves `aria-label` or `enterkeyhint` off), and `classNameTarget: "wrapper"` to send `className` to the wrapper instead of the input. New props: `onClear` (called after `onChange` when the value becomes empty) and `inputClassName` (merged into the input last).
+- `Calendar`: `classes.base` replaces the root `className` classes; every other key replaces that DayPicker `classNames` key (a caller `classNames` still wins). `components` is the default for the prop, applied over the built-in `Root` and `Chevron`. New export `CalendarDayButton`: DayPicker's day button plus `data-selected`, for classes such as `data-[selected=true]:bg-primary` on the button; pass it as `components.DayButton`.
+- `Carousel`: `classes.dots`, `classes.dot`, `classes.dotActive`, `classes.dotInactive` for the new `CarouselDots` (one button per snap, nothing for a single page). `useCarousel` is exported and its context adds `selectedIndex`, `scrollSnaps` and `scrollTo`.
+- `Tabs`: `variant` (default for the `TabsList` prop), `pillMotion` (`"x"` default; `"xy"` moves the segmented pill on both axes with `transform`, for lists that wrap or run in a column), `classes.list` (replaces the list classes of every variant), `classes.size.<default|sm>`, `classes.pill`, `classes.trigger` (every trigger), `classes.content`. New `TabsList` prop `size`: `"sm"` shrinks the triggers (`[&_.t-tab]:px-2.5 py-1 text-xs`); `"default"` adds no classes. New `TabsBar`: a tab strip on a bottom hairline (`border-b border-border`, `px-3 py-2`; `size="sm"` `px-2 py-1.5`) with an `actions` slot on the right. `syncTabsPill` takes an optional motion (`"x"` or `"xy"`).
+- `Accordion`: `classes.item`, `classes.header`, `classes.trigger`, `classes.content` (the animated panel), `classes.contentInner` (the padded box inside it), `icon`. New `AccordionTrigger` prop `icon`: shown after the children (default the chevron). New prop `classes` on `AccordionItem` (`{ item }`), `AccordionTrigger` (`{ header, trigger }`) and `AccordionContent` (`{ content, contentInner }`): the same keys for one instance; they win over the entry.
+- `Collapsible`: `classes.trigger`, `classes.content`. The parts have no built-in classes, so without an entry `className` passes through untouched. `CollapsibleTrigger` and `CollapsibleContent` are now thin wrappers (same DOM, refs still reach the element); the `CollapsibleContentProps` type is exported.
+- Deprecated `AccordionAlt*`, `InputGroupAlt*` and `ClearInputAlt` wrap the main parts with their old markup (pinned by `src/ui/alt-wrappers.test.tsx`; no `UiConfig` entry reaches them). Use the main components; the `Alt` names go in a later minor release once consumers move. `InputGroupAlt` (the root) and `InputGroupButtonAlt` stay a plain `<div>` and a `Button`: the root renders `data-input-group` before `class`, and the button has no default `type`, which the main parts cannot reproduce.
+
+### Overlays
+
+```tsx
+<UiConfigProvider config={{ Dialog: { viewportAware: false, classes: { content: "..." } }, Tooltip: { delayDuration: 300, portal: true } }}>
+```
+
+| Entry | `classes` parts | Other keys |
+| --- | --- | --- |
+| `Dialog` | `trigger`, `overlay`, `content` (both layouts), `centered`, `compact`, `close`, `header`, `body`, `footer`, `title`, `description` | `viewportAware` |
+| `Popover` | `trigger`, `content` | `sideOffset`, `collisionPadding` |
+| `HoverCard` | `content` | `openDelay`, `closeDelay`, `sideOffset`, `portal` |
+| `Tooltip` | `content` | `delayDuration` (read by `TooltipProvider`), `sideOffset`, `portal` |
+| `DropdownMenu` | `trigger`, `content`, `subContent`, `subTrigger`, `item`, `checkboxItem`, `radioItem`, `label`, `separator`, `shortcut` | `icons.check`, `icons.radio`, `sideOffset`, `collisionPadding` |
+| `ContextMenu` | same as `DropdownMenu` | `icons.check`, `icons.radio`, `collisionPadding`, `subContentPortal` |
+| `Select` | `trigger`, `scrollButton`, `content`, `viewport`, `popperViewport`, `label`, `item`, `separator` | `icons.trigger`, `icons.scrollUp`, `icons.scrollDown`, `icons.check`, `triggerSlot`, `collisionPadding` |
+| `Command` | `root`, `dialogContent`, `dialogCommand`, `inputWrapper`, `input`, `list`, `empty`, `group`, `separator`, `item`, `shortcut` | `icons.search`, `emptyClassNameReplaces` |
+
+`icons.*` take a node and replace the built-in icon. A `trigger` class is added only when set: without it the trigger renders exactly as the Radix one.
+
+New props and exports:
+
+- `DialogContent` `viewportAware` (default `true`): the bottom sheet on compact viewports, visual-viewport sizing, keyboard-aware scrolling and the body pointer-events fix. `false` keeps a centred dialog at every size and leaves the viewport and body alone.
+- `PopoverAnchor` (Radix `Popover.Anchor`).
+- `HoverCardContent` and `TooltipContent` `portal`: render into `document.body`.
+- `ContextMenuSubContent` `portal`.
+- Config `Select.triggerSlot`: adds `data-slot="select-trigger"`, which the `ButtonGroup` selectors read.
+- Config `Command.emptyClassNameReplaces`: a `className` on `CommandEmpty` (even `""`) replaces its classes instead of merging.
+
+`DialogTrigger`, `PopoverTrigger`, `DropdownMenuTrigger` and `ContextMenuTrigger` are now thin wrappers that read the config; `HoverCard` and `TooltipProvider` are function components that read the configured delays. Same DOM and props without config.
+
+### Card, table, progress, separator and label
+
+| Entry | Keys |
+| --- | --- |
+| `Card` | `classes.root`, `header`, `title`, `description`, `content`, `footer`, `action`. |
+| `Table` | `classes.wrapper` (the scroll `<div>`), `table`, `header`, `body`, `footer`, `row`, `head`, `cell`, `caption`. |
+| `Progress` | `classes.root`, `indicator`. |
+| `Separator` | `classes.root` (the orientation size classes stay). |
+| `Label` | `classes.root`. |
+
+```tsx
+<UiConfigProvider config={{ Card: { classes: { root: "rounded-surface bg-card text-card-foreground" } } }}>
+```
+
+New exports: `CardTitle`, `CardDescription`, `CardFooter`, `CardAction`.
 
 ## Colour names in components
 

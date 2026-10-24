@@ -67,6 +67,18 @@ describe("Slider", () => {
     expect(thumb.getAttribute("aria-label")).toBe("Volume");
   });
 
+  it("renders children inside the track, after the range", async () => {
+    const host = await render(
+      <Slider defaultValue={[1]} max={2} aria-label="Model">
+        <span data-testid="tick" />
+      </Slider>,
+    );
+    const { track, range } = parts(host);
+    expect(track.children).toHaveLength(2);
+    expect(track.firstElementChild).toBe(range);
+    expect(track.lastElementChild?.getAttribute("data-testid")).toBe("tick");
+  });
+
   it("renders a thumb per value for a range", async () => {
     const host = await render(<Slider defaultValue={[20, 80]} thumbLabels={["From", "To"]} />);
     const all = thumbs(host);

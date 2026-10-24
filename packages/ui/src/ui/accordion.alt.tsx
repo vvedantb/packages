@@ -1,56 +1,49 @@
 import * as React from "react";
-import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { IconChevronDown } from "@tabler/icons-react";
-import { cn } from "../utils/cn";
+import { Accordion as AccordionPrimitive } from "radix-ui";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./accordion";
 
-const Accordion = AccordionPrimitive.Root;
+// The `Alt` look on the main parts: per-instance `classes` replace the main
+// classes (and any `UiConfig.Accordion` entry), and `data-slot={undefined}`
+// drops the main `data-slot` attributes, so the markup is the pre-wrapper one.
 
-const AccordionItem = React.forwardRef<
-  React.ComponentRef<typeof AccordionPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
->(({ className, ...props }, ref) => (
-  <AccordionPrimitive.Item
-    ref={ref}
-    className={cn("rounded-lg", className)}
-    {...props}
-  />
-));
-AccordionItem.displayName = "AccordionItem";
+/** @deprecated Use `Accordion`. Kept for existing consumers; removed in a later minor after they move. */
+function AccordionAlt(props: React.ComponentProps<typeof AccordionPrimitive.Root>) {
+  return <Accordion data-slot={undefined} {...props} />;
+}
 
-const AccordionTrigger = React.forwardRef<
-  React.ComponentRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Header className="flex">
-    <AccordionPrimitive.Trigger
-      ref={ref}
-      className={cn(
-        "flex flex-1 items-center justify-between rounded-lg py-4 text-sm font-medium transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.99] hover:bg-surface-tertiary/50 [&[data-state=open]>svg]:rotate-180",
-        className,
-      )}
+/** @deprecated Use `AccordionItem`. Kept for existing consumers; removed in a later minor after they move. */
+function AccordionItemAlt(props: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  return <AccordionItem data-slot={undefined} classes={{ item: "rounded-lg" }} {...props} />;
+}
+
+const triggerClasses = {
+  header: "flex",
+  trigger:
+    "flex flex-1 items-center justify-between rounded-lg py-4 text-sm font-medium transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.99] hover:bg-surface-tertiary/50 [&[data-state=open]>svg]:rotate-180",
+};
+
+/** @deprecated Use `AccordionTrigger`. Kept for existing consumers; removed in a later minor after they move. */
+function AccordionTriggerAlt(props: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  return (
+    <AccordionTrigger
+      data-slot={undefined}
+      classes={triggerClasses}
+      icon={<IconChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />}
       {...props}
-    >
-      {children}
-      <IconChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-    </AccordionPrimitive.Trigger>
-  </AccordionPrimitive.Header>
-));
-AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
+    />
+  );
+}
 
-const AccordionContent = React.forwardRef<
-  React.ComponentRef<typeof AccordionPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Content
-    ref={ref}
-    className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
-    {...props}
-  >
-    <div className={cn("pb-4 pt-0 text-muted-foreground", className)}>
-      {children}
-    </div>
-  </AccordionPrimitive.Content>
-));
-AccordionContent.displayName = AccordionPrimitive.Content.displayName;
+const contentClasses = {
+  content:
+    "overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+  contentInner: "pb-4 pt-0 text-muted-foreground",
+};
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
+/** @deprecated Use `AccordionContent`. Kept for existing consumers; removed in a later minor after they move. */
+function AccordionContentAlt(props: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+  return <AccordionContent data-slot={undefined} classes={contentClasses} {...props} />;
+}
+
+export { AccordionAlt, AccordionItemAlt, AccordionTriggerAlt, AccordionContentAlt };

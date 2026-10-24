@@ -1,26 +1,36 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../utils/cn";
+import { useCn, useUiConfig } from "./ui-config";
 
-const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full border border-transparent px-2.5 py-1 text-xs font-medium tracking-normal transition-colors focus:outline-none focus:ring-2 focus:ring-focus-ring focus:ring-offset-2 focus:ring-offset-background",
-  {
-    variants: {
-      variant: {
-        default: "border-border bg-default text-foreground",
-        secondary: "border-separator bg-default text-default-foreground",
-        destructive: "border-danger/25 bg-danger/12 text-danger",
-        // Neutral border with a faint danger tint, e.g. a revoked or expired status.
-        "destructive-soft": "border-border bg-danger/10 text-danger",
-        outline: "border-separator bg-transparent text-muted-foreground",
-        success: "border-success/25 bg-success/12 text-success",
-        warning: "border-warning/25 bg-warning/12 text-warning",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
+const badgeBaseClasses =
+  "inline-flex items-center gap-1 rounded-full border border-transparent px-2.5 py-1 text-xs font-medium tracking-normal transition-colors focus:outline-none focus:ring-2 focus:ring-focus-ring focus:ring-offset-2 focus:ring-offset-background";
+
+const badgeVariantClasses = {
+  default: "border-border bg-default text-foreground",
+  secondary: "border-separator bg-default text-default-foreground",
+  destructive: "border-danger/25 bg-danger/12 text-danger",
+  // Neutral border with a faint danger tint, e.g. a revoked or expired status.
+  "destructive-soft": "border-border bg-danger/10 text-danger",
+  outline: "border-separator bg-transparent text-muted-foreground",
+  success: "border-success/25 bg-success/12 text-success",
+  warning: "border-warning/25 bg-warning/12 text-warning",
+};
+
+const badgeVariants = cva(badgeBaseClasses, {
+  variants: {
+    variant: badgeVariantClasses,
   },
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+/** `UiConfig.Badge`: each given class string replaces the built-in one. */
+export interface BadgeConfig {
+  classes?: {
+    base?: string;
+    variant?: Partial<Record<keyof typeof badgeVariantClasses, string>>;
+  };
+}
 
 export interface BadgeProps
   extends
@@ -28,8 +38,22 @@ export interface BadgeProps
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
+  const classes = useUiConfig("Badge")?.classes;
+  const merge = useCn();
+  const v = variant ?? "default";
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div
+      className={
+        classes
+          ? merge(
+              classes.base ?? badgeBaseClasses,
+              classes.variant?.[v] ?? badgeVariantClasses[v],
+              className,
+            )
+          : merge(badgeVariants({ variant }), className)
+      }
+      {...props}
+    />
   );
 }
 
