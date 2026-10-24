@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### App config provider
+
+Defaults are unchanged: without a `UiConfigProvider`, every component renders exactly as in 0.17.1.
+
+- New root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types. An entry's `classes` replace a part's built-in classes, other keys are prop defaults, and an explicit prop wins.
+- `UiConfig.cn`: an app class merger that components use in place of the built-in `cn`, for apps whose tailwind-merge setup differs. Components read it with the internal `useCn` hook (not a root export). Component entries are added with the components that read them.
+- Default DOM guard: `src/default-dom.test.tsx` renders 53 primitives and AI elements with no provider and compares `document.body` (portals included) with `tokens/test/fixtures/default-dom.json`, byte for byte. Regenerate it only for an intended default change.
+- No new dependencies.
+
 ## 0.17.1
 
 Fix: `text-muted` was nearly invisible with `compat-shadcn-rgb.css`. No markup, export or `tokens.css` changes.

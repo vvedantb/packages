@@ -1063,6 +1063,25 @@ With `closeButtonStyle="hoverChip"`, hover changes the text colour, and sonner m
 
 Helpers: `createToasterClassNames`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `filledToastIcons`. Fixture: `tokens/examples/toaster/`.
 
+## App config
+
+`UiConfigProvider` gives components app-level defaults, so an app does not pass the same props at every call site. Wrap the app once:
+
+```tsx
+import { UiConfigProvider, type UiConfig } from "@vvedantb/ui";
+
+const config = { cn: appCn } satisfies UiConfig;
+
+<UiConfigProvider config={config}>{app}</UiConfigProvider>
+```
+
+Defaults are unchanged. Without a provider, or with an empty entry, every component renders its built-in DOM. `src/default-dom.test.tsx` renders 53 primitives and AI elements without a provider and compares `document.body` (portals included) with `tokens/test/fixtures/default-dom.json`, byte for byte.
+
+- Root exports: `UiConfigProvider` (`config`, `children`), `useUiConfig(name)` (the app's entry for one component, or `undefined`) and the `UiConfig` and `UiConfigProviderProps` types.
+- An entry's `classes` replace built-in classes part by part. A part left out keeps its default, and a caller `className` still merges after it. Other keys are default prop values. An explicit prop always wins.
+- `cn`: the class merger that components use in place of the built-in `cn` when they merge a caller `className`. Set it when the app's tailwind-merge setup differs, for example when it does not treat `rounded-surface` as a radius class and relies on the CSS order instead. Components read it with the internal `useCn` hook.
+- `UiConfig` holds only `cn` so far, and no component reads it yet. Component entries come with the components that read them.
+
 ## Colour names in components
 
 Components use `text-muted-foreground`, `primary` and `--color-*` theme variables. They no longer use `text-muted`, `*-accent` or raw `var(--muted)` reads, which clash with shadcn names. Exceptions that match existing app markup on purpose: the `InputArea` ghost text, the `Button` `flat` variant and the `CommandDialog` `listLayout="auto"` group headings use `text-muted`. `tokens.css` still defines `--color-muted` and `--color-accent`. `pnpm --filter @vvedantb/ui check:tokens` fails if a component brings the old names back (it also runs in `build`, `test` and `verify`).
