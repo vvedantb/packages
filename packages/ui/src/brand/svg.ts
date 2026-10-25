@@ -5,7 +5,7 @@ export const APP_NAMES = ["projectv", "vibot", "vhub", "vmem", "verve", "velth"]
 
 export type AppName = (typeof APP_NAMES)[number];
 
-/** `mark`: glyph only, follows `currentColor`. `tile`: white glyph on a black tile. `tile-light`: black glyph on a white tile. */
+/** `mark`: glyph only, cropped tight, follows `currentColor`. `tile`: white glyph on a black tile. `tile-light`: black glyph on a white tile. */
 export type AppMarkVariant = "mark" | "tile" | "tile-light";
 
 export const MARK_VIEWBOX = "0 0 1024 1024";
@@ -79,6 +79,121 @@ export const APP_MARKS: Record<AppName, MarkShape> = {
   },
 };
 
+type Point = [number, number];
+type Box = [minX: number, minY: number, maxX: number, maxY: number];
+
+/** Roots in (0, 1) of the derivative of a Bezier with 1D control values `v` (quadratic or cubic). */
+function bezierExtrema(v: number[]): number[] {
+  const roots: number[] = [];
+  if (v.length === 3) {
+    const d = v[0]! - 2 * v[1]! + v[2]!;
+    if (d !== 0) roots.push((v[0]! - v[1]!) / d);
+  } else {
+    const a = -v[0]! + 3 * v[1]! - 3 * v[2]! + v[3]!;
+    const b = 2 * (v[0]! - 2 * v[1]! + v[2]!);
+    const c = v[1]! - v[0]!;
+    if (Math.abs(a) < 1e-12) {
+      if (b !== 0) roots.push(-c / b);
+    } else {
+      const disc = b * b - 4 * a * c;
+      if (disc >= 0) roots.push((-b + Math.sqrt(disc)) / (2 * a), (-b - Math.sqrt(disc)) / (2 * a));
+    }
+  }
+  return roots.filter((t) => t > 0 && t < 1);
+}
+
+function bezierAt(v: number[], t: number): number {
+  const u = 1 - t;
+  const [p0, p1, p2, p3] = v as [number, number, number, number];
+  return v.length === 3 ? u * u * p0 + 2 * u * t * p1 + t * t * p2 : u ** 3 * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t ** 3 * p3;
+}
+
+/** Extreme points of an SVG elliptical arc (endpoint form, no rotation), including both ends. */
+function arcPoints(from: Point, [rx0, ry0, , large, sweep, x, y]: [number, number, number, number, number, number, number]): Point[] {
+  const [x0, y0] = from;
+  let rx = Math.abs(rx0);
+  let ry = Math.abs(ry0);
+  const dx = (x0 - x) / 2;
+  const dy = (y0 - y) / 2;
+  const lambda = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+  if (lambda > 1) {
+    rx *= Math.sqrt(lambda);
+    ry *= Math.sqrt(lambda);
+  }
+  const num = rx * rx * ry * ry - rx * rx * dy * dy - ry * ry * dx * dx;
+  const den = rx * rx * dy * dy + ry * ry * dx * dx;
+  const k = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / den));
+  const cx = k * ((rx * dy) / ry) + (x0 + x) / 2;
+  const cy = k * (-(ry * dx) / rx) + (y0 + y) / 2;
+  const a0 = Math.atan2((y0 - cy) / ry, (x0 - cx) / rx);
+  let delta = Math.atan2((y - cy) / ry, (x - cx) / rx) - a0;
+  if (sweep && delta < 0) delta += 2 * Math.PI;
+  if (!sweep && delta > 0) delta -= 2 * Math.PI;
+  const points: Point[] = [from, [x, y]];
+  for (let q = -6; q <= 6; q++) {
+    const a = (q * Math.PI) / 2;
+    const t = (a - a0) / delta;
+    if (t > 0 && t < 1) points.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+  }
+  return points;
+}
+
+/** Exact bounding box of absolute `M`, `L`, `Q`, `C` and `A` path data (the only commands the marks use). Returns [minX, minY, maxX, maxY]. */
+export function pathBBox(d: string): Box {
+  const tokens = d.match(/[MLQCA]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
+  const points: Point[] = [];
+  let cmd = "";
+  let cur: Point = [0, 0];
+  const argc: Record<string, number> = { M: 2, L: 2, Q: 4, C: 6, A: 7 };
+  for (let i = 0; i < tokens.length; ) {
+    if (/[A-Z]/.test(tokens[i]!)) cmd = tokens[i++]!;
+    const n = argc[cmd];
+    if (!n) throw new Error(`Unsupported path command: ${cmd}`);
+    const a = tokens.slice(i, i + n).map(Number);
+    i += n;
+    const end: Point = [a[n - 2]!, a[n - 1]!];
+    if (cmd === "Q" || cmd === "C") {
+      const xs = [cur[0], ...a.filter((_, j) => j % 2 === 0)];
+      const ys = [cur[1], ...a.filter((_, j) => j % 2 === 1)];
+      for (const t of new Set([...bezierExtrema(xs), ...bezierExtrema(ys)])) points.push([bezierAt(xs, t), bezierAt(ys, t)]);
+    } else if (cmd === "A") {
+      points.push(...arcPoints(cur, a as Parameters<typeof arcPoints>[1]));
+    }
+    points.push(end);
+    cur = end;
+  }
+  return [Math.min(...points.map((p) => p[0])), Math.min(...points.map((p) => p[1])), Math.max(...points.map((p) => p[0])), Math.max(...points.map((p) => p[1]))];
+}
+
+/** Tight box of a mark: union of its paths, grown by half the stroke width for stroke marks. Returns [minX, minY, maxX, maxY]. */
+export function markBBox(app: AppName): Box {
+  const { kind, paths } = APP_MARKS[app];
+  const boxes = paths.map(pathBBox);
+  const pad = kind === "stroke" ? markStrokeWidth(app) / 2 : 0;
+  return [Math.min(...boxes.map((b) => b[0])) - pad, Math.min(...boxes.map((b) => b[1])) - pad, Math.max(...boxes.map((b) => b[2])) + pad, Math.max(...boxes.map((b) => b[3])) + pad];
+}
+
+
+/**
+ * Tight viewBox per app (`minX minY width height` on the 1024 grid): the glyph box grown by half the
+ * stroke width for stroke marks, rounded outward to whole units. Checked against `markBBox` in tests.
+ * Used by the plain logo (`variant="mark"`, `appMarkSvg`). Tiles keep `MARK_VIEWBOX`.
+ */
+export const APP_MARK_VIEWBOX: Record<AppName, string> = {
+  projectv: "172 377 686 295",
+  vibot: "295 314 494 398",
+  vhub: "186 338 582 348",
+  vmem: "255 259 513 503",
+  verve: "260 319 504 413",
+  velth: "273 276 478 482",
+};
+
+/** Width over height of a mark's tight viewBox. */
+export function markAspect(app: AppName): number {
+  const [, , w = 1, h = 1] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
+  return w / h;
+}
+
 const NS = 'xmlns="http://www.w3.org/2000/svg"';
 
 /** Attributes that paint the glyph in `color`. */
@@ -90,9 +205,9 @@ function pathElements(app: AppName): string {
   return APP_MARKS[app].paths.map((d) => `<path d="${d}"/>`).join("");
 }
 
-/** Glyph only, painted with `color` (default `currentColor`). */
+/** Glyph only, cropped tight with no padding, painted with `color` (default `currentColor`). */
 export function appMarkSvg(app: AppName, color = "currentColor"): string {
-  return `<svg ${NS} viewBox="${MARK_VIEWBOX}" ${markPaintAttrs(app, color)}>${pathElements(app)}</svg>\n`;
+  return `<svg ${NS} viewBox="${APP_MARK_VIEWBOX[app]}" ${markPaintAttrs(app, color)}>${pathElements(app)}</svg>\n`;
 }
 
 /** Tile with a glyph. `radius` 0 gives a full-bleed square (apple-touch, maskable). */

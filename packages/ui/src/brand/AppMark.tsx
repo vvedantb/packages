@@ -1,12 +1,16 @@
 import { useId, type SVGProps } from "react";
-import { APP_MARKS, MARK_VIEWBOX, TILE_RADIUS, markLinecap, markStrokeWidth, type AppMarkVariant, type AppName } from "./svg";
+import { APP_MARKS, APP_MARK_VIEWBOX, MARK_VIEWBOX, TILE_RADIUS, markAspect, markLinecap, markStrokeWidth, type AppMarkVariant, type AppName } from "./svg";
 
 export type AppMarkProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" | "width" | "viewBox"> & {
   /** Which family app's mark to draw. */
   app: AppName;
-  /** `"mark"` (default): glyph in `currentColor`. `"tile"`: white glyph on a black rounded tile. `"tile-light"`: black glyph on a white tile. */
+  /** `"mark"` (default): plain logo in `currentColor`, cropped tight to the glyph with no padding. `"tile"`: white glyph on a black rounded tile. `"tile-light"`: black glyph on a white tile. */
   variant?: AppMarkVariant;
-  /** Width and height. Default 24. */
+  /**
+   * Default 24. For `"mark"` it sets the rendered height and the width follows the glyph's aspect ratio
+   * (a number gives an exact width; a string sets both to the same value and the glyph is centred).
+   * Tiles are always square, `size` by `size`.
+   */
   size?: number | string;
   /** Accessible name. Without it the mark is `aria-hidden`. */
   title?: string;
@@ -17,10 +21,12 @@ const TILE_TONES = {
   "tile-light": { bg: "#fff", fg: "#000" },
 } as const;
 
-/** One of the six family app marks on the 1024 grid. */
+/** One of the six family app marks. The plain mark is cropped tight; tiles use the padded 1024 grid. */
 export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: AppMarkProps) {
   const titleId = useId();
   const { kind, paths } = APP_MARKS[app];
+  const isMark = variant === "mark";
+  const width = isMark && typeof size === "number" ? Math.round(size * markAspect(app) * 100) / 100 : size;
   const tone = variant === "mark" ? undefined : TILE_TONES[variant];
   const color = tone?.fg ?? "currentColor";
   const glyphProps =
@@ -38,9 +44,10 @@ export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: Ap
     <svg
       {...rest}
       xmlns="http://www.w3.org/2000/svg"
-      width={size}
+      width={width}
       height={size}
-      viewBox={MARK_VIEWBOX}
+      viewBox={isMark ? APP_MARK_VIEWBOX[app] : MARK_VIEWBOX}
+      preserveAspectRatio="xMidYMid meet"
       data-app={app}
       data-variant={variant}
       role={title ? "img" : undefined}
