@@ -1,13 +1,17 @@
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { AppMark } from "../brand/AppMark";
+import type { AppName } from "../brand/svg";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
 import { VisuallyHidden } from "../ui/visually-hidden";
-import { pricingModalClasses, type PricingModalTone } from "./marketing-classes";
+import { pricingModalClasses, pricingMultiClasses, type PricingModalTone } from "./marketing-classes";
 
 export type PricingModalPeriod = "month" | "year";
 
-export type PricingModalProps = {
+export type PricingModalLegacyProps = {
+  /** Absent in the single-plan layout. Set `plans` for the multi-plan layout. */
+  plans?: undefined;
   open: boolean;
   /** Called when the dialog asks to close and by the `closeButton`. */
   onClose: () => void;
@@ -51,8 +55,67 @@ export type PricingModalProps = {
   tone?: PricingModalTone;
 };
 
-/** Single-plan upgrade dialog: brand header with price and tagline, checkout button and feature list. */
-export function PricingModal({
+export type PricingPlanBenefit = {
+  label: ReactNode;
+  /** `"check"` (default) or an app mark. */
+  icon?: "check" | AppName;
+  /** Dimmed row. */
+  muted?: boolean;
+};
+
+export type PricingPlan = {
+  id: string;
+  name: string;
+  /** Display strings per month, for example `{ month: "$10", year: "$8" }`. The yearly price is still per month. */
+  price: { month: string; year: string };
+  /** Default "Get started". */
+  ctaLabel?: string;
+  /** Line above the highlight, for example "Everything in Free, and:". */
+  intro?: ReactNode;
+  /** Large title with small text under it. */
+  highlight?: { title: string; description: string };
+  benefits?: readonly PricingPlanBenefit[];
+  /** The plan the user is on: the button reads "Current plan" and is disabled. */
+  current?: boolean;
+  /** Subtle ring on the card. `highlighted` is an alias. */
+  featured?: boolean;
+  highlighted?: boolean;
+  /** Text after the price. Default "/month". */
+  periodSuffix?: string;
+};
+
+export type PricingModalMultiProps = {
+  open: boolean;
+  onClose: () => void;
+  /** Accessible dialog title. Not visible. */
+  title: string;
+  /** Accessible description. Not visible. */
+  description?: string;
+  /** Cards, left to right. Sized for 1 to 4. */
+  plans: readonly PricingPlan[];
+  /** App marks at the top left. */
+  apps?: readonly AppName[];
+  /** Centred headline, for example "One plan. Every V app." */
+  headline?: ReactNode;
+  /** Small print under the cards. */
+  finePrint?: ReactNode;
+  billingPeriod?: PricingModalPeriod;
+  onBillingPeriodChange?: (period: PricingModalPeriod) => void;
+  /** Default `"month"`. */
+  defaultBillingPeriod?: PricingModalPeriod;
+  /** Wraps each plan's button, for example in the billing provider's checkout. Not called for the `current` plan. */
+  renderCheckout: (button: ReactElement, plan: PricingPlan, period: PricingModalPeriod) => ReactNode;
+  tone?: PricingModalTone;
+};
+
+export type PricingModalProps = PricingModalLegacyProps | PricingModalMultiProps;
+
+/** Upgrade dialog. With `plans`: wide multi-plan layout. Without: the single-plan layout. */
+export function PricingModal(props: PricingModalProps) {
+  return props.plans ? <PricingModalMulti {...props} /> : <PricingModalSingle {...props} />;
+}
+
+function PricingModalSingle({
   open,
   onClose,
   title,
@@ -71,7 +134,7 @@ export function PricingModal({
   renderCheckout,
   closeButton = false,
   tone = "muted",
-}: PricingModalProps) {
+}: PricingModalLegacyProps) {
   const c = pricingModalClasses[tone];
   const [localPeriod, setLocalPeriod] = useState<PricingModalPeriod>(defaultBillingPeriod);
   const period: PricingModalPeriod = yearly ? (billingPeriod ?? localPeriod) : "month";
@@ -170,6 +233,166 @@ export function PricingModal({
             </ul>
           </div>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const multiWidth = {
+  1: "sm:max-w-md",
+  2: "sm:max-w-3xl",
+  3: "sm:max-w-5xl",
+  4: "sm:max-w-6xl",
+} as const;
+
+const multiColumns = {
+  1: "",
+  2: "sm:grid-cols-2",
+  3: "md:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
+} as const;
+
+function PricingModalMulti({
+  open,
+  onClose,
+  title,
+  description,
+  plans,
+  apps,
+  headline,
+  finePrint,
+  billingPeriod,
+  onBillingPeriodChange,
+  defaultBillingPeriod = "month",
+  renderCheckout,
+  tone = "muted",
+}: PricingModalMultiProps) {
+  const c = pricingMultiClasses[tone];
+  const [localPeriod, setLocalPeriod] = useState<PricingModalPeriod>(defaultBillingPeriod);
+  const period = billingPeriod ?? localPeriod;
+  const selectPeriod = (next: PricingModalPeriod) => {
+    setLocalPeriod(next);
+    onBillingPeriodChange?.(next);
+  };
+  const contentRef = useRef<HTMLDivElement>(null);
+  const count = Math.min(Math.max(plans.length, 1), 4) as 1 | 2 | 3 | 4;
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent
+        ref={contentRef}
+        hideCloseButton
+        // Focus the dialog, not the first segment button, so no ring shows on open.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          contentRef.current?.focus();
+        }}
+        className={`max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto p-0 font-sans sm:w-[calc(100vw-2rem)] ${multiWidth[count]}`}
+      >
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        {description ? <DialogDescription className="sr-only">{description}</DialogDescription> : null}
+
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-4 pb-4 pt-5 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
+          <div className="flex items-center gap-2 text-foreground" data-testid="pricing-apps">
+            {apps?.map((app) => <AppMark key={app} app={app} variant="tile" size={24} className="rounded-md" />)}
+          </div>
+          <div className="flex items-center justify-end gap-2 sm:order-last">
+            <div role="group" aria-label="Billing period" className="inline-flex rounded-full bg-surface-tertiary p-0.5">
+              {(["month", "year"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={period === value}
+                  onClick={() => selectPeriod(value)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 motion-reduce:transition-none ${
+                    period === value ? "bg-segment text-segment-foreground" : `${c.switchIdle} hover:text-foreground`
+                  }`}
+                >
+                  {value === "month" ? "Monthly" : "Annual"}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-[background-color,transform] duration-100 ease-out hover:bg-surface-tertiary hover:text-foreground active:scale-[0.96] motion-reduce:transition-none"
+            >
+              <IconX className="size-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+          {headline ? (
+            <p className="col-span-2 text-balance text-center text-xl font-medium tracking-tight text-foreground sm:order-none sm:col-span-1 sm:text-2xl">
+              {headline}
+            </p>
+          ) : (
+            <span className="hidden sm:block" />
+          )}
+        </div>
+
+        <div className={`grid grid-cols-1 gap-3 px-4 sm:px-6 ${multiColumns[count]}`}>
+          {plans.map((plan) => {
+            const emphasised = plan.featured ?? plan.highlighted;
+            const button = (
+              <Button
+                size="lg"
+                variant={plan.current ? "outline" : emphasised ? "default" : "secondary"}
+                disabled={plan.current}
+                className="h-12 w-full rounded-full"
+              >
+                {plan.current ? "Current plan" : (plan.ctaLabel ?? "Get started")}
+              </Button>
+            );
+            return (
+              <section
+                key={plan.id}
+                data-plan={plan.id}
+                aria-label={plan.name}
+                className={`flex flex-col rounded-3xl bg-surface-secondary p-5 ${
+                  emphasised ? "ring-1 ring-foreground/25" : "ring-1 ring-separator"
+                }`}
+              >
+                <h3 className="text-base text-foreground">{plan.name}</h3>
+                <p className="mt-4 flex items-baseline gap-1">
+                  <span className="text-5xl font-medium tabular-nums leading-none tracking-tight text-foreground">
+                    {plan.price[period]}
+                  </span>
+                  <span className={c.suffix}>{plan.periodSuffix ?? "/month"}</span>
+                </p>
+                <div className="mt-5">{plan.current ? button : renderCheckout(button, plan, period)}</div>
+                {plan.intro ? <p className={`mt-6 text-sm ${c.suffix}`}>{plan.intro}</p> : null}
+                {plan.highlight ? (
+                  <div className="mt-3">
+                    <p className="text-2xl font-medium leading-tight text-foreground">{plan.highlight.title}</p>
+                    <p className="text-sm text-foreground">{plan.highlight.description}</p>
+                  </div>
+                ) : null}
+                {plan.benefits?.length ? (
+                  <ul className="mt-5 space-y-2.5 border-t border-separator pt-4">
+                    {plan.benefits.map((benefit, index) => (
+                      <li
+                        key={index}
+                        className={`flex items-start gap-2.5 text-sm leading-snug ${
+                          benefit.muted ? c.suffix : "text-foreground"
+                        }`}
+                      >
+                        <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                          {benefit.icon && benefit.icon !== "check" ? (
+                            <AppMark app={benefit.icon} size={16} />
+                          ) : (
+                            <IconCheck className="size-4" strokeWidth={2} />
+                          )}
+                        </span>
+                        <span>{benefit.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </section>
+            );
+          })}
+        </div>
+
+        {finePrint ? <p className={`px-4 pb-5 pt-4 text-xs sm:px-6 ${c.suffix}`}>{finePrint}</p> : <div className="pb-4" />}
       </DialogContent>
     </Dialog>
   );

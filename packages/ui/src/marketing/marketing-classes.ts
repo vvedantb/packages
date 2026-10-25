@@ -113,3 +113,15 @@ export const pricingModalClasses = {
 } as const;
 
 export type PricingModalTone = keyof typeof pricingModalClasses;
+
+/** Multi-plan `PricingModal` secondary text classes for the two tones. */
+export const pricingMultiClasses = {
+  muted: {
+    suffix: "text-muted", // check-tokens-allow: text-muted
+    switchIdle: "text-muted", // check-tokens-allow: text-muted
+  },
+  "muted-foreground": {
+    suffix: "text-muted-foreground",
+    switchIdle: "text-muted-foreground",
+  },
+} as const;
