@@ -3,7 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_MARKS, APP_MARK_SVG, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markStrokeWidth } from "./index";
+import { APP_MARKS, APP_MARK_SVG, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markLinecap, markStrokeWidth } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -65,9 +65,15 @@ describe.each(APP_NAMES)("AppMark %s", (app) => {
       expect(g.getAttribute("fill")).toBe("none");
       expect(g.getAttribute("stroke")).toBe("currentColor");
       expect(g.getAttribute("stroke-width")).toBe(String(markStrokeWidth(app)));
-      expect(g.getAttribute("stroke-linecap")).toBe("round");
+      expect(g.getAttribute("stroke-linecap")).toBe(markLinecap(app));
       expect(g.getAttribute("stroke-linejoin")).toBe("round");
     }
+  });
+
+  it("vmem uses butt caps and every other stroke mark keeps round caps", () => {
+    expect(markLinecap("vmem")).toBe("butt");
+    expect(APP_MARK_SVG.vmem).toContain('stroke-linecap="butt"');
+    for (const app of APP_NAMES.filter((a) => a !== "vmem")) expect(markLinecap(app)).toBe("round");
   });
 
   it("tile is a black rounded tile with a white glyph", async () => {

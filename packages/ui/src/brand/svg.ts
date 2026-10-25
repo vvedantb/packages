@@ -13,17 +13,24 @@ export const MARK_STROKE_WIDTH = 50;
 export const TILE_RADIUS = 224;
 
 export type MarkShape = {
-  /** Filled shapes (no stroke) versus 50-wide round-capped lines. */
+  /** Filled shapes (no stroke) versus lines (50 wide, round caps by default). */
   kind: "fill" | "stroke";
   /** Path data on the 1024 grid. */
   paths: readonly string[];
   /** Stroke width override on the 1024 grid. Defaults to `MARK_STROKE_WIDTH`. */
   strokeWidth?: number;
+  /** Line cap override. Defaults to `"round"`. */
+  linecap?: "butt" | "round";
 };
 
 /** Stroke width of a mark on the 1024 grid. */
 export function markStrokeWidth(app: AppName): number {
   return APP_MARKS[app].strokeWidth ?? MARK_STROKE_WIDTH;
+}
+
+/** Line cap of a mark. */
+export function markLinecap(app: AppName): "butt" | "round" {
+  return APP_MARKS[app].linecap ?? "round";
 }
 
 /**
@@ -49,10 +56,11 @@ export const APP_MARKS: Record<AppName, MarkShape> = {
   vmem: {
     kind: "stroke",
     strokeWidth: 58,
+    linecap: "butt",
     paths: [
-      "M418.9 310.8A229 229 0 0 1 605.1 310.8",
-      "M701.8 391.9A229 229 0 0 1 605.1 729.2",
-      "M418.9 729.2A229 229 0 0 1 322.2 391.9",
+      "M693.2 379.5A227.25 227.25 0 0 1 581.0 732.7",
+      "M442.5 732.7A227.25 227.25 0 0 1 330.9 378.7",
+      "M397.3 319.9A227.25 227.25 0 0 1 627.1 320.4",
     ],
   },
   verve: {
@@ -75,7 +83,7 @@ const NS = 'xmlns="http://www.w3.org/2000/svg"';
 
 /** Attributes that paint the glyph in `color`. */
 export function markPaintAttrs(app: AppName, color: string): string {
-  return APP_MARKS[app].kind === "fill" ? `fill="${color}"` : `fill="none" stroke="${color}" stroke-width="${markStrokeWidth(app)}" stroke-linecap="round" stroke-linejoin="round"`;
+  return APP_MARKS[app].kind === "fill" ? `fill="${color}"` : `fill="none" stroke="${color}" stroke-width="${markStrokeWidth(app)}" stroke-linecap="${markLinecap(app)}" stroke-linejoin="round"`;
 }
 
 function pathElements(app: AppName): string {
