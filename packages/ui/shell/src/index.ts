@@ -1,5 +1,7 @@
 export { SidebarHeader } from "./SidebarHeader.js";
 export type { SidebarHeaderProps } from "./SidebarHeader.js";
+export { SidebarUpgradeCard } from "./SidebarUpgradeCard.js";
+export type { SidebarUpgradeCardProps } from "./SidebarUpgradeCard.js";
 export { PillTabs } from "./PillTabs.js";
 export type { PillTabItem, PillTabsProps } from "./PillTabs.js";
 export { cn } from "./cn.js";

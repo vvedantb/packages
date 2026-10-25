@@ -107,6 +107,16 @@ describe("PricingModal multi-plan", () => {
     expect(document.body.querySelector("[role='dialog']")?.textContent).toContain("Close");
   });
 
+  it("shows the Project V mark beside the paid plan name only", async () => {
+    await mountMulti();
+    const pro = document.body.querySelector("section[data-plan='pro']") as HTMLElement;
+    const free = document.body.querySelector("section[data-plan='free']") as HTMLElement;
+    const mark = pro.querySelector("h3")?.previousElementSibling;
+    expect(mark?.getAttribute("data-app")).toBe("projectv");
+    expect(mark?.getAttribute("height")).toBe("16");
+    expect(free.querySelector("h3")?.previousElementSibling).toBeNull();
+  });
+
   it("switches prices and the renderCheckout period", async () => {
     const renderCheckout = vi.fn<PricingModalMultiProps["renderCheckout"]>((button) => button);
     await mountMulti({ renderCheckout });
