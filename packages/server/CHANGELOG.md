@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0
+
+Shared "V Pro" plan check for every Project V app. Additive; no new dependency.
+
+### Added
+
+- `hasVPlan(claimsOrIdentity)`: true when the Clerk session token v2 `pla` claim (`u:<plan>` or `o:<plan>`, or a bare slug) is `v_pro` or the legacy `vibot_pro`. Takes a Convex `getUserIdentity()` result or raw JWT claims. `null`, `undefined`, a missing claim or a malformed one returns `false`; it never throws.
+- `V_PRO_PLAN_KEY` (`"v_pro"`), `V_PRO_LEGACY_PLAN_KEY` (`"vibot_pro"`) and `V_PRO_PLAN_KEYS`.
+
+### Tests
+
+- `tests/convex/vPlan.test.ts`: both scopes for both plans, bare slugs, identity-shaped objects, unrelated plans and malformed input. `tests-node/esm-exports.mjs` checks the new exports.
+
 ## 0.8.1
 
 Fix: 0.8.0 sent every JWT-shaped bearer to `verifyClerkOAuthJwt`, which rejects any header `typ` other than `at+jwt` or `application/at+jwt`. Clerk session tokens (RS256, `typ` `JWT` or none), which apps accept on `/mcp` with `acceptsToken: ["oauth_token", "session_token"]`, were rejected with no retry. No new dependency.

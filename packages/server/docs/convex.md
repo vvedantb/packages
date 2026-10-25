@@ -394,6 +394,19 @@ expect(store.getQuery(api.tasks.list, { projectId })).toHaveLength(1);
 - **Update callback.** app-a's map function gets the value only; app-b and app-d also get the args. Passing args to a one-argument callback changes nothing.
 - **Memory stores.** app-d's is a `Map` per function; app-c's is one array. Same lookups, order and deletes. app-d also reads `setQuery` with missing args as `{}`; app-c would key it as `undefined` (unreachable through Convex's types). The package follows app-d. `getAllQueries` returns the stored entry objects (app-d), not copies (app-c).
 
+## V Pro plan check
+
+`hasVPlan` tells whether a session holds the shared V Pro plan (Clerk Billing key `v_pro`, $10/month or $100/year). The legacy `vibot_pro` plan counts too. It reads the Clerk session token v2 `pla` claim (`u:v_pro`, `o:v_pro`, `u:vibot_pro`, or a bare slug), because Clerk's `has({ plan })` is not available in Convex. Convex surfaces custom JWT claims on the identity.
+
+```ts
+import { hasVPlan } from "@vvedantb/server";
+
+const identity = await ctx.auth.getUserIdentity();
+if (!hasVPlan(identity)) throw new Error("V Pro required");
+```
+
+`null`, a missing `pla` or a malformed value returns `false`; it never throws. `V_PRO_PLAN_KEY`, `V_PRO_LEGACY_PLAN_KEY` and `V_PRO_PLAN_KEYS` are exported too.
+
 ## Develop
 
 ```sh

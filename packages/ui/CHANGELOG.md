@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.0
+
+- `PricingModal` takes an optional `yearly` prop (`{ pricePerMonth, total?, saveLabel? }`) that adds a monthly/yearly toggle. `price` stays the monthly price. Set the period with `billingPeriod` and `onBillingPeriodChange` (controlled) or `defaultBillingPeriod` (uncontrolled, default `"month"`). The note reads "Billed yearly." (or "{total} billed yearly.") for the yearly period.
+- `renderCheckout` gets the selected period as an optional second argument (`"month"` or `"year"`), for Clerk's `planPeriod`. Callers that ignore it keep working. New type `PricingModalPeriod`.
+- Without `yearly` the DOM is unchanged, so existing callers need no change. No new dependencies.
+
 ## 0.19.1
 
 - `JumpRail` height is floored at 48px (new export `JUMP_RAIL_MIN_HEIGHT_PX`), so rails with only a few ticks (e.g. page headings in Verve) stay hoverable. Rails with 7+ ticks are unchanged.
