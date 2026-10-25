@@ -903,13 +903,13 @@ Each app passes its own plan names, prices and copy. The example and the screens
   title="Plans"
   apps={["vibot", "verve", "velth", "vmem", "vhub"]}
   headline="One plan. Every V app."
-  finePrint="Cancel anytime. Taxes may apply."
+  finePrint="Cancel anytime. $120 billed yearly. Save 33%."
   plans={[
     { id: "free", name: "Free", price: { month: "$0", year: "$0" }, current: true },
     {
       id: "pro",
       name: "V Pro",
-      price: { month: "$10", year: "$8" },
+      price: { month: "$15", year: "$10" },
       featured: true,
       intro: "Everything in Free, and:",
       highlight: { title: "Shared", description: "usage across every V app" },
@@ -928,7 +928,9 @@ Each app passes its own plan names, prices and copy. The example and the screens
 />
 ```
 
-Screenshots: `brand/pricing-modal/` (regenerate with
+In the example, V Pro costs $15/month, or $10/month billed yearly ($120/year,
+a 33% saving). The cards show the per-month price only, so the yearly total and
+the saving go in `finePrint`. Screenshots: `brand/pricing-modal/` (regenerate with
 `node scripts/build-pricing-screenshots.mjs`).
 
 #### Single plan

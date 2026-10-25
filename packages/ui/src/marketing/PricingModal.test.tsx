@@ -74,7 +74,7 @@ const multi: PricingModalMultiProps = {
     {
       id: "pro",
       name: "V Pro",
-      price: { month: "$10", year: "$8" },
+      price: { month: "$15", year: "$10" },
       ctaLabel: "Upgrade",
       featured: true,
       intro: "Everything in Free, and:",
@@ -110,12 +110,12 @@ describe("PricingModal multi-plan", () => {
   it("switches prices and the renderCheckout period", async () => {
     const renderCheckout = vi.fn<PricingModalMultiProps["renderCheckout"]>((button) => button);
     await mountMulti({ renderCheckout });
-    expect(document.body.textContent).toContain("$10");
+    expect(document.body.textContent).toContain("$15");
     expect(renderCheckout.mock.calls.at(-1)?.[1].id).toBe("pro");
     expect(renderCheckout.mock.calls.at(-1)?.[2]).toBe("month");
     await act(async () => pick("Annual")?.click());
-    expect(document.body.textContent).toContain("$8");
-    expect(document.body.textContent).not.toContain("$10");
+    expect(document.body.textContent).toContain("$10");
+    expect(document.body.textContent).not.toContain("$15");
     expect(pick("Annual")?.getAttribute("aria-pressed")).toBe("true");
     expect(renderCheckout.mock.calls.at(-1)?.[2]).toBe("year");
   });
@@ -134,13 +134,13 @@ describe("PricingModal multi-plan", () => {
 
   it("works uncontrolled and controlled", async () => {
     const unmount = await mountMulti({ defaultBillingPeriod: "year" });
-    expect(document.body.textContent).toContain("$8");
+    expect(document.body.textContent).toContain("$10");
     await unmount();
     document.body.innerHTML = "";
     const onBillingPeriodChange = vi.fn();
     await mountMulti({ billingPeriod: "month", onBillingPeriodChange });
     await act(async () => pick("Annual")?.click());
     expect(onBillingPeriodChange).toHaveBeenCalledWith("year");
-    expect(document.body.textContent).toContain("$10");
+    expect(document.body.textContent).toContain("$15");
   });
 });
