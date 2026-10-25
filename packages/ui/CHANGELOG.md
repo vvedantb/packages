@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.23.0
+
+- New `SidebarUpgradeCard` (shell family, exported from the root). A rounded card with the Project V mark, the title "Upgrade to Pro" and an "Upgrade" pill, with no subtitle. Props: `onUpgrade`, `className` and `collapsed` (an icon-only round button labelled "Upgrade to Pro" for narrow rails). It uses theme tokens, so it works in light and dark. It does not detect the plan; the app hides it for Pro users.
+- `PricingModal` multi-plan cards show the Project V mark (16px high, `currentColor`) beside the name of the `featured` / `highlighted` plan. Other plans show the name only.
+
 ## 0.22.1
 
 - `AppMark` with `variant="mark"` (the default) is now cropped tight to the glyph, with no padding. Stroke marks include half the stroke width. `size` sets the rendered height and the width follows the aspect ratio, so the logo sits level with a wordmark. A string `size` still sets width and height to the same value. Tile variants are unchanged (1024 grid, equalised, square).

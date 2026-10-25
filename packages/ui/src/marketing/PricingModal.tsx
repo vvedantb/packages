@@ -351,7 +351,14 @@ function PricingModalMulti({
                   emphasised ? "ring-1 ring-foreground/25" : "ring-1 ring-separator"
                 }`}
               >
-                <h3 className="text-base text-foreground">{plan.name}</h3>
+                {emphasised ? (
+                  <div className="flex items-center gap-2 text-base text-foreground">
+                    <AppMark app="projectv" size={16} className="shrink-0" />
+                    <h3>{plan.name}</h3>
+                  </div>
+                ) : (
+                  <h3 className="text-base text-foreground">{plan.name}</h3>
+                )}
                 <p className="mt-4 flex items-baseline gap-1">
                   <span className="text-5xl font-medium tabular-nums leading-none tracking-tight text-foreground">
                     {plan.price[period]}

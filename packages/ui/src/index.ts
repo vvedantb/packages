@@ -181,6 +181,8 @@ export { toast } from "sonner";
 // use the root `cn` (clsx + tailwind-merge).
 export { SidebarHeader } from "../shell/src/SidebarHeader";
 export type { SidebarHeaderProps } from "../shell/src/SidebarHeader";
+export { SidebarUpgradeCard } from "../shell/src/SidebarUpgradeCard";
+export type { SidebarUpgradeCardProps } from "../shell/src/SidebarUpgradeCard";
 export { PillTabs } from "../shell/src/PillTabs";
 export type { PillTabItem, PillTabsProps } from "../shell/src/PillTabs";
 export { SessionsHoverCard } from "../shell/src/SessionsHoverCard";

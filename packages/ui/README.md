@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `border-beam` (opt-in, for `BorderBeam`), `markdown` (opt-in, for `Markdown`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
@@ -178,6 +178,17 @@ function MentionComposer({ draft, setDraft, send }: Props) {
 `ComposerShell` props: `layout`, `disabled`, `streaming`, `canSend` (always a boolean: `Composer` resolves the function form), `stopMode` (`"replace"` or `"alongside"`, where the buttons render), `onSend`, `onStop`, `plusMenu`, `trailingActions`, `attachments`, `className` and `children` (the input region). In the shell the Enter, Tab and Esc keys are yours to wire when you do not use `Composer`.
 
 Fixture: `composer/examples/` (see its README). It has a `tokens.css` page and a `compat-shadcn-rgb.css` page, each with light and dark.
+
+## Sidebar upgrade card
+
+```tsx
+import { SidebarUpgradeCard } from "@vvedantb/ui";
+
+{!isPro && <SidebarUpgradeCard onUpgrade={() => setPricingOpen(true)} />}
+{!isPro && <SidebarUpgradeCard collapsed onUpgrade={() => setPricingOpen(true)} />}
+```
+
+Shows the Project V mark, "Upgrade to Pro" and an "Upgrade" pill. `collapsed` renders an icon-only round button labelled "Upgrade to Pro" for narrow rails. The card does not check the plan, so the app hides it for Pro users.
 
 ## Sessions hover card
 
