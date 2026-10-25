@@ -1,4 +1,4 @@
-import { AppMark } from "../../src/brand/AppMark";
+import { IconProjectV } from "../../src/brand/AppIcons";
 import { Button } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
 
@@ -28,7 +28,7 @@ export function SidebarUpgradeCard({ onUpgrade, collapsed = false, className }: 
         onClick={onUpgrade}
         className={cn("rounded-full", pillClass, className)}
       >
-        <AppMark app="projectv" size={16} />
+        <IconProjectV size={16} />
       </Button>
     );
   }
@@ -41,7 +41,7 @@ export function SidebarUpgradeCard({ onUpgrade, collapsed = false, className }: 
       )}
     >
       <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
-        <AppMark app="projectv" size={14} className="shrink-0" />
+        <IconProjectV size={14} className="shrink-0" />
         <span className="truncate">Upgrade to Pro</span>
       </div>
       <Button type="button" size="sm" onClick={onUpgrade} className={cn("shrink-0 rounded-full", pillClass)}>

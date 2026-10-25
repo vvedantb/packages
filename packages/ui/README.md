@@ -876,8 +876,26 @@ links under a separator.
 | `legalLinks` | `{ href, label }[]`, open in a new tab. |
 | `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |
 
-### `AppMark`
+### `Icon*` app icons
 
+Tabler-style plain app glyphs: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`,
+`IconVelth` and `IconProjectV`. No background, no padding. `APP_ICONS[app]`
+looks one up by `AppName`.
+
+```tsx
+import { IconVerve } from "@vvedantb/ui"
+
+<IconVerve size={24} color="currentColor" />
+```
+
+`size` is the height (default 24) and the width follows the glyph. `color`
+defaults to `currentColor`. `stroke` sets the stroke width in pixels for stroke
+glyphs (fill glyphs ignore it). `title` gives an accessible name. The ref goes
+to the `<svg>`.
+
+### `AppMark` (deprecated)
+
+Deprecated in favour of the `Icon*` components for plain marks. Tiles stay here.
 Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
 `variant`, `size`, `title`.
 

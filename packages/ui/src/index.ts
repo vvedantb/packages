@@ -303,7 +303,7 @@ export type {
 // App helpers: confirm skip, update watcher, settings chrome, stable auth, Convex provider, VITE env and ensure-user.
 export * from "../app/src/index";
 
-// Family app marks (AppMark and raw SVG strings for favicons).
+// Family app marks (Icon* components, deprecated AppMark and raw SVG strings for favicons).
 export * from "./brand";
 
 // Native tokens (JS values that match tokens.css).

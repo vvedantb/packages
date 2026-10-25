@@ -1,7 +1,6 @@
 import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { AppMark } from "../brand/AppMark";
-import type { AppName } from "../brand/svg";
+import { APP_ICONS, IconProjectV, type AppIconProps, type AppName } from "../brand";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
 import { VisuallyHidden } from "../ui/visually-hidden";
@@ -111,6 +110,11 @@ export type PricingModalMultiProps = {
 export type PricingModalProps = PricingModalLegacyProps | PricingModalMultiProps;
 
 /** Upgrade dialog. With `plans`: wide multi-plan layout. Without: the single-plan layout. */
+function AppIcon({ app, ...props }: AppIconProps & { app: AppName }) {
+  const Icon = APP_ICONS[app];
+  return <Icon {...props} />;
+}
+
 export function PricingModal(props: PricingModalProps) {
   return props.plans ? <PricingModalMulti {...props} /> : <PricingModalSingle {...props} />;
 }
@@ -293,7 +297,7 @@ function PricingModalMulti({
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-4 pb-4 pt-5 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
           <div className="flex items-center gap-2 text-foreground" data-testid="pricing-apps">
-            {apps?.map((app) => <AppMark key={app} app={app} size={20} />)}
+            {apps?.map((app) => <AppIcon key={app} app={app} size={20} />)}
           </div>
           <div className="flex items-center justify-end gap-2 sm:order-last">
             <div role="group" aria-label="Billing period" className="inline-flex rounded-full bg-surface-tertiary p-0.5">
@@ -353,7 +357,7 @@ function PricingModalMulti({
               >
                 {emphasised ? (
                   <div className="flex items-center gap-2 text-base text-foreground">
-                    <AppMark app="projectv" size={16} className="shrink-0" />
+                    <IconProjectV size={16} className="shrink-0" />
                     <h3>{plan.name}</h3>
                   </div>
                 ) : (
@@ -384,7 +388,7 @@ function PricingModalMulti({
                       >
                         <span className="mt-0.5 flex h-4 w-5 shrink-0 items-center justify-center">
                           {benefit.icon && benefit.icon !== "check" ? (
-                            <AppMark app={benefit.icon} size={12} className="max-w-full" />
+                            <AppIcon app={benefit.icon} size={12} className="max-w-full" />
                           ) : (
                             <IconCheck className="size-4" strokeWidth={2} />
                           )}

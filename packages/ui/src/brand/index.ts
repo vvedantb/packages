@@ -1,3 +1,4 @@
+export * from "./AppIcons";
 export { AppMark } from "./AppMark";
 export type { AppMarkProps } from "./AppMark";
 export {

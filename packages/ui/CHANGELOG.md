@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.24.0
+
+- New Tabler-style app icons, exported from the root and from `@vvedantb/ui/brand`: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`, `IconVelth` and `IconProjectV`. Each is the plain glyph only, with no tile and no padding, cropped to the tight viewBox. Example: `<IconVerve size={24} color="currentColor" />`.
+- Props: `size` (height, default 24; the width follows the glyph aspect ratio), `color` (default `currentColor`; fill and stroke glyphs), `stroke` (stroke width in rendered pixels, scaled into viewBox units; fill glyphs ignore it; default is the glyph's own weight), `className`, `title` (sets `role="img"`; without it the icon is `aria-hidden`) and any other SVG prop. Each icon forwards its ref to the `<svg>` and has a `displayName`.
+- New `APP_ICONS` (`Record<AppName, component>`) for lookup by `AppName`, and the `AppIconProps` type.
+- `AppMark` is deprecated. Apps should move to the `Icon*` components (or `APP_ICONS[app]`). It stays exported so nothing breaks; `variant="mark"` now renders through the icons. Tile variants and the string helpers (`appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`, `appMarkSvg`) are unchanged.
+- `PricingModal` and `SidebarUpgradeCard` now use the icons instead of `AppMark`. Their output is unchanged.
+- No new dependencies.
+
 ## 0.23.0
 
 - New `SidebarUpgradeCard` (shell family, exported from the root). A rounded card with the Project V mark, the title "Upgrade to Pro" and an "Upgrade" pill, with no subtitle. Props: `onUpgrade`, `className` and `collapsed` (an icon-only round button labelled "Upgrade to Pro" for narrow rails). It uses theme tokens, so it works in light and dark. It does not detect the plan; the app hides it for Pro users.
