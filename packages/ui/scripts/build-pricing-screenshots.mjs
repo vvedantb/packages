@@ -21,6 +21,15 @@ const esbuildDir = readdirSync(store).filter((d) => d.startsWith("esbuild@")).so
 const esbuild = createRequire(join(store, esbuildDir, "node_modules/"))("esbuild");
 const { compile } = await import(pathToFileURL(createRequire(join(pkg, "package.json")).resolve("@tailwindcss/node")).href);
 
+// Load Instrument Sans (every @font-face Google returns, inlined) so text matches the library, not the system fallback.
+const fontCss = await (await fetch("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=block", { headers: { "user-agent": "Mozilla/5.0 (X11; Linux x86_64) Chrome/120.0 Safari/537.36" } })).text();
+let fontFace = fontCss;
+for (const [, url] of fontCss.matchAll(/url\(([^)]+)\)/g)) {
+  const data = Buffer.from(await (await fetch(url)).arrayBuffer()).toString("base64");
+  fontFace = fontFace.replace(url, `data:font/ttf;base64,${data}`);
+}
+if (!fontFace.includes("data:font/ttf")) throw new Error("Instrument Sans not found");
+
 const entry = join(work, "entry.tsx");
 writeFileSync(
   entry,
@@ -34,17 +43,17 @@ createRoot(document.getElementById("root")!).render(
     onClose={() => undefined}
     title="Plans"
     description="Choose a plan"
-    apps={["projectv", "vibot", "vhub", "vmem"]}
+    apps={["vibot", "verve", "velth", "vmem", "vhub"]}
     headline="One plan. Every V app."
     finePrint="Cancel anytime. Taxes may apply."
     defaultBillingPeriod={q.get("period") === "year" ? "year" : "month"}
     plans={[
       { id: "free", name: "Free", price: { month: "$0", year: "$0" }, current: true, intro: "Start here:",
-        highlight: { title: "Core", description: "Limited use across the family" },
-        benefits: [{ label: "Project V", icon: "projectv" }, { label: "Chat, with daily limits", icon: "vibot" }, { label: "Basic search" }] },
+        highlight: { title: "Core", description: "limited use" },
+        benefits: [{ label: "vibot: core chat", icon: "vibot" }, { label: "vmem: basic memory", icon: "vmem" }, { label: "vhub: basic storage", icon: "vhub" }] },
       { id: "pro", name: "V Pro", price: { month: "$10", year: "$8" }, featured: true, ctaLabel: "Upgrade", intro: "Everything in Free, and:",
-        highlight: { title: "5x", description: "more usage than Free" },
-        benefits: [{ label: "Higher limits in every app", icon: "projectv" }, { label: "Latest models", icon: "vibot" }, { label: "Shared hub storage", icon: "vhub" }, { label: "Long-term memory", icon: "vmem" }, { label: "Priority at peak times" }] },
+        highlight: { title: "Shared", description: "usage across every V app" },
+        benefits: [{ label: "vibot: higher limits", icon: "vibot" }, { label: "Verve: Pro features", icon: "verve" }, { label: "Velth: Pro features", icon: "velth" }, { label: "vmem: more memory", icon: "vmem" }, { label: "vhub: more storage", icon: "vhub" }] },
     ]}
     renderCheckout={(button) => button}
   />,
@@ -76,7 +85,7 @@ const css = compiler.build([...candidates]);
 
 writeFileSync(
   join(work, "index.html"),
-  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><body class="bg-background font-sans text-foreground"><div id="root"></div><script>${js.outputFiles[0].text.replaceAll("</script", "<\\/script")}</script>`,
+  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${fontFace}</style><style>${css}</style><body class="bg-background font-sans text-foreground"><div id="root"></div><script>${js.outputFiles[0].text.replaceAll("</script", "<\\/script")}</script>`,
 );
 
 const shots = [

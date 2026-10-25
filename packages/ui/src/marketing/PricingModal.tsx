@@ -331,17 +331,17 @@ function PricingModalMulti({
 
         <div className={`grid grid-cols-1 gap-3 px-4 sm:px-6 ${multiColumns[count]}`}>
           {plans.map((plan) => {
+            const emphasised = plan.featured ?? plan.highlighted;
             const button = (
               <Button
                 size="lg"
-                variant={plan.current ? "outline" : "secondary"}
+                variant={plan.current ? "outline" : emphasised ? "default" : "secondary"}
                 disabled={plan.current}
                 className="h-12 w-full rounded-full"
               >
                 {plan.current ? "Current plan" : (plan.ctaLabel ?? "Get started")}
               </Button>
             );
-            const emphasised = plan.featured ?? plan.highlighted;
             return (
               <section
                 key={plan.id}

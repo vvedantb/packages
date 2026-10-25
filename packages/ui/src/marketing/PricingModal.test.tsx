@@ -66,7 +66,7 @@ const multi: PricingModalMultiProps = {
   open: true,
   onClose: () => undefined,
   title: "Plans",
-  apps: ["projectv", "vibot", "vhub", "vmem"],
+  apps: ["vibot", "verve", "velth", "vmem", "vhub"],
   headline: "One plan. Every V app.",
   finePrint: "Cancel anytime. Taxes may apply.",
   plans: [
@@ -78,7 +78,7 @@ const multi: PricingModalMultiProps = {
       ctaLabel: "Upgrade",
       featured: true,
       intro: "Everything in Free, and:",
-      highlight: { title: "5x", description: "more usage" },
+      highlight: { title: "Shared", description: "usage across every V app" },
       benefits: [{ label: "Chat", icon: "vibot" }, { label: "Dim", muted: true }],
     },
   ],
@@ -103,7 +103,7 @@ describe("PricingModal multi-plan", () => {
     expect(text).toContain("Everything in Free, and:");
     expect(text).toContain("/month");
     const marks = [...document.body.querySelectorAll("[data-testid='pricing-apps'] svg")];
-    expect(marks.map((m) => m.getAttribute("data-app"))).toEqual(["projectv", "vibot", "vhub", "vmem"]);
+    expect(marks.map((m) => m.getAttribute("data-app"))).toEqual(["vibot", "verve", "velth", "vmem", "vhub"]);
     expect(document.body.querySelector("[role='dialog']")?.textContent).toContain("Close");
   });
 
@@ -128,6 +128,8 @@ describe("PricingModal multi-plan", () => {
     expect(current.className).toContain("border");
     expect(renderCheckout.mock.calls.every(([, plan]) => plan.id !== "free")).toBe(true);
     expect(pick("Upgrade")?.hasAttribute("disabled")).toBe(false);
+    expect(pick("Upgrade")?.className).toContain("bg-primary");
+    expect(current.className).not.toContain("bg-primary");
   });
 
   it("works uncontrolled and controlled", async () => {

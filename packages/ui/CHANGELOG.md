@@ -7,6 +7,8 @@
 - In multi-plan mode `renderCheckout(button, plan, period)` gets the plan and the period. `billingPeriod`, `onBillingPeriodChange` and `defaultBillingPeriod` work as in 0.20.0 (the switch is always shown).
 - New types `PricingPlan`, `PricingPlanBenefit`, `PricingModalLegacyProps` and `PricingModalMultiProps`. `PricingModalProps` is now the union of the two prop sets.
 - Migration: callers without `plans` render the previous single-plan layout with the same DOM, so nothing changes for them. Their `renderCheckout(button, period)` keeps its signature. Code that read `PricingModalProps["renderCheckout"]` should use `PricingModalLegacyProps` (or `PricingModalMultiProps`) instead, as the union has two function types.
+- The `featured` plan's upgrade button is a solid primary button. Other plans stay secondary.
+- Screenshot harness loads Instrument Sans and uses neutral placeholder copy with five apps (`vibot`, `verve`, `velth`, `vmem`, `vhub`). Apps pass their own copy.
 - New `scripts/build-pricing-screenshots.mjs` (dev only) and `brand/pricing-modal/*.png`: 2-card layout in dark and light, monthly and annual, plus a narrow stacked view.
 
 ## 0.21.0

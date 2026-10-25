@@ -890,14 +890,18 @@ price is the per-month price). `ctaLabel` defaults to "Get started". `featured`
 (or `highlighted`) adds a subtle ring. A `current` plan shows a disabled,
 outlined "Current plan" button and does not call `renderCheckout`.
 
+The `featured` plan's button is a solid primary button (`Button` `variant="default"`). Other plans use `secondary`.
+
 `renderCheckout(button, plan, period)` wraps each plan's button.
+
+Each app passes its own plan names, prices and copy. The example and the screenshots use placeholder text only.
 
 ```tsx
 <PricingModal
   open={open}
   onClose={close}
   title="Plans"
-  apps={["projectv", "vibot", "vhub", "vmem"]}
+  apps={["vibot", "verve", "velth", "vmem", "vhub"]}
   headline="One plan. Every V app."
   finePrint="Cancel anytime. Taxes may apply."
   plans={[
@@ -908,8 +912,14 @@ outlined "Current plan" button and does not call `renderCheckout`.
       price: { month: "$10", year: "$8" },
       featured: true,
       intro: "Everything in Free, and:",
-      highlight: { title: "5x", description: "more usage than Free" },
-      benefits: [{ label: "Higher limits" }, { label: "Chat", icon: "vibot" }],
+      highlight: { title: "Shared", description: "usage across every V app" },
+      benefits: [
+        { label: "Higher limits", icon: "vibot" },
+        { label: "Pro features", icon: "verve" },
+        { label: "Pro features", icon: "velth" },
+        { label: "More memory", icon: "vmem" },
+        { label: "More storage", icon: "vhub" },
+      ],
     },
   ]}
   renderCheckout={(button, plan, period) => (
