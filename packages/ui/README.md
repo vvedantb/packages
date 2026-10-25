@@ -867,20 +867,72 @@ links under a separator.
 
 ### `PricingModal`
 
-One-plan upgrade dialog. Props: `open`, `onClose`, `title` (accessible, hidden),
-`description` (hidden; when set the title is an `sr-only` `DialogTitle`,
-otherwise it sits in `VisuallyHidden`), `logo` (`dark` and `light` image URLs,
-shown in that colour mode), `wordmark`, `price`, `tagline`,
-`taglineFontClassName`, `features`, `ctaLabel` (default "Get Pro"),
-`renderCheckout(button, period)` (wrap the button in the billing provider's checkout),
-`closeButton` (an extra compact close button, default `false`) and `tone`
-(`"muted"` default or `"muted-foreground"`).
+Upgrade dialog with two layouts. Without `plans` it is the single-plan dialog
+below. With `plans` (0.22.0) it is the wide multi-plan dialog.
+
+Shared props: `open`, `onClose`, `title` (accessible, hidden), `description`
+(hidden), `tone` (`"muted"` default or `"muted-foreground"`),
+`billingPeriod`, `onBillingPeriodChange`, `defaultBillingPeriod` (`"month"`
+default) and `renderCheckout`.
+
+#### Multi-plan (0.22.0)
+
+Header: `apps` (an `AppName[]`, shown as `AppMark` tiles at the top left),
+`headline` (centre), a Monthly / Annual switch and a close button (top right).
+Then one card per entry of `plans` (2 to 4 fit) and one `finePrint` line. Cards
+stack on narrow screens.
+
+A `PricingPlan` is `{ id, name, price: { month, year }, ctaLabel?, intro?,
+highlight?: { title, description }, benefits?: { label, icon?: "check" |
+AppName, muted? }[], current?, featured?, periodSuffix? }`. Prices are display
+strings and always per month (`periodSuffix` default `"/month"`; the yearly
+price is the per-month price). `ctaLabel` defaults to "Get started". `featured`
+(or `highlighted`) adds a subtle ring. A `current` plan shows a disabled,
+outlined "Current plan" button and does not call `renderCheckout`.
+
+`renderCheckout(button, plan, period)` wraps each plan's button.
+
+```tsx
+<PricingModal
+  open={open}
+  onClose={close}
+  title="Plans"
+  apps={["projectv", "vibot", "vhub", "vmem"]}
+  headline="One plan. Every V app."
+  finePrint="Cancel anytime. Taxes may apply."
+  plans={[
+    { id: "free", name: "Free", price: { month: "$0", year: "$0" }, current: true },
+    {
+      id: "pro",
+      name: "V Pro",
+      price: { month: "$10", year: "$8" },
+      featured: true,
+      intro: "Everything in Free, and:",
+      highlight: { title: "5x", description: "more usage than Free" },
+      benefits: [{ label: "Higher limits" }, { label: "Chat", icon: "vibot" }],
+    },
+  ]}
+  renderCheckout={(button, plan, period) => (
+    <CheckoutButton planId={plan.id} planPeriod={period}>{button}</CheckoutButton>
+  )}
+/>
+```
+
+Screenshots: `brand/pricing-modal/` (regenerate with
+`node scripts/build-pricing-screenshots.mjs`).
+
+#### Single plan
+
+Props: `logo` (`dark` and `light` image URLs, shown in that colour mode),
+`wordmark`, `price`, `tagline`, `taglineFontClassName`, `features`, `ctaLabel`
+(default "Get Pro"), `renderCheckout(button, period)` (wrap the button in the
+billing provider's checkout), `closeButton` (an extra compact close button,
+default `false`) and, when `description` is set, the title is an `sr-only`
+`DialogTitle`, otherwise it sits in `VisuallyHidden`.
 
 From 0.20.0, `yearly={{ pricePerMonth, total?, saveLabel? }}` adds a
-monthly/yearly toggle; `price` stays the monthly price. Control the period with
-`billingPeriod` and `onBillingPeriodChange`, or set the start with
-`defaultBillingPeriod` (`"month"` default). `renderCheckout` gets the selected
-`period` (`"month"` or `"year"`) as its second argument, for Clerk's
+monthly/yearly toggle; `price` stays the monthly price. `renderCheckout` gets the
+selected `period` (`"month"` or `"year"`) as its second argument, for Clerk's
 `planPeriod`. Without `yearly` the DOM is unchanged.
 
 ```tsx
@@ -893,6 +945,15 @@ monthly/yearly toggle; `price` stays the monthly price. Control the period with
   /* ... */
 />
 ```
+
+#### Migration
+
+Single-plan callers need no change. To move to the multi-plan layout, replace
+`logo`, `wordmark`, `price`, `tagline`, `features` and `yearly` with `plans`,
+`apps` and `headline`, and change `renderCheckout` to
+`(button, plan, period)`. Type helpers: use `PricingModalLegacyProps` or
+`PricingModalMultiProps` when you need one layout's props;
+`PricingModalProps` is their union.
 
 ### Account menu items and rail collapse tile
 

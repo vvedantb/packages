@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.22.0
+
+- `PricingModal` has a wide multi-plan layout, used when `plans` is set. Top left: family app marks (`apps`, an `AppName[]`, drawn with `AppMark` tiles). Centre: `headline`. Top right: a Monthly / Annual switch (`role="group"`, `aria-pressed`) and an always-present close button. Below: one card per plan, then one `finePrint` line. The dialog widens with the plan count (2 to 4) and the cards stack to one column on narrow screens.
+- New `PricingPlan` type: `id`, `name`, `price: { month, year }` (display strings, per month in both periods), `ctaLabel` (default "Get started"), `intro`, `highlight: { title, description }`, `benefits: { label, icon?: "check" | AppName, muted? }[]`, `current`, `featured` (alias `highlighted`) and `periodSuffix` (default "/month"). A `current` plan shows a disabled, outlined "Current plan" button and skips `renderCheckout`.
+- In multi-plan mode `renderCheckout(button, plan, period)` gets the plan and the period. `billingPeriod`, `onBillingPeriodChange` and `defaultBillingPeriod` work as in 0.20.0 (the switch is always shown).
+- New types `PricingPlan`, `PricingPlanBenefit`, `PricingModalLegacyProps` and `PricingModalMultiProps`. `PricingModalProps` is now the union of the two prop sets.
+- Migration: callers without `plans` render the previous single-plan layout with the same DOM, so nothing changes for them. Their `renderCheckout(button, period)` keeps its signature. Code that read `PricingModalProps["renderCheckout"]` should use `PricingModalLegacyProps` (or `PricingModalMultiProps`) instead, as the union has two function types.
+- New `scripts/build-pricing-screenshots.mjs` (dev only) and `brand/pricing-modal/*.png`: 2-card layout in dark and light, monthly and annual, plus a narrow stacked view.
+
 ## 0.21.0
 
 - New `AppMark`: one source for the family app icons (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`). Props: `app`, `variant` (`"mark"` default, glyph in `currentColor`; `"tile"`, white glyph on a black rounded tile; `"tile-light"`, black glyph on a white tile), `size` (default 24) and `title` (a labelled `img`; without it the mark is `aria-hidden`). All marks use a 1024 grid, 50-wide round-capped strokes (`vibot` and `projectv` are filled shapes), and one sizing rule: longest side 512 x min(1.2, aspect^0.25). `verve` and `velth` use their final vectors; the other four are traced from the approved 1024px renders.

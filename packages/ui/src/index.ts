@@ -289,7 +289,14 @@ export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-
 export { SiteFooter } from "./marketing/SiteFooter";
 export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./marketing/SiteFooter";
 export { PricingModal } from "./marketing/PricingModal";
-export type { PricingModalPeriod, PricingModalProps } from "./marketing/PricingModal";
+export type {
+  PricingModalLegacyProps,
+  PricingModalMultiProps,
+  PricingModalPeriod,
+  PricingModalProps,
+  PricingPlan,
+  PricingPlanBenefit,
+} from "./marketing/PricingModal";
 
 // App helpers: confirm skip, update watcher, settings chrome, stable auth, Convex provider, VITE env and ensure-user.
 export * from "../app/src/index";
