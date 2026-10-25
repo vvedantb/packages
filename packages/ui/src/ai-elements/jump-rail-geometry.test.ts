@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   JUMP_RAIL_ITEM_SPACING_PX,
+  JUMP_RAIL_MIN_HEIGHT_PX,
   resolveJumpRailHeightStyle,
   resolveJumpRailIndexFromPointer,
   resolveJumpRailTickLevelStyle,
@@ -10,17 +11,36 @@ import {
 } from "./jump-rail-geometry";
 
 describe("resolveJumpRailHeightStyle", () => {
-  it("uses one spacing step per gap, capped by the max height", () => {
-    expect(resolveJumpRailHeightStyle(5)).toBe(
-      `min(${4 * JUMP_RAIL_ITEM_SPACING_PX}px, calc(100dvh - 18rem))`,
+  it("floors short rails and uses one spacing step per gap once above the floor", () => {
+    const floor = `min(${JUMP_RAIL_MIN_HEIGHT_PX}px, calc(100dvh - 18rem))`;
+    expect(JUMP_RAIL_MIN_HEIGHT_PX).toBe(48);
+    expect(resolveJumpRailHeightStyle(1)).toBe(floor);
+    expect(resolveJumpRailHeightStyle(3)).toBe(floor);
+    // 5 items: (5-1)*8 = 32 < 48 → still floored
+    expect(resolveJumpRailHeightStyle(5)).toBe(floor);
+    // 10 items: (10-1)*8 = 72 ≥ 48 → spacing-based (unchanged from pre-floor)
+    expect(resolveJumpRailHeightStyle(10)).toBe(
+      `min(${9 * JUMP_RAIL_ITEM_SPACING_PX}px, calc(100dvh - 18rem))`,
+    );
+    // 100 items: same spacing-based height as before the floor
+    expect(resolveJumpRailHeightStyle(100)).toBe(
+      `min(${99 * JUMP_RAIL_ITEM_SPACING_PX}px, calc(100dvh - 18rem))`,
     );
   });
-  it("never goes below 1px", () => {
-    expect(resolveJumpRailHeightStyle(1)).toContain("min(1px");
-    expect(resolveJumpRailHeightStyle(0)).toContain("min(1px");
+  it("never goes below the minimum height", () => {
+    const floor = `min(${JUMP_RAIL_MIN_HEIGHT_PX}px, calc(100dvh - 18rem))`;
+    expect(resolveJumpRailHeightStyle(0)).toBe(floor);
+    expect(resolveJumpRailHeightStyle(1)).toBe(floor);
+    expect(resolveJumpRailHeightStyle(3)).toBe(floor);
+  });
+  it("keeps the spacing-based height once it reaches the minimum", () => {
+    expect(resolveJumpRailHeightStyle(7)).toBe("min(48px, calc(100dvh - 18rem))");
+    expect(resolveJumpRailHeightStyle(10)).toBe("min(72px, calc(100dvh - 18rem))");
+    expect(resolveJumpRailHeightStyle(100)).toBe("min(792px, calc(100dvh - 18rem))");
   });
   it("accepts a custom max height", () => {
-    expect(resolveJumpRailHeightStyle(3, "200px")).toBe("min(16px, 200px)");
+    expect(resolveJumpRailHeightStyle(3, "200px")).toBe("min(48px, 200px)");
+    expect(resolveJumpRailHeightStyle(100, "200px")).toBe("min(792px, 200px)");
   });
 });
 

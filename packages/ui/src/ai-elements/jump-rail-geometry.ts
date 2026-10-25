@@ -9,12 +9,18 @@ export const JUMP_RAIL_LEVEL_INDENT_PX = 2;
 /** Narrowest a levelled tick gets, in px. */
 export const JUMP_RAIL_MIN_TICK_WIDTH_PX = 4;
 
-/** Rail height: one spacing step per gap, capped at `maxHeight`. */
+/** Shortest rail, in px, so rails with few items stay easy to hover. */
+export const JUMP_RAIL_MIN_HEIGHT_PX = 48;
+
+/** Rail height: one spacing step per gap, floored at the minimum, capped at `maxHeight`. */
 export function resolveJumpRailHeightStyle(
   itemCount: number,
   maxHeight: string = JUMP_RAIL_MAX_HEIGHT_CSS,
 ): string {
-  const naturalHeight = Math.max(1, (itemCount - 1) * JUMP_RAIL_ITEM_SPACING_PX);
+  const naturalHeight = Math.max(
+    JUMP_RAIL_MIN_HEIGHT_PX,
+    (itemCount - 1) * JUMP_RAIL_ITEM_SPACING_PX,
+  );
   return `min(${naturalHeight}px, ${maxHeight})`;
 }
 
