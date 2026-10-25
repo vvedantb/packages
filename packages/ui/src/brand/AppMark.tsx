@@ -1,5 +1,5 @@
 import { useId, type SVGProps } from "react";
-import { APP_MARKS, MARK_STROKE_WIDTH, MARK_VIEWBOX, TILE_RADIUS, type AppMarkVariant, type AppName } from "./svg";
+import { APP_MARKS, MARK_VIEWBOX, TILE_RADIUS, markStrokeWidth, type AppMarkVariant, type AppName } from "./svg";
 
 export type AppMarkProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" | "width" | "viewBox"> & {
   /** Which family app's mark to draw. */
@@ -26,7 +26,7 @@ export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: Ap
   const glyphProps =
     kind === "fill"
       ? { fill: color }
-      : { fill: "none", stroke: color, strokeWidth: MARK_STROKE_WIDTH, strokeLinecap: "round", strokeLinejoin: "round" };
+      : { fill: "none", stroke: color, strokeWidth: markStrokeWidth(app), strokeLinecap: "round", strokeLinejoin: "round" };
   const glyph = (
     <g {...(glyphProps as SVGProps<SVGGElement>)} data-glyph={app}>
       {paths.map((d) => (

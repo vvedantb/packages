@@ -10,5 +10,6 @@ export {
   appExtension128Svg,
   appMarkSvg,
   appTileSvg,
+  markStrokeWidth,
 } from "./svg";
 export type { AppMarkVariant, AppName, MarkShape } from "./svg";

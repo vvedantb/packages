@@ -17,7 +17,14 @@ export type MarkShape = {
   kind: "fill" | "stroke";
   /** Path data on the 1024 grid. */
   paths: readonly string[];
+  /** Stroke width override on the 1024 grid. Defaults to `MARK_STROKE_WIDTH`. */
+  strokeWidth?: number;
 };
+
+/** Stroke width of a mark on the 1024 grid. */
+export function markStrokeWidth(app: AppName): number {
+  return APP_MARKS[app].strokeWidth ?? MARK_STROKE_WIDTH;
+}
 
 /**
  * Glyphs sized by one rule: longest side = 512 * min(1.2, aspect^0.25), centred halfway between
@@ -41,6 +48,7 @@ export const APP_MARKS: Record<AppName, MarkShape> = {
   },
   vmem: {
     kind: "stroke",
+    strokeWidth: 58,
     paths: [
       "M418.9 310.8A229 229 0 0 1 605.1 310.8",
       "M701.8 391.9A229 229 0 0 1 605.1 729.2",
@@ -64,11 +72,10 @@ export const APP_MARKS: Record<AppName, MarkShape> = {
 };
 
 const NS = 'xmlns="http://www.w3.org/2000/svg"';
-const STROKE_ATTRS = `stroke-width="${MARK_STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"`;
 
 /** Attributes that paint the glyph in `color`. */
 export function markPaintAttrs(app: AppName, color: string): string {
-  return APP_MARKS[app].kind === "fill" ? `fill="${color}"` : `fill="none" stroke="${color}" ${STROKE_ATTRS}`;
+  return APP_MARKS[app].kind === "fill" ? `fill="${color}"` : `fill="none" stroke="${color}" stroke-width="${markStrokeWidth(app)}" stroke-linecap="round" stroke-linejoin="round"`;
 }
 
 function pathElements(app: AppName): string {

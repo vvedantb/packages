@@ -3,7 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_MARKS, APP_MARK_SVG, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg } from "./index";
+import { APP_MARKS, APP_MARK_SVG, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markStrokeWidth } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -64,7 +64,7 @@ describe.each(APP_NAMES)("AppMark %s", (app) => {
     } else {
       expect(g.getAttribute("fill")).toBe("none");
       expect(g.getAttribute("stroke")).toBe("currentColor");
-      expect(g.getAttribute("stroke-width")).toBe("50");
+      expect(g.getAttribute("stroke-width")).toBe(String(markStrokeWidth(app)));
       expect(g.getAttribute("stroke-linecap")).toBe("round");
       expect(g.getAttribute("stroke-linejoin")).toBe("round");
     }
