@@ -143,7 +143,7 @@ export * from "./ai-elements/sources";
 export * from "./ai-elements/speech-input";
 export * from "./ai-elements/suggestion";
 
-// Agent activity and run surfaces (moved from eva): the activity timeline and
+// Agent activity and run surfaces (moved from an app): the activity timeline and
 // its step model, Trace lines, plan, test results, web preview, context usage
 // and the model picker.
 export * from "./ai-elements/activity-shared";
@@ -293,6 +293,9 @@ export type { PricingModalPeriod, PricingModalProps } from "./marketing/PricingM
 
 // App helpers: confirm skip, update watcher, settings chrome, stable auth, Convex provider, VITE env and ensure-user.
 export * from "../app/src/index";
+
+// Family app marks (AppMark and raw SVG strings for favicons).
+export * from "./brand";
 
 // Native tokens (JS values that match tokens.css).
 export { tokens } from "../tokens/src/native";
