@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.1
+
+- `JumpRail` height is floored at 48px (new export `JUMP_RAIL_MIN_HEIGHT_PX`), so rails with only a few ticks (e.g. page headings in Verve) stay hoverable. Rails with 7+ ticks are unchanged.
+
 ## 0.19.0
 
 - New `JumpRail`: a t3code-style timeline minimap (short rail of ticks, hover preview card, click, arrow, Home, End and Enter to jump). Props: `items` (`{ id, title, preview?, level? }`), `scrollRef` or `getScrollElement`, `targetAttribute` (default `data-message-id`), `resolveTarget`, `onReveal` (target not in the DOM), `onBeforeScroll` (called before `onReveal`), `onSelect` (called with the id after a click or Enter/Space pick, once the scroll or `onReveal` has run, for example to move focus to the target for keyboard users), `observeKey` (re-observe when rows render later), `minVisibleItems` (default 2), `className`, and the label strings `ariaLabel`, `buttonLabel`, `fallbackLabel`. Ticks for `level` above 1 are shorter and indented. Motion runs inside its own `LazyMotion`.
