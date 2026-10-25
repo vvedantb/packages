@@ -3,7 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_MARKS, APP_MARK_SVG, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markLinecap, markStrokeWidth } from "./index";
+import { APP_MARKS, APP_MARK_SVG, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markAspect, markBBox, markLinecap, markStrokeWidth, pathBBox } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -52,9 +52,9 @@ describe("brand exports", () => {
 describe.each(APP_NAMES)("AppMark %s", (app) => {
   const { kind } = APP_MARKS[app];
 
-  it("renders the glyph on the 1024 grid in currentColor", async () => {
+  it("renders the glyph on its tight viewBox in currentColor", async () => {
     const svg = await render(<AppMark app={app} />);
-    expect(svg.getAttribute("viewBox")).toBe("0 0 1024 1024");
+    expect(svg.getAttribute("viewBox")).toBe(APP_MARK_VIEWBOX[app]);
     expect(svg.querySelector("rect")).toBeNull();
     expect(svg.querySelectorAll("path").length).toBe(APP_MARKS[app].paths.length);
     const g = glyph(svg);
@@ -82,6 +82,7 @@ describe.each(APP_NAMES)("AppMark %s", (app) => {
     expect(rect?.getAttribute("fill")).toBe("#000");
     expect(rect?.getAttribute("rx")).toBe("224");
     expect(rect?.getAttribute("width")).toBe("1024");
+    expect(svg.getAttribute("viewBox")).toBe("0 0 1024 1024");
     expect(glyph(svg).getAttribute(kind === "fill" ? "fill" : "stroke")).toBe("#fff");
   });
 
@@ -92,7 +93,8 @@ describe.each(APP_NAMES)("AppMark %s", (app) => {
   });
 
   it("raw SVG strings match the component geometry", () => {
-    expect(APP_MARK_SVG[app]).toContain('viewBox="0 0 1024 1024"');
+    expect(APP_MARK_SVG[app]).toContain(`viewBox="${APP_MARK_VIEWBOX[app]}"`);
+    expect(APP_TILE_SVG[app]).toContain('viewBox="0 0 1024 1024"');
     expect(APP_MARK_SVG[app]).toContain('"currentColor"');
     expect(APP_TILE_SVG[app]).toContain('<rect width="1024" height="1024" rx="224" fill="#000"/>');
     expect(APP_TILE_LIGHT_SVG[app]).toContain('<rect width="1024" height="1024" rx="224" fill="#fff"/>');
@@ -106,11 +108,15 @@ describe.each(APP_NAMES)("AppMark %s", (app) => {
 describe("AppMark props", () => {
   it("sets width and height from size (default 24)", async () => {
     const svg = await render(<AppMark app="verve" />);
-    expect(svg.getAttribute("width")).toBe("24");
     expect(svg.getAttribute("height")).toBe("24");
-    const sized = await render(<AppMark app="verve" size={64} />);
-    expect(sized.getAttribute("width")).toBe("64");
+    expect(Number(svg.getAttribute("width"))).toBeCloseTo(24 * markAspect("verve"), 1);
+    const sized = await render(<AppMark app="projectv" size={64} />);
     expect(sized.getAttribute("height")).toBe("64");
+    expect(Number(sized.getAttribute("width"))).toBeCloseTo(64 * markAspect("projectv"), 1);
+    expect(Number(sized.getAttribute("width"))).toBeGreaterThan(64);
+    const tile = await render(<AppMark app="projectv" variant="tile" size={64} />);
+    expect(tile.getAttribute("width")).toBe("64");
+    expect(tile.getAttribute("height")).toBe("64");
     const css = await render(<AppMark app="verve" size="2rem" />);
     expect(css.getAttribute("width")).toBe("2rem");
     expect(css.getAttribute("height")).toBe("2rem");
@@ -138,6 +144,39 @@ describe("AppMark props", () => {
     expect(svg.getAttribute("data-testid")).toBe("m");
     expect(svg.getAttribute("data-app")).toBe("vmem");
     expect(svg.getAttribute("data-variant")).toBe("tile");
+  });
+});
+
+describe.each(APP_NAMES)("tight viewBox %s", (app) => {
+  it("matches the path geometry (stroke marks grown by half the stroke width)", () => {
+    const [x0, y0, x1, y1] = markBBox(app);
+    const [x = 0, y = 0, w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
+    // Constants round outward to whole units: they contain the box and overshoot by less than 1.
+    expect(x).toBeLessThanOrEqual(x0);
+    expect(y).toBeLessThanOrEqual(y0);
+    expect(x + w).toBeGreaterThanOrEqual(x1);
+    expect(y + h).toBeGreaterThanOrEqual(y1);
+    expect(x0 - x).toBeLessThan(1);
+    expect(y0 - y).toBeLessThan(1);
+    expect(x + w - x1).toBeLessThan(1);
+    expect(y + h - y1).toBeLessThan(1);
+  });
+});
+
+describe("pathBBox", () => {
+  it("handles lines, curves and arcs", () => {
+    expect(pathBBox("M10 20L30 5L40 50")).toEqual([10, 5, 40, 50]);
+    const [, , , qMaxY] = pathBBox("M0 0Q50 100 100 0");
+    expect(qMaxY).toBeCloseTo(50, 6);
+    const [, cMinY] = pathBBox("M0 0C0 -40 100 -40 100 0");
+    expect(cMinY).toBeCloseTo(-30, 6);
+    const [ax0, ay0, ax1, ay1] = pathBBox("M100 0A100 100 0 0 1 -100 0");
+    expect([ax0, ay0, ax1, ay1].map(Math.round)).toEqual([-100, 0, 100, 100]);
+  });
+
+  it("grows stroke marks by half the stroke width and leaves fills alone", () => {
+    expect(markBBox("vhub")[0]).toBe(211 - 25);
+    expect(markBBox("projectv")[0]).toBe(172);
   });
 });
 

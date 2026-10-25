@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.1
+
+- `AppMark` with `variant="mark"` (the default) is now cropped tight to the glyph, with no padding. Stroke marks include half the stroke width. `size` sets the rendered height and the width follows the aspect ratio, so the logo sits level with a wordmark. A string `size` still sets width and height to the same value. Tile variants are unchanged (1024 grid, equalised, square).
+- `appMarkSvg()` and `APP_MARK_SVG` use the tight viewBox. `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`, `APP_TILE_SVG`, `APP_TILE_LIGHT_SVG` and the favicon and app icon outputs are unchanged.
+- New exports `APP_MARK_VIEWBOX` (tight viewBox per app), `markAspect`, `markBBox` and `pathBBox` (bounding-box helpers that tests use to check the viewBoxes).
+- `PricingModal` multi-plan header shows plain app marks (20px high, `currentColor`) instead of rounded tiles. Benefit-row marks are 12px high in a 20 by 16px box.
+
 ## 0.22.0
 
 - `PricingModal` has a wide multi-plan layout, used when `plans` is set. Top left: family app marks (`apps`, an `AppName[]`, drawn with `AppMark` tiles). Centre: `headline`. Top right: a Monthly / Annual switch (`role="group"`, `aria-pressed`) and an always-present close button. Below: one card per plan, then one `finePrint` line. The dialog widens with the plan count (2 to 4) and the cards stack to one column on narrow screens.

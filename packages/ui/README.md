@@ -865,6 +865,24 @@ links under a separator.
 | `legalLinks` | `{ href, label }[]`, open in a new tab. |
 | `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |
 
+### `AppMark`
+
+Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
+`variant`, `size`, `title`.
+
+- `variant="mark"` (default) is the plain logo in `currentColor`. It is cropped
+  tight to the glyph (stroke marks include half the stroke width) with no
+  padding. `size` is the rendered height; the width follows the glyph's aspect
+  ratio, so it sits level with a wordmark. A string `size` (for example `"2rem"`)
+  sets both width and height to that value. `APP_MARK_VIEWBOX` holds the tight
+  viewBox per app; `appMarkSvg()` and `APP_MARK_SVG` use it.
+- `variant="tile"` and `"tile-light"` keep the equalised, padded 1024 grid on a
+  rounded tile, always square. `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`,
+  `APP_TILE_SVG`, `APP_TILE_LIGHT_SVG` and favicons are unchanged.
+
+Use tiles only where the app shows on its background (app and store icons,
+favicons). Use the plain mark wherever the logo has no background.
+
 ### `PricingModal`
 
 Upgrade dialog with two layouts. Without `plans` it is the single-plan dialog
@@ -877,7 +895,7 @@ default) and `renderCheckout`.
 
 #### Multi-plan (0.22.0)
 
-Header: `apps` (an `AppName[]`, shown as `AppMark` tiles at the top left),
+Header: `apps` (an `AppName[]`, shown as plain `AppMark` logos, no tile, at the top left),
 `headline` (centre), a Monthly / Annual switch and a close button (top right).
 Then one card per entry of `plans` (2 to 4 fit) and one `finePrint` line. Cards
 stack on narrow screens.

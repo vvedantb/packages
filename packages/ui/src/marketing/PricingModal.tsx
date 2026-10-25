@@ -293,7 +293,7 @@ function PricingModalMulti({
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-4 pb-4 pt-5 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
           <div className="flex items-center gap-2 text-foreground" data-testid="pricing-apps">
-            {apps?.map((app) => <AppMark key={app} app={app} variant="tile" size={24} className="rounded-md" />)}
+            {apps?.map((app) => <AppMark key={app} app={app} size={20} />)}
           </div>
           <div className="flex items-center justify-end gap-2 sm:order-last">
             <div role="group" aria-label="Billing period" className="inline-flex rounded-full bg-surface-tertiary p-0.5">
@@ -375,9 +375,9 @@ function PricingModalMulti({
                           benefit.muted ? c.suffix : "text-foreground"
                         }`}
                       >
-                        <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                        <span className="mt-0.5 flex h-4 w-5 shrink-0 items-center justify-center">
                           {benefit.icon && benefit.icon !== "check" ? (
-                            <AppMark app={benefit.icon} size={16} />
+                            <AppMark app={benefit.icon} size={12} className="max-w-full" />
                           ) : (
                             <IconCheck className="size-4" strokeWidth={2} />
                           )}
