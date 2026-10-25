@@ -11,6 +11,9 @@ const pkgDir = fileURLToPath(new URL("../..", import.meta.url));
 // short ones that are also English words only as whole words.
 const APP_NAMES = /(?:vibot|vmem|vhub|velth)|\b(?:eva|verve)\b/i;
 
+// The legacy plan slug `vibot_pro` is a Clerk Billing key that `hasVPlan` must match.
+const LEGACY_PLAN_SLUG = /vibot_pro/gi;
+
 function filesUnder(dir: string): string[] {
   return readdirSync(join(pkgDir, dir), { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
@@ -31,7 +34,7 @@ describe("no app name", () => {
 
   it.each(files.map((file) => [file.slice(pkgDir.length), file]))("%s", (_name, file) => {
     const lines = readFileSync(file, "utf8").split("\n");
-    const hits = lines.flatMap((line, i) => (APP_NAMES.test(line) ? [`${String(i + 1)}: ${line.trim()}`] : []));
+    const hits = lines.flatMap((line, i) => (APP_NAMES.test(line.replace(LEGACY_PLAN_SLUG, "")) ? [`${String(i + 1)}: ${line.trim()}`] : []));
     expect(hits).toEqual([]);
   });
 

@@ -872,9 +872,27 @@ One-plan upgrade dialog. Props: `open`, `onClose`, `title` (accessible, hidden),
 otherwise it sits in `VisuallyHidden`), `logo` (`dark` and `light` image URLs,
 shown in that colour mode), `wordmark`, `price`, `tagline`,
 `taglineFontClassName`, `features`, `ctaLabel` (default "Get Pro"),
-`renderCheckout(button)` (wrap the button in the billing provider's checkout),
+`renderCheckout(button, period)` (wrap the button in the billing provider's checkout),
 `closeButton` (an extra compact close button, default `false`) and `tone`
 (`"muted"` default or `"muted-foreground"`).
+
+From 0.20.0, `yearly={{ pricePerMonth, total?, saveLabel? }}` adds a
+monthly/yearly toggle; `price` stays the monthly price. Control the period with
+`billingPeriod` and `onBillingPeriodChange`, or set the start with
+`defaultBillingPeriod` (`"month"` default). `renderCheckout` gets the selected
+`period` (`"month"` or `"year"`) as its second argument, for Clerk's
+`planPeriod`. Without `yearly` the DOM is unchanged.
+
+```tsx
+<PricingModal
+  price="$10"
+  yearly={{ pricePerMonth: "$8.33", total: "$100" }}
+  renderCheckout={(button, period) => (
+    <CheckoutButton planId={planId} planPeriod={period}>{button}</CheckoutButton>
+  )}
+  /* ... */
+/>
+```
 
 ### Account menu items and rail collapse tile
 
