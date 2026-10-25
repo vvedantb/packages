@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.0
+
+- New `AppMark`: one source for the family app icons (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`). Props: `app`, `variant` (`"mark"` default, glyph in `currentColor`; `"tile"`, white glyph on a black rounded tile; `"tile-light"`, black glyph on a white tile), `size` (default 24) and `title` (a labelled `img`; without it the mark is `aria-hidden`). All marks use a 1024 grid, 50-wide round-capped strokes (`vibot` and `projectv` are filled shapes), and one sizing rule: longest side 512 x min(1.2, aspect^0.25). `verve` and `velth` use their final vectors; the other four are traced from the approved 1024px renders.
+- New exports `APP_NAMES`, `AppName`, `AppMarkVariant`, `AppMarkProps`, `APP_MARKS` (geometry), raw SVG strings `APP_MARK_SVG`, `APP_TILE_SVG` and `APP_TILE_LIGHT_SVG` (copy into `public/` for favicons), and builders `appMarkSvg`, `appTileSvg`, `appAdaptiveSvg` and `appExtension128Svg`. They are available from the root and from the new `@vvedantb/ui/brand` subpath.
+- New asset script `scripts/build-brand-assets.mjs` (`pnpm brand:assets --out <dir> [--app <name>] [--no-png] [--dry-run]`, shipped in the package). It writes SVGs (mark, icon, favicon, icon-light, Android adaptive foreground) for each app, and, when `rsvg-convert` is installed, the PNG set (favicons, apple-touch, 192/512/1024, maskable, extension 16 to 128, Android adaptive) and `favicon.ico`. Without `rsvg-convert` it writes the SVGs and says the PNGs were skipped. No new dependencies.
+- New `brand/family-sheet.png` (all six marks at 200px and 32px on `#111`), regenerated with `pnpm brand:sheet`.
+- New `src/noAppNames.test.ts`: production source under `src`, `shell/src` and `app/src` must not name an app, with one exception for `src/brand/`. A comment in `src/index.ts` no longer names an app.
+
 ## 0.20.0
 
 - `PricingModal` takes an optional `yearly` prop (`{ pricePerMonth, total?, saveLabel? }`) that adds a monthly/yearly toggle. `price` stays the monthly price. Set the period with `billingPeriod` and `onBillingPeriodChange` (controlled) or `defaultBillingPeriod` (uncontrolled, default `"month"`). The note reads "Billed yearly." (or "{total} billed yearly.") for the yearly period.

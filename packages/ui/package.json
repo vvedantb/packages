@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/ui",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "license": "MIT",
   "description": "Shared React 19 UI for web apps: one JavaScript entry (primitives, shell pieces, app helpers including the Convex and Clerk provider, VITE env parsing and ensure-user, artifact viewers over the @vvedantb/server artifacts core, native tokens), design-token CSS, shared Tailwind v4 CSS and a Tailwind preset.",
   "type": "module",
@@ -40,6 +40,10 @@
       "types": "./tokens/src/tailwind-preset.d.mts",
       "default": "./tokens/src/tailwind-preset.mjs"
     },
+    "./brand": {
+      "types": "./src/brand/index.ts",
+      "default": "./src/brand/index.ts"
+    },
     "./landing.css": "./src/marketing/landing.css",
     "./package.json": "./package.json"
   },
@@ -50,6 +54,7 @@
     "app/src",
     "tokens/src",
     "tokens/examples",
+    "scripts/build-brand-assets.mjs",
     "README.md",
     "LICENSE",
     "!**/*.test.ts",
@@ -66,6 +71,8 @@
     "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
     "analyze": "node tokens/verify/analyze.mjs",
+    "brand:assets": "node scripts/build-brand-assets.mjs",
+    "brand:sheet": "node scripts/build-brand-sheet.mjs",
     "prepack": "node tokens/scripts/check-exports.mjs"
   },
   "dependencies": {
