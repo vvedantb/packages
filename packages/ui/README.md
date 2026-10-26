@@ -879,7 +879,7 @@ links under a separator.
 ### `Icon*` app icons
 
 Tabler-style plain app glyphs: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`,
-`IconVelth` and `IconProjectV`. No background, no padding. `APP_ICONS[app]`
+`IconVelth` and `IconProjectV`. No background. Each sits on an equalised square viewBox, so all apps look the same size. `APP_ICONS[app]`
 looks one up by `AppName`.
 
 ```tsx
@@ -888,7 +888,7 @@ import { IconVerve } from "@vvedantb/ui"
 <IconVerve size={24} color="currentColor" />
 ```
 
-`size` is the height (default 24) and the width follows the glyph. `color`
+`size` sets both width and height (default 24; a string is any CSS length). `color`
 defaults to `currentColor`. `stroke` sets the stroke width in pixels for stroke
 glyphs (fill glyphs ignore it). `title` gives an accessible name. The ref goes
 to the `<svg>`.
@@ -899,12 +899,12 @@ Deprecated in favour of the `Icon*` components for plain marks. Tiles stay here.
 Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
 `variant`, `size`, `title`.
 
-- `variant="mark"` (default) is the plain logo in `currentColor`. It is cropped
-  tight to the glyph (stroke marks include half the stroke width) with no
-  padding. `size` is the rendered height; the width follows the glyph's aspect
-  ratio, so it sits level with a wordmark. A string `size` (for example `"2rem"`)
-  sets both width and height to that value. `APP_MARK_VIEWBOX` holds the tight
-  viewBox per app; `appMarkSvg()` and `APP_MARK_SVG` use it.
+- `variant="mark"` (default) is the plain logo in `currentColor`. It sits
+  on an equalised square viewBox (the glyph box, stroke marks included, padded
+  to a square and centred). `size` sets both width and height; a string `size`
+  (for example `"2rem"`) is any CSS length. `APP_MARK_VIEWBOX` holds the square
+  viewBox per app; `appMarkSvg()` and `APP_MARK_SVG` use it. `markAspect` returns
+  1 and is kept for API stability only.
 - `variant="tile"` and `"tile-light"` keep the equalised, padded 1024 grid on a
   rounded tile, always square. `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`,
   `APP_TILE_SVG`, `APP_TILE_LIGHT_SVG` and favicons are unchanged.

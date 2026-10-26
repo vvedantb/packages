@@ -1,8 +1,8 @@
 import { forwardRef, useId, type ForwardRefExoticComponent, type RefAttributes, type SVGProps } from "react";
-import { APP_MARKS, APP_MARK_VIEWBOX, APP_NAMES, markAspect, markLinecap, markStrokeWidth, type AppName } from "./svg";
+import { APP_MARKS, APP_MARK_VIEWBOX, APP_NAMES, markLinecap, markStrokeWidth, type AppName } from "./svg";
 
 export type AppIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" | "width" | "viewBox" | "stroke" | "color"> & {
-  /** Rendered height. Default 24. A number gives the width from the glyph's aspect ratio; a string sets width and height to the same value. */
+  /** Rendered width and height (the glyph is square). Default 24. A number is in pixels; a string is any CSS length. */
   size?: number | string;
   /** Glyph colour, for fill and stroke glyphs. Default `"currentColor"`. */
   color?: string;
@@ -14,7 +14,7 @@ export type AppIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" |
 
 export type AppIconComponent = ForwardRefExoticComponent<AppIconProps & RefAttributes<SVGSVGElement>>;
 
-function viewBoxHeight(app: AppName): number {
+function viewBoxSide(app: AppName): number {
   return Number(APP_MARK_VIEWBOX[app].split(" ")[3]);
 }
 
@@ -25,9 +25,8 @@ function createAppIcon(app: AppName, displayName: string): AppIconComponent {
   ) {
     const titleId = useId();
     const { kind, paths } = APP_MARKS[app];
-    const width = typeof size === "number" ? Math.round(size * markAspect(app) * 100) / 100 : size;
-    const renderedHeight = typeof size === "number" ? size : 24;
-    const strokeWidth = stroke === undefined ? markStrokeWidth(app) : Number(stroke) * (viewBoxHeight(app) / renderedHeight);
+    const renderedSize = typeof size === "number" ? size : 24;
+    const strokeWidth = stroke === undefined ? markStrokeWidth(app) : Number(stroke) * (viewBoxSide(app) / renderedSize);
     const glyphProps =
       kind === "fill"
         ? { fill: color }
@@ -37,7 +36,7 @@ function createAppIcon(app: AppName, displayName: string): AppIconComponent {
         {...rest}
         ref={ref}
         xmlns="http://www.w3.org/2000/svg"
-        width={width}
+        width={size}
         height={size}
         viewBox={APP_MARK_VIEWBOX[app]}
         preserveAspectRatio="xMidYMid meet"

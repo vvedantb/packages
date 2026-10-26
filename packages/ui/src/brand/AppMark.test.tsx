@@ -3,7 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_MARKS, APP_MARK_SVG, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markAspect, markBBox, markLinecap, markStrokeWidth, pathBBox } from "./index";
+import { APP_MARKS, APP_MARK_SVG, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markBBox, markLinecap, markStrokeWidth, pathBBox } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -52,7 +52,7 @@ describe("brand exports", () => {
 describe.each(APP_NAMES)("AppMark %s", (app) => {
   const { kind } = APP_MARKS[app];
 
-  it("renders the glyph on its tight viewBox in currentColor", async () => {
+  it("renders the glyph on its square viewBox in currentColor", async () => {
     const svg = await render(<AppMark app={app} />);
     expect(svg.getAttribute("viewBox")).toBe(APP_MARK_VIEWBOX[app]);
     expect(svg.querySelector("rect")).toBeNull();
@@ -109,11 +109,10 @@ describe("AppMark props", () => {
   it("sets width and height from size (default 24)", async () => {
     const svg = await render(<AppMark app="verve" />);
     expect(svg.getAttribute("height")).toBe("24");
-    expect(Number(svg.getAttribute("width"))).toBeCloseTo(24 * markAspect("verve"), 1);
+    expect(svg.getAttribute("width")).toBe("24");
     const sized = await render(<AppMark app="projectv" size={64} />);
     expect(sized.getAttribute("height")).toBe("64");
-    expect(Number(sized.getAttribute("width"))).toBeCloseTo(64 * markAspect("projectv"), 1);
-    expect(Number(sized.getAttribute("width"))).toBeGreaterThan(64);
+    expect(sized.getAttribute("width")).toBe("64");
     const tile = await render(<AppMark app="projectv" variant="tile" size={64} />);
     expect(tile.getAttribute("width")).toBe("64");
     expect(tile.getAttribute("height")).toBe("64");
@@ -147,19 +146,29 @@ describe("AppMark props", () => {
   });
 });
 
-describe.each(APP_NAMES)("tight viewBox %s", (app) => {
-  it("matches the path geometry (stroke marks grown by half the stroke width)", () => {
+describe("APP_MARK_VIEWBOX", () => {
+  it("is square for every app", () => {
+    for (const app of APP_NAMES) {
+      const [, , w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
+      expect(w).toBeGreaterThan(0);
+      expect(w).toBe(h);
+    }
+  });
+});
+
+describe.each(APP_NAMES)("equalised viewBox %s", (app) => {
+  it("contains the path geometry (stroke marks grown by half the stroke width) and centres it", () => {
     const [x0, y0, x1, y1] = markBBox(app);
     const [x = 0, y = 0, w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
-    // Constants round outward to whole units: they contain the box and overshoot by less than 1.
     expect(x).toBeLessThanOrEqual(x0);
     expect(y).toBeLessThanOrEqual(y0);
     expect(x + w).toBeGreaterThanOrEqual(x1);
     expect(y + h).toBeGreaterThanOrEqual(y1);
-    expect(x0 - x).toBeLessThan(1);
-    expect(y0 - y).toBeLessThan(1);
-    expect(x + w - x1).toBeLessThan(1);
-    expect(y + h - y1).toBeLessThan(1);
+    // The longer glyph side fits the square with less than 3 units to spare (whole-unit rounding and centring).
+    expect(w - Math.max(x1 - x0, y1 - y0)).toBeLessThan(3);
+    // Padding is the same on both sides of each axis, within 1 unit of rounding.
+    expect(Math.abs(x0 - x - (x + w - x1))).toBeLessThanOrEqual(1);
+    expect(Math.abs(y0 - y - (y + h - y1))).toBeLessThanOrEqual(1);
   });
 });
 
