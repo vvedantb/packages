@@ -22,7 +22,7 @@ test("writes the SVG set for one app", () => {
     assert.ok(!existsSync(join(out, "vibot")), "only the requested app is written");
     assert.ok(!existsSync(join(out, "vhub/favicon-32.png")), "--no-png skips PNGs");
     const mark = readFileSync(join(out, "vhub/mark.svg"), "utf8");
-    assert.match(mark, /viewBox="165 160 700 700"/);
+    assert.match(mark, /viewBox="173 197 629 629"/);
     assert.match(mark, /stroke="currentColor"/);
     const icon = readFileSync(join(out, "vhub/icon.svg"), "utf8");
     assert.match(icon, /<rect width="1024" height="1024" rx="224" fill="#000"\/>/);

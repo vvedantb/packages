@@ -175,16 +175,22 @@ export function markBBox(app: AppName): Box {
 
 
 /**
- * Shared crop for the plain logo (`variant="mark"`, `appMarkSvg`, `Icon*`): the union of every app's `markBBox` on the
- * 1024 tile grid (x 172 to 858, y 259.96 to 761.7), made square, centred, with about 2% breathing room, then rounded
- * outward to whole units. It is not the full tile and not a per-app tight box, so relative glyph sizes match the tiles
- * while the widest glyph (`projectv`) nearly fills the icon box. Checked against `markBBox` in tests.
+ * Shared crop for the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) in the plain logo (`variant="mark"`,
+ * `appMarkSvg`, `Icon*`): the union of their `markBBox` results on the 1024 tile grid (x 186 to 789, y 259.96 to 761.7),
+ * centred in a square of side max(width, height) x 1.04 (about 4% padding), then rounded outward to whole units.
+ * `projectv` is left out so its wide brand mark does not shrink the app glyphs. Not the full tile. Checked in tests.
  */
-export const APP_MARK_CROP_VIEWBOX = "165 160 700 700";
+export const APP_MARK_CROP_VIEWBOX = "173 197 629 629";
 
-/** The same shared crop for every app, keyed by app name. */
+/**
+ * Own tight square for `projectv` (a brand mark, not an app): `markBBox("projectv")` (x 172 to 858, y 377 to 672),
+ * centred on the shorter axis and rounded outward to whole units, with no extra padding.
+ */
+export const PROJECTV_MARK_VIEWBOX = "172 181 687 687";
+
+/** Plain-mark viewBox per app: the shared crop for the five apps, a tight square for `projectv`. Always square. */
 export const APP_MARK_VIEWBOX: Record<AppName, string> = {
-  projectv: APP_MARK_CROP_VIEWBOX,
+  projectv: PROJECTV_MARK_VIEWBOX,
   vibot: APP_MARK_CROP_VIEWBOX,
   vhub: APP_MARK_CROP_VIEWBOX,
   vmem: APP_MARK_CROP_VIEWBOX,
