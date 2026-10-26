@@ -43,6 +43,7 @@ createRoot(document.getElementById("root")!).render(
     onClose={() => undefined}
     title="Plans"
     description="Choose a plan"
+    currentApp="vibot"
     apps={["vibot", "verve", "velth", "vmem", "vhub"]}
     headline="One plan. Every V app."
     finePrint={q.get("period") === "year" ? "Cancel anytime. $120 billed yearly. Save 33%." : "Cancel anytime. Billed monthly."}
@@ -50,10 +51,9 @@ createRoot(document.getElementById("root")!).render(
     plans={[
       { id: "free", name: "Free", price: { month: "$0", year: "$0" }, current: true, intro: "Start here:",
         highlight: { title: "Core", description: "limited use" },
-        benefits: [{ label: "vibot: core chat", icon: "vibot" }, { label: "vmem: basic memory", icon: "vmem" }, { label: "vhub: basic storage", icon: "vhub" }] },
+        benefits: [{ label: "50 messages / day" }, { label: "5 image gens / day" }, { label: "5 deep searches / day" }, { label: "1 extreme search / day" }] },
       { id: "pro", name: "V Pro", price: { month: "$15", year: "$10" }, featured: true, ctaLabel: "Upgrade", intro: "Everything in Free, and:",
-        highlight: { title: "Shared", description: "usage across every V app" },
-        benefits: [{ label: "vibot: higher limits", icon: "vibot" }, { label: "Verve: Pro features", icon: "verve" }, { label: "Velth: Pro features", icon: "velth" }, { label: "vmem: more memory", icon: "vmem" }, { label: "vhub: more storage", icon: "vhub" }] },
+        highlight: { title: "V Pro", description: "one plan, every V app" } },
     ]}
     renderCheckout={(button) => button}
   />,

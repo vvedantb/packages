@@ -1,9 +1,12 @@
 import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { AppMark } from "../brand/AppMark";
-import type { AppName } from "../brand/svg";
+import { APP_ICONS, IconProjectV, V_PRO_APP_BENEFITS, familyApp, type AppIconProps, type AppName, type PricingPlanAppBenefit } from "../brand";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+
+export { V_PRO_APP_BENEFITS };
+export type { PricingPlanAppBenefit };
 import { VisuallyHidden } from "../ui/visually-hidden";
 import { pricingModalClasses, pricingMultiClasses, type PricingModalTone } from "./marketing-classes";
 
@@ -75,6 +78,11 @@ export type PricingPlan = {
   /** Large title with small text under it. */
   highlight?: { title: string; description: string };
   benefits?: readonly PricingPlanBenefit[];
+  /**
+   * Grouped per app, shown after `benefits`. The `currentApp` group comes first, the rest keep the array order.
+   * The `featured` / `highlighted` plan defaults to `V_PRO_APP_BENEFITS` when this is omitted, so apps usually pass only `currentApp`. Other plans show none unless set.
+   */
+  appBenefits?: readonly PricingPlanAppBenefit[];
   /** The plan the user is on: the button reads "Current plan" and is disabled. */
   current?: boolean;
   /** Subtle ring on the card. `highlighted` is an alias. */
@@ -95,6 +103,8 @@ export type PricingModalMultiProps = {
   plans: readonly PricingPlan[];
   /** App marks at the top left. */
   apps?: readonly AppName[];
+  /** App the dialog is shown in. Its `appBenefits` group comes first. */
+  currentApp?: Exclude<AppName, "projectv">;
   /** Centred headline, for example "One plan. Every V app." */
   headline?: ReactNode;
   /** Small print under the cards. */
@@ -111,6 +121,16 @@ export type PricingModalMultiProps = {
 export type PricingModalProps = PricingModalLegacyProps | PricingModalMultiProps;
 
 /** Upgrade dialog. With `plans`: wide multi-plan layout. Without: the single-plan layout. */
+function AppIcon({ app, ...props }: AppIconProps & { app: AppName }) {
+  const Icon = APP_ICONS[app];
+  return <Icon {...props} />;
+}
+
+function sortAppBenefits(groups: readonly PricingPlanAppBenefit[], currentApp?: AppName) {
+  // Stable sort: the current app moves to the front, the rest keep their order.
+  return [...groups].sort((a, b) => Number(b.app === currentApp) - Number(a.app === currentApp));
+}
+
 export function PricingModal(props: PricingModalProps) {
   return props.plans ? <PricingModalMulti {...props} /> : <PricingModalSingle {...props} />;
 }
@@ -259,6 +279,7 @@ function PricingModalMulti({
   description,
   plans,
   apps,
+  currentApp,
   headline,
   finePrint,
   billingPeriod,
@@ -293,7 +314,27 @@ function PricingModalMulti({
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-4 pb-4 pt-5 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
           <div className="flex items-center gap-2 text-foreground" data-testid="pricing-apps">
-            {apps?.map((app) => <AppMark key={app} app={app} size={20} />)}
+            <TooltipProvider delayDuration={200}>
+              {apps?.map((app) => {
+                const { name, url } = familyApp(app);
+                return (
+                  <Tooltip key={app}>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={name}
+                        className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"
+                      >
+                        <AppIcon app={app} size={20} />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent portal>{name}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </TooltipProvider>
           </div>
           <div className="flex items-center justify-end gap-2 sm:order-last">
             <div role="group" aria-label="Billing period" className="inline-flex rounded-full bg-surface-tertiary p-0.5">
@@ -332,6 +373,7 @@ function PricingModalMulti({
         <div className={`grid grid-cols-1 gap-3 px-4 sm:px-6 ${multiColumns[count]}`}>
           {plans.map((plan) => {
             const emphasised = plan.featured ?? plan.highlighted;
+            const appBenefits = plan.appBenefits ?? (emphasised ? V_PRO_APP_BENEFITS : undefined);
             const button = (
               <Button
                 size="lg"
@@ -353,7 +395,7 @@ function PricingModalMulti({
               >
                 {emphasised ? (
                   <div className="flex items-center gap-2 text-base text-foreground">
-                    <AppMark app="projectv" size={16} className="shrink-0" />
+                    <IconProjectV size={16} className="shrink-0" />
                     <h3>{plan.name}</h3>
                   </div>
                 ) : (
@@ -384,7 +426,7 @@ function PricingModalMulti({
                       >
                         <span className="mt-0.5 flex h-4 w-5 shrink-0 items-center justify-center">
                           {benefit.icon && benefit.icon !== "check" ? (
-                            <AppMark app={benefit.icon} size={12} className="max-w-full" />
+                            <AppIcon app={benefit.icon} size={12} className="max-w-full" />
                           ) : (
                             <IconCheck className="size-4" strokeWidth={2} />
                           )}
@@ -393,6 +435,25 @@ function PricingModalMulti({
                       </li>
                     ))}
                   </ul>
+                ) : null}
+                {appBenefits?.length ? (
+                  <div className="mt-4 grid gap-x-6 gap-y-2.5 border-t border-separator pt-3 sm:grid-cols-2">
+                    {sortAppBenefits(appBenefits, currentApp).map((group) => (
+                      <div key={group.app} data-app-benefits={group.app}>
+                        <p className="flex items-center gap-2 text-xs font-medium text-foreground">
+                          <AppIcon app={group.app} size={12} className="shrink-0" />
+                          {familyApp(group.app).name}
+                        </p>
+                        <ul className="mt-1 space-y-0.5 pl-5">
+                          {group.items.map((item, index) => (
+                            <li key={index} className="text-sm leading-snug text-foreground">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 ) : null}
               </section>
             );

@@ -1,5 +1,6 @@
 import { useId, type SVGProps } from "react";
-import { APP_MARKS, APP_MARK_VIEWBOX, MARK_VIEWBOX, TILE_RADIUS, markAspect, markLinecap, markStrokeWidth, type AppMarkVariant, type AppName } from "./svg";
+import { APP_ICONS } from "./AppIcons";
+import { APP_MARKS, MARK_VIEWBOX, TILE_RADIUS, markLinecap, markStrokeWidth, type AppMarkVariant, type AppName } from "./svg";
 
 export type AppMarkProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" | "width" | "viewBox"> & {
   /** Which family app's mark to draw. */
@@ -21,14 +22,19 @@ const TILE_TONES = {
   "tile-light": { bg: "#fff", fg: "#000" },
 } as const;
 
-/** One of the six family app marks. The plain mark is cropped tight; tiles use the padded 1024 grid. */
+/**
+ * One of the six family app marks. The plain mark is cropped tight; tiles use the padded 1024 grid.
+ * @deprecated Use the per-app `Icon*` components (or `APP_ICONS[app]`) for plain marks. Tiles are for app and store icons only.
+ */
 export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: AppMarkProps) {
   const titleId = useId();
+  if (variant === "mark") {
+    const Icon = APP_ICONS[app];
+    return <Icon {...rest} size={size} title={title} data-variant="mark" />;
+  }
   const { kind, paths } = APP_MARKS[app];
-  const isMark = variant === "mark";
-  const width = isMark && typeof size === "number" ? Math.round(size * markAspect(app) * 100) / 100 : size;
-  const tone = variant === "mark" ? undefined : TILE_TONES[variant];
-  const color = tone?.fg ?? "currentColor";
+  const tone = TILE_TONES[variant];
+  const color = tone.fg;
   const glyphProps =
     kind === "fill"
       ? { fill: color }
@@ -44,9 +50,9 @@ export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: Ap
     <svg
       {...rest}
       xmlns="http://www.w3.org/2000/svg"
-      width={width}
+      width={size}
       height={size}
-      viewBox={isMark ? APP_MARK_VIEWBOX[app] : MARK_VIEWBOX}
+      viewBox={MARK_VIEWBOX}
       preserveAspectRatio="xMidYMid meet"
       data-app={app}
       data-variant={variant}
@@ -55,7 +61,7 @@ export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: Ap
       aria-labelledby={title ? titleId : undefined}
     >
       {title ? <title id={titleId}>{title}</title> : null}
-      {tone ? <rect width={1024} height={1024} rx={TILE_RADIUS} fill={tone.bg} /> : null}
+      <rect width={1024} height={1024} rx={TILE_RADIUS} fill={tone.bg} />
       {glyph}
     </svg>
   );

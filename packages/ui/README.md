@@ -188,7 +188,7 @@ import { SidebarUpgradeCard } from "@vvedantb/ui";
 {!isPro && <SidebarUpgradeCard collapsed onUpgrade={() => setPricingOpen(true)} />}
 ```
 
-Shows the Project V mark, "Upgrade to Pro" and an "Upgrade" pill. `collapsed` renders an icon-only round button labelled "Upgrade to Pro" for narrow rails. The card does not check the plan, so the app hides it for Pro users.
+Shows the title "Upgrade to Pro" and an "Upgrade" pill, with no mark. The title fits in full at 254px. `collapsed` renders a round button with the short text "Pro", labelled "Upgrade to Pro" for narrow rails. The card does not check the plan, so the app hides it for Pro users.
 
 ## Sessions hover card
 
@@ -876,8 +876,26 @@ links under a separator.
 | `legalLinks` | `{ href, label }[]`, open in a new tab. |
 | `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |
 
-### `AppMark`
+### `Icon*` app icons
 
+Tabler-style plain app glyphs: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`,
+`IconVelth` and `IconProjectV`. No background, no padding. `APP_ICONS[app]`
+looks one up by `AppName`.
+
+```tsx
+import { IconVerve } from "@vvedantb/ui"
+
+<IconVerve size={24} color="currentColor" />
+```
+
+`size` is the height (default 24) and the width follows the glyph. `color`
+defaults to `currentColor`. `stroke` sets the stroke width in pixels for stroke
+glyphs (fill glyphs ignore it). `title` gives an accessible name. The ref goes
+to the `<svg>`.
+
+### `AppMark` (deprecated)
+
+Deprecated in favour of the `Icon*` components for plain marks. Tiles stay here.
 Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
 `variant`, `size`, `title`.
 
@@ -906,7 +924,7 @@ default) and `renderCheckout`.
 
 #### Multi-plan (0.22.0)
 
-Header: `apps` (an `AppName[]`, shown as plain `AppMark` logos, no tile, at the top left),
+Header: `apps` (an `AppName[]`, shown as plain `Icon*` logos at the top left; each links to the app's site in a new tab and shows its display name in a tooltip, from `FAMILY_APPS`),
 `headline` (centre), a Monthly / Annual switch and a close button (top right).
 Then one card per entry of `plans` (2 to 4 fit) and one `finePrint` line. Cards
 stack on narrow screens.
@@ -918,6 +936,10 @@ strings and always per month (`periodSuffix` default `"/month"`; the yearly
 price is the per-month price). `ctaLabel` defaults to "Get started". `featured`
 (or `highlighted`) adds a subtle ring. A `current` plan shows a disabled,
 outlined "Current plan" button and does not call `renderCheckout`.
+
+`appBenefits` (`{ app, items }[]`, type `PricingPlanAppBenefit`) groups benefits per app, each under a small heading with that app's icon and display name. It renders after `benefits` and scrolls inside the card when long. Set `currentApp` on the modal to put that app's group first; the other groups keep the array order. The `featured` / `highlighted` plan uses `V_PRO_APP_BENEFITS` (the approved V Pro copy, in the order vibot, vmem, vhub, velth, verve) when it omits `appBenefits`, so apps usually pass only `currentApp`. Other plans show app benefits only when set.
+
+`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites (`vibot`, `Verve`, `Velth`, `vmem`, `vhub`, `Project V`; URLs without a trailing slash). App names live only under `src/brand/`.
 
 The `featured` plan's button is a solid primary button (`Button` `variant="default"`). Other plans use `secondary`.
 
@@ -941,14 +963,6 @@ Each app passes its own plan names, prices and copy. The example and the screens
       price: { month: "$15", year: "$10" },
       featured: true,
       intro: "Everything in Free, and:",
-      highlight: { title: "Shared", description: "usage across every V app" },
-      benefits: [
-        { label: "Higher limits", icon: "vibot" },
-        { label: "Pro features", icon: "verve" },
-        { label: "Pro features", icon: "velth" },
-        { label: "More memory", icon: "vmem" },
-        { label: "More storage", icon: "vhub" },
-      ],
     },
   ]}
   renderCheckout={(button, plan, period) => (

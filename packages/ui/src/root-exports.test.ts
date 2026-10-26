@@ -33,8 +33,9 @@ test("root exposes former subpath APIs", () => {
     "JUMP_RAIL_ITEM_SPACING_PX", "JUMP_RAIL_MIN_HEIGHT_PX", "resolveJumpRailHeightStyle", "resolveJumpRailTopPercent",
     "resolveJumpRailIndexFromPointer", "resolveJumpRailTickWidthClass", "resolveJumpRailTickLevelStyle",
     "SortableListProvider", "SortableListItem", "LiveCursor", "LiveCursorPointer",
-    "AppMark", "APP_NAMES", "APP_MARKS", "APP_MARK_SVG", "APP_TILE_SVG", "APP_TILE_LIGHT_SVG",
-    "appMarkSvg", "appTileSvg", "appAdaptiveSvg", "appExtension128Svg",
+    "AppMark", "APP_ICONS", "IconVibot", "IconVhub", "IconVmem", "IconVerve", "IconVelth", "IconProjectV", "APP_NAMES", "APP_MARKS", "APP_MARK_SVG", "APP_TILE_SVG", "APP_TILE_LIGHT_SVG",
+    "appMarkSvg", "appTileSvg", "appAdaptiveSvg", "appExtension128Svg", "FAMILY_APPS", "familyApp",
+    "V_PRO_APP_BENEFITS",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

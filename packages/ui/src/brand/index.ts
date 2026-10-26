@@ -1,3 +1,4 @@
+export * from "./AppIcons";
 export { AppMark } from "./AppMark";
 export type { AppMarkProps } from "./AppMark";
 export {
@@ -18,3 +19,7 @@ export {
   pathBBox,
 } from "./svg";
 export type { AppMarkVariant, AppName, MarkShape } from "./svg";
+export { FAMILY_APPS, familyApp } from "./familyApps";
+export type { FamilyApp } from "./familyApps";
+export { V_PRO_APP_BENEFITS } from "./vProAppBenefits";
+export type { PricingPlanAppBenefit } from "./vProAppBenefits";

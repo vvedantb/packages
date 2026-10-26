@@ -290,20 +290,21 @@ export {
 export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";
 export { SiteFooter } from "./marketing/SiteFooter";
 export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./marketing/SiteFooter";
-export { PricingModal } from "./marketing/PricingModal";
+export { PricingModal, V_PRO_APP_BENEFITS } from "./marketing/PricingModal";
 export type {
   PricingModalLegacyProps,
   PricingModalMultiProps,
   PricingModalPeriod,
   PricingModalProps,
   PricingPlan,
+  PricingPlanAppBenefit,
   PricingPlanBenefit,
 } from "./marketing/PricingModal";
 
 // App helpers: confirm skip, update watcher, settings chrome, stable auth, Convex provider, VITE env and ensure-user.
 export * from "../app/src/index";
 
-// Family app marks (AppMark and raw SVG strings for favicons).
+// Family app marks (Icon* components, deprecated AppMark and raw SVG strings for favicons).
 export * from "./brand";
 
 // Native tokens (JS values that match tokens.css).

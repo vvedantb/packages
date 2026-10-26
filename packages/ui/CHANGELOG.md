@@ -1,8 +1,22 @@
 # Changelog
 
+## 0.24.0
+
+- New Tabler-style app icons, exported from the root and from `@vvedantb/ui/brand`: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`, `IconVelth` and `IconProjectV`. Each is the plain glyph only, with no tile and no padding, cropped to the tight viewBox. Example: `<IconVerve size={24} color="currentColor" />`.
+- Props: `size` (height, default 24; the width follows the glyph aspect ratio), `color` (default `currentColor`; fill and stroke glyphs), `stroke` (stroke width in rendered pixels, scaled into viewBox units; fill glyphs ignore it; default is the glyph's own weight), `className`, `title` (sets `role="img"`; without it the icon is `aria-hidden`) and any other SVG prop. Each icon forwards its ref to the `<svg>` and has a `displayName`.
+- New `APP_ICONS` (`Record<AppName, component>`) for lookup by `AppName`, and the `AppIconProps` type.
+- `AppMark` is deprecated. Apps should move to the `Icon*` components (or `APP_ICONS[app]`). It stays exported so nothing breaks; `variant="mark"` now renders through the icons. Tile variants and the string helpers (`appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`, `appMarkSvg`) are unchanged.
+- `PricingModal` and `SidebarUpgradeCard` now use the icons instead of `AppMark`.
+- `SidebarUpgradeCard` no longer shows a mark. The expanded card is the title "Upgrade to Pro" and the "Upgrade" pill, and the title fits in full at 254px. The `collapsed` button is a round button with the text "Pro" (still labelled "Upgrade to Pro").
+- New `FAMILY_APPS` and `familyApp()` under `src/brand/` (root and `@vvedantb/ui/brand`): display name and site for each app. The `PricingModal` header icons now link to those sites (`target="_blank"`, `rel="noopener noreferrer"`, focus ring) and show the app name in a `Tooltip`.
+- New `PricingPlan.appBenefits` (type `PricingPlanAppBenefit`), grouped per app under a small icon and display-name heading, and `PricingModalMultiProps.currentApp` to put that app's group first (the rest keep the array order). Plain `benefits` still render first. The benefits block does not scroll inside the card: every app group shows in the card flow, with tight spacing, in two columns from `sm` up and one column on narrow screens. On short screens the dialog body scrolls.
+- `V_PRO_APP_BENEFITS` now holds the approved per-app copy (vibot, vmem, vhub, velth, verve), defined under `src/brand/`. The `featured` / `highlighted` plan uses it when `appBenefits` is omitted, so apps usually pass only `currentApp`. Other plans show app benefits only when set.
+- `FAMILY_APPS` uses the approved display names and sites: `vibot`, `Verve`, `Velth`, `vmem`, `vhub` and `Project V`. URLs have no trailing slash. The screenshot harness uses the real constant.
+- No new dependencies.
+
 ## 0.23.0
 
-- New `SidebarUpgradeCard` (shell family, exported from the root). A rounded card with the Project V mark, the title "Upgrade to Pro" and an "Upgrade" pill, with no subtitle. Props: `onUpgrade`, `className` and `collapsed` (an icon-only round button labelled "Upgrade to Pro" for narrow rails). It uses theme tokens, so it works in light and dark. It does not detect the plan; the app hides it for Pro users.
+- New `SidebarUpgradeCard` (shell family, exported from the root). A rounded card with the title "Upgrade to Pro" and an "Upgrade" pill, with no subtitle. Props: `onUpgrade`, `className` and `collapsed` (a round button labelled "Upgrade to Pro" for narrow rails). Later releases removed the mark and changed the collapsed button to show "Pro". It uses theme tokens, so it works in light and dark. It does not detect the plan; the app hides it for Pro users.
 - `PricingModal` multi-plan cards show the Project V mark (16px high, `currentColor`) beside the name of the `featured` / `highlighted` plan. Other plans show the name only.
 
 ## 0.22.1
