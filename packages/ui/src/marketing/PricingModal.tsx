@@ -260,7 +260,7 @@ function PricingModalSingle({
 
 const multiWidth = {
   1: "sm:max-w-md",
-  2: "sm:max-w-3xl",
+  2: "sm:max-w-[68rem]",
   3: "sm:max-w-5xl",
   4: "sm:max-w-6xl",
 } as const;
