@@ -290,13 +290,14 @@ export {
 export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";
 export { SiteFooter } from "./marketing/SiteFooter";
 export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./marketing/SiteFooter";
-export { PricingModal } from "./marketing/PricingModal";
+export { PricingModal, V_PRO_APP_BENEFITS } from "./marketing/PricingModal";
 export type {
   PricingModalLegacyProps,
   PricingModalMultiProps,
   PricingModalPeriod,
   PricingModalProps,
   PricingPlan,
+  PricingPlanAppBenefit,
   PricingPlanBenefit,
 } from "./marketing/PricingModal";
 

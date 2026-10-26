@@ -188,7 +188,7 @@ import { SidebarUpgradeCard } from "@vvedantb/ui";
 {!isPro && <SidebarUpgradeCard collapsed onUpgrade={() => setPricingOpen(true)} />}
 ```
 
-Shows the Project V mark, "Upgrade to Pro" and an "Upgrade" pill. `collapsed` renders an icon-only round button labelled "Upgrade to Pro" for narrow rails. The card does not check the plan, so the app hides it for Pro users.
+Shows the title "Upgrade to Pro" and an "Upgrade" pill, with no mark. The title fits in full at 254px. `collapsed` renders a round button with the short text "Pro", labelled "Upgrade to Pro" for narrow rails. The card does not check the plan, so the app hides it for Pro users.
 
 ## Sessions hover card
 
@@ -924,7 +924,7 @@ default) and `renderCheckout`.
 
 #### Multi-plan (0.22.0)
 
-Header: `apps` (an `AppName[]`, shown as plain `AppMark` logos, no tile, at the top left),
+Header: `apps` (an `AppName[]`, shown as plain `Icon*` logos at the top left; each links to the app's site in a new tab and shows its display name in a tooltip, from `FAMILY_APPS`),
 `headline` (centre), a Monthly / Annual switch and a close button (top right).
 Then one card per entry of `plans` (2 to 4 fit) and one `finePrint` line. Cards
 stack on narrow screens.
@@ -936,6 +936,10 @@ strings and always per month (`periodSuffix` default `"/month"`; the yearly
 price is the per-month price). `ctaLabel` defaults to "Get started". `featured`
 (or `highlighted`) adds a subtle ring. A `current` plan shows a disabled,
 outlined "Current plan" button and does not call `renderCheckout`.
+
+`appBenefits` (`{ app, items }[]`, type `PricingPlanAppBenefit`) groups benefits per app, each under that app's icon and display name. It renders after `benefits`. Set `currentApp` on the modal to put that app's group first; other groups follow `FAMILY_APPS` order. `V_PRO_APP_BENEFITS` is the shared default and is empty until the real copy is supplied.
+
+`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites. App names live only under `src/brand/`.
 
 The `featured` plan's button is a solid primary button (`Button` `variant="default"`). Other plans use `secondary`.
 
@@ -959,14 +963,7 @@ Each app passes its own plan names, prices and copy. The example and the screens
       price: { month: "$15", year: "$10" },
       featured: true,
       intro: "Everything in Free, and:",
-      highlight: { title: "Shared", description: "usage across every V app" },
-      benefits: [
-        { label: "Higher limits", icon: "vibot" },
-        { label: "Pro features", icon: "verve" },
-        { label: "Pro features", icon: "velth" },
-        { label: "More memory", icon: "vmem" },
-        { label: "More storage", icon: "vhub" },
-      ],
+      appBenefits: [{ app: "vibot", items: ["Sample item"] }],
     },
   ]}
   renderCheckout={(button, plan, period) => (

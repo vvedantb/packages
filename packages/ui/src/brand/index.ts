@@ -19,3 +19,5 @@ export {
   pathBBox,
 } from "./svg";
 export type { AppMarkVariant, AppName, MarkShape } from "./svg";
+export { FAMILY_APPS, familyApp } from "./familyApps";
+export type { FamilyApp } from "./familyApps";

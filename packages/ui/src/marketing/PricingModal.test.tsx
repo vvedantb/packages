@@ -2,7 +2,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PricingModal, type PricingModalMultiProps, type PricingModalLegacyProps } from "./PricingModal";
+import { PricingModal, V_PRO_APP_BENEFITS, type PricingModalMultiProps, type PricingModalLegacyProps } from "./PricingModal";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -105,6 +105,63 @@ describe("PricingModal multi-plan", () => {
     const marks = [...document.body.querySelectorAll("[data-testid='pricing-apps'] svg")];
     expect(marks.map((m) => m.getAttribute("data-app"))).toEqual(["vibot", "verve", "velth", "vmem", "vhub"]);
     expect(document.body.querySelector("[role='dialog']")?.textContent).toContain("Close");
+  });
+
+  it("links each app icon to its site with a tooltip name", async () => {
+    await mountMulti();
+    const links = [...document.body.querySelectorAll<HTMLAnchorElement>("[data-testid='pricing-apps'] a")];
+    expect(links.map((a) => a.getAttribute("href"))).toEqual([
+      "https://vibot.projectv.uk/",
+      "https://verve.projectv.uk/",
+      "https://velth.projectv.uk/",
+      "https://vmem.projectv.uk/",
+      "https://vhub.projectv.uk/",
+    ]);
+    for (const a of links) {
+      expect(a.getAttribute("target")).toBe("_blank");
+      expect(a.getAttribute("rel")).toBe("noopener noreferrer");
+      expect(a.className).toContain("focus-visible:ring");
+    }
+    await act(async () => {
+      links[1]!.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "mouse" }));
+      await new Promise((r) => setTimeout(r, 300));
+    });
+    expect(document.body.querySelector("[role='tooltip']")?.textContent).toBe("Verve");
+  });
+
+  it("groups appBenefits per app with the current app first, after benefits", async () => {
+    const plans = [
+      {
+        id: "pro",
+        name: "V Pro",
+        price: { month: "$15", year: "$10" },
+        benefits: [{ label: "Plain" }],
+        appBenefits: [
+          { app: "vmem", items: ["M1"] },
+          { app: "vibot", items: ["B1", "B2"] },
+          { app: "velth", items: ["L1"] },
+        ],
+      },
+    ] satisfies PricingModalMultiProps["plans"];
+    await mountMulti({ plans, currentApp: "velth" });
+    const groups = [...document.body.querySelectorAll("[data-app-benefits]")];
+    expect(groups.map((g) => g.getAttribute("data-app-benefits"))).toEqual(["velth", "vibot", "vmem"]);
+    expect(groups[0]!.querySelector("svg")?.getAttribute("data-app")).toBe("velth");
+    expect(groups[0]!.textContent).toBe("VelthL1");
+    expect(groups[1]!.querySelectorAll("li")).toHaveLength(2);
+    const section = document.body.querySelector("section[data-plan='pro']") as HTMLElement;
+    expect(section.textContent!.indexOf("Plain")).toBeLessThan(section.textContent!.indexOf("Velth"));
+  });
+
+  it("keeps FAMILY_APPS order without currentApp, and plain benefits still render", async () => {
+    await mountMulti({
+      plans: [
+        { id: "p", name: "P", price: { month: "$1", year: "$1" }, appBenefits: [{ app: "vhub", items: ["H"] }, { app: "verve", items: ["V"] }] },
+      ],
+    });
+    expect([...document.body.querySelectorAll("[data-app-benefits]")].map((g) => g.getAttribute("data-app-benefits"))).toEqual(["verve", "vhub"]);
+    expect(document.body.querySelector("section[data-plan='free']")).toBeNull();
+    expect(V_PRO_APP_BENEFITS).toEqual([]);
   });
 
   it("shows the Project V mark beside the paid plan name only", async () => {

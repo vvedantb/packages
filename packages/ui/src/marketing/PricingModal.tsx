@@ -1,8 +1,9 @@
 import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { APP_ICONS, IconProjectV, type AppIconProps, type AppName } from "../brand";
+import { APP_ICONS, FAMILY_APPS, IconProjectV, familyApp, type AppIconProps, type AppName } from "../brand";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { VisuallyHidden } from "../ui/visually-hidden";
 import { pricingModalClasses, pricingMultiClasses, type PricingModalTone } from "./marketing-classes";
 
@@ -62,6 +63,18 @@ export type PricingPlanBenefit = {
   muted?: boolean;
 };
 
+/** Benefits for one app, shown under that app's icon and name. */
+export type PricingPlanAppBenefit = {
+  app: Exclude<AppName, "projectv">;
+  items: readonly string[];
+};
+
+/**
+ * Per-app copy for V Pro.
+ * TODO: empty until the real per-app copy arrives. Do not add limits here without a source.
+ */
+export const V_PRO_APP_BENEFITS: readonly PricingPlanAppBenefit[] = [];
+
 export type PricingPlan = {
   id: string;
   name: string;
@@ -74,6 +87,8 @@ export type PricingPlan = {
   /** Large title with small text under it. */
   highlight?: { title: string; description: string };
   benefits?: readonly PricingPlanBenefit[];
+  /** Grouped per app, shown after `benefits`. The `currentApp` group comes first, the rest in `FAMILY_APPS` order. */
+  appBenefits?: readonly PricingPlanAppBenefit[];
   /** The plan the user is on: the button reads "Current plan" and is disabled. */
   current?: boolean;
   /** Subtle ring on the card. `highlighted` is an alias. */
@@ -94,6 +109,8 @@ export type PricingModalMultiProps = {
   plans: readonly PricingPlan[];
   /** App marks at the top left. */
   apps?: readonly AppName[];
+  /** App the dialog is shown in. Its `appBenefits` group comes first. */
+  currentApp?: Exclude<AppName, "projectv">;
   /** Centred headline, for example "One plan. Every V app." */
   headline?: ReactNode;
   /** Small print under the cards. */
@@ -113,6 +130,11 @@ export type PricingModalProps = PricingModalLegacyProps | PricingModalMultiProps
 function AppIcon({ app, ...props }: AppIconProps & { app: AppName }) {
   const Icon = APP_ICONS[app];
   return <Icon {...props} />;
+}
+
+function sortAppBenefits(groups: readonly PricingPlanAppBenefit[], currentApp?: AppName) {
+  const rank = (app: AppName) => (app === currentApp ? -1 : FAMILY_APPS.findIndex((entry) => entry.app === app));
+  return [...groups].sort((a, b) => rank(a.app) - rank(b.app));
 }
 
 export function PricingModal(props: PricingModalProps) {
@@ -263,6 +285,7 @@ function PricingModalMulti({
   description,
   plans,
   apps,
+  currentApp,
   headline,
   finePrint,
   billingPeriod,
@@ -297,7 +320,27 @@ function PricingModalMulti({
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-4 pb-4 pt-5 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
           <div className="flex items-center gap-2 text-foreground" data-testid="pricing-apps">
-            {apps?.map((app) => <AppIcon key={app} app={app} size={20} />)}
+            <TooltipProvider delayDuration={200}>
+              {apps?.map((app) => {
+                const { name, url } = familyApp(app);
+                return (
+                  <Tooltip key={app}>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={name}
+                        className="rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"
+                      >
+                        <AppIcon app={app} size={20} />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent portal>{name}</TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </TooltipProvider>
           </div>
           <div className="flex items-center justify-end gap-2 sm:order-last">
             <div role="group" aria-label="Billing period" className="inline-flex rounded-full bg-surface-tertiary p-0.5">
@@ -397,6 +440,25 @@ function PricingModalMulti({
                       </li>
                     ))}
                   </ul>
+                ) : null}
+                {plan.appBenefits?.length ? (
+                  <div className="mt-5 space-y-4 border-t border-separator pt-4">
+                    {sortAppBenefits(plan.appBenefits, currentApp).map((group) => (
+                      <div key={group.app} data-app-benefits={group.app}>
+                        <p className="flex items-center gap-2 text-sm text-foreground">
+                          <AppIcon app={group.app} size={12} className="shrink-0" />
+                          {familyApp(group.app).name}
+                        </p>
+                        <ul className="mt-2 space-y-1.5 pl-5">
+                          {group.items.map((item, index) => (
+                            <li key={index} className="text-sm leading-snug text-foreground">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 ) : null}
               </section>
             );

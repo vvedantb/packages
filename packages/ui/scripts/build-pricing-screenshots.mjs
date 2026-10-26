@@ -43,6 +43,7 @@ createRoot(document.getElementById("root")!).render(
     onClose={() => undefined}
     title="Plans"
     description="Choose a plan"
+    currentApp="vibot"
     apps={["vibot", "verve", "velth", "vmem", "vhub"]}
     headline="One plan. Every V app."
     finePrint={q.get("period") === "year" ? "Cancel anytime. $120 billed yearly. Save 33%." : "Cancel anytime. Billed monthly."}
@@ -52,8 +53,13 @@ createRoot(document.getElementById("root")!).render(
         highlight: { title: "Core", description: "limited use" },
         benefits: [{ label: "vibot: core chat", icon: "vibot" }, { label: "vmem: basic memory", icon: "vmem" }, { label: "vhub: basic storage", icon: "vhub" }] },
       { id: "pro", name: "V Pro", price: { month: "$15", year: "$10" }, featured: true, ctaLabel: "Upgrade", intro: "Everything in Free, and:",
-        highlight: { title: "Shared", description: "usage across every V app" },
-        benefits: [{ label: "vibot: higher limits", icon: "vibot" }, { label: "Verve: Pro features", icon: "verve" }, { label: "Velth: Pro features", icon: "velth" }, { label: "vmem: more memory", icon: "vmem" }, { label: "vhub: more storage", icon: "vhub" }] },
+        highlight: { title: "V Pro", description: "one plan, every V app" },
+        // SAMPLE DATA for the harness only. Not real Pro copy.
+        appBenefits: [
+          { app: "vmem", items: ["Sample item A", "Sample item B"] },
+          { app: "vibot", items: ["Sample item C"] },
+          { app: "verve", items: ["Sample item D"] },
+        ] },
     ]}
     renderCheckout={(button) => button}
   />,

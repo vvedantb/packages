@@ -1,11 +1,10 @@
-import { IconProjectV } from "../../src/brand/AppIcons";
 import { Button } from "../../src/ui/button";
 import { cn } from "../../src/utils/cn";
 
 export type SidebarUpgradeCardProps = {
   /** Opens the app's `PricingModal`. */
   onUpgrade: () => void;
-  /** Narrow rail: an icon-only "Upgrade to Pro" button instead of the full card. Default `false`. */
+  /** Narrow rail: a round "Pro" button (labelled "Upgrade to Pro") instead of the full card. Default `false`. */
   collapsed?: boolean;
   className?: string;
 };
@@ -13,22 +12,21 @@ export type SidebarUpgradeCardProps = {
 const pillClass = "bg-foreground text-background hover:bg-foreground/85";
 
 /**
- * Upgrade prompt for the sidebar: Project V mark, "Upgrade to Pro" and an "Upgrade" pill. It does not check
- * the plan; the app hides it when the user is already on Pro. The mark uses a numeric `size` (its height) so
- * the width follows the aspect ratio.
+ * Upgrade prompt for the sidebar: the title "Upgrade to Pro" and an "Upgrade" pill, with no mark. It does
+ * not check the plan; the app hides it when the user is already on Pro.
  */
 export function SidebarUpgradeCard({ onUpgrade, collapsed = false, className }: SidebarUpgradeCardProps) {
   if (collapsed) {
     return (
       <Button
         type="button"
-        size="icon"
+        size="sm"
         aria-label="Upgrade to Pro"
         title="Upgrade to Pro"
         onClick={onUpgrade}
-        className={cn("rounded-full", pillClass, className)}
+        className={cn("rounded-full px-3", pillClass, className)}
       >
-        <IconProjectV size={16} />
+        Pro
       </Button>
     );
   }
@@ -40,10 +38,7 @@ export function SidebarUpgradeCard({ onUpgrade, collapsed = false, className }: 
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-2 text-sm font-semibold">
-        <IconProjectV size={14} className="shrink-0" />
-        <span className="truncate">Upgrade to Pro</span>
-      </div>
+      <span className="min-w-0 truncate text-sm font-semibold">Upgrade to Pro</span>
       <Button type="button" size="sm" onClick={onUpgrade} className={cn("shrink-0 rounded-full", pillClass)}>
         Upgrade
       </Button>
