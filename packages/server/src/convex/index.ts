@@ -98,5 +98,4 @@ export {
   hasVPlan,
   V_PRO_PLAN_KEY,
   V_PRO_PLAN_KEYS,
-  V_PRO_LEGACY_PLAN_KEY,
 } from "./vPlan.js";

@@ -1,14 +1,11 @@
 /** Clerk Billing plan key for the shared V Pro plan ($10/month or $100/year). */
 export const V_PRO_PLAN_KEY = "v_pro";
 
-/** The earlier single-app plan. It still counts as V Pro. */
-export const V_PRO_LEGACY_PLAN_KEY = "vibot_pro";
-
 /** Plan keys that grant V Pro. */
-export const V_PRO_PLAN_KEYS: readonly string[] = [V_PRO_PLAN_KEY, V_PRO_LEGACY_PLAN_KEY];
+export const V_PRO_PLAN_KEYS: readonly string[] = [V_PRO_PLAN_KEY];
 
 /**
- * True when the session's active plan is V Pro (`v_pro` or legacy `vibot_pro`).
+ * True when the session's active plan is V Pro (`v_pro`).
  * Reads the Clerk session token v2 `pla` claim, `u:<plan>` or `o:<plan>`, from a
  * Convex `ctx.auth.getUserIdentity()` result or raw JWT claims. A bare plan slug
  * also matches. Anything else, including `null`, returns `false`; it never throws.

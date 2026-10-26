@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.10.0
+
+Retires the per-app `vibot_pro` plan. Only the shared `v_pro` plan counts as V Pro. No new dependency.
+
+### Removed
+
+- `V_PRO_LEGACY_PLAN_KEY` (`"vibot_pro"`). Breaking for any consumer that imports it.
+
+### Changed
+
+- `V_PRO_PLAN_KEYS` is now `["v_pro"]`. The export stays.
+- `hasVPlan` no longer treats `vibot_pro` (`u:vibot_pro`, `o:vibot_pro` or bare) as V Pro; it returns `false`.
+
+### Tests
+
+- `tests/convex/vPlan.test.ts` and `tests-node/esm-exports.mjs` check that `vibot_pro` no longer counts.
+
 ## 0.9.0
 
 Shared "V Pro" plan check for every Project V app. Additive; no new dependency.
