@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.1
+
+- App icons centred in their square frames. In 0.25.0 the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) shared one crop origin, so glyphs that were off-centre in the tile (`vmem` most) rendered off-centre. The five apps keep the 629 x 629 frame (equal scale), and each `APP_MARK_VIEWBOX` origin is now centred on that glyph's `markBBox`. `projectv` keeps 687 x 687, centred on its bbox (`171.5 181 687 687`). `APP_MARK_CROP_VIEWBOX` stays as the historical size constant. Tiles (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) and path data (`APP_MARKS`) are unchanged.
+- `V_PRO_APP_BENEFITS`: vibot now lists only "Higher AI limits/usage" and "Smarter AI for chats, documents & sub-agents". The message, image-gen and search counts are removed. Other apps are unchanged.
+- `Icon*` accept `align?: "center" | "start"` (default `"center"`). `"start"` left-aligns the glyph's ink in the same square frame (same side, same y, x set to `markBBox` minX), so labels line up in vertical lists. The rendered box stays `size` x `size`. New `APP_MARK_VIEWBOX_START` holds the start viewBoxes. `appMarkSvg` stays on the centred viewBox.
+- No new dependencies.
+
 ## 0.25.0
 
 - `APP_MARK_VIEWBOX` now holds square viewBoxes. The five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) share one crop, `173 197 629 629` (also exported as `APP_MARK_CROP_VIEWBOX`): the union of their `markBBox` results on the 1024 tile grid, centred in a square with about 4% padding, rounded outward to whole units. `vhub`, the widest app glyph, fills about 92% of the icon width. `projectv` is a brand mark, not an app, so it is left out of the union and has its own tight square, `172 181 687 687` (exported as `PROJECTV_MARK_VIEWBOX`): fitted to `markBBox("projectv")`, centred on the shorter axis, rounded outward, with no extra padding. Relative sizes between the app glyphs match the tiles. Path data (`APP_MARKS`) and the tile geometry (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) are unchanged. `appMarkSvg` and `APP_MARK_SVG` pick up the new viewBoxes.

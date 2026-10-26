@@ -1,5 +1,5 @@
 import { forwardRef, useId, type ForwardRefExoticComponent, type RefAttributes, type SVGProps } from "react";
-import { APP_MARKS, APP_MARK_VIEWBOX, APP_NAMES, markLinecap, markStrokeWidth, type AppName } from "./svg";
+import { APP_MARKS, APP_MARK_VIEWBOX, APP_MARK_VIEWBOX_START, APP_NAMES, markLinecap, markStrokeWidth, type AppName } from "./svg";
 
 export type AppIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" | "width" | "viewBox" | "stroke" | "color"> & {
   /** Rendered width and height (the glyph is square). Default 24. A number is in pixels; a string is any CSS length. */
@@ -10,6 +10,8 @@ export type AppIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "height" |
   stroke?: number | string;
   /** Accessible name. Without it the icon is `aria-hidden`. */
   title?: string;
+  /** Where the glyph sits in its equal-size square. `"center"` (default) centres it. `"start"` left-aligns the glyph's ink in the same square, so labels line up in a vertical list. The rendered box stays `size` x `size`. */
+  align?: "center" | "start";
 };
 
 export type AppIconComponent = ForwardRefExoticComponent<AppIconProps & RefAttributes<SVGSVGElement>>;
@@ -20,7 +22,7 @@ function viewBoxSide(app: AppName): number {
 
 function createAppIcon(app: AppName, displayName: string): AppIconComponent {
   const Icon = forwardRef<SVGSVGElement, AppIconProps>(function Icon(
-    { size = 24, color = "currentColor", stroke, title, ...rest },
+    { size = 24, color = "currentColor", stroke, title, align = "center", ...rest },
     ref,
   ) {
     const titleId = useId();
@@ -38,9 +40,10 @@ function createAppIcon(app: AppName, displayName: string): AppIconComponent {
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}
-        viewBox={APP_MARK_VIEWBOX[app]}
+        viewBox={align === "start" ? APP_MARK_VIEWBOX_START[app] : APP_MARK_VIEWBOX[app]}
         preserveAspectRatio="xMidYMid meet"
         data-app={app}
+        data-align={align}
         role={title ? "img" : undefined}
         aria-hidden={title ? undefined : true}
         aria-labelledby={title ? titleId : undefined}

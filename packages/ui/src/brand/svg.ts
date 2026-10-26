@@ -175,27 +175,46 @@ export function markBBox(app: AppName): Box {
 
 
 /**
- * Shared crop for the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) in the plain logo (`variant="mark"`,
- * `appMarkSvg`, `Icon*`): the union of their `markBBox` results on the 1024 tile grid (x 186 to 789, y 259.96 to 761.7),
- * centred in a square of side max(width, height) x 1.04 (about 4% padding), then rounded outward to whole units.
- * `projectv` is left out so its wide brand mark does not shrink the app glyphs. Not the full tile. Checked in tests.
+ * Frame size for the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) in the plain logo (`variant="mark"`,
+ * `appMarkSvg`, `Icon*`): a 629 x 629 square, the union of their `markBBox` results on the 1024 tile grid
+ * (x 186 to 789, y 259.96 to 761.7) at side max(width, height) x 1.04 (about 4% padding), rounded outward.
+ * All five use this side, so glyph scale stays equal. Only the size is shared: each app has its own origin in
+ * `APP_MARK_VIEWBOX`. `projectv` is left out so its wide brand mark does not shrink the app glyphs.
  */
 export const APP_MARK_CROP_VIEWBOX = "173 197 629 629";
 
 /**
- * Own tight square for `projectv` (a brand mark, not an app): `markBBox("projectv")` (x 172 to 858, y 377 to 672),
- * centred on the shorter axis and rounded outward to whole units, with no extra padding.
+ * `projectv` (a brand mark, not an app) keeps a 687 x 687 frame, centred on `markBBox("projectv")`
+ * (x 172 to 858, y 377 to 672, centre 515 x 524.5), with no extra padding.
  */
-export const PROJECTV_MARK_VIEWBOX = "172 181 687 687";
+export const PROJECTV_MARK_VIEWBOX = "171.5 181 687 687";
 
-/** Plain-mark viewBox per app: the shared crop for the five apps, a tight square for `projectv`. Always square. */
+/**
+ * Plain-mark viewBox per app. Always square. The five apps keep one 629 side (equal scale), and each origin is
+ * `markBBox(app)` centre minus 314.5 on both axes, so every glyph sits centred in its own frame. `projectv` uses
+ * its 687 frame, centre minus 343.5. Hardcoded; checked against `markBBox` in tests.
+ */
 export const APP_MARK_VIEWBOX: Record<AppName, string> = {
   projectv: PROJECTV_MARK_VIEWBOX,
-  vibot: APP_MARK_CROP_VIEWBOX,
-  vhub: APP_MARK_CROP_VIEWBOX,
-  vmem: APP_MARK_CROP_VIEWBOX,
-  verve: APP_MARK_CROP_VIEWBOX,
-  velth: APP_MARK_CROP_VIEWBOX,
+  vibot: "227.5 198.5 629 629",
+  vhub: "162.5 197.5 629 629",
+  vmem: "197.24772201231343 196.33100022273135 629 629",
+  verve: "197.5 210.9 629 629",
+  velth: "197.5 202.45 629 629",
+};
+
+/**
+ * Start-aligned viewBox per app, for `Icon*` `align="start"`. Same side and same y as `APP_MARK_VIEWBOX`; x is
+ * `markBBox(app)` minX, so the glyph's left ink edge sits flush with the frame's left edge. Hardcoded; checked
+ * against `markBBox` in tests.
+ */
+export const APP_MARK_VIEWBOX_START: Record<AppName, string> = {
+  projectv: "172 181 687 687",
+  vibot: "295 198.5 629 629",
+  vhub: "186 197.5 629 629",
+  vmem: "255.5301217210191 196.33100022273135 629 629",
+  verve: "260.4 210.9 629 629",
+  velth: "273.9433593555699 202.45 629 629",
 };
 
 /** Width over height of a mark's viewBox. Always about 1, because the viewBoxes are square. Kept for API stability; do not use it for sizing. */
