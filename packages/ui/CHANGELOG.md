@@ -9,7 +9,9 @@
 - `PricingModal` and `SidebarUpgradeCard` now use the icons instead of `AppMark`.
 - `SidebarUpgradeCard` no longer shows a mark. The expanded card is the title "Upgrade to Pro" and the "Upgrade" pill, and the title fits in full at 254px. The `collapsed` button is a round button with the text "Pro" (still labelled "Upgrade to Pro").
 - New `FAMILY_APPS` and `familyApp()` under `src/brand/` (root and `@vvedantb/ui/brand`): display name and site for each app. The `PricingModal` header icons now link to those sites (`target="_blank"`, `rel="noopener noreferrer"`, focus ring) and show the app name in a `Tooltip`.
-- New `PricingPlan.appBenefits` (type `PricingPlanAppBenefit`), grouped per app under its icon and name, and `PricingModalMultiProps.currentApp` to put that app's group first. Plain `benefits` still work and render first. New `V_PRO_APP_BENEFITS`, empty for now (TODO: real per-app copy). The screenshot harness uses clearly labelled sample data.
+- New `PricingPlan.appBenefits` (type `PricingPlanAppBenefit`), grouped per app under a small icon and display-name heading, and `PricingModalMultiProps.currentApp` to put that app's group first (the rest keep the array order). Plain `benefits` still render first. The benefits block scrolls inside the card (`max-h-64`) so long lists do not grow the modal.
+- `V_PRO_APP_BENEFITS` now holds the approved per-app copy (vibot, vmem, vhub, velth, verve), defined under `src/brand/`. The `featured` / `highlighted` plan uses it when `appBenefits` is omitted, so apps usually pass only `currentApp`. Other plans show app benefits only when set.
+- `FAMILY_APPS` uses the approved display names and sites: `vibot`, `Verve`, `Velth`, `vmem`, `vhub` and `Project V`. URLs have no trailing slash. The screenshot harness uses the real constant.
 - No new dependencies.
 
 ## 0.23.0

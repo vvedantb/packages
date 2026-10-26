@@ -111,11 +111,11 @@ describe("PricingModal multi-plan", () => {
     await mountMulti();
     const links = [...document.body.querySelectorAll<HTMLAnchorElement>("[data-testid='pricing-apps'] a")];
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "https://vibot.projectv.uk/",
-      "https://verve.projectv.uk/",
-      "https://velth.projectv.uk/",
-      "https://vmem.projectv.uk/",
-      "https://vhub.projectv.uk/",
+      "https://vibot.projectv.uk",
+      "https://verve.projectv.uk",
+      "https://velth.projectv.uk",
+      "https://vmem.projectv.uk",
+      "https://vhub.projectv.uk",
     ]);
     for (const a of links) {
       expect(a.getAttribute("target")).toBe("_blank");
@@ -145,23 +145,49 @@ describe("PricingModal multi-plan", () => {
     ] satisfies PricingModalMultiProps["plans"];
     await mountMulti({ plans, currentApp: "velth" });
     const groups = [...document.body.querySelectorAll("[data-app-benefits]")];
-    expect(groups.map((g) => g.getAttribute("data-app-benefits"))).toEqual(["velth", "vibot", "vmem"]);
+    expect(groups.map((g) => g.getAttribute("data-app-benefits"))).toEqual(["velth", "vmem", "vibot"]);
     expect(groups[0]!.querySelector("svg")?.getAttribute("data-app")).toBe("velth");
     expect(groups[0]!.textContent).toBe("VelthL1");
-    expect(groups[1]!.querySelectorAll("li")).toHaveLength(2);
+    expect(groups[2]!.querySelectorAll("li")).toHaveLength(2);
     const section = document.body.querySelector("section[data-plan='pro']") as HTMLElement;
     expect(section.textContent!.indexOf("Plain")).toBeLessThan(section.textContent!.indexOf("Velth"));
   });
 
-  it("keeps FAMILY_APPS order without currentApp, and plain benefits still render", async () => {
+  it("keeps the provided order without currentApp", async () => {
     await mountMulti({
       plans: [
         { id: "p", name: "P", price: { month: "$1", year: "$1" }, appBenefits: [{ app: "vhub", items: ["H"] }, { app: "verve", items: ["V"] }] },
       ],
     });
-    expect([...document.body.querySelectorAll("[data-app-benefits]")].map((g) => g.getAttribute("data-app-benefits"))).toEqual(["verve", "vhub"]);
+    expect([...document.body.querySelectorAll("[data-app-benefits]")].map((g) => g.getAttribute("data-app-benefits"))).toEqual(["vhub", "verve"]);
     expect(document.body.querySelector("section[data-plan='free']")).toBeNull();
-    expect(V_PRO_APP_BENEFITS).toEqual([]);
+  });
+
+  it("has the approved V_PRO_APP_BENEFITS copy in order", () => {
+    expect(V_PRO_APP_BENEFITS.map((g) => g.app)).toEqual(["vibot", "vmem", "vhub", "velth", "verve"]);
+    expect(V_PRO_APP_BENEFITS[0]!.items).toEqual([
+      "1000 messages / day",
+      "100 image gens / day",
+      "100 deep & 20 extreme searches / day",
+      "Smarter AI for chats, documents & sub-agents",
+    ]);
+    expect(V_PRO_APP_BENEFITS.every((g) => g.items.length > 0)).toBe(true);
+  });
+
+  it("defaults the featured plan to V_PRO_APP_BENEFITS, current app first, with display-name casing", async () => {
+    await mountMulti({
+      currentApp: "velth",
+      plans: [
+        { id: "free", name: "Free", price: { month: "$0", year: "$0" } },
+        { id: "pro", name: "V Pro", price: { month: "$15", year: "$10" }, featured: true },
+      ],
+    });
+    const pro = document.body.querySelector("section[data-plan='pro']") as HTMLElement;
+    const groups = [...pro.querySelectorAll("[data-app-benefits]")];
+    expect(groups.map((g) => g.getAttribute("data-app-benefits"))).toEqual(["velth", "vibot", "vmem", "vhub", "verve"]);
+    expect(groups.map((g) => g.querySelector("p")?.textContent)).toEqual(["Velth", "vibot", "vmem", "vhub", "Verve"]);
+    expect(pro.querySelector("[data-app-benefits]")!.parentElement!.className).toContain("overflow-y-auto");
+    expect(document.body.querySelector("section[data-plan='free']")!.querySelector("[data-app-benefits]")).toBeNull();
   });
 
   it("shows the Project V mark beside the paid plan name only", async () => {

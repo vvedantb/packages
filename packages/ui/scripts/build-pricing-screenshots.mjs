@@ -35,6 +35,7 @@ writeFileSync(
   entry,
   `import { createRoot } from "react-dom/client";
 import { PricingModal } from ${JSON.stringify(join(pkg, "src/marketing/PricingModal.tsx"))};
+import { V_PRO_APP_BENEFITS } from ${JSON.stringify(join(pkg, "src/brand/index.ts"))};
 const q = new URLSearchParams(location.search);
 document.documentElement.classList.toggle("dark", q.get("theme") !== "light");
 createRoot(document.getElementById("root")!).render(
@@ -54,12 +55,7 @@ createRoot(document.getElementById("root")!).render(
         benefits: [{ label: "vibot: core chat", icon: "vibot" }, { label: "vmem: basic memory", icon: "vmem" }, { label: "vhub: basic storage", icon: "vhub" }] },
       { id: "pro", name: "V Pro", price: { month: "$15", year: "$10" }, featured: true, ctaLabel: "Upgrade", intro: "Everything in Free, and:",
         highlight: { title: "V Pro", description: "one plan, every V app" },
-        // SAMPLE DATA for the harness only. Not real Pro copy.
-        appBenefits: [
-          { app: "vmem", items: ["Sample item A", "Sample item B"] },
-          { app: "vibot", items: ["Sample item C"] },
-          { app: "verve", items: ["Sample item D"] },
-        ] },
+        appBenefits: V_PRO_APP_BENEFITS },
     ]}
     renderCheckout={(button) => button}
   />,

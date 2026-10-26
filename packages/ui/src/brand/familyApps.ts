@@ -10,12 +10,12 @@ export type FamilyApp = {
 
 /** Single source for family app display names and sites, in display order. */
 export const FAMILY_APPS: readonly FamilyApp[] = [
-  { app: "vibot", name: "Vibot", url: "https://vibot.projectv.uk/" },
-  { app: "verve", name: "Verve", url: "https://verve.projectv.uk/" },
-  { app: "velth", name: "Velth", url: "https://velth.projectv.uk/" },
-  { app: "vmem", name: "Vmem", url: "https://vmem.projectv.uk/" },
-  { app: "vhub", name: "Vhub", url: "https://vhub.projectv.uk/" },
-  { app: "projectv", name: "Project V", url: "https://projectv.uk/" },
+  { app: "vibot", name: "vibot", url: "https://vibot.projectv.uk" },
+  { app: "verve", name: "Verve", url: "https://verve.projectv.uk" },
+  { app: "velth", name: "Velth", url: "https://velth.projectv.uk" },
+  { app: "vmem", name: "vmem", url: "https://vmem.projectv.uk" },
+  { app: "vhub", name: "vhub", url: "https://vhub.projectv.uk" },
+  { app: "projectv", name: "Project V", url: "https://projectv.uk" },
 ];
 
 /** Entry of `FAMILY_APPS` for an app. */

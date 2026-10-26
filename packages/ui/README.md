@@ -937,9 +937,9 @@ price is the per-month price). `ctaLabel` defaults to "Get started". `featured`
 (or `highlighted`) adds a subtle ring. A `current` plan shows a disabled,
 outlined "Current plan" button and does not call `renderCheckout`.
 
-`appBenefits` (`{ app, items }[]`, type `PricingPlanAppBenefit`) groups benefits per app, each under that app's icon and display name. It renders after `benefits`. Set `currentApp` on the modal to put that app's group first; other groups follow `FAMILY_APPS` order. `V_PRO_APP_BENEFITS` is the shared default and is empty until the real copy is supplied.
+`appBenefits` (`{ app, items }[]`, type `PricingPlanAppBenefit`) groups benefits per app, each under a small heading with that app's icon and display name. It renders after `benefits` and scrolls inside the card when long. Set `currentApp` on the modal to put that app's group first; the other groups keep the array order. The `featured` / `highlighted` plan uses `V_PRO_APP_BENEFITS` (the approved V Pro copy, in the order vibot, vmem, vhub, velth, verve) when it omits `appBenefits`, so apps usually pass only `currentApp`. Other plans show app benefits only when set.
 
-`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites. App names live only under `src/brand/`.
+`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites (`vibot`, `Verve`, `Velth`, `vmem`, `vhub`, `Project V`; URLs without a trailing slash). App names live only under `src/brand/`.
 
 The `featured` plan's button is a solid primary button (`Button` `variant="default"`). Other plans use `secondary`.
 
@@ -963,7 +963,6 @@ Each app passes its own plan names, prices and copy. The example and the screens
       price: { month: "$15", year: "$10" },
       featured: true,
       intro: "Everything in Free, and:",
-      appBenefits: [{ app: "vibot", items: ["Sample item"] }],
     },
   ]}
   renderCheckout={(button, plan, period) => (
