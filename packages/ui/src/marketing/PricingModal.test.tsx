@@ -78,7 +78,7 @@ const multi: PricingModalMultiProps = {
       ctaLabel: "Upgrade",
       featured: true,
       intro: "Everything in Free, and:",
-      highlight: { title: "Shared", description: "usage across every V app" },
+      highlight: { title: "V Pro", description: "one plan, every V app" },
       benefits: [{ label: "Chat", icon: "vibot" }, { label: "Dim", muted: true }],
     },
   ],
@@ -186,7 +186,10 @@ describe("PricingModal multi-plan", () => {
     const groups = [...pro.querySelectorAll("[data-app-benefits]")];
     expect(groups.map((g) => g.getAttribute("data-app-benefits"))).toEqual(["velth", "vibot", "vmem", "vhub", "verve"]);
     expect(groups.map((g) => g.querySelector("p")?.textContent)).toEqual(["Velth", "vibot", "vmem", "vhub", "Verve"]);
-    expect(pro.querySelector("[data-app-benefits]")!.parentElement!.className).toContain("overflow-y-auto");
+    const wrap = pro.querySelector("[data-app-benefits]")!.parentElement!.className;
+    expect(wrap).not.toContain("overflow-y-auto");
+    expect(wrap).not.toContain("max-h-");
+    expect(wrap).toContain("sm:grid-cols-2");
     expect(document.body.querySelector("section[data-plan='free']")!.querySelector("[data-app-benefits]")).toBeNull();
   });
 

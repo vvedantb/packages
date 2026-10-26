@@ -35,7 +35,6 @@ writeFileSync(
   entry,
   `import { createRoot } from "react-dom/client";
 import { PricingModal } from ${JSON.stringify(join(pkg, "src/marketing/PricingModal.tsx"))};
-import { V_PRO_APP_BENEFITS } from ${JSON.stringify(join(pkg, "src/brand/index.ts"))};
 const q = new URLSearchParams(location.search);
 document.documentElement.classList.toggle("dark", q.get("theme") !== "light");
 createRoot(document.getElementById("root")!).render(
@@ -52,10 +51,9 @@ createRoot(document.getElementById("root")!).render(
     plans={[
       { id: "free", name: "Free", price: { month: "$0", year: "$0" }, current: true, intro: "Start here:",
         highlight: { title: "Core", description: "limited use" },
-        benefits: [{ label: "vibot: core chat", icon: "vibot" }, { label: "vmem: basic memory", icon: "vmem" }, { label: "vhub: basic storage", icon: "vhub" }] },
+        benefits: [{ label: "50 messages / day" }, { label: "5 image gens / day" }, { label: "5 deep searches / day" }, { label: "1 extreme search / day" }] },
       { id: "pro", name: "V Pro", price: { month: "$15", year: "$10" }, featured: true, ctaLabel: "Upgrade", intro: "Everything in Free, and:",
-        highlight: { title: "V Pro", description: "one plan, every V app" },
-        appBenefits: V_PRO_APP_BENEFITS },
+        highlight: { title: "V Pro", description: "one plan, every V app" } },
     ]}
     renderCheckout={(button) => button}
   />,

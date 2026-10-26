@@ -437,14 +437,14 @@ function PricingModalMulti({
                   </ul>
                 ) : null}
                 {appBenefits?.length ? (
-                  <div className="mt-5 max-h-64 space-y-3 overflow-y-auto border-t border-separator pt-4">
+                  <div className="mt-4 grid gap-x-6 gap-y-2.5 border-t border-separator pt-3 sm:grid-cols-2">
                     {sortAppBenefits(appBenefits, currentApp).map((group) => (
                       <div key={group.app} data-app-benefits={group.app}>
                         <p className="flex items-center gap-2 text-xs font-medium text-foreground">
                           <AppIcon app={group.app} size={12} className="shrink-0" />
                           {familyApp(group.app).name}
                         </p>
-                        <ul className="mt-1.5 space-y-1 pl-5">
+                        <ul className="mt-1 space-y-0.5 pl-5">
                           {group.items.map((item, index) => (
                             <li key={index} className="text-sm leading-snug text-foreground">
                               {item}
