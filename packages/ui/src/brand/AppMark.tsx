@@ -21,7 +21,7 @@ const TILE_TONES = {
 } as const;
 
 /**
- * One of the six family app marks. The plain mark uses an equalised square viewBox; tiles use the padded 1024 grid.
+ * One of the six family app marks. The plain mark and the tiles share the same square 1024 viewBox, so a bare glyph matches the tile glyph optically.
  * @deprecated Use the per-app `Icon*` components (or `APP_ICONS[app]`) for plain marks. Tiles are for app and store icons only.
  */
 export function AppMark({ app, variant = "mark", size = 24, title, ...rest }: AppMarkProps) {

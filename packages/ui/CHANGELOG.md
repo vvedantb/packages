@@ -2,7 +2,7 @@
 
 ## 0.25.0
 
-- `APP_MARK_VIEWBOX` now holds equalised square viewBoxes (width equals height) for every app, including `projectv`. Each is the glyph box padded on the shorter axis, centred and rounded outward to whole units, so all glyphs look the same size when rendered square. They are no longer tight crops. Path data (`APP_MARKS`) and the tile geometry (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) are unchanged. `appMarkSvg` and `APP_MARK_SVG` pick up the square viewBoxes.
+- `APP_MARK_VIEWBOX` now holds the same square viewBox for every app, including `projectv`: `0 0 1024 1024`, equal to `MARK_VIEWBOX` and the tile layout. The `APP_MARKS` paths are already optically sized and placed on that grid, so a bare icon at size N matches the tile glyph without its background. Wide glyphs (`vhub`, `projectv`) no longer look smaller than `vmem` and `velth`. The viewBoxes are not tight crops and are not fitted per app. Path data (`APP_MARKS`) and the tile geometry (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) are unchanged. `appMarkSvg` and `APP_MARK_SVG` pick up the shared viewBox.
 - `Icon*` (and `AppMark variant="mark"`): a numeric `size` now sets both width and height. The aspect-based width is removed, so wide glyphs (`IconVibot`, `IconVhub`, `IconProjectV`) render narrower than in 0.24.0 at the same `size`. A string `size` behaves as before. A pixel `stroke` is scaled by the new viewBox side, so stroke glyphs keep the same rendered weight.
 - `markAspect` stays exported for API stability. It now returns 1 for every app and is not used for sizing.
 - No new dependencies.

@@ -175,20 +175,18 @@ export function markBBox(app: AppName): Box {
 
 
 /**
- * Equalised square viewBox per app (`minX minY side side` on the 1024 grid). Each is the glyph box from
- * `markBBox` (stroke marks grown by half the stroke width), padded on the shorter axis to a square,
- * centred on the glyph and rounded outward to whole units. Wide glyphs (`projectv`, `vibot`, `vhub`) get
- * vertical padding; near-square ones (`vmem`, `velth`) get a few units at the sides. Rendered square, all
- * apps look the same size. These are not tight crops. Checked against `markBBox` in tests.
- * Used by the plain logo (`variant="mark"`, `appMarkSvg`, `Icon*`). Tiles keep `MARK_VIEWBOX`.
+ * Shared square viewBox for the plain logo (`variant="mark"`, `appMarkSvg`, `Icon*`). Every app uses the same
+ * crop as the tile layout (`MARK_VIEWBOX`, `0 0 1024 1024`), not a per-glyph tight crop or a per-app padded box.
+ * `APP_MARKS` paths are optically sized and placed on that grid, so a bare icon at size N looks like the tile
+ * glyph without the background. Checked against `markBBox` in tests.
  */
 export const APP_MARK_VIEWBOX: Record<AppName, string> = {
-  projectv: "172 181 686 686",
-  vibot: "295 266 494 494",
-  vhub: "186 221 582 582",
-  vmem: "255 254 513 513",
-  verve: "260 273 504 504",
-  velth: "270 275 483 483",
+  projectv: MARK_VIEWBOX,
+  vibot: MARK_VIEWBOX,
+  vhub: MARK_VIEWBOX,
+  vmem: MARK_VIEWBOX,
+  verve: MARK_VIEWBOX,
+  velth: MARK_VIEWBOX,
 };
 
 /** Width over height of a mark's viewBox. Always about 1, because the viewBoxes are square. Kept for API stability; do not use it for sizing. */

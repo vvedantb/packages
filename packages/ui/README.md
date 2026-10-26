@@ -900,12 +900,13 @@ Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
 `variant`, `size`, `title`.
 
 - `variant="mark"` (default) is the plain logo in `currentColor`. It sits
-  on an equalised square viewBox (the glyph box, stroke marks included, padded
-  to a square and centred). `size` sets both width and height; a string `size`
-  (for example `"2rem"`) is any CSS length. `APP_MARK_VIEWBOX` holds the square
-  viewBox per app; `appMarkSvg()` and `APP_MARK_SVG` use it. `markAspect` returns
+  on the shared square 1024 viewBox from the tile layout (`MARK_VIEWBOX`,
+  `0 0 1024 1024`), the same crop for every app, so a bare glyph matches the tile
+  glyph optically. `size` sets both width and height; a string `size`
+  (for example `"2rem"`) is any CSS length. `APP_MARK_VIEWBOX` holds the shared square
+  viewBox for each app; `appMarkSvg()` and `APP_MARK_SVG` use it. `markAspect` returns
   1 and is kept for API stability only.
-- `variant="tile"` and `"tile-light"` keep the equalised, padded 1024 grid on a
+- `variant="tile"` and `"tile-light"` use the same 1024 grid on a
   rounded tile, always square. `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`,
   `APP_TILE_SVG`, `APP_TILE_LIGHT_SVG` and favicons are unchanged.
 

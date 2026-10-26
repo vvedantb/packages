@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
 import { APP_MARKS, APP_MARK_SVG, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markBBox, markLinecap, markStrokeWidth, pathBBox } from "./index";
+import { MARK_VIEWBOX } from "./svg";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -147,28 +148,25 @@ describe("AppMark props", () => {
 });
 
 describe("APP_MARK_VIEWBOX", () => {
-  it("is square for every app", () => {
+  it("is square and equal to the tile viewBox for every app", () => {
     for (const app of APP_NAMES) {
       const [, , w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
       expect(w).toBeGreaterThan(0);
       expect(w).toBe(h);
+      expect(APP_MARK_VIEWBOX[app]).toBe(MARK_VIEWBOX);
+      expect(APP_MARK_VIEWBOX[app]).toBe("0 0 1024 1024");
     }
   });
 });
 
-describe.each(APP_NAMES)("equalised viewBox %s", (app) => {
-  it("contains the path geometry (stroke marks grown by half the stroke width) and centres it", () => {
+describe.each(APP_NAMES)("shared viewBox %s", (app) => {
+  it("contains the path geometry (stroke marks grown by half the stroke width)", () => {
     const [x0, y0, x1, y1] = markBBox(app);
     const [x = 0, y = 0, w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
     expect(x).toBeLessThanOrEqual(x0);
     expect(y).toBeLessThanOrEqual(y0);
     expect(x + w).toBeGreaterThanOrEqual(x1);
     expect(y + h).toBeGreaterThanOrEqual(y1);
-    // The longer glyph side fits the square with less than 3 units to spare (whole-unit rounding and centring).
-    expect(w - Math.max(x1 - x0, y1 - y0)).toBeLessThan(3);
-    // Padding is the same on both sides of each axis, within 1 unit of rounding.
-    expect(Math.abs(x0 - x - (x + w - x1))).toBeLessThanOrEqual(1);
-    expect(Math.abs(y0 - y - (y + h - y1))).toBeLessThanOrEqual(1);
   });
 });
 
