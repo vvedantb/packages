@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.0
+
+- `APP_MARK_VIEWBOX` now holds square viewBoxes. The five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) share one crop, `173 197 629 629` (also exported as `APP_MARK_CROP_VIEWBOX`): the union of their `markBBox` results on the 1024 tile grid, centred in a square with about 4% padding, rounded outward to whole units. `vhub`, the widest app glyph, fills about 92% of the icon width. `projectv` is a brand mark, not an app, so it is left out of the union and has its own tight square, `172 181 687 687` (exported as `PROJECTV_MARK_VIEWBOX`): fitted to `markBBox("projectv")`, centred on the shorter axis, rounded outward, with no extra padding. Relative sizes between the app glyphs match the tiles. Path data (`APP_MARKS`) and the tile geometry (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) are unchanged. `appMarkSvg` and `APP_MARK_SVG` pick up the new viewBoxes.
+- `Icon*` (and `AppMark variant="mark"`): a numeric `size` now sets both width and height. The aspect-based width is removed, so wide glyphs (`IconVibot`, `IconVhub`, `IconProjectV`) render narrower than in 0.24.0 at the same `size`. A string `size` behaves as before. A pixel `stroke` is scaled by the new viewBox side, so stroke glyphs keep the same rendered weight.
+- `markAspect` stays exported for API stability. It now returns 1 for every app and is not used for sizing.
+- No new dependencies.
+
 ## 0.24.0
 
 - New Tabler-style app icons, exported from the root and from `@vvedantb/ui/brand`: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`, `IconVelth` and `IconProjectV`. Each is the plain glyph only, with no tile and no padding, cropped to the tight viewBox. Example: `<IconVerve size={24} color="currentColor" />`.

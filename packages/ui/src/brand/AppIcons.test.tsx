@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_ICONS, APP_MARKS, APP_NAMES, IconProjectV, markAspect, markStrokeWidth } from "./index";
+import { APP_ICONS, APP_MARKS, APP_NAMES, IconProjectV, markStrokeWidth } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -36,13 +36,13 @@ describe("Icon* app icons", () => {
     }
   });
 
-  it("renders the plain glyph with size as height and aspect width", async () => {
+  it("renders the plain glyph with size as both width and height", async () => {
     for (const app of APP_NAMES) {
       const Icon = APP_ICONS[app];
       const svg = await render(<Icon size={32} />);
       expect(svg.getAttribute("data-app")).toBe(app);
       expect(svg.getAttribute("height")).toBe("32");
-      expect(svg.getAttribute("width")).toBe(String(Math.round(32 * markAspect(app) * 100) / 100));
+      expect(svg.getAttribute("width")).toBe("32");
       expect(svg.getAttribute("aria-hidden")).toBe("true");
       expect(svg.querySelector("rect")).toBeNull();
       await act(async () => reactRoot?.unmount());

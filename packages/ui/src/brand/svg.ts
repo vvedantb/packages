@@ -5,7 +5,7 @@ export const APP_NAMES = ["projectv", "vibot", "vhub", "vmem", "verve", "velth"]
 
 export type AppName = (typeof APP_NAMES)[number];
 
-/** `mark`: glyph only, cropped tight, follows `currentColor`. `tile`: white glyph on a black tile. `tile-light`: black glyph on a white tile. */
+/** `mark`: glyph only on an equalised square viewBox, follows `currentColor`. `tile`: white glyph on a black tile. `tile-light`: black glyph on a white tile. */
 export type AppMarkVariant = "mark" | "tile" | "tile-light";
 
 export const MARK_VIEWBOX = "0 0 1024 1024";
@@ -175,20 +175,30 @@ export function markBBox(app: AppName): Box {
 
 
 /**
- * Tight viewBox per app (`minX minY width height` on the 1024 grid): the glyph box grown by half the
- * stroke width for stroke marks, rounded outward to whole units. Checked against `markBBox` in tests.
- * Used by the plain logo (`variant="mark"`, `appMarkSvg`). Tiles keep `MARK_VIEWBOX`.
+ * Shared crop for the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) in the plain logo (`variant="mark"`,
+ * `appMarkSvg`, `Icon*`): the union of their `markBBox` results on the 1024 tile grid (x 186 to 789, y 259.96 to 761.7),
+ * centred in a square of side max(width, height) x 1.04 (about 4% padding), then rounded outward to whole units.
+ * `projectv` is left out so its wide brand mark does not shrink the app glyphs. Not the full tile. Checked in tests.
  */
+export const APP_MARK_CROP_VIEWBOX = "173 197 629 629";
+
+/**
+ * Own tight square for `projectv` (a brand mark, not an app): `markBBox("projectv")` (x 172 to 858, y 377 to 672),
+ * centred on the shorter axis and rounded outward to whole units, with no extra padding.
+ */
+export const PROJECTV_MARK_VIEWBOX = "172 181 687 687";
+
+/** Plain-mark viewBox per app: the shared crop for the five apps, a tight square for `projectv`. Always square. */
 export const APP_MARK_VIEWBOX: Record<AppName, string> = {
-  projectv: "172 377 686 295",
-  vibot: "295 314 494 398",
-  vhub: "186 338 582 348",
-  vmem: "255 259 513 503",
-  verve: "260 319 504 413",
-  velth: "273 276 478 482",
+  projectv: PROJECTV_MARK_VIEWBOX,
+  vibot: APP_MARK_CROP_VIEWBOX,
+  vhub: APP_MARK_CROP_VIEWBOX,
+  vmem: APP_MARK_CROP_VIEWBOX,
+  verve: APP_MARK_CROP_VIEWBOX,
+  velth: APP_MARK_CROP_VIEWBOX,
 };
 
-/** Width over height of a mark's tight viewBox. */
+/** Width over height of a mark's viewBox. Always about 1, because the viewBoxes are square. Kept for API stability; do not use it for sizing. */
 export function markAspect(app: AppName): number {
   const [, , w = 1, h = 1] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
   return w / h;
@@ -205,7 +215,7 @@ function pathElements(app: AppName): string {
   return APP_MARKS[app].paths.map((d) => `<path d="${d}"/>`).join("");
 }
 
-/** Glyph only, cropped tight with no padding, painted with `color` (default `currentColor`). */
+/** Glyph only on its equalised square viewBox, painted with `color` (default `currentColor`). */
 export function appMarkSvg(app: AppName, color = "currentColor"): string {
   return `<svg ${NS} viewBox="${APP_MARK_VIEWBOX[app]}" ${markPaintAttrs(app, color)}>${pathElements(app)}</svg>\n`;
 }

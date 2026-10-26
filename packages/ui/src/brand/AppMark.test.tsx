@@ -3,7 +3,8 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_MARKS, APP_MARK_SVG, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markAspect, markBBox, markLinecap, markStrokeWidth, pathBBox } from "./index";
+import { APP_MARKS, APP_MARK_SVG, APP_MARK_CROP_VIEWBOX, APP_MARK_VIEWBOX, APP_NAMES, APP_TILE_LIGHT_SVG, APP_TILE_SVG, AppMark, appAdaptiveSvg, appExtension128Svg, markBBox, markLinecap, markStrokeWidth, pathBBox, PROJECTV_MARK_VIEWBOX } from "./index";
+import { MARK_VIEWBOX } from "./svg";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -52,7 +53,7 @@ describe("brand exports", () => {
 describe.each(APP_NAMES)("AppMark %s", (app) => {
   const { kind } = APP_MARKS[app];
 
-  it("renders the glyph on its tight viewBox in currentColor", async () => {
+  it("renders the glyph on its square viewBox in currentColor", async () => {
     const svg = await render(<AppMark app={app} />);
     expect(svg.getAttribute("viewBox")).toBe(APP_MARK_VIEWBOX[app]);
     expect(svg.querySelector("rect")).toBeNull();
@@ -109,11 +110,10 @@ describe("AppMark props", () => {
   it("sets width and height from size (default 24)", async () => {
     const svg = await render(<AppMark app="verve" />);
     expect(svg.getAttribute("height")).toBe("24");
-    expect(Number(svg.getAttribute("width"))).toBeCloseTo(24 * markAspect("verve"), 1);
+    expect(svg.getAttribute("width")).toBe("24");
     const sized = await render(<AppMark app="projectv" size={64} />);
     expect(sized.getAttribute("height")).toBe("64");
-    expect(Number(sized.getAttribute("width"))).toBeCloseTo(64 * markAspect("projectv"), 1);
-    expect(Number(sized.getAttribute("width"))).toBeGreaterThan(64);
+    expect(sized.getAttribute("width")).toBe("64");
     const tile = await render(<AppMark app="projectv" variant="tile" size={64} />);
     expect(tile.getAttribute("width")).toBe("64");
     expect(tile.getAttribute("height")).toBe("64");
@@ -147,19 +147,45 @@ describe("AppMark props", () => {
   });
 });
 
-describe.each(APP_NAMES)("tight viewBox %s", (app) => {
-  it("matches the path geometry (stroke marks grown by half the stroke width)", () => {
-    const [x0, y0, x1, y1] = markBBox(app);
-    const [x = 0, y = 0, w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
-    // Constants round outward to whole units: they contain the box and overshoot by less than 1.
-    expect(x).toBeLessThanOrEqual(x0);
-    expect(y).toBeLessThanOrEqual(y0);
-    expect(x + w).toBeGreaterThanOrEqual(x1);
-    expect(y + h).toBeGreaterThanOrEqual(y1);
-    expect(x0 - x).toBeLessThan(1);
-    expect(y0 - y).toBeLessThan(1);
-    expect(x + w - x1).toBeLessThan(1);
-    expect(y + h - y1).toBeLessThan(1);
+const FIVE_APPS = APP_NAMES.filter((app) => app !== "projectv");
+const parseBox = (vb: string) => vb.split(" ").map(Number) as [number, number, number, number];
+const contains = (vb: string, [x0, y0, x1, y1]: ReturnType<typeof markBBox>) => {
+  const [x, y, w, h] = parseBox(vb);
+  return x <= x0 && y <= y0 && x + w >= x1 && y + h >= y1;
+};
+
+describe("APP_MARK_VIEWBOX", () => {
+  it("is one identical square for the five apps, and is not the tile viewBox", () => {
+    const [first] = FIVE_APPS;
+    expect(FIVE_APPS).toHaveLength(5);
+    for (const app of FIVE_APPS) {
+      const [, , w, h] = parseBox(APP_MARK_VIEWBOX[app]);
+      expect(w).toBeGreaterThan(0);
+      expect(w).toBe(h);
+      expect(APP_MARK_VIEWBOX[app]).toBe(APP_MARK_VIEWBOX[first!]);
+      expect(APP_MARK_VIEWBOX[app]).not.toBe(MARK_VIEWBOX);
+      expect(APP_MARK_VIEWBOX[app]).toBe(APP_MARK_CROP_VIEWBOX);
+      expect(contains(APP_MARK_VIEWBOX[app], markBBox(app))).toBe(true);
+    }
+  });
+
+  it("is 1.03 to 1.05 times the long side of the five-app union", () => {
+    const boxes = FIVE_APPS.map(markBBox);
+    const long = Math.max(Math.max(...boxes.map((b) => b[2])) - Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[3])) - Math.min(...boxes.map((b) => b[1])));
+    const side = parseBox(APP_MARK_CROP_VIEWBOX)[2];
+    expect(side / long).toBeGreaterThanOrEqual(1.03);
+    expect(side / long).toBeLessThanOrEqual(1.05);
+  });
+
+  it("gives projectv its own tight square", () => {
+    const vb = APP_MARK_VIEWBOX.projectv;
+    const [, , w, h] = parseBox(vb);
+    const [x0, y0, x1, y1] = markBBox("projectv");
+    expect(w).toBe(h);
+    expect(vb).not.toBe(APP_MARK_CROP_VIEWBOX);
+    expect(vb).toBe(PROJECTV_MARK_VIEWBOX);
+    expect(contains(vb, markBBox("projectv"))).toBe(true);
+    expect(w - Math.max(x1 - x0, y1 - y0)).toBeLessThan(3);
   });
 });
 

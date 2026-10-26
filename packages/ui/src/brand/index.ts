@@ -3,7 +3,9 @@ export { AppMark } from "./AppMark";
 export type { AppMarkProps } from "./AppMark";
 export {
   APP_MARKS,
+  APP_MARK_CROP_VIEWBOX,
   APP_MARK_VIEWBOX,
+  PROJECTV_MARK_VIEWBOX,
   APP_MARK_SVG,
   APP_NAMES,
   APP_TILE_LIGHT_SVG,
