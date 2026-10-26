@@ -166,9 +166,7 @@ describe("PricingModal multi-plan", () => {
   it("has the approved V_PRO_APP_BENEFITS copy in order", () => {
     expect(V_PRO_APP_BENEFITS.map((g) => g.app)).toEqual(["vibot", "vmem", "vhub", "velth", "verve"]);
     expect(V_PRO_APP_BENEFITS[0]!.items).toEqual([
-      "1000 messages / day",
-      "100 image gens / day",
-      "100 deep & 20 extreme searches / day",
+      "Higher AI limits/usage",
       "Smarter AI for chats, documents & sub-agents",
     ]);
     expect(V_PRO_APP_BENEFITS.every((g) => g.items.length > 0)).toBe(true);

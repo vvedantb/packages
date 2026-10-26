@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import * as root from "../index";
-import { APP_ICONS, APP_MARKS, APP_NAMES, IconProjectV, markStrokeWidth } from "./index";
+import { APP_ICONS, APP_MARKS, APP_MARK_VIEWBOX, APP_MARK_VIEWBOX_START, APP_NAMES, IconProjectV, markBBox, markStrokeWidth } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -84,5 +84,41 @@ describe("Icon* app icons", () => {
     expect(svg.getAttribute("role")).toBe("img");
     expect(svg.querySelector("title")?.textContent).toBe("Project V");
     expect(svg.getAttribute("aria-labelledby")).toBe(svg.querySelector("title")?.id);
+  });
+
+  it("align defaults to the centred viewBox", async () => {
+    for (const app of APP_NAMES) {
+      const Icon = APP_ICONS[app];
+      const svg = await render(<Icon />);
+      expect(svg.getAttribute("viewBox")).toBe(APP_MARK_VIEWBOX[app]);
+      expect(svg.getAttribute("data-align")).toBe("center");
+      await act(async () => reactRoot?.unmount());
+      host?.remove();
+      const centred = await render(<Icon align="center" />);
+      expect(centred.getAttribute("viewBox")).toBe(APP_MARK_VIEWBOX[app]);
+      await act(async () => reactRoot?.unmount());
+      host?.remove();
+    }
+  });
+
+  it('align="start" puts glyph minX on the viewBox x, keeping side, y and square size', async () => {
+    for (const app of APP_NAMES) {
+      const Icon = APP_ICONS[app];
+      const svg = await render(<Icon size={16} align="start" />);
+      const viewBox = svg.getAttribute("viewBox")!;
+      expect(viewBox).toBe(APP_MARK_VIEWBOX_START[app]);
+      expect(svg.getAttribute("data-align")).toBe("start");
+      const [x, y, w, h] = viewBox.split(" ").map(Number);
+      const [cx, cy, cw, ch] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
+      expect(x).toBe(markBBox(app)[0]);
+      expect(Number(viewBox.split(" ")[0])).toBe(markBBox(app)[0]);
+      expect([y, w, h]).toEqual([cy, cw, ch]);
+      expect(w).toBe(app === "projectv" ? 687 : 629);
+      expect(x).toBeGreaterThan(cx!);
+      expect(svg.getAttribute("width")).toBe("16");
+      expect(svg.getAttribute("height")).toBe("16");
+      await act(async () => reactRoot?.unmount());
+      host?.remove();
+    }
   });
 });

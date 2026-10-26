@@ -893,6 +893,15 @@ defaults to `currentColor`. `stroke` sets the stroke width in pixels for stroke
 glyphs (fill glyphs ignore it). `title` gives an accessible name. The ref goes
 to the `<svg>`.
 
+`align?: "center" | "start"` (0.25.1, default `"center"`) sets where the glyph sits
+in its equal-size square. `"start"` left-aligns the glyph's ink in the same square
+(same scale, same `size` x `size` box), so labels line up in a vertical list.
+`APP_MARK_VIEWBOX_START` holds the viewBoxes.
+
+```tsx
+<IconVmem size={16} align="start" />
+```
+
 ### `AppMark` (deprecated)
 
 Deprecated in favour of the `Icon*` components for plain marks. Tiles stay here.
@@ -900,11 +909,11 @@ Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
 `variant`, `size`, `title`.
 
 - `variant="mark"` (default) is the plain logo in `currentColor`. It sits
-  on a square viewBox. The five apps (`vibot`, `vhub`, `vmem`, `verve`, `velth`) share one
-  crop (`APP_MARK_CROP_VIEWBOX`, `173 197 629 629`): the union of their glyph boxes on the
-  1024 tile grid, centred, with about 4% padding, so relative glyph sizes match the tiles and
-  the widest glyph fills about 92% of the icon box. `projectv` is a brand mark, so it has its
-  own tight square (`PROJECTV_MARK_VIEWBOX`, `172 181 687 687`). `size` sets both width and
+  on a square viewBox. The five apps (`vibot`, `vhub`, `vmem`, `verve`, `velth`) keep one
+  frame size, 629 x 629 (`APP_MARK_CROP_VIEWBOX` is the historical `173 197 629 629`), so relative
+  glyph sizes match the tiles. Each viewBox origin is centred on that glyph's `markBBox`, so no
+  glyph sits off-centre in its square. `projectv` is a brand mark, so it keeps its own 687 frame,
+  centred on its bbox (`PROJECTV_MARK_VIEWBOX`, `171.5 181 687 687`). `size` sets both width and
   height; a string `size` (for example `"2rem"`) is any CSS length. `APP_MARK_VIEWBOX` holds the
   viewBox for each app; `appMarkSvg()` and `APP_MARK_SVG` use it. `markAspect` returns
   1 and is kept for API stability only.

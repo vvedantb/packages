@@ -155,17 +155,24 @@ const contains = (vb: string, [x0, y0, x1, y1]: ReturnType<typeof markBBox>) => 
 };
 
 describe("APP_MARK_VIEWBOX", () => {
-  it("is one identical square for the five apps, and is not the tile viewBox", () => {
-    const [first] = FIVE_APPS;
+  it("is an equal-scale 629 square per app, not identical strings, and not the tile viewBox", () => {
     expect(FIVE_APPS).toHaveLength(5);
     for (const app of FIVE_APPS) {
       const [, , w, h] = parseBox(APP_MARK_VIEWBOX[app]);
-      expect(w).toBeGreaterThan(0);
+      expect(w).toBe(629);
       expect(w).toBe(h);
-      expect(APP_MARK_VIEWBOX[app]).toBe(APP_MARK_VIEWBOX[first!]);
       expect(APP_MARK_VIEWBOX[app]).not.toBe(MARK_VIEWBOX);
-      expect(APP_MARK_VIEWBOX[app]).toBe(APP_MARK_CROP_VIEWBOX);
       expect(contains(APP_MARK_VIEWBOX[app], markBBox(app))).toBe(true);
+    }
+    expect(new Set(FIVE_APPS.map((app) => APP_MARK_VIEWBOX[app])).size).toBe(5);
+  });
+
+  it("centres every glyph in its frame to within 1% of the side", () => {
+    for (const app of APP_NAMES) {
+      const [x, y, w, h] = parseBox(APP_MARK_VIEWBOX[app]);
+      const [x0, y0, x1, y1] = markBBox(app);
+      expect(Math.abs((x0 + x1) / 2 - (x + w / 2))).toBeLessThanOrEqual(0.01 * w);
+      expect(Math.abs((y0 + y1) / 2 - (y + h / 2))).toBeLessThanOrEqual(0.01 * h);
     }
   });
 
@@ -182,6 +189,7 @@ describe("APP_MARK_VIEWBOX", () => {
     const [, , w, h] = parseBox(vb);
     const [x0, y0, x1, y1] = markBBox("projectv");
     expect(w).toBe(h);
+    expect(w).toBe(687);
     expect(vb).not.toBe(APP_MARK_CROP_VIEWBOX);
     expect(vb).toBe(PROJECTV_MARK_VIEWBOX);
     expect(contains(vb, markBBox("projectv"))).toBe(true);

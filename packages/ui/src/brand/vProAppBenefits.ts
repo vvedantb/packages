@@ -11,9 +11,7 @@ export const V_PRO_APP_BENEFITS: readonly PricingPlanAppBenefit[] = [
   {
     app: "vibot",
     items: [
-      "1000 messages / day",
-      "100 image gens / day",
-      "100 deep & 20 extreme searches / day",
+      "Higher AI limits/usage",
       "Smarter AI for chats, documents & sub-agents",
     ],
   },
