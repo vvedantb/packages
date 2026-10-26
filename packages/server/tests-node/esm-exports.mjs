@@ -54,7 +54,7 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `if (m.ARTIFACT_READY_TYPE !== "artifact:ready" || m.ARTIFACT_STATE_MAX_KEYS !== 32) throw new Error("artifact constants");\n` +
       `if (m.MCP_TOKEN_CACHE_TTL_MS !== 300000 || m.MCP_TOKEN_CACHE_PURGE_BATCH !== 500 || m.MCP_TOKEN_CACHE_TABLE !== "mcpTokenCache") throw new Error("token cache constants");\n` +
       `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n` +
-      `if (m.V_PRO_PLAN_KEY !== "v_pro" || m.V_PRO_LEGACY_PLAN_KEY !== "vibot_pro" || !m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n`,
+      `if (m.V_PRO_PLAN_KEY !== "v_pro" || !m.hasVPlan({ pla: "u:v_pro" }) || m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });

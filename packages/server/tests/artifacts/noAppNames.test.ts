@@ -11,7 +11,7 @@ const pkgDir = fileURLToPath(new URL("../..", import.meta.url));
 // short ones that are also English words only as whole words.
 const APP_NAMES = /(?:vibot|vmem|vhub|velth)|\b(?:eva|verve)\b/i;
 
-// The legacy plan slug `vibot_pro` is a Clerk Billing key that `hasVPlan` must match.
+// The retired plan slug `vibot_pro` stays in CHANGELOG.md and docs/convex.md as history.
 const LEGACY_PLAN_SLUG = /vibot_pro/gi;
 
 function filesUnder(dir: string): string[] {

@@ -3,22 +3,24 @@ import {
   hasVPlan,
   V_PRO_PLAN_KEY,
   V_PRO_PLAN_KEYS,
-  V_PRO_LEGACY_PLAN_KEY,
 } from "@vvedantb/server";
 
 describe("hasVPlan", () => {
   it("exports the plan keys", () => {
     expect(V_PRO_PLAN_KEY).toBe("v_pro");
-    expect(V_PRO_LEGACY_PLAN_KEY).toBe("vibot_pro");
-    expect([...V_PRO_PLAN_KEYS]).toEqual(["v_pro", "vibot_pro"]);
+    expect([...V_PRO_PLAN_KEYS]).toEqual(["v_pro"]);
   });
 
-  it.each(["u:v_pro", "o:v_pro", "u:vibot_pro", "o:vibot_pro", "v_pro", "vibot_pro"])(
+  it.each(["u:v_pro", "o:v_pro", "v_pro"])(
     "accepts pla %s",
     (pla) => {
       expect(hasVPlan({ pla })).toBe(true);
     },
   );
+
+  it.each(["u:vibot_pro", "o:vibot_pro", "vibot_pro"])("no longer accepts retired plan %s", (pla) => {
+    expect(hasVPlan({ pla })).toBe(false);
+  });
 
   it("accepts a getUserIdentity-shaped object", () => {
     const identity = {
