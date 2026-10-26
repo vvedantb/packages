@@ -1,7 +1,7 @@
-/* Instrument Serif ships only regular (+ italic). Disable faux-bold. */
 .landing-wordmark-text {
-  font-family: var(--font-instrumentSerif);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: -0.02em;
   font-synthesis: none;
 }
 
