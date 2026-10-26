@@ -148,14 +148,24 @@ describe("AppMark props", () => {
 });
 
 describe("APP_MARK_VIEWBOX", () => {
-  it("is square and equal to the tile viewBox for every app", () => {
+  it("is identical and square for every app, and is not the tile viewBox", () => {
+    const [first] = APP_NAMES;
     for (const app of APP_NAMES) {
       const [, , w = 0, h = 0] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
       expect(w).toBeGreaterThan(0);
       expect(w).toBe(h);
-      expect(APP_MARK_VIEWBOX[app]).toBe(MARK_VIEWBOX);
-      expect(APP_MARK_VIEWBOX[app]).toBe("0 0 1024 1024");
+      expect(APP_MARK_VIEWBOX[app]).toBe(APP_MARK_VIEWBOX[first!]);
+      expect(APP_MARK_VIEWBOX[app]).not.toBe(MARK_VIEWBOX);
+      expect(APP_MARK_VIEWBOX[app]).toBe("165 160 700 700");
     }
+  });
+
+  it("is within a few percent of the union's long side", () => {
+    const boxes = APP_NAMES.map(markBBox);
+    const long = Math.max(Math.max(...boxes.map((b) => b[2])) - Math.min(...boxes.map((b) => b[0])), Math.max(...boxes.map((b) => b[3])) - Math.min(...boxes.map((b) => b[1])));
+    const side = Number(APP_MARK_VIEWBOX.projectv.split(" ")[2]);
+    expect(side / long).toBeGreaterThanOrEqual(1.01);
+    expect(side / long).toBeLessThanOrEqual(1.04);
   });
 });
 
