@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.26.0
+
+- New `AppWordmark` (and types `AppWordmarkProps`, `ProductAppName`), exported from the root and `@vvedantb/ui/brand`. It shows the app `Icon*` and the full lowercase app name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) in Instrument Serif, weight 400, for the five product apps. The leading `v` is upright and the remainder (`ibot`, `mem`, `erve`, `elth`, `hub`) is italic, matching vmem. `projectv` is not accepted.
+- API: `app` (required), `size` (font and icon px, default 24; gap is `size * 8 / 24` px), `icon` (default `true`), `href` (renders an `<a>` with a focus ring; otherwise a `<span>`), `className`, and `target`, `rel`, `aria-label`, `title`, `id`.
+- Font setup is the app's job: import `@vvedantb/ui/landing.css` (for `.landing-wordmark-text`), load Instrument Serif regular and italic, and set `--font-instrumentSerif`. The package does not bundle the font. Instrument Serif is for app names only.
+- No new dependencies.
+
 ## 0.25.2
 
 - `PricingModal` multi-plan (2 plans): dialog max width raised from `sm:max-w-3xl` (768px) to `sm:max-w-[68rem]` (1088px) so the V Pro per-app perk grid mostly fits each line on one row at desktop width. One-plan, three-plan and four-plan widths, stacking on narrow screens, and all copy/prices/behaviour are unchanged.

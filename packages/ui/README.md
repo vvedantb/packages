@@ -10,7 +10,7 @@ Shared React 19 web UI. Source-exported: no build step.
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `border-beam` (opt-in, for `BorderBeam`), `markdown` (opt-in, for `Markdown`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
-| `@vvedantb/ui/landing.css` | Landing page classes (`landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
+| `@vvedantb/ui/landing.css` | Landing page classes (`landing-wordmark-text` for `AppWordmark`, `landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
 | `@vvedantb/ui/package.json` | Package metadata. |
 
 Removed in 0.4.0-rc.1: the `/cn`, `/sonner`, `/audio`, `/shell`, `/app`, `/composer` and `/tokens/native` subpaths. Import from `@vvedantb/ui`. See [`MIGRATION.md`](MIGRATION.md).
@@ -900,6 +900,44 @@ in its equal-size square. `"start"` left-aligns the glyph's ink in the same squa
 
 ```tsx
 <IconVmem size={16} align="start" />
+```
+
+### `AppWordmark`
+
+Shared marketing wordmark for product app names across Project V sites: the `Icon*` glyph, then the full lowercase name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) in Instrument Serif, weight 400. The leading `v` is upright and the remainder (`ibot`, `mem`, `erve`, `elth`, `hub`) is italic, matching vmem. The two sit flush with no gap. The label is the lowercase app id, not `FAMILY_APPS[].name`. Use it in headers, the Products menu, ecosystem cards and footers.
+
+**Font rule:** across all Project V sites, Instrument Serif is reserved only for app names. Headings and everything else stay sans (Instrument Sans or system). Do not use this font treatment for section titles.
+
+Project V's own wordmark stays Michroma. Never use `AppWordmark` for `projectv` (the type rejects it).
+
+Setup. The package does not bundle the font.
+
+```css
+@import "@vvedantb/ui/landing.css"; /* provides .landing-wordmark-text */
+
+@theme {
+  --font-instrumentSerif: "Instrument Serif", Georgia, serif;
+}
+```
+
+Load Instrument Serif regular and italic (Google Fonts or self-hosted) in the app.
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `app` | `"vibot" \| "vmem" \| "verve" \| "velth" \| "vhub"` | required | `ProductAppName`. |
+| `size` | `number` | `24` | Font size in px. The icon is `size` px square. Gap is `size * 8 / 24` px. |
+| `icon` | `boolean` | `true` | `false` renders text only. |
+| `href` | `string` | none | Root is an `<a>` with a focus ring. Otherwise a `<span>`. |
+| `className` | `string` | none | On the root. |
+| `target`, `rel`, `aria-label`, `title`, `id` | as `<a>` | none | Forwarded to the root. `target="_blank"` is never forced. |
+
+```tsx
+import { AppWordmark } from "@vvedantb/ui"
+
+<AppWordmark app="vmem" />                                  {/* header, 24 */}
+<AppWordmark app="vmem" size={16} />                        {/* menu or footer */}
+<AppWordmark app="vibot" icon={false} />                    {/* text only */}
+<AppWordmark app="vhub" href="https://vhub.projectv.uk" />  {/* link */}
 ```
 
 ### `AppMark` (deprecated)
