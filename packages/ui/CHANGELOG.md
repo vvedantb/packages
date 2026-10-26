@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.2
+
+- `PricingModal` multi-plan (2 plans): dialog max width raised from `sm:max-w-3xl` (768px) to `sm:max-w-[68rem]` (1088px) so the V Pro per-app perk grid mostly fits each line on one row at desktop width. One-plan, three-plan and four-plan widths, stacking on narrow screens, and all copy/prices/behaviour are unchanged.
+- No new dependencies.
+
 ## 0.25.1
 
 - App icons centred in their square frames. In 0.25.0 the five app glyphs (`vibot`, `vhub`, `vmem`, `verve`, `velth`) shared one crop origin, so glyphs that were off-centre in the tile (`vmem` most) rendered off-centre. The five apps keep the 629 x 629 frame (equal scale), and each `APP_MARK_VIEWBOX` origin is now centred on that glyph's `markBBox`. `projectv` keeps 687 x 687, centred on its bbox (`171.5 181 687 687`). `APP_MARK_CROP_VIEWBOX` stays as the historical size constant. Tiles (`MARK_VIEWBOX`, `appTileSvg`, `appAdaptiveSvg`, `appExtension128Svg`) and path data (`APP_MARKS`) are unchanged.
