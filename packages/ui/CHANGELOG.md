@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.1
+
+- `AppWordmark`: `ICON_SCALE` changes from `0.875` to `1.4`. The icon is now `Math.round(size * 1.4)` px square (34px at the default size 24, 67px at size 48). The gap stays `0.3em`.
+- Why: the glyphs fill only 55-80% of their square frame (average about 0.68), so the old icon looked smaller than the text. At 1.4 the visible glyph is about 1.3x the Instrument Sans 500 cap height (0.72em), so icons overhang the lowercase name slightly above and below, and stay vertically centred.
+- Glyph SVGs, paths and viewBoxes are unchanged.
+- Observation only, no change: stroke glyphs may look light next to weight-500 text at this size. A slightly thicker stroke could balance them.
+- No new dependencies.
+
 ## 0.26.0
 
 - New `AppWordmark` (and types `AppWordmarkProps`, `ProductAppName`), exported from the root and `@vvedantb/ui/brand`. It shows the app `Icon*` and the full lowercase app name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) for the five product apps, in Instrument Sans (`--font-sans`), weight 500, letter-spacing `-0.02em`, upright. `projectv` is not accepted.

@@ -9,7 +9,7 @@ export type ProductAppName = Exclude<AppName, "projectv">;
 export type AppWordmarkProps = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "target" | "rel" | "aria-label" | "title" | "id"> & {
   /** Which product app's name to show. The label is always the lowercase app id. */
   app: ProductAppName;
-  /** Text font size in px (default 24). The icon is `Math.round(size * 0.875)` px square and the gap is `0.3em`. */
+  /** Text font size in px (default 24). The icon is `Math.round(size * 1.4)` px square (larger than the text, so the glyph overhangs the cap height) and the gap is `0.3em`. */
   size?: number;
   /** `false` renders the name only (default `true`). */
   icon?: boolean;
@@ -18,8 +18,12 @@ export type AppWordmarkProps = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "ta
   className?: string;
 };
 
-/** Icon size relative to the text font size. */
-const ICON_SCALE = 0.875;
+/**
+ * Icon frame size relative to the text font size. The glyphs fill about 55-80% of their square frame, so 1.4 makes the
+ * visible glyph about 1.3x the Instrument Sans 500 cap height (0.72em): a slight overhang above and below the letters.
+ * Stroke glyphs may read light next to weight-500 text. That is an observation only: stroke widths are unchanged.
+ */
+const ICON_SCALE = 1.4;
 
 const FOCUS_RING =
   "rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";

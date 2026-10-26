@@ -59,19 +59,19 @@ describe("AppWordmark", () => {
     expect(el.textContent).toBe("vmem");
   });
 
-  it("sets the font size from size and the icon to Math.round(size * 0.875)", async () => {
+  it("sets the font size from size and the icon to Math.round(size * 1.4)", async () => {
     const el = await render(<AppWordmark app="verve" size={48} />);
     expect((el.firstElementChild as HTMLElement).style.fontSize).toBe("48px");
     const svg = el.querySelector("svg")!;
-    expect(svg.getAttribute("width")).toBe("42");
-    expect(svg.getAttribute("height")).toBe("42");
+    expect(svg.getAttribute("width")).toBe("67");
+    expect(svg.getAttribute("height")).toBe("67");
   });
 
-  it("defaults to size 24 with a 21px icon and a 0.3em gap", async () => {
+  it("defaults to size 24 with a 34px icon and a 0.3em gap", async () => {
     const el = await render(<AppWordmark app="vhub" />);
     const rootEl = el.firstElementChild as HTMLElement;
     expect(rootEl.style.fontSize).toBe("24px");
-    expect(el.querySelector("svg")!.getAttribute("width")).toBe("21");
+    expect(el.querySelector("svg")!.getAttribute("width")).toBe("34");
     expect(rootEl.style.gap).toBe("0.3em");
   });
 
