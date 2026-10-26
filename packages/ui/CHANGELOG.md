@@ -2,9 +2,10 @@
 
 ## 0.26.0
 
-- New `AppWordmark` (and types `AppWordmarkProps`, `ProductAppName`), exported from the root and `@vvedantb/ui/brand`. It shows the app `Icon*` and the full lowercase app name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) in Instrument Serif, weight 400, for the five product apps. The leading `v` is upright and the remainder (`ibot`, `mem`, `erve`, `elth`, `hub`) is italic, matching vmem. `projectv` is not accepted.
-- API: `app` (required), `size` (font and icon px, default 24; gap is `size * 8 / 24` px), `icon` (default `true`), `href` (renders an `<a>` with a focus ring; otherwise a `<span>`), `className`, and `target`, `rel`, `aria-label`, `title`, `id`.
-- Font setup is the app's job: import `@vvedantb/ui/landing.css` (for `.landing-wordmark-text`), load Instrument Serif regular and italic, and set `--font-instrumentSerif`. The package does not bundle the font. Instrument Serif is for app names only.
+- New `AppWordmark` (and types `AppWordmarkProps`, `ProductAppName`), exported from the root and `@vvedantb/ui/brand`. It shows the app `Icon*` and the full lowercase app name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) for the five product apps, in Instrument Sans (`--font-sans`), weight 500, letter-spacing `-0.02em`, upright. `projectv` is not accepted.
+- API: `app` (required), `size` (text font size in px, default 24; the icon is `Math.round(size * 0.875)` px and the gap is `0.3em`), `icon` (default `true`), `href` (renders an `<a>` with a focus ring; otherwise a `<span>`), `className`, and `target`, `rel`, `aria-label`, `title`, `id`.
+- `landing.css` adds `.landing-wordmark-text` (`font-family: var(--font-sans)`, weight 500, letter-spacing `-0.02em`, `font-synthesis: none`). The package does not bundle the font: apps load Instrument Sans, as they already do for the UI.
+- Font rule: app names use this sans `AppWordmark`. Only the PROJECT V wordmark uses Michroma. No serif and no italic sans for app names.
 - No new dependencies.
 
 ## 0.25.2

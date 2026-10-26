@@ -33,17 +33,17 @@ describe("AppWordmark", () => {
     expect(AppWordmark.displayName).toBe("AppWordmark");
   });
 
-  it("renders the full lowercase name for every product app", async () => {
+  it("renders the full lowercase name as one text unit for every product app", async () => {
     for (const app of APPS) {
       const el = await render(<AppWordmark app={app} />);
       const text = el.querySelector(".landing-wordmark-text")!;
       expect(text.textContent).toBe(app);
-      expect(text.className).not.toMatch(/(^|\s)italic(\s|$)/);
-      const rest = text.querySelector(".italic")!;
-      expect(rest.textContent).toBe(app.slice(1));
+      expect(text.childNodes).toHaveLength(1);
       expect(text.firstChild!.nodeType).toBe(Node.TEXT_NODE);
-      expect(text.firstChild!.textContent).toBe("v");
-      expect(text.lastChild).toBe(rest);
+      expect(text.className).not.toMatch(/(^|\s)italic(\s|$)/);
+      expect(text.querySelector(".italic, i, em, span")).toBeNull();
+      expect((text as HTMLElement).style.fontStyle).toBe("");
+      expect(el.querySelector(".italic")).toBeNull();
       await act(async () => reactRoot?.unmount());
       host?.remove();
     }
@@ -59,19 +59,20 @@ describe("AppWordmark", () => {
     expect(el.textContent).toBe("vmem");
   });
 
-  it("sizes the font, icon and gap from size", async () => {
+  it("sets the font size from size and the icon to Math.round(size * 0.875)", async () => {
     const el = await render(<AppWordmark app="verve" size={48} />);
-    expect((el.querySelector(".landing-wordmark-text") as HTMLElement).style.fontSize).toBe("48px");
+    expect((el.firstElementChild as HTMLElement).style.fontSize).toBe("48px");
     const svg = el.querySelector("svg")!;
-    expect(svg.getAttribute("width")).toBe("48");
-    expect(svg.getAttribute("height")).toBe("48");
-    expect((el.firstElementChild as HTMLElement).style.gap).toBe("16px");
+    expect(svg.getAttribute("width")).toBe("42");
+    expect(svg.getAttribute("height")).toBe("42");
   });
 
-  it("defaults to size 24 with an 8px gap", async () => {
+  it("defaults to size 24 with a 21px icon and a 0.3em gap", async () => {
     const el = await render(<AppWordmark app="vhub" />);
-    expect(el.querySelector("svg")!.getAttribute("width")).toBe("24");
-    expect((el.firstElementChild as HTMLElement).style.gap).toBe("8px");
+    const rootEl = el.firstElementChild as HTMLElement;
+    expect(rootEl.style.fontSize).toBe("24px");
+    expect(el.querySelector("svg")!.getAttribute("width")).toBe("21");
+    expect(rootEl.style.gap).toBe("0.3em");
   });
 
   it("renders an anchor with href and a span without", async () => {

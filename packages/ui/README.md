@@ -904,28 +904,22 @@ in its equal-size square. `"start"` left-aligns the glyph's ink in the same squa
 
 ### `AppWordmark`
 
-Shared marketing wordmark for product app names across Project V sites: the `Icon*` glyph, then the full lowercase name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) in Instrument Serif, weight 400. The leading `v` is upright and the remainder (`ibot`, `mem`, `erve`, `elth`, `hub`) is italic, matching vmem. The two sit flush with no gap. The label is the lowercase app id, not `FAMILY_APPS[].name`. Use it in headers, the Products menu, ecosystem cards and footers.
+Shared marketing wordmark for product app names across Project V sites: the `Icon*` glyph, then the full lowercase name (`vibot`, `vmem`, `verve`, `velth`, `vhub`) in Instrument Sans (`--font-sans`), weight 500, letter-spacing `-0.02em`, upright. The label is the lowercase app id, not `FAMILY_APPS[].name`. Use it in headers, the Products menu, ecosystem cards and footers.
 
-**Font rule:** across all Project V sites, Instrument Serif is reserved only for app names. Headings and everything else stay sans (Instrument Sans or system). Do not use this font treatment for section titles.
+**Font rule:** app names use this sans `AppWordmark` (Instrument Sans, `--font-sans`, weight 500). Only the PROJECT V wordmark uses Michroma. No serif and no italic sans for app names.
 
-Project V's own wordmark stays Michroma. Never use `AppWordmark` for `projectv` (the type rejects it).
+Never use `AppWordmark` for `projectv` (the type rejects it).
 
-Setup. The package does not bundle the font.
+Setup. The package does not bundle the font. `--font-sans` comes from the package tokens. Load Instrument Sans in the app, as for the rest of the UI, if it is not already loaded.
 
 ```css
 @import "@vvedantb/ui/landing.css"; /* provides .landing-wordmark-text */
-
-@theme {
-  --font-instrumentSerif: "Instrument Serif", Georgia, serif;
-}
 ```
-
-Load Instrument Serif regular and italic (Google Fonts or self-hosted) in the app.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `app` | `"vibot" \| "vmem" \| "verve" \| "velth" \| "vhub"` | required | `ProductAppName`. |
-| `size` | `number` | `24` | Font size in px. The icon is `size` px square. Gap is `size * 8 / 24` px. |
+| `size` | `number` | `24` | Text font size in px. The icon is `Math.round(size * 0.875)` px square. Gap is `0.3em`. |
 | `icon` | `boolean` | `true` | `false` renders text only. |
 | `href` | `string` | none | Root is an `<a>` with a focus ring. Otherwise a `<span>`. |
 | `className` | `string` | none | On the root. |
