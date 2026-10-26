@@ -9,7 +9,7 @@ export type ProductAppName = Exclude<AppName, "projectv">;
 export type AppWordmarkProps = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "target" | "rel" | "aria-label" | "title" | "id"> & {
   /** Which product app's name to show. The label is always the lowercase app id. */
   app: ProductAppName;
-  /** Text font size in px (default 24). The icon is `Math.round(size * 1.4)` px square (larger than the text, so the glyph overhangs the cap height) and the gap is `0.3em`. */
+  /** Text font size in px (default 24). The icon is `Math.round(size * 1.4)` px square (larger than the text, so the glyph overhangs the cap height) and the gap is `0.2em`. */
   size?: number;
   /** `false` renders the name only (default `true`). */
   icon?: boolean;
@@ -36,8 +36,8 @@ const FOCUS_RING =
 export function AppWordmark({ app, size = 24, icon = true, href, className, ...rest }: AppWordmarkProps) {
   const Icon = APP_ICONS[app];
   const classes = cn("inline-flex flex-row items-center text-foreground", href && FOCUS_RING, className);
-  // Font size sits on the root so the `0.3em` gap tracks the text size. The text node inherits it.
-  const style = { fontSize: size, gap: "0.3em" };
+  // Font size sits on the root so the `0.2em` gap tracks the text size. The text node inherits it.
+  const style = { fontSize: size, gap: "0.2em" };
   const content = (
     <>
       {icon ? <Icon size={Math.round(size * ICON_SCALE)} /> : null}

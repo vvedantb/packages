@@ -919,7 +919,7 @@ Setup. The package does not bundle the font. `--font-sans` comes from the packag
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `app` | `"vibot" \| "vmem" \| "verve" \| "velth" \| "vhub"` | required | `ProductAppName`. |
-| `size` | `number` | `24` | Text font size in px. The icon is `Math.round(size * 1.4)` px square (visible glyph about 1.3x the cap height). Gap is `0.3em`. |
+| `size` | `number` | `24` | Text font size in px. The icon is `Math.round(size * 1.4)` px square (visible glyph about 1.3x the cap height). Gap is `0.2em`. |
 | `icon` | `boolean` | `true` | `false` renders text only. |
 | `href` | `string` | none | Root is an `<a>` with a focus ring. Otherwise a `<span>`. |
 | `className` | `string` | none | On the root. |

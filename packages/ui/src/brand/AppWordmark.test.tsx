@@ -67,12 +67,12 @@ describe("AppWordmark", () => {
     expect(svg.getAttribute("height")).toBe("67");
   });
 
-  it("defaults to size 24 with a 34px icon and a 0.3em gap", async () => {
+  it("defaults to size 24 with a 34px icon and a 0.2em gap", async () => {
     const el = await render(<AppWordmark app="vhub" />);
     const rootEl = el.firstElementChild as HTMLElement;
     expect(rootEl.style.fontSize).toBe("24px");
     expect(el.querySelector("svg")!.getAttribute("width")).toBe("34");
-    expect(rootEl.style.gap).toBe("0.3em");
+    expect(rootEl.style.gap).toBe("0.2em");
   });
 
   it("renders an anchor with href and a span without", async () => {

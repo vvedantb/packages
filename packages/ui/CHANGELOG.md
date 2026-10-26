@@ -2,8 +2,9 @@
 
 ## 0.26.1
 
-- `AppWordmark`: `ICON_SCALE` changes from `0.875` to `1.4`. The icon is now `Math.round(size * 1.4)` px square (34px at the default size 24, 67px at size 48). The gap stays `0.3em`.
+- `AppWordmark`: `ICON_SCALE` changes from `0.875` to `1.4`. The icon is now `Math.round(size * 1.4)` px square (34px at the default size 24, 67px at size 48). The gap tightens from `0.3em` to `0.2em`.
 - Why: the glyphs fill only 55-80% of their square frame (average about 0.68), so the old icon looked smaller than the text. At 1.4 the visible glyph is about 1.3x the Instrument Sans 500 cap height (0.72em), so icons overhang the lowercase name slightly above and below, and stay vertically centred.
+- Why the gap change: the larger icon already carries side padding inside its square frame (about 0.04-0.12 of the frame width, so 0.05-0.17em at 1.4). A `0.3em` gap looked too wide. At `0.2em` the measured ink-to-text space is about 0.25em (vhub, tightest) to 0.37em (velth, widest), so it is tighter but not cramped.
 - Glyph SVGs, paths and viewBoxes are unchanged.
 - Observation only, no change: stroke glyphs may look light next to weight-500 text at this size. A slightly thicker stroke could balance them.
 - No new dependencies.
