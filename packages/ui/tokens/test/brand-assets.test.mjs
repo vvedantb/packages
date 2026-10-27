@@ -1,7 +1,7 @@
 // Offline checks for scripts/build-brand-assets.mjs.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const SCRIPT = join(PKG, "scripts/build-brand-assets.mjs");
 const run = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: "utf8" });
+const { pngSpecs } = await import(SCRIPT);
 
 test("writes the SVG set for one app", () => {
   const out = mkdtempSync(join(tmpdir(), "brand-assets-"));
@@ -45,4 +46,31 @@ test("writes every app by default and rejects bad input", () => {
   for (const app of ["projectv", "vibot", "vhub", "vmem", "verve", "velth"]) assert.match(dry.stdout, new RegExp(`${app}/mark\\.svg`), app);
   assert.notEqual(run("--out", tmpdir(), "--app", "nope").status, 0);
   assert.notEqual(run().status, 0);
+});
+
+test("the extension icon set is extension/icon-{16,32,48,128}.png", () => {
+  const extension = pngSpecs("vmem").filter(([file]) => file.startsWith("extension/"));
+  assert.deepEqual(extension.map(([file, , px]) => [file, px]), [
+    ["extension/icon-16.png", 16],
+    ["extension/icon-32.png", 32],
+    ["extension/icon-48.png", 48],
+    ["extension/icon-128.png", 128],
+  ]);
+});
+
+// Node will not strip types under node_modules, so the script strips svg.ts itself there.
+test("runs from an installed copy under node_modules", () => {
+  const dir = mkdtempSync(join(tmpdir(), "brand-assets-installed-"));
+  try {
+    const installed = join(dir, "node_modules/@vvedantb/ui");
+    for (const file of ["package.json", "scripts/build-brand-assets.mjs", "src/brand/svg.ts"]) cpSync(join(PKG, file), join(installed, file));
+    const result = spawnSync(process.execPath, [join(installed, "scripts/build-brand-assets.mjs"), "--out", join(dir, "installed"), "--app", "vmem", "--no-png"], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(run("--out", join(dir, "repo"), "--app", "vmem", "--no-png").status, 0);
+    for (const file of ["mark.svg", "icon.svg", "icon-light.svg", "android/adaptive-foreground.svg"]) {
+      assert.equal(readFileSync(join(dir, "installed/vmem", file), "utf8"), readFileSync(join(dir, "repo/vmem", file), "utf8"), file);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

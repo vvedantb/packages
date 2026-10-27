@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/config",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
-  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, and a packaged Electron app.asar module check.",
+  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, a packaged Electron app.asar module check and a CLI that adds an extension to Clerk's allowed origins.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -14,12 +14,17 @@
   },
   "bin": {
     "vvedantb-config": "./dist/cli.js",
-    "vvedantb-check-asar": "./dist/check-asar-cli.js"
+    "vvedantb-check-asar": "./dist/check-asar-cli.js",
+    "vvedantb-clerk-allow": "./dist/clerk-allow-cli.js"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./extension": {
+      "types": "./dist/extension.d.ts",
+      "default": "./dist/extension.js"
     },
     "./tsconfig/base.json": "./tsconfig/base.json",
     "./tsconfig/web.json": "./tsconfig/web.json",

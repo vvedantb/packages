@@ -21,6 +21,12 @@ export {
   type CheckAsarIo,
 } from "./check-asar.js";
 export {
+  runClerkAllow,
+  type ClerkAllowFetch,
+  type ClerkAllowIo,
+  type ClerkAllowResponse,
+} from "./clerk-allow.js";
+export {
   REACT_DEDUPE,
   defineWebViteConfig,
   defineWebVitestConfig,
