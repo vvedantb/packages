@@ -22,11 +22,17 @@ export {
   type UpdateToastOptions,
 } from "./update/updateWatcher.js";
 
-export { SettingsSection } from "./settings/SettingsSection.js";
+export {
+  SettingsSection,
+  type SettingsSectionConfig,
+} from "./settings/SettingsSection.js";
 export { SettingsField } from "./settings/SettingsField.js";
 export { SettingsStack } from "./settings/SettingsStack.js";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow.js";
-export { SettingsEmptyState } from "./settings/SettingsEmptyState.js";
+export {
+  SettingsEmptyState,
+  type SettingsEmptyStateConfig,
+} from "./settings/SettingsEmptyState.js";
 export {
   DefaultSettingsLayout,
   SettingsPage,
@@ -89,3 +95,5 @@ export {
   type ViteEnvName,
 } from "./convex/env.js";
 export { useEnsureUser, type EnsureUserMutation } from "./convex/useEnsureUser.js";
+export { convexErrorMessage, userFacingErrorMessage } from "./convex/errorMessage.js";
+export { useHeldResult } from "./convex/useHeldResult.js";

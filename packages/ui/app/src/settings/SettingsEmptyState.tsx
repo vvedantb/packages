@@ -1,4 +1,15 @@
 import type { ComponentType, ReactNode } from "react";
+import { useUiConfig } from "../../../src/ui/ui-config";
+
+const ICON_CLASS = "mb-5 text-muted-foreground opacity-50";
+
+/** `UiConfig.SettingsEmptyState`: replaces the built-in classes of a part. */
+export interface SettingsEmptyStateConfig {
+  classes?: {
+    /** The icon above the title (colour, opacity, spacing). */
+    icon?: string;
+  };
+}
 
 interface SettingsEmptyStateProps {
   /** Tabler icon component, rendered muted above the copy. */
@@ -23,9 +34,11 @@ export function SettingsEmptyState({
   description,
   action,
 }: SettingsEmptyStateProps) {
+  const iconClass =
+    useUiConfig("SettingsEmptyState")?.classes?.icon ?? ICON_CLASS;
   return (
     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-      <Icon size={28} className="mb-5 text-muted-foreground opacity-50" />
+      <Icon size={28} className={iconClass} />
       <h4 className="text-sm font-medium text-foreground">{title}</h4>
       {description ? (
         <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">

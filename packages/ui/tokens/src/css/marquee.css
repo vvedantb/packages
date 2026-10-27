@@ -1,0 +1,43 @@
+/*
+ * @vvedantb/ui/tokens/css/marquee.css: the `.mq-*` rules for
+ * <MarqueeOnHover/>. Opt-in: neither tokens.css nor index.css imports it.
+ *
+ *   @import "@vvedantb/ui/tokens/css/marquee.css";
+ *
+ * Idle is a plain ellipsis. On hover (only when the text overflows) the inner
+ * span scrolls left to reveal its hidden tail and holds, then eases back on
+ * leave. The component sets --mq-shift and --mq-dur per element and toggles
+ * data-mq-overflow. Reads --motion-base and --motion-ease-out for the return.
+ * Set on :root, the host or any ancestor to change:
+ *   --mq-delay: 400ms (dwell before the reveal starts)
+ *
+ * Hovering the label or any ancestor with Tailwind's `group` class reveals
+ * it, so hovering anywhere on a card or row scrolls its title.
+ *
+ * Unlayered on purpose, so it wins over utilities at equal specificity.
+ */
+
+.mq-host {
+  display: block;
+  overflow: hidden;
+  padding: 0; /* keep clientWidth == content box so the overflow measurement is honest */
+}
+
+.mq-inner {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateX(0);
+  transition: transform var(--motion-base) var(--motion-ease-out); /* return ease on leave */
+  will-change: transform;
+}
+
+.mq-host[data-mq-overflow="true"]:hover .mq-inner,
+.group:hover .mq-host[data-mq-overflow="true"] .mq-inner {
+  max-width: none; /* let the text spill to its full width; the host clips it */
+  transform: translateX(calc(-1 * var(--mq-shift, 0px)));
+  transition: transform var(--mq-dur, 0s) linear var(--mq-delay, 400ms);
+}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { cn } from "../cn.js";
+import { useCn, useUiConfig } from "../../../src/ui/ui-config";
 
 type SettingsSectionBodyVariant = "form" | "list" | "compact";
 
@@ -9,6 +9,23 @@ const BODY_VARIANT_CLASS: Record<SettingsSectionBodyVariant, string> = {
   list: "divide-y divide-separator/50 p-0",
   compact: "px-4 py-3",
 };
+
+const CARD_CLASS =
+  "rounded-lg bg-surface-card [&_input]:bg-field-background [&_textarea]:bg-field-background [&_[data-slot=select-trigger]]:bg-field-background [&_[role=combobox]]:border-border [&_[role=combobox]]:bg-field-background";
+const FOOTER_CLASS =
+  "flex items-center justify-end gap-2 rounded-b-lg bg-surface-secondary px-4 py-3";
+
+/** `UiConfig.SettingsSection`: replaces the built-in classes of a part. */
+export interface SettingsSectionConfig {
+  classes?: {
+    /** The card behind the body and footer (tone, radius, nested field fills). */
+    card?: string;
+    /** The bottom bar that holds `footer`. */
+    footer?: string;
+    /** Body padding per `bodyVariant`. */
+    body?: Partial<Record<SettingsSectionBodyVariant, string>>;
+  };
+}
 
 interface SettingsSectionProps {
   /** Section heading. Kept short — the description carries the detail. */
@@ -49,6 +66,9 @@ export function SettingsSection({
   bodyClassName,
   className,
 }: SettingsSectionProps) {
+  const config = useUiConfig("SettingsSection");
+  const cn = useCn();
+  const classes = config?.classes;
   const hasBody = children != null;
   const hasCard = hasBody || footer != null;
 
@@ -71,17 +91,22 @@ export function SettingsSection({
       {hasCard ? (
         <div
           className={cn(
-            "rounded-lg bg-surface-card [&_input]:bg-field-background [&_textarea]:bg-field-background [&_[data-slot=select-trigger]]:bg-field-background [&_[role=combobox]]:border-border [&_[role=combobox]]:bg-field-background",
+            classes?.card ?? CARD_CLASS,
             bodyVariant === "list" && "overflow-hidden",
           )}
         >
           {hasBody ? (
-            <div className={cn(BODY_VARIANT_CLASS[bodyVariant], bodyClassName)}>
+            <div
+              className={cn(
+                classes?.body?.[bodyVariant] ?? BODY_VARIANT_CLASS[bodyVariant],
+                bodyClassName,
+              )}
+            >
               {children}
             </div>
           ) : null}
           {footer ? (
-            <div className="flex items-center justify-end gap-2 rounded-b-lg bg-surface-secondary px-4 py-3">
+            <div className={classes?.footer ?? FOOTER_CLASS}>
               {footer}
             </div>
           ) : null}
