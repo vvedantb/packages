@@ -9,7 +9,9 @@ import {
   SelectValue,
 } from "./primitives/select";
 import { cn } from "./cn";
+import { fieldStyle, fieldTextStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 interface SelectOption<TValue = string | number | null> {
   label: string;
@@ -64,6 +66,7 @@ function Select<TValue = string | number | null>({
   testID,
 }: SelectProps<TValue>) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   const primitiveValue = toPrimitiveValue(value, options);
 
   return (
@@ -90,11 +93,12 @@ function Select<TValue = string | number | null>({
       <SelectTrigger
         testID={testID}
         className={cn(
-          "h-14 w-full rounded-lg border-0 bg-secondary px-4 py-0 shadow-none",
+          "h-14 w-full border px-4 py-0 shadow-none",
           largerText && "h-16",
           triggerClassName,
           className,
         )}
+        style={fieldStyle(scheme)}
       >
         <SelectValue
           placeholder={placeholder ?? "Select option"}
@@ -102,6 +106,7 @@ function Select<TValue = string | number | null>({
             "font-instrument-sans-medium text-foreground",
             largerText ? "text-xl" : "text-lg",
           )}
+          style={fieldTextStyle(scheme)}
         />
       </SelectTrigger>
       <SelectContent className={cn("w-full", contentClassName)}>

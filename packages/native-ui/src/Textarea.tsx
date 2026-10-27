@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
-import { FLOATING_ROW_RADIUS } from "./floating";
+import { fieldStyle, fieldTextStyle } from "./controlStyles";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -10,7 +10,7 @@ type TextareaProps = React.ComponentPropsWithoutRef<typeof PrimitiveInput> & {
   className?: string;
 };
 
-/** Multiline `Input`: same fill, border and type, field radius (20) instead of a pill. Grows from 4 lines. */
+/** Multiline `Input`: same fill, border, radius and type. Grows from 4 lines. */
 const Textarea = React.forwardRef<
   React.ElementRef<typeof PrimitiveInput>,
   TextareaProps
@@ -25,11 +25,11 @@ const Textarea = React.forwardRef<
       textAlignVertical="top"
       placeholderTextColor={placeholderTextColor ?? tokens.color.muted[scheme]}
       className={cn(
-        "min-h-28 border border-white/40 bg-secondary px-4 py-3 text-lg font-instrument-sans-medium text-foreground dark:border-white/10",
+        "min-h-28 border px-4 py-3 text-lg font-instrument-sans-medium text-foreground",
         largerText && "min-h-32 text-xl",
         className,
       )}
-      style={[{ borderRadius: FLOATING_ROW_RADIUS }, style]}
+      style={[fieldStyle(scheme), fieldTextStyle(scheme), style]}
       {...props}
     />
   );

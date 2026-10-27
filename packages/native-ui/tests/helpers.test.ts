@@ -55,7 +55,7 @@ describe("PricingModal helpers", () => {
   it("labels the button as the web does", () => {
     expect(planButton(plan({ current: true }))).toEqual({
       label: "Current plan",
-      variant: "secondary",
+      variant: "outline",
       disabled: true,
     });
     expect(planButton(plan({ featured: true }))).toEqual({

@@ -160,7 +160,12 @@ export function ParityGallery() {
 
         <Section title="Button">
           {BUTTON_VARIANTS.map((variant) => (
-            <Button key={variant} variant={variant} onPress={() => toast(variant)}>
+            <Button
+              key={variant}
+              variant={variant}
+              fullWidth={false}
+              onPress={() => toast(variant)}
+            >
               {variant}
             </Button>
           ))}

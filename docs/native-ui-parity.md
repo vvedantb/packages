@@ -44,15 +44,15 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 
 | Web export | Native 0.3.0 | Status | Notes |
 | --- | --- | --- | --- |
-| `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Existing `primary`, `small`, `medium`, `large` and the pink `outline` are unchanged. |
-| `Input` | `Input` | same | Placeholder colour now follows the colour scheme. |
-| `Textarea` | `Textarea` (new) | same | Multiline field with the field radius (20). |
+| `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. Existing `primary`, `small`, `medium` and `large` are unchanged. |
+| `Input` | `Input` | same | Web field look (white, bordered) with the native field radius (20). Placeholder colour follows the colour scheme. |
+| `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look. |
 | `Label` | `Label` (new) | same | |
 | `Card` and parts | `Card` and parts (new parts) | same | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` added. The existing `title` / `leftIcon` / `action` API is unchanged; `description` and `className` added. |
 | `Badge` | `Badge` (new) | same | All seven web variants. |
-| `Switch` | `Switch` | same | Unchanged. |
+| `Switch` | `Switch` | same | Track and thumb colours from `palette`, as on the web. |
 | `Checkbox` | `Checkbox` (new) | same | No `@rn-primitives/checkbox`: `Pressable` and a Tabler check. |
-| `Select` | `Select` | partial | Options-array API. |
+| `Select` | `Select` | partial | Options-array API. The trigger has the `Input` field look. |
 | `Sheet` | `Sheet` (new), `BottomSheetContainer` | same | RN `Modal`, bottom edge only. |
 | `Dialog` | `Dialog` (new) | same | RN `Modal`. |
 | `AlertDialog` | `AlertDialog` (new) | same | |
@@ -90,7 +90,7 @@ No new package was added, and `@vvedantb/ui` is unchanged. Sharing works through
 
 A shared module that both packages import would need a new package, or would make native-ui import from `@vvedantb/ui` (and so pull in Radix, react-dom and the rest of the web stack). Neither was acceptable, so the copies stay. The `palette` test reads `tokens.css` directly, so a web colour change fails the native-ui tests until `palette.ts` is updated.
 
-`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop` and `destructive`. New components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints) and the existing NativeWind classes (`bg-secondary`, `bg-surface`, `text-foreground`, `text-muted-foreground`) elsewhere. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
+`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop` and `destructive`. New components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints) and the existing NativeWind classes (`bg-secondary`, `bg-surface`, `text-foreground`, `text-muted-foreground`) elsewhere. `Button`, `Input`, `Textarea`, the `Select` trigger and `Switch` take their colours from `src/controlStyles.ts`, because the primitives' NativeWind keys (`bg-primary`, `bg-input`) are not defined in apps. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
 
 ### Where `tokens` and `tokens.css` differ
 
@@ -145,9 +145,10 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 
 ## Known differences and follow-ups
 
-- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed, so nothing was rendered. Check the components on iOS and Android with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
+- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed here. A throwaway Expo web harness outside the repository rendered `ParityGallery` beside the web gallery on 27 October 2026; that led to the `Button`, field and `Switch` colour fixes. iOS and Android were not checked. Check them with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
 - **Type checking uses shims.** `pnpm typecheck` checks the package against local declarations of the peers in `types/peers.d.ts`. They are looser than the real types. Each consuming app type-checks the source against the real packages.
-- **`Button` `outline`.** Native `outline` keeps its pink tint. The web `outline` (bordered, neutral) is closest to native `secondary`. `AlertDialogCancel` and `PricingModal` use `secondary` where the web uses `outline`.
+- **`Button` shape.** Colours match the web. Native keeps the pill radius, the taller sizes (56 px default), the shadow on `primary` / `default` and an always-underlined `link` (there is no hover). `loading` shows only the spinner; the web shows the spinner and the label. `fullWidth` still defaults to `true`. `tinted` keeps the 0.2 pink tint for apps that used the old `outline`.
+- **Field radius.** `Input`, `Textarea` and the `Select` trigger use `tokens.radius.field` (20). The web field radius is 10 (see [Tokens](#tokens)).
 - **`AlertDialogAction`** does not close the dialog, as on the web. `ConfirmDialog` closes on either button.
 - **Toasts over modals.** On iOS, `Toaster` draws in a `FullWindowOverlay`, so toasts show over dialogs. On Android an RN `Modal` covers them.
 - **`Tabs` and Expo Router.** `Tabs` shares its name with Expo Router's `Tabs` layout. Import one under another name where a file needs both.
@@ -162,7 +163,7 @@ Run on 27 October 2026 in this repository:
 
 | Command | Result |
 | --- | --- |
-| `pnpm --filter @vvedantb/native-ui test` | 6 files, 51 tests passed. |
+| `pnpm --filter @vvedantb/native-ui test` | 7 files, 63 tests passed. |
 | `pnpm --filter @vvedantb/native-ui typecheck` | Passed (against `types/peers.d.ts`). |
 | `pnpm --filter @vvedantb/native-ui build` | Passed. |
 | `pnpm --filter @vvedantb/ui test` | 93 files, 1,798 tests passed; 50 node tests passed, including "native-ui keeps an identical copy of the native tokens". Needs `pnpm --filter @vvedantb/server build` first: without `packages/server/dist`, 19 test files cannot import `@vvedantb/server`. |
@@ -199,7 +200,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/badge.tsx` | `BadgeConfig`ᵀ, `BadgeProps`ᵀ, `Badge` | same | `Badge` | Same seven variants and colours (from `palette`). `BadgeConfig` is n/a. |
 | `src/ui/border-beam.tsx` | `BorderBeam`, `BorderBeamSize`ᵀ, `BorderBeamColorVariant`ᵀ, `BorderBeamProps`ᵀ | missing | — | CSS animation. Feasible with `expo-linear-gradient` and Reanimated; decorative, low priority. |
 | `src/ui/breadcrumb.tsx` | `Breadcrumb`, `BreadcrumbLink`, `BreadcrumbPage` | n/a | — | Mobile uses stack navigation with a back button. |
-| `src/ui/button.tsx` | `ButtonConfig`ᵀ, `ButtonProps`ᵀ, `Button` | same | `Button` | Adds the web variants `default`, `destructive`, `ghost`, `link` and sizes `sm`, `default`, `lg`, `icon`, plus `startContent` / `endContent`. Native `outline` stays a pink tint (web `outline` ≈ native `secondary`). No `asChild`; no `flat`, `success`, `warning`, `xs` or `icon-*`. `ButtonConfig` is n/a. |
+| `src/ui/button.tsx` | `ButtonConfig`ᵀ, `ButtonProps`ᵀ, `Button` | same | `Button` | Adds the web variants `default`, `destructive`, `ghost`, `link` and sizes `sm`, `default`, `lg`, `icon`, plus `startContent` / `endContent`. `outline` matches the web; the 0.2 pink tint is `tinted`. No `asChild`; no `flat`, `success`, `warning`, `xs` or `icon-*`. `ButtonConfig` is n/a. |
 | `src/ui/button-group.tsx` | `ButtonGroupConfig`ᵀ, `ButtonGroup`, `ButtonGroupSeparator`, `ButtonGroupText`, `buttonGroupVariants` | missing | — | Feasible with a row of `Button`s. |
 | `src/ui/card.tsx` | `CardConfig`ᵀ, `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `CardAction` | same | `Card` + `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | Native `Card` keeps `title` / `leftIcon` / `action` and adds `description` and `className`. `CardAction` is the `action` prop. |
 | `src/ui/carousel.tsx` | `CarouselConfig`ᵀ, `CarouselApi`ᵀ, `Carousel`, `CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext`, `CarouselDots`, `useCarousel` | n/a | — | Embla. Native pattern: a horizontal `FlatList` with `pagingEnabled`. |
@@ -210,13 +211,13 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/context-menu.tsx` | `ContextMenuConfig`ᵀ, `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent`, `ContextMenuItem`, `ContextMenuCheckboxItem`, `ContextMenuRadioItem`, `ContextMenuLabel`, `ContextMenuSeparator`, `ContextMenuShortcut`, `ContextMenuGroup`, `ContextMenuPortal`, `ContextMenuSub`, `ContextMenuSubContent`, `ContextMenuSubTrigger`, `ContextMenuRadioGroup` | n/a | — | Right-click menus. A long-press menu would need `@rn-primitives/context-menu`. |
 | `src/ui/crossfade-icon.tsx` | `CrossfadeIcon`, `CrossfadeIconSlot` | missing | — | Feasible with Reanimated. |
 | `src/ui/dialog.tsx` | `DialogConfig`ᵀ, `Dialog`, `DialogPortal`, `DialogOverlay`, `DialogTrigger`, `DialogClose`, `DialogContent`, `DialogRawContent`, `DialogHeader`, `DialogBody`, `DialogFooter`, `DialogTitle`, `DialogDescription` | same | `Dialog`, `DialogTrigger`, `DialogClose`, `DialogContent`, `DialogHeader`, `DialogBody`, `DialogTitle`, `DialogDescription`, `DialogFooter` | RN `Modal`, no new dependency. `DialogPortal`, `DialogOverlay` and `DialogRawContent` are n/a (the `Modal` is the portal and backdrop). `DialogConfig` is n/a. |
-| `src/ui/alert-dialog.tsx` | `AlertDialog`, `AlertDialogTrigger`, `AlertDialogPortal`, `AlertDialogOverlay`, `AlertDialogContent`, `AlertDialogHeader`, `AlertDialogFooter`, `AlertDialogTitle`, `AlertDialogDescription`, `AlertDialogAction`, `AlertDialogCancel` | same | `AlertDialog*` | No backdrop dismiss, no close button. `AlertDialogAction` does not close (as on the web); `AlertDialogCancel` closes and defaults to `secondary` (web `outline`). Portal and overlay are n/a. |
+| `src/ui/alert-dialog.tsx` | `AlertDialog`, `AlertDialogTrigger`, `AlertDialogPortal`, `AlertDialogOverlay`, `AlertDialogContent`, `AlertDialogHeader`, `AlertDialogFooter`, `AlertDialogTitle`, `AlertDialogDescription`, `AlertDialogAction`, `AlertDialogCancel` | same | `AlertDialog*` | No backdrop dismiss, no close button. `AlertDialogAction` does not close (as on the web); `AlertDialogCancel` closes and defaults to `outline`, as on the web. Portal and overlay are n/a. |
 | `src/ui/confirm-dialog-parts.tsx` | `useConfirmDialog`, `ConfirmDialogActionProps`ᵀ, `ConfirmDialogBodyProps`ᵀ, `ConfirmDialogCancelProps`ᵀ, `ConfirmDialogContentProps`ᵀ, `ConfirmDialogDescriptionProps`ᵀ, `ConfirmDialogFieldProps`ᵀ, `ConfirmDialogFooterProps`ᵀ, `ConfirmDialogHeaderProps`ᵀ, `ConfirmDialogRootProps`ᵀ, `ConfirmDialogSize`ᵀ, `ConfirmDialogTitleProps`ᵀ | missing | — | The composable `ConfirmDialog.*` parts, `useConfirmDialog`, sizes and confirm phrase are not ported. Compose `AlertDialog` parts instead. |
 | `src/ui/confirm-dialog.tsx` | `ConfirmDialogProps`ᵀ, `ConfirmDialog` | partial | `ConfirmDialog` | Legacy props with `size="default"` (blocking, closes on either button). |
 | `src/ui/dropdown-menu.tsx` | `DropdownMenuConfig`ᵀ, `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubContent`, `DropdownMenuSubTrigger`, `DropdownMenuRadioGroup` | missing (needs dep) | — | Needs `@rn-primitives/dropdown-menu`. Until then use `Select` or a `Sheet` of rows. |
 | `src/ui/empty-state.tsx` | `EmptyStateVariant`ᵀ, `EmptyStateRootProps`ᵀ, `EmptyStateIconProps`ᵀ, `EmptyStateTitleProps`ᵀ, `EmptyStateDescriptionProps`ᵀ, `EmptyStateActionsProps`ᵀ, `EmptyState` | same | `EmptyState` | Native `EmptyState` keeps its props and gains `EmptyState.Root`, `.Icon`, `.Title`, `.Description`, `.Actions` with the `default` / `panel` variants. |
 | `src/ui/hover-card.tsx` | `HoverCardConfig`ᵀ, `HoverCard`, `HoverCardTrigger`, `HoverCardContent` | n/a | — | Hover. |
-| `src/ui/input.tsx` | `InputConfig`ᵀ, `Input` | same | `Input` | Pill field, native sizes. `InputConfig` is n/a. |
+| `src/ui/input.tsx` | `InputConfig`ᵀ, `Input` | same | `Input` | Web field look with the native field radius (20) and sizes. `InputConfig` is n/a. |
 | `src/ui/label.tsx` | `LabelConfig`ᵀ, `Label` | same | `Label` | Text with `disabled`. Link to a field with `nativeID` / `accessibilityLabelledBy`. |
 | `src/ui/labeled-slider-row.tsx` | `LabeledSliderRow` | missing (needs dep) | — | Needs a slider (`@react-native-community/slider`). |
 | `src/ui/labeled-switch-row.tsx` | `LabeledSwitchRow` | same | `LabeledSwitchRow` | Same props except `id`; adds `testID`. The row is one accessible switch. |
@@ -238,11 +239,11 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/spinner.tsx` | `SpinnerMarkShape`ᵀ, `SpinnerMark`ᵀ, `SpinnerCircleColors`ᵀ, `SpinnerConfig`ᵀ, `SpinnerProps`ᵀ, `Spinner` | partial | `Spinner` | Platform `ActivityIndicator` with `size` and `tone`. The `mark`, `circle` and `ring` SVG variants are not ported. |
 | `src/ui/status-dot.tsx` | `StatusDot`, `StatusTone`ᵀ, `StatusDotConfig`ᵀ, `StatusDotProps`ᵀ | same | `StatusDot` | Same tones and sizes. |
 | `src/ui/surface.tsx` | `SurfaceProps`ᵀ, `Surface`, `surfaceVariants` | partial | `FloatingSurface` | Different API. |
-| `src/ui/switch.tsx` | `SwitchConfig`ᵀ, `Switch` | same | `Switch` | `@rn-primitives/switch`, touch-sized (56 × 32). `SwitchConfig` is n/a. |
+| `src/ui/switch.tsx` | `SwitchConfig`ᵀ, `Switch` | same | `Switch` | `@rn-primitives/switch`, touch-sized (56 × 32), colours from `palette`. `SwitchConfig` is n/a. |
 | `src/ui/table.tsx` | `TableConfig`ᵀ, `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableHead`, `TableRow`, `TableCell`, `TableCaption` | missing | — | Feasible; low priority on phones. |
 | `src/ui/tabs.tsx` | `TabsConfig`ᵀ, `Tabs`, `TabsBar`, `TabsList`, `TabsTrigger`, `TabsContent` | same | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `pills`, `segmented` and `soft` variants and `size="sm"`. `TabsBar` (a toolbar strip) is missing. `TabsConfig` is n/a. |
 | `@radix-ui/react-tabs` (re-export) | `TabsPrimitive` | n/a | — | Raw Radix primitive. |
-| `src/ui/textarea.tsx` | `TextareaConfig`ᵀ, `Textarea` | same | `Textarea` | Multiline `Input` with the field radius (20). |
+| `src/ui/textarea.tsx` | `TextareaConfig`ᵀ, `Textarea` | same | `Textarea` | Multiline `Input`, same field look. |
 | `src/ui/toolbar-search-input.tsx` | `ToolbarSearchInputProps`ᵀ, `ToolbarSearchInput` | missing | — | Feasible; see `search-input`. |
 | `src/ui/time-picker.tsx` | `TimePicker` | partial | `DateTimeField mode="time"` | System picker. |
 | `src/ui/calendar.tsx` | `CalendarConfig`ᵀ, `Calendar`, `CalendarDayButton` | partial | `DateTimeField` | System date picker; no inline calendar grid. |

@@ -43,9 +43,9 @@ export function AlertDialogAction(props: ButtonProps) {
   return <Button shadowType="flat" {...props} />;
 }
 
-/** Cancel button: runs `onPress`, then closes the dialog. Default variant `secondary` (the web uses `outline`). */
+/** Cancel button: runs `onPress`, then closes the dialog. Default variant `outline`, as on the web. */
 export function AlertDialogCancel({
-  variant = "secondary",
+  variant = "outline",
   onPress,
   ...props
 }: ButtonProps) {

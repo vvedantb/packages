@@ -59,17 +59,14 @@ export function sortAppBenefits(
   );
 }
 
-/**
- * Label, variant and state of a plan's button. The web uses `outline` for the
- * current plan; the native `outline` is a pink tint, so it uses `secondary`.
- */
+/** Label, variant and state of a plan's button, as on the web. */
 export function planButton(plan: PricingPlan): {
   label: string;
-  variant: "default" | "secondary";
+  variant: "default" | "secondary" | "outline";
   disabled: boolean;
 } {
   if (plan.current) {
-    return { label: "Current plan", variant: "secondary", disabled: true };
+    return { label: "Current plan", variant: "outline", disabled: true };
   }
   return {
     label: plan.ctaLabel ?? "Get started",

@@ -5,25 +5,10 @@ import { ActivityIndicator, View } from "react-native";
 import { Button as PrimitiveButton } from "./primitives/button";
 import { Text as PrimitiveText } from "./primitives/text";
 import { cn } from "./cn";
+import { buttonColors, type ButtonVariant } from "./controlStyles";
 import { floatingShadow } from "./floating";
-import { palette } from "./palette";
-import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
-
-/**
- * `primary` and `default` are the same (`default` is the web name). `outline`
- * keeps the native pink tint; the web `outline` (a bordered neutral button) is
- * closest to `secondary` here.
- */
-type ButtonVariant =
-  | "primary"
-  | "default"
-  | "secondary"
-  | "outline"
-  | "destructive"
-  | "ghost"
-  | "link";
 
 /** `sm`, `default` and `lg` are the web names for `small`, `medium` and `large`. `icon` is a square button. */
 type ButtonSize = "small" | "medium" | "large" | "sm" | "default" | "lg" | "icon";
@@ -78,34 +63,27 @@ const TEXT = {
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
 };
 
-const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: "",
-  default: "",
-  outline: "border-0 bg-pink-50 dark:bg-pink-900/20",
-  secondary: "bg-neutral-100 dark:bg-neutral-800",
-  destructive: "border-0",
-  ghost: "border-0 bg-transparent",
-  link: "h-auto border-0 bg-transparent px-0",
+// Colours come from `buttonColors` as styles, except `tinted`, which keeps
+// the pink classes that `outline` used before 0.3.0.
+const VARIANT_CLASS: Partial<Record<ButtonVariant, string>> = {
+  link: "h-auto border-0 px-0",
+  tinted: "border-0 bg-pink-50 dark:bg-pink-900/20",
 };
 
-const TEXT_CLASS: Record<ButtonVariant, string> = {
-  primary: "text-white",
-  default: "text-white",
-  outline: "text-pink-700 dark:text-pink-300",
-  secondary: "text-pink-700 dark:text-pink-300",
-  destructive: "text-white",
-  ghost: "text-foreground",
-  link: "text-foreground underline",
+const TEXT_CLASS: Partial<Record<ButtonVariant, string>> = {
+  link: "underline",
+  tinted: "text-pink-700 dark:text-pink-300",
 };
 
 const PRIMITIVE_VARIANT = {
   primary: "default",
   default: "default",
-  outline: "secondary",
+  outline: "outline",
   secondary: "secondary",
   destructive: "destructive",
   ghost: "ghost",
   link: "link",
+  tinted: "secondary",
 } as const;
 
 export type { ButtonProps, ButtonSize, ButtonVariant };
@@ -128,16 +106,17 @@ export function Button({
   const scale = useLargerText() ? "larger" : "regular";
   const scheme = useScheme();
   const resolvedSize = SIZE_ALIAS[size];
-  const contentColor =
-    variant === "outline" || variant === "secondary"
-      ? PINK_600
-      : variant === "ghost" || variant === "link"
-        ? tokens.color.foreground[scheme]
-        : "#fff";
+  const colors = buttonColors(variant, scheme);
+  const contentColor = colors?.color ?? PINK_600;
   const elevate =
     shadowType === "shadow" && (variant === "primary" || variant === "default");
-  const variantStyle =
-    variant === "destructive" ? { backgroundColor: palette.destructive } : null;
+  const baseStyle = [
+    elevate ? floatingShadow : null,
+    colors
+      ? { backgroundColor: colors.backgroundColor, borderColor: colors.borderColor }
+      : null,
+  ];
+  const callerStyle = props.style;
 
   return (
     <PrimitiveButton
@@ -145,7 +124,7 @@ export function Button({
       variant={PRIMITIVE_VARIANT[variant]}
       hitSlop={resolvedSize === "small" || resolvedSize === "icon" ? 8 : undefined}
       className={cn(
-        "relative rounded-full border border-white/40 dark:border-white/10",
+        "relative rounded-full border",
         HEIGHT[scale][resolvedSize],
         fullWidth && resolvedSize !== "icon" && "w-full",
         VARIANT_CLASS[variant],
@@ -159,9 +138,9 @@ export function Button({
         busy: Boolean(loading),
       }}
       style={
-        typeof props.style === "function"
-          ? props.style
-          : [elevate ? floatingShadow : null, variantStyle, props.style]
+        typeof callerStyle === "function"
+          ? (state) => [baseStyle, callerStyle(state)]
+          : [baseStyle, callerStyle]
       }
     >
       <View className="flex-row items-center justify-center gap-2">
@@ -185,6 +164,7 @@ export function Button({
                   "font-instrument-sans-semibold",
                   TEXT_CLASS[variant],
                 )}
+                style={colors ? { color: colors.color } : undefined}
               >
                 {children}
               </PrimitiveText>

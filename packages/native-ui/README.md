@@ -51,7 +51,7 @@ config.resolver.nodeModulesPaths = [
 ];
 ```
 
-The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, `text-foreground`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet.
+The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, `text-foreground`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch` and `Badge` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. Override those colours with `style`, not `className`.
 
 ## Theme
 
@@ -73,7 +73,7 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 
 | Area | Exports |
 | --- | --- |
-| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `Input`, `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `DateTimeField` |
+| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `Input`, `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `DateTimeField` |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Badge`, `StatusDot`, `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow`, `Chip` |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton` |
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
