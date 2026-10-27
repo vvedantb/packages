@@ -148,6 +148,8 @@ Overlays hold their own open state, or take `open` and `onOpenChange`:
 
 As on the web, `AlertDialogAction` does not close the dialog; `ConfirmDialog` closes on either button. `DialogFooter` and `AlertDialogFooter` lay their buttons out in a row at the end, as the web does from `sm` up. Pass `fullWidth={false}` to a plain `Button` there (`AlertDialogAction` and `AlertDialogCancel` already default to it). `SheetFooter` stacks full width.
 
+From 0.3.7, in a compact window (639 wide or less, or 500 high or less: the web `COMPACT_OVERLAY_QUERY`) `DialogContent`, and so `AlertDialogContent` and `ConfirmDialog`, is the web phone bottom sheet: full width, top corners 16, a handle, the bottom safe-area inset. Its footer stacks the buttons full width and at least 44 high, the last child on top, whatever `fullWidth` says. Pass `viewportAware={false}` to keep the centred dialog at every size.
+
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.
 
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.

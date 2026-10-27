@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.7
+
+Phone dialogs and type sizes, from the phone-width (390) comparison of `ParityGallery` against the web gallery.
+
+- **Visible change: dialogs are a bottom sheet on phones.** In a compact window (639 wide or less, or 500 high or less, from `useWindowDimensions`: the web `COMPACT_OVERLAY_QUERY`), `DialogContent` is the web phone sheet. It is full width at the bottom edge, with top corners 16 (web `rounded-t-2xl`), and a handle: an `h-1 w-12` `surfaceTertiary` pill in a 44-high row, hidden from screen readers. Padding is `px-6 pt-3`, with the bottom safe-area inset below (at least 24, the web `pb-[max(1.5rem,…)]`). It slides up, except with Reduce Motion on or on web, as `SheetContent` does. The close button stays. `AlertDialogContent` and `ConfirmDialog` get the same layout through `DialogContent`. Larger windows keep the centred panel, at most 480 wide. Both layouts are one tree, so a window that crosses the compact size while the dialog is open (split view, a foldable) keeps the content and its state.
+- **New prop: `viewportAware`** on `DialogContent` and `AlertDialogContent`, as on the web. Default `true`; `false` keeps the centred panel at every size.
+- **Visible change: stacked footer on phones.** In the compact sheet, `DialogFooter` and `AlertDialogFooter` are the web phone footer: `flex-col-reverse gap-2 pt-2`, so the last child (Save, Delete) sits above Cancel. Every `Button` in it fills the width, even with `fullWidth={false}` (so `AlertDialogAction`, `AlertDialogCancel` and the gallery buttons stretch). Labelled buttons anywhere in the compact sheet are at least 44 high (web `[&_button]:min-h-11`). `DialogContent` and `DialogFooter` pass this to `Button` through a new internal context (`src/dialogLayout.ts`). The row footer on larger windows is unchanged.
+- **Fix: type sizes.** On Expo web at 390 wide, the 0.3.6 gallery measured `Button` labels and `Label` at 16 / 400 (web 14 / 500), and the `Card` title at 16 / 400. The new `sizeStyle(size, leading?)` in `src/controlStyles.ts` sets `fontSize` and `lineHeight` as a style beside each `text-*` class, so the size wins as `typeStyle` does for weight.
+  - `Button` labels: the class size as a style too; the default size is 14 / 20, weight 500.
+  - `Label`: `text-sm` medium, 14 / 20, weight 500 (was `text-base` semibold). The web is `leading-none`; native keeps 20.
+  - `CardTitle` and the `Card` `title`: 16, weight 600, line height 20 (`leading-tight`; were `text-xl`, 20 / 28). The web is `leading-none` (16). Native uses 20, because a line height below the face's ascent and descent can clip glyphs on iOS and Android.
+  - `CardDescription` (and the `Card` `description`): `text-sm`, 14 / 20 (was `text-base`).
+  - With larger text the sizes are unchanged (`Label` `text-lg`, card titles `text-2xl`, descriptions `text-lg`). The card title line height is now 30 (`leading-tight`), not 32. `DialogTitle` stays `text-lg` semibold.
+- New exports from `src/controlStyles.ts` (not from the entries): `sizeStyle`, `TextSize`, `COMPACT_OVERLAY` and `isCompactOverlay`.
+- Tests: `tests/controlStyles.test.ts` checks `COMPACT_OVERLAY` against the web query and `isCompactOverlay` at phone, landscape, tablet and desktop sizes; `sizeStyle` values; that the compact `DialogContent` uses bottom placement, the 16 radius, the handle, `px-6 pt-3`, the safe-area padding and the slide through `NativeOnlyAnimatedView`, against the web `dialog.tsx` classes; that the wide path keeps centre placement, 480 width and the row footer; that both layouts share one tree; the stacked footer and the `Button` stretch and 44 minimum; and the `Button`, `Label`, `CardTitle` and `CardDescription` sizes and weights against the web `button.tsx`, `label.tsx` and `card.tsx`.
+- Not checked on a device or in Expo captures. The entries and subpaths are unchanged. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.6
 
 - `ParityGallery`: the `ScrollView` content has 720 of bottom padding (was `pb-24`, 96), so the Card, Upgrade and Overlays sections can scroll to the top of an 844-tall phone for phone-width screenshot crops. The padding is a `contentContainerStyle`; the class keeps `gap-8 px-4 pt-4`. The 0.3.5 visual and accessibility changes are unchanged.

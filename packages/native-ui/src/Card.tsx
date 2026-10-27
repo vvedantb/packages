@@ -8,7 +8,7 @@ import {
   CardTitle as PrimitiveCardTitle,
 } from "./primitives/card";
 import { cn } from "./cn";
-import { cardStyle, textStyle, typeStyle } from "./controlStyles";
+import { cardStyle, sizeStyle, textStyle, typeStyle } from "./controlStyles";
 import { useAccentColor, useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -35,6 +35,7 @@ export function Card({
   const accentColor = useAccentColor();
   const scheme = useScheme();
   const hasHeader = Boolean(title || action);
+  const titleSize = largerText ? "text-2xl" : "text-base";
   // The web card: a flat `surfaceCard` fill at radius 16, with no border, no
   // shadow and no blur. Dialogs, sheets and toasts float, as on the web.
   return (
@@ -52,11 +53,12 @@ export function Card({
               )}
               {title ? (
                 <PrimitiveCardTitle
-                  className={cn(
-                    "font-instrument-sans-semibold",
-                    largerText ? "text-2xl" : "text-xl",
-                  )}
-                  style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+                  className={cn("font-instrument-sans-semibold leading-tight", titleSize)}
+                  style={[
+                    textStyle("foreground", scheme),
+                    sizeStyle(titleSize, "tight"),
+                    typeStyle("semibold"),
+                  ]}
                 >
                   {title}
                 </PrimitiveCardTitle>
@@ -85,34 +87,39 @@ export function CardHeader({ className, ...props }: PartProps) {
   return <View className={cn("gap-1 pb-3", className)} {...props} />;
 }
 
+/**
+ * Web `font-semibold leading-none` at the inherited 16. The line height is
+ * `leading-tight` (20), not 16: below the face's ascent and descent, iOS and
+ * Android can clip the glyphs.
+ */
 export function CardTitle({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
   const scheme = useScheme();
+  const size = largerText ? "text-2xl" : "text-base";
   return (
     <Text
       accessibilityRole="header"
-      className={cn(
-        "font-instrument-sans-semibold",
-        largerText ? "text-2xl" : "text-xl",
-        className,
-      )}
-      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
+      className={cn("font-instrument-sans-semibold leading-tight", size, className)}
+      style={[
+        textStyle("foreground", scheme),
+        sizeStyle(size, "tight"),
+        typeStyle("semibold"),
+        style,
+      ]}
       {...props}
     />
   );
 }
 
+/** Web `text-sm` (14 / 20) in the muted colour. */
 export function CardDescription({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
   const scheme = useScheme();
+  const size = largerText ? "text-lg" : "text-sm";
   return (
     <Text
-      className={cn(
-        "font-instrument-sans",
-        largerText ? "text-lg" : "text-base",
-        className,
-      )}
-      style={[textStyle("muted", scheme), style]}
+      className={cn("font-instrument-sans", size, className)}
+      style={[textStyle("muted", scheme), sizeStyle(size), style]}
       {...props}
     />
   );

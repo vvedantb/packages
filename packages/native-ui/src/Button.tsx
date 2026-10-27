@@ -5,7 +5,8 @@ import { View } from "react-native";
 import { Button as PrimitiveButton } from "./primitives/button";
 import { Text as PrimitiveText } from "./primitives/text";
 import { cn } from "./cn";
-import { buttonColors, typeStyle, type ButtonVariant } from "./controlStyles";
+import { buttonColors, sizeStyle, typeStyle, type ButtonVariant } from "./controlStyles";
+import { useDialogLayout } from "./dialogLayout";
 import { floatingShadow } from "./floating";
 import { Spinner } from "./Spinner";
 import { useLargerText } from "./theme";
@@ -29,6 +30,10 @@ interface ButtonProps extends Omit<
   endContent?: React.ReactNode;
   loading?: boolean;
   size?: ButtonSize;
+  /**
+   * Default `true`. In the stacked footer of a compact dialog the button fills
+   * the width whatever this says, as on the web.
+   */
   fullWidth?: boolean;
   /** Label, or other content. Give a button with no text child an `accessibilityLabel`. */
   children?: React.ReactNode;
@@ -67,10 +72,11 @@ const HEIGHT = {
   },
 };
 
+// Each class is also set as a style (`sizeStyle`): web `text-sm` is 14 / 20.
 const TEXT = {
   regular: { small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" },
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
-};
+} as const;
 
 // The web sizes are under the 44 pt touch target; the slop brings each to 48.
 const HIT_SLOP = {
@@ -123,6 +129,7 @@ export function Button({
 }: ButtonProps) {
   const scale = useLargerText() ? "larger" : "regular";
   const scheme = useScheme();
+  const dialog = useDialogLayout();
   const resolvedSize = SIZE_ALIAS[size];
   const colors = buttonColors(variant, scheme);
   const contentColor = colors?.color ?? PINK_600;
@@ -159,7 +166,9 @@ export function Button({
         HEIGHT[scale][resolvedSize],
         // Column flex children stretch by default (React Native Web too), so
         // a button that is not full width must opt out with `self-start`.
-        resolvedSize !== "icon" && (fullWidth ? "w-full" : "self-start"),
+        resolvedSize !== "icon" && (fullWidth || dialog.stacked ? "w-full" : "self-start"),
+        // The web compact dialog: labelled buttons at least 44 high (`min-h-11`).
+        dialog.compact && scale === "regular" && resolvedSize !== "icon" && "min-h-11",
         VARIANT_CLASS[variant],
         className,
       )}
@@ -185,7 +194,11 @@ export function Button({
               "font-instrument-sans-medium",
               TEXT_CLASS[variant],
             )}
-            style={[colors ? { color: colors.color } : null, typeStyle("medium")]}
+            style={[
+              colors ? { color: colors.color } : null,
+              sizeStyle(TEXT[scale][resolvedSize]),
+              typeStyle("medium"),
+            ]}
           >
             {children}
           </PrimitiveText>

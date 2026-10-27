@@ -256,7 +256,7 @@ describe("safe area and keyboard", () => {
   it("lifts dialog and sheet fields above the keyboard on iOS and Android", () => {
     expect(overlay).toMatch(/<KeyboardAvoidingView behavior="padding" style=\{styles\.fill\}>/);
     expect(code(overlay)).not.toMatch(/Platform\.OS === "ios" \? "padding" : undefined/);
-    expect(read("Dialog.tsx")).toMatch(/<OverlayModal part="DialogContent" placement="center"/);
+    expect(read("Dialog.tsx")).toMatch(/<OverlayModal\s+part="DialogContent"\s+placement=\{compact \? "bottom" : "center"\}/);
     expect(read("Sheet.tsx")).toMatch(/<OverlayModal part="SheetContent" placement="bottom"/);
     expect(read("Dialog.tsx")).toMatch(/keyboardShouldPersistTaps="handled"/);
   });

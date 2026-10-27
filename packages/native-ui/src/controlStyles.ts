@@ -3,8 +3,9 @@
  * `Checkbox`, `Tabs`, `Card` and component text, taken from `palette` and
  * `tokens` instead of NativeWind theme keys (`bg-primary`, `bg-input`,
  * `text-foreground`) that apps do not define, or define without a dark value.
- * Also text weights as styles, and the touch-target maths. No React Native
- * import, so the tests can load this file.
+ * Also text weights and sizes as styles, the compact window test for dialogs
+ * and the touch-target maths. No React Native import, so the tests can load
+ * this file.
  */
 import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
@@ -118,6 +119,40 @@ const FONT_WEIGHT = { medium: "500", semibold: "600" } as const;
  */
 export function typeStyle(weight: TypeWeight) {
   return { fontWeight: FONT_WEIGHT[weight] };
+}
+
+/** Tailwind `text-*` sizes with their default line heights, in points. */
+const TEXT_SIZE = {
+  "text-xs": { fontSize: 12, lineHeight: 16 },
+  "text-sm": { fontSize: 14, lineHeight: 20 },
+  "text-base": { fontSize: 16, lineHeight: 24 },
+  "text-lg": { fontSize: 18, lineHeight: 28 },
+  "text-xl": { fontSize: 20, lineHeight: 28 },
+  "text-2xl": { fontSize: 24, lineHeight: 32 },
+} as const;
+
+export type TextSize = keyof typeof TEXT_SIZE;
+
+/**
+ * Font size and line height of a `text-*` class as a style, set beside the
+ * class. On Expo web at 390 wide (0.3.6 gallery), `Button` labels with
+ * `text-sm` measured 16, so the class alone does not always reach the text.
+ * `"tight"` is the Tailwind `leading-tight` (1.25 × the size).
+ */
+export function sizeStyle(size: TextSize, leading?: "tight") {
+  const { fontSize, lineHeight } = TEXT_SIZE[size];
+  return { fontSize, lineHeight: leading === "tight" ? fontSize * 1.25 : lineHeight };
+}
+
+/**
+ * The web `COMPACT_OVERLAY_QUERY`, `(max-width: 639px), (max-height: 500px)`:
+ * phones, and short landscape windows such as 844 × 390.
+ */
+export const COMPACT_OVERLAY = { maxWidth: 639, maxHeight: 500 } as const;
+
+/** Whether a window of `width` × `height` points is compact: `DialogContent` is a bottom sheet there. */
+export function isCompactOverlay(width: number, height: number) {
+  return width <= COMPACT_OVERLAY.maxWidth || height <= COMPACT_OVERLAY.maxHeight;
 }
 
 /**

@@ -41,7 +41,7 @@ export const AlertDialogDescription = DialogDescription;
 /**
  * Confirm button. As on the web it does not close the dialog: close it in
  * `onPress` (set `open` to false). Not full width by default, for the row
- * footer.
+ * footer; full width in the stacked footer of the compact sheet.
  */
 export function AlertDialogAction(props: ButtonProps) {
   return <Button shadowType="flat" fullWidth={false} {...props} />;
@@ -49,7 +49,8 @@ export function AlertDialogAction(props: ButtonProps) {
 
 /**
  * Cancel button: runs `onPress`, then closes the dialog. Default variant
- * `outline`, as on the web, and not full width.
+ * `outline`, as on the web. Not full width, except in the stacked footer of
+ * the compact sheet.
  */
 export function AlertDialogCancel({
   variant = "outline",

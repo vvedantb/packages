@@ -3,12 +3,15 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  COMPACT_OVERLAY,
   MIN_TOUCH_TARGET,
   buttonColors,
   cardStyle,
   checkboxColors,
   fieldStyle,
   fieldTextStyle,
+  isCompactOverlay,
+  sizeStyle,
   switchColors,
   switchSize,
   tabColors,
@@ -143,7 +146,7 @@ describe("Button (source contract)", () => {
     expect(button).toMatch(/const colors = buttonColors\(variant, scheme\)/);
     expect(button).toMatch(/backgroundColor: colors\.backgroundColor/);
     expect(button).toMatch(
-      /style=\{\[colors \? \{ color: colors\.color \} : null, typeStyle\("medium"\)\]\}/,
+      /style=\{\[\s+colors \? \{ color: colors\.color \} : null,\s+sizeStyle\(TEXT\[scale\]\[resolvedSize\]\),\s+typeStyle\("medium"\),\s+\]\}/,
     );
   });
 
@@ -237,12 +240,105 @@ describe("textStyle", () => {
 describe("Dialog layout (source contract)", () => {
   const dialog = read("Dialog.tsx");
 
-  it("DialogFooter is a row at the end, as the web footer from sm up", () => {
+  const web = readFileSync(join(root, "..", "ui", "src/ui/dialog.tsx"), "utf8");
+  const content = fn(dialog, "DialogContent");
+
+  it("DialogFooter is a row at the end when not compact, as the web footer from sm up", () => {
     const footer = fn(dialog, "DialogFooter");
-    expect(footer).toMatch(/"flex-row flex-wrap items-center justify-end gap-2"/);
-    expect(footer).not.toMatch(/flex-col/);
-    const web = readFileSync(join(root, "..", "ui", "src/ui/dialog.tsx"), "utf8");
+    const row = footer.slice(footer.lastIndexOf("return ("));
+    expect(row).toMatch(/"flex-row flex-wrap items-center justify-end gap-2"/);
+    expect(row).not.toMatch(/flex-col/);
     expect(web).toMatch(/sm:flex-row sm:justify-end/);
+  });
+
+  it("DialogFooter stacks full-width buttons in the compact sheet, last child on top", () => {
+    const footer = fn(dialog, "DialogFooter");
+    expect(footer).toMatch(/const \{ compact \} = useDialogLayout\(\);/);
+    expect(footer).toMatch(
+      /if \(compact\) \{\s+return \(\s+<DialogLayoutContext\.Provider value=\{STACKED\}>\s+<View className=\{cn\("flex-col-reverse gap-2 pt-2", className\)\}/,
+    );
+    expect(dialog).toMatch(/const STACKED: DialogLayout = \{ compact: true, stacked: true \};/);
+    // The web footer: `flex-col-reverse gap-2 pt-2`, and every button `min-h-11` when compact.
+    expect(web).toMatch(/"mt-auto flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end"/);
+    expect(web).toMatch(/data-\[compact=true\]:\[&_button\]:min-h-11/);
+    // `Button` reads the layout: full width when stacked, 44 high when compact.
+    const button = read("Button.tsx");
+    expect(button).toMatch(/const dialog = useDialogLayout\(\);/);
+    expect(button).toMatch(/\(fullWidth \|\| dialog\.stacked \? "w-full" : "self-start"\)/);
+    expect(button).toMatch(
+      /dialog\.compact && scale === "regular" && resolvedSize !== "icon" && "min-h-11",/,
+    );
+    // After the size class, so tailwind-merge drops `min-h-10`.
+    expect(button.indexOf("HEIGHT[scale][resolvedSize],")).toBeLessThan(button.indexOf('"min-h-11",'));
+  });
+
+  it("DialogContent is a bottom sheet in a compact window, with viewportAware on by default", () => {
+    expect(content).toMatch(/viewportAware = true,/);
+    expect(content).toMatch(/const \{ width, height \} = useWindowDimensions\(\);/);
+    expect(content).toMatch(/const compact = viewportAware && isCompactOverlay\(width, height\);/);
+    expect(content).toMatch(/<DialogLayoutContext\.Provider value=\{compact \? COMPACT : CENTRED\}>/);
+    expect(content).toMatch(/placement=\{compact \? "bottom" : "center"\}/);
+    // Top corners at the web `rounded-t-2xl` (16); the bottom ones below the edge.
+    expect(dialog).toMatch(/const SHEET_RADIUS = tokens\.radius\.lg;/);
+    expect(tokens.radius.lg).toBe(16);
+    expect(content).toMatch(/radius=\{compact \? SHEET_RADIUS : tokens\.radius\.card\}/);
+    expect(dialog).toMatch(/const SHEET = \{ marginBottom: -SHEET_RADIUS \};/);
+    expect(content).toMatch(/style=\{compact \? SHEET : PANEL\}/);
+    // The web `pt-3`, `p-6` sides and `pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
+    expect(content).toMatch(/className=\{cn\(compact \? "gap-4 px-6 pt-3" : "gap-4 p-6", className\)\}/);
+    expect(content).toMatch(
+      /compact \? \{ paddingBottom: Math\.max\(24, insets\.bottom\) \+ SHEET_RADIUS \} : null,\s+style,/,
+    );
+    expect(content).toMatch(/\{compact \? <DialogHandle \/> : null\}\s+\{children\}/);
+    expect(content).toMatch(/hideCloseButton \? null : <DialogCloseButton \/>/);
+    expect(web).toMatch(/rounded-t-2xl rounded-b-none pt-3/);
+    expect(web).toMatch(/pb-\[max\(1\.5rem,env\(safe-area-inset-bottom,0px\)\)\]/);
+  });
+
+  it("uses one tree for both layouts, so crossing the compact size keeps the content", () => {
+    expect(content.match(/<OverlayModal\b/g)).toHaveLength(1);
+    expect(content.match(/\{children\}/g)).toHaveLength(1);
+    expect(content).not.toMatch(/if \(compact\)/);
+  });
+
+  it("the sheet slides up through NativeOnlyAnimatedView, so Reduce Motion turns it off", () => {
+    expect(content).toMatch(
+      /<NativeOnlyAnimatedView\s+entering=\{compact \? SlideInDown\.duration\(240\) : undefined\}/,
+    );
+    expect(read("primitives/native-only-animated-view.tsx")).toMatch(
+      /entering=\{reduceMotion \? undefined : entering\}/,
+    );
+  });
+
+  it("the handle is the web h-1 w-12 surface-tertiary pill in a 44 row, hidden from screen readers", () => {
+    const handle = fn(dialog, "DialogHandle");
+    expect(handle).toMatch(/className="mb-1 min-h-11 items-center justify-center"/);
+    expect(handle).toMatch(/className="h-1 w-12 rounded-full"/);
+    expect(handle).toMatch(/backgroundColor: palette\.surfaceTertiary\[scheme\]/);
+    expect(handle).toMatch(/accessibilityElementsHidden/);
+    expect(handle).toMatch(/importantForAccessibility="no-hide-descendants"/);
+    expect(web).toMatch(/className="mx-auto mb-1 flex min-h-11 w-full shrink-0 items-center justify-center"/);
+    expect(web).toMatch(/<span className="h-1 w-12 rounded-full bg-surface-tertiary" \/>/);
+  });
+
+  it("keeps the centred panel, card radius and padding 24 on larger windows", () => {
+    expect(dialog).toMatch(/const PANEL = \{ width: "100%", maxWidth: 480, alignSelf: "center" \} as const;/);
+    expect(dialog).toMatch(/const CENTRED: DialogLayout = \{ compact: false, stacked: false \};/);
+    expect(tokens.radius.card).toBe(24);
+    // No handle, no extra bottom padding and no slide when not compact.
+    expect(content).toMatch(/compact \? <DialogHandle \/> : null/);
+    expect(content).toMatch(/compact \? SlideInDown\.duration\(240\) : undefined/);
+  });
+
+  it("AlertDialogContent and ConfirmDialog get the same behaviour from DialogContent", () => {
+    const alert = read("AlertDialog.tsx");
+    expect(alert).toMatch(/export type AlertDialogContentProps = Omit<DialogContentProps, "dismissible">;/);
+    expect(fn(alert, "AlertDialogContent")).toMatch(
+      /<DialogContent hideCloseButton=\{hideCloseButton\} dismissible=\{false\} \{\.\.\.props\} \/>/,
+    );
+    const confirm = read("ConfirmDialog.tsx");
+    expect(confirm).toMatch(/<AlertDialogContent testID=\{testID\}>/);
+    expect(confirm).toMatch(/<AlertDialogFooter>/);
   });
 
   it("AlertDialog shares the footer and its buttons are not full width", () => {
@@ -257,7 +353,7 @@ describe("Dialog layout (source contract)", () => {
   });
 
   it("has the web padding (p-6) and title type (text-lg semibold)", () => {
-    expect(dialog).toMatch(/className=\{cn\("gap-4 p-6", className\)\}/);
+    expect(dialog).toMatch(/className=\{cn\(compact \? "gap-4 px-6 pt-3" : "gap-4 p-6", className\)\}/);
     expect(fn(dialog, "DialogTitle")).toMatch(/"font-instrument-sans-semibold",\s+largerText \? "text-2xl" : "text-lg"/);
   });
 });
@@ -488,17 +584,108 @@ describe("typeStyle", () => {
   });
 });
 
+describe("sizeStyle", () => {
+  it("is the Tailwind size and default line height, or leading-tight", () => {
+    expect(sizeStyle("text-xs")).toEqual({ fontSize: 12, lineHeight: 16 });
+    expect(sizeStyle("text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
+    expect(sizeStyle("text-base")).toEqual({ fontSize: 16, lineHeight: 24 });
+    expect(sizeStyle("text-lg")).toEqual({ fontSize: 18, lineHeight: 28 });
+    expect(sizeStyle("text-xl")).toEqual({ fontSize: 20, lineHeight: 28 });
+    expect(sizeStyle("text-2xl")).toEqual({ fontSize: 24, lineHeight: 32 });
+    expect(sizeStyle("text-base", "tight")).toEqual({ fontSize: 16, lineHeight: 20 });
+    expect(sizeStyle("text-2xl", "tight")).toEqual({ fontSize: 24, lineHeight: 30 });
+  });
+});
+
+describe("isCompactOverlay", () => {
+  it("is the web COMPACT_OVERLAY_QUERY", () => {
+    const web = readFileSync(join(root, "..", "ui", "src/ui/overlay-a11y.ts"), "utf8");
+    const query = web.match(/COMPACT_OVERLAY_QUERY = "\(max-width: (\d+)px\), \(max-height: (\d+)px\)"/);
+    expect(query).not.toBeNull();
+    expect(COMPACT_OVERLAY).toEqual({ maxWidth: Number(query![1]), maxHeight: Number(query![2]) });
+  });
+
+  it("is true for phones and short landscape windows, false for tablets and desktops", () => {
+    expect(isCompactOverlay(390, 844)).toBe(true);
+    expect(isCompactOverlay(844, 390)).toBe(true);
+    expect(isCompactOverlay(639, 900)).toBe(true);
+    expect(isCompactOverlay(640, 500)).toBe(true);
+    expect(isCompactOverlay(640, 501)).toBe(false);
+    expect(isCompactOverlay(768, 1024)).toBe(false);
+    expect(isCompactOverlay(1280, 800)).toBe(false);
+  });
+});
+
+describe("type sizes (source contract)", () => {
+  const webUi = (file: string) => readFileSync(join(root, "..", "ui", "src/ui", file), "utf8");
+
+  it("Button labels are the web text-sm medium: 14 / 20, weight 500", () => {
+    const button = read("Button.tsx");
+    expect(webUi("button.tsx")).toMatch(/rounded-lg text-sm font-medium/);
+    const regular = button.match(/regular: \{ small: "(text-\w+)", medium: "(text-\w+)"/);
+    expect(regular?.[2]).toBe("text-sm");
+    expect(sizeStyle(regular![2] as "text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
+    expect(sizeStyle(regular![1] as "text-xs").fontSize).toBe(12);
+    expect(Number(typeStyle("medium").fontWeight)).toBe(500);
+    // Larger text keeps its step-up.
+    expect(button).toMatch(
+      /larger: \{ small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" \}/,
+    );
+  });
+
+  it("Label is the web text-sm font-medium: 14, weight 500", () => {
+    expect(webUi("label.tsx")).toMatch(/"text-sm font-medium /);
+    const label = fn(read("Label.tsx"), "Label");
+    expect(label).toMatch(/const size = largerText \? "text-lg" : "text-sm";/);
+    expect(label).toMatch(/"font-instrument-sans-medium", size,/);
+    expect(label).toMatch(
+      /style=\{\[textStyle\("foreground", scheme\), sizeStyle\(size\), typeStyle\("medium"\), style\]\}/,
+    );
+    expect(label).not.toMatch(/semibold|text-base/);
+    expect(sizeStyle("text-sm").fontSize).toBe(14);
+  });
+
+  it("card titles are the web 16 semibold with a tight line height", () => {
+    // The web title has no size class, so it is the inherited 16.
+    expect(webUi("card.tsx")).toMatch(/"title", "font-semibold leading-none tracking-\[-0\.02em\]"/);
+    const card = read("Card.tsx");
+    const title = fn(card, "CardTitle");
+    expect(title).toMatch(/const size = largerText \? "text-2xl" : "text-base";/);
+    expect(title).toMatch(/sizeStyle\(size, "tight"\),\s+typeStyle\("semibold"\),/);
+    expect(fn(card, "Card")).toMatch(/const titleSize = largerText \? "text-2xl" : "text-base";/);
+    expect(fn(card, "Card")).toMatch(/sizeStyle\(titleSize, "tight"\),\s+typeStyle\("semibold"\),/);
+    expect(card).not.toMatch(/text-xl/);
+    expect(sizeStyle("text-base", "tight")).toEqual({ fontSize: 16, lineHeight: 20 });
+    expect(Number(typeStyle("semibold").fontWeight)).toBe(600);
+  });
+
+  it("CardDescription is the web text-sm", () => {
+    expect(webUi("card.tsx")).toMatch(/"description", "text-sm text-muted-foreground"/);
+    const description = fn(read("Card.tsx"), "CardDescription");
+    expect(description).toMatch(/const size = largerText \? "text-lg" : "text-sm";/);
+    expect(description).toMatch(/sizeStyle\(size\)/);
+  });
+
+  it("pairs every size style with the same class, so the two cannot disagree", () => {
+    for (const file of ["Button.tsx", "Label.tsx", "Card.tsx"]) {
+      const source = code(read(file));
+      for (const call of source.matchAll(/sizeStyle\((\w+)/g)) {
+        expect(source, `${file} ${call[1]}`).toMatch(new RegExp(`cn\\([^;]*\\b${call[1]}\\b`));
+      }
+    }
+  });
+});
+
 describe("type weights (source contract)", () => {
   const files = readdirSync(join(root, "src"), { recursive: true, encoding: "utf8" }).filter(
     (file) => /\.tsx$/.test(file),
   );
 
-  it("sets 600 on titles, labels and tab bar labels, and 500 on button, badge and tab labels", () => {
+  it("sets 600 on titles and tab bar labels, and 500 on button, label, badge and tab labels", () => {
     const semibold: [string, string][] = [
       ["Card.tsx", "Card"],
       ["Card.tsx", "CardTitle"],
       ["Dialog.tsx", "DialogTitle"],
-      ["Label.tsx", "Label"],
       ["settings/SettingsSection.tsx", "SettingsSection"],
       ["examples/ParityGallery.tsx", "Section"],
       ["FloatingTabBar.tsx", "FloatingTabBar"],
@@ -508,6 +695,7 @@ describe("type weights (source contract)", () => {
     }
     const medium: [string, string][] = [
       ["Button.tsx", "Button"],
+      ["Label.tsx", "Label"],
       ["Badge.tsx", "Badge"],
       ["Tabs.tsx", "TabsTrigger"],
     ];
