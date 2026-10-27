@@ -201,6 +201,15 @@ describe("0.3.1 opt-ins", () => {
     expect(render({ toastIcons: "filled24", loadingIcon: a, icons: { loading: b } }).icons.loading).toBe(b);
   });
 
+  it("paints the filled24 status icons with fill=currentColor, not only fill-current", () => {
+    for (const kind of ["success", "error", "warning", "info"] as const) {
+      const svg = renderToStaticMarkup(filledToastIcons[kind]);
+      expect(svg, kind).toMatch(/<svg[^>]*\sfill=["']currentColor["']/);
+      expect(svg, kind).not.toMatch(/<svg[^>]*\sfill=["']none["']/);
+      expect(svg, kind).toMatch(/class="[^"]*\bfill-current\b/);
+    }
+  });
+
   it("pins the hover chip border over sonner's hover border", () => {
     // Sonner's dark `[data-close-button]:hover` rule is not gated on data-styled.
     expect(hoverChipCloseButtonClassName).toContain("hover:border-border!");
