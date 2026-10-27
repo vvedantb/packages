@@ -8,6 +8,8 @@ export { fieldFocusClass, fieldFocusWithinClass } from "./ui/_field-classes";
 export * from "./ui/surface-classes";
 export * from "./motion/presets";
 export * from "./motion/panel-transition";
+export { ListEnter, useFirstPaintGate } from "./motion/list-enter";
+export type { ListEnterProps } from "./motion/list-enter";
 // Gesture physics and animation budget helpers (shared clock, on-screen and
 // page-visibility pausing for infinite animations).
 export { DRAG_ACTIVATION_DISTANCE_PX, projectVelocity, rubberband } from "./utils/gesture";
@@ -22,6 +24,18 @@ export { CAT_SLOT_COUNT, catColorForId, catColorForSlot, catSlotForId } from "./
 export type { CatColorClasses, CatSlot } from "./utils/cat-color";
 export { CONTROL_RADIUS_CLASS, SURFACE_RADIUS_CLASS } from "./utils/surface-radius";
 export { restoreModalScrollLock } from "./ui/overlay-a11y";
+// Generic hooks: media query, page visibility, trailing debounce,
+// single-flight async calls and a persisted scroll container.
+export * from "./hooks";
+export { ErrorBoundary } from "./ui/error-boundary";
+export type { ErrorBoundaryProps } from "./ui/error-boundary";
+export { CountPop, countLabel, UnreadDot } from "./ui/count-pop";
+export { MarqueeOnHover } from "./ui/marquee-on-hover";
+export { RelativeDateTime } from "./ui/relative-date-time";
+export type { RelativeDateTimeProps } from "./ui/relative-date-time";
+export { ImageLightbox } from "./ui/image-lightbox";
+export type { GalleryImage } from "./ui/image-lightbox";
+export { ImageGalleryPreview, ScreenshotPreview, VideoPreview } from "./ui/media-preview";
 
 export * from "./ui/avatar";
 export * from "./ui/badge";

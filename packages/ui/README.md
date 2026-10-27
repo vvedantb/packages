@@ -1184,7 +1184,30 @@ import { DatePicker, DateTimePicker, MonthPicker } from "@vvedantb/ui";
 - `DatePicker`: `value` "YYYY-MM-DD" or "". The trigger matches `TimePicker` and shows the date with `dateStyle: "medium"` (`locale`) or `placeholder` ("Pick a date"). `min` and `max` disable days; `clearable` adds a clear control (`onChange("")`); `name` adds a hidden input. `className` goes on the wrapper, `triggerClassName` merges onto the button (default `w-40`). A width on either sizes the field, and `w-full` on either fills the row; pill inputs can pass `triggerClassName="h-10 w-full rounded-full px-4 text-sm"`. `ariaLabel` names the trigger, followed by the shown text.
 - `DateTimePicker`: `value` "YYYY-MM-DDTHH:mm" or "". A date with no time uses `defaultTime` ("00:00"); a time with no date uses today. Only the date part of `min` and `max` applies. `triggerClassName` goes to both triggers, a width only to the date.
 - `MonthPicker`: `value` "YYYY-MM" or "", with year navigation and a month grid. `min` and `max` are "YYYY-MM".
+- `TimePicker`: `value` "HH:mm" (24h) or "". `hourCycle={12}` (0.27.0) shows "02:30 PM" and adds an AM/PM column; `value` stays 24h. Each column opens centred on the selected item.
 - `Calendar`: the styled `DayPicker` for custom layouts (every `DayPicker` prop). `parseDateValue` and `formatDateValue` convert between "YYYY-MM-DD" and a local `Date`.
+
+## Hooks, media and list motion (0.27.0)
+
+Generic pieces lifted from an app. Components that use `m` need the app's `LazyMotion`.
+
+```tsx
+import {
+  ErrorBoundary, ListEnter, useFirstPaintGate, CountPop, countLabel, UnreadDot,
+  MarqueeOnHover, RelativeDateTime, ImageLightbox, ImageGalleryPreview, ScreenshotPreview, VideoPreview,
+  useMediaQuery, useDocumentVisible, useIdleCallback, useSingleFlight, usePersistedScrollParent,
+  convexErrorMessage, userFacingErrorMessage, useHeldResult,
+} from "@vvedantb/ui";
+```
+
+- `ErrorBoundary` (`fallback` node or `(retry) => node`, `onError`): contains a failure to its subtree; `retry` clears the error.
+- `ListEnter` (`index`, `fast`, `firstPaint`, `staggerStep`, `staggerMax`, `slide`, `as` `div | tr | li`) and `useFirstPaintGate()`: first-paint fade and 8px slide, staggered with `staggerDelay`. Pass `firstPaint={gate.current}` so recycled rows do not restagger.
+- `CountPop` (`label`, `className`, `children`): pop-in and shrink-out for a live count, re-popping on each change. `countLabel(n)` gives `null`, the number or `"99+"`. `UnreadDot` (`show`): a `bg-primary` dot on `CountPop`.
+- `MarqueeOnHover`: a single-line label that scrolls its hidden tail into view on hover (or on hover of a `group` ancestor). Import `@vvedantb/ui/tokens/css/marquee.css`; `--mq-delay` sets the dwell.
+- `RelativeDateTime` (`at`, `emptyLabel` default "—", `exactFormat` default "DD/MM/YYYY HH:mm"): "15m" / "2d" with the exact time in a tooltip.
+- `ImageLightbox` (`images`, `index` or `null`, `onIndexChange`, `onClose`): fullscreen viewer with arrow keys, buttons and swipe. `ImageGalleryPreview` (`images`): up to a 2×2 grid with a "+N" tile. `ScreenshotPreview` (`url`, `alt`) and `VideoPreview` (`url`).
+- Hooks: `useMediaQuery(query)`, `useDocumentVisible()`, `useIdleCallback(ms, fn)` (trailing debounce; `createIdleCallback` is the React-free core), `useSingleFlight(fn)` (one call at a time, latest args run next), `usePersistedScrollParent(storageKey)` (restores a container's `scrollTop` from `sessionStorage`).
+- Convex: `convexErrorMessage(error, fallback)` reads `ConvexError` data first; `userFacingErrorMessage(error, fallback)` strips the client envelope and stack. `useHeldResult(result, key)` keeps the last result while a query is skipped (`key` `null`). None of these import `convex`.
 
 ## Slider (0.16.0, dark contrast and className props 0.16.1)
 

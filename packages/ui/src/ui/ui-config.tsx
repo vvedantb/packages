@@ -40,6 +40,8 @@ import type { QueueConfig } from "../ai-elements/queue";
 import type { SearchInputConfig } from "./search-input";
 import type { SelectConfig } from "./select";
 import type { SeparatorConfig } from "./separator";
+import type { SettingsEmptyStateConfig } from "../../app/src/settings/SettingsEmptyState";
+import type { SettingsSectionConfig } from "../../app/src/settings/SettingsSection";
 import type { ShimmerConfig } from "../ai-elements/shimmer";
 import type { SliderConfig } from "./slider";
 import type { SonnerToasterConfig } from "./sonner";
@@ -110,6 +112,8 @@ export interface UiConfig {
   SearchInput?: SearchInputConfig;
   Select?: SelectConfig;
   Separator?: SeparatorConfig;
+  SettingsEmptyState?: SettingsEmptyStateConfig;
+  SettingsSection?: SettingsSectionConfig;
   Shimmer?: ShimmerConfig;
   Slider?: SliderConfig;
   SonnerToaster?: SonnerToasterConfig;

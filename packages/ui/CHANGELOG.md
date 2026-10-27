@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.27.0
+
+- New generic pieces, lifted from an app (see the README section "Hooks, media and list motion"): `ErrorBoundary`, `ListEnter` and `useFirstPaintGate`, `CountPop`, `countLabel` and `UnreadDot`, `MarqueeOnHover`, `RelativeDateTime`, `ImageLightbox` (type `GalleryImage`), `ImageGalleryPreview`, `ScreenshotPreview` and `VideoPreview`, and the hooks `useMediaQuery`, `useDocumentVisible`, `useIdleCallback` / `createIdleCallback`, `useSingleFlight` and `usePersistedScrollParent`.
+- New app helpers: `convexErrorMessage`, `userFacingErrorMessage` and `useHeldResult`. They do not import `convex` (a `ConvexError` is matched by `name`), so the root graph's convex importers are unchanged.
+- New opt-in stylesheet `@vvedantb/ui/tokens/css/marquee.css` (the `.mq-*` rules for `MarqueeOnHover`).
+- `UiConfig.SettingsSection` (`classes.card`, `classes.footer`, `classes.body[variant]`) and `UiConfig.SettingsEmptyState` (`classes.icon`) replace those parts' built-in classes, for apps whose settings cards use other tokens. Without an entry the DOM is unchanged.
+- `TimePicker`: new `hourCycle` (`12 | 24`, default `24`). `12` shows "02:30 PM" and adds an AM/PM column; `value` stays "HH:mm" 24h.
+- Fix: `TimePicker` columns now open centred on the selected hour and minute. The scroll ran in the picker before the popover content had mounted, so it never found the items. Each column now centres itself when it mounts, by setting its own `scrollTop` (the page no longer scrolls). The columns gain `relative` and a `data-time-column` attribute.
+- `usePersistedScrollParent` reads and writes `sessionStorage` directly (no `usehooks-ts`), in the same JSON number format.
+- No new dependencies.
+
 ## 0.26.1
 
 - `AppWordmark`: `ICON_SCALE` changes from `0.875` to `1.4`. The icon is now `Math.round(size * 1.4)` px square (34px at the default size 24, 67px at size 48). The gap tightens from `0.3em` to `0.2em`.

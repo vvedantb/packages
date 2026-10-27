@@ -23,12 +23,38 @@ interface TimePickerProps {
   // merged onto the trigger (width defaults to a compact 110px; height,
   // radius, padding and text size override cleanly)
   triggerClassName?: string;
+  // `12` shows "02:30 PM" with an AM/PM column; `value` stays "HH:mm" 24h.
+  // Default `24`.
+  hourCycle?: 12 | 24;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 60 }, (_, i) =>
   String(i).padStart(2, "0"),
 );
+const HOURS_12 = Array.from({ length: 12 }, (_, i) =>
+  String(i + 1).padStart(2, "0"),
+);
+const PERIODS = ["AM", "PM"];
+
+type Period = "AM" | "PM";
+
+/** "14" → { hour: "02", period: "PM" }; "00" → { hour: "12", period: "AM" }. */
+function toTwelveHour(hour: string): { hour: string; period: Period } {
+  const h = Number(hour);
+  return {
+    hour: String(((h + 11) % 12) + 1).padStart(2, "0"),
+    period: h < 12 ? "AM" : "PM",
+  };
+}
+
+/** "02" + "PM" → "14"; "12" + "AM" → "00". */
+function toTwentyFourHour(hour: string, period: Period): string {
+  return String((Number(hour) % 12) + (period === "PM" ? 12 : 0)).padStart(
+    2,
+    "0",
+  );
+}
 
 function parseValue(value: string): { hour: string; minute: string } {
   const match = /^(\d{2}):(\d{2})$/.exec(value);
@@ -42,44 +68,31 @@ function parseValue(value: string): { hour: string; minute: string } {
   return { hour: "00", minute: "00" };
 }
 
-// auto, scroll a column to its selected item when the popover opens using
-// `scrollintoview({ block: "centre" })` is good enough, the popover only
-// has 2 columns and a fixed height, so we don't need a custom scroll calc
-function useScrollSelectedIntoView(
-  ref: React.RefObject<HTMLDivElement | null>,
-  selector: string,
-  open: boolean,
-): void {
-  React.useEffect(() => {
-    if (!open) return;
-    const root = ref.current;
-    if (!root) return;
-    const target = root.querySelector(selector);
-    if (target instanceof HTMLElement) {
-      target.scrollIntoView({ block: "center", behavior: "auto" });
-    }
-  }, [open, ref, selector]);
-}
-
 const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
   (
-    { value, onChange, className, disabled, ariaLabel, triggerClassName },
+    {
+      value,
+      onChange,
+      className,
+      disabled,
+      ariaLabel,
+      triggerClassName,
+      hourCycle = 24,
+    },
     ref,
   ) => {
     const [open, setOpen] = React.useState(false);
     const { hour, minute } = parseValue(value);
-    const hoursRef = React.useRef<HTMLDivElement | null>(null);
-    const minutesRef = React.useRef<HTMLDivElement | null>(null);
-
-    useScrollSelectedIntoView(hoursRef, `[data-time-value="${hour}"]`, open);
-    useScrollSelectedIntoView(
-      minutesRef,
-      `[data-time-value="${minute}"]`,
-      open,
-    );
+    const twelve = toTwelveHour(hour);
+    const isTwelveHour = hourCycle === 12;
 
     const handleHourSelect = (h: string) => {
-      onChange(`${h}:${minute}`);
+      const next = isTwelveHour ? toTwentyFourHour(h, twelve.period) : h;
+      onChange(`${next}:${minute}`);
+    };
+    const handlePeriodSelect = (p: string) => {
+      const period: Period = p === "PM" ? "PM" : "AM";
+      onChange(`${toTwentyFourHour(twelve.hour, period)}:${minute}`);
     };
     const handleMinuteSelect = (m: string) => {
       onChange(`${hour}:${m}`);
@@ -100,7 +113,11 @@ const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
               className,
             )}
           >
-            <span>{`${hour}:${minute}`}</span>
+            <span>
+              {isTwelveHour
+                ? `${twelve.hour}:${minute} ${twelve.period}`
+                : `${hour}:${minute}`}
+            </span>
             <IconClock className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         </PopoverTrigger>
@@ -110,19 +127,25 @@ const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
           className="flex w-auto gap-1 p-2"
         >
           <TimeColumn
-            ref={hoursRef}
             label="Hours"
-            values={HOURS}
-            selected={hour}
+            values={isTwelveHour ? HOURS_12 : HOURS}
+            selected={isTwelveHour ? twelve.hour : hour}
             onSelect={handleHourSelect}
           />
           <TimeColumn
-            ref={minutesRef}
             label="Minutes"
             values={MINUTES}
             selected={minute}
             onSelect={handleMinuteSelect}
           />
+          {isTwelveHour ? (
+            <TimeColumn
+              label="AM/PM"
+              values={PERIODS}
+              selected={twelve.period}
+              onSelect={handlePeriodSelect}
+            />
+          ) : null}
         </PopoverContent>
       </Popover>
     );
@@ -137,41 +160,52 @@ interface TimeColumnProps {
   onSelect: (value: string) => void;
 }
 
-const TimeColumn = React.forwardRef<HTMLDivElement, TimeColumnProps>(
-  ({ label, values, selected, onSelect }, ref) => {
-    return (
-      <div className="flex w-14 flex-col">
-        <div className="px-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </div>
-        <div
-          ref={ref}
-          className="h-48 overflow-y-auto rounded-lg bg-segment py-1"
-        >
-          {values.map((v) => {
-            const isSelected = v === selected;
-            return (
-              <button
-                key={v}
-                type="button"
-                data-time-value={v}
-                onClick={() => onSelect(v)}
-                className={cn(
-                  "flex h-7 w-full items-center justify-center text-xs tabular-nums transition-colors",
-                  isSelected
-                    ? pickerSelectedClass
-                    : cn("text-foreground/80", pickerItemHoverClass),
-                )}
-              >
-                {v}
-              </button>
-            );
-          })}
-        </div>
+// Centres the selected item when the column mounts. The column lives inside
+// the popover content, which mounts after the trigger's open state changes,
+// so the scroll has to run here rather than in the picker. It sets the
+// column's own `scrollTop`, so the page never scrolls.
+function TimeColumn({ label, values, selected, onSelect }: TimeColumnProps) {
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+  React.useLayoutEffect(() => {
+    const list = listRef.current;
+    const item = list?.querySelector(`[data-time-value="${selected}"]`);
+    if (!list || !(item instanceof HTMLElement)) return;
+    list.scrollTop =
+      item.offsetTop - list.clientHeight / 2 + item.offsetHeight / 2;
+    // Mount only: re-centring on every pick would jump the list under the pointer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div className="flex w-14 flex-col" data-time-column={label}>
+      <div className="px-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+        {label}
       </div>
-    );
-  },
-);
-TimeColumn.displayName = "TimeColumn";
+      <div
+        ref={listRef}
+        className="relative h-48 overflow-y-auto rounded-lg bg-segment py-1"
+      >
+        {values.map((v) => {
+          const isSelected = v === selected;
+          return (
+            <button
+              key={v}
+              type="button"
+              data-time-value={v}
+              onClick={() => onSelect(v)}
+              className={cn(
+                "flex h-7 w-full items-center justify-center text-xs tabular-nums transition-colors",
+                isSelected
+                  ? pickerSelectedClass
+                  : cn("text-foreground/80", pickerItemHoverClass),
+              )}
+            >
+              {v}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export { TimePicker };
