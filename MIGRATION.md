@@ -118,7 +118,7 @@ Install `@vvedantb/server` once and import everything from the root. `0.1.x` use
 | --- | --- |
 | `@vvedantb/native-ui` `0.1.x` with a `@vvedantb/tokens` peer | `@vvedantb/native-ui` `0.2.0`. Remove `@vvedantb/tokens` unless the app also uses it for web. |
 
-`@vvedantb/native-ui` keeps its own copy of the JS tokens in `src/tokens.ts`. It does not depend on `@vvedantb/ui`, so React Native apps install no Radix or `react-dom`. Apps that already depend on `@vvedantb/ui` can import the same values from `@vvedantb/ui/tokens/native`.
+`@vvedantb/native-ui` keeps its own copy of the JS tokens in `src/tokens.ts`. It does not depend on `@vvedantb/ui`, so React Native apps install no Radix or `react-dom`. Apps that already depend on `@vvedantb/ui` can import the same values as the `tokens` named export of `@vvedantb/ui` (there is no `./tokens/native` subpath).
 
 ### Config (`@vvedantb/config`)
 
