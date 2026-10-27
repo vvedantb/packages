@@ -126,7 +126,9 @@ export function Button({
       className={cn(
         "relative rounded-full border",
         HEIGHT[scale][resolvedSize],
-        fullWidth && resolvedSize !== "icon" && "w-full",
+        // Column flex children stretch by default (React Native Web too), so
+        // a button that is not full width must opt out with `self-start`.
+        resolvedSize !== "icon" && (fullWidth ? "w-full" : "self-start"),
         VARIANT_CLASS[variant],
         className,
       )}
