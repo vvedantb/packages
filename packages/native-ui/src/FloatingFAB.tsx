@@ -32,11 +32,9 @@ export function FloatingFAB({
   return (
     <View
       pointerEvents="box-none"
-      className={cn(
-        "right-4 z-10",
-        Platform.OS === "web" ? "fixed" : "absolute",
-      )}
+      className={cn("z-10", Platform.OS === "web" ? "fixed" : "absolute")}
       style={{
+        right: insets.right + FLOATING_INSET,
         bottom: FLOATING_INSET + Math.max(insets.bottom, 8) + tabBar + 20,
       }}
     >

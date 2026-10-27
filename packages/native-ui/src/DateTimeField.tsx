@@ -4,7 +4,9 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
+import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 type PickerMode = "date" | "time";
 type PickerButton = { mode: PickerMode; label: string };
@@ -23,6 +25,7 @@ export function DateTimeField({
   testID?: string;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   const [picker, setPicker] = useState<PickerMode | null>(null);
 
   const handleChange = (event: DateTimePickerEvent, next?: Date) => {
@@ -53,10 +56,11 @@ export function DateTimeField({
                 current === button.mode ? null : button.mode,
               )
             }
-            className={`${largerText ? "h-16" : "h-14"} flex-1 justify-center rounded-lg bg-secondary px-4 active:opacity-70`}
+            className={`${largerText ? "min-h-16" : "min-h-14"} flex-1 justify-center rounded-lg bg-secondary px-4 py-2 active:opacity-70`}
           >
             <Text
-              className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-semibold text-foreground`}
+              className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-semibold`}
+              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
             >
               {button.label}
             </Text>

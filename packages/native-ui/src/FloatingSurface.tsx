@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, View, type ViewProps } from "react-native";
-import { BlurView } from "expo-blur";
 import { useColorScheme } from "nativewind";
+import { glassMode, loadBlur } from "./blur";
 import { cn } from "./cn";
 import {
   floatingFill,
@@ -9,6 +9,7 @@ import {
   floatingSolidFill,
   FLOATING_RADIUS,
 } from "./floating";
+import { useGlassBlurTarget } from "./glassBlur";
 import { useReduceTransparency } from "./useReduceTransparency";
 
 type FloatingSurfaceProps = ViewProps & {
@@ -29,15 +30,19 @@ export function FloatingSurface({
 }: FloatingSurfaceProps) {
   const { colorScheme } = useColorScheme();
   const reduceTransparency = useReduceTransparency();
+  const blurTarget = useGlassBlurTarget();
+  const BlurView = loadBlur()?.BlurView;
+  const mode = glassMode({
+    os: Platform.OS,
+    blur,
+    reduceTransparency,
+    hasBlurView: BlurView != null,
+  });
   const isDark = colorScheme === "dark";
   const opaqueFill = isDark ? floatingSolidFill.dark : floatingSolidFill.light;
   const translucentFill = isDark ? floatingFill.dark : floatingFill.light;
   const border = isDark ? floatingHairline.dark : floatingHairline.light;
-  const useBlur = blur && !reduceTransparency && Platform.OS === "ios";
-  const fill =
-    Platform.OS === "android" || reduceTransparency || !blur
-      ? opaqueFill
-      : translucentFill;
+  const fill = mode === "solid" ? opaqueFill : translucentFill;
 
   return (
     <View
@@ -57,21 +62,38 @@ export function FloatingSurface({
             borderRadius: radius,
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: border,
-            backgroundColor: useBlur ? "transparent" : fill,
+            backgroundColor: mode === "blur" ? "transparent" : fill,
           },
           Platform.OS === "ios" ? styles.continuous : null,
           style != null ? styles.fill : null,
         ]}
       >
-        {useBlur ? (
+        {mode === "blur" && BlurView ? (
+          // Android: dimezis blur of the `GlassBlurTarget` content (without
+          // one, expo-blur draws only the tint). `experimentalBlurMethod` is
+          // the pre-SDK 55 name and logs a deprecation warning, so iOS skips it.
           <BlurView
             pointerEvents="none"
             tint={isDark ? "systemMaterialDark" : "systemMaterialLight"}
             intensity={70}
+            experimentalBlurMethod={
+              Platform.OS === "android" ? "dimezisBlurView" : undefined
+            }
+            blurMethod="dimezisBlurView"
+            blurReductionFactor={3}
+            blurTarget={blurTarget ?? undefined}
             style={StyleSheet.absoluteFill}
           />
         ) : null}
-        {Platform.OS === "web" && blur && !reduceTransparency ? (
+        {mode === "blur" && Platform.OS === "android" ? (
+          // The iOS backdrop includes the outer fill; dimezis samples only the
+          // target, so Android lays the same fill over the blur.
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: translucentFill }]}
+          />
+        ) : null}
+        {mode === "backdrop" ? (
           <View
             pointerEvents="none"
             className="absolute inset-0 backdrop-blur-xl"

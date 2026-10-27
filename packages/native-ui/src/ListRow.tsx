@@ -3,8 +3,10 @@ import { Pressable, Text, View } from "react-native";
 import type { IconProps } from "@tabler/icons-react-native";
 import { NEUTRAL_500 } from "./colors";
 import { cn } from "./cn";
+import { textStyle, typeStyle } from "./controlStyles";
 import { FLOATING_ROW_RADIUS } from "./floating";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 export function ListRow({
   title,
@@ -28,6 +30,7 @@ export function ListRow({
   testID?: string;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   const content = (
     <>
       {Icon ? <Icon size={largerText ? 30 : 26} color={iconColor} /> : null}
@@ -35,18 +38,20 @@ export function ListRow({
         <Text
           numberOfLines={2}
           className={cn(
-            "font-instrument-sans-semibold text-foreground",
+            "font-instrument-sans-semibold",
             largerText ? "text-xl" : "text-lg",
           )}
+          style={[textStyle("foreground", scheme), typeStyle("semibold")]}
         >
           {title}
         </Text>
         {meta ? (
           <Text
             className={cn(
-              "font-instrument-sans text-muted-foreground",
+              "font-instrument-sans",
               largerText ? "text-lg" : "text-base",
             )}
+            style={textStyle("muted", scheme)}
           >
             {meta}
           </Text>

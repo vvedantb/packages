@@ -1,5 +1,7 @@
 import { Pressable, Text } from "react-native";
+import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 export function Chip({
   label,
@@ -15,6 +17,7 @@ export function Chip({
   round?: boolean;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   const size = round
     ? largerText
       ? "h-14 w-14"
@@ -37,10 +40,9 @@ export function Chip({
         className={`font-instrument-sans-semibold ${
           largerText ? "text-xl" : "text-lg"
         } ${
-          selected
-            ? "text-pink-700 dark:text-pink-300"
-            : "text-muted-foreground"
+          selected ? "text-pink-700 dark:text-pink-300" : ""
         }`}
+        style={[selected ? null : textStyle("muted", scheme), typeStyle("semibold")]}
       >
         {label}
       </Text>

@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.2.1",
+  "version": "0.3.12",
   "license": "MIT",
-  "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, settings chrome, and tab bar.",
+  "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, overlays, toasts, settings chrome, tab bar and the family app marks.",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -17,6 +17,70 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./tab-bar": {
+      "types": "./src/entries/tab-bar.ts",
+      "default": "./src/entries/tab-bar.ts"
+    },
+    "./brand": {
+      "types": "./src/entries/brand.ts",
+      "default": "./src/entries/brand.ts"
+    },
+    "./button": {
+      "types": "./src/entries/button.ts",
+      "default": "./src/entries/button.ts"
+    },
+    "./primitives": {
+      "types": "./src/entries/primitives.ts",
+      "default": "./src/entries/primitives.ts"
+    },
+    "./search-input": {
+      "types": "./src/entries/search-input.ts",
+      "default": "./src/entries/search-input.ts"
+    },
+    "./toast": {
+      "types": "./src/entries/toast.ts",
+      "default": "./src/entries/toast.ts"
+    },
+    "./theme": {
+      "types": "./src/entries/theme.ts",
+      "default": "./src/entries/theme.ts"
+    },
+    "./floating": {
+      "types": "./src/entries/floating.ts",
+      "default": "./src/entries/floating.ts"
+    },
+    "./layout": {
+      "types": "./src/entries/layout.ts",
+      "default": "./src/entries/layout.ts"
+    },
+    "./marketing": {
+      "types": "./src/entries/marketing.ts",
+      "default": "./src/entries/marketing.ts"
+    },
+    "./ambient": {
+      "types": "./src/entries/ambient.ts",
+      "default": "./src/entries/ambient.ts"
+    },
+    "./bottom-sheet": {
+      "types": "./src/entries/bottom-sheet.ts",
+      "default": "./src/entries/bottom-sheet.ts"
+    },
+    "./date-time": {
+      "types": "./src/entries/date-time.ts",
+      "default": "./src/entries/date-time.ts"
+    },
+    "./gallery": {
+      "types": "./src/examples/ParityGallery.tsx",
+      "default": "./src/examples/ParityGallery.tsx"
+    },
+    "./blur": {
+      "types": "./src/blur.ts",
+      "default": "./src/blur.ts"
+    },
+    "./haptics": {
+      "types": "./src/haptics.ts",
+      "default": "./src/haptics.ts"
+    },
     "./package.json": "./package.json"
   },
   "types": "./src/index.ts",
@@ -28,6 +92,7 @@
   "scripts": {
     "build": "node -e \"require('node:fs').accessSync('src/index.ts')\"",
     "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
     "prepack": "node -e \"require('node:fs').accessSync('src/index.ts')\""
   },
   "peerDependencies": {
@@ -52,6 +117,7 @@
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
+    "react-native-svg": "*",
     "tailwind-merge": ">=2.0.0"
   },
   "peerDependenciesMeta": {
@@ -64,7 +130,19 @@
     "dayjs": {
       "optional": true
     },
+    "expo-blur": {
+      "optional": true
+    },
+    "expo-haptics": {
+      "optional": true
+    },
+    "expo-linear-gradient": {
+      "optional": true
+    },
     "expo-router": {
+      "optional": true
+    },
+    "react-native-svg": {
       "optional": true
     }
   },

@@ -9,7 +9,16 @@ import {
   SelectValue,
 } from "./primitives/select";
 import { cn } from "./cn";
+import {
+  MIN_TOUCH_TARGET,
+  fieldStyle,
+  fieldTextStyle,
+  touchSlop,
+  typeStyle,
+} from "./controlStyles";
+import { palette } from "./palette";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 interface SelectOption<TValue = string | number | null> {
   label: string;
@@ -27,6 +36,8 @@ interface SelectProps<TValue = string | number | null> {
   triggerClassName?: string;
   contentClassName?: string;
   testID?: string;
+  /** Names the field for VoiceOver and TalkBack, which otherwise read only the value or placeholder. */
+  accessibilityLabel?: string;
 }
 
 const NULL_SENTINEL = "__null__";
@@ -62,8 +73,10 @@ function Select<TValue = string | number | null>({
   triggerClassName,
   contentClassName,
   testID,
+  accessibilityLabel,
 }: SelectProps<TValue>) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   const primitiveValue = toPrimitiveValue(value, options);
 
   return (
@@ -89,19 +102,32 @@ function Select<TValue = string | number | null>({
     >
       <SelectTrigger
         testID={testID}
+        accessibilityRole="combobox"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ disabled: Boolean(disabled) }}
+        // 40 high on screen, as on the web; a 44 target to touch.
+        hitSlop={touchSlop(MIN_TOUCH_TARGET, largerText ? 64 : 40)}
         className={cn(
-          "h-14 w-full rounded-lg border-0 bg-secondary px-4 py-0 shadow-none",
-          largerText && "h-16",
+          // The web trigger: h-10 px-3.5, 16 px type (its phone size). A
+          // minimum height, so a large Dynamic Type size does not clip the value.
+          "h-auto min-h-10 w-full border px-3.5 py-0 shadow-none",
+          largerText && "min-h-16 px-4",
           triggerClassName,
           className,
         )}
+        style={fieldStyle(scheme)}
       >
         <SelectValue
           placeholder={placeholder ?? "Select option"}
-          className={cn(
-            "font-instrument-sans-medium text-foreground",
-            largerText ? "text-xl" : "text-lg",
-          )}
+          className={
+            largerText ? "font-instrument-sans-medium text-xl" : "font-instrument-sans text-base"
+          }
+          style={[
+            primitiveValue
+              ? fieldTextStyle(scheme)
+              : { color: palette.fieldPlaceholder[scheme] },
+            largerText ? typeStyle("medium") : null,
+          ]}
         />
       </SelectTrigger>
       <SelectContent className={cn("w-full", contentClassName)}>

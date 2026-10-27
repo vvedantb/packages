@@ -1,9 +1,9 @@
-import type { ComponentProps } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Tabs } from "expo-router";
+import { typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
+import { isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
 import { useLargerText } from "./theme";
 import {
   FLOATING_INSET,
@@ -12,15 +12,38 @@ import {
   FLOATING_TAB_BAR_HEIGHT_LARGE,
 } from "./floating";
 
-type TabBarProps = Parameters<
-  NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
->[0];
+/**
+ * The fields this bar reads from the props Expo Router's `Tabs` passes to
+ * `tabBar` (React Navigation's `BottomTabBarProps`, Expo SDK 57). Declared
+ * here so the tab bar does not import `expo-router`.
+ */
+export type FloatingTabBarProps = {
+  state: {
+    index: number;
+    routes: readonly { key: string; name: string; params?: object }[];
+  };
+  descriptors: Record<string, { options: FloatingTabOptions }>;
+  navigation: {
+    emit(event: {
+      type: "tabPress";
+      target: string;
+      canPreventDefault: true;
+    }): { defaultPrevented: boolean };
+    navigate(name: string, params?: object): void;
+  };
+};
 
+/**
+ * The floating pill tab bar, for the `tabBar` prop of Expo Router's `Tabs`.
+ * Hide a tab with `options={{ href: null }}` on its `Tabs.Screen`: the bar
+ * draws no tab for it (`isTabBarRouteVisible`), and the other tabs keep their
+ * focus and navigation.
+ */
 export function FloatingTabBar({
   state,
   descriptors,
   navigation,
-}: TabBarProps) {
+}: FloatingTabBarProps) {
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
   const height = largerText
@@ -30,10 +53,11 @@ export function FloatingTabBar({
   return (
     <View
       pointerEvents="box-none"
+      // Inside the home indicator and, in landscape, the notch.
       style={{
         position: "absolute",
-        left: FLOATING_INSET,
-        right: FLOATING_INSET,
+        left: insets.left + FLOATING_INSET,
+        right: insets.right + FLOATING_INSET,
         bottom: FLOATING_INSET + Math.max(insets.bottom, 8),
       }}
     >
@@ -44,11 +68,12 @@ export function FloatingTabBar({
           accessibilityRole="tablist"
         >
           {state.routes.map((route, index) => {
-            const focused = state.index === index;
             const options = descriptors[route.key]?.options;
-            if (!options) {
+            if (!isTabBarRouteVisible(options)) {
               return null;
             }
+            // `index` counts hidden routes too, as `state.index` does.
+            const focused = state.index === index;
             const label =
               typeof options.tabBarLabel === "string"
                 ? options.tabBarLabel
@@ -90,10 +115,13 @@ export function FloatingTabBar({
                   : null}
                 <Text
                   numberOfLines={1}
+                  // The bar has a fixed height (`tabBarReserve`), so labels
+                  // scale with Dynamic Type only up to what fits in it.
+                  maxFontSizeMultiplier={1.5}
                   className={`font-instrument-sans-semibold ${
                     largerText ? "text-base" : "text-sm"
                   }`}
-                  style={{ color }}
+                  style={[{ color }, typeStyle("semibold")]}
                 >
                   {label}
                 </Text>

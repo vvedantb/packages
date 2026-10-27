@@ -1,7 +1,10 @@
 import * as React from "react";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
+import { fieldStyle, fieldTextStyle, typeStyle } from "./controlStyles";
+import { palette } from "./palette";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 type InputProps = React.ComponentPropsWithoutRef<typeof PrimitiveInput> & {
   className?: string;
@@ -10,17 +13,25 @@ type InputProps = React.ComponentPropsWithoutRef<typeof PrimitiveInput> & {
 const Input = React.forwardRef<
   React.ElementRef<typeof PrimitiveInput>,
   InputProps
->(({ className, placeholderTextColor, ...props }, ref) => {
+>(({ className, placeholderTextColor, style, ...props }, ref) => {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <PrimitiveInput
       ref={ref}
-      placeholderTextColor={placeholderTextColor ?? "#737373"}
+      placeholderTextColor={placeholderTextColor ?? palette.fieldPlaceholder[scheme]}
       className={cn(
-        "min-h-14 rounded-full border border-white/40 bg-secondary px-4 py-3 text-lg font-instrument-sans-medium text-foreground dark:border-white/10",
-        largerText && "min-h-16 py-4 text-xl",
+        // The web field: h-10 px-3.5 py-2, 16 px type (its phone size).
+        "min-h-10 border px-3.5 py-2 text-base font-instrument-sans",
+        largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium",
         className,
       )}
+      style={[
+        fieldStyle(scheme),
+        fieldTextStyle(scheme),
+        largerText ? typeStyle("medium") : null,
+        style,
+      ]}
       {...props}
     />
   );

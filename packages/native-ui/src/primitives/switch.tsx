@@ -1,6 +1,6 @@
 import * as SwitchPrimitives from "@rn-primitives/switch";
 import * as React from "react";
-import { Platform } from "react-native";
+import { Platform, type ViewStyle } from "react-native";
 import { cn } from "../cn";
 
 type SwitchProps = React.ComponentPropsWithoutRef<
@@ -8,8 +8,12 @@ type SwitchProps = React.ComponentPropsWithoutRef<
 > & {
   className?: string;
   thumbClassName?: string;
-  onColor?: string;
-  offColor?: string;
+  /**
+   * Track and thumb colours. Flat objects: on web each part is a Radix slot,
+   * which spreads `style`, so these are the only styles applied there.
+   */
+  trackStyle?: ViewStyle;
+  thumbStyle?: ViewStyle;
 };
 
 const Switch = React.forwardRef<
@@ -20,8 +24,8 @@ const Switch = React.forwardRef<
     {
       className,
       thumbClassName,
-      onColor,
-      offColor,
+      trackStyle,
+      thumbStyle,
       checked,
       style,
       disabled,
@@ -30,16 +34,10 @@ const Switch = React.forwardRef<
     ref,
   ) => {
     const isChecked = Boolean(checked);
-    const trackColor =
-      Platform.OS !== "web" && (onColor || offColor)
-        ? { backgroundColor: isChecked ? onColor : offColor }
-        : null;
     const resolvedStyle =
       Platform.OS === "web" || typeof style === "function"
-        ? undefined
-        : trackColor
-          ? [trackColor, style]
-          : style;
+        ? trackStyle
+        : [trackStyle, style];
 
     return (
       <SwitchPrimitives.Root
@@ -59,6 +57,7 @@ const Switch = React.forwardRef<
         {...props}
       >
         <SwitchPrimitives.Thumb
+          style={thumbStyle}
           className={cn(
             "h-4 w-4 rounded-full bg-background transition-transform",
             isChecked

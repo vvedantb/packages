@@ -7,6 +7,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useRef, useEffect, useCallback, JSX } from "react";
 import { useColorScheme } from "nativewind";
 import { Colors } from "./colors";
+import { textStyle, typeStyle } from "./controlStyles";
 import { IconX } from "@tabler/icons-react-native";
 import { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
 import { GlassSheetBackground } from "./LiquidGlass";
@@ -66,7 +67,12 @@ export function BottomSheetContainer({
       <BottomSheetView className="p-5 pb-12">
         <View className="mb-4 flex-row items-center justify-between gap-3">
           <Text
-            className={`${largerText ? "text-2xl" : "text-xl"} flex-1 font-instrument-sans-bold text-foreground`}
+            accessibilityRole="header"
+            className={`${largerText ? "text-2xl" : "text-xl"} flex-1 font-instrument-sans-semibold`}
+            style={[
+              textStyle("foreground", colorScheme === "dark" ? "dark" : "light"),
+              typeStyle("semibold"),
+            ]}
           >
             {title}
           </Text>

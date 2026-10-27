@@ -6,13 +6,16 @@ import {
   ChevronUpIcon,
 } from "lucide-react-native";
 import * as React from "react";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import { NativeOnlyAnimatedView } from "./native-only-animated-view";
 import { TextClassContext } from "./text";
 import { LiquidGlass } from "../LiquidGlass";
 import { cn } from "../cn";
+import { textStyle, typeStyle } from "../controlStyles";
+import { tokens } from "../tokens";
+import { useScheme } from "../useScheme";
 
 type Option = SelectPrimitive.Option;
 
@@ -30,14 +33,18 @@ type SelectValueProps = React.ComponentPropsWithoutRef<
 const SelectValue = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Value>,
   SelectValueProps
->(({ className, ...props }, ref) => {
-  return (
-    <SelectPrimitive.Value
-      ref={ref}
-      className={cn("line-clamp-1 text-sm text-foreground", className)}
-      {...props}
-    />
-  );
+>(({ className, style, ...props }, ref) => {
+  const classes = cn("line-clamp-1 text-sm text-foreground", className);
+  if (Platform.OS === "web") {
+    // Radix `Select.Value` drops `className` and `style`, so the placeholder
+    // took the page colour. Its span inherits them from this Text instead.
+    return (
+      <Text className={classes} style={style}>
+        <SelectPrimitive.Value ref={ref} {...props} />
+      </Text>
+    );
+  }
+  return <SelectPrimitive.Value ref={ref} className={classes} style={style} {...props} />;
 });
 
 type SelectTriggerProps = React.ComponentPropsWithoutRef<
@@ -51,6 +58,7 @@ const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
 >(({ className, children, size = "default", disabled, ...props }, ref) => {
+  const scheme = useScheme();
   return (
     <SelectPrimitive.Trigger
       ref={ref}
@@ -64,7 +72,7 @@ const SelectTrigger = React.forwardRef<
       {...props}
     >
       <>{children}</>
-      <ChevronDown size={16} color="#737373" />
+      <ChevronDown size={16} color={tokens.color.muted[scheme]} />
     </SelectPrimitive.Trigger>
   );
 });
@@ -155,6 +163,7 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   SelectItemProps
 >(({ className, disabled, ...props }, ref) => {
+  const scheme = useScheme();
   return (
     <SelectPrimitive.Item
       ref={ref}
@@ -168,10 +177,14 @@ const SelectItem = React.forwardRef<
     >
       <View className="absolute right-2 size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check size={16} color="#737373" />
+          <Check size={16} color={tokens.color.muted[scheme]} />
         </SelectPrimitive.ItemIndicator>
       </View>
-      <SelectPrimitive.ItemText className="select-none text-sm font-instrument-sans-medium text-foreground" />
+      <SelectPrimitive.ItemText
+        className="select-none text-sm font-instrument-sans-medium"
+        // One object: on web the item text is a Radix slot, which drops arrays.
+        style={{ ...textStyle("foreground", scheme), ...typeStyle("medium") }}
+      />
     </SelectPrimitive.Item>
   );
 });
