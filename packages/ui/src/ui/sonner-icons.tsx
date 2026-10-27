@@ -8,7 +8,7 @@ function InfoIcon() {
     <svg
       aria-hidden="true"
       className="h-6 w-6 fill-current text-primary"
-      fill="none"
+      fill="currentColor"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -22,7 +22,7 @@ function SuccessIcon() {
     <svg
       aria-hidden="true"
       className="h-6 w-6 fill-current text-success"
-      fill="none"
+      fill="currentColor"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -36,7 +36,7 @@ function WarningIcon() {
     <svg
       aria-hidden="true"
       className="h-6 w-6 fill-current text-warning"
-      fill="none"
+      fill="currentColor"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -54,7 +54,7 @@ function ErrorIcon() {
     <svg
       aria-hidden="true"
       className="h-6 w-6 fill-current text-destructive"
-      fill="none"
+      fill="currentColor"
       viewBox="0 0 20 20"
       xmlns="http://www.w3.org/2000/svg"
     >

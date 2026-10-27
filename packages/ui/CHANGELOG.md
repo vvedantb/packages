@@ -4,6 +4,11 @@
 
 - `tokens` (`tokens/src/native.ts`, the React Native tokens): the neutrals now equal `tokens.css`, converted from oklch to sRGB hex. The dark values change most: `background` `#060606` (was `#1f1f1f`), `surface` `#181818` (was `#242426`), `border` `#292929` (was `#474747`). `radius.field` is 10 (was 20), the web `--field-radius`. `color.fill.dark` is `rgba(24, 24, 24, 0.88)`. The header now says which values follow `tokens.css`. This keeps the copy in `@vvedantb/native-ui` 0.3.3 in step. Web CSS is unchanged.
 
+## 0.29.1
+
+- Fix: the `filledToastIcons` success, info, warning and error SVGs set `fill="none"` and relied on the Tailwind class `fill-current` to paint. In apps whose Tailwind build did not emit that utility, the icons rendered blank. They now set `fill="currentColor"`, so they paint without it. `fill-current` stays in the class list. The close cross is unchanged (stroke icon, `fill="none"`).
+- No new dependencies.
+
 ## 0.29.0
 
 - `SiteFooterLink`: new `app?: AppName`. It renders the `APP_ICONS[app]` glyph before the label: 14px square, `currentColor`, no tile, `aria-hidden`. The link takes the `imageLink` classes (`flex items-center gap-2`), as with `image`. If both are set, `app` wins.
