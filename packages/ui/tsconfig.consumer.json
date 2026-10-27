@@ -12,5 +12,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "files": ["consumer/window-speech.d.ts", "src/index.ts"]
+  "files": ["consumer/window-speech.d.ts", "src/index.ts", "src/client.ts"]
 }

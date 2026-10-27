@@ -5,10 +5,19 @@
 // SVGs are always written. PNGs and favicon.ico need `rsvg-convert`; without it they are skipped
 // with a message. Layout: <dir>/<app>/{mark,icon,favicon,icon-light}.svg, PNGs, extension/, android/.
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { APP_NAMES, appAdaptiveSvg, appExtension128Svg, appMarkSvg, appTileSvg } from "../src/brand/svg.ts";
+
+// Node does not strip types from files under node_modules, so an installed copy
+// of this script strips svg.ts itself (svg.ts has no imports).
+async function loadSvg() {
+  const url = new URL("../src/brand/svg.ts", import.meta.url);
+  if (!fileURLToPath(url).split(sep).includes("node_modules")) return import(url.href);
+  const { stripTypeScriptTypes } = await import("node:module");
+  return import(`data:text/javascript,${encodeURIComponent(stripTypeScriptTypes(readFileSync(url, "utf8")))}`);
+}
+const { APP_NAMES, appAdaptiveSvg, appExtension128Svg, appMarkSvg, appTileSvg } = await loadSvg();
 
 /** Whether `rsvg-convert` can be run. */
 export function hasRsvg() {

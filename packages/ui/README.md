@@ -4,13 +4,16 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The only JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The main JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui/client` | The root without `@vvedantb/server`, convex or Clerk, for Chrome extensions (0.28.0). Leaves out the artifact viewers, `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`. See [Chrome extensions](#chrome-extensions-0280). |
+| `@vvedantb/ui/brand` | App icons (`Icon*`, `APP_ICONS`), `AppWordmark`, deprecated `AppMark`, raw SVG strings and `FAMILY_APPS`. Also in the root and `/client`. |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `border-beam` (opt-in, for `BorderBeam`), `markdown` (opt-in, for `Markdown`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
 | `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | Same file as `tokens/css/compat-shadcn-rgb.css`. CSS. |
 | `@vvedantb/ui/tokens/tailwind-preset` | Tailwind preset (`.mjs`) for `@config "@vvedantb/ui/tokens/tailwind-preset"`. Kept as a build-tool entry: Tailwind needs a resolvable package path, and it is not a React API. |
 | `@vvedantb/ui/landing.css` | Landing page classes (`landing-wordmark-text` for `AppWordmark`, `landing-atmosphere`, `landing-grain`, `landing-pulse-dot`, ambient graph and preview animations, smooth `#top` scrolling). CSS. |
+| `@vvedantb/ui/fonts/instrument-sans.css` | Instrument Sans `@font-face` rules over packaged woff2 files, and the Clerk Inter override, for extension pages (0.28.0). Opt-in. CSS. |
 | `@vvedantb/ui/package.json` | Package metadata. |
 
 Removed in 0.4.0-rc.1: the `/cn`, `/sonner`, `/audio`, `/shell`, `/app`, `/composer` and `/tokens/native` subpaths. Import from `@vvedantb/ui`. See [`MIGRATION.md`](MIGRATION.md).
@@ -910,7 +913,7 @@ Shared marketing wordmark for product app names across Project V sites: the `Ico
 
 Never use `AppWordmark` for `projectv` (the type rejects it).
 
-Setup. The package does not bundle the font. `--font-sans` comes from the package tokens. Load Instrument Sans in the app, as for the rest of the UI, if it is not already loaded.
+Setup. `--font-sans` comes from the package tokens. Load Instrument Sans in the app, as for the rest of the UI, if it is not already loaded. Extension pages can import `@vvedantb/ui/fonts/instrument-sans.css` (0.28.0); web apps keep their own font loading.
 
 ```css
 @import "@vvedantb/ui/landing.css"; /* provides .landing-wordmark-text */
@@ -1208,6 +1211,55 @@ import {
 - `ImageLightbox` (`images`, `index` or `null`, `onIndexChange`, `onClose`): fullscreen viewer with arrow keys, buttons and swipe. `ImageGalleryPreview` (`images`): up to a 2×2 grid with a "+N" tile. `ScreenshotPreview` (`url`, `alt`) and `VideoPreview` (`url`).
 - Hooks: `useMediaQuery(query)`, `useDocumentVisible()`, `useIdleCallback(ms, fn)` (trailing debounce; `createIdleCallback` is the React-free core), `useSingleFlight(fn)` (one call at a time, latest args run next), `usePersistedScrollParent(storageKey)` (restores a container's `scrollTop` from `sessionStorage`).
 - Convex: `convexErrorMessage(error, fallback)` reads `ConvexError` data first; `userFacingErrorMessage(error, fallback)` strips the client envelope and stack. `useHeldResult(result, key)` keeps the last result while a query is skipped (`key` `null`). None of these import `convex`.
+
+## Chrome extensions (0.28.0)
+
+Extension pages (popup, side panel, options, welcome) run under the MV3 extension-page CSP, which blocks remote font stylesheets, and should not load `@vvedantb/server`. Three pieces cover them. Web apps change nothing unless they opt in.
+
+### Fonts
+
+```css
+@import "tailwindcss";
+@import "@vvedantb/ui/tokens";
+@import "@vvedantb/ui/fonts/instrument-sans.css";
+@source "../node_modules/@vvedantb/ui/src/**/*.{ts,tsx}";
+```
+
+`instrument-sans.css` has four `@font-face` rules: variable weight 400-700, normal and italic, latin and latin-ext. The `url()`s are relative, so Vite and WXT copy the woff2 files into the build. The licence is `fonts/OFL.txt`. The file ends with the rule both extensions carried in `globals.css`:
+
+```css
+html,
+body {
+  font-family: var(--font-sans);
+}
+```
+
+Clerk injects an unlayered `body { font-family: Inter }`, which beats the `@layer base` rule in the tokens; this rule is unlayered too. `tokens.css` does not import the file. Once an extension imports it, it can drop its own copy of the fonts, the CSS and the override.
+
+### `@vvedantb/ui/client`
+
+```tsx
+import { AppWordmark, Button, Card, Tabs, TabsList, TabsTrigger, cn, createThemeProvider } from "@vvedantb/ui/client";
+```
+
+The root's exports, without:
+
+- the artifact viewers (`src/artifacts`: `ArtifactFrame`, `ArtifactViewer`, ...), which import `@vvedantb/server`;
+- `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`, which import `convex` or `@clerk/clerk-react`.
+
+Every other name is the same binding as in the root. `src/client-exports.test.ts` keeps the two in step, and `app/tests-node/client-graph.test.mjs` checks that the entry's module graph has no `@vvedantb/server`, convex, Clerk or `node:` import. The root is unchanged.
+
+### Icons
+
+`scripts/build-brand-assets.mjs` ships in the package and writes `<out>/<app>/extension/icon-{16,32,48,128}.png` (the tile at 16, 32 and 48 px, `appExtension128Svg` at 128 px). Copy them into the extension's public folder:
+
+```sh
+out=$(mktemp -d)
+node node_modules/@vvedantb/ui/scripts/build-brand-assets.mjs --out "$out" --app vmem
+mkdir -p public/icons && cp "$out"/vmem/extension/icon-*.png public/icons/
+```
+
+PNGs need `rsvg-convert` (librsvg); without it the script writes only the SVGs and says so. It needs Node 22.18 or later. Under `node_modules` it strips the types from `src/brand/svg.ts` itself, because Node will not, and Node prints an `ExperimentalWarning` for that. `defineVExtensionConfig` in `@vvedantb/config/extension` points the manifest `icons` and `action.default_icon` at `icons/icon-{16,32,48,128}.png`.
 
 ## Slider (0.16.0, dark contrast and className props 0.16.1)
 

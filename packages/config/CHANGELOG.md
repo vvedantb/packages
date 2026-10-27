@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- New subpath `@vvedantb/config/extension` for Chrome extensions built with WXT. Like the Vite presets, it never imports WXT, Vite or a plugin; the app passes its plugin factories in. WXT is not a peer.
+- `extensionHostPermissions({ hosts, devHosts, mode, connectable })` replaces the dev-only host lists the extensions kept in `wxt.config.ts` and `vite.config.ts`. `host_permissions` is `hosts`, plus `devHosts` when `mode` is `"development"`, without duplicates. `connectable` (off by default) adds `externally_connectable.matches` for those hosts, with the path set to `/*`. `true` takes every host that names one; a list picks some and throws on a pattern that is not a host.
+- `defineVExtensionConfig({ app, react, tailwindcss, plugins, modules, buildTarget, hosts, devHosts, connectable, manifest })` returns WXT's `manifest` and `vite` (and `modules` when set). The manifest gets `name`, `icons` and `action.default_icon` at `icons/icon-{16,32,48,128}.png` (`EXTENSION_ICONS`, the `@vvedantb/ui` extension brand assets copied to `public/icons/`), the host keys, then the app's own keys. A test compares it with a copy of an extension's current config.
+- New bin `vvedantb-clerk-allow <extension-id>`. It adds `chrome-extension://<id>` to the allowed origins of the Clerk instance whose key is in `CLERK_SECRET_KEY`: GET `/v1/instance`, add the origin, PATCH the full list. It does nothing if the origin is already there or the response has no list. The key is never printed. The root exports `runClerkAllow` and the types `ClerkAllowIo`, `ClerkAllowFetch` and `ClerkAllowResponse`; tests pass a fake `fetch`.
+- No zip or release helper: `wxt zip` already covers it.
+- No new dependencies or peers.
+
 ## 0.3.0
 
 - New Vite and Vitest presets: `defineWebViteConfig`, `defineWebVitestConfig`, `reactPlugins`, `vendorChunkBuild`, `srcAlias` and `REACT_DEDUPE`. The app passes its plugin factories in; the root does not import Vite or any plugin, and needs no new peer.

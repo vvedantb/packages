@@ -1,6 +1,6 @@
 # @vvedantb/config
 
-Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, Vite, Vitest, Babel and Metro presets, pinned tool versions, a `sync` CLI and a packaged Electron `app.asar` module check (`vvedantb-check-asar`).
+Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a `sync` CLI, a packaged Electron `app.asar` module check (`vvedantb-check-asar`) and a CLI that adds an extension to Clerk's allowed origins (`vvedantb-clerk-allow`).
 
 ## Install
 
@@ -11,7 +11,7 @@ npm install -D @electron/asar   # only for vvedantb-check-asar list
 
 ## Exports
 
-The only JS entry is the root (`@vvedantb/config`). It is an ES module exported under the `default` condition, so both `import` and `require()` reach it. `require()` of an ES module needs Node 20.19+ or 22.12+, which every Expo SDK from 54 needs anyway. The JSON files below are also exported by path, because TypeScript (`extends`) and oxlint resolve them as files, not as modules:
+There are two JS entries: the root (`@vvedantb/config`) and `@vvedantb/config/extension` (0.4.0, see [Chrome extensions](#chrome-extensions-wxt)). Each is an ES module exported under the `default` condition, so both `import` and `require()` reach it. `require()` of an ES module needs Node 20.19+ or 22.12+, which every Expo SDK from 54 needs anyway. The JSON files below are also exported by path, because TypeScript (`extends`) and oxlint resolve them as files, not as modules:
 
 - `@vvedantb/config/tsconfig/base.json`, `web.json`, `convex.json` and `react-native.json`
 - `@vvedantb/config/oxlint/base.json`
@@ -90,6 +90,101 @@ export default defineConfig({
 Keys that are not asked for are left out, so `resolve` and `build` appear only when set. `reactPlugins(setup)` and `vendorChunkBuild(tests?)` are exported on their own.
 
 `defineWebVitestConfig` takes `plugins`, `tsconfigPaths`, `alias`, `automaticJsx` (`esbuild: { jsx: "automatic" }`), `include` (default `["src/**/*.test.ts"]`) and `inline` (`test.server.deps.inline`). It always sets `test.environment: "node"`. Pass the result to `defineConfig` from `vitest/config`.
+
+## Chrome extensions (WXT)
+
+`@vvedantb/config/extension` holds the shared part of an extension's `wxt.config.ts`. Like the Vite presets, it never imports WXT, Vite or a plugin: the app passes the plugin factories in. WXT is not a peer.
+
+```ts
+import { defineConfig } from "wxt";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import { srcAlias } from "@vvedantb/config";
+import { defineVExtensionConfig } from "@vvedantb/config/extension";
+
+export default defineConfig({
+  ...defineVExtensionConfig({
+    app: "Example",
+    react: { plugin: react },
+    tailwindcss,
+    buildTarget: "chrome120",
+    hosts: ["https://app.example.com/*", "https://clerk.example.com/*"],
+    devHosts: ["https://app-git-staging.example.dev/*", "https://example-00.clerk.accounts.dev/*"],
+    manifest: {
+      description: "What the extension does",
+      version: "0.2.0",
+      permissions: ["storage", "cookies"],
+      content_security_policy: { extension_pages: "script-src 'self'; object-src 'self'" },
+    },
+  }),
+  srcDir: "src",
+  outDir: "dist",
+  imports: false,
+  alias: srcAlias(import.meta.dirname),
+});
+```
+
+`defineVExtensionConfig` returns `manifest` (a function of WXT's env), `vite` and, when set, `modules`:
+
+| Option | Result |
+| --- | --- |
+| `app` | Manifest `name`. |
+| `react: { plugin, compiler? }` | First plugin, as in `defineWebViteConfig` (`compiler: true` or `{ babel, preset }`). |
+| `tailwindcss` | `tailwindcss()`, after React. |
+| `plugins` | App Vite plugins, last. Falsy entries are dropped. |
+| `modules` | WXT `modules`, as given, for example `["@wxt-dev/module-react"]` instead of `react`. |
+| `buildTarget` | `vite.build.target`, for example `"chrome120"` so Clerk's chunks are not downlevelled. |
+| `hosts`, `devHosts`, `connectable` | `host_permissions` and `externally_connectable`, from `extensionHostPermissions` with WXT's `mode`. |
+| `manifest` | The app's other manifest keys, or a function of WXT's env that returns them. They win over the preset's keys, except `action`, which is merged over `{ default_icon }`. |
+
+`icons` and `action.default_icon` point at `icons/icon-16.png`, `icon-32.png`, `icon-48.png` and `icon-128.png` in the public folder (`EXTENSION_ICONS`). Generate them with `@vvedantb/ui`'s brand-asset script and copy them there: see "Chrome extensions" in the `@vvedantb/ui` README.
+
+Keys that are not asked for are left out. WXT's own options (`srcDir`, `outDir`, `publicDir`, `alias`, `imports`) stay in the app's `defineConfig`.
+
+### extensionHostPermissions
+
+```ts
+import { extensionHostPermissions } from "@vvedantb/config/extension";
+
+extensionHostPermissions({ hosts, devHosts, mode });
+// { host_permissions: [...hosts, ...(mode === "development" ? devHosts : [])] }
+```
+
+- `host_permissions`: `hosts`, then `devHosts` when `mode` is `"development"`, in order and without duplicates. Other modes (`production`, `staging`, ...) get `hosts` only.
+- `connectable` (off by default) adds `externally_connectable.matches`: the web pages that may message the extension. Each match keeps the scheme and host and sets the path to `/*`, so `https://app.example.com/api/*` becomes `https://app.example.com/*`.
+  - `true` uses every host in the build that names one. `<all_urls>`, a `*` host and non-web schemes are skipped.
+  - A list picks patterns from `hosts` and `devHosts`; a dev host counts in development only. A pattern that is in neither list, or cannot be matched, throws.
+- When no match is left, `externally_connectable` is left out. Declaring it, even empty, stops other extensions from connecting.
+- Chrome also rejects wildcards on an effective top-level domain (`*.co.uk`). The helper does not check for those.
+
+### Zip and release
+
+No helper: `wxt zip` already builds the store zip, and no shared logic sits on top of it.
+
+## clerk-allow
+
+`vvedantb-clerk-allow` adds a Chrome extension's origin, `chrome-extension://<id>`, to a Clerk instance's allowed origins, as Clerk's Chrome extension setup asks.
+
+```sh
+# CLERK_SECRET_KEY already set in the environment
+pnpm exec vvedantb-clerk-allow abcdefghijklmnopabcdefghijklmnop
+
+# or read it from an env file
+node --env-file=.env.local node_modules/@vvedantb/config/dist/clerk-allow-cli.js abcdefghijklmnopabcdefghijklmnop
+```
+
+Do not type the key on the command line: shell history keeps it.
+
+1. Reads the secret key from `CLERK_SECRET_KEY`. It must start with `sk_`.
+2. `GET https://api.clerk.com/v1/instance` and reads `allowed_origins` (`null` counts as empty).
+3. If the origin is already there, prints `... is already allowed on the <environment> instance.` and stops.
+4. Otherwise `PATCH /v1/instance` with `allowed_origins` set to the full list: the origins already allowed, then the new one.
+
+Run it once per Clerk instance: the development key with the unpacked ID, the production key with the store ID. The ID is the 32 letters (a to p) shown in `chrome://extensions`.
+
+The secret key is never printed. Error messages from Clerk or the network have it replaced with `[redacted]`, and a bad ID is not echoed (it could be a key pasted by mistake). If the GET response has no `allowed_origins` list, nothing is sent: a PATCH with only the new origin could drop the others.
+
+Exit codes: 0 done (or already allowed), 1 Clerk API or network failure, 2 bad arguments or a missing or wrong `CLERK_SECRET_KEY`. `runClerkAllow(argv, io)` is exported from the root, with `fetch` in `io`, for tests.
 
 ## Expo presets
 

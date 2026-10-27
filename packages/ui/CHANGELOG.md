@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.28.0
+
+- New entry `@vvedantb/ui/client`, for Chrome extensions: the root without `@vvedantb/server`, convex or Clerk. It leaves out the artifact viewers (`src/artifacts`), `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`. Every other root export is there, as the same binding. A test walks the entry's module graph, including type-only, side-effect and dynamic imports, and finds no `@vvedantb/server`, convex, Clerk or `node:` import. The root entry is unchanged.
+- New opt-in stylesheet `@vvedantb/ui/fonts/instrument-sans.css`: four Instrument Sans `@font-face` rules (variable weight 400-700, normal and italic, latin and latin-ext) over woff2 files that now ship in `fonts/` with `OFL.txt`. The `url()`s are relative, so Vite and WXT bundle the files. The faces are the same as the copy in the extensions.
+- The same file ends with the unlayered `html, body { font-family: var(--font-sans) }` rule that both extensions carried in `globals.css`, so Clerk's injected Inter does not win on extension pages. One import covers fonts and override.
+- `tokens.css` does not import the fonts, so web apps are unchanged.
+- Fix: `scripts/build-brand-assets.mjs` failed when run from an installed package (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`), because Node does not strip types under `node_modules`. There it now strips `src/brand/svg.ts` with `module.stripTypeScriptTypes` (Node prints an `ExperimentalWarning`). Run from the repository, it loads the file as before. Output is unchanged.
+- README: new section "Chrome extensions (0.28.0)" on the fonts, `/client` and copying `extension/icon-{16,32,48,128}.png` into an extension's `public/icons/`. The entry table also lists `@vvedantb/ui/brand`, which was missing.
+- No new dependencies.
+
 ## 0.27.0
 
 - New generic pieces, lifted from an app (see the README section "Hooks, media and list motion"): `ErrorBoundary`, `ListEnter` and `useFirstPaintGate`, `CountPop`, `countLabel` and `UnreadDot`, `MarqueeOnHover`, `RelativeDateTime`, `ImageLightbox` (type `GalleryImage`), `ImageGalleryPreview`, `ScreenshotPreview` and `VideoPreview`, and the hooks `useMediaQuery`, `useDocumentVisible`, `useIdleCallback` / `createIdleCallback`, `useSingleFlight` and `usePersistedScrollParent`.
