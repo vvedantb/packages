@@ -68,9 +68,9 @@ export function Checkbox({
       {on
         ? (icon ??
           (checked === "indeterminate" ? (
-            <IconMinus size={iconSize} color={color} stroke={2} />
+            <IconMinus size={iconSize} color={color} strokeWidth={2} />
           ) : (
-            <IconCheck size={iconSize} color={color} stroke={2} />
+            <IconCheck size={iconSize} color={color} strokeWidth={2} />
           )))
         : null}
     </Pressable>

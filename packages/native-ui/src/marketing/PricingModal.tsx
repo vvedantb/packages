@@ -347,7 +347,7 @@ function PlanCard({
                   {BenefitIcon ? (
                     <BenefitIcon size={14} color={benefit.muted ? muted : fg} />
                   ) : (
-                    <IconCheck size={16} stroke={2} color={benefit.muted ? muted : fg} />
+                    <IconCheck size={16} strokeWidth={2} color={benefit.muted ? muted : fg} />
                   )}
                 </View>
                 <Text

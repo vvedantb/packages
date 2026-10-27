@@ -94,7 +94,7 @@ function Icon({
   icon: ComponentType<IconProps>;
   /** Default 40 (`default`) or 22 (`panel`). */
   size?: number;
-  /** Default the icon's own (`default`) or 1.5 (`panel`). */
+  /** Line width, as on the web. Default the icon's own (`default`) or 1.5 (`panel`). Passed to Tabler as `strokeWidth`, since native Tabler reads `stroke` as the colour. */
   stroke?: number;
   className?: string;
 }) {
@@ -106,13 +106,13 @@ function Icon({
         className={cn("mb-3 h-11 w-11 items-center justify-center rounded-xl", className)}
         style={{ backgroundColor: palette.surfaceTertiary[scheme] }}
       >
-        <IconComponent size={size ?? 22} stroke={stroke ?? 1.5} color={tokens.color.muted[scheme]} />
+        <IconComponent size={size ?? 22} strokeWidth={stroke ?? 1.5} color={tokens.color.muted[scheme]} />
       </View>
     );
   }
   return (
     <View className={cn("mb-4", className)}>
-      <IconComponent size={size ?? 40} stroke={stroke} color={tokens.color.muted[scheme]} />
+      <IconComponent size={size ?? 40} strokeWidth={stroke} color={tokens.color.muted[scheme]} />
     </View>
   );
 }

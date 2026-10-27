@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.11
+
+The rest of the 0.3.10 fix. Native Tabler (`@tabler/icons-react-native`) reads `strokeWidth` as the line width and passes `stroke` on as the SVG colour. The web `@tabler/icons-react` reads `stroke` as the width. A numeric `stroke` on native gives `stroke="2"`, so the line does not show on Expo web.
+
+- **Fix: `Checkbox` check and dash.** `IconCheck` and `IconMinus` take `strokeWidth={2}` (was `stroke={2}`). `color` is unchanged.
+- **Fix: `PricingModal` benefit check.** The default `IconCheck` takes `strokeWidth={2}` (was `stroke={2}`).
+- **Fix: `EmptyState.Icon` line width.** The icon takes `strokeWidth`: 1.5 by default in `panel`, the icon's own in `default`. The public `stroke?: number` prop keeps its name and meaning, a width as on the web; it is now passed on as `strokeWidth`. The icon colour is still the muted token, through `color`.
+- No other Tabler icon in `src/` set `stroke`. The brand `APP_ICONS` keep their own `stroke` prop: it is a width, and `AppIcons.tsx` turns it into `strokeWidth` itself.
+- Tests:
+  - New `tests/iconStroke.test.ts` reads the source. Across `src/`, without comments, no element named in a `@tabler/icons-react-native` import, nor `EmptyState`'s `IconComponent`, passes `stroke={…}`. It also checks that `Checkbox`, `PricingModal` and `EmptyState` pass `strokeWidth`, and that `EmptyState.Icon` still declares `stroke?: number`. Against the 0.3.10 source, 4 of its 5 tests fail.
+  - `tests/exports.test.ts` checks the 0.3.11 version.
+- Not checked on a device or in Expo captures. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.10
 
 - **Fix: `SearchInput` clear cross invisible on Expo web.** The `IconX` now takes `strokeWidth={1.75}`. Native Tabler reads `stroke` as the colour, so `stroke={1.75}` gave `stroke="1.75"` and no visible line. `tests/searchInput.test.ts` checks the cross takes `color={muted}` and `strokeWidth`, and that no icon in the file sets `stroke`.
