@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.10
+
+- **Fix: `SearchInput` clear cross invisible on Expo web.** The `IconX` now takes `strokeWidth={1.75}`. Native Tabler reads `stroke` as the colour, so `stroke={1.75}` gave `stroke="1.75"` and no visible line. `tests/searchInput.test.ts` checks the cross takes `color={muted}` and `strokeWidth`, and that no icon in the file sets `stroke`.
+
 ## 0.3.9
 
 APIs for V Store: `SearchInput`, a light `/toast` entry, and hidden tabs in `FloatingTabBar`.

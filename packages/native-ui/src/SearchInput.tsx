@@ -142,7 +142,8 @@ const SearchInput = React.forwardRef<
               className="items-center justify-center rounded-md active:opacity-70"
               style={{ width: metrics.clear, height: metrics.clear }}
             >
-              <IconX size={metrics.clearIcon} color={muted} stroke={1.75} />
+              {/* `strokeWidth`, not the web `stroke`: here `stroke` is the colour. */}
+              <IconX size={metrics.clearIcon} color={muted} strokeWidth={1.75} />
             </Pressable>
           </View>
         ) : null}

@@ -77,7 +77,10 @@ describe("searchInputSize (web contract)", () => {
         clearRight: points("2"),
       });
     }
-    expect(source).toMatch(/<IconX size=\{metrics\.clearIcon\} color=\{muted\} stroke=\{1\.75\} \/>/);
+    // The web `stroke` is a width. On native, Tabler takes `strokeWidth` and
+    // passes `stroke` on as the SVG colour, so `stroke={1.75}` hides the cross.
+    expect(source).toMatch(/<IconX size=\{metrics\.clearIcon\} color=\{muted\} strokeWidth=\{1\.75\} \/>/);
+    expect(source).not.toMatch(/<Icon\w+[^>]*\sstroke=/);
   });
 
   it("keeps sm at 32: its padding, border and line fit, where the web py-2 would not", () => {
@@ -166,6 +169,8 @@ describe("SearchInput (behaviour)", () => {
     });
     expect(flatten(clear!.props.style)).toMatchObject({ width: 24, height: 24 });
     expect(style.paddingRight).toBe(36);
+    const cross = elements(clear).find((element) => element.type === "IconX")!;
+    expect(cross.props).toEqual({ size: 14, color: tokens.color.muted.light, strokeWidth: 1.75 });
   });
 
   it("clears with onChange(\"\") and then onClear", async () => {
