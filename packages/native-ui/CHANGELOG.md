@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6
+
+- `ParityGallery`: the `ScrollView` content has 720 of bottom padding (was `pb-24`, 96), so the Card, Upgrade and Overlays sections can scroll to the top of an 844-tall phone for phone-width screenshot crops. The padding is a `contentContainerStyle`; the class keeps `gap-8 px-4 pt-4`. The 0.3.5 visual and accessibility changes are unchanged.
+- Tests: `tests/mobile.test.ts` checks the gallery end padding; `tests/exports.test.ts` checks the 0.3.6 version.
+- Not checked on a device. The entries and subpaths are unchanged. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.5
 
 Visual fixes from a further side-by-side review of `ParityGallery` against the web gallery, and a pass on phone behaviour: touch targets, accessibility roles and states, Dynamic Type, Reduce Motion, safe-area insets and the keyboard.

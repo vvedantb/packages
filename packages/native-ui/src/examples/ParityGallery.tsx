@@ -111,6 +111,10 @@ const STATUS_TONES: StatusTone[] = [
   "neutral",
 ];
 
+// Space after the last section, so Card, Upgrade and Overlays can scroll to the
+// top of an 844-tall phone for screenshot crops.
+const GALLERY_END_SPACE = 720;
+
 const PLANS: PricingPlan[] = [
   {
     id: "free",
@@ -174,7 +178,10 @@ function GalleryScreen() {
 
   return (
     <View className="flex-1">
-      <ScrollView contentContainerClassName="gap-8 p-4 pb-24">
+      <ScrollView
+        contentContainerClassName="gap-8 px-4 pt-4"
+        contentContainerStyle={{ paddingBottom: GALLERY_END_SPACE }}
+      >
         <Section title="Brand">
           {(["vibot", "verve", "velth", "vmem", "vhub"] as const).map((app) => (
             <AppWordmark key={app} app={app} />

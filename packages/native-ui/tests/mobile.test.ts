@@ -309,6 +309,12 @@ describe("ParityGallery (phone layout)", () => {
     expect(variants).not.toMatch(/fullWidth/);
   });
 
+  it("leaves room to scroll the last sections to the top of an 844-tall phone", () => {
+    expect(gallery).toMatch(/const GALLERY_END_SPACE = 720;/);
+    expect(gallery).toMatch(/contentContainerStyle=\{\{ paddingBottom: GALLERY_END_SPACE \}\}/);
+    expect(gallery).toMatch(/contentContainerClassName="gap-8 px-4 pt-4"/);
+  });
+
   it("lets the collapsed upgrade pill stretch in a column, as the web Button does", () => {
     const card = read("marketing/UpgradeToProCard.tsx");
     expect(card).toMatch(/<View testID=\{testID\} className=\{className\}>\s+\{pill\("Pro", title\)\}/);
