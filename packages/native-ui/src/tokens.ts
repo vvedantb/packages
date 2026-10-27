@@ -1,10 +1,13 @@
 /**
- * JS tokens for React Native. Values match `tokens.css`
- * (oklch neutrals → hex, 1rem = 16).
+ * JS tokens for React Native: colours, radii and spacing (1rem = 16).
  *
  * Copy of `packages/ui/tokens/src/native.ts`, kept here so native-ui has no
- * dependency on the web package. A test in `@vvedantb/ui` fails when the two
- * differ below this header: change both together.
+ * dependency on the web package. A test in `@vvedantb/ui` and one in this
+ * package fail when the two differ below this header: change both together.
+ *
+ * Not every value matches `tokens.css` today (most visibly the dark neutrals
+ * and `radius.field`); `docs/native-ui-parity.md` lists the differences. The
+ * web semantic colours (primary, danger, success, warning) are in `palette.ts`.
  */
 export const tokens = {
   color: {
