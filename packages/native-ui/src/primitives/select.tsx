@@ -6,7 +6,7 @@ import {
   ChevronUpIcon,
 } from "lucide-react-native";
 import * as React from "react";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import { NativeOnlyAnimatedView } from "./native-only-animated-view";
@@ -33,14 +33,18 @@ type SelectValueProps = React.ComponentPropsWithoutRef<
 const SelectValue = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Value>,
   SelectValueProps
->(({ className, ...props }, ref) => {
-  return (
-    <SelectPrimitive.Value
-      ref={ref}
-      className={cn("line-clamp-1 text-sm text-foreground", className)}
-      {...props}
-    />
-  );
+>(({ className, style, ...props }, ref) => {
+  const classes = cn("line-clamp-1 text-sm text-foreground", className);
+  if (Platform.OS === "web") {
+    // Radix `Select.Value` drops `className` and `style`, so the placeholder
+    // took the page colour. Its span inherits them from this Text instead.
+    return (
+      <Text className={classes} style={style}>
+        <SelectPrimitive.Value ref={ref} {...props} />
+      </Text>
+    );
+  }
+  return <SelectPrimitive.Value ref={ref} className={classes} style={style} {...props} />;
 });
 
 type SelectTriggerProps = React.ComponentPropsWithoutRef<

@@ -1,14 +1,14 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, Text, View, type ViewProps } from "react-native";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { tabColors, tabTrackStyle, type TabsVariant } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { useControllableState } from "./primitives/use-controllable-state";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
 /** `pills` (default): separate pills, the `PillTabs` look. `segmented`: one track with the active segment raised. `soft`: wrapping pills, the active one filled. */
-export type TabsListVariant = "pills" | "segmented" | "soft";
+export type TabsListVariant = TabsVariant;
 
 const TabsContext = createContext<{
   value: string;
@@ -66,8 +66,10 @@ export function TabsList({
   variant = "pills",
   size = "default",
   className,
+  style,
   ...props
 }: TabsListProps) {
+  const scheme = useScheme();
   return (
     <TabsListContext.Provider value={{ variant, size }}>
       <View
@@ -75,12 +77,13 @@ export function TabsList({
         className={cn(
           "flex-row",
           variant === "segmented"
-            ? "rounded-full border border-white/40 bg-secondary p-1 dark:border-white/10"
+            ? "rounded-full border border-white/40 p-1 dark:border-white/10"
             : variant === "soft"
               ? "flex-wrap gap-2"
               : "gap-2",
           className,
         )}
+        style={variant === "segmented" ? [tabTrackStyle(scheme), style] : style}
         {...props}
       />
     </TabsListContext.Provider>
@@ -110,20 +113,9 @@ export function TabsTrigger({
   const scheme = useScheme();
   const selected = current === value;
   const small = size === "sm";
-  const fill =
-    variant === "segmented"
-      ? selected
-        ? "bg-surface"
-        : "bg-transparent"
-      : variant === "soft"
-        ? selected
-          ? "bg-secondary"
-          : "bg-transparent"
-        : selected
-          ? "border border-white/40 bg-pink-100 dark:border-white/10 dark:bg-pink-900/40"
-          : "border border-white/40 bg-secondary dark:border-white/10";
-  // The selected pill keeps its pink classes; other text takes a style colour.
-  const pinkText = variant === "pills" && selected;
+  // Fill and label are styles from `tabColors`: apps' `bg-secondary` and
+  // `bg-surface` can stay light in dark mode, under a light label.
+  const colors = tabColors(variant, selected, scheme);
 
   return (
     <Pressable
@@ -149,10 +141,13 @@ export function TabsTrigger({
             ? "min-h-14 py-3"
             : "min-h-12 py-2",
         variant === "segmented" && "flex-1",
-        fill,
+        variant === "pills" && "border border-white/40 dark:border-white/10",
+        disabled ? "opacity-50" : "active:opacity-70",
         className,
       )}
-      style={({ pressed }) => ({ opacity: disabled ? 0.5 : pressed ? 0.7 : 1 })}
+      // A plain object: NativeWind puts the class styles and `style` in an
+      // array, where a `({ pressed }) => ...` style is dropped.
+      style={{ backgroundColor: colors.backgroundColor }}
     >
       {typeof children === "string" || typeof children === "number" ? (
         <Text
@@ -166,9 +161,8 @@ export function TabsTrigger({
               : largerText
                 ? "text-xl"
                 : "text-lg",
-            pinkText && "text-pink-700 dark:text-pink-300",
           )}
-          style={pinkText ? undefined : textStyle(selected ? "foreground" : "muted", scheme)}
+          style={{ color: colors.color }}
         >
           {children}
         </Text>

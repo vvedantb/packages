@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.4
+
+Dark-mode contrast fixes from a second look at `ParityGallery` on Expo web, beside the web gallery.
+
+- **Fix: tab colours.** `TabsTrigger` and `PillTabs` take their fill and label colour from the new `tabColors` in `src/controlStyles.ts`, as styles. The colours are the web tab variables (`tabs-pills.css`): an unselected tab has no fill and a `--muted` label; a selected pill is `--default` and a selected segment `--segment`, both with the `--segment-foreground` label (the neutral primary). `soft` is `surfaceSecondary` with a `foreground` label when selected. The segmented `TabsList` track is `--default`. Before, the fills were `bg-surface` and `bg-secondary`, which stay light in dark mode in apps that nest `dark` under those keys. That drew the selected segment as near-white text on white (1.03:1) and unselected labels at about 2.3:1. The selected pill used the pink classes; it is neutral now.
+- **Visible change: unselected pills have no fill** (the web pills look). They keep the hairline border. `PillTabs` "Day" / "Week" and `TabsList variant="pills"` look different in light mode. A `className` fill on `TabsTrigger` no longer wins over the tab colours.
+- **Fix: tab press feedback.** `TabsTrigger` and `PillTabs` dim with `active:opacity-70` (disabled tabs `opacity-50`). Their `({ pressed }) => style` function was dropped when NativeWind merged it with the class styles, so presses showed no feedback on web.
+- **Fix: the `Select` placeholder on web.** Radix `Select.Value` drops `className` and `style`, so the placeholder took the page text colour and font. On web the `SelectValue` primitive now wraps it in a `Text` that carries both, so the placeholder is `palette.fieldPlaceholder`. Native is unchanged (its `Value` is a `Text`).
+- **Fix: `Input` and `Textarea` placeholders on iOS and Android.** The input primitive had a native-only `placeholder:text-muted-foreground/50` class. NativeWind turns that class into `placeholderTextColor` and it beats the prop, so the `palette.fieldPlaceholder` set by `Input` and `Textarea` did not apply. Apps that nest `dark` under `muted-foreground` got the light grey at half opacity: near-invisible on a dark field. The class is gone; the primitive defaults `placeholderTextColor` to `palette.fieldPlaceholder` for the scheme. This was found by reading the NativeWind and css-interop source; it has not been checked on a device.
+- Ghost `Button` labels were already `tokens.color.muted` (`#a0a0a0` in dark, the web `text-muted-foreground`), measured at 7.7:1 on the dark page. Unchanged.
+- Tests: `tests/controlStyles.test.ts` checks `tabColors` against `tabs-pills.css` and the web soft trigger, that tab colours are neutral (not the accent), and label contrast (selected 4.5:1 or more, unselected 4:1 or more, the web's own light value). Source checks: `Tabs` and `PillTabs` use `tabColors` styles, no pink, accent or `bg-secondary` / `bg-surface` fill and no style function; `Input`, `Textarea` and the input primitive pass `palette.fieldPlaceholder`; no component uses a `placeholder:` class; `SelectValue` wraps the web value.
+- The entries and subpaths are unchanged. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.3
 
 Visual parity fixes from a side-by-side screenshot review of `ParityGallery` against the web gallery.

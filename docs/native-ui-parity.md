@@ -1,6 +1,6 @@
 # `@vvedantb/native-ui` parity with `@vvedantb/ui`
 
-Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.3, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery.
+Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.4, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery. 0.3.4 fixes the tab colours and the field placeholders in dark mode.
 
 This audit lists every public export of `@vvedantb/ui` and says whether `@vvedantb/native-ui` has an equivalent. It also records how the two packages share design tokens and brand data.
 
@@ -45,19 +45,19 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | Web export | Native 0.3.0 | Status | Notes |
 | --- | --- | --- | --- |
 | `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. From 0.3.3, without larger text: web heights and padding (`sm` 32, `default` 40, `lg` 44), `text-sm` / `text-xs` medium and radius 16 (web `rounded-lg`). `primary`, `small`, `medium` and `large` are aliases of the web names. |
-| `Input` | `Input` | same | Web field look (white, bordered), web radius (10), height (40) and padding from 0.3.3. Placeholder in `palette.fieldPlaceholder`. |
+| `Input` | `Input` | same | Web field look (white, bordered), web radius (10), height (40) and padding from 0.3.3. Placeholder in `palette.fieldPlaceholder`, also on iOS and Android from 0.3.4. |
 | `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look; web `min-h-20`. |
 | `Label` | `Label` (new) | same | Colour from `tokens` (a style) from 0.3.3. Type stays `text-base` semibold (web `text-sm` medium). |
 | `Card` and parts | `Card` and parts (new parts) | same | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` added. The existing `title` / `leftIcon` / `action` API is unchanged; `description` and `className` added. |
 | `Badge` | `Badge` (new) | same | All seven web variants. |
 | `Switch` | `Switch` | same | Track and thumb colours from `palette`, as on the web. |
 | `Checkbox` | `Checkbox` (new) | same | No `@rn-primitives/checkbox`: `Pressable` and a Tabler check. From 0.3.3: palette `primary` fill (was the theme accent) and the web 16 px box, with a 14 hit slop. |
-| `Select` | `Select` | partial | Options-array API. The trigger has the `Input` field look and size; the placeholder uses `palette.fieldPlaceholder`. |
+| `Select` | `Select` | partial | Options-array API. The trigger has the `Input` field look and size; the placeholder uses `palette.fieldPlaceholder` (on web from 0.3.4). |
 | `Sheet` | `Sheet` (new), `BottomSheetContainer` | same | RN `Modal`, bottom edge only. |
 | `Dialog` | `Dialog` (new) | same | RN `Modal`. From 0.3.3: footer buttons in a row at the end (the web layout from `sm` up), padding 24, title `text-lg` semibold, description in the web colour (`palette.overlayMuted`). |
 | `AlertDialog` | `AlertDialog` (new) | same | |
 | `ConfirmDialog` | `ConfirmDialog` (new) | partial | Legacy props, default size. |
-| `Tabs` | `Tabs` (new), `PillTabs` | same | `pills`, `segmented`, `soft`. |
+| `Tabs` | `Tabs` (new), `PillTabs` | same | `pills`, `segmented`, `soft`. From 0.3.4 fills and labels are the web tab colours (`tabColors`), not pink. |
 | `Avatar` | `Avatar` (new) | same | |
 | `Skeleton` | `Skeleton` | same | Now takes `View` props and respects Reduce Motion. |
 | `toast`, `SonnerToaster` | `toast`, `Toaster` (new) | partial | Top toasts, no sonner. |
@@ -90,7 +90,7 @@ No new package was added, and `@vvedantb/ui` is unchanged. Sharing works through
 
 A shared module that both packages import would need a new package, or would make native-ui import from `@vvedantb/ui` (and so pull in Radix, react-dom and the rest of the web stack). Neither was acceptable, so the copies stay. The `palette` test reads `tokens.css` directly, so a web colour change fails the native-ui tests until `palette.ts` is updated.
 
-`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop`, `overlayMuted` and `destructive`. `overlayMuted` is the web `DialogDescription` colour: `--overlay-foreground` mixed 72% into `--overlay` in oklch. A test derives it from `tokens.css` and `dialog.tsx`. Components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints, text) and NativeWind classes (`bg-secondary`, `bg-surface`) for some fills. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch` and `Checkbox` take their colours from `src/controlStyles.ts`, because the primitives' NativeWind keys (`bg-primary`, `bg-input`) are not defined in apps. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
+`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop`, `overlayMuted` and `destructive`. `overlayMuted` is the web `DialogDescription` colour: `--overlay-foreground` mixed 72% into `--overlay` in oklch. A test derives it from `tokens.css` and `dialog.tsx`. Components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints, text) and NativeWind classes (`bg-secondary`, `bg-surface`) for some fills. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Tabs` and `PillTabs` take their colours from `src/controlStyles.ts`, because the primitives' NativeWind keys (`bg-primary`, `bg-input`) are not defined in apps. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
 
 From 0.3.3, component text takes its colour from `textStyle(tone, scheme)` in `src/controlStyles.ts`, not from `text-foreground` or `text-muted-foreground`. A screenshot review found dialog titles, card titles, field labels and switch and checkbox labels near-invisible in dark mode. The preview app's Tailwind theme defined `foreground` as `{ DEFAULT: <light hex>, dark: <dark hex> }`. That makes `text-foreground` the light value in both schemes and adds a separate `text-foreground-dark` class, so dark mode drew about #242426 text on a dark surface. Apps can define their theme the same way, so the package no longer relies on those classes. A test fails if a component outside `src/primitives` uses them. The raw primitives keep the classes, but every public wrapper overrides their text colour.
 
@@ -149,13 +149,13 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 
 ## Known differences and follow-ups
 
-- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed here. A throwaway Expo web harness outside the repository rendered `ParityGallery` beside the web gallery on 27 October 2026; that led to the `Button`, field and `Switch` colour fixes, and a second review led to the 0.3.3 fixes. The 0.3.3 changes have not yet been re-captured in that harness. iOS and Android were not checked. Check them with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
+- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed here. A throwaway Expo web harness outside the repository rendered `ParityGallery` beside the web gallery on 27 October 2026; that led to the `Button`, field and `Switch` colour fixes, and a second review led to the 0.3.3 fixes. A third look led to 0.3.4; its tab and `Select` placeholder colours were measured in that harness after the change (computed styles, both schemes). The other 0.3.3 changes have not been re-captured. iOS and Android were not checked, so the 0.3.4 `Input` / `Textarea` placeholder fix rests on reading the NativeWind source. Check them with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
 - **Type checking uses shims.** `pnpm typecheck` checks the package against local declarations of the peers in `types/peers.d.ts`. They are looser than the real types. Each consuming app type-checks the source against the real packages.
 - **`Button` shape.** Colours, heights, padding, type and radius match the web from 0.3.3 (without larger text). Native keeps the shadow on `primary` / `default` (pass `shadowType="flat"` to drop it) and an always-underlined `link` (there is no hover). The web sizes are under the 44 pt touch target, so each size gets a hit slop that brings it to 48. `loading` shows only the spinner; the web shows the spinner and the label. `fullWidth` still defaults to `true`. `tinted` keeps the 0.2 pink tint for apps that used the old `outline`.
 - **Larger text.** With `NativeUiProvider largerText`, `Button`, `Input`, `Textarea`, the `Select` trigger and dialog text keep their 0.3.2 sizes (for example a 64 px default button). These are a native accessibility step-up with no web equivalent. `Checkbox` grows to 24 px.
 - **Type scale outside controls.** `Label`, `CardTitle`, `CardDescription`, `LabeledSwitchRow`, `EmptyState`, list rows and settings rows keep their mobile sizes (for example `Label` `text-base` semibold against the web `text-sm` medium). Only their colours changed in 0.3.3.
 - **Footers.** `DialogFooter` and `AlertDialogFooter` are a row at the end, which the web uses from `sm` up; the web stacks them on phones. `SheetFooter` stacks full width, as the web sheet footer does on phones.
-- **Colour overrides.** Text, field, button and checkbox colours are styles. A `className` colour such as `text-pink-600` no longer changes them; pass `style={{ color }}`.
+- **Colour overrides.** Text, field, button, checkbox and tab colours are styles. A `className` colour such as `text-pink-600` no longer changes them; pass `style={{ color }}`.
 - **`AlertDialogAction`** does not close the dialog, as on the web. `ConfirmDialog` closes on either button.
 - **Toasts over modals.** On iOS, `Toaster` draws in a `FullWindowOverlay`, so toasts show over dialogs. On Android an RN `Modal` covers them.
 - **`Tabs` and Expo Router.** `Tabs` shares its name with Expo Router's `Tabs` layout. Import one under another name where a file needs both.
@@ -248,7 +248,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/surface.tsx` | `SurfaceProps`ᵀ, `Surface`, `surfaceVariants` | partial | `FloatingSurface` | Different API. |
 | `src/ui/switch.tsx` | `SwitchConfig`ᵀ, `Switch` | same | `Switch` | `@rn-primitives/switch`, touch-sized (56 × 32), colours from `palette`. `SwitchConfig` is n/a. |
 | `src/ui/table.tsx` | `TableConfig`ᵀ, `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableHead`, `TableRow`, `TableCell`, `TableCaption` | missing | — | Feasible; low priority on phones. |
-| `src/ui/tabs.tsx` | `TabsConfig`ᵀ, `Tabs`, `TabsBar`, `TabsList`, `TabsTrigger`, `TabsContent` | same | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `pills`, `segmented` and `soft` variants and `size="sm"`. `TabsBar` (a toolbar strip) is missing. `TabsConfig` is n/a. |
+| `src/ui/tabs.tsx` | `TabsConfig`ᵀ, `Tabs`, `TabsBar`, `TabsList`, `TabsTrigger`, `TabsContent` | same | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `pills`, `segmented` and `soft` variants and `size="sm"`, in the web tab colours from 0.3.4. Labels stay `text-lg` semibold (web `text-sm` medium). `TabsBar` (a toolbar strip) is missing. `TabsConfig` is n/a. |
 | `@radix-ui/react-tabs` (re-export) | `TabsPrimitive` | n/a | — | Raw Radix primitive. |
 | `src/ui/textarea.tsx` | `TextareaConfig`ᵀ, `Textarea` | same | `Textarea` | Multiline `Input`, same field look. |
 | `src/ui/toolbar-search-input.tsx` | `ToolbarSearchInputProps`ᵀ, `ToolbarSearchInput` | missing | — | Feasible; see `search-input`. |

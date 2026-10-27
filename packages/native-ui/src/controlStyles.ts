@@ -1,9 +1,9 @@
 /**
  * Colours for `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`,
- * `Checkbox` and component text, taken from `palette` and `tokens` instead of
- * NativeWind theme keys (`bg-primary`, `bg-input`, `text-foreground`) that apps
- * do not define, or define without a dark value. No React Native import, so
- * the tests can load this file.
+ * `Checkbox`, `Tabs` and component text, taken from `palette` and `tokens`
+ * instead of NativeWind theme keys (`bg-primary`, `bg-input`, `text-foreground`)
+ * that apps do not define, or define without a dark value. No React Native
+ * import, so the tests can load this file.
  */
 import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
@@ -101,6 +101,41 @@ export function textStyle(tone: TextTone, scheme: Scheme) {
   return {
     color: tone === "overlayMuted" ? palette.overlayMuted[scheme] : tokens.color[tone][scheme],
   };
+}
+
+export type TabsVariant = "pills" | "segmented" | "soft";
+
+export type TabColors = {
+  backgroundColor: string;
+  color: string;
+};
+
+/**
+ * Fill and label colour of one tab, from the web tab variables
+ * (`tabs-pills.css`). Unselected: no fill, `--muted` label. Selected: a
+ * `--default` pill or a `--segment` segment with the `--segment-foreground`
+ * label (the neutral primary, not the accent). `soft` is the web soft trigger
+ * (`bg-surface-secondary text-foreground`). Fill and label come from one
+ * scheme, so a selected label cannot match its fill.
+ */
+export function tabColors(variant: TabsVariant, selected: boolean, scheme: Scheme): TabColors {
+  if (!selected) return { backgroundColor: "transparent", color: tokens.color.muted[scheme] };
+  switch (variant) {
+    case "segmented":
+      return { backgroundColor: palette.segment[scheme], color: palette.segmentForeground[scheme] };
+    case "soft":
+      return {
+        backgroundColor: tokens.color.surfaceSecondary[scheme],
+        color: tokens.color.foreground[scheme],
+      };
+    default:
+      return { backgroundColor: palette.default[scheme], color: palette.segmentForeground[scheme] };
+  }
+}
+
+/** The segmented track, web `--tabs-bar-bg` (`--default`). */
+export function tabTrackStyle(scheme: Scheme) {
+  return { backgroundColor: palette.default[scheme] };
 }
 
 /**

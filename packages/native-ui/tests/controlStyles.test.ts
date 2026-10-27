@@ -8,8 +8,11 @@ import {
   fieldStyle,
   fieldTextStyle,
   switchColors,
+  tabColors,
+  tabTrackStyle,
   textStyle,
   type ButtonVariant,
+  type TabsVariant,
 } from "../src/controlStyles";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
@@ -17,6 +20,23 @@ import { tokens } from "../src/tokens";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
 const schemes = ["light", "dark"] as const;
+
+/** Source without comments, so a comment can name a class the code must not use. */
+const code = (source: string) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+/** WCAG contrast ratio of two `#rrggbb` colours. */
+function contrast(a: string, b: string): number {
+  const luminance = (hex: string) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => {
+      const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * bl!;
+  };
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi! + 0.05) / (lo! + 0.05);
+}
 
 /** The body of `function name(...) { ... }` up to the next top-level declaration. */
 function fn(source: string, name: string): string {
@@ -225,6 +245,159 @@ describe("Dialog layout (source contract)", () => {
   it("has the web padding (p-6) and title type (text-lg semibold)", () => {
     expect(dialog).toMatch(/className=\{cn\("gap-4 p-6", className\)\}/);
     expect(fn(dialog, "DialogTitle")).toMatch(/"font-instrument-sans-semibold",\s+largerText \? "text-2xl" : "text-lg"/);
+  });
+});
+
+describe("tabColors", () => {
+  const variants: TabsVariant[] = ["pills", "segmented", "soft"];
+  const css = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs-pills.css"), "utf8");
+  /** The variable a `--tabs-*` colour points at, e.g. `--default`. */
+  const tabVar = (name: string) => {
+    const refs = [...css.matchAll(new RegExp(`${name}: var\\((--[a-z-]+)\\);`, "g"))].map((m) => m[1]);
+    expect(refs, name).toHaveLength(2); // light and dark blocks
+    expect(refs[0], name).toBe(refs[1]);
+    return refs[0]!;
+  };
+  const native: Record<string, Record<"light" | "dark", string>> = {
+    "--muted": tokens.color.muted,
+    "--default": palette.default,
+    "--segment": palette.segment,
+    "--segment-foreground": palette.segmentForeground,
+  };
+  const web = (name: string) => native[tabVar(name)]!;
+
+  it("uses the web tab variables (tabs-pills.css) for pills, segments and the track", () => {
+    for (const scheme of schemes) {
+      for (const variant of variants) {
+        expect(tabColors(variant, false, scheme), `${variant} ${scheme}`).toEqual({
+          backgroundColor: "transparent",
+          color: web("--tabs-text-muted")[scheme],
+        });
+      }
+      expect(tabColors("pills", true, scheme)).toEqual({
+        backgroundColor: web("--tabs-pill-active-bg")[scheme],
+        color: web("--tabs-text-active")[scheme],
+      });
+      expect(tabColors("segmented", true, scheme)).toEqual({
+        backgroundColor: web("--tabs-pill-bg")[scheme],
+        color: web("--tabs-text-active")[scheme],
+      });
+      expect(tabTrackStyle(scheme)).toEqual({ backgroundColor: web("--tabs-bar-bg")[scheme] });
+    }
+  });
+
+  it("uses the web soft trigger colours", () => {
+    const webTabs = readFileSync(join(root, "..", "ui", "src/ui/tabs.tsx"), "utf8");
+    expect(webTabs).toMatch(
+      /text-muted-foreground[^"]*data-\[state=active\]:bg-surface-secondary data-\[state=active\]:text-foreground/,
+    );
+    for (const scheme of schemes) {
+      expect(tabColors("soft", true, scheme)).toEqual({
+        backgroundColor: tokens.color.surfaceSecondary[scheme],
+        color: tokens.color.foreground[scheme],
+      });
+    }
+  });
+
+  it("labels a selected tab in the neutral primary, not the accent", () => {
+    for (const scheme of schemes) {
+      for (const variant of ["pills", "segmented"] as const) {
+        expect(tabColors(variant, true, scheme).color).toBe(palette.primary[scheme]);
+      }
+      for (const variant of variants) {
+        for (const selected of [true, false]) {
+          const { backgroundColor, color } = tabColors(variant, selected, scheme);
+          // Neutral: channels within 2 of each other (dark surface-secondary
+          // is #242323); the pink accent #db2777 spreads 180.
+          for (const value of [backgroundColor, color].filter((c) => c !== "transparent")) {
+            const channels = [1, 3, 5].map((i) => Number.parseInt(value.slice(i, i + 2), 16));
+            const spread = Math.max(...channels) - Math.min(...channels);
+            expect(spread, `${variant} ${selected} ${scheme} ${value}`).toBeLessThanOrEqual(2);
+          }
+        }
+      }
+    }
+  });
+
+  it("keeps labels readable on what is behind them: no light label on a light fill", () => {
+    for (const scheme of schemes) {
+      for (const variant of variants) {
+        const on = tabColors(variant, true, scheme);
+        expect(contrast(on.color, on.backgroundColor), `${variant} selected ${scheme}`).toBeGreaterThanOrEqual(4.5);
+        // Unselected tabs have no fill: the label sits on the track or the page.
+        // 4:1 is the web's own light value (--muted on --default is 4.04).
+        const behind = variant === "segmented" ? tabTrackStyle(scheme).backgroundColor : tokens.color.background[scheme];
+        const off = tabColors(variant, false, scheme);
+        expect(contrast(off.color, behind), `${variant} unselected ${scheme}`).toBeGreaterThanOrEqual(4);
+      }
+    }
+    // The 0.3.3 dark segment: a near-white label on `bg-surface`, which an app theme that nests `dark` resolves to white.
+    expect(contrast(tokens.color.foreground.dark, tokens.color.white)).toBeLessThan(1.1);
+  });
+});
+
+describe("Tabs and PillTabs (source contract)", () => {
+  const tabs = code(read("Tabs.tsx"));
+  const pills = code(read("PillTabs.tsx"));
+
+  it("take fill and label from tabColors as styles", () => {
+    expect(fn(tabs, "TabsTrigger")).toMatch(/const colors = tabColors\(variant, selected, scheme\);/);
+    expect(pills).toMatch(/const colors = tabColors\("pills", isSelected, scheme\);/);
+    for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
+      expect(source, file).toMatch(/style=\{\{ backgroundColor: colors\.backgroundColor \}\}/);
+      expect(source, file).toMatch(/style=\{\{ color: colors\.color \}\}/);
+    }
+    expect(fn(tabs, "TabsList")).toMatch(/variant === "segmented" \? \[tabTrackStyle\(scheme\), style\] : style/);
+  });
+
+  it("use no accent, pink or app theme fill classes for tabs", () => {
+    for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
+      expect(source, file).not.toMatch(/useAccentColor|accentColor|-pink-\d/);
+      expect(source, file).not.toMatch(/\bbg-(?:secondary|surface|primary)\b/);
+      expect(source, file).not.toMatch(/\btext-(?:white|black|pink)/);
+    }
+  });
+
+  it("use no style function, which NativeWind drops when it merges class styles", () => {
+    for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
+      expect(source, file).not.toMatch(/style=\{\(\{ pressed \}\)/);
+      expect(source, file).toMatch(/active:opacity-70/);
+    }
+  });
+});
+
+describe("placeholders", () => {
+  it("are the web field placeholder colour, readable on the field (4.5:1)", () => {
+    for (const scheme of schemes) {
+      expect(palette.fieldPlaceholder[scheme]).toBe(tokens.color.muted[scheme]);
+      expect(
+        contrast(palette.fieldPlaceholder[scheme], fieldStyle(scheme).backgroundColor),
+        scheme,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("Input, Textarea and the input primitive pass placeholderTextColor from the palette", () => {
+    for (const file of ["Input.tsx", "Textarea.tsx", "primitives/input.tsx"]) {
+      expect(read(file), file).toMatch(
+        /placeholderTextColor=\{placeholderTextColor \?\? palette\.fieldPlaceholder\[scheme\]\}/,
+      );
+    }
+  });
+
+  it("are never a placeholder: class, which on native beats placeholderTextColor", () => {
+    const files = readdirSync(join(root, "src"), { recursive: true, encoding: "utf8" }).filter(
+      (file) => /\.tsx$/.test(file),
+    );
+    for (const file of files) expect(code(read(file)), file).not.toMatch(/["'`\s]placeholder:[a-z]/);
+  });
+
+  it("SelectValue wraps the web Radix value in a Text, as Radix drops className and style", () => {
+    const select = read("primitives/select.tsx");
+    expect(select).toMatch(
+      /if \(Platform\.OS === "web"\) \{[\s\S]*?<Text className=\{classes\} style=\{style\}>\s*<SelectPrimitive\.Value ref=\{ref\} \{\.\.\.props\} \/>\s*<\/Text>/,
+    );
+    expect(select).toMatch(/<SelectPrimitive\.Value ref=\{ref\} className=\{classes\} style=\{style\} \{\.\.\.props\} \/>/);
   });
 });
 
