@@ -1,10 +1,16 @@
 import { Pressable, Text, View } from "react-native";
 import { cn } from "../cn";
-import { textStyle, typeStyle } from "../controlStyles";
-import { FLOATING_ROW_RADIUS } from "../floating";
+import { sizeStyle, textStyle, typeStyle } from "../controlStyles";
 import { tokens } from "../tokens";
 import { useLargerText } from "../theme";
 import { useScheme } from "../useScheme";
+
+/** Web `rounded-2xl` (16) on the card. */
+const RADIUS = tokens.radius.lg;
+
+// The web `Button` `sm` (`h-8 px-3 text-xs`) uses `max-sm:hit-target`, 8 on
+// each side: 32 + 16 = 48, as the native `Button` `small`.
+const HIT_SLOP = 8;
 
 export type UpgradeToProCardProps = {
   /** Opens the app's `PricingModal`. */
@@ -38,26 +44,30 @@ export function UpgradeToProCard({
 }: UpgradeToProCardProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
-  // The web pill is a `Button` (`font-medium`) in `bg-foreground text-background`.
+  // Each class is also set as a style (`sizeStyle`): web `text-sm` is 14 / 20.
+  const titleSize = largerText ? "text-lg" : "text-sm";
+  const ctaSize = largerText ? "text-base" : "text-xs";
+  // The web pill is a `Button` `sm` (`font-medium`) in `bg-foreground text-background`.
   const pill = (label: string, accessibilityLabel?: string) => (
     <Pressable
       testID={testID ? `${testID}-cta` : undefined}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onUpgrade}
-      hitSlop={6}
+      hitSlop={HIT_SLOP}
       className={cn(
-        "shrink-0 items-center justify-center rounded-full px-4 active:opacity-80",
-        largerText ? "min-h-12" : "min-h-10",
+        "shrink-0 items-center justify-center rounded-full active:opacity-80",
+        largerText ? "min-h-12 px-4" : "min-h-8 px-3",
       )}
       style={{ backgroundColor: tokens.color.foreground[scheme] }}
     >
       <Text
-        className={cn(
-          "font-instrument-sans-medium",
-          largerText ? "text-base" : "text-sm",
-        )}
-        style={[{ color: tokens.color.background[scheme] }, typeStyle("medium")]}
+        className={cn("font-instrument-sans-medium", ctaSize)}
+        style={[
+          { color: tokens.color.background[scheme] },
+          sizeStyle(ctaSize),
+          typeStyle("medium"),
+        ]}
       >
         {label}
       </Text>
@@ -75,18 +85,15 @@ export function UpgradeToProCard({
     <View
       testID={testID}
       className={cn(
-        "flex-row items-center justify-between gap-3 bg-surface-secondary px-4 py-3",
+        "flex-row items-center justify-between gap-3 bg-surface-secondary px-3 py-2.5",
         className,
       )}
-      style={{ borderRadius: FLOATING_ROW_RADIUS }}
+      style={{ borderRadius: RADIUS }}
     >
       <Text
         numberOfLines={1}
-        className={cn(
-          "min-w-0 flex-1 font-instrument-sans-semibold",
-          largerText ? "text-lg" : "text-base",
-        )}
-        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+        className={cn("min-w-0 flex-1 font-instrument-sans-semibold", titleSize)}
+        style={[textStyle("foreground", scheme), sizeStyle(titleSize), typeStyle("semibold")]}
       >
         {title}
       </Text>

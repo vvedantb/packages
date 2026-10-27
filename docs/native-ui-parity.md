@@ -72,7 +72,7 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | `AppMark` | `AppMark` (new) | same | |
 | `AppWordmark` | `AppWordmark` (new) | same | Instrument Sans 500, -0.02em. |
 | `APP_MARKS`, `APP_NAMES`, `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` and the other `svg.ts` exports | same names (new) | same | Byte-identical copies. |
-| `SidebarUpgradeCard` | `UpgradeToProCard` (new) | same | Renamed: native has no sidebar. |
+| `SidebarUpgradeCard` | `UpgradeToProCard` (new) | same | Renamed: native has no sidebar. From 0.3.8 the web sizes, set as styles: title `text-sm` semibold (14 / 600), pills the web `Button` `sm` (32 high, `px-3`, `text-xs` medium, 12 / 500), card `px-3 py-2.5` at radius 16 (`rounded-2xl`). |
 | `PricingModal` | `PricingModal` (new) | partial | Multi-plan layout only. |
 
 ## Tokens
@@ -123,7 +123,7 @@ The light changes are small (each channel moves by 14 or less out of 255, the mo
 | `pill` | 999 | `rounded-full` | yes |
 | `spacing.unit` | 16 | 1rem | yes |
 
-`FLOATING_ROW_RADIUS` (list rows, toasts, `UpgradeToProCard`) was `tokens.radius.field`. It is now the literal 20, so rows look as before. `tokens` is also a public export of `@vvedantb/ui`, so these values change there too, with no `@vvedantb/ui` version bump yet.
+`FLOATING_ROW_RADIUS` (list rows and toasts; `UpgradeToProCard` until 0.3.7) was `tokens.radius.field`. It is now the literal 20, so rows look as before. From 0.3.8 `UpgradeToProCard` uses 16, the web `rounded-2xl`. `tokens` is also a public export of `@vvedantb/ui`, so these values change there too, with no `@vvedantb/ui` version bump yet.
 
 ### Instrument Sans
 
@@ -153,7 +153,7 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 - **Type checking uses shims.** `pnpm typecheck` checks the package against local declarations of the peers in `types/peers.d.ts`. They are looser than the real types. Each consuming app type-checks the source against the real packages.
 - **`Button` shape.** Colours, heights, padding, type and radius match the web from 0.3.3 (without larger text). From 0.3.5 there is no shadow unless `shadowType="shadow"`, and `loading` shows the 16 ring with the label, as on the web. Native keeps an always-underlined `link` (there is no hover). The web sizes are under the 44 pt touch target, so each size gets a hit slop that brings it to 48. Labelled sizes are minimum heights, so Dynamic Type grows them. `fullWidth` still defaults to `true`. `tinted` keeps the 0.2 pink tint for apps that used the old `outline`.
 - **Larger text.** With `NativeUiProvider largerText`, `Button`, `Input`, `Textarea`, the `Select` trigger and dialog text keep their 0.3.2 sizes (for example a 64 px default button). These are a native accessibility step-up with no web equivalent. `Checkbox` grows to 24 px.
-- **Type scale outside controls.** From 0.3.7 `Label` (14 / 500), `CardTitle` and the `Card` title (16 / 600, line height 20 against the web `leading-none` 16) and `CardDescription` (14) have the web sizes, set as styles (`sizeStyle`). `LabeledSwitchRow`, `EmptyState`, list rows and settings rows keep their mobile sizes. The colours of all of these changed in 0.3.3. From 0.3.5 their weight is also a style (`typeStyle`), so it shows where an app maps every Instrument Sans class to one family, and the bold titles are semibold, as on the web.
+- **Type scale outside controls.** From 0.3.7 `Label` (14 / 500), `CardTitle` and the `Card` title (16 / 600, line height 20 against the web `leading-none` 16) and `CardDescription` (14) have the web sizes, set as styles (`sizeStyle`). From 0.3.8 so do the `UpgradeToProCard` title (14 / 600) and pill label (12 / 500). `LabeledSwitchRow`, `EmptyState`, list rows and settings rows keep their mobile sizes. The colours of all of these changed in 0.3.3. From 0.3.5 their weight is also a style (`typeStyle`), so it shows where an app maps every Instrument Sans class to one family, and the bold titles are semibold, as on the web.
 - **Footers.** `DialogFooter` and `AlertDialogFooter` are a row at the end, which the web uses from `sm` up. From 0.3.7, in the compact sheet they stack (`flex-col-reverse`, last child on top) with every button full width and at least 44 high, as the web does on phones. The row footer has no `pt-2`; the web footer has it in both layouts. `SheetFooter` stacks full width, as the web sheet footer does on phones.
 - **Colour overrides.** Text, field, button, checkbox and tab colours are styles. A `className` colour such as `text-pink-600` no longer changes them; pass `style={{ color }}`.
 - **`AlertDialogAction`** does not close the dialog, as on the web. `ConfirmDialog` closes on either button.

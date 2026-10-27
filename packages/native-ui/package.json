@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "license": "MIT",
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, overlays, toasts, settings chrome, tab bar and the family app marks.",
   "type": "module",

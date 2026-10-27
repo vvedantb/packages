@@ -666,8 +666,39 @@ describe("type sizes (source contract)", () => {
     expect(description).toMatch(/sizeStyle\(size\)/);
   });
 
+  it("UpgradeToProCard is the web SidebarUpgradeCard: text-sm semibold title, Button sm pill", () => {
+    const web = readFileSync(join(root, "..", "ui", "shell/src/SidebarUpgradeCard.tsx"), "utf8");
+    const webSm = readFileSync(join(root, "..", "ui", "src/ui/button.tsx"), "utf8").match(
+      /\n\s*sm: "([^"]+)"/,
+    )?.[1];
+    expect(web).toMatch(/"min-w-0 truncate text-sm font-semibold"/);
+    // Both pills (the card CTA and the collapsed "Pro") are `Button` `sm`.
+    expect(web.match(/<Button\s+type="button"\s+size="sm"/g)).toHaveLength(2);
+    expect(webSm?.split(" ")).toEqual(expect.arrayContaining(["h-8", "px-3", "text-xs"]));
+    expect(web).toMatch(/rounded-2xl bg-surface-secondary px-3 py-2\.5/);
+
+    const card = read("marketing/UpgradeToProCard.tsx");
+    expect(card).toMatch(/const titleSize = largerText \? "text-lg" : "text-sm";/);
+    expect(card).toMatch(/cn\("min-w-0 flex-1 font-instrument-sans-semibold", titleSize\)/);
+    expect(card).toMatch(
+      /style=\{\[textStyle\("foreground", scheme\), sizeStyle\(titleSize\), typeStyle\("semibold"\)\]\}/,
+    );
+    expect(card).toMatch(/const ctaSize = largerText \? "text-base" : "text-xs";/);
+    expect(card).toMatch(/cn\("font-instrument-sans-medium", ctaSize\)/);
+    expect(card).toMatch(/sizeStyle\(ctaSize\),\s+typeStyle\("medium"\),/);
+    // The web `h-8` as a minimum, and the `sm` padding.
+    expect(card).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
+    expect(card).toMatch(/bg-surface-secondary px-3 py-2\.5"/);
+    expect(card).toMatch(/const RADIUS = tokens\.radius\.lg;/);
+    expect(card).toMatch(/style=\{\{ borderRadius: RADIUS \}\}/);
+    expect(code(card)).not.toMatch(/FLOATING_ROW_RADIUS|px-4 py-3|min-h-10/);
+    expect(tokens.radius.lg).toBe(16);
+    expect(sizeStyle("text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
+    expect(sizeStyle("text-xs")).toEqual({ fontSize: 12, lineHeight: 16 });
+  });
+
   it("pairs every size style with the same class, so the two cannot disagree", () => {
-    for (const file of ["Button.tsx", "Label.tsx", "Card.tsx"]) {
+    for (const file of ["Button.tsx", "Label.tsx", "Card.tsx", "marketing/UpgradeToProCard.tsx"]) {
       const source = code(read(file));
       for (const call of source.matchAll(/sizeStyle\((\w+)/g)) {
         expect(source, `${file} ${call[1]}`).toMatch(new RegExp(`cn\\([^;]*\\b${call[1]}\\b`));

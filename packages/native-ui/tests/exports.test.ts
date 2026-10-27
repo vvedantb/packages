@@ -153,8 +153,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.7 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.7");
+  it("is 0.3.8 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.8");
     const entries = [
       "./tab-bar",
       "./brand",

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.8
+
+`UpgradeToProCard` sizes, from the phone-width (390 × 844) comparison of Expo web against the web `SidebarUpgradeCard`.
+
+- **Visible change: smaller title and pill.** Without larger text, `UpgradeToProCard` has the web sizes, set as styles (`sizeStyle`) beside the classes as in 0.3.7:
+  - Title: `text-sm` semibold, 14 / 20, weight 600 (was `text-base`, 16 / 24).
+  - The "Upgrade" pill and the collapsed "Pro" pill are the web `Button` `sm`: label `text-xs` medium, 12 / 16, weight 500 (was `text-sm`, 14); 32 high (`min-h-8`, was `min-h-10`, 40); `px-3` (was `px-4`).
+  - Card: `px-3 py-2.5` (was `px-4 py-3`) and radius 16, the web `rounded-2xl` (`tokens.radius.lg`). It was `FLOATING_ROW_RADIUS` (20), which list rows and toasts keep.
+- **Touch target.** The pill keeps its 32 painted height and has a hit slop of 8 on each side (was 6), the web `max-sm:hit-target` inset. That makes the target 48 high, as the native `Button` `small`.
+- With larger text the title (`text-lg`) and the pill (`text-base`, `min-h-12 px-4`) are unchanged. The new card padding and radius apply at both text sizes.
+- Tests: `tests/controlStyles.test.ts` checks the title and pill classes and their `sizeStyle` against the web `SidebarUpgradeCard.tsx` and the web `Button` `sm` in `button.tsx`, the card padding and radius, and that each size style has the same class. `tests/mobile.test.ts` checks the 32 and 48 pill heights, the slop against the web `hit-target` and the 44 target at both text sizes. `tests/exports.test.ts` checks the 0.3.8 version.
+- Not checked on a device or in Expo captures. The entries and subpaths are unchanged. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.7
 
 Phone dialogs and type sizes, from the phone-width (390) comparison of `ParityGallery` against the web gallery.

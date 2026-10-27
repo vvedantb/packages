@@ -150,6 +150,8 @@ As on the web, `AlertDialogAction` does not close the dialog; `ConfirmDialog` cl
 
 From 0.3.7, in a compact window (639 wide or less, or 500 high or less: the web `COMPACT_OVERLAY_QUERY`) `DialogContent`, and so `AlertDialogContent` and `ConfirmDialog`, is the web phone bottom sheet: full width, top corners 16, a handle, the bottom safe-area inset. Its footer stacks the buttons full width and at least 44 high, the last child on top, whatever `fullWidth` says. Pass `viewportAware={false}` to keep the centred dialog at every size.
 
+From 0.3.8 `UpgradeToProCard` has the web `SidebarUpgradeCard` sizes: a 14 / 600 title, a 32-high pill with a 12 / 500 label (the web `Button` `sm`), `px-3 py-2.5` padding and radius 16. With larger text the title and pill keep their larger sizes.
+
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.
 
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
@@ -158,7 +160,7 @@ Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Th
 
 ## Phones and accessibility
 
-The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
+The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
 
 Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label; only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
 
