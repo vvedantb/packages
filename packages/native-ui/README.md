@@ -14,7 +14,6 @@ Peers the app must already have (Expo SDK 57 / RN 0.76+):
 
 - `react`, `react-native`
 - `nativewind` `>=4`
-- `expo-linear-gradient`
 - `react-native-reanimated`, `react-native-safe-area-context`, `react-native-screens`
 - `@rn-primitives/slot`, `@rn-primitives/switch`, `@rn-primitives/select`
 - `@expo/vector-icons`, `@tabler/icons-react-native`, `lucide-react-native`
@@ -22,7 +21,6 @@ Peers the app must already have (Expo SDK 57 / RN 0.76+):
 
 Optional, only if you import those components:
 
-- `expo-router` — `FloatingTabBar`
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
 - `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`) and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
@@ -31,8 +29,46 @@ Optional and loaded only when installed, so the package imports and runs without
 
 - `expo-blur` — glass blur on `FloatingSurface` and the chrome built on it. Without it, those surfaces draw a solid fill.
 - `expo-haptics` — the selection haptic on `FloatingTabBar`, `Tabs` and `Checkbox` presses. Without it, presses are silent.
+- `expo-linear-gradient` — the gradient in `AmbientBackground`. Without it, the background is the solid `tokens.color.background`.
 
-The package loads these two with a `require` inside `try`. Metro treats that as an optional dependency when `transformer.allowOptionalDependencies` is on, which is the default in the Expo and React Native Metro configs. `@vvedantb/native-ui/blur` exports the loader (`loadBlur`) and `@vvedantb/native-ui/haptics` exports `loadHaptics` and `selectionHaptic`. TypeScript still resolves their types: an app that type-checks without them reports a missing module in `src/blur.ts` or `src/haptics.ts`.
+The package loads these three with a `require` inside `try`. Metro treats that as an optional dependency when `transformer.allowOptionalDependencies` is on, which is the default in the Expo and React Native Metro configs. `@vvedantb/native-ui/blur` exports the loader (`loadBlur`) and `@vvedantb/native-ui/haptics` exports `loadHaptics` and `selectionHaptic`. TypeScript still resolves their types: an app that type-checks without them reports a missing module in `src/blur.ts`, `src/haptics.ts` or `src/gradient.ts`. Declare the missing ones in a `.d.ts` file in the app:
+
+```ts
+declare module "expo-blur";
+declare module "expo-haptics";
+declare module "expo-linear-gradient";
+```
+
+`expo-router` stays an optional peer, but the package does not import it. `FloatingTabBar` declares the props it reads (`FloatingTabBarProps`) and fits the `tabBar` prop of Expo Router's `Tabs` on Expo SDK 57. Expo SDK 58 passes `emitter` and `navigateToTab` to `tabBar` in place of `navigation`, so the bar does not fit it yet.
+
+## Entry points
+
+The root entry exports everything. It still imports `BottomSheetContainer` and `DateTimeField`, so Metro resolves `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs` for any import from it. Apps without those peers, such as V Store, should import from the smaller entries below. Between them, they export every name the root exports.
+
+| Entry | Exports | Optional peers it reaches |
+| --- | --- | --- |
+| `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
+| `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
+| `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
+| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
+| `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
+| `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
+| `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
+| `@vvedantb/native-ui/date-time` | `DateTimeField` | `@react-native-community/datetimepicker`, `dayjs` (import) |
+
+"Loader" means the `require` inside `try` described above, so the entry bundles and runs without that peer. `@vvedantb/native-ui/gallery` imports the root entry.
+
+```tsx
+import { FloatingTabBar } from "@vvedantb/native-ui/tab-bar";
+import { AppMark } from "@vvedantb/native-ui/brand";
+import { NativeUiProvider } from "@vvedantb/native-ui/theme";
+```
+
+The entries re-export the same source files, so they can be mixed: `NativeUiProvider` from `/theme` sets the context that `FloatingTabBar` from `/tab-bar` reads. `tests/subpaths.test.ts` walks the imports from each entry and fails if one of the basic entries reaches a heavy peer other than through its loader.
 
 ## Expo / NativeWind
 

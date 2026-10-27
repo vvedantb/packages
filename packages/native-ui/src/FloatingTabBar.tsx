@@ -1,7 +1,6 @@
-import type { ComponentProps } from "react";
-import { Pressable, Text, View } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, Text, View, type ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Tabs } from "expo-router";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
 import { useLargerText } from "./theme";
@@ -12,15 +11,46 @@ import {
   FLOATING_TAB_BAR_HEIGHT_LARGE,
 } from "./floating";
 
-type TabBarProps = Parameters<
-  NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
->[0];
+type FloatingTabOptions = {
+  title?: string;
+  tabBarLabel?: string | ((props: never) => ReactNode);
+  tabBarIcon?: (props: {
+    focused: boolean;
+    color: ColorValue;
+    size: number;
+  }) => ReactNode;
+  tabBarActiveTintColor?: ColorValue;
+  tabBarInactiveTintColor?: ColorValue;
+  tabBarButtonTestID?: string;
+  tabBarAccessibilityLabel?: string;
+};
+
+/**
+ * The fields this bar reads from the props Expo Router's `Tabs` passes to
+ * `tabBar` (React Navigation's `BottomTabBarProps`, Expo SDK 57). Declared
+ * here so the tab bar does not import `expo-router`.
+ */
+export type FloatingTabBarProps = {
+  state: {
+    index: number;
+    routes: readonly { key: string; name: string; params?: object }[];
+  };
+  descriptors: Record<string, { options: FloatingTabOptions }>;
+  navigation: {
+    emit(event: {
+      type: "tabPress";
+      target: string;
+      canPreventDefault: true;
+    }): { defaultPrevented: boolean };
+    navigate(name: string, params?: object): void;
+  };
+};
 
 export function FloatingTabBar({
   state,
   descriptors,
   navigation,
-}: TabBarProps) {
+}: FloatingTabBarProps) {
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
   const height = largerText

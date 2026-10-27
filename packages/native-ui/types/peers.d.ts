@@ -11,7 +11,8 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
-// Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`).
+// Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
+// `src/gradient.ts`).
 declare function require(id: string): unknown;
 
 declare module "react-native" {

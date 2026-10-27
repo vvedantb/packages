@@ -153,16 +153,33 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.1 with gallery, blur and haptics entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.1");
-    for (const entry of ["./gallery", "./blur", "./haptics"]) {
+  it("is 0.3.2 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.2");
+    const entries = [
+      "./tab-bar",
+      "./brand",
+      "./button",
+      "./primitives",
+      "./theme",
+      "./floating",
+      "./layout",
+      "./marketing",
+      "./ambient",
+      "./bottom-sheet",
+      "./date-time",
+      "./gallery",
+      "./blur",
+      "./haptics",
+    ];
+    expect(Object.keys(pkg.exports).sort()).toEqual([".", ...entries, "./package.json"].sort());
+    for (const entry of entries) {
       expect(existsSync(join(root, pkg.exports[entry].default)), entry).toBe(true);
       expect(pkg.exports[entry].types, entry).toBe(pkg.exports[entry].default);
     }
     expect(pkg.exports["./package.json"]).toBe("./package.json");
     expect(pkg.exports["."].default).toBe("./src/index.ts");
     expect(pkg.scripts.typecheck).toBe("tsc -p tsconfig.typecheck.json");
-    for (const peer of ["react-native-svg", "expo-blur", "expo-haptics"]) {
+    for (const peer of ["react-native-svg", "expo-blur", "expo-haptics", "expo-linear-gradient"]) {
       expect(pkg.peerDependencies[peer], peer).toBe("*");
       expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
     }

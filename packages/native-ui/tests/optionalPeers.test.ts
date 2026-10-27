@@ -1,13 +1,21 @@
 import Module from "node:module";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { glassMode } from "../src/blur";
+import { tokens } from "../src/tokens";
 
-// `expo-blur` and `expo-haptics` are not installed in this repository, so the
-// loaders hit the missing-peer path for real. The present-peer cases hand
-// `require` a stub through Node's module loader.
+// `expo-blur`, `expo-haptics` and `expo-linear-gradient` are not installed in
+// this repository, so the loaders hit the missing-peer path for real. The
+// present-peer cases hand `require` a stub through Node's module loader.
 
 const platform = vi.hoisted(() => ({ OS: "ios" }));
-vi.mock("react-native", () => ({ Platform: platform }));
+const scheme = vi.hoisted(() => ({ colorScheme: "light" }));
+vi.mock("react-native", () => ({
+  Platform: platform,
+  View: "View",
+  StyleSheet: { absoluteFill: { position: "absolute" }, absoluteFillObject: { position: "absolute" } },
+}));
+vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
+vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
 type Load = (this: unknown, request: string, ...rest: unknown[]) => unknown;
 const nodeModule = Module as unknown as { _load: Load };
@@ -22,6 +30,7 @@ function providePeer(name: string, exports: unknown) {
 afterEach(() => {
   nodeModule._load = realLoad;
   platform.OS = "ios";
+  scheme.colorScheme = "light";
   vi.resetModules();
 });
 
@@ -91,5 +100,45 @@ describe("selection haptic", () => {
     platform.OS = "web";
     selectionHaptic();
     expect(selectionAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe("expo-linear-gradient loader", () => {
+  it("returns null when expo-linear-gradient is not installed", async () => {
+    const { loadLinearGradient } = await import("../src/gradient");
+    expect(loadLinearGradient()).toBeNull();
+    expect(loadLinearGradient()).toBeNull();
+  });
+
+  it("returns expo-linear-gradient when it is installed", async () => {
+    const expoLinearGradient = { LinearGradient: () => null };
+    providePeer("expo-linear-gradient", expoLinearGradient);
+    const { loadLinearGradient } = await import("../src/gradient");
+    expect(loadLinearGradient()).toBe(expoLinearGradient);
+  });
+});
+
+describe("AmbientBackground", () => {
+  // The first child is the backdrop: the gradient, or the solid fallback.
+  async function backdrop() {
+    const { AmbientBackground } = await import("../src/AmbientBackground");
+    return AmbientBackground({ children: "content" }).props.children[0];
+  }
+
+  it("draws the background token without expo-linear-gradient", async () => {
+    const light = await backdrop();
+    expect(light.type).toBe("View");
+    expect(light.props.style.backgroundColor).toBe(tokens.color.background.light);
+    expect(light.props.pointerEvents).toBe("none");
+    scheme.colorScheme = "dark";
+    expect((await backdrop()).props.style.backgroundColor).toBe(tokens.color.background.dark);
+  });
+
+  it("draws the gradient when expo-linear-gradient is installed", async () => {
+    const LinearGradient = () => null;
+    providePeer("expo-linear-gradient", { LinearGradient });
+    const gradient = await backdrop();
+    expect(gradient.type).toBe(LinearGradient);
+    expect(gradient.props.colors).toEqual(["#f6f6f7", "#fde8f0", "#f4f5f7"]);
   });
 });

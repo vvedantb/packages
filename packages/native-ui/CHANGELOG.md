@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2
+
+- **Entry points for apps without the heavy optional peers.** The new entries `@vvedantb/native-ui/tab-bar`, `/brand`, `/button`, `/primitives`, `/theme`, `/floating`, `/layout`, `/marketing` and `/ambient` do not import `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker`, `dayjs` or `expo-router`. They load `expo-blur`, `expo-haptics` and `expo-linear-gradient` only through the optional-peer loaders. Between them, they export every name the root entry exports. `BottomSheetContainer` and `DateTimeField` also have their own entries, `/bottom-sheet` and `/date-time`. The README lists what each entry exports.
+- The root entry is unchanged for apps that have the peers. It still imports `BottomSheetContainer` and `DateTimeField`, so any import from it resolves `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs`. Apps without them, such as V Store, should use the new entries.
+- **`expo-linear-gradient` is now an optional peer**, loaded with a `require` inside `try`, like `expo-blur`. Without it, `AmbientBackground` draws the solid `tokens.color.background` in place of the gradient.
+- `FloatingTabBar` no longer imports `expo-router`. Its props are a local type, `FloatingTabBarProps` (new export), with only the fields the bar reads. The `tabBar` props of Expo Router's `Tabs` on Expo SDK 57 are assignable to it (checked against the `expo-router` 57.0.29 types). `expo-router` stays an optional peer.
+- Tests: `tests/subpaths.test.ts` walks the imports from each entry. It fails if a basic entry reaches a heavy peer other than through its loader, or if the entries stop covering the root exports. New tests cover the `expo-linear-gradient` loader and the `AmbientBackground` fallback.
+- Known: Expo SDK 58 (`expo-router` 58) passes `emitter` and `navigateToTab` to `tabBar`, not `navigation`. `FloatingTabBar` does not support that yet. An SDK 58 app gets a type error, and at run time a tab press would call `emit` on an undefined `navigation`.
+- No new dependencies; the lockfile is unchanged.
+
 ## 0.3.1
 
 - **Android glass blur.** With `expo-blur` installed, `FloatingSurface` now blurs on Android as well as iOS. So do `FloatingTabBar`, `Card`, `SettingsSection`, toasts, the `Select` popover and `GlassSheetBackground`. Before, Android always drew the solid fill. The solid fill is now used only when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on. Web keeps the CSS backdrop blur.
