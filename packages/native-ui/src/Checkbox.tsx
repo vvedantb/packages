@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { Pressable, type PressableProps } from "react-native";
 import { IconCheck, IconMinus } from "@tabler/icons-react-native";
 import { cn } from "./cn";
+import { checkboxColors } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
-import { tokens } from "./tokens";
-import { useAccentColor, useLargerText } from "./theme";
+import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
 export type CheckboxProps = Omit<PressableProps, "onPress" | "children"> & {
@@ -18,8 +18,10 @@ export type CheckboxProps = Omit<PressableProps, "onPress" | "children"> & {
 
 /**
  * Controlled checkbox with a Pressable and a Tabler check, as the web
- * `Checkbox` (`checked` / `onCheckedChange`). Checked fill is the theme accent.
- * 24 square (28 with larger text) plus a 12 hit slop.
+ * `Checkbox` (`checked` / `onCheckedChange`). Colours from `checkboxColors`:
+ * the palette primary when checked, as on the web (not the theme accent).
+ * 16 square with a 14 check, as on the web (24 and 18 with larger text), plus
+ * a 14 hit slop so the target is at least 44.
  */
 export function Checkbox({
   checked,
@@ -31,10 +33,11 @@ export function Checkbox({
   ...props
 }: CheckboxProps) {
   const scheme = useScheme();
-  const accent = useAccentColor();
   const largerText = useLargerText();
   const on = checked !== false;
-  const iconSize = largerText ? 20 : 16;
+  const { color, ...fill } = checkboxColors(on, scheme);
+  const boxStyle = { borderRadius: largerText ? 6 : 4, ...fill };
+  const iconSize = largerText ? 18 : 14;
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -42,7 +45,7 @@ export function Checkbox({
         checked: checked === "indeterminate" ? "mixed" : checked,
         disabled: Boolean(disabled),
       }}
-      hitSlop={12}
+      hitSlop={14}
       disabled={disabled}
       onPress={() => {
         selectionHaptic();
@@ -50,30 +53,23 @@ export function Checkbox({
       }}
       className={cn(
         "items-center justify-center border active:opacity-70",
-        largerText ? "h-7 w-7" : "h-6 w-6",
+        largerText ? "h-6 w-6" : "h-4 w-4",
         disabled && "opacity-50",
         className,
       )}
       style={
         typeof style === "function"
-          ? style
-          : [
-              {
-                borderRadius: 6,
-                borderColor: on ? accent : tokens.color.border[scheme],
-                backgroundColor: on ? accent : tokens.color.surface[scheme],
-              },
-              style,
-            ]
+          ? (state) => [boxStyle, style(state)]
+          : [boxStyle, style]
       }
       {...props}
     >
       {on
         ? (icon ??
           (checked === "indeterminate" ? (
-            <IconMinus size={iconSize} color={tokens.color.white} stroke={3} />
+            <IconMinus size={iconSize} color={color} stroke={2} />
           ) : (
-            <IconCheck size={iconSize} color={tokens.color.white} stroke={3} />
+            <IconCheck size={iconSize} color={color} stroke={2} />
           )))
         : null}
     </Pressable>

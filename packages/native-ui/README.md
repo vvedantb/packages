@@ -94,7 +94,7 @@ config.resolver.nodeModulesPaths = [
 ];
 ```
 
-The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, `text-foreground`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch` and `Badge` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. Override those colours with `style`, not `className`.
+The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox` and `Badge` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes.
 
 ## Theme
 
@@ -110,7 +110,7 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 </NativeUiProvider>
 ```
 
-`useLargerText()` steps type and tap targets up. `accentColor` tints FABs, card icons, checked checkboxes and progress bars. Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, row 20, pill 999) and spacing (16).
+`useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, button 16, field 10, pill 999; rows 20) and spacing (16).
 
 ## Components (0.3.0)
 
@@ -144,7 +144,7 @@ Overlays hold their own open state, or take `open` and `onOpenChange`:
 </AlertDialog>
 ```
 
-As on the web, `AlertDialogAction` does not close the dialog; `ConfirmDialog` closes on either button.
+As on the web, `AlertDialogAction` does not close the dialog; `ConfirmDialog` closes on either button. `DialogFooter` and `AlertDialogFooter` lay their buttons out in a row at the end, as the web does from `sm` up. Pass `fullWidth={false}` to a plain `Button` there (`AlertDialogAction` and `AlertDialogCancel` already default to it). `SheetFooter` stacks full width.
 
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.
 
@@ -181,7 +181,7 @@ On Android the `BlurView` uses the dimezis method (`experimentalBlurMethod` and 
 
 ## Tokens
 
-The JS tokens (colours, radii, spacing) live in `src/tokens.ts`. It is a copy of `packages/ui/tokens/src/native.ts` (the `tokens` export of `@vvedantb/ui`), kept inside this package so React Native apps do not install `@vvedantb/ui` (Radix, react-dom and the rest of the web stack) for colour values. A test in each package fails when the two files differ, so change both together. Some values differ from the web `tokens.css`, most visibly the dark neutrals and `radius.field`; the parity doc lists them.
+The JS tokens (colours, radii, spacing) live in `src/tokens.ts`. It is a copy of `packages/ui/tokens/src/native.ts` (the `tokens` export of `@vvedantb/ui`), kept inside this package so React Native apps do not install `@vvedantb/ui` (Radix, react-dom and the rest of the web stack) for colour values. A test in each package fails when the two files differ, so change both together. From 0.3.3 the neutrals and radii match the web `tokens.css` (oklch converted to sRGB hex), and a test converts `tokens.css` and fails when they drift. `fill`, `hairline` and `radius.card` are native-only.
 
 `palette` holds the web semantic colours that `tokens` lacks (`primary`, `danger`, `success`, `warning`, `default`, `overlay`, `segment` and others), each `{ light, dark }`. A test converts `tokens.css` and fails when a value drifts. `withAlpha("#rrggbb", 0.12)` gives tints such as the web `bg-danger/12`.
 

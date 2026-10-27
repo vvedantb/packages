@@ -38,12 +38,19 @@ export const AlertDialogFooter = DialogFooter;
 export const AlertDialogTitle = DialogTitle;
 export const AlertDialogDescription = DialogDescription;
 
-/** Confirm button. As on the web it does not close the dialog: close it in `onPress` (set `open` to false). */
+/**
+ * Confirm button. As on the web it does not close the dialog: close it in
+ * `onPress` (set `open` to false). Not full width by default, for the row
+ * footer.
+ */
 export function AlertDialogAction(props: ButtonProps) {
-  return <Button shadowType="flat" {...props} />;
+  return <Button shadowType="flat" fullWidth={false} {...props} />;
 }
 
-/** Cancel button: runs `onPress`, then closes the dialog. Default variant `outline`, as on the web. */
+/**
+ * Cancel button: runs `onPress`, then closes the dialog. Default variant
+ * `outline`, as on the web, and not full width.
+ */
 export function AlertDialogCancel({
   variant = "outline",
   onPress,
@@ -54,6 +61,7 @@ export function AlertDialogCancel({
     <Button
       variant={variant}
       shadowType="flat"
+      fullWidth={false}
       {...props}
       onPress={() => {
         onPress?.();

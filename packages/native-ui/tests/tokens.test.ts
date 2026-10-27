@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { palette, withAlpha } from "../src/palette";
+import { tokens } from "../src/tokens";
 import { fontClass, WORDMARK } from "../src/typography";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -45,7 +46,8 @@ function cssColour(value: string): string {
   throw new Error(`Unsupported colour ${value}`);
 }
 
-const PALETTE_VARS: Record<Exclude<keyof typeof palette, "destructive">, string> = {
+/** `palette` keys with one `tokens.css` variable each. `destructive` and `overlayMuted` are derived. */
+const PALETTE_VARS: Record<Exclude<keyof typeof palette, "destructive" | "overlayMuted">, string> = {
   primary: "--accent",
   primaryForeground: "--accent-foreground",
   danger: "--danger",
@@ -65,6 +67,28 @@ const PALETTE_VARS: Record<Exclude<keyof typeof palette, "destructive">, string>
   backdrop: "--backdrop",
 };
 
+const css = read(join(uiDir, "tokens/src/tokens.css"));
+const darkStart = css.indexOf('.dark,\n  [data-theme="dark"]');
+const blocks = { light: css.slice(0, darkStart), dark: css.slice(darkStart) };
+
+/** The raw value of a `tokens.css` variable in one scheme's block. */
+function cssVar(name: string, scheme: "light" | "dark"): string {
+  const match = blocks[scheme].match(new RegExp(`\\n\\s*${name}:\\s*([^;]+);`));
+  expect(match, `${name} (${scheme})`).not.toBeNull();
+  return match![1]!.trim();
+}
+
+const TOKEN_VARS: Record<Exclude<keyof typeof tokens.color, "white" | "black" | "hairline" | "fill">, string> = {
+  background: "--background",
+  foreground: "--foreground",
+  muted: "--muted",
+  border: "--border",
+  surface: "--surface",
+  surfaceSecondary: "--surface-secondary",
+  surfaceCard: "--surface-card",
+  separator: "--separator",
+};
+
 describe("tokens", () => {
   it("keeps the same body as @vvedantb/ui tokens/src/native.ts (the ui package has the same check)", () => {
     const body = (path: string) => read(path).replace(/^\/\*\*[\s\S]*?\*\/\s*/, "");
@@ -72,24 +96,58 @@ describe("tokens", () => {
       body(join(uiDir, "tokens/src/native.ts")),
     );
   });
-});
 
-describe("palette", () => {
-  const css = read(join(uiDir, "tokens/src/tokens.css"));
-  const darkStart = css.indexOf('.dark,\n  [data-theme="dark"]');
-  const blocks = { light: css.slice(0, darkStart), dark: css.slice(darkStart) };
-
-  for (const [key, name] of Object.entries(PALETTE_VARS)) {
-    it(`${key} matches ${name} in tokens.css`, () => {
+  for (const [key, name] of Object.entries(TOKEN_VARS)) {
+    it(`color.${key} matches ${name} in tokens.css`, () => {
       for (const scheme of ["light", "dark"] as const) {
-        const match = blocks[scheme].match(new RegExp(`\\n\\s*${name}:\\s*([^;]+);`));
-        expect(match, `${name} (${scheme})`).not.toBeNull();
-        expect(palette[key as keyof typeof PALETTE_VARS][scheme], `${key}.${scheme}`).toBe(
-          cssColour(match![1]!.trim()),
+        expect(tokens.color[key as keyof typeof TOKEN_VARS][scheme], `${key}.${scheme}`).toBe(
+          cssColour(cssVar(name, scheme)),
         );
       }
     });
   }
+
+  it("radius.lg and radius.field match --radius and --field-radius (1rem = 16)", () => {
+    for (const scheme of ["light", "dark"] as const) {
+      expect(cssVar("--radius", scheme)).toBe("1rem");
+      expect(cssVar("--field-radius", scheme)).toBe("min(var(--radius), 0.625rem)");
+    }
+    expect(tokens.radius.lg).toBe(16);
+    expect(tokens.radius.field).toBe(Math.min(16, 0.625 * 16));
+  });
+});
+
+describe("palette", () => {
+
+  for (const [key, name] of Object.entries(PALETTE_VARS)) {
+    it(`${key} matches ${name} in tokens.css`, () => {
+      for (const scheme of ["light", "dark"] as const) {
+        expect(palette[key as keyof typeof PALETTE_VARS][scheme], `${key}.${scheme}`).toBe(
+          cssColour(cssVar(name, scheme)),
+        );
+      }
+    });
+  }
+
+  it("overlayMuted is the web DialogDescription colour-mix of --overlay-foreground into --overlay", () => {
+    const dialog = read(join(uiDir, "src/ui/dialog.tsx"));
+    const mix = dialog.match(
+      /color-mix\(in_oklch,var\(--color-popover-foreground,var\(--overlay-foreground\)\)_(\d+)%,var\(--color-popover,var\(--overlay\)\)\)/,
+    );
+    expect(mix).not.toBeNull();
+    const share = Number(mix![1]) / 100;
+    for (const scheme of ["light", "dark"] as const) {
+      const lightness = (name: string) => {
+        // Both are neutral (chroma 0), so the oklch mix is a mix of lightness.
+        const match = cssVar(name, scheme).match(/^oklch\(([\d.]+)% 0 0\)$/);
+        expect(match, `${name} (${scheme})`).not.toBeNull();
+        return Number(match![1]);
+      };
+      const mixed =
+        share * lightness("--overlay-foreground") + (1 - share) * lightness("--overlay");
+      expect(palette.overlayMuted[scheme], scheme).toBe(oklchToHex(mixed, 0, 0));
+    }
+  });
 
   it("destructive matches the web destructive Button fill", () => {
     const button = read(join(uiDir, "src/ui/button.tsx"));

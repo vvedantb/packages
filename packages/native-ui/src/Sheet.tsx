@@ -6,12 +6,7 @@ import { cn } from "./cn";
 import { withAlpha } from "./palette";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
-import {
-  DialogBody,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from "./Dialog";
+import { DialogBody, DialogDescription, DialogTitle } from "./Dialog";
 import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
 import {
   OverlayClose,
@@ -106,4 +101,7 @@ export function SheetHeader({ className, ...props }: ViewProps & { className?: s
 export const SheetTitle = DialogTitle;
 export const SheetDescription = DialogDescription;
 export const SheetBody = DialogBody;
-export const SheetFooter = DialogFooter;
+/** Buttons stack full width, the last child on top: the web footer on a phone. */
+export function SheetFooter({ className, ...props }: ViewProps & { className?: string }) {
+  return <View className={cn("flex-col-reverse gap-2", className)} {...props} />;
+}

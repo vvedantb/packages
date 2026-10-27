@@ -10,6 +10,7 @@ import {
 } from "./primitives/select";
 import { cn } from "./cn";
 import { fieldStyle, fieldTextStyle } from "./controlStyles";
+import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -93,8 +94,9 @@ function Select<TValue = string | number | null>({
       <SelectTrigger
         testID={testID}
         className={cn(
-          "h-14 w-full border px-4 py-0 shadow-none",
-          largerText && "h-16",
+          // The web trigger: h-10 px-3.5, 16 px type (its phone size).
+          "h-10 w-full border px-3.5 py-0 shadow-none",
+          largerText && "h-16 px-4",
           triggerClassName,
           className,
         )}
@@ -102,11 +104,14 @@ function Select<TValue = string | number | null>({
       >
         <SelectValue
           placeholder={placeholder ?? "Select option"}
-          className={cn(
-            "font-instrument-sans-medium text-foreground",
-            largerText ? "text-xl" : "text-lg",
-          )}
-          style={fieldTextStyle(scheme)}
+          className={
+            largerText ? "font-instrument-sans-medium text-xl" : "font-instrument-sans text-base"
+          }
+          style={
+            primitiveValue
+              ? fieldTextStyle(scheme)
+              : { color: palette.fieldPlaceholder[scheme] }
+          }
         />
       </SelectTrigger>
       <SelectContent className={cn("w-full", contentClassName)}>

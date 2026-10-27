@@ -5,7 +5,8 @@ export const FLOATING_INSET = tokens.spacing.unit;
 export const FLOATING_TAB_BAR_HEIGHT = 64;
 export const FLOATING_TAB_BAR_HEIGHT_LARGE = 72;
 export const FLOATING_RADIUS = tokens.radius.card;
-export const FLOATING_ROW_RADIUS = tokens.radius.field;
+/** Rows, toasts and the upgrade card: 20, the field radius before 0.3.3 (web fields are 10). */
+export const FLOATING_ROW_RADIUS = 20;
 export const FLOATING_PILL_RADIUS = tokens.radius.pill;
 
 const FLOATING_BOX_SHADOW = "0px 8px 24px rgba(10, 10, 10, 0.12)";

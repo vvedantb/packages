@@ -1,9 +1,10 @@
 import { createContext, useContext, type ComponentType, type ReactNode } from "react";
 import { View, Text, type TextProps, type ViewProps } from "react-native";
 import { IconInbox, type IconProps } from "@tabler/icons-react-native";
-import { NEUTRAL_500 } from "./colors";
 import { cn } from "./cn";
+import { textStyle } from "./controlStyles";
 import { palette } from "./palette";
+import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -23,26 +24,29 @@ function EmptyStateView({
   testID?: string;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <View
       testID={testID}
       className={`items-center px-4 ${compact ? "py-6" : "py-16"}`}
     >
-      <Icon size={largerText ? 44 : 40} color={NEUTRAL_500} />
+      <Icon size={largerText ? 44 : 40} color={tokens.color.muted[scheme]} />
       <Text
         className={cn(
-          "mt-4 text-center font-instrument-sans-semibold text-foreground",
+          "mt-4 text-center font-instrument-sans-semibold",
           largerText ? "text-xl" : "text-lg",
         )}
+        style={textStyle("foreground", scheme)}
       >
         {title}
       </Text>
       {description ? (
         <Text
           className={cn(
-            "mt-2 max-w-sm text-center font-instrument-sans text-muted-foreground",
+            "mt-2 max-w-sm text-center font-instrument-sans",
             largerText ? "text-lg" : "text-base",
           )}
+          style={textStyle("muted", scheme)}
         >
           {description}
         </Text>
@@ -102,40 +106,44 @@ function Icon({
         className={cn("mb-3 h-11 w-11 items-center justify-center rounded-xl", className)}
         style={{ backgroundColor: palette.surfaceTertiary[scheme] }}
       >
-        <IconComponent size={size ?? 22} stroke={stroke ?? 1.5} color={NEUTRAL_500} />
+        <IconComponent size={size ?? 22} stroke={stroke ?? 1.5} color={tokens.color.muted[scheme]} />
       </View>
     );
   }
   return (
     <View className={cn("mb-4", className)}>
-      <IconComponent size={size ?? 40} stroke={stroke} color={NEUTRAL_500} />
+      <IconComponent size={size ?? 40} stroke={stroke} color={tokens.color.muted[scheme]} />
     </View>
   );
 }
 
-function Title({ className, ...props }: TextProps & { className?: string }) {
+function Title({ className, style, ...props }: TextProps & { className?: string }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       className={cn(
-        "text-center font-instrument-sans-semibold text-foreground",
+        "text-center font-instrument-sans-semibold",
         largerText ? "text-xl" : "text-lg",
         className,
       )}
+      style={[textStyle("foreground", scheme), style]}
       {...props}
     />
   );
 }
 
-function Description({ className, ...props }: TextProps & { className?: string }) {
+function Description({ className, style, ...props }: TextProps & { className?: string }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       className={cn(
-        "mt-2 max-w-sm text-center font-instrument-sans text-muted-foreground",
+        "mt-2 max-w-sm text-center font-instrument-sans",
         largerText ? "text-lg" : "text-base",
         className,
       )}
+      style={[textStyle("muted", scheme), style]}
       {...props}
     />
   );

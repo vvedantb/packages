@@ -1,4 +1,6 @@
 import { View, Text } from "react-native";
+import { textStyle } from "../controlStyles";
+import { useScheme } from "../useScheme";
 
 export function SettingsField({
   label,
@@ -9,10 +11,14 @@ export function SettingsField({
   description?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const scheme = useScheme();
   return (
     <View>
       {typeof label === "string" ? (
-        <Text className="mb-2 text-base font-instrument-sans-semibold text-foreground">
+        <Text
+          className="mb-2 text-base font-instrument-sans-semibold"
+          style={textStyle("foreground", scheme)}
+        >
           {label}
         </Text>
       ) : (
@@ -21,7 +27,10 @@ export function SettingsField({
       {children}
       {description != null ? (
         typeof description === "string" ? (
-          <Text className="mt-1.5 text-sm font-instrument-sans text-muted-foreground">
+          <Text
+            className="mt-1.5 text-sm font-instrument-sans"
+            style={textStyle("muted", scheme)}
+          >
             {description}
           </Text>
         ) : (

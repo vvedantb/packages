@@ -21,7 +21,8 @@ describe("Android floating shadow rules", () => {
     expect(src).toMatch(/boxShadow:/);
     expect(src).not.toMatch(/elevation:/);
     expect(src).toMatch(/FLOATING_RADIUS = tokens\.radius\.card/);
-    expect(src).toMatch(/FLOATING_ROW_RADIUS = tokens\.radius\.field/);
+    // Rows keep 20; fields use the web radius (`tokens.radius.field`, 10) since 0.3.3.
+    expect(src).toMatch(/FLOATING_ROW_RADIUS = 20;/);
   });
 
   it("clips inside FloatingSurface and blurs on iOS and Android through expo-blur", () => {

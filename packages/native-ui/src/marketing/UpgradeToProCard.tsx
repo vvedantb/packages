@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { cn } from "../cn";
+import { textStyle } from "../controlStyles";
 import { FLOATING_ROW_RADIUS } from "../floating";
 import { tokens } from "../tokens";
 import { useLargerText } from "../theme";
@@ -78,9 +79,10 @@ export function UpgradeToProCard({
       <Text
         numberOfLines={1}
         className={cn(
-          "min-w-0 flex-1 font-instrument-sans-semibold text-foreground",
+          "min-w-0 flex-1 font-instrument-sans-semibold",
           largerText ? "text-lg" : "text-base",
         )}
+        style={textStyle("foreground", scheme)}
       >
         {title}
       </Text>

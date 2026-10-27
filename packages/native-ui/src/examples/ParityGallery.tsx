@@ -1,9 +1,10 @@
 // Reference screen for the components that mirror `@vvedantb/ui`. Render it in
 // an Expo route to compare against the web: it needs the same NativeWind setup
-// as the rest of the package and a `SafeAreaProvider` above it. Prices below
+// as the rest of the package and a `SafeAreaProvider` above it. It always
+// renders the default sizes (larger text off), as the web does. Prices below
 // are placeholders, not real plan prices.
 import { useState, type ReactNode } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View, type TextProps } from "react-native";
 import { IconInbox } from "@tabler/icons-react-native";
 import {
   APP_ICONS,
@@ -45,6 +46,7 @@ import {
   Input,
   Label,
   LabeledSwitchRow,
+  NativeUiProvider,
   PillTabs,
   PricingModal,
   Progress,
@@ -70,11 +72,14 @@ import {
   UpgradeToProCard,
   initials,
   toast,
+  tokens,
+  useNativeUi,
   type BadgeVariant,
   type ButtonVariant,
   type PricingPlan,
   type StatusTone,
 } from "../index";
+import { useScheme } from "../useScheme";
 
 const BUTTON_VARIANTS: ButtonVariant[] = [
   "default",
@@ -123,20 +128,43 @@ const PLANS: PricingPlan[] = [
   },
 ];
 
+/** Body text in the scheme's foreground (a style, so it reads in dark mode too). */
+function GalleryText({ className, style, ...props }: TextProps & { className?: string }) {
+  const scheme = useScheme();
+  return (
+    <Text
+      className={className ?? "font-instrument-sans text-base"}
+      style={[{ color: tokens.color.foreground[scheme] }, style]}
+      {...props}
+    />
+  );
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View className="gap-3">
-      <Text className="font-instrument-sans-bold text-lg text-foreground">{title}</Text>
+      <GalleryText accessibilityRole="header" className="font-instrument-sans-bold text-lg">
+        {title}
+      </GalleryText>
       {children}
     </View>
   );
 }
 
 export function ParityGallery() {
+  const { accentColor } = useNativeUi();
+  return (
+    <NativeUiProvider largerText={false} accentColor={accentColor}>
+      <GalleryScreen />
+    </NativeUiProvider>
+  );
+}
+
+function GalleryScreen() {
   const [checked, setChecked] = useState<boolean | "indeterminate">("indeterminate");
   const [switchOn, setSwitchOn] = useState(true);
   const [pill, setPill] = useState<"day" | "week">("day");
-  const [colour, setColour] = useState<string | null>("pink");
+  const [colour, setColour] = useState<string | null | undefined>(undefined);
   const [progress, setProgress] = useState(40);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -169,6 +197,15 @@ export function ParityGallery() {
               {variant}
             </Button>
           ))}
+          <View className="flex-row flex-wrap items-center gap-2">
+            <Button size="sm" fullWidth={false}>
+              Small
+            </Button>
+            <Button fullWidth={false}>Default</Button>
+            <Button size="lg" fullWidth={false}>
+              Large
+            </Button>
+          </View>
           <View className="flex-row gap-2">
             <Button size="sm" fullWidth={false} loading>
               Saving
@@ -179,7 +216,7 @@ export function ParityGallery() {
           </View>
         </Section>
 
-        <Section title="Badge and StatusDot">
+        <Section title="Badge">
           <View className="flex-row flex-wrap gap-2">
             {BADGE_VARIANTS.map((variant) => (
               <Badge key={variant} variant={variant}>
@@ -187,6 +224,9 @@ export function ParityGallery() {
               </Badge>
             ))}
           </View>
+        </Section>
+
+        <Section title="StatusDot">
           <View className="flex-row flex-wrap items-center gap-3">
             {STATUS_TONES.map((tone) => (
               <StatusDot key={tone} tone={tone} size="md" />
@@ -203,6 +243,7 @@ export function ParityGallery() {
           <Select
             value={colour}
             onValueChange={setColour}
+            placeholder="Pick a colour"
             options={[
               { label: "Pink", value: "pink" },
               { label: "None", value: null },
@@ -214,7 +255,7 @@ export function ParityGallery() {
               onCheckedChange={setChecked}
               accessibilityLabel="Remember me"
             />
-            <Text className="font-instrument-sans text-base text-foreground">Remember me</Text>
+            <Label nativeID="gallery-remember">Remember me</Label>
             <Switch checked={switchOn} onCheckedChange={setSwitchOn} />
           </View>
           <LabeledSwitchRow
@@ -243,10 +284,10 @@ export function ParityGallery() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="one">
-              <Text className="font-instrument-sans text-base text-foreground">First panel</Text>
+              <GalleryText>First panel</GalleryText>
             </TabsContent>
             <TabsContent value="two">
-              <Text className="font-instrument-sans text-base text-foreground">Second panel</Text>
+              <GalleryText>Second panel</GalleryText>
             </TabsContent>
           </Tabs>
         </Section>
@@ -279,7 +320,7 @@ export function ParityGallery() {
 
         <Section title="Card">
           <Card title="Today" description="Card props, as before.">
-            <Text className="font-instrument-sans text-base text-foreground">Body</Text>
+            <GalleryText>Body</GalleryText>
           </Card>
           <Card>
             <CardHeader>
@@ -287,7 +328,7 @@ export function ParityGallery() {
               <CardDescription>Web part names inside the native card.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Text className="font-instrument-sans text-base text-foreground">Content</Text>
+              <GalleryText>Content</GalleryText>
             </CardContent>
             <CardFooter>
               <Button size="sm" fullWidth={false} variant="secondary">
@@ -320,12 +361,16 @@ export function ParityGallery() {
               </DialogBody>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="secondary" shadowType="flat">
+                  <Button variant="secondary" shadowType="flat" fullWidth={false}>
                     Cancel
                   </Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button shadowType="flat" onPress={() => toast.success("Renamed")}>
+                  <Button
+                    shadowType="flat"
+                    fullWidth={false}
+                    onPress={() => toast.success("Renamed")}
+                  >
                     Save
                   </Button>
                 </DialogClose>

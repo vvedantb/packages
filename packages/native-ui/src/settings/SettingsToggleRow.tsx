@@ -1,6 +1,8 @@
 import { View, Text } from "react-native";
 import { cn } from "../cn";
+import { textStyle } from "../controlStyles";
 import { useLargerText } from "../theme";
+import { useScheme } from "../useScheme";
 
 export function SettingsToggleRow({
   title,
@@ -14,6 +16,7 @@ export function SettingsToggleRow({
   className?: string;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <View
       className={cn(
@@ -26,9 +29,10 @@ export function SettingsToggleRow({
         {typeof title === "string" ? (
           <Text
             className={cn(
-              "font-instrument-sans-semibold text-foreground",
+              "font-instrument-sans-semibold",
               largerText ? "text-xl" : "text-lg",
             )}
+            style={textStyle("foreground", scheme)}
           >
             {title}
           </Text>
@@ -39,9 +43,10 @@ export function SettingsToggleRow({
           typeof description === "string" ? (
             <Text
               className={cn(
-                "mt-1 font-instrument-sans text-muted-foreground",
+                "mt-1 font-instrument-sans",
                 largerText ? "text-lg" : "text-base",
               )}
+              style={textStyle("muted", scheme)}
             >
               {description}
             </Text>

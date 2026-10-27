@@ -1,9 +1,11 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, Text, View, type ViewProps } from "react-native";
 import { cn } from "./cn";
+import { textStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { useControllableState } from "./primitives/use-controllable-state";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 /** `pills` (default): separate pills, the `PillTabs` look. `segmented`: one track with the active segment raised. `soft`: wrapping pills, the active one filled. */
 export type TabsListVariant = "pills" | "segmented" | "soft";
@@ -105,6 +107,7 @@ export function TabsTrigger({
   const { value: current, setValue } = useTabs("TabsTrigger");
   const { variant, size } = useContext(TabsListContext);
   const largerText = useLargerText();
+  const scheme = useScheme();
   const selected = current === value;
   const small = size === "sm";
   const fill =
@@ -119,14 +122,8 @@ export function TabsTrigger({
         : selected
           ? "border border-white/40 bg-pink-100 dark:border-white/10 dark:bg-pink-900/40"
           : "border border-white/40 bg-secondary dark:border-white/10";
-  const textColor =
-    variant === "pills"
-      ? selected
-        ? "text-pink-700 dark:text-pink-300"
-        : "text-muted-foreground"
-      : selected
-        ? "text-foreground"
-        : "text-muted-foreground";
+  // The selected pill keeps its pink classes; other text takes a style colour.
+  const pinkText = variant === "pills" && selected;
 
   return (
     <Pressable
@@ -169,8 +166,9 @@ export function TabsTrigger({
               : largerText
                 ? "text-xl"
                 : "text-lg",
-            textColor,
+            pinkText && "text-pink-700 dark:text-pink-300",
           )}
+          style={pinkText ? undefined : textStyle(selected ? "foreground" : "muted", scheme)}
         >
           {children}
         </Text>

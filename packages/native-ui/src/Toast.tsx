@@ -18,6 +18,7 @@ import {
 } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
+import { textStyle } from "./controlStyles";
 import { FLOATING_INSET, FLOATING_ROW_RADIUS } from "./floating";
 import { palette } from "./palette";
 import { tokens } from "./tokens";
@@ -80,6 +81,7 @@ function ToastIcon({ item }: { item: ToastItem }) {
 
 function ToastCard({ item }: { item: ToastItem }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
 
   useEffect(() => {
     if (!Number.isFinite(item.duration)) return;
@@ -114,18 +116,20 @@ function ToastCard({ item }: { item: ToastItem }) {
           <View className="min-w-0 flex-1">
             <Text
               className={cn(
-                "font-instrument-sans-semibold text-foreground",
+                "font-instrument-sans-semibold",
                 largerText ? "text-lg" : "text-base",
               )}
+              style={textStyle("foreground", scheme)}
             >
               {item.title}
             </Text>
             {item.description ? (
               <Text
                 className={cn(
-                  "font-instrument-sans text-muted-foreground",
+                  "font-instrument-sans",
                   largerText ? "text-base" : "text-sm",
                 )}
+                style={textStyle("muted", scheme)}
               >
                 {item.description}
               </Text>
@@ -141,7 +145,10 @@ function ToastCard({ item }: { item: ToastItem }) {
               }}
               className="rounded-full bg-secondary px-3 py-1.5 active:opacity-70"
             >
-              <Text className="font-instrument-sans-semibold text-sm text-foreground">
+              <Text
+                className="font-instrument-sans-semibold text-sm"
+                style={textStyle("foreground", scheme)}
+              >
                 {item.action.label}
               </Text>
             </Pressable>

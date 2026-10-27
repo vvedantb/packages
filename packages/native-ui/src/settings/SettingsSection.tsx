@@ -1,6 +1,8 @@
 import { View, Text } from "react-native";
 import { cn } from "../cn";
+import { textStyle } from "../controlStyles";
 import { FloatingSurface } from "../FloatingSurface";
+import { useScheme } from "../useScheme";
 
 type SettingsSectionBodyVariant = "form" | "list" | "compact";
 
@@ -21,6 +23,7 @@ export function SettingsSection({
   bodyVariant?: SettingsSectionBodyVariant;
   className?: string;
 }) {
+  const scheme = useScheme();
   const hasBody = children != null;
   const hasCard = hasBody || footer != null;
 
@@ -29,7 +32,10 @@ export function SettingsSection({
       <View className="flex-row items-start justify-between gap-4 px-4">
         <View className="min-w-0 flex-1">
           {typeof title === "string" ? (
-            <Text className="text-lg font-instrument-sans-bold text-foreground">
+            <Text
+              className="text-lg font-instrument-sans-bold"
+              style={textStyle("foreground", scheme)}
+            >
               {title}
             </Text>
           ) : (
@@ -37,7 +43,10 @@ export function SettingsSection({
           )}
           {description != null ? (
             typeof description === "string" ? (
-              <Text className="mt-0.5 text-base font-instrument-sans text-muted-foreground">
+              <Text
+                className="mt-0.5 text-base font-instrument-sans"
+                style={textStyle("muted", scheme)}
+              >
                 {description}
               </Text>
             ) : (

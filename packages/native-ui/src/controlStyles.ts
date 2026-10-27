@@ -1,8 +1,9 @@
 /**
- * Colours for `Button`, `Input`, `Textarea`, the `Select` trigger and `Switch`,
- * taken from `palette` and `tokens` instead of NativeWind theme keys
- * (`bg-primary`, `bg-input`) that apps do not define. No React Native import,
- * so the tests can load this file.
+ * Colours for `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`,
+ * `Checkbox` and component text, taken from `palette` and `tokens` instead of
+ * NativeWind theme keys (`bg-primary`, `bg-input`, `text-foreground`) that apps
+ * do not define, or define without a dark value. No React Native import, so
+ * the tests can load this file.
  */
 import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
@@ -69,8 +70,8 @@ export function buttonColors(variant: ButtonVariant, scheme: Scheme): ButtonColo
 
 /**
  * The web field look (`rounded-field border border-border bg-field-background`),
- * with the native field radius (20, web 10). A flat object: on web the `Select`
- * trigger is a Radix slot, which spreads `style` and so drops arrays.
+ * radius 10 as on the web. A flat object: on web the `Select` trigger is a
+ * Radix slot, which spreads `style` and so drops arrays.
  */
 export function fieldStyle(scheme: Scheme) {
   return {
@@ -82,7 +83,43 @@ export function fieldStyle(scheme: Scheme) {
 
 /** Text on `fieldStyle`. From the same scheme as the fill, so the two cannot disagree. */
 export function fieldTextStyle(scheme: Scheme) {
-  return { color: tokens.color.foreground[scheme] };
+  return textStyle("foreground", scheme);
+}
+
+/**
+ * `foreground` and `muted` are the web `text-foreground` and
+ * `text-muted-foreground`; `overlayMuted` is the web `DialogDescription`.
+ */
+export type TextTone = "foreground" | "muted" | "overlayMuted";
+
+/**
+ * Text colour as a style. Where an app defines the NativeWind `foreground` key
+ * with a nested `dark` shade, `text-foreground` keeps the light value in dark
+ * mode, so class-coloured text was near-black on dark surfaces.
+ */
+export function textStyle(tone: TextTone, scheme: Scheme) {
+  return {
+    color: tone === "overlayMuted" ? palette.overlayMuted[scheme] : tokens.color[tone][scheme],
+  };
+}
+
+/**
+ * Box and check colours, from the web `Checkbox` classes: `bg-field-background
+ * border-border`, and `bg-primary border-primary text-primary-foreground` when
+ * checked (also when indeterminate).
+ */
+export function checkboxColors(checked: boolean, scheme: Scheme) {
+  return checked
+    ? {
+        backgroundColor: palette.primary[scheme],
+        borderColor: palette.primary[scheme],
+        color: palette.primaryForeground[scheme],
+      }
+    : {
+        backgroundColor: tokens.color.surface[scheme],
+        borderColor: tokens.color.border[scheme],
+        color: palette.primaryForeground[scheme],
+      };
 }
 
 /**

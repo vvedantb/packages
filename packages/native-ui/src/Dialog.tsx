@@ -10,6 +10,7 @@ import {
 import { IconX } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
+import { textStyle } from "./controlStyles";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -49,7 +50,8 @@ export type DialogContentProps = ViewProps & {
 
 /**
  * Centred panel in an RN `Modal`: opaque surface (card radius 24, floating
- * shadow, no blur), at most 480 wide. Android back closes it.
+ * shadow, no blur), at most 480 wide, padding 24 as on the web. Android back
+ * closes it.
  */
 export function DialogContent({
   children,
@@ -64,7 +66,7 @@ export function DialogContent({
         <FloatingSurface blur={false}>
           <View
             accessibilityViewIsModal
-            className={cn("gap-4 p-5", className)}
+            className={cn("gap-4 p-6", className)}
             {...props}
           >
             {children}
@@ -84,9 +86,9 @@ function DialogCloseButton() {
       testID="dialog-close"
       accessibilityLabel="Close"
       hitSlop={8}
-      className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full active:opacity-70"
+      className="absolute right-2 top-2 h-11 w-11 items-center justify-center rounded-lg active:opacity-70"
     >
-      <IconX size={largerText ? 26 : 22} color={tokens.color.muted[scheme]} />
+      <IconX size={largerText ? 26 : 16} color={tokens.color.muted[scheme]} />
     </DialogClose>
   );
 }
@@ -95,33 +97,42 @@ type PartProps = ViewProps & { className?: string };
 type TextPartProps = TextProps & { className?: string };
 
 export function DialogHeader({ className, ...props }: PartProps) {
-  return <View className={cn("gap-1.5 pr-8", className)} {...props} />;
+  return <View className={cn("gap-1.5 pr-10", className)} {...props} />;
 }
 
-export function DialogTitle({ className, ...props }: TextPartProps) {
+// Text colours are styles (`textStyle`), so they follow the colour scheme in
+// apps whose `text-foreground` does not. Recolour with `style`, not `className`.
+
+/** Web `text-lg font-semibold`. */
+export function DialogTitle({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       accessibilityRole="header"
       className={cn(
-        "font-instrument-sans-bold text-foreground",
-        largerText ? "text-2xl" : "text-xl",
+        "font-instrument-sans-semibold",
+        largerText ? "text-2xl" : "text-lg",
         className,
       )}
+      style={[textStyle("foreground", scheme), style]}
       {...props}
     />
   );
 }
 
-export function DialogDescription({ className, ...props }: TextPartProps) {
+/** Web `text-sm leading-relaxed`, in the web description colour (`palette.overlayMuted`). */
+export function DialogDescription({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       className={cn(
-        "font-instrument-sans text-muted-foreground",
-        largerText ? "text-lg" : "text-base",
+        "font-instrument-sans leading-relaxed",
+        largerText ? "text-lg" : "text-sm",
         className,
       )}
+      style={[textStyle("overlayMuted", scheme), style]}
       {...props}
     />
   );
@@ -144,7 +155,16 @@ export function DialogBody({
   );
 }
 
-/** Buttons stack full width, the last child on top (the web small-screen order). */
+/**
+ * Buttons in a row at the end, as the web footer from `sm` up (Cancel, then
+ * Save). Give each `Button` `fullWidth={false}`; `AlertDialogAction` and
+ * `AlertDialogCancel` already do. Wraps when the labels do not fit.
+ */
 export function DialogFooter({ className, ...props }: PartProps) {
-  return <View className={cn("flex-col-reverse gap-2", className)} {...props} />;
+  return (
+    <View
+      className={cn("flex-row flex-wrap items-center justify-end gap-2", className)}
+      {...props}
+    />
+  );
 }

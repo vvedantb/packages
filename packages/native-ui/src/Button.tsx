@@ -8,6 +8,7 @@ import { cn } from "./cn";
 import { buttonColors, type ButtonVariant } from "./controlStyles";
 import { floatingShadow } from "./floating";
 import { useLargerText } from "./theme";
+import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
 /** `sm`, `default` and `lg` are the web names for `small`, `medium` and `large`. `icon` is a square button. */
@@ -43,12 +44,15 @@ const SIZE_ALIAS = {
   icon: "icon",
 } as const;
 
+// `regular` is the web `Button` (`sm` h-8 px-3, `default` h-10 px-4, `lg`
+// h-11 px-6, `icon` h-10 w-10). `larger` is the larger-text step-up, unchanged
+// from 0.3.2.
 const HEIGHT = {
   regular: {
-    small: "h-12 px-5",
-    medium: "h-14 px-6",
-    large: "h-16 px-6",
-    icon: "h-12 w-12 px-0",
+    small: "h-8 px-3",
+    medium: "h-10 px-4",
+    large: "h-11 px-6",
+    icon: "h-10 w-10 px-0",
   },
   larger: {
     small: "h-14 px-5",
@@ -59,9 +63,18 @@ const HEIGHT = {
 };
 
 const TEXT = {
-  regular: { small: "text-sm", medium: "text-lg", large: "text-xl", icon: "text-sm" },
+  regular: { small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" },
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
 };
+
+// The web sizes are under the 44 pt touch target; the slop brings each to 48.
+const HIT_SLOP = {
+  regular: { small: 8, medium: 4, large: 2, icon: 4 },
+  larger: { small: 8, medium: undefined, large: undefined, icon: 8 },
+};
+
+/** Web `rounded-lg` (`--radius`, 16). A style, because apps' NativeWind themes set their own `rounded-lg`. */
+const RADIUS = tokens.radius.lg;
 
 // Colours come from `buttonColors` as styles, except `tinted`, which keeps
 // the pink classes that `outline` used before 0.3.0.
@@ -111,6 +124,7 @@ export function Button({
   const elevate =
     shadowType === "shadow" && (variant === "primary" || variant === "default");
   const baseStyle = [
+    { borderRadius: RADIUS },
     elevate ? floatingShadow : null,
     colors
       ? { backgroundColor: colors.backgroundColor, borderColor: colors.borderColor }
@@ -122,9 +136,9 @@ export function Button({
     <PrimitiveButton
       onPress={onPress}
       variant={PRIMITIVE_VARIANT[variant]}
-      hitSlop={resolvedSize === "small" || resolvedSize === "icon" ? 8 : undefined}
+      hitSlop={HIT_SLOP[scale][resolvedSize]}
       className={cn(
-        "relative rounded-full border",
+        "relative border",
         HEIGHT[scale][resolvedSize],
         // Column flex children stretch by default (React Native Web too), so
         // a button that is not full width must opt out with `self-start`.
@@ -155,7 +169,7 @@ export function Button({
               (icon ? (
                 <MaterialIcons
                   name={icon}
-                  size={scale === "larger" ? 26 : 22}
+                  size={scale === "larger" ? 26 : 16}
                   color={contentColor}
                 />
               ) : null)}
@@ -163,7 +177,7 @@ export function Button({
               <PrimitiveText
                 className={cn(
                   TEXT[scale][resolvedSize],
-                  "font-instrument-sans-semibold",
+                  "font-instrument-sans-medium",
                   TEXT_CLASS[variant],
                 )}
                 style={colors ? { color: colors.color } : undefined}

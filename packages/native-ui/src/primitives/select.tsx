@@ -13,6 +13,9 @@ import { NativeOnlyAnimatedView } from "./native-only-animated-view";
 import { TextClassContext } from "./text";
 import { LiquidGlass } from "../LiquidGlass";
 import { cn } from "../cn";
+import { textStyle } from "../controlStyles";
+import { tokens } from "../tokens";
+import { useScheme } from "../useScheme";
 
 type Option = SelectPrimitive.Option;
 
@@ -51,6 +54,7 @@ const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
 >(({ className, children, size = "default", disabled, ...props }, ref) => {
+  const scheme = useScheme();
   return (
     <SelectPrimitive.Trigger
       ref={ref}
@@ -64,7 +68,7 @@ const SelectTrigger = React.forwardRef<
       {...props}
     >
       <>{children}</>
-      <ChevronDown size={16} color="#737373" />
+      <ChevronDown size={16} color={tokens.color.muted[scheme]} />
     </SelectPrimitive.Trigger>
   );
 });
@@ -155,6 +159,7 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   SelectItemProps
 >(({ className, disabled, ...props }, ref) => {
+  const scheme = useScheme();
   return (
     <SelectPrimitive.Item
       ref={ref}
@@ -168,10 +173,13 @@ const SelectItem = React.forwardRef<
     >
       <View className="absolute right-2 size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check size={16} color="#737373" />
+          <Check size={16} color={tokens.color.muted[scheme]} />
         </SelectPrimitive.ItemIndicator>
       </View>
-      <SelectPrimitive.ItemText className="select-none text-sm font-instrument-sans-medium text-foreground" />
+      <SelectPrimitive.ItemText
+        className="select-none text-sm font-instrument-sans-medium"
+        style={textStyle("foreground", scheme)}
+      />
     </SelectPrimitive.Item>
   );
 });

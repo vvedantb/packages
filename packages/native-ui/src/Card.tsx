@@ -9,7 +9,9 @@ import {
 } from "./primitives/card";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
+import { textStyle } from "./controlStyles";
 import { useAccentColor, useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 export function Card({
   children,
@@ -32,6 +34,7 @@ export function Card({
 }) {
   const largerText = useLargerText();
   const accentColor = useAccentColor();
+  const scheme = useScheme();
   const hasHeader = Boolean(title || action);
   return (
     <FloatingSurface className={className}>
@@ -49,9 +52,10 @@ export function Card({
                 {title ? (
                   <PrimitiveCardTitle
                     className={cn(
-                      "font-instrument-sans-bold text-foreground",
+                      "font-instrument-sans-bold",
                       largerText ? "text-2xl" : "text-xl",
                     )}
+                    style={textStyle("foreground", scheme)}
                   >
                     {title}
                   </PrimitiveCardTitle>
@@ -71,7 +75,8 @@ export function Card({
 }
 
 // Parts for composing a card body with the web part names. They sit inside
-// `Card`'s padded content, so they add no side padding of their own.
+// `Card`'s padded content, so they add no side padding of their own. Text
+// colours are styles that follow the colour scheme; recolour with `style`.
 
 type PartProps = ViewProps & { className?: string };
 type TextPartProps = TextProps & { className?: string };
@@ -80,30 +85,34 @@ export function CardHeader({ className, ...props }: PartProps) {
   return <View className={cn("gap-1 pb-3", className)} {...props} />;
 }
 
-export function CardTitle({ className, ...props }: TextPartProps) {
+export function CardTitle({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       accessibilityRole="header"
       className={cn(
-        "font-instrument-sans-bold text-foreground",
+        "font-instrument-sans-bold",
         largerText ? "text-2xl" : "text-xl",
         className,
       )}
+      style={[textStyle("foreground", scheme), style]}
       {...props}
     />
   );
 }
 
-export function CardDescription({ className, ...props }: TextPartProps) {
+export function CardDescription({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <Text
       className={cn(
-        "font-instrument-sans text-muted-foreground",
+        "font-instrument-sans",
         largerText ? "text-lg" : "text-base",
         className,
       )}
+      style={[textStyle("muted", scheme), style]}
       {...props}
     />
   );

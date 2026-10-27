@@ -1,6 +1,6 @@
 # `@vvedantb/native-ui` parity with `@vvedantb/ui`
 
-Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.0, against `@vvedantb/ui` 0.29.0.
+Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.3, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery.
 
 This audit lists every public export of `@vvedantb/ui` and says whether `@vvedantb/native-ui` has an equivalent. It also records how the two packages share design tokens and brand data.
 
@@ -44,17 +44,17 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 
 | Web export | Native 0.3.0 | Status | Notes |
 | --- | --- | --- | --- |
-| `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. Existing `primary`, `small`, `medium` and `large` are unchanged. |
-| `Input` | `Input` | same | Web field look (white, bordered) with the native field radius (20). Placeholder colour follows the colour scheme. |
-| `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look. |
-| `Label` | `Label` (new) | same | |
+| `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. From 0.3.3, without larger text: web heights and padding (`sm` 32, `default` 40, `lg` 44), `text-sm` / `text-xs` medium and radius 16 (web `rounded-lg`). `primary`, `small`, `medium` and `large` are aliases of the web names. |
+| `Input` | `Input` | same | Web field look (white, bordered), web radius (10), height (40) and padding from 0.3.3. Placeholder in `palette.fieldPlaceholder`. |
+| `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look; web `min-h-20`. |
+| `Label` | `Label` (new) | same | Colour from `tokens` (a style) from 0.3.3. Type stays `text-base` semibold (web `text-sm` medium). |
 | `Card` and parts | `Card` and parts (new parts) | same | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` added. The existing `title` / `leftIcon` / `action` API is unchanged; `description` and `className` added. |
 | `Badge` | `Badge` (new) | same | All seven web variants. |
 | `Switch` | `Switch` | same | Track and thumb colours from `palette`, as on the web. |
-| `Checkbox` | `Checkbox` (new) | same | No `@rn-primitives/checkbox`: `Pressable` and a Tabler check. |
-| `Select` | `Select` | partial | Options-array API. The trigger has the `Input` field look. |
+| `Checkbox` | `Checkbox` (new) | same | No `@rn-primitives/checkbox`: `Pressable` and a Tabler check. From 0.3.3: palette `primary` fill (was the theme accent) and the web 16 px box, with a 14 hit slop. |
+| `Select` | `Select` | partial | Options-array API. The trigger has the `Input` field look and size; the placeholder uses `palette.fieldPlaceholder`. |
 | `Sheet` | `Sheet` (new), `BottomSheetContainer` | same | RN `Modal`, bottom edge only. |
-| `Dialog` | `Dialog` (new) | same | RN `Modal`. |
+| `Dialog` | `Dialog` (new) | same | RN `Modal`. From 0.3.3: footer buttons in a row at the end (the web layout from `sm` up), padding 24, title `text-lg` semibold, description in the web colour (`palette.overlayMuted`). |
 | `AlertDialog` | `AlertDialog` (new) | same | |
 | `ConfirmDialog` | `ConfirmDialog` (new) | partial | Legacy props, default size. |
 | `Tabs` | `Tabs` (new), `PillTabs` | same | `pills`, `segmented`, `soft`. |
@@ -83,43 +83,47 @@ No new package was added, and `@vvedantb/ui` is unchanged. Sharing works through
 
 | What | Native file | Source of truth | Check |
 | --- | --- | --- | --- |
-| Neutrals, radii, spacing (`tokens`) | `src/tokens.ts` | `packages/ui/tokens/src/native.ts` | Body must match, below the header comment. Checked in both packages: `packages/ui/tokens/test/package.test.mjs` and `packages/native-ui/tests/tokens.test.ts`. |
+| Neutrals, radii, spacing (`tokens`) | `src/tokens.ts` | `packages/ui/tokens/src/native.ts`, whose neutrals and radii follow `tokens.css` | Body must match, below the header comment. Checked in both packages: `packages/ui/tokens/test/package.test.mjs` and `packages/native-ui/tests/tokens.test.ts`. From 0.3.3 `tests/tokens.test.ts` also converts the `tokens.css` neutrals, `--radius` and `--field-radius` and compares them. |
 | Web semantic colours (`palette`) | `src/palette.ts` | `packages/ui/tokens/src/tokens.css` | `tests/tokens.test.ts` converts each `oklch()` value to sRGB hex (clipped to sRGB) and compares it with the light and dark values. `palette.destructive` is checked against the web destructive `Button` fill. |
 | Brand data | `src/brand/svg.ts`, `familyApps.ts`, `vProAppBenefits.ts` | `packages/ui/src/brand/` | Byte-identical, checked by `tests/brand.test.ts`. |
 | Wordmark type | `src/typography.ts` (`WORDMARK`) | `.landing-wordmark-text` in `landing.css`, `ICON_SCALE` and the gap in `AppWordmark.tsx` | `tests/tokens.test.ts`. |
 
 A shared module that both packages import would need a new package, or would make native-ui import from `@vvedantb/ui` (and so pull in Radix, react-dom and the rest of the web stack). Neither was acceptable, so the copies stay. The `palette` test reads `tokens.css` directly, so a web colour change fails the native-ui tests until `palette.ts` is updated.
 
-`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop` and `destructive`. New components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints) and the existing NativeWind classes (`bg-secondary`, `bg-surface`, `text-foreground`, `text-muted-foreground`) elsewhere. `Button`, `Input`, `Textarea`, the `Select` trigger and `Switch` take their colours from `src/controlStyles.ts`, because the primitives' NativeWind keys (`bg-primary`, `bg-input`) are not defined in apps. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
+`palette` adds the colours that `tokens` lacks: `primary`, `danger`, `success`, `warning` (each with a foreground), `default`, `overlay`, `segment`, `surfaceTertiary`, `fieldPlaceholder`, `backdrop`, `overlayMuted` and `destructive`. `overlayMuted` is the web `DialogDescription` colour: `--overlay-foreground` mixed 72% into `--overlay` in oklch. A test derives it from `tokens.css` and `dialog.tsx`. Components use `tokens` and `palette` for any colour drawn through a style (icons, fills, borders, tints, text) and NativeWind classes (`bg-secondary`, `bg-surface`) for some fills. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch` and `Checkbox` take their colours from `src/controlStyles.ts`, because the primitives' NativeWind keys (`bg-primary`, `bg-input`) are not defined in apps. `withAlpha(hex, alpha)` gives the tints that the web writes as `bg-danger/12`.
 
-### Where `tokens` and `tokens.css` differ
+From 0.3.3, component text takes its colour from `textStyle(tone, scheme)` in `src/controlStyles.ts`, not from `text-foreground` or `text-muted-foreground`. A screenshot review found dialog titles, card titles, field labels and switch and checkbox labels near-invisible in dark mode. The preview app's Tailwind theme defined `foreground` as `{ DEFAULT: <light hex>, dark: <dark hex> }`. That makes `text-foreground` the light value in both schemes and adds a separate `text-foreground-dark` class, so dark mode drew about #242426 text on a dark surface. Apps can define their theme the same way, so the package no longer relies on those classes. A test fails if a component outside `src/primitives` uses them. The raw primitives keep the classes, but every public wrapper overrides their text colour.
 
-The header of `packages/ui/tokens/src/native.ts` says the values match `tokens.css`, and the native-ui copy said the same before 0.3.0. They do not all match. Measured on 27 October 2026 (native / web, web converted from `oklch()` to hex):
+### Where `tokens` and `tokens.css` differed
+
+Up to 0.3.2 the neutrals and `radius.field` did not match `tokens.css`. 0.3.3 moves them to the web values, in both `packages/ui/tokens/src/native.ts` and the native-ui copy. `packages/native-ui/tests/tokens.test.ts` now converts each `tokens.css` value and fails when one drifts. Values converted from `oklch()` to sRGB hex on 27 October 2026 (before → 0.3.3, which is the web value):
 
 | `tokens.color` | CSS variable | Light | Dark |
 | --- | --- | --- | --- |
-| `background` | `--background` | #f6f6f6 / #f5f5f5 | #1f1f1f / #060606 |
-| `foreground` | `--foreground` | #242426 / #181818 | #fafafa / #fcfcfc |
-| `muted` | `--muted` | #737373 / #727272 | #b3b3b3 / #a0a0a0 |
-| `border` | `--border` | #e5e5e5 / #dedede | #474747 / #292929 |
-| `surface` | `--surface` | #ffffff / #ffffff (same) | #242426 / #181818 |
-| `surfaceSecondary` | `--surface-secondary` | #f2f2f2 / #efefef | #2a2a2c / #242323 |
-| `surfaceCard` | `--surface-card` | #fafafa / #f8f8f8 | #2a2a2c / #242323 |
-| `separator` | `--separator` | #ebebeb / #e4e4e4 | #404040 / #222222 |
+| `background` | `--background` | #f6f6f6 → #f5f5f5 | #1f1f1f → #060606 |
+| `foreground` | `--foreground` | #242426 → #181818 | #fafafa → #fcfcfc |
+| `muted` | `--muted` | #737373 → #727272 | #b3b3b3 → #a0a0a0 |
+| `border` | `--border` | #e5e5e5 → #dedede | #474747 → #292929 |
+| `surface` | `--surface` | #ffffff (unchanged) | #242426 → #181818 |
+| `surfaceSecondary` | `--surface-secondary` | #f2f2f2 → #efefef | #2a2a2c → #242323 |
+| `surfaceCard` | `--surface-card` | #fafafa → #f8f8f8 | #2a2a2c → #242323 |
+| `separator` | `--separator` | #ebebeb → #e4e4e4 | #404040 → #222222 |
 
-In light mode each channel is within 7 of the web value (out of 255), except `foreground` (12). The dark neutrals differ more: the web dark theme is darker (background `#060606` against native `#1f1f1f`) and its borders are lower contrast.
+The light changes are small (each channel moves by 14 or less out of 255, the most in `foreground`). The dark theme is now the web's: a near-black page (#060606), surfaces and fields at #181818, and lower-contrast borders (#292929).
+
+`fill` and `hairline` have no web token. `fill.dark`, the translucent glass fill, moves from `rgba(28, 28, 30, 0.88)` to `rgba(24, 24, 24, 0.88)`, so glass matches the solid surface (#181818) on the darker page. `fill.light` and both `hairline` values are unchanged.
 
 | `tokens.radius` | Native | Web | Match |
 | --- | --- | --- | --- |
 | `lg` | 16 | `--radius` 1rem (16) | yes |
 | `md` | 14 | `calc(var(--radius) - 2px)` (14) | yes |
 | `sm` | 12 | `calc(var(--radius) - 4px)` (12) | yes |
-| `field` | 20 | `--field-radius` `min(var(--radius), 0.625rem)` (10, since ui 0.16.3) | no |
+| `field` | 10 (20 before 0.3.3) | `--field-radius` `min(var(--radius), 0.625rem)` (10, since ui 0.16.3) | yes |
 | `card` | 24 | no token; web cards use `rounded-lg` (16), pricing cards `rounded-3xl` (24) | n/a |
 | `pill` | 999 | `rounded-full` | yes |
 | `spacing.unit` | 16 | 1rem | yes |
 
-These values are left unchanged in 0.3.0. Changing them would change how every native app looks, and `tokens` is also a public export of `@vvedantb/ui`. Aligning them is a design decision for the package owner: either move the native values to the web values (a visual change in both packages' `tokens` export), or record the native values as intended. Only the native-ui copy's header comment was corrected; the test ignores that comment.
+`FLOATING_ROW_RADIUS` (list rows, toasts, `UpgradeToProCard`) was `tokens.radius.field`. It is now the literal 20, so rows look as before. `tokens` is also a public export of `@vvedantb/ui`, so these values change there too, with no `@vvedantb/ui` version bump yet.
 
 ### Instrument Sans
 
@@ -145,14 +149,17 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 
 ## Known differences and follow-ups
 
-- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed here. A throwaway Expo web harness outside the repository rendered `ParityGallery` beside the web gallery on 27 October 2026; that led to the `Button`, field and `Switch` colour fixes. iOS and Android were not checked. Check them with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
+- **Not checked on a device.** There is no Expo app in this repository and the React Native peers are not installed here. A throwaway Expo web harness outside the repository rendered `ParityGallery` beside the web gallery on 27 October 2026; that led to the `Button`, field and `Switch` colour fixes, and a second review led to the 0.3.3 fixes. The 0.3.3 changes have not yet been re-captured in that harness. iOS and Android were not checked. Check them with `@vvedantb/native-ui/gallery` (`ParityGallery`) before release.
 - **Type checking uses shims.** `pnpm typecheck` checks the package against local declarations of the peers in `types/peers.d.ts`. They are looser than the real types. Each consuming app type-checks the source against the real packages.
-- **`Button` shape.** Colours match the web. Native keeps the pill radius, the taller sizes (56 px default), the shadow on `primary` / `default` and an always-underlined `link` (there is no hover). `loading` shows only the spinner; the web shows the spinner and the label. `fullWidth` still defaults to `true`. `tinted` keeps the 0.2 pink tint for apps that used the old `outline`.
-- **Field radius.** `Input`, `Textarea` and the `Select` trigger use `tokens.radius.field` (20). The web field radius is 10 (see [Tokens](#tokens)).
+- **`Button` shape.** Colours, heights, padding, type and radius match the web from 0.3.3 (without larger text). Native keeps the shadow on `primary` / `default` (pass `shadowType="flat"` to drop it) and an always-underlined `link` (there is no hover). The web sizes are under the 44 pt touch target, so each size gets a hit slop that brings it to 48. `loading` shows only the spinner; the web shows the spinner and the label. `fullWidth` still defaults to `true`. `tinted` keeps the 0.2 pink tint for apps that used the old `outline`.
+- **Larger text.** With `NativeUiProvider largerText`, `Button`, `Input`, `Textarea`, the `Select` trigger and dialog text keep their 0.3.2 sizes (for example a 64 px default button). These are a native accessibility step-up with no web equivalent. `Checkbox` grows to 24 px.
+- **Type scale outside controls.** `Label`, `CardTitle`, `CardDescription`, `LabeledSwitchRow`, `EmptyState`, list rows and settings rows keep their mobile sizes (for example `Label` `text-base` semibold against the web `text-sm` medium). Only their colours changed in 0.3.3.
+- **Footers.** `DialogFooter` and `AlertDialogFooter` are a row at the end, which the web uses from `sm` up; the web stacks them on phones. `SheetFooter` stacks full width, as the web sheet footer does on phones.
+- **Colour overrides.** Text, field, button and checkbox colours are styles. A `className` colour such as `text-pink-600` no longer changes them; pass `style={{ color }}`.
 - **`AlertDialogAction`** does not close the dialog, as on the web. `ConfirmDialog` closes on either button.
 - **Toasts over modals.** On iOS, `Toaster` draws in a `FullWindowOverlay`, so toasts show over dialogs. On Android an RN `Modal` covers them.
 - **`Tabs` and Expo Router.** `Tabs` shares its name with Expo Router's `Tabs` layout. Import one under another name where a file needs both.
-- **`Badge` text contrast.** The `success` and `warning` badges use the web colours. Their text on the light tint is low contrast, as on the web.
+- **`Badge` text contrast.** Badges use the web colours, so they share the web contrast. Computed on 27 October 2026 (WCAG ratio, tint over the 0.3.3 page colour): in dark mode `default` and `secondary` 14.6, `outline` 7.7, `success` 8.0, `warning` 9.6, `destructive` 4.2 and `destructive-soft` 4.3 (under the 4.5 AA level for small text). In light mode `destructive` 2.8, `destructive-soft` 2.9, `success` 1.8 and `warning` 1.7 are low, as on the web. A fix belongs in `tokens.css` first.
 - **Payments.** `PricingModal` does not choose a payment flow. Which purchase flow an iOS or Android paywall may use depends on App Store and Google Play rules and the app's markets. The app owner should confirm this before `onCheckout` is wired.
 - **Portable helpers not yet copied:** `formatCompactRelativeTime`, `convexErrorMessage`, `userFacingErrorMessage`, `useHeldResult`, `useSingleFlight`, `ErrorBoundary`, `projectVelocity` and `rubberband`. Each has no DOM or web-only import.
 - **Feasible next components** (no new dependency): `Collapsible`, `Accordion`, `SearchInput`, `ClearInput`, `InputGroup`, `ButtonGroup`, `LoadingState`, `CountPop`, `ImageLightbox` and `TabsBar`.
@@ -163,12 +170,12 @@ Run on 27 October 2026 in this repository:
 
 | Command | Result |
 | --- | --- |
-| `pnpm --filter @vvedantb/native-ui test` | 7 files, 63 tests passed. |
+| `pnpm --filter @vvedantb/native-ui test` | 9 files, 121 tests passed (0.3.3). |
 | `pnpm --filter @vvedantb/native-ui typecheck` | Passed (against `types/peers.d.ts`). |
 | `pnpm --filter @vvedantb/native-ui build` | Passed. |
 | `pnpm --filter @vvedantb/ui test` | 93 files, 1,798 tests passed; 50 node tests passed, including "native-ui keeps an identical copy of the native tokens". Needs `pnpm --filter @vvedantb/server build` first: without `packages/server/dist`, 19 test files cannot import `@vvedantb/server`. |
 | `pnpm --filter @vvedantb/ui typecheck` | Passed. |
-| `pnpm install --frozen-lockfile --offline` | Lockfile up to date. |
+| `git diff pnpm-lock.yaml` | No change in 0.3.3 (`pnpm install --frozen-lockfile --offline` passed for 0.3.0). |
 
 ## Detailed table
 
@@ -205,7 +212,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/card.tsx` | `CardConfig`ᵀ, `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `CardAction` | same | `Card` + `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | Native `Card` keeps `title` / `leftIcon` / `action` and adds `description` and `className`. `CardAction` is the `action` prop. |
 | `src/ui/carousel.tsx` | `CarouselConfig`ᵀ, `CarouselApi`ᵀ, `Carousel`, `CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext`, `CarouselDots`, `useCarousel` | n/a | — | Embla. Native pattern: a horizontal `FlatList` with `pagingEnabled`. |
 | `src/ui/centered-spinner.tsx` | `CenteredSpinner` | same | `CenteredSpinner` | Same `label` prop. |
-| `src/ui/checkbox.tsx` | `CheckboxConfig`ᵀ, `Checkbox`, `CheckboxProps`ᵀ | same | `Checkbox` | Built on `Pressable` and Tabler `IconCheck`, no `@rn-primitives/checkbox`. `checked` (incl. `"indeterminate"`), `onCheckedChange`, `disabled`, `icon`. Checked fill is the theme accent. |
+| `src/ui/checkbox.tsx` | `CheckboxConfig`ᵀ, `Checkbox`, `CheckboxProps`ᵀ | same | `Checkbox` | Built on `Pressable` and Tabler `IconCheck`, no `@rn-primitives/checkbox`. `checked` (incl. `"indeterminate"`), `onCheckedChange`, `disabled`, `icon`. Checked fill is the palette primary, as on the web (the theme accent before 0.3.3); 16 px box. |
 | `src/ui/collapsible.tsx` | `CollapsibleConfig`ᵀ, `CollapsibleContentProps`ᵀ, `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | missing | — | Feasible with state and Reanimated. |
 | `src/ui/command.tsx` | `CommandConfig`ᵀ, `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `CommandShortcut`, `CommandSeparator` | n/a | — | cmdk keyboard command palette. |
 | `src/ui/context-menu.tsx` | `ContextMenuConfig`ᵀ, `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent`, `ContextMenuItem`, `ContextMenuCheckboxItem`, `ContextMenuRadioItem`, `ContextMenuLabel`, `ContextMenuSeparator`, `ContextMenuShortcut`, `ContextMenuGroup`, `ContextMenuPortal`, `ContextMenuSub`, `ContextMenuSubContent`, `ContextMenuSubTrigger`, `ContextMenuRadioGroup` | n/a | — | Right-click menus. A long-press menu would need `@rn-primitives/context-menu`. |
@@ -217,7 +224,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/dropdown-menu.tsx` | `DropdownMenuConfig`ᵀ, `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuPortal`, `DropdownMenuSub`, `DropdownMenuSubContent`, `DropdownMenuSubTrigger`, `DropdownMenuRadioGroup` | missing (needs dep) | — | Needs `@rn-primitives/dropdown-menu`. Until then use `Select` or a `Sheet` of rows. |
 | `src/ui/empty-state.tsx` | `EmptyStateVariant`ᵀ, `EmptyStateRootProps`ᵀ, `EmptyStateIconProps`ᵀ, `EmptyStateTitleProps`ᵀ, `EmptyStateDescriptionProps`ᵀ, `EmptyStateActionsProps`ᵀ, `EmptyState` | same | `EmptyState` | Native `EmptyState` keeps its props and gains `EmptyState.Root`, `.Icon`, `.Title`, `.Description`, `.Actions` with the `default` / `panel` variants. |
 | `src/ui/hover-card.tsx` | `HoverCardConfig`ᵀ, `HoverCard`, `HoverCardTrigger`, `HoverCardContent` | n/a | — | Hover. |
-| `src/ui/input.tsx` | `InputConfig`ᵀ, `Input` | same | `Input` | Web field look with the native field radius (20) and sizes. `InputConfig` is n/a. |
+| `src/ui/input.tsx` | `InputConfig`ᵀ, `Input` | same | `Input` | Web field look, radius (10) and size (40 high) from 0.3.3. `InputConfig` is n/a. |
 | `src/ui/label.tsx` | `LabelConfig`ᵀ, `Label` | same | `Label` | Text with `disabled`. Link to a field with `nativeID` / `accessibilityLabelledBy`. |
 | `src/ui/labeled-slider-row.tsx` | `LabeledSliderRow` | missing (needs dep) | — | Needs a slider (`@react-native-community/slider`). |
 | `src/ui/labeled-switch-row.tsx` | `LabeledSwitchRow` | same | `LabeledSwitchRow` | Same props except `id`; adds `testID`. The row is one accessible switch. |

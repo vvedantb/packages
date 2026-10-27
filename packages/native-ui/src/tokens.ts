@@ -5,20 +5,22 @@
  * dependency on the web package. A test in `@vvedantb/ui` and one in this
  * package fail when the two differ below this header: change both together.
  *
- * Not every value matches `tokens.css` today (most visibly the dark neutrals
- * and `radius.field`); `docs/native-ui-parity.md` lists the differences. The
- * web semantic colours (primary, danger, success, warning) are in `palette.ts`.
+ * The neutrals and `radius.field` match `tokens.css` (oklch → sRGB hex); a
+ * test converts `tokens.css` and fails when they drift. `fill` and `hairline`
+ * are native glass chrome with no web token. `radius.card` has no web token
+ * either; `docs/native-ui-parity.md` lists it. The web semantic colours
+ * (primary, danger, success, warning) are in `palette.ts`.
  */
 export const tokens = {
   color: {
-    background: { light: "#f6f6f6", dark: "#1f1f1f" },
-    foreground: { light: "#242426", dark: "#fafafa" },
-    muted: { light: "#737373", dark: "#b3b3b3" },
-    border: { light: "#e5e5e5", dark: "#474747" },
-    surface: { light: "#ffffff", dark: "#242426" },
-    surfaceSecondary: { light: "#f2f2f2", dark: "#2a2a2c" },
-    surfaceCard: { light: "#fafafa", dark: "#2a2a2c" },
-    separator: { light: "#ebebeb", dark: "#404040" },
+    background: { light: "#f5f5f5", dark: "#060606" },
+    foreground: { light: "#181818", dark: "#fcfcfc" },
+    muted: { light: "#727272", dark: "#a0a0a0" },
+    border: { light: "#dedede", dark: "#292929" },
+    surface: { light: "#ffffff", dark: "#181818" },
+    surfaceSecondary: { light: "#efefef", dark: "#242323" },
+    surfaceCard: { light: "#f8f8f8", dark: "#242323" },
+    separator: { light: "#e4e4e4", dark: "#222222" },
     white: "#ffffff",
     black: "#000000",
     hairline: {
@@ -27,12 +29,12 @@ export const tokens = {
     },
     fill: {
       light: "rgba(255, 255, 255, 0.86)",
-      dark: "rgba(28, 28, 30, 0.88)",
+      dark: "rgba(24, 24, 24, 0.88)",
     },
   },
   radius: {
     lg: 16,
-    field: 20,
+    field: 10,
     md: 14,
     sm: 12,
     card: 24,

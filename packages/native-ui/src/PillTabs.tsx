@@ -1,5 +1,7 @@
 import { View, Text, Pressable } from "react-native";
+import { textStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 export function PillTabs<T extends string>({
   options,
@@ -11,6 +13,7 @@ export function PillTabs<T extends string>({
   onChange: (id: T) => void;
 }) {
   const largerText = useLargerText();
+  const scheme = useScheme();
   return (
     <View className="flex-row gap-2">
       {options.map((tab) => {
@@ -36,10 +39,9 @@ export function PillTabs<T extends string>({
               className={`text-center font-instrument-sans-semibold ${
                 largerText ? "text-xl" : "text-lg"
               } ${
-                isSelected
-                  ? "text-pink-700 dark:text-pink-300"
-                  : "text-muted-foreground"
+                isSelected ? "text-pink-700 dark:text-pink-300" : ""
               }`}
+              style={isSelected ? undefined : textStyle("muted", scheme)}
             >
               {tab.label}
             </Text>

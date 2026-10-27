@@ -2,7 +2,7 @@ import * as React from "react";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
 import { fieldStyle, fieldTextStyle } from "./controlStyles";
-import { tokens } from "./tokens";
+import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -23,10 +23,11 @@ const Textarea = React.forwardRef<
       multiline
       numberOfLines={numberOfLines}
       textAlignVertical="top"
-      placeholderTextColor={placeholderTextColor ?? tokens.color.muted[scheme]}
+      placeholderTextColor={placeholderTextColor ?? palette.fieldPlaceholder[scheme]}
       className={cn(
-        "min-h-28 border px-4 py-3 text-lg font-instrument-sans-medium text-foreground",
-        largerText && "min-h-32 text-xl",
+        // The web textarea: min-h-20 px-3.5 py-2.5, 16 px type.
+        "min-h-20 border px-3.5 py-2.5 text-base font-instrument-sans",
+        largerText && "min-h-32 px-4 py-3 text-xl font-instrument-sans-medium",
         className,
       )}
       style={[fieldStyle(scheme), fieldTextStyle(scheme), style]}

@@ -107,7 +107,13 @@ export function PricingModal({
       onRequestClose={onClose}
       testID={testID}
     >
-      <View className="flex-1 bg-background" style={{ paddingBottom: insets.bottom }}>
+      <View
+        className="flex-1"
+        style={{
+          backgroundColor: tokens.color.background[scheme],
+          paddingBottom: insets.bottom,
+        }}
+      >
         {/* The web `sr-only` DialogTitle: a visually hidden header. */}
         <View
           accessible
@@ -192,9 +198,10 @@ export function PricingModal({
           {headline ? (
             <Text
               className={cn(
-                "pb-2 text-center font-instrument-sans-medium text-foreground",
+                "pb-2 text-center font-instrument-sans-medium",
                 largerText ? "text-3xl" : "text-2xl",
               )}
+              style={{ color: fg }}
             >
               {headline}
             </Text>
@@ -212,7 +219,7 @@ export function PricingModal({
           ))}
 
           {finePrint ? (
-            <Text className="px-1 pt-1 font-instrument-sans text-sm text-muted-foreground">
+            <Text className="px-1 pt-1 font-instrument-sans text-sm" style={{ color: muted }}>
               {finePrint}
             </Text>
           ) : null}
@@ -270,7 +277,8 @@ function PlanCard({
         {emphasised ? <IconProjectV size={16} color={fg} /> : null}
         <Text
           accessibilityRole="header"
-          className={cn("font-instrument-sans-medium text-foreground", bodyText)}
+          className={cn("font-instrument-sans-medium", bodyText)}
+          style={{ color: fg }}
         >
           {plan.name}
         </Text>
@@ -278,8 +286,9 @@ function PlanCard({
 
       <View className="mt-4 flex-row items-baseline gap-1">
         <Text
-          className="font-instrument-sans-medium text-foreground"
+          className="font-instrument-sans-medium"
           style={{
+            color: fg,
             fontSize: 48,
             lineHeight: 52,
             letterSpacing: -0.5,
@@ -288,7 +297,7 @@ function PlanCard({
         >
           {plan.price[period]}
         </Text>
-        <Text className={cn("font-instrument-sans text-muted-foreground", bodyText)}>
+        <Text className={cn("font-instrument-sans", bodyText)} style={{ color: muted }}>
           {plan.periodSuffix ?? "/month"}
         </Text>
       </View>
@@ -298,17 +307,17 @@ function PlanCard({
       </View>
 
       {plan.intro ? (
-        <Text className={cn("mt-6 font-instrument-sans text-muted-foreground", bodyText)}>
+        <Text className={cn("mt-6 font-instrument-sans", bodyText)} style={{ color: muted }}>
           {plan.intro}
         </Text>
       ) : null}
 
       {plan.highlight ? (
         <View className="mt-3">
-          <Text className="font-instrument-sans-medium text-2xl text-foreground">
+          <Text className="font-instrument-sans-medium text-2xl" style={{ color: fg }}>
             {plan.highlight.title}
           </Text>
-          <Text className={cn("font-instrument-sans text-foreground", bodyText)}>
+          <Text className={cn("font-instrument-sans", bodyText)} style={{ color: fg }}>
             {plan.highlight.description}
           </Text>
         </View>
@@ -354,7 +363,7 @@ function PlanCard({
               <View key={group.app}>
                 <View className="flex-row items-center gap-2">
                   <GroupIcon size={14} color={fg} />
-                  <Text className="font-instrument-sans-medium text-sm text-foreground">
+                  <Text className="font-instrument-sans-medium text-sm" style={{ color: fg }}>
                     {familyApp(group.app).name}
                   </Text>
                 </View>
@@ -362,7 +371,8 @@ function PlanCard({
                   {group.items.map((item, index) => (
                     <Text
                       key={index}
-                      className={cn("font-instrument-sans text-foreground", bodyText)}
+                      className={cn("font-instrument-sans", bodyText)}
+                      style={{ color: fg }}
                     >
                       {item}
                     </Text>
