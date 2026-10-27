@@ -874,7 +874,7 @@ links under a separator.
 | --- | --- |
 | `brand`, `tagline` | Nodes. |
 | `socials` | `{ href, icon, label? }[]`. `icon` is a component that takes `className`. Links open in a new tab. |
-| `columns` | `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt } }`. |
+| `columns` | `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt }, app?: AppName }`. `image` is a 20px round image before the label. `app` (0.29.0) is the 14px `APP_ICONS[app]` glyph before the label, in `currentColor` and `aria-hidden`. If both are set, `app` wins. |
 | `name`, `year` | "Copyright © {year} {name}". `year` defaults to the current year. |
 | `legalLinks` | `{ href, label }[]`, open in a new tab. |
 | `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |

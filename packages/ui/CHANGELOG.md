@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.0
+
+- `SiteFooterLink`: new `app?: AppName`. It renders the `APP_ICONS[app]` glyph before the label: 14px square, `currentColor`, no tile, `aria-hidden`. The link takes the `imageLink` classes (`flex items-center gap-2`), as with `image`. If both are set, `app` wins.
+- `image` is unchanged. Links without `app` render as before.
+- No new dependencies.
+
 ## 0.28.0
 
 - New entry `@vvedantb/ui/client`, for Chrome extensions: the root without `@vvedantb/server`, convex or Clerk. It leaves out the artifact viewers (`src/artifacts`), `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`. Every other root export is there, as the same binding. A test walks the entry's module graph, including type-only, side-effect and dynamic imports, and finds no `@vvedantb/server`, convex, Clerk or `node:` import. The root entry is unchanged.

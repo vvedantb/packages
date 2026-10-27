@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
+import { APP_ICONS, type AppName } from "../brand";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { siteFooterClasses, type SiteFooterVariant } from "./marketing-classes";
@@ -10,6 +11,8 @@ export type SiteFooterLink = {
   external?: boolean;
   /** 20px round image before the label. */
   image?: { src: string; alt: string };
+  /** 14px app glyph before the label, in `currentColor` and `aria-hidden`. Wins over `image`. */
+  app?: AppName;
 };
 
 export type SiteFooterSocial = {
@@ -78,25 +81,30 @@ export function SiteFooter({
                 <div key={column.heading} className="flex-1 sm:flex-none">
                   <h4 className={c.heading}>{column.heading}</h4>
                   <div className={c.links}>
-                    {column.links.map((link) => (
-                      <a
-                        key={link.label}
-                        href={link.href}
-                        {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                        className={link.image ? c.imageLink : c.link}
-                      >
-                        {link.image ? (
-                          <img
-                            src={link.image.src}
-                            alt={link.image.alt}
-                            width={20}
-                            height={20}
-                            className="rounded-full object-cover w-5 h-5 md:w-5 md:h-5"
-                          />
-                        ) : null}
-                        {link.label}
-                      </a>
-                    ))}
+                    {column.links.map((link) => {
+                      const AppIcon = link.app ? APP_ICONS[link.app] : null;
+                      return (
+                        <a
+                          key={link.label}
+                          href={link.href}
+                          {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className={AppIcon || link.image ? c.imageLink : c.link}
+                        >
+                          {AppIcon ? (
+                            <AppIcon size={14} />
+                          ) : link.image ? (
+                            <img
+                              src={link.image.src}
+                              alt={link.image.alt}
+                              width={20}
+                              height={20}
+                              className="rounded-full object-cover w-5 h-5 md:w-5 md:h-5"
+                            />
+                          ) : null}
+                          {link.label}
+                        </a>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
