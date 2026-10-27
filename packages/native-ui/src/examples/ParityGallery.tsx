@@ -47,7 +47,6 @@ import {
   Label,
   LabeledSwitchRow,
   NativeUiProvider,
-  PillTabs,
   PricingModal,
   Progress,
   Select,
@@ -79,6 +78,7 @@ import {
   type PricingPlan,
   type StatusTone,
 } from "../index";
+import { typeStyle } from "../controlStyles";
 import { useScheme } from "../useScheme";
 
 const BUTTON_VARIANTS: ButtonVariant[] = [
@@ -143,7 +143,11 @@ function GalleryText({ className, style, ...props }: TextProps & { className?: s
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View className="gap-3">
-      <GalleryText accessibilityRole="header" className="font-instrument-sans-bold text-lg">
+      <GalleryText
+        accessibilityRole="header"
+        className="font-instrument-sans-semibold text-lg"
+        style={typeStyle("semibold")}
+      >
         {title}
       </GalleryText>
       {children}
@@ -163,7 +167,6 @@ export function ParityGallery() {
 function GalleryScreen() {
   const [checked, setChecked] = useState<boolean | "indeterminate">("indeterminate");
   const [switchOn, setSwitchOn] = useState(true);
-  const [pill, setPill] = useState<"day" | "week">("day");
   const [colour, setColour] = useState<string | null | undefined>(undefined);
   const [progress, setProgress] = useState(40);
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -187,16 +190,22 @@ function GalleryScreen() {
         </Section>
 
         <Section title="Button">
-          {BUTTON_VARIANTS.map((variant) => (
-            <Button
-              key={variant}
-              variant={variant}
-              fullWidth={false}
-              onPress={() => toast(variant)}
-            >
-              {variant}
-            </Button>
-          ))}
+          {/* The web gallery: a full-width column of variants, then the sm row. */}
+          <View className="gap-2">
+            {BUTTON_VARIANTS.map((variant) => (
+              <Button key={variant} variant={variant} onPress={() => toast(variant)}>
+                {variant}
+              </Button>
+            ))}
+            <View className="flex-row gap-2">
+              <Button size="sm" fullWidth={false} loading>
+                Saving
+              </Button>
+              <Button size="sm" fullWidth={false} disabled>
+                Disabled
+              </Button>
+            </View>
+          </View>
           <View className="flex-row flex-wrap items-center gap-2">
             <Button size="sm" fullWidth={false}>
               Small
@@ -204,14 +213,6 @@ function GalleryScreen() {
             <Button fullWidth={false}>Default</Button>
             <Button size="lg" fullWidth={false}>
               Large
-            </Button>
-          </View>
-          <View className="flex-row gap-2">
-            <Button size="sm" fullWidth={false} loading>
-              Saving
-            </Button>
-            <Button size="sm" fullWidth={false} disabled>
-              Disabled
             </Button>
           </View>
         </Section>
@@ -267,14 +268,6 @@ function GalleryScreen() {
         </Section>
 
         <Section title="Tabs">
-          <PillTabs
-            options={[
-              { id: "day", label: "Day" },
-              { id: "week", label: "Week" },
-            ]}
-            value={pill}
-            onChange={setPill}
-          />
           <Tabs defaultValue="one">
             <TabsList variant="segmented">
               <TabsTrigger value="one">One</TabsTrigger>

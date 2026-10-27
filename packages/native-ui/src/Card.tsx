@@ -7,9 +7,8 @@ import {
   CardHeader as PrimitiveCardHeader,
   CardTitle as PrimitiveCardTitle,
 } from "./primitives/card";
-import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { cardStyle, textStyle, typeStyle } from "./controlStyles";
 import { useAccentColor, useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -28,7 +27,7 @@ export function Card({
   description?: string;
   action?: ReactNode;
   leftIcon?: ComponentType<IconProps>;
-  /** Classes on the floating surface. */
+  /** Classes on the card surface. */
   className?: string;
   testID?: string;
 }) {
@@ -36,41 +35,42 @@ export function Card({
   const accentColor = useAccentColor();
   const scheme = useScheme();
   const hasHeader = Boolean(title || action);
+  // The web card: a flat `surfaceCard` fill at radius 16, with no border, no
+  // shadow and no blur. Dialogs, sheets and toasts float, as on the web.
   return (
-    <FloatingSurface className={className}>
-      <PrimitiveCard
-        testID={testID}
-        className="gap-4 rounded-none border-0 bg-transparent py-4"
-      >
-        {hasHeader && (
-          <PrimitiveCardHeader className="px-4 py-0">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                {Icon && (
-                  <Icon size={largerText ? 28 : 24} color={accentColor} />
-                )}
-                {title ? (
-                  <PrimitiveCardTitle
-                    className={cn(
-                      "font-instrument-sans-bold",
-                      largerText ? "text-2xl" : "text-xl",
-                    )}
-                    style={textStyle("foreground", scheme)}
-                  >
-                    {title}
-                  </PrimitiveCardTitle>
-                ) : null}
-              </View>
-              {action}
+    <PrimitiveCard
+      testID={testID}
+      className={cn("gap-4 overflow-hidden border-0 py-4", className)}
+      style={cardStyle(scheme)}
+    >
+      {hasHeader && (
+        <PrimitiveCardHeader className="px-4 py-0">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              {Icon && (
+                <Icon size={largerText ? 28 : 24} color={accentColor} />
+              )}
+              {title ? (
+                <PrimitiveCardTitle
+                  className={cn(
+                    "font-instrument-sans-semibold",
+                    largerText ? "text-2xl" : "text-xl",
+                  )}
+                  style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+                >
+                  {title}
+                </PrimitiveCardTitle>
+              ) : null}
             </View>
-            {description ? <CardDescription>{description}</CardDescription> : null}
-          </PrimitiveCardHeader>
-        )}
-        <PrimitiveCardContent className={cn(hasHeader && "pt-0", "px-4")}>
-          {children}
-        </PrimitiveCardContent>
-      </PrimitiveCard>
-    </FloatingSurface>
+            {action}
+          </View>
+          {description ? <CardDescription>{description}</CardDescription> : null}
+        </PrimitiveCardHeader>
+      )}
+      <PrimitiveCardContent className={cn(hasHeader && "pt-0", "px-4")}>
+        {children}
+      </PrimitiveCardContent>
+    </PrimitiveCard>
   );
 }
 
@@ -92,11 +92,11 @@ export function CardTitle({ className, style, ...props }: TextPartProps) {
     <Text
       accessibilityRole="header"
       className={cn(
-        "font-instrument-sans-bold",
+        "font-instrument-sans-semibold",
         largerText ? "text-2xl" : "text-xl",
         className,
       )}
-      style={[textStyle("foreground", scheme), style]}
+      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
       {...props}
     />
   );

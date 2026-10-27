@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { cn } from "../cn";
-import { textStyle } from "../controlStyles";
+import { textStyle, typeStyle } from "../controlStyles";
 import { useLargerText } from "../theme";
 import { useScheme } from "../useScheme";
 
@@ -32,7 +32,7 @@ export function SettingsToggleRow({
               "font-instrument-sans-semibold",
               largerText ? "text-xl" : "text-lg",
             )}
-            style={textStyle("foreground", scheme)}
+            style={[textStyle("foreground", scheme), typeStyle("semibold")]}
           >
             {title}
           </Text>

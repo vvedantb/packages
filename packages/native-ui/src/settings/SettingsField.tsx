@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { textStyle } from "../controlStyles";
+import { textStyle, typeStyle } from "../controlStyles";
 import { useScheme } from "../useScheme";
 
 export function SettingsField({
@@ -17,7 +17,7 @@ export function SettingsField({
       {typeof label === "string" ? (
         <Text
           className="mb-2 text-base font-instrument-sans-semibold"
-          style={textStyle("foreground", scheme)}
+          style={[textStyle("foreground", scheme), typeStyle("semibold")]}
         >
           {label}
         </Text>

@@ -3,13 +3,13 @@ import { View, type ViewProps } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { cn } from "./cn";
 import { palette } from "./palette";
 import { useAccentColor } from "./theme";
+import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
 
 export type ProgressProps = ViewProps & {
@@ -33,7 +33,7 @@ export function Progress({
 }: ProgressProps) {
   const scheme = useScheme();
   const accent = useAccentColor();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const percent = Math.min(100, Math.max(0, ((value ?? 0) / max) * 100));
   const width = useSharedValue(percent);
 

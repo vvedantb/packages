@@ -1,8 +1,9 @@
 /**
  * Colours for `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`,
- * `Checkbox`, `Tabs` and component text, taken from `palette` and `tokens`
- * instead of NativeWind theme keys (`bg-primary`, `bg-input`, `text-foreground`)
- * that apps do not define, or define without a dark value. No React Native
+ * `Checkbox`, `Tabs`, `Card` and component text, taken from `palette` and
+ * `tokens` instead of NativeWind theme keys (`bg-primary`, `bg-input`,
+ * `text-foreground`) that apps do not define, or define without a dark value.
+ * Also text weights as styles, and the touch-target maths. No React Native
  * import, so the tests can load this file.
  */
 import { palette, withAlpha } from "./palette";
@@ -103,6 +104,49 @@ export function textStyle(tone: TextTone, scheme: Scheme) {
   };
 }
 
+/** The web `font-medium` and `font-semibold`. */
+export type TypeWeight = "medium" | "semibold";
+
+const FONT_WEIGHT = { medium: "500", semibold: "600" } as const;
+
+/**
+ * Font weight as a style, set beside the `font-instrument-sans-*` class with
+ * the same weight. Expo web and many apps map every one of those classes to
+ * the one `Instrument Sans` family with no weight, so the class alone draws
+ * Regular. There is no `bold`: the web titles are semibold, and on Android 700
+ * can add a synthetic bold to a face that is already bold.
+ */
+export function typeStyle(weight: TypeWeight) {
+  return { fontWeight: FONT_WEIGHT[weight] };
+}
+
+/**
+ * The web `Card` root (`rounded-lg bg-surface-card`): a flat fill at radius 16,
+ * with no border and no shadow. Also `SettingsSection`. A flat object, like
+ * `fieldStyle`.
+ */
+export function cardStyle(scheme: Scheme) {
+  return {
+    backgroundColor: tokens.color.surfaceCard[scheme],
+    borderRadius: tokens.radius.lg,
+  };
+}
+
+/** The smallest touch target on a phone, in points (Apple's 44; Material asks 48). */
+export const MIN_TOUCH_TARGET = 44;
+
+/**
+ * `hitSlop` that makes a control painted `width` × `height` points reach
+ * `MIN_TOUCH_TARGET` on each axis, so it can keep the web size on screen. An
+ * axis that is already large enough gets 0.
+ */
+export function touchSlop(width: number, height: number = width) {
+  const pad = (size: number) => Math.max(0, Math.ceil((MIN_TOUCH_TARGET - size) / 2));
+  const x = pad(width);
+  const y = pad(height);
+  return { top: y, bottom: y, left: x, right: x };
+}
+
 export type TabsVariant = "pills" | "segmented" | "soft";
 
 export type TabColors = {
@@ -133,6 +177,28 @@ export function tabColors(variant: TabsVariant, selected: boolean, scheme: Schem
   }
 }
 
+export type TabsSize = "default" | "sm";
+
+/**
+ * Trigger box and type for `TabsTrigger` and `PillTabs`. Without larger text
+ * these are the web sizes: `pills` and `segmented` are the web `.t-tab` (30
+ * high, `px-3 py-1`, `text-sm`), `soft` the web soft trigger (`px-4 py-2
+ * text-sm`) and `sm` the web `sm` list (`px-2.5 py-1 text-xs`). With larger
+ * text they are the 0.3.4 sizes. `minHeight` is a minimum, so a large Dynamic
+ * Type size grows the trigger instead of clipping its label.
+ */
+export function tabTriggerSize(variant: TabsVariant, size: TabsSize, largerText: boolean) {
+  if (largerText) {
+    return size === "sm"
+      ? { minHeight: 48, className: "px-4 py-2", textClassName: "text-lg" }
+      : { minHeight: 56, className: "px-4 py-3", textClassName: "text-xl" };
+  }
+  if (size === "sm") return { minHeight: 30, className: "px-2.5 py-1", textClassName: "text-xs" };
+  return variant === "soft"
+    ? { minHeight: 36, className: "px-4 py-2", textClassName: "text-sm" }
+    : { minHeight: 30, className: "px-3 py-1", textClassName: "text-sm" };
+}
+
 /** The segmented track, web `--tabs-bar-bg` (`--default`). */
 export function tabTrackStyle(scheme: Scheme) {
   return { backgroundColor: palette.default[scheme] };
@@ -155,6 +221,18 @@ export function checkboxColors(checked: boolean, scheme: Scheme) {
         borderColor: tokens.color.border[scheme],
         color: palette.primaryForeground[scheme],
       };
+}
+
+/**
+ * Track and thumb size classes, and the track size in points for the hit slop.
+ * Without larger text it is the web `Switch`: a `h-5 w-9` track (20 × 36,
+ * with a 1 border) and a `size-4` thumb that moves `translate-x-4`. With larger
+ * text it is the 0.3.4 size. `justify-center` on the track centres the thumb.
+ */
+export function switchSize(largerText: boolean) {
+  return largerText
+    ? { track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6", width: 56, height: 32 }
+    : { track: "h-5 w-9", thumb: "h-4 w-4", on: "translate-x-4", width: 36, height: 20 };
 }
 
 /**

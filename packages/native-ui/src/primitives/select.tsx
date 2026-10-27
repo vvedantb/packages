@@ -13,7 +13,7 @@ import { NativeOnlyAnimatedView } from "./native-only-animated-view";
 import { TextClassContext } from "./text";
 import { LiquidGlass } from "../LiquidGlass";
 import { cn } from "../cn";
-import { textStyle } from "../controlStyles";
+import { textStyle, typeStyle } from "../controlStyles";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 
@@ -182,7 +182,8 @@ const SelectItem = React.forwardRef<
       </View>
       <SelectPrimitive.ItemText
         className="select-none text-sm font-instrument-sans-medium"
-        style={textStyle("foreground", scheme)}
+        // One object: on web the item text is a Radix slot, which drops arrays.
+        style={{ ...textStyle("foreground", scheme), ...typeStyle("medium") }}
       />
     </SelectPrimitive.Item>
   );

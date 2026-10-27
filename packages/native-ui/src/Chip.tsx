@@ -1,5 +1,5 @@
 import { Pressable, Text } from "react-native";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -42,7 +42,7 @@ export function Chip({
         } ${
           selected ? "text-pink-700 dark:text-pink-300" : ""
         }`}
-        style={selected ? undefined : textStyle("muted", scheme)}
+        style={[selected ? null : textStyle("muted", scheme), typeStyle("semibold")]}
       >
         {label}
       </Text>

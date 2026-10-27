@@ -1,13 +1,22 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, Text, View, type ViewProps } from "react-native";
 import { cn } from "./cn";
-import { tabColors, tabTrackStyle, type TabsVariant } from "./controlStyles";
+import {
+  MIN_TOUCH_TARGET,
+  tabColors,
+  tabTrackStyle,
+  tabTriggerSize,
+  touchSlop,
+  typeStyle,
+  type TabsSize,
+  type TabsVariant,
+} from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { useControllableState } from "./primitives/use-controllable-state";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
-/** `pills` (default): separate pills, the `PillTabs` look. `segmented`: one track with the active segment raised. `soft`: wrapping pills, the active one filled. */
+/** `pills` (default): separate pills, the `PillTabs` look. `segmented`: one track with the active segment raised. `soft`: wrapping pills, the active one filled. `pills` and `segmented` are as wide as their tabs, at the start, as on the web. */
 export type TabsListVariant = TabsVariant;
 
 const TabsContext = createContext<{
@@ -17,7 +26,7 @@ const TabsContext = createContext<{
 
 const TabsListContext = createContext<{
   variant: TabsListVariant;
-  size: "default" | "sm";
+  size: TabsSize;
 }>({ variant: "pills", size: "default" });
 
 function useTabs(part: string) {
@@ -58,7 +67,7 @@ export function Tabs({
 export type TabsListProps = ViewProps & {
   variant?: TabsListVariant;
   /** `sm` makes the triggers smaller. */
-  size?: "default" | "sm";
+  size?: TabsSize;
   className?: string;
 };
 
@@ -76,11 +85,14 @@ export function TabsList({
         accessibilityRole="tablist"
         className={cn(
           "flex-row",
+          // The web lists: `segmented` and `pills` are `inline-flex` (as wide
+          // as their tabs), `soft` a full-width row of centred, wrapping pills.
+          // Pills wrap rather than run off a phone screen.
           variant === "segmented"
-            ? "rounded-full border border-white/40 p-1 dark:border-white/10"
+            ? "max-w-full gap-[3px] self-start rounded-full p-[3px]"
             : variant === "soft"
-              ? "flex-wrap gap-2"
-              : "gap-2",
+              ? "flex-wrap items-center justify-center gap-1.5"
+              : "max-w-full flex-wrap gap-1.5 self-start",
           className,
         )}
         style={variant === "segmented" ? [tabTrackStyle(scheme), style] : style}
@@ -112,10 +124,12 @@ export function TabsTrigger({
   const largerText = useLargerText();
   const scheme = useScheme();
   const selected = current === value;
-  const small = size === "sm";
   // Fill and label are styles from `tabColors`: apps' `bg-secondary` and
   // `bg-surface` can stay light in dark mode, under a light label.
   const colors = tabColors(variant, selected, scheme);
+  const trigger = tabTriggerSize(variant, size, largerText);
+  // The web `.t-tab` is `font-medium`; the soft trigger is regular.
+  const medium = variant !== "soft";
 
   return (
     <Pressable
@@ -125,6 +139,8 @@ export function TabsTrigger({
         accessibilityLabel ?? (typeof children === "string" ? children : undefined)
       }
       accessibilityState={{ selected, disabled: Boolean(disabled) }}
+      // The web height (30) on screen, a 44 target to touch.
+      hitSlop={touchSlop(MIN_TOUCH_TARGET, trigger.minHeight)}
       disabled={disabled}
       onPress={() => {
         if (selected) return;
@@ -132,37 +148,25 @@ export function TabsTrigger({
         setValue(value);
       }}
       className={cn(
-        "items-center justify-center rounded-full px-4",
-        small
-          ? largerText
-            ? "min-h-12 py-2"
-            : "min-h-10 py-1.5"
-          : largerText
-            ? "min-h-14 py-3"
-            : "min-h-12 py-2",
-        variant === "segmented" && "flex-1",
+        "shrink items-center justify-center rounded-full",
+        trigger.className,
         variant === "pills" && "border border-white/40 dark:border-white/10",
         disabled ? "opacity-50" : "active:opacity-70",
         className,
       )}
       // A plain object: NativeWind puts the class styles and `style` in an
       // array, where a `({ pressed }) => ...` style is dropped.
-      style={{ backgroundColor: colors.backgroundColor }}
+      style={{ backgroundColor: colors.backgroundColor, minHeight: trigger.minHeight }}
     >
       {typeof children === "string" || typeof children === "number" ? (
         <Text
           numberOfLines={1}
           className={cn(
-            "text-center font-instrument-sans-semibold",
-            small
-              ? largerText
-                ? "text-lg"
-                : "text-base"
-              : largerText
-                ? "text-xl"
-                : "text-lg",
+            "text-center",
+            medium ? "font-instrument-sans-medium" : "font-instrument-sans",
+            trigger.textClassName,
           )}
-          style={{ color: colors.color }}
+          style={[{ color: colors.color }, medium ? typeStyle("medium") : null]}
         >
           {children}
         </Text>

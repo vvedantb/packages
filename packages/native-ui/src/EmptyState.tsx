@@ -2,7 +2,7 @@ import { createContext, useContext, type ComponentType, type ReactNode } from "r
 import { View, Text, type TextProps, type ViewProps } from "react-native";
 import { IconInbox, type IconProps } from "@tabler/icons-react-native";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { palette } from "./palette";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
@@ -36,7 +36,7 @@ function EmptyStateView({
           "mt-4 text-center font-instrument-sans-semibold",
           largerText ? "text-xl" : "text-lg",
         )}
-        style={textStyle("foreground", scheme)}
+        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
       >
         {title}
       </Text>
@@ -127,7 +127,7 @@ function Title({ className, style, ...props }: TextProps & { className?: string 
         largerText ? "text-xl" : "text-lg",
         className,
       )}
-      style={[textStyle("foreground", scheme), style]}
+      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
       {...props}
     />
   );

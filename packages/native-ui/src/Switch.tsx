@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Switch as PrimitiveSwitch } from "./primitives/switch";
 import { cn } from "./cn";
-import { switchColors } from "./controlStyles";
+import { switchColors, switchSize, touchSlop } from "./controlStyles";
+import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
 type SwitchProps = Omit<
@@ -24,6 +25,7 @@ const Switch = React.forwardRef<
   const resolvedValue = checked ?? value ?? false;
   const colors = switchColors(resolvedValue, useScheme());
   const trackColor = resolvedValue ? onColor : offColor;
+  const size = switchSize(useLargerText());
 
   const handleCheckedChange = (nextValue: boolean) => {
     onCheckedChange?.(nextValue);
@@ -35,17 +37,21 @@ const Switch = React.forwardRef<
       ref={ref}
       checked={resolvedValue}
       onCheckedChange={handleCheckedChange}
-      hitSlop={12}
-      className="h-8 w-14"
+      // The web size on screen, a 44 target to touch.
+      hitSlop={touchSlop(size.width, size.height)}
+      accessibilityRole="switch"
+      className={cn(size.track, "justify-center")}
       trackStyle={
         trackColor ? { backgroundColor: trackColor, borderColor: trackColor } : colors.track
       }
       thumbStyle={colors.thumb}
-      thumbClassName={cn(
-        "h-7 w-7",
-        resolvedValue ? "translate-x-6" : "translate-x-0",
-      )}
+      thumbClassName={cn(size.thumb, resolvedValue ? size.on : "translate-x-0")}
       {...props}
+      accessibilityState={{
+        ...props.accessibilityState,
+        checked: resolvedValue,
+        disabled: Boolean(props.disabled),
+      }}
     />
   );
 });

@@ -1,12 +1,13 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { PINK_600 } from "./colors";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import { Button as PrimitiveButton } from "./primitives/button";
 import { Text as PrimitiveText } from "./primitives/text";
 import { cn } from "./cn";
-import { buttonColors, type ButtonVariant } from "./controlStyles";
+import { buttonColors, typeStyle, type ButtonVariant } from "./controlStyles";
 import { floatingShadow } from "./floating";
+import { Spinner } from "./Spinner";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
@@ -29,7 +30,9 @@ interface ButtonProps extends Omit<
   loading?: boolean;
   size?: ButtonSize;
   fullWidth?: boolean;
+  /** Label, or other content. Give a button with no text child an `accessibilityLabel`. */
   children?: React.ReactNode;
+  /** `"shadow"` adds the floating shadow to `primary` and `default`. Default `"flat"`: the web button has none. */
   shadowType?: "flat" | "shadow";
   className?: string;
 }
@@ -45,19 +48,21 @@ const SIZE_ALIAS = {
 } as const;
 
 // `regular` is the web `Button` (`sm` h-8 px-3, `default` h-10 px-4, `lg`
-// h-11 px-6, `icon` h-10 w-10). `larger` is the larger-text step-up, unchanged
-// from 0.3.2.
+// h-11 px-6, `icon` h-10 w-10). `larger` is the larger-text step-up from
+// 0.3.2. Labelled sizes are minimum heights (`h-auto` drops the primitive's
+// `h-10`), so a large Dynamic Type size grows the button instead of clipping
+// the label.
 const HEIGHT = {
   regular: {
-    small: "h-8 px-3",
-    medium: "h-10 px-4",
-    large: "h-11 px-6",
+    small: "h-auto min-h-8 px-3",
+    medium: "h-auto min-h-10 px-4",
+    large: "h-auto min-h-11 px-6",
     icon: "h-10 w-10 px-0",
   },
   larger: {
-    small: "h-14 px-5",
-    medium: "h-16 px-6",
-    large: "h-[72px] px-6",
+    small: "h-auto min-h-14 px-5",
+    medium: "h-auto min-h-16 px-6",
+    large: "h-auto min-h-[72px] px-6",
     icon: "h-14 w-14 px-0",
   },
 };
@@ -112,7 +117,7 @@ export function Button({
   size = "medium",
   fullWidth = true,
   children,
-  shadowType = "shadow",
+  shadowType = "flat",
   className,
   ...props
 }: ButtonProps) {
@@ -131,12 +136,24 @@ export function Button({
       : null,
   ];
   const callerStyle = props.style;
+  // As on the web, `loading` swaps the start content for the 16 ring (`h-4
+  // w-4`, Spinner `sm`) and keeps the label.
+  const start = loading ? (
+    <Spinner size="sm" color={contentColor} decorative />
+  ) : (
+    leftIcon ??
+    startContent ??
+    (icon ? (
+      <MaterialIcons name={icon} size={scale === "larger" ? 26 : 16} color={contentColor} />
+    ) : null)
+  );
 
   return (
     <PrimitiveButton
       onPress={onPress}
       variant={PRIMITIVE_VARIANT[variant]}
       hitSlop={HIT_SLOP[scale][resolvedSize]}
+      accessibilityRole="button"
       className={cn(
         "relative border",
         HEIGHT[scale][resolvedSize],
@@ -160,36 +177,22 @@ export function Button({
       }
     >
       <View className="flex-row items-center justify-center gap-2">
-        {loading ? (
-          <ActivityIndicator size="small" color={contentColor} />
-        ) : (
-          <>
-            {leftIcon ??
-              startContent ??
-              (icon ? (
-                <MaterialIcons
-                  name={icon}
-                  size={scale === "larger" ? 26 : 16}
-                  color={contentColor}
-                />
-              ) : null)}
-            {typeof children === "string" || typeof children === "number" ? (
-              <PrimitiveText
-                className={cn(
-                  TEXT[scale][resolvedSize],
-                  "font-instrument-sans-medium",
-                  TEXT_CLASS[variant],
-                )}
-                style={colors ? { color: colors.color } : undefined}
-              >
-                {children}
-              </PrimitiveText>
-            ) : (
-              children
+        {start}
+        {typeof children === "string" || typeof children === "number" ? (
+          <PrimitiveText
+            className={cn(
+              TEXT[scale][resolvedSize],
+              "font-instrument-sans-medium",
+              TEXT_CLASS[variant],
             )}
-            {endContent}
-          </>
+            style={[colors ? { color: colors.color } : null, typeStyle("medium")]}
+          >
+            {children}
+          </PrimitiveText>
+        ) : (
+          children
         )}
+        {endContent}
       </View>
     </PrimitiveButton>
   );

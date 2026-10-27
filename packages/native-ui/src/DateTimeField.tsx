@@ -4,7 +4,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -56,11 +56,11 @@ export function DateTimeField({
                 current === button.mode ? null : button.mode,
               )
             }
-            className={`${largerText ? "h-16" : "h-14"} flex-1 justify-center rounded-lg bg-secondary px-4 active:opacity-70`}
+            className={`${largerText ? "min-h-16" : "min-h-14"} flex-1 justify-center rounded-lg bg-secondary px-4 py-2 active:opacity-70`}
           >
             <Text
               className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-semibold`}
-              style={textStyle("foreground", scheme)}
+              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
             >
               {button.label}
             </Text>

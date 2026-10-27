@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { cn } from "../cn";
-import { textStyle } from "../controlStyles";
-import { FloatingSurface } from "../FloatingSurface";
+import { cardStyle, textStyle, typeStyle } from "../controlStyles";
+import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 
 type SettingsSectionBodyVariant = "form" | "list" | "compact";
@@ -33,8 +33,9 @@ export function SettingsSection({
         <View className="min-w-0 flex-1">
           {typeof title === "string" ? (
             <Text
-              className="text-lg font-instrument-sans-bold"
-              style={textStyle("foreground", scheme)}
+              accessibilityRole="header"
+              className="text-lg font-instrument-sans-semibold"
+              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
             >
               {title}
             </Text>
@@ -58,7 +59,8 @@ export function SettingsSection({
       </View>
 
       {hasCard ? (
-        <FloatingSurface>
+        // The web section card (`rounded-lg bg-surface-card`): flat, no shadow.
+        <View className="overflow-hidden" style={cardStyle(scheme)}>
           {hasBody ? (
             <View
               className={
@@ -73,11 +75,14 @@ export function SettingsSection({
             </View>
           ) : null}
           {footer != null ? (
-            <View className="flex-row items-center justify-end gap-2 bg-background px-4 py-3">
+            <View
+              className="flex-row items-center justify-end gap-2 px-4 py-3"
+              style={{ backgroundColor: tokens.color.surfaceSecondary[scheme] }}
+            >
               {footer}
             </View>
           ) : null}
-        </FloatingSurface>
+        </View>
       ) : null}
     </View>
   );

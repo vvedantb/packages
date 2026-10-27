@@ -96,6 +96,8 @@ config.resolver.nodeModulesPaths = [
 
 The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes.
 
+From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular.
+
 ## Theme
 
 Wrap the tree (inside your colour-scheme provider):
@@ -152,13 +154,21 @@ Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Th
 
 `@vvedantb/native-ui/gallery` exports `ParityGallery`, a screen that renders these components. Put it in a dev-only route to check them on a device.
 
+## Phones and accessibility
+
+The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
+
+Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label; only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
+
 ## Floating UI / Android shadows
 
 Do not put `elevation` or NativeWind `shadow-*` on nested or translucent chrome. `floatingShadow` is iOS `shadow*` and Android/web `boxShadow`. `FloatingSurface` clips on an inner view.
 
+Only chrome that floats on the web too has a shadow: dialogs, sheets and toasts, plus the native `FloatingTabBar` and `FloatingFAB`. From 0.3.5 `Card` and `SettingsSection` are flat (`cardStyle`: the web `rounded-lg bg-surface-card`), and `Button` is flat unless you pass `shadowType="shadow"`.
+
 ## Glass blur (iOS and Android)
 
-With `expo-blur` installed, `FloatingSurface` blurs on iOS and Android. So do the components built on it: `FloatingTabBar`, `Card`, `SettingsSection`, toasts, the `Select` popover and `GlassSheetBackground`. Web uses a CSS backdrop blur. A surface draws the solid fill when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on.
+With `expo-blur` installed, `FloatingSurface` blurs on iOS and Android. So do the components built on it: `FloatingTabBar`, toasts, the `Select` popover and `GlassSheetBackground`. `Card` and `SettingsSection` do not blur from 0.3.5. Web uses a CSS backdrop blur. A surface draws the solid fill when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on.
 
 Since expo-blur 55, Android blur needs a target: the content to blur. Wrap the screen content in `GlassBlurTarget` and render the floating chrome outside it, with both inside one `GlassBlurProvider`:
 

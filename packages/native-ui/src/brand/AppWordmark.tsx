@@ -54,6 +54,9 @@ export function AppWordmark({
           fontSize: size,
           lineHeight: size,
           letterSpacing: size * WORDMARK.letterSpacingEm,
+          // The class alone draws Regular where an app maps every Instrument
+          // Sans class to one family.
+          fontWeight: WORDMARK.fontWeight,
           color: fg,
           includeFontPadding: false,
         }}

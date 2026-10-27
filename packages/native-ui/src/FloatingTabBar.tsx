@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View, type ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
 import { useLargerText } from "./theme";
@@ -60,10 +61,11 @@ export function FloatingTabBar({
   return (
     <View
       pointerEvents="box-none"
+      // Inside the home indicator and, in landscape, the notch.
       style={{
         position: "absolute",
-        left: FLOATING_INSET,
-        right: FLOATING_INSET,
+        left: insets.left + FLOATING_INSET,
+        right: insets.right + FLOATING_INSET,
         bottom: FLOATING_INSET + Math.max(insets.bottom, 8),
       }}
     >
@@ -120,10 +122,13 @@ export function FloatingTabBar({
                   : null}
                 <Text
                   numberOfLines={1}
+                  // The bar has a fixed height (`tabBarReserve`), so labels
+                  // scale with Dynamic Type only up to what fits in it.
+                  maxFontSizeMultiplier={1.5}
                   className={`font-instrument-sans-semibold ${
                     largerText ? "text-base" : "text-sm"
                   }`}
-                  style={{ color }}
+                  style={[{ color }, typeStyle("semibold")]}
                 >
                   {label}
                 </Text>

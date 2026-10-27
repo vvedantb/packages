@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
-import { fieldStyle, fieldTextStyle } from "./controlStyles";
+import { fieldStyle, fieldTextStyle, typeStyle } from "./controlStyles";
 import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -30,7 +30,12 @@ const Textarea = React.forwardRef<
         largerText && "min-h-32 px-4 py-3 text-xl font-instrument-sans-medium",
         className,
       )}
-      style={[fieldStyle(scheme), fieldTextStyle(scheme), style]}
+      style={[
+        fieldStyle(scheme),
+        fieldTextStyle(scheme),
+        largerText ? typeStyle("medium") : null,
+        style,
+      ]}
       {...props}
     />
   );

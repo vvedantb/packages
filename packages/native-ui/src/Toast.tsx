@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { FLOATING_INSET, FLOATING_ROW_RADIUS } from "./floating";
 import { palette } from "./palette";
 import { tokens } from "./tokens";
@@ -32,8 +32,8 @@ import { getToasts, subscribeToasts, toast, type ToastItem } from "./toastStore"
 const FullWindowOverlay = Platform.OS === "ios" ? RNFullWindowOverlay : Fragment;
 
 /**
- * Renders the `toast()` queue at the top of the screen, under the safe-area
- * inset. Mount once, inside `SafeAreaProvider` and after the navigator.
+ * Renders the `toast()` queue at the top of the screen, inside the safe-area
+ * insets. Mount once, inside `SafeAreaProvider` and after the navigator.
  */
 export function Toaster({ offset = 8 }: { offset?: number }) {
   const items = useSyncExternalStore(subscribeToasts, getToasts, getToasts);
@@ -47,8 +47,8 @@ export function Toaster({ offset = 8 }: { offset?: number }) {
         style={{
           position: "absolute",
           top: insets.top + offset,
-          left: FLOATING_INSET,
-          right: FLOATING_INSET,
+          left: insets.left + FLOATING_INSET,
+          right: insets.right + FLOATING_INSET,
           zIndex: 50,
         }}
       >
@@ -119,7 +119,7 @@ function ToastCard({ item }: { item: ToastItem }) {
                 "font-instrument-sans-semibold",
                 largerText ? "text-lg" : "text-base",
               )}
-              style={textStyle("foreground", scheme)}
+              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
             >
               {item.title}
             </Text>
@@ -147,7 +147,7 @@ function ToastCard({ item }: { item: ToastItem }) {
             >
               <Text
                 className="font-instrument-sans-semibold text-sm"
-                style={textStyle("foreground", scheme)}
+                style={[textStyle("foreground", scheme), typeStyle("semibold")]}
               >
                 {item.action.label}
               </Text>

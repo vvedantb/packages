@@ -15,9 +15,11 @@ import { familyApp } from "../brand/familyApps";
 import type { AppName } from "../brand/svg";
 import { Button } from "../Button";
 import { cn } from "../cn";
+import { typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { useLargerText } from "../theme";
+import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { useControllableState } from "../primitives/use-controllable-state";
 import {
@@ -91,6 +93,7 @@ export function PricingModal({
   const scheme = useScheme();
   const largerText = useLargerText();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
   const [period, setPeriod] = useControllableState({
     value: billingPeriod,
     defaultValue: defaultBillingPeriod,
@@ -102,7 +105,7 @@ export function PricingModal({
   return (
     <Modal
       visible={open}
-      animationType="slide"
+      animationType={reduceMotion ? "none" : "slide"}
       presentationStyle="pageSheet"
       onRequestClose={onClose}
       testID={testID}
@@ -167,9 +170,10 @@ export function PricingModal({
                         "font-instrument-sans-medium",
                         largerText ? "text-base" : "text-sm",
                       )}
-                      style={{
-                        color: selected ? palette.segmentForeground[scheme] : muted,
-                      }}
+                      style={[
+                        { color: selected ? palette.segmentForeground[scheme] : muted },
+                        typeStyle("medium"),
+                      ]}
                     >
                       {value === "month" ? "Monthly" : "Annual"}
                     </Text>
@@ -201,7 +205,7 @@ export function PricingModal({
                 "pb-2 text-center font-instrument-sans-medium",
                 largerText ? "text-3xl" : "text-2xl",
               )}
-              style={{ color: fg }}
+              style={[{ color: fg }, typeStyle("medium")]}
             >
               {headline}
             </Text>
@@ -278,7 +282,7 @@ function PlanCard({
         <Text
           accessibilityRole="header"
           className={cn("font-instrument-sans-medium", bodyText)}
-          style={{ color: fg }}
+          style={[{ color: fg }, typeStyle("medium")]}
         >
           {plan.name}
         </Text>
@@ -287,13 +291,16 @@ function PlanCard({
       <View className="mt-4 flex-row items-baseline gap-1">
         <Text
           className="font-instrument-sans-medium"
-          style={{
-            color: fg,
-            fontSize: 48,
-            lineHeight: 52,
-            letterSpacing: -0.5,
-            fontVariant: ["tabular-nums"],
-          }}
+          style={[
+            {
+              color: fg,
+              fontSize: 48,
+              lineHeight: 52,
+              letterSpacing: -0.5,
+              fontVariant: ["tabular-nums"],
+            },
+            typeStyle("medium"),
+          ]}
         >
           {plan.price[period]}
         </Text>
@@ -314,7 +321,10 @@ function PlanCard({
 
       {plan.highlight ? (
         <View className="mt-3">
-          <Text className="font-instrument-sans-medium text-2xl" style={{ color: fg }}>
+          <Text
+            className="font-instrument-sans-medium text-2xl"
+            style={[{ color: fg }, typeStyle("medium")]}
+          >
             {plan.highlight.title}
           </Text>
           <Text className={cn("font-instrument-sans", bodyText)} style={{ color: fg }}>
@@ -363,7 +373,10 @@ function PlanCard({
               <View key={group.app}>
                 <View className="flex-row items-center gap-2">
                   <GroupIcon size={14} color={fg} />
-                  <Text className="font-instrument-sans-medium text-sm" style={{ color: fg }}>
+                  <Text
+                    className="font-instrument-sans-medium text-sm"
+                    style={[{ color: fg }, typeStyle("medium")]}
+                  >
                     {familyApp(group.app).name}
                   </Text>
                 </View>

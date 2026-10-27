@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { Switch } from "./Switch";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -60,7 +60,7 @@ export function LabeledSwitchRow({
               largerText ? "text-xl" : "text-lg",
               disabled && "opacity-70",
             )}
-            style={textStyle("foreground", scheme)}
+            style={[textStyle("foreground", scheme), typeStyle("semibold")]}
           >
             {label}
           </Text>

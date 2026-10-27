@@ -10,7 +10,7 @@ import {
 import { IconX } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -115,7 +115,7 @@ export function DialogTitle({ className, style, ...props }: TextPartProps) {
         largerText ? "text-2xl" : "text-lg",
         className,
       )}
-      style={[textStyle("foreground", scheme), style]}
+      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
       {...props}
     />
   );

@@ -10,7 +10,7 @@ import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
 export type SpinnerProps = Omit<ActivityIndicatorProps, "size" | "color"> & {
-  /** `sm` and `md` are the small system spinner, `lg` the large one. A number sets the size on Android; iOS picks small below 30. Default `"md"`. */
+  /** `sm` is 16, the web `sm` and the `Button` loading ring. `md` is the small system spinner (20), `lg` the large one. A number sets the size on Android; iOS picks small below 30. Default `"md"`. */
   size?: "sm" | "md" | "lg" | number;
   /** `"muted"` (default) uses the muted text colour, `"inherit"` the foreground. Native has no `currentColor`. */
   tone?: "muted" | "inherit";
@@ -19,6 +19,11 @@ export type SpinnerProps = Omit<ActivityIndicatorProps, "size" | "color"> & {
   /** Hide from assistive tech, for example inside a labelled button. Default `false`. */
   decorative?: boolean;
 };
+
+/** The system `"small"` spinner box on iOS, Android and React Native Web. */
+const SYSTEM_SMALL = 20;
+/** Web `size-4`. No platform has a 16 spinner, so `sm` is the small one scaled down in a 16 box. */
+const SM = 16;
 
 function systemSize(size: NonNullable<SpinnerProps["size"]>) {
   if (typeof size === "number") {
@@ -37,10 +42,12 @@ export function Spinner({
   color,
   decorative = false,
   accessibilityLabel,
+  style,
   ...props
 }: SpinnerProps) {
   const scheme = useScheme();
-  return (
+  const small = size === "sm";
+  const indicator = (
     <ActivityIndicator
       size={systemSize(size)}
       color={
@@ -53,8 +60,17 @@ export function Spinner({
       importantForAccessibility={decorative ? "no-hide-descendants" : "auto"}
       accessibilityRole={decorative ? undefined : "progressbar"}
       accessibilityLabel={decorative ? undefined : (accessibilityLabel ?? "Loading")}
+      style={small ? { transform: [{ scale: SM / SYSTEM_SMALL }] } : style}
       {...props}
     />
+  );
+  if (!small) return indicator;
+  return (
+    <View
+      style={[{ width: SM, height: SM, alignItems: "center", justifyContent: "center" }, style]}
+    >
+      {indicator}
+    </View>
   );
 }
 

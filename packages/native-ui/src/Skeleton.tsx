@@ -2,13 +2,15 @@ import { View, type ViewProps } from "react-native";
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 import { useEffect } from "react";
 import { cn } from "./cn";
+import { cardStyle } from "./controlStyles";
+import { useReduceMotion } from "./useReduceMotion";
+import { useScheme } from "./useScheme";
 
 /** Pulsing placeholder block. Holds still with Reduce Motion. Size it with `className` (for example `h-4 w-32`). */
 export function Skeleton({
@@ -16,7 +18,7 @@ export function Skeleton({
   style,
   ...props
 }: ViewProps & { className?: string }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const opacity = useSharedValue(0.4);
 
   useEffect(() => {
@@ -43,9 +45,11 @@ export function Skeleton({
   );
 }
 
+/** A `Card`-shaped placeholder: the flat card fill and radius. */
 export function CardSkeleton() {
+  const scheme = useScheme();
   return (
-    <View className="rounded-lg bg-surface p-5 gap-3">
+    <View className="gap-3 p-5" style={cardStyle(scheme)}>
       <Skeleton className="h-4 w-32" />
       <Skeleton className="h-16 w-full" />
     </View>

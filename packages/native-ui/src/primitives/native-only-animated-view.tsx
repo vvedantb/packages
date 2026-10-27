@@ -1,5 +1,6 @@
 import { Platform, View, type ViewProps } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
+import { useReduceMotion } from "../useReduceMotion";
 
 type NativeOnlyAnimatedViewProps = ViewProps & {
   entering?: AnimatedProps<ViewProps>["entering"];
@@ -7,6 +8,11 @@ type NativeOnlyAnimatedViewProps = ViewProps & {
   layout?: AnimatedProps<ViewProps>["layout"];
 };
 
+/**
+ * `Animated.View` with layout animations on iOS and Android, a plain `View`
+ * on web. With Reduce Motion on, it drops the animations: sheets, toasts and
+ * the `Select` popover appear and leave in place.
+ */
 function NativeOnlyAnimatedView({
   children,
   entering,
@@ -14,15 +20,16 @@ function NativeOnlyAnimatedView({
   layout,
   ...props
 }: NativeOnlyAnimatedViewProps) {
+  const reduceMotion = useReduceMotion();
   if (Platform.OS === "web") {
     return <View {...props}>{children}</View>;
   }
 
   return (
     <Animated.View
-      entering={entering}
-      exiting={exiting}
-      layout={layout}
+      entering={reduceMotion ? undefined : entering}
+      exiting={reduceMotion ? undefined : exiting}
+      layout={reduceMotion ? undefined : layout}
       {...props}
     >
       {children}

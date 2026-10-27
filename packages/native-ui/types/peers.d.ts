@@ -112,6 +112,7 @@ declare module "react-native" {
     pointerEvents?: "box-none" | "none" | "box-only" | "auto";
     hitSlop?: number | Insets | null;
     onLayout?: (event: LayoutChangeEvent) => void;
+    onAccessibilityEscape?: () => void;
     collapsable?: boolean;
   }
   export class View extends React.Component<ViewProps> {}

@@ -8,7 +8,6 @@ import {
 import {
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette } from "../palette";
+import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { useControllableState } from "./use-controllable-state";
 
@@ -99,9 +99,11 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
 
 /**
  * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance.
- * `placement="center"` centres the child (dialogs); `"bottom"` pins it to the
- * bottom edge (sheets). The backdrop closes the overlay only when `dismissible`;
- * Android back always closes it, as Escape does on the web.
+ * `placement="center"` centres the child (dialogs) inside the insets on every
+ * side; `"bottom"` pins it to the bottom edge (sheets), which pad their own
+ * bottom inset. The backdrop closes the overlay only when `dismissible`;
+ * Android back and the VoiceOver escape gesture always close it, as Escape
+ * does on the web. With Reduce Motion on, the fade is off.
  */
 export function OverlayModal({
   part,
@@ -117,20 +119,22 @@ export function OverlayModal({
   const { open, setOpen } = useOverlay(part);
   const scheme = useScheme();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReduceMotion();
   const close = () => setOpen(false);
 
   return (
     <Modal
       visible={open}
       transparent
-      animationType="fade"
+      animationType={reduceMotion ? "none" : "fade"}
       statusBarTranslucent
       onRequestClose={close}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.fill}
-      >
+      {/* Android too: a modal window with `statusBarTranslucent` may not
+          resize for the keyboard, which then covers the fields. The padding
+          is the measured overlap, so it drops to 0 where the window does
+          resize. */}
+      <KeyboardAvoidingView behavior="padding" style={styles.fill}>
         <Pressable
           testID={`${part}-backdrop`}
           accessible={dismissible}
@@ -142,15 +146,22 @@ export function OverlayModal({
         />
         <View
           pointerEvents="box-none"
+          onAccessibilityEscape={close}
           style={[
             styles.fill,
             placement === "bottom"
-              ? { justifyContent: "flex-end", paddingTop: insets.top + 16 }
+              ? {
+                  justifyContent: "flex-end",
+                  paddingTop: insets.top + 16,
+                  paddingLeft: insets.left,
+                  paddingRight: insets.right,
+                }
               : {
                   justifyContent: "center",
                   paddingTop: insets.top + 16,
                   paddingBottom: insets.bottom + 16,
-                  paddingHorizontal: 16,
+                  paddingLeft: insets.left + 16,
+                  paddingRight: insets.right + 16,
                 },
           ]}
         >

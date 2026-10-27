@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { cn } from "../cn";
-import { textStyle } from "../controlStyles";
+import { textStyle, typeStyle } from "../controlStyles";
 import { FLOATING_ROW_RADIUS } from "../floating";
 import { tokens } from "../tokens";
 import { useLargerText } from "../theme";
@@ -9,7 +9,11 @@ import { useScheme } from "../useScheme";
 export type UpgradeToProCardProps = {
   /** Opens the app's `PricingModal`. */
   onUpgrade: () => void;
-  /** A round "Pro" pill (labelled with `title`) instead of the full card. Default `false`. */
+  /**
+   * A "Pro" pill (labelled with `title`) instead of the full card. Like the
+   * web `Button` it stretches across a column and fits its label in a row.
+   * Default `false`.
+   */
   collapsed?: boolean;
   /** Default "Upgrade to Pro". */
   title?: string;
@@ -34,7 +38,7 @@ export function UpgradeToProCard({
 }: UpgradeToProCardProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
-  // The web pill is `bg-foreground text-background`.
+  // The web pill is a `Button` (`font-medium`) in `bg-foreground text-background`.
   const pill = (label: string, accessibilityLabel?: string) => (
     <Pressable
       testID={testID ? `${testID}-cta` : undefined}
@@ -44,16 +48,16 @@ export function UpgradeToProCard({
       hitSlop={6}
       className={cn(
         "shrink-0 items-center justify-center rounded-full px-4 active:opacity-80",
-        largerText ? "h-12" : "h-10",
+        largerText ? "min-h-12" : "min-h-10",
       )}
       style={{ backgroundColor: tokens.color.foreground[scheme] }}
     >
       <Text
         className={cn(
-          "font-instrument-sans-semibold",
+          "font-instrument-sans-medium",
           largerText ? "text-base" : "text-sm",
         )}
-        style={{ color: tokens.color.background[scheme] }}
+        style={[{ color: tokens.color.background[scheme] }, typeStyle("medium")]}
       >
         {label}
       </Text>
@@ -62,7 +66,7 @@ export function UpgradeToProCard({
 
   if (collapsed) {
     return (
-      <View testID={testID} className={cn("self-start", className)}>
+      <View testID={testID} className={className}>
         {pill("Pro", title)}
       </View>
     );
@@ -82,7 +86,7 @@ export function UpgradeToProCard({
           "min-w-0 flex-1 font-instrument-sans-semibold",
           largerText ? "text-lg" : "text-base",
         )}
-        style={textStyle("foreground", scheme)}
+        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
       >
         {title}
       </Text>

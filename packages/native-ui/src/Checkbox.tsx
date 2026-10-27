@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable, type PressableProps } from "react-native";
 import { IconCheck, IconMinus } from "@tabler/icons-react-native";
 import { cn } from "./cn";
-import { checkboxColors } from "./controlStyles";
+import { checkboxColors, touchSlop } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -21,7 +21,7 @@ export type CheckboxProps = Omit<PressableProps, "onPress" | "children"> & {
  * `Checkbox` (`checked` / `onCheckedChange`). Colours from `checkboxColors`:
  * the palette primary when checked, as on the web (not the theme accent).
  * 16 square with a 14 check, as on the web (24 and 18 with larger text), plus
- * a 14 hit slop so the target is at least 44.
+ * a hit slop (`touchSlop`) that makes the target 44.
  */
 export function Checkbox({
   checked,
@@ -37,6 +37,7 @@ export function Checkbox({
   const on = checked !== false;
   const { color, ...fill } = checkboxColors(on, scheme);
   const boxStyle = { borderRadius: largerText ? 6 : 4, ...fill };
+  const box = largerText ? 24 : 16;
   const iconSize = largerText ? 18 : 14;
   return (
     <Pressable
@@ -45,7 +46,7 @@ export function Checkbox({
         checked: checked === "indeterminate" ? "mixed" : checked,
         disabled: Boolean(disabled),
       }}
-      hitSlop={14}
+      hitSlop={touchSlop(box)}
       disabled={disabled}
       onPress={() => {
         selectionHaptic();

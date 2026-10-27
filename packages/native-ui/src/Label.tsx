@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "react-native";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -27,7 +27,7 @@ export function Label({ className, disabled, style, ...props }: LabelProps) {
         disabled && "opacity-70",
         className,
       )}
-      style={[textStyle("foreground", scheme), style]}
+      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
       {...props}
     />
   );

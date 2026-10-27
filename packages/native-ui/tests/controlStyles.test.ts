@@ -3,14 +3,20 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  MIN_TOUCH_TARGET,
   buttonColors,
+  cardStyle,
   checkboxColors,
   fieldStyle,
   fieldTextStyle,
   switchColors,
+  switchSize,
   tabColors,
   tabTrackStyle,
+  tabTriggerSize,
   textStyle,
+  touchSlop,
+  typeStyle,
   type ButtonVariant,
   type TabsVariant,
 } from "../src/controlStyles";
@@ -109,10 +115,14 @@ describe("Button (source contract)", () => {
   const regular = button.match(/regular: \{\n([\s\S]*?)\n {2}\}/)?.[1] ?? "";
   const nativeSize = (size: string) => regular.match(new RegExp(`${size}: "([^"]+)"`))?.[1] ?? "";
 
-  it("uses the web heights and padding without larger text", () => {
+  it("uses the web heights (as minimums) and padding without larger text", () => {
     const pairs = { small: "sm", medium: "default", large: "lg", icon: "icon" } as const;
     for (const [native, webName] of Object.entries(pairs)) {
-      const classes = nativeSize(native).split(" ").filter((c) => c !== "px-0");
+      // `min-h-10` is the web `h-10` as a minimum; `h-auto` drops the primitive's `h-10`.
+      const classes = nativeSize(native)
+        .split(" ")
+        .filter((c) => c !== "px-0" && c !== "h-auto")
+        .map((c) => c.replace(/^min-h-/, "h-"));
       expect(classes.length, native).toBeGreaterThan(0);
       for (const c of classes) expect(webSize(webName), `${native} ${c}`).toContain(c);
     }
@@ -132,7 +142,9 @@ describe("Button (source contract)", () => {
   it("applies buttonColors to the fill and the label", () => {
     expect(button).toMatch(/const colors = buttonColors\(variant, scheme\)/);
     expect(button).toMatch(/backgroundColor: colors\.backgroundColor/);
-    expect(button).toMatch(/style=\{colors \? \{ color: colors\.color \} : undefined\}/);
+    expect(button).toMatch(
+      /style=\{\[colors \? \{ color: colors\.color \} : null, typeStyle\("medium"\)\]\}/,
+    );
   });
 
   it("does not hard-code a white label or the pink tint outside tinted", () => {
@@ -173,7 +185,7 @@ describe("field sizes (source contract)", () => {
     expect(read("Textarea.tsx")).toMatch(
       /"min-h-20 border px-3\.5 py-2\.5 text-base font-instrument-sans"/,
     );
-    expect(read("Select.tsx")).toMatch(/"h-10 w-full border px-3\.5 py-0 shadow-none"/);
+    expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full border px-3\.5 py-0 shadow-none"/);
   });
 
   it("Select shows its placeholder in the field placeholder colour", () => {
@@ -216,7 +228,9 @@ describe("textStyle", () => {
       for (const name of names) expect(fn(source, name), `${file} ${name}`).toMatch(/textStyle\(/);
     }
     expect(fn(read("Dialog.tsx"), "DialogDescription")).toMatch(/textStyle\("overlayMuted", scheme\)/);
-    expect(read("primitives/select.tsx")).toMatch(/style=\{textStyle\("foreground", scheme\)\}/);
+    expect(read("primitives/select.tsx")).toMatch(
+      /style=\{\{ \.\.\.textStyle\("foreground", scheme\), \.\.\.typeStyle\("medium"\) \}\}/,
+    );
   });
 });
 
@@ -344,8 +358,10 @@ describe("Tabs and PillTabs (source contract)", () => {
     expect(fn(tabs, "TabsTrigger")).toMatch(/const colors = tabColors\(variant, selected, scheme\);/);
     expect(pills).toMatch(/const colors = tabColors\("pills", isSelected, scheme\);/);
     for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
-      expect(source, file).toMatch(/style=\{\{ backgroundColor: colors\.backgroundColor \}\}/);
-      expect(source, file).toMatch(/style=\{\{ color: colors\.color \}\}/);
+      expect(source, file).toMatch(
+        /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: trigger\.minHeight \}\}/,
+      );
+      expect(source, file).toMatch(/style=\{\[\{ color: colors\.color \}, /);
     }
     expect(fn(tabs, "TabsList")).toMatch(/variant === "segmented" \? \[tabTrackStyle\(scheme\), style\] : style/);
   });
@@ -426,8 +442,10 @@ describe("checkboxColors", () => {
     expect(checkbox).toMatch(/checkboxColors\(on, scheme\)/);
     expect(checkbox).not.toMatch(/useAccentColor|accentColor|const accent/);
     expect(checkbox).toMatch(/largerText \? "h-6 w-6" : "h-4 w-4"/);
-    expect(checkbox).toMatch(/hitSlop=\{14\}/);
-    expect(16 + 2 * 14).toBeGreaterThanOrEqual(44);
+    expect(checkbox).toMatch(/const box = largerText \? 24 : 16;/);
+    expect(checkbox).toMatch(/hitSlop=\{touchSlop\(box\)\}/);
+    expect(touchSlop(16)).toEqual({ top: 14, bottom: 14, left: 14, right: 14 });
+    expect(touchSlop(24).top).toBe(10);
   });
 });
 
@@ -458,5 +476,204 @@ describe("switchColors", () => {
   it("keeps the 0.2 onColor and offColor props", () => {
     expect(read("Switch.tsx")).toMatch(/onColor\?: string;\s+offColor\?: string;/);
     expect(read("Switch.tsx")).toMatch(/const trackColor = resolvedValue \? onColor : offColor;/);
+  });
+});
+
+describe("typeStyle", () => {
+  it("is the web font-medium (500) and font-semibold (600) as a numeric weight", () => {
+    expect(typeStyle("medium")).toEqual({ fontWeight: "500" });
+    expect(typeStyle("semibold")).toEqual({ fontWeight: "600" });
+    expect(Number(typeStyle("medium").fontWeight)).toBe(500);
+    expect(Number(typeStyle("semibold").fontWeight)).toBe(600);
+  });
+});
+
+describe("type weights (source contract)", () => {
+  const files = readdirSync(join(root, "src"), { recursive: true, encoding: "utf8" }).filter(
+    (file) => /\.tsx$/.test(file),
+  );
+
+  it("sets 600 on titles, labels and tab bar labels, and 500 on button, badge and tab labels", () => {
+    const semibold: [string, string][] = [
+      ["Card.tsx", "Card"],
+      ["Card.tsx", "CardTitle"],
+      ["Dialog.tsx", "DialogTitle"],
+      ["Label.tsx", "Label"],
+      ["settings/SettingsSection.tsx", "SettingsSection"],
+      ["examples/ParityGallery.tsx", "Section"],
+      ["FloatingTabBar.tsx", "FloatingTabBar"],
+    ];
+    for (const [file, name] of semibold) {
+      expect(fn(read(file), name), `${file} ${name}`).toMatch(/typeStyle\("semibold"\)/);
+    }
+    const medium: [string, string][] = [
+      ["Button.tsx", "Button"],
+      ["Badge.tsx", "Badge"],
+      ["Tabs.tsx", "TabsTrigger"],
+    ];
+    for (const [file, name] of medium) {
+      expect(fn(read(file), name), `${file} ${name}`).toMatch(/typeStyle\("medium"\)/);
+    }
+    // `PillTabs` is generic (`function PillTabs<T …>(`) and the only component in its file.
+    expect(read("PillTabs.tsx")).toMatch(/style=\{\[\{ color: colors\.color \}, typeStyle\("medium"\)\]\}/);
+    // `SheetTitle` and `AlertDialogTitle` are `DialogTitle`.
+    expect(read("Sheet.tsx")).toMatch(/export const SheetTitle = DialogTitle;/);
+    expect(read("AlertDialog.tsx")).toMatch(/export const AlertDialogTitle = DialogTitle;/);
+  });
+
+  it("pairs every weighted font class with the same typeStyle, so it is not drawn Regular", () => {
+    for (const file of files) {
+      const source = code(read(file));
+      for (const weight of ["semibold", "medium"] as const) {
+        const classes = source.match(new RegExp(`font-instrument-sans-${weight}\\b`, "g"))?.length ?? 0;
+        const styles = source.split(`typeStyle("${weight}")`).length - 1;
+        expect(styles, `${file} ${weight}`).toBeGreaterThanOrEqual(classes);
+      }
+    }
+  });
+
+  it("uses no bold class: the web titles are semibold", () => {
+    for (const file of files) {
+      expect(code(read(file)), file).not.toMatch(/font-instrument-sans-bold/);
+    }
+  });
+});
+
+describe("cards (source contract)", () => {
+  it("cardStyle is the web card: surfaceCard fill at radius lg (16)", () => {
+    const web = readFileSync(join(root, "..", "ui", "src/ui/card.tsx"), "utf8");
+    expect(web).toMatch(/"rounded-lg bg-surface-card text-surface-foreground"/);
+    expect(tokens.radius.lg).toBe(16);
+    for (const scheme of schemes) {
+      expect(cardStyle(scheme)).toEqual({
+        backgroundColor: tokens.color.surfaceCard[scheme],
+        borderRadius: tokens.radius.lg,
+      });
+    }
+    // Light: a muted fill a shade off the page and the white field.
+    expect(cardStyle("light").backgroundColor).not.toBe(tokens.color.background.light);
+    expect(cardStyle("light").backgroundColor).not.toBe(tokens.color.surface.light);
+  });
+
+  it("Card, SettingsSection and CardSkeleton are flat: cardStyle, no FloatingSurface, no shadow", () => {
+    for (const file of ["Card.tsx", "settings/SettingsSection.tsx", "Skeleton.tsx"]) {
+      const source = code(read(file));
+      expect(source, file).toMatch(/cardStyle\(scheme\)/);
+      expect(source, file).not.toMatch(/FloatingSurface|LiquidGlass|floatingShadow|shadow[A-Z]|boxShadow/);
+      expect(source, file).not.toMatch(/\bshadow-(?!none)/);
+    }
+    expect(fn(read("Card.tsx"), "Card")).toMatch(/style=\{cardStyle\(scheme\)\}/);
+  });
+
+  it("Button has no shadow unless asked, as the web button has none", () => {
+    const button = read("Button.tsx");
+    expect(button).toMatch(/shadowType = "flat",/);
+    expect(button).toMatch(/const elevate =\s+shadowType === "shadow"/);
+  });
+});
+
+describe("switchSize", () => {
+  const web = readFileSync(join(root, "..", "ui", "src/ui/switch.tsx"), "utf8");
+
+  it("is the web Switch without larger text: h-5 w-9 track, size-4 thumb, translate-x-4", () => {
+    expect(web).toMatch(/inline-flex h-5 w-9 shrink-0/);
+    expect(web).toMatch(/block size-4 rounded-full/);
+    expect(web).toMatch(/data-\[state=checked\]:translate-x-4/);
+    expect(switchSize(false)).toEqual({
+      track: "h-5 w-9",
+      thumb: "h-4 w-4",
+      on: "translate-x-4",
+      width: 36,
+      height: 20,
+    });
+  });
+
+  it("keeps the 0.3.4 size with larger text", () => {
+    expect(switchSize(true)).toMatchObject({ track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6" });
+  });
+
+  it("is what Switch draws, centring the thumb", () => {
+    const source = read("Switch.tsx");
+    expect(source).toMatch(/const size = switchSize\(useLargerText\(\)\);/);
+    expect(source).toMatch(/className=\{cn\(size\.track, "justify-center"\)\}/);
+    expect(source).toMatch(/thumbClassName=\{cn\(size\.thumb, resolvedValue \? size\.on : "translate-x-0"\)\}/);
+    expect(source).not.toMatch(/"h-8 w-14"/);
+  });
+});
+
+describe("tabTriggerSize", () => {
+  const css = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs.css"), "utf8");
+  const pillsCss = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs-pills.css"), "utf8");
+  const webTabs = readFileSync(join(root, "..", "ui", "src/ui/tabs.tsx"), "utf8");
+  const variants: TabsVariant[] = ["pills", "segmented", "soft"];
+
+  it("is the web .t-tab for pills and segmented: 30 high, px-3 py-1, text-sm", () => {
+    expect(css).toMatch(/\.t-tab \{[^}]*height: 30px;\s+padding: 4px 12px;/);
+    expect(webTabs).toMatch(/"t-tab inline-flex [^"]*text-sm font-medium/);
+    for (const variant of ["pills", "segmented"] as const) {
+      expect(tabTriggerSize(variant, "default", false)).toEqual({
+        minHeight: 30,
+        className: "px-3 py-1",
+        textClassName: "text-sm",
+      });
+    }
+  });
+
+  it("is the web soft trigger and the web sm list", () => {
+    expect(webTabs).toMatch(/rounded-full px-4 py-2 text-sm text-muted-foreground/);
+    expect(webTabs).toMatch(/sm: "\[&_\.t-tab\]:px-2\.5 \[&_\.t-tab\]:py-1 \[&_\.t-tab\]:text-xs"/);
+    expect(tabTriggerSize("soft", "default", false)).toMatchObject({ className: "px-4 py-2", textClassName: "text-sm" });
+    for (const variant of variants) {
+      expect(tabTriggerSize(variant, "sm", false)).toMatchObject({ className: "px-2.5 py-1", textClassName: "text-xs" });
+    }
+  });
+
+  it("keeps the larger-text sizes", () => {
+    for (const variant of variants) {
+      expect(tabTriggerSize(variant, "default", true)).toEqual({ minHeight: 56, className: "px-4 py-3", textClassName: "text-xl" });
+      expect(tabTriggerSize(variant, "sm", true)).toEqual({ minHeight: 48, className: "px-4 py-2", textClassName: "text-lg" });
+    }
+  });
+
+  it("lays tabs out like the web lists: content-sized at the start, no flex-1 or w-full", () => {
+    expect(pillsCss).toMatch(/\.t-tabs--segmented \{\s+gap: 3px;\s+padding: 3px;/);
+    expect(pillsCss).toMatch(/\.t-tabs--pills \{\s+gap: 6px;/);
+    const tabs = code(read("Tabs.tsx"));
+    const pills = code(read("PillTabs.tsx"));
+    for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
+      expect(source, file).not.toMatch(/(?<![\w-])(?:flex-1|w-full)(?![\w-])/);
+      expect(source, file).toMatch(/self-start/);
+    }
+    const list = fn(tabs, "TabsList");
+    expect(list).toMatch(/"max-w-full gap-\[3px\] self-start rounded-full p-\[3px\]"/);
+    expect(list).toMatch(/"max-w-full flex-wrap gap-1\.5 self-start"/);
+    expect(list).toMatch(/"flex-wrap items-center justify-center gap-1\.5"/);
+    expect(fn(tabs, "TabsTrigger")).toMatch(/const trigger = tabTriggerSize\(variant, size, largerText\);/);
+    expect(pills).toMatch(/const trigger = tabTriggerSize\("pills", "default", largerText\);/);
+    expect(pills).toMatch(/"max-w-full flex-row flex-wrap gap-1\.5 self-start"/);
+  });
+
+  it("labels pills and segments in the web medium weight, soft tabs in regular", () => {
+    const trigger = fn(code(read("Tabs.tsx")), "TabsTrigger");
+    expect(trigger).toMatch(/const medium = variant !== "soft";/);
+    expect(trigger).toMatch(/medium \? "font-instrument-sans-medium" : "font-instrument-sans"/);
+    expect(trigger).toMatch(/medium \? typeStyle\("medium"\) : null/);
+    expect(trigger).not.toMatch(/semibold/);
+  });
+
+  it("gives every trigger a 44 target with the hit slop", () => {
+    for (const variant of variants) {
+      for (const size of ["default", "sm"] as const) {
+        for (const largerText of [false, true]) {
+          const { minHeight } = tabTriggerSize(variant, size, largerText);
+          const slop = touchSlop(MIN_TOUCH_TARGET, minHeight);
+          expect(minHeight + slop.top + slop.bottom, `${variant} ${size} ${largerText}`).toBeGreaterThanOrEqual(44);
+        }
+      }
+    }
+    expect(touchSlop(MIN_TOUCH_TARGET, 30)).toEqual({ top: 7, bottom: 7, left: 0, right: 0 });
+    for (const file of ["Tabs.tsx", "PillTabs.tsx"]) {
+      expect(read(file), file).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, trigger\.minHeight\)\}/);
+    }
   });
 });

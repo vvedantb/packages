@@ -1,8 +1,19 @@
 import { View, Text, Pressable } from "react-native";
-import { tabColors } from "./controlStyles";
+import { cn } from "./cn";
+import {
+  MIN_TOUCH_TARGET,
+  tabColors,
+  tabTriggerSize,
+  touchSlop,
+  typeStyle,
+} from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
+/**
+ * A row of pill tabs from an options array: the `pills` `TabsList` look and
+ * size (30 high, `text-sm` medium), as wide as its pills, at the start.
+ */
 export function PillTabs<T extends string>({
   options,
   value,
@@ -14,8 +25,12 @@ export function PillTabs<T extends string>({
 }) {
   const largerText = useLargerText();
   const scheme = useScheme();
+  const trigger = tabTriggerSize("pills", "default", largerText);
   return (
-    <View className="flex-row gap-2">
+    <View
+      accessibilityRole="tablist"
+      className="max-w-full flex-row flex-wrap gap-1.5 self-start"
+    >
       {options.map((tab) => {
         const isSelected = value === tab.id;
         const colors = tabColors("pills", isSelected, scheme);
@@ -28,17 +43,17 @@ export function PillTabs<T extends string>({
             onPress={() => onChange(tab.id)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
-            className={`flex-1 justify-center rounded-full border border-white/40 px-3 active:opacity-70 dark:border-white/10 ${
-              largerText ? "min-h-16 py-3" : "min-h-14 py-3"
-            }`}
-            style={{ backgroundColor: colors.backgroundColor }}
+            hitSlop={touchSlop(MIN_TOUCH_TARGET, trigger.minHeight)}
+            className={cn(
+              "shrink justify-center rounded-full border border-white/40 active:opacity-70 dark:border-white/10",
+              trigger.className,
+            )}
+            style={{ backgroundColor: colors.backgroundColor, minHeight: trigger.minHeight }}
           >
             <Text
               numberOfLines={1}
-              className={`text-center font-instrument-sans-semibold ${
-                largerText ? "text-xl" : "text-lg"
-              }`}
-              style={{ color: colors.color }}
+              className={cn("text-center font-instrument-sans-medium", trigger.textClassName)}
+              style={[{ color: colors.color }, typeStyle("medium")]}
             >
               {tab.label}
             </Text>

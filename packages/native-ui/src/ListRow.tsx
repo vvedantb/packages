@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { IconProps } from "@tabler/icons-react-native";
 import { NEUTRAL_500 } from "./colors";
 import { cn } from "./cn";
-import { textStyle } from "./controlStyles";
+import { textStyle, typeStyle } from "./controlStyles";
 import { FLOATING_ROW_RADIUS } from "./floating";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -41,7 +41,7 @@ export function ListRow({
             "font-instrument-sans-semibold",
             largerText ? "text-xl" : "text-lg",
           )}
-          style={textStyle("foreground", scheme)}
+          style={[textStyle("foreground", scheme), typeStyle("semibold")]}
         >
           {title}
         </Text>

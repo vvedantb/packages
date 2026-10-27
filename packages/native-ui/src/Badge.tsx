@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Text, View, type ViewProps } from "react-native";
 import { cn } from "./cn";
+import { typeStyle } from "./controlStyles";
 import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
@@ -95,7 +96,7 @@ export function Badge({
             largerText ? "text-base" : "text-sm",
             textClassName,
           )}
-          style={{ color }}
+          style={[{ color }, typeStyle("medium")]}
         >
           {children}
         </Text>

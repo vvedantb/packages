@@ -15,6 +15,7 @@ import {
   type ViewProps,
 } from "react-native";
 import { cn } from "./cn";
+import { typeStyle } from "./controlStyles";
 import { palette } from "./palette";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
@@ -125,10 +126,10 @@ export function AvatarFallback({
         <Text
           numberOfLines={1}
           className={cn("font-instrument-sans-semibold", textClassName)}
-          style={{
-            fontSize: Math.round(size * 0.4),
-            color: palette.defaultForeground[scheme],
-          }}
+          style={[
+            { fontSize: Math.round(size * 0.4), color: palette.defaultForeground[scheme] },
+            typeStyle("semibold"),
+          ]}
         >
           {children}
         </Text>
