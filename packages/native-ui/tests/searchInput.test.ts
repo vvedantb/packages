@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { searchInputSize, touchSlop } from "../src/controlStyles";
+import { scaledFieldHeight, searchInputSize, touchSlop } from "../src/controlStyles";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
 
@@ -12,11 +12,13 @@ import { tokens } from "../src/tokens";
 // returns.
 
 const larger = vi.hoisted(() => ({ value: false }));
+const fontScale = vi.hoisted(() => ({ value: 1 }));
 vi.mock("react-native", () => ({
   Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
   View: "View",
   Pressable: "Pressable",
   TextInput: "TextInput",
+  useWindowDimensions: () => ({ width: 390, height: 844, scale: 2, fontScale: fontScale.value }),
 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("@tabler/icons-react-native", () => ({ IconSearch: "IconSearch", IconX: "IconX" }));
@@ -32,6 +34,7 @@ const points = (value: string) => Number(value) * 4;
 
 afterEach(() => {
   larger.value = false;
+  fontScale.value = 1;
 });
 
 describe("searchInputSize (web contract)", () => {
@@ -43,6 +46,8 @@ describe("searchInputSize (web contract)", () => {
   it("is the web sm: h-8 pl-8 text-sm, icon at left-2", () => {
     const [, h, pl, rest, left] = webSize("sm")!;
     const sm = searchInputSize("sm", false);
+    expect(points(h!)).toBe(32);
+    expect(sm.height).toBe(points(h!));
     expect(sm.minHeight).toBe(points(h!));
     expect(sm.paddingLeft).toBe(points(pl!));
     expect(rest!.trim()).toBe("text-sm");
@@ -53,12 +58,13 @@ describe("searchInputSize (web contract)", () => {
   it("is the web md: h-10 pl-9 and the phone text-base of the field, icon at left-3", () => {
     const [, h, pl, rest, left] = webSize("md")!;
     const md = searchInputSize("md", false);
+    expect(points(h!)).toBe(40);
+    expect(md.height).toBe(points(h!));
     expect(md.minHeight).toBe(points(h!));
     expect(md.paddingLeft).toBe(points(pl!));
     expect(rest).toBe("");
     expect(clear).toMatch(/const inputClasses =\s+"flex h-10 w-full [^"]*px-3\.5 py-2 text-base sm:text-sm/);
     expect(md.text).toBe("text-base");
-    expect(md.paddingY).toBe(points("2"));
     expect(md.iconLeft).toBe(points(left!));
   });
 
@@ -83,12 +89,31 @@ describe("searchInputSize (web contract)", () => {
     expect(source).not.toMatch(/<Icon\w+[^>]*\sstroke=/);
   });
 
-  it("keeps sm at 32: its padding, border and line fit, where the web py-2 would not", () => {
+  it("keeps sm at 32 and md at 40: padding, border and line fit the lock, where the web py-2 would not", () => {
+    // A 1 border above and below, and the `text-sm` 20 or `text-base` 24 line.
+    const height = (paddingY: number, line: number) => 2 * paddingY + 2 + line;
     const sm = searchInputSize("sm", false);
-    // Taking the line as the `text-sm` 20, and a 1 border above and below.
-    const height = (paddingY: number) => 2 * paddingY + 2 + 20;
-    expect(height(sm.paddingY)).toBeLessThanOrEqual(sm.minHeight);
-    expect(height(points("2"))).toBeGreaterThan(sm.minHeight);
+    expect(height(sm.paddingY, 20)).toBeLessThanOrEqual(sm.height);
+    expect(height(points("2"), 20)).toBeGreaterThan(sm.height);
+    const md = searchInputSize("md", false);
+    expect(height(md.paddingY, 24)).toBe(md.height);
+    // The web py-2 drew md 42 high on Expo web at 0.3.11, before the lock.
+    expect(height(points("2"), 24)).toBe(42);
+  });
+
+  it("locks the height without larger text and scales the lock with the font size", () => {
+    expect(scaledFieldHeight(32, 1)).toBe(32);
+    expect(scaledFieldHeight(32, 0.82)).toBe(32);
+    expect(scaledFieldHeight(32, 1.5)).toBe(48);
+    expect(scaledFieldHeight(undefined, 2)).toBeUndefined();
+    // The line scales with the font and the padding does not, so it still fits.
+    const sm = searchInputSize("sm", false);
+    const md = searchInputSize("md", false);
+    for (const scale of [1, 1.35, 2, 3.1]) {
+      expect(2 * sm.paddingY + 2 + 20 * scale, `sm ${scale}`).toBeLessThanOrEqual(scaledFieldHeight(sm.height, scale)!);
+      expect(2 * md.paddingY + 2 + 24 * scale, `md ${scale}`).toBeLessThanOrEqual(scaledFieldHeight(md.height, scale)!);
+    }
+    expect(searchInputSize("sm", true).height).toBeUndefined();
   });
 
   it("is the larger Input with larger text, at both sizes", () => {
@@ -155,7 +180,7 @@ describe("SearchInput (behaviour)", () => {
       placeholderTextColor: palette.fieldPlaceholder.light,
       returnKeyType: "search",
     });
-    expect(style).toMatchObject({ minHeight: 32, paddingLeft: 32, paddingRight: 14, fontSize: 14 });
+    expect(style).toMatchObject({ minHeight: 32, height: 32, paddingTop: 4, paddingBottom: 4, paddingLeft: 32, paddingRight: 14, fontSize: 14 });
     expect(style).not.toHaveProperty("lineHeight");
     expect(style.borderRadius).toBe(tokens.radius.field);
   });
@@ -219,8 +244,16 @@ describe("SearchInput (behaviour)", () => {
 
   it("is 40 high with the icon at 12 at size md", async () => {
     const { iconBox, style } = await render({ value: "", onChange: () => {}, size: "md" });
-    expect(style).toMatchObject({ minHeight: 40, paddingLeft: 36, fontSize: 16 });
+    expect(style).toMatchObject({ minHeight: 40, height: 40, paddingTop: 7, paddingBottom: 7, paddingLeft: 36, fontSize: 16 });
     expect(flatten(iconBox.props.style).left).toBe(12);
+  });
+
+  it("grows the locked field with the system font size", async () => {
+    fontScale.value = 1.5;
+    expect((await render({ value: "", onChange: () => {} })).style.height).toBe(48);
+    expect((await render({ value: "", onChange: () => {}, size: "md" })).style.height).toBe(60);
+    fontScale.value = 0.82;
+    expect((await render({ value: "", onChange: () => {} })).style.height).toBe(32);
   });
 
   it("hides the clear button on a field that is not editable", async () => {
@@ -232,6 +265,8 @@ describe("SearchInput (behaviour)", () => {
     larger.value = true;
     const { icon, clear, style } = await render({ value: "pink", onChange: () => {} });
     expect(style).toMatchObject({ minHeight: 64, fontSize: 20, fontWeight: "500", paddingRight: 48 });
+    // No lock: the minimum height grows the larger field.
+    expect(style.height).toBeUndefined();
     expect(icon.props.size).toBe(24);
     expect(clear!.props.hitSlop).toEqual(touchSlop(32));
   });

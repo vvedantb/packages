@@ -148,14 +148,12 @@ describe("granular entries", () => {
     ]);
   });
 
-  it("brand, button and search-input reach no heavy peer, not even a loader", () => {
+  it("brand, button, search-input and toast reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
-  });
-
-  it("gives the toast entry blur through its loader only, and no haptics or gradient", () => {
-    expect(heavyRefs("./toast")).toEqual(["blur.ts: lazy expo-blur", "blur.ts: type expo-blur"]);
+    // From 0.3.12 the toast surface is flat, so the entry no longer reaches the expo-blur loader.
+    expect(heavyRefs("./toast")).toEqual([]);
   });
 
   it("loads expo-linear-gradient on the ambient entry only through its loader", () => {

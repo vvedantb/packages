@@ -585,7 +585,7 @@ describe("typeStyle", () => {
 });
 
 describe("sizeStyle", () => {
-  it("is the Tailwind size and default line height, or leading-tight", () => {
+  it("is the Tailwind size and default line height, or leading-tight or leading-snug", () => {
     expect(sizeStyle("text-xs")).toEqual({ fontSize: 12, lineHeight: 16 });
     expect(sizeStyle("text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
     expect(sizeStyle("text-base")).toEqual({ fontSize: 16, lineHeight: 24 });
@@ -594,6 +594,7 @@ describe("sizeStyle", () => {
     expect(sizeStyle("text-2xl")).toEqual({ fontSize: 24, lineHeight: 32 });
     expect(sizeStyle("text-base", "tight")).toEqual({ fontSize: 16, lineHeight: 20 });
     expect(sizeStyle("text-2xl", "tight")).toEqual({ fontSize: 24, lineHeight: 30 });
+    expect(sizeStyle("text-sm", "snug")).toEqual({ fontSize: 14, lineHeight: 19.25 });
   });
 });
 

@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, useWindowDimensions, View } from "react-native";
 import { IconSearch, IconX } from "@tabler/icons-react-native";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
 import {
   fieldStyle,
   fieldTextStyle,
+  scaledFieldHeight,
   searchInputSize,
   sizeStyle,
   touchSlop,
@@ -26,7 +27,7 @@ type SearchInputProps = Omit<
   onChange: (value: string) => void;
   /** Accessibility label, and the placeholder when `placeholder` is not set. Default `"Search"`. */
   label?: string;
-  /** `sm` is 32 high (web `h-8`), `md` is 40 (web `h-10`). Default `"sm"`. */
+  /** `sm` is 32 high (web `h-8`), `md` is 40 (web `h-10`), border included. Default `"sm"`. */
   size?: SearchInputSize;
   /** Called after `onChange` whenever the value becomes empty (typed away or cleared). */
   onClear?: () => void;
@@ -81,6 +82,7 @@ const SearchInput = React.forwardRef<
   ) => {
     const largerText = useLargerText();
     const scheme = useScheme();
+    const { fontScale } = useWindowDimensions();
     const metrics = searchInputSize(size, largerText);
     const change = searchChange(onChange, onClear);
     const filled = value.length > 0;
@@ -107,6 +109,9 @@ const SearchInput = React.forwardRef<
             fieldTextStyle(scheme),
             {
               minHeight: metrics.minHeight,
+              // The web border-box height, so the class line height cannot
+              // grow the field; it still grows with the system font size.
+              height: scaledFieldHeight(metrics.height, fontScale),
               paddingTop: metrics.paddingY,
               paddingBottom: metrics.paddingY,
               paddingLeft: metrics.paddingLeft,

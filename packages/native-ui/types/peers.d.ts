@@ -362,6 +362,8 @@ declare module "react-native-svg" {
     strokeWidth?: number | string;
     strokeLinecap?: "butt" | "round" | "square";
     strokeLinejoin?: "miter" | "round" | "bevel";
+    fillRule?: "evenodd" | "nonzero";
+    clipRule?: "evenodd" | "nonzero";
     opacity?: number;
   }
   export interface SvgProps extends Omit<ViewProps, "style">, PaintProps {

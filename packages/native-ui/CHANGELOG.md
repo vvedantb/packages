@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.12
+
+Toast look and `SearchInput` heights, from the phone-width (390 × 844) comparison of Expo web against the web gallery.
+
+- **Visible change: filled toast icons.** `Toaster` draws the web `filledToastIcons` (`sonner-icons.tsx`, `toastIcons="filled24"`) instead of the Tabler outline icons (`IconCircleCheck`, `IconCircleX`, `IconAlertTriangle`, `IconInfoCircle` at 22). The paths, viewBoxes and even-odd rule are copied from the web file, drawn filled at 24 with no stroke through `react-native-svg`. The colours are `palette.success`, `palette.danger` (the web `text-destructive` is `--danger`), `palette.warning` and, for info, `palette.primary` (the web `text-primary`; it was the muted grey). Loading keeps `ActivityIndicator`. The paths and chrome values are in the new internal `src/toastChrome.ts`.
+- **Visible change: toast type and chrome**, the web `createToasterClassNames` defaults:
+  - Title: `text-sm` medium, 14 / 19.25 (`leading-snug`), weight 500, set as styles beside the class. It was `text-base` semibold, 16 / 24, weight 600. With larger text it stays `text-lg`, now medium.
+  - Surface: radius 16 (`rounded-lg`, `tokens.radius.lg`), the flat overlay fill (`glass-panel-strong`, `palette.overlay`), a 1 px ring in the border colour at 60% and a `0 4px 12px` shadow at 0.08 (`smooth-shadow-ring-md`). It was `FloatingSurface` at `FLOATING_ROW_RADIUS` (20), with the glass blur and the floating `0 8 20` shadow at 0.12. iOS uses the shadow props with radius 6 (half the CSS blur); Android and web use `boxShadow`. The ring is a border, so the painted toast is the web toast plus its ring.
+  - The row is unchanged: `gap-3 px-4 py-3`.
+  - Measured on Expo web at 390 after the change, light and dark: toast 50 high (the web gallery's 48 plus its 1 px ring), radius 16, icon 24, title 14 / 19.25 at weight 500.
+  - Still different from the web: the description stays `text-sm` (web `text-[13px] leading-snug`), the action button keeps its native pill, and toasts list 8 apart instead of in sonner's collapsed stack.
+- **`/toast` entry.** It no longer reaches the `expo-blur` loader, as the toast no longer blurs. It imports `react-native-svg`, which the Tabler icons it used already needed.
+- **Fix: `SearchInput` heights.** `searchInputSize` gains `height`: 32 for `sm` and 40 for `md`, border included, as the web `h-8` and `h-10` are border-box. `SearchInput` sets it, so the line height of the `text-*` class cannot grow the field.
+  - Measured on Expo web at 390: before, `sm` 32 and `md` 42; after, 32 and 40.
+  - `md` pads 7 above and below (was 8, the web `py-2`), so its 24 line fits inside 40. `sm` keeps 4.
+  - The lock grows with the system font size: the new internal `scaledFieldHeight(height, fontScale)` multiplies it by `useWindowDimensions().fontScale` above 1. A large Dynamic Type size still grows the field, as the minimum height did.
+  - With larger text there is no lock (64 minimum, as before). The icon and clear metrics are unchanged.
+- `sizeStyle` takes `"snug"` (`leading-snug`, 1.375 × the size).
+- `types/peers.d.ts` declares `fillRule` and `clipRule` on the `react-native-svg` paint props.
+- Tests:
+  - `tests/toast.test.ts` reads the web `sonner-icons.tsx` and checks each native path, viewBox and fill rule against it, and that the web icons are filled (`fill-current`, no stroke) in the colours `toastIconColor` returns. It calls `Toaster` with React Native and its peers stubbed and checks each variant's 24 `Svg` and filled `Path`, the dark scheme, the loading spinner, the title (14 / 19.25 at 500, `text-lg` with larger text), the `gap-3 px-4 py-3` row, the surface (radius 16, overlay fill, ring) in both schemes, and the shadow against the web `smooth-shadow-ring-md` (not the 0.3.11 radius 20 or `0 8 20` at 0.12).
+  - `tests/searchInput.test.ts` checks `height` 32 and 40 against the web `h-8` and `h-10`, that padding, border and line fit each lock, the rendered `height`, and the growth with `fontScale`.
+  - `tests/androidShadow.test.ts` and `tests/subpaths.test.ts` follow the flat toast surface; the `/toast` entry reaches no heavy peer. `tests/mobile.test.ts` checks the scaled lock. `tests/controlStyles.test.ts` checks `"snug"`. `tests/exports.test.ts` checks the 0.3.12 version.
+  - Mutation check: changing one icon path, the radius, the shadow opacity, the title weight, `fill` to `stroke`, or the `sm` height fails at least one test.
+- Not checked on a device. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.11
 
 The rest of the 0.3.10 fix. Native Tabler (`@tabler/icons-react-native`) reads `strokeWidth` as the line width and passes `stroke` on as the SVG colour. The web `@tabler/icons-react` reads `stroke` as the width. A numeric `stroke` on native gives `stroke="2"`, so the line does not show on Expo web.

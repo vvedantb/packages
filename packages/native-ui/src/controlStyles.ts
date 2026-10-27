@@ -133,15 +133,19 @@ const TEXT_SIZE = {
 
 export type TextSize = keyof typeof TEXT_SIZE;
 
+/** Tailwind `leading-tight` and `leading-snug`, as multiples of the size. */
+const LEADING = { tight: 1.25, snug: 1.375 } as const;
+
 /**
  * Font size and line height of a `text-*` class as a style, set beside the
  * class. On Expo web at 390 wide (0.3.6 gallery), `Button` labels with
  * `text-sm` measured 16, so the class alone does not always reach the text.
- * `"tight"` is the Tailwind `leading-tight` (1.25 × the size).
+ * `"tight"` and `"snug"` are the Tailwind `leading-tight` (1.25 × the size)
+ * and `leading-snug` (1.375 ×).
  */
-export function sizeStyle(size: TextSize, leading?: "tight") {
+export function sizeStyle(size: TextSize, leading?: "tight" | "snug") {
   const { fontSize, lineHeight } = TEXT_SIZE[size];
-  return { fontSize, lineHeight: leading === "tight" ? fontSize * 1.25 : lineHeight };
+  return { fontSize, lineHeight: leading ? fontSize * LEADING[leading] : lineHeight };
 }
 
 /**
@@ -191,15 +195,21 @@ export type SearchInputSize = "sm" | "md";
  * (the phone `text-base`) with the icon at `left-3`. Both have a 16 search
  * icon, the field `px-3.5` at the end, and the `h-6 w-6` clear button at
  * `right-2` with a 14 cross, for which a filled field reserves `pr-9`.
- * `minHeight` is a minimum, so a large Dynamic Type size grows the field. `sm`
- * pads 4 above and below, not the web 8: a native field adds its padding to
- * the line height, so 8 would draw it taller than 32. With larger text both
- * sizes are the larger `Input` (64 high, `text-xl`).
+ * `height` locks the field at the web height, border included (the web
+ * `h-8` and `h-10` are border-box), so the line height of the `text-*` class
+ * cannot grow it. `SearchInput` scales it with the system font size
+ * (`scaledFieldHeight`), so a large Dynamic Type size still grows the field.
+ * The padding leaves room for the line inside the lock: `sm` pads 4 above and
+ * below and `md` 7, not the web 8, because a native field adds its padding to
+ * the line height (8 drew `md` 42 high on Expo web). With larger text both
+ * sizes are the larger `Input` (64 high, `text-xl`), with a minimum height
+ * and no lock.
  */
 export function searchInputSize(size: SearchInputSize, largerText: boolean) {
   if (largerText) {
     return {
       minHeight: 64,
+      height: undefined,
       paddingY: 16,
       paddingLeft: 48,
       paddingRight: 16,
@@ -221,8 +231,18 @@ export function searchInputSize(size: SearchInputSize, largerText: boolean) {
     clearRight: 8,
   } as const;
   return size === "md"
-    ? { ...shared, minHeight: 40, paddingY: 8, paddingLeft: 36, text: "text-base", iconLeft: 12 } as const
-    : { ...shared, minHeight: 32, paddingY: 4, paddingLeft: 32, text: "text-sm", iconLeft: 8 } as const;
+    ? { ...shared, minHeight: 40, height: 40, paddingY: 7, paddingLeft: 36, text: "text-base", iconLeft: 12 } as const
+    : { ...shared, minHeight: 32, height: 32, paddingY: 4, paddingLeft: 32, text: "text-sm", iconLeft: 8 } as const;
+}
+
+/**
+ * A locked field height at the system font scale (`useWindowDimensions().fontScale`):
+ * `height` up to a scale of 1, and `height` × the scale above it, as a web
+ * `rem` height grows with the browser text size. `undefined` (no lock) stays
+ * `undefined`.
+ */
+export function scaledFieldHeight(height: number | undefined, fontScale: number) {
+  return height === undefined ? undefined : height * Math.max(1, fontScale);
 }
 
 export type TabsVariant = "pills" | "segmented" | "soft";

@@ -10,17 +10,17 @@ import {
 import { FadeInUp, FadeOutUp, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
-import {
-  IconAlertTriangle,
-  IconCircleCheck,
-  IconCircleX,
-  IconInfoCircle,
-} from "@tabler/icons-react-native";
-import { FloatingSurface } from "./FloatingSurface";
+import Svg, { Path } from "react-native-svg";
 import { cn } from "./cn";
-import { textStyle, typeStyle } from "./controlStyles";
-import { FLOATING_INSET, FLOATING_ROW_RADIUS } from "./floating";
-import { palette } from "./palette";
+import { sizeStyle, textStyle, typeStyle } from "./controlStyles";
+import { FLOATING_INSET } from "./floating";
+import {
+  TOAST_ICON_SIZE,
+  TOAST_ICONS,
+  toastIconColor,
+  toastShadowStyle,
+  toastSurfaceStyle,
+} from "./toastChrome";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -30,6 +30,8 @@ import { getToasts, subscribeToasts, toast, type ToastItem } from "./toastStore"
 // On iOS the overlay draws above RN `Modal`s, so toasts show over dialogs (as
 // sonner does on the web). On Android a `Modal` still covers them.
 const FullWindowOverlay = Platform.OS === "ios" ? RNFullWindowOverlay : Fragment;
+
+const toastShadow = toastShadowStyle(Platform.OS);
 
 /**
  * Renders the `toast()` queue at the top of the screen, inside the safe-area
@@ -60,23 +62,25 @@ export function Toaster({ offset = 8 }: { offset?: number }) {
   );
 }
 
+/** The web filled 24 icons (`toastChrome`), or a spinner while loading. */
 function ToastIcon({ item }: { item: ToastItem }) {
   const scheme = useScheme();
-  const size = 22;
-  switch (item.variant) {
-    case "success":
-      return <IconCircleCheck size={size} color={palette.success[scheme]} />;
-    case "error":
-      return <IconCircleX size={size} color={palette.danger[scheme]} />;
-    case "warning":
-      return <IconAlertTriangle size={size} color={palette.warning[scheme]} />;
-    case "info":
-      return <IconInfoCircle size={size} color={tokens.color.muted[scheme]} />;
-    case "loading":
-      return <ActivityIndicator size="small" color={tokens.color.muted[scheme]} />;
-    default:
-      return null;
+  if (item.variant === "loading") {
+    return <ActivityIndicator size="small" color={tokens.color.muted[scheme]} />;
   }
+  if (item.variant === "default") return null;
+  const { viewBox, d, evenOdd } = TOAST_ICONS[item.variant];
+  const rule = evenOdd ? "evenodd" : undefined;
+  return (
+    <Svg width={TOAST_ICON_SIZE} height={TOAST_ICON_SIZE} viewBox={viewBox}>
+      <Path
+        d={d}
+        fill={toastIconColor(item.variant, scheme)}
+        fillRule={rule}
+        clipRule={rule}
+      />
+    </Svg>
+  );
 }
 
 function ToastCard({ item }: { item: ToastItem }) {
@@ -101,7 +105,8 @@ function ToastCard({ item }: { item: ToastItem }) {
       exiting={FadeOutUp.duration(160)}
       layout={LinearTransition}
     >
-      <FloatingSurface radius={FLOATING_ROW_RADIUS}>
+      {/* The web toast: flat overlay fill, radius 16, ring and a light shadow. */}
+      <View style={[toastSurfaceStyle(scheme), toastShadow]}>
         <Pressable
           testID={`toast-${item.id}`}
           // With an action, the text and the action button stay separate
@@ -114,12 +119,17 @@ function ToastCard({ item }: { item: ToastItem }) {
         >
           <ToastIcon item={item} />
           <View className="min-w-0 flex-1">
+            {/* Web `text-sm font-medium leading-snug` (14 / 19.25, 500); `text-lg` with larger text. */}
             <Text
               className={cn(
-                "font-instrument-sans-semibold",
-                largerText ? "text-lg" : "text-base",
+                "font-instrument-sans-medium",
+                largerText ? "text-lg" : "text-sm",
               )}
-              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+              style={[
+                textStyle("foreground", scheme),
+                typeStyle("medium"),
+                largerText ? sizeStyle("text-lg") : sizeStyle("text-sm", "snug"),
+              ]}
             >
               {item.title}
             </Text>
@@ -154,7 +164,7 @@ function ToastCard({ item }: { item: ToastItem }) {
             </Pressable>
           ) : null}
         </Pressable>
-      </FloatingSurface>
+      </View>
     </NativeOnlyAnimatedView>
   );
 }

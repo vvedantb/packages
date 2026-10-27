@@ -94,10 +94,19 @@ describe("Android floating shadow rules", () => {
     }
   });
 
-  it("raises overlays and toasts with FloatingSurface, opaque when nested in a Modal", () => {
+  it("raises overlays with FloatingSurface, opaque when nested in a Modal", () => {
     for (const file of ["Dialog.tsx", "Sheet.tsx"]) {
       expect(readSrc(file), file).toMatch(/<FloatingSurface blur=\{false\}/);
     }
-    expect(readSrc("Toast.tsx")).toMatch(/<FloatingSurface/);
+  });
+
+  it("draws toasts on the flat web toast surface, with boxShadow off iOS", () => {
+    // From 0.3.12: the web `glass-panel-strong` and `smooth-shadow-ring-md`
+    // (`toastChrome.ts`, tested in toast.test.ts), not the blurred row surface.
+    const src = readSrc("Toast.tsx");
+    expect(src).toMatch(/<View style=\{\[toastSurfaceStyle\(scheme\), toastShadow\]\}>/);
+    expect(src).toMatch(/const toastShadow = toastShadowStyle\(Platform\.OS\);/);
+    expect(src).not.toMatch(/FloatingSurface|FLOATING_ROW_RADIUS/);
+    expect(readSrc("toastChrome.ts")).toMatch(/return \{ boxShadow: /);
   });
 });

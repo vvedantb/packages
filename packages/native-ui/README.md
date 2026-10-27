@@ -61,7 +61,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
 | `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
-| `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | `expo-blur` (loader) |
+| `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
 | `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
@@ -165,7 +165,7 @@ From 0.3.7, in a compact window (639 wide or less, or 500 high or less: the web 
 
 From 0.3.8 `UpgradeToProCard` has the web `SidebarUpgradeCard` sizes: a 14 / 600 title, a 32-high pill with a 12 / 500 label (the web `Button` `sm`), `px-3 py-2.5` padding and radius 16. With larger text the title and pill keep their larger sizes.
 
-From 0.3.9 `SearchInput` is the web search field: a search icon, and a clear button while there is text. It is controlled with `value` and `onChange(text)`; `onClear` runs whenever the value becomes empty. `size="sm"` (default) is 32 high and `md` 40, as on the web. The clear button is painted at 24 and reaches 44 with its hit slop. Inside a `ScrollView`, set `keyboardShouldPersistTaps="handled"` so the first tap on it clears while the keyboard is up. The web `shortcut` hint and `toolbar` variant are not ported.
+From 0.3.9 `SearchInput` is the web search field: a search icon, and a clear button while there is text. It is controlled with `value` and `onChange(text)`; `onClear` runs whenever the value becomes empty. `size="sm"` (default) is 32 high and `md` 40, border included, as on the web. From 0.3.12 that height is locked, so the line height of the text class cannot grow the field; it still grows with the system font size. The clear button is painted at 24 and reaches 44 with its hit slop. Inside a `ScrollView`, set `keyboardShouldPersistTaps="handled"` so the first tap on it clears while the keyboard is up. The web `shortcut` hint and `toolbar` variant are not ported.
 
 ```tsx
 const [query, setQuery] = useState("");
@@ -173,6 +173,8 @@ const [query, setQuery] = useState("");
 ```
 
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.
+
+From 0.3.12 a toast looks like the web `SonnerToaster` at its default density with `toastIcons="filled24"`: the filled 24 success, info, warning and error icons (the web paths, in `palette` colours), a `text-sm` medium title, `px-4 py-3`, radius 16, and the flat overlay fill with a 1 px ring and a light shadow (`smooth-shadow-ring-md`). Toasts no longer blur.
 
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
 
@@ -182,7 +184,7 @@ Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Th
 
 The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `SearchInput` clear button (24), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
 
-Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label; only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
+Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label (the `SearchInput` lock grows with the font scale); only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
 
 ## Floating UI / Android shadows
 
@@ -192,7 +194,7 @@ Only chrome that floats on the web too has a shadow: dialogs, sheets and toasts,
 
 ## Glass blur (iOS and Android)
 
-With `expo-blur` installed, `FloatingSurface` blurs on iOS and Android. So do the components built on it: `FloatingTabBar`, toasts, the `Select` popover and `GlassSheetBackground`. `Card` and `SettingsSection` do not blur from 0.3.5. Web uses a CSS backdrop blur. A surface draws the solid fill when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on.
+With `expo-blur` installed, `FloatingSurface` blurs on iOS and Android. So do the components built on it: `FloatingTabBar`, the `Select` popover and `GlassSheetBackground`. `Card` and `SettingsSection` do not blur from 0.3.5, nor toasts from 0.3.12. Web uses a CSS backdrop blur. A surface draws the solid fill when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on.
 
 Since expo-blur 55, Android blur needs a target: the content to blur. Wrap the screen content in `GlassBlurTarget` and render the floating chrome outside it, with both inside one `GlassBlurProvider`:
 

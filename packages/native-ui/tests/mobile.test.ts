@@ -327,6 +327,8 @@ describe("Dynamic Type", () => {
     expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
     expect(read("DateTimeField.tsx")).toMatch(/largerText \? "min-h-16" : "min-h-14"/);
     expect(read("SearchInput.tsx")).toMatch(/minHeight: metrics\.minHeight,/);
+    // The SearchInput lock grows with the font scale (tests/searchInput.test.ts).
+    expect(read("SearchInput.tsx")).toMatch(/height: scaledFieldHeight\(metrics\.height, fontScale\),/);
   });
 });
 

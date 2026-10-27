@@ -1,6 +1,6 @@
 # `@vvedantb/native-ui` parity with `@vvedantb/ui`
 
-Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.9, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery. 0.3.4 fixes the tab colours and the field placeholders in dark mode. 0.3.5 makes cards flat, sizes tabs and the switch as on the web, sets title and button weights as styles, and covers phone use: 44 pt touch targets, accessibility roles and states, Dynamic Type, Reduce Motion, safe-area insets and the keyboard. See [Phones and accessibility](#phones-and-accessibility). 0.3.9 ports `SearchInput`, adds the `/search-input` and `/toast` entries, and hides `FloatingTabBar` tabs for routes with Expo Router's `href: null`.
+Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.9, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery. 0.3.4 fixes the tab colours and the field placeholders in dark mode. 0.3.5 makes cards flat, sizes tabs and the switch as on the web, sets title and button weights as styles, and covers phone use: 44 pt touch targets, accessibility roles and states, Dynamic Type, Reduce Motion, safe-area insets and the keyboard. See [Phones and accessibility](#phones-and-accessibility). 0.3.9 ports `SearchInput`, adds the `/search-input` and `/toast` entries, and hides `FloatingTabBar` tabs for routes with Expo Router's `href: null`. 0.3.12 gives `Toaster` the web toast look and locks the `SearchInput` heights.
 
 This audit lists every public export of `@vvedantb/ui` and says whether `@vvedantb/native-ui` has an equivalent. It also records how the two packages share design tokens and brand data.
 
@@ -46,7 +46,7 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | --- | --- | --- | --- |
 | `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. From 0.3.3, without larger text: web heights and padding (`sm` 32, `default` 40, `lg` 44), `text-sm` / `text-xs` medium and radius 16 (web `rounded-lg`). From 0.3.5: no shadow by default, as on the web; `loading` shows the web 16 ring and keeps the label. `primary`, `small`, `medium` and `large` are aliases of the web names. |
 | `Input` | `Input` | same | Web field look (white, bordered), web radius (10), height (40) and padding from 0.3.3. Placeholder in `palette.fieldPlaceholder`, also on iOS and Android from 0.3.4. |
-| `SearchInput` | `SearchInput` (0.3.9) | partial | Web sizes (`sm` 32, `md` 40), 16 search icon, and a clear button (24, labelled "Clear search") with a hit slop to 44. `value` / `onChange(text)`, `label`, `placeholder`, `onClear`, `clearLabel`. No `shortcut` hint, `toolbar` variant, `SearchInputConfig` or dissolve animation. Also on `@vvedantb/native-ui/search-input`. |
+| `SearchInput` | `SearchInput` (0.3.9) | partial | Web sizes (`sm` 32, `md` 40, border included; locked from 0.3.12 and scaled with the font size), 16 search icon, and a clear button (24, labelled "Clear search") with a hit slop to 44. `value` / `onChange(text)`, `label`, `placeholder`, `onClear`, `clearLabel`. No `shortcut` hint, `toolbar` variant, `SearchInputConfig` or dissolve animation. Also on `@vvedantb/native-ui/search-input`. |
 | `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look; web `min-h-20`. |
 | `Label` | `Label` (new) | same | Colour from `tokens` (a style) from 0.3.3. From 0.3.7 the web `text-sm` medium (14 / 500), with size and weight as styles. The web `leading-none` and `text-foreground/90` are not ported (line height 20, full foreground). |
 | `Card` and parts | `Card` and parts (new parts) | same | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` added. The existing `title` / `leftIcon` / `action` API is unchanged; `description` and `className` added. From 0.3.5 the card is flat, as on the web: `surfaceCard` fill, radius 16, no shadow or blur. |
@@ -61,7 +61,7 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | `Tabs` | `Tabs` (new), `PillTabs` | same | `pills`, `segmented`, `soft`. From 0.3.4 fills and labels are the web tab colours (`tabColors`), not pink. From 0.3.5 the web sizes (30 high, `text-sm` medium), as wide as the tabs and at the start. |
 | `Avatar` | `Avatar` (new) | same | |
 | `Skeleton` | `Skeleton` | same | Now takes `View` props and respects Reduce Motion. |
-| `toast`, `SonnerToaster` | `toast`, `Toaster` (new) | partial | Top toasts, no sonner. From 0.3.9 also on `@vvedantb/native-ui/toast`, which reaches only the `expo-blur` loader. |
+| `toast`, `SonnerToaster` | `toast`, `Toaster` (new) | partial | Top toasts, no sonner. From 0.3.9 also on `@vvedantb/native-ui/toast`. From 0.3.12 the default-density look: the filled 24 icons, a `text-sm` medium title, radius 16 and the flat overlay fill with the `smooth-shadow-ring-md` ring and shadow, and no blur, so the entry reaches no optional-peer loader. |
 | `Separator` | `Separator` (new) | same | |
 | `Progress` | `Progress` (new) | same | |
 | `Spinner`, `CenteredSpinner` | `Spinner`, `CenteredSpinner` (new) | partial, same | System spinner; no SVG variants. |
@@ -124,7 +124,7 @@ The light changes are small (each channel moves by 14 or less out of 255, the mo
 | `pill` | 999 | `rounded-full` | yes |
 | `spacing.unit` | 16 | 1rem | yes |
 
-`FLOATING_ROW_RADIUS` (list rows and toasts; `UpgradeToProCard` until 0.3.7) was `tokens.radius.field`. It is now the literal 20, so rows look as before. From 0.3.8 `UpgradeToProCard` uses 16, the web `rounded-2xl`. `tokens` is also a public export of `@vvedantb/ui`, so these values change there too, with no `@vvedantb/ui` version bump yet.
+`FLOATING_ROW_RADIUS` (list rows; toasts until 0.3.11; `UpgradeToProCard` until 0.3.7) was `tokens.radius.field`. It is now the literal 20, so rows look as before. From 0.3.8 `UpgradeToProCard` uses 16, the web `rounded-2xl`, and from 0.3.12 toasts use 16, the web `rounded-lg`. `tokens` is also a public export of `@vvedantb/ui`, so these values change there too, with no `@vvedantb/ui` version bump yet.
 
 ### Instrument Sans
 
@@ -256,8 +256,8 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/skeleton.tsx` | `Skeleton` | same | `Skeleton` | Same `className` API; now takes `View` props and holds still with Reduce Motion. Native colour stays `neutral-200` / `neutral-700`. |
 | `src/ui/slide-over-panel.tsx` | `SlideOverPanel`, `SlideOverPanelProps`ᵀ | partial | `Sheet` | Bottom sheet only. |
 | `src/ui/slider.tsx` | `SliderConfig`ᵀ, `Slider`, `SliderProps`ᵀ | missing (needs dep) | — | Needs `@react-native-community/slider`. |
-| `src/ui/sonner.tsx` | `SonnerToaster`, `createToasterClassNames`, `hoverChipCloseButtonClassName`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `sonnerVarsStyle`, `SonnerToasterConfig`ᵀ, `SonnerToasterOptions`ᵀ | partial | `Toaster` | Top toasts under the safe area, no sonner. The class-merging helpers are n/a. |
-| `src/ui/sonner-icons.tsx` | `filledToastIcons` | n/a | — | Sonner icon set; `Toaster` uses Tabler icons. |
+| `src/ui/sonner.tsx` | `SonnerToaster`, `createToasterClassNames`, `hoverChipCloseButtonClassName`, `mergeToastClassNames`, `mergeToastOptions`, `mergeToasterStyle`, `sonnerVarsStyle`, `SonnerToasterConfig`ᵀ, `SonnerToasterOptions`ᵀ | partial | `Toaster` | Top toasts under the safe area, no sonner. From 0.3.12 the default-density toast classes: `rounded-lg`, `gap-3 px-4 py-3`, title `text-sm font-medium leading-snug`, `glass-panel-strong` and `smooth-shadow-ring-md`. The description stays `text-sm` (web `text-[13px]`), and the action button keeps its native pill. The class-merging helpers are n/a. |
+| `src/ui/sonner-icons.tsx` | `filledToastIcons` | partial | `Toaster` | From 0.3.12 `Toaster` draws the same success, info, warning and error paths (`src/toastChrome.ts`), filled at 24 in `palette` colours. No exported icon set; loading stays `ActivityIndicator` and native toasts have no close button. |
 | `src/ui/spinner.tsx` | `SpinnerMarkShape`ᵀ, `SpinnerMark`ᵀ, `SpinnerCircleColors`ᵀ, `SpinnerConfig`ᵀ, `SpinnerProps`ᵀ, `Spinner` | partial | `Spinner` | Platform `ActivityIndicator` with `size` and `tone`. The `mark`, `circle` and `ring` SVG variants are not ported. |
 | `src/ui/status-dot.tsx` | `StatusDot`, `StatusTone`ᵀ, `StatusDotConfig`ᵀ, `StatusDotProps`ᵀ | same | `StatusDot` | Same tones and sizes. |
 | `src/ui/surface.tsx` | `SurfaceProps`ᵀ, `Surface`, `surfaceVariants` | partial | `FloatingSurface` | Different API. |
