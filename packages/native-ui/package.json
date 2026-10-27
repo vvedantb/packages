@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, overlays, toasts, settings chrome, tab bar and the family app marks.",
   "type": "module",
@@ -20,6 +20,14 @@
     "./gallery": {
       "types": "./src/examples/ParityGallery.tsx",
       "default": "./src/examples/ParityGallery.tsx"
+    },
+    "./blur": {
+      "types": "./src/blur.ts",
+      "default": "./src/blur.ts"
+    },
+    "./haptics": {
+      "types": "./src/haptics.ts",
+      "default": "./src/haptics.ts"
     },
     "./package.json": "./package.json"
   },
@@ -68,6 +76,12 @@
       "optional": true
     },
     "dayjs": {
+      "optional": true
+    },
+    "expo-blur": {
+      "optional": true
+    },
+    "expo-haptics": {
       "optional": true
     },
     "expo-router": {

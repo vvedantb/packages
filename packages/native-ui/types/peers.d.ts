@@ -11,6 +11,8 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
+// Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`).
+declare function require(id: string): unknown;
 
 declare module "react-native" {
   import type * as React from "react";
@@ -379,9 +381,21 @@ declare module "react-native-svg" {
 
 declare module "expo-blur" {
   import type * as React from "react";
-  import type { ViewProps } from "react-native";
-  export const BlurView: React.ComponentType<
-    ViewProps & { tint?: string; intensity?: number }
+  import type { View, ViewProps } from "react-native";
+
+  export type BlurMethod = "none" | "dimezisBlurView" | "dimezisBlurViewSdk31Plus";
+  export interface BlurViewProps extends ViewProps {
+    tint?: string;
+    intensity?: number;
+    blurReductionFactor?: number;
+    /** @deprecated Use `blurMethod`. */
+    experimentalBlurMethod?: BlurMethod;
+    blurMethod?: BlurMethod;
+    blurTarget?: React.RefObject<React.ComponentRef<typeof View> | null>;
+  }
+  export const BlurView: React.ComponentType<BlurViewProps>;
+  export const BlurTargetView: React.ComponentType<
+    ViewProps & { ref?: React.Ref<React.ComponentRef<typeof View>> }
   >;
 }
 

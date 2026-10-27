@@ -24,12 +24,43 @@ describe("Android floating shadow rules", () => {
     expect(src).toMatch(/FLOATING_ROW_RADIUS = tokens\.radius\.field/);
   });
 
-  it("clips inside FloatingSurface and blurs only on iOS", () => {
+  it("clips inside FloatingSurface and blurs on iOS and Android through expo-blur", () => {
     const src = readSrc("FloatingSurface.tsx");
-    expect(src).toMatch(/Platform\.OS === "ios"/);
-    expect(src).toMatch(/Platform\.OS === "android"/);
     expect(src).toMatch(/styles\.clip/);
     expect(src).not.toMatch(/className=\{cn\("overflow-hidden"/);
+    // The solid fill comes from `glassMode` (no expo-blur, blur off, Reduce
+    // Transparency), not from the platform.
+    expect(src).toMatch(/glassMode\(/);
+    expect(src).toMatch(/mode === "solid" \? opaqueFill : translucentFill/);
+    expect(src).not.toMatch(/Platform\.OS === "android" \|\|/);
+    expect(src).not.toMatch(/=== "ios";/);
+    expect(src).toMatch(/const BlurView = loadBlur\(\)\?\.BlurView/);
+  });
+
+  it("uses the dimezis blur on Android with the GlassBlurTarget", () => {
+    const src = readSrc("FloatingSurface.tsx");
+    expect(src).toMatch(
+      /experimentalBlurMethod=\{\s*Platform\.OS === "android" \? "dimezisBlurView" : undefined\s*\}/,
+    );
+    expect(src).toMatch(/blurMethod="dimezisBlurView"/);
+    expect(src).toMatch(/blurReductionFactor=\{3\}/);
+    expect(src).toMatch(/intensity=\{70\}/);
+    expect(src).toMatch(/tint=\{isDark \? "systemMaterialDark" : "systemMaterialLight"\}/);
+    expect(src).toMatch(/blurTarget=\{blurTarget \?\? undefined\}/);
+
+    const target = readSrc("glassBlur.tsx");
+    expect(target).toMatch(/loadBlur\(\)\?\.BlurTargetView/);
+    // Surfaces inside the target must not blur their own ancestor.
+    expect(target).toMatch(/<GlassBlurContext\.Provider value=\{NO_TARGET\}>\{children\}/);
+  });
+
+  it("loads expo-blur and expo-haptics only through the optional-peer loaders", () => {
+    for (const file of listSrc()) {
+      expect(readSrc(file), file).not.toMatch(/^import (?!type )[^;]*from "expo-(?:blur|haptics)"/m);
+    }
+    expect(readSrc("blur.ts")).toMatch(/try \{\s*expoBlur = require\("expo-blur"\)/);
+    expect(readSrc("haptics.ts")).toMatch(/try \{\s*expoHaptics = require\("expo-haptics"\)/);
+    expect(readSrc("FloatingTabBar.tsx")).toMatch(/selectionHaptic\(\);/);
   });
 
   it("does not put NativeWind shadows on nested or translucent chrome", () => {

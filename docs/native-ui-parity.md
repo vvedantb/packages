@@ -180,7 +180,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | Module | Exports | Status | Native equivalent | Notes |
 | --- | --- | --- | --- | --- |
 | `src/ui/ui-config.tsx` | `UiConfigProvider`, `useUiConfig`, `UiConfig`ᵀ, `UiConfigProviderProps`ᵀ | n/a | — | Class-override config for web parts. Native parts take `className` and props directly. |
-| `src/ui/_menu-classes.ts` | `floatingSurfaceClass` | partial | `FloatingSurface` | A class string on the web; a component on native (blur on iOS, opaque on Android). |
+| `src/ui/_menu-classes.ts` | `floatingSurfaceClass` | partial | `FloatingSurface` | A class string on the web; a component on native (blur on iOS and Android when `expo-blur` is installed, opaque without it). |
 | `src/ui/_field-classes.ts` | `fieldFocusClass`, `fieldFocusWithinClass` | n/a | — | Keyboard focus-ring classes; touch fields have no focus ring. |
 | `src/ui/overlay-a11y.ts` | `restoreModalScrollLock` | n/a | — | DOM scroll-lock repair for Radix overlays. |
 | `src/ui/error-boundary.tsx` | `ErrorBoundary`, `ErrorBoundaryProps`ᵀ | missing | — | React-only, so portable as-is. Not copied in 0.3.0. |

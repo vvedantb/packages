@@ -14,7 +14,7 @@ Peers the app must already have (Expo SDK 57 / RN 0.76+):
 
 - `react`, `react-native`
 - `nativewind` `>=4`
-- `expo-blur`, `expo-haptics`, `expo-linear-gradient`
+- `expo-linear-gradient`
 - `react-native-reanimated`, `react-native-safe-area-context`, `react-native-screens`
 - `@rn-primitives/slot`, `@rn-primitives/switch`, `@rn-primitives/select`
 - `@expo/vector-icons`, `@tabler/icons-react-native`, `lucide-react-native`
@@ -26,6 +26,13 @@ Optional, only if you import those components:
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
 - `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`) and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
+
+Optional and loaded only when installed, so the package imports and runs without them:
+
+- `expo-blur` — glass blur on `FloatingSurface` and the chrome built on it. Without it, those surfaces draw a solid fill.
+- `expo-haptics` — the selection haptic on `FloatingTabBar`, `Tabs` and `Checkbox` presses. Without it, presses are silent.
+
+The package loads these two with a `require` inside `try`. Metro treats that as an optional dependency when `transformer.allowOptionalDependencies` is on, which is the default in the Expo and React Native Metro configs. `@vvedantb/native-ui/blur` exports the loader (`loadBlur`) and `@vvedantb/native-ui/haptics` exports `loadHaptics` and `selectionHaptic`. TypeScript still resolves their types: an app that type-checks without them reports a missing module in `src/blur.ts` or `src/haptics.ts`.
 
 ## Expo / NativeWind
 
@@ -111,7 +118,30 @@ Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Th
 
 ## Floating UI / Android shadows
 
-Do not put `elevation` or NativeWind `shadow-*` on nested or translucent chrome. `floatingShadow` is iOS `shadow*` and Android/web `boxShadow`. `FloatingSurface` paints an opaque fill on Android and clips on an inner view. Blur is iOS-only.
+Do not put `elevation` or NativeWind `shadow-*` on nested or translucent chrome. `floatingShadow` is iOS `shadow*` and Android/web `boxShadow`. `FloatingSurface` clips on an inner view.
+
+## Glass blur (iOS and Android)
+
+With `expo-blur` installed, `FloatingSurface` blurs on iOS and Android. So do the components built on it: `FloatingTabBar`, `Card`, `SettingsSection`, toasts, the `Select` popover and `GlassSheetBackground`. Web uses a CSS backdrop blur. A surface draws the solid fill when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on.
+
+Since expo-blur 55, Android blur needs a target: the content to blur. Wrap the screen content in `GlassBlurTarget` and render the floating chrome outside it, with both inside one `GlassBlurProvider`:
+
+```tsx
+import { GlassBlurProvider, GlassBlurTarget } from "@vvedantb/native-ui";
+
+<GlassBlurProvider>
+  <GlassBlurTarget>
+    <Stack />
+  </GlassBlurTarget>
+  <Toaster />
+</GlassBlurProvider>
+```
+
+With `FloatingTabBar`, put `GlassBlurProvider` around `Tabs` and wrap each tab screen's content in `GlassBlurTarget`. Pass `active={isFocused}` (for example from React Navigation's `useIsFocused()`) so the bar blurs the visible tab. The last active target wins.
+
+`GlassBlurTarget` is a view with `flex: 1`; pass `style` to change that. A blur view must not sit inside its own target, so surfaces inside a target (such as cards on the screen) get none. Without a target, expo-blur logs a warning on Android and draws only its tint, which under the glass fill looks almost solid.
+
+On Android the `BlurView` uses the dimezis method (`experimentalBlurMethod` and `blurMethod` set to `"dimezisBlurView"`) with `blurReductionFactor={3}`, and the same `tint` and `intensity` as iOS. The translucent glass fill is laid over the Android blur, because on iOS the blur samples that fill and dimezis does not. expo-blur 55 and later log a deprecation warning for `experimentalBlurMethod` when each Android `BlurView` mounts.
 
 ## Tokens
 

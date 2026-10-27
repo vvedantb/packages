@@ -153,13 +153,19 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.0 with a gallery entry, a typecheck script and react-native-svg as an optional peer", () => {
-    expect(pkg.version).toBe("0.3.0");
-    expect(existsSync(join(root, pkg.exports["./gallery"].default))).toBe(true);
+  it("is 0.3.1 with gallery, blur and haptics entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.1");
+    for (const entry of ["./gallery", "./blur", "./haptics"]) {
+      expect(existsSync(join(root, pkg.exports[entry].default)), entry).toBe(true);
+      expect(pkg.exports[entry].types, entry).toBe(pkg.exports[entry].default);
+    }
+    expect(pkg.exports["./package.json"]).toBe("./package.json");
     expect(pkg.exports["."].default).toBe("./src/index.ts");
     expect(pkg.scripts.typecheck).toBe("tsc -p tsconfig.typecheck.json");
-    expect(pkg.peerDependencies["react-native-svg"]).toBe("*");
-    expect(pkg.peerDependenciesMeta["react-native-svg"]).toEqual({ optional: true });
+    for (const peer of ["react-native-svg", "expo-blur", "expo-haptics"]) {
+      expect(pkg.peerDependencies[peer], peer).toBe("*");
+      expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
+    }
     expect(pkg.dependencies).toBeUndefined();
   });
 });

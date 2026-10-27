@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1
+
+- **Android glass blur.** With `expo-blur` installed, `FloatingSurface` now blurs on Android as well as iOS. So do `FloatingTabBar`, `Card`, `SettingsSection`, toasts, the `Select` popover and `GlassSheetBackground`. Before, Android always drew the solid fill. The solid fill is now used only when `expo-blur` is not installed, with `blur={false}`, or when Reduce Transparency is on. Web keeps the CSS backdrop blur.
+- Android `BlurView` settings: `experimentalBlurMethod="dimezisBlurView"`, plus `blurMethod="dimezisBlurView"` (the name since expo-blur 55), `blurReductionFactor={3}`, and the iOS `tint` (`systemMaterialLight` / `systemMaterialDark`) and `intensity={70}`. The translucent glass fill is laid over the Android blur, because the iOS blur samples that fill and dimezis does not. A factor of 3 blurs harder than the expo-blur default of 4 and keeps the radius (70 / 3, about 23) within the 25 px limit of the RenderScript blur that Dimezis uses below API 29. These values are derived from the expo-blur 58.0.5 source (its Android tint table and radius formula). They have not been checked on a device.
+- `GlassBlurProvider` and `GlassBlurTarget` now work; before, they only passed their children through. `GlassBlurTarget` renders an expo-blur `BlurTargetView` (a plain `View` without `expo-blur`), takes `View` props and an `active` prop, and becomes the Android blur target for floating surfaces in the same `GlassBlurProvider`. Since expo-blur 55, Android dimezis blur needs a target. Without one, expo-blur logs a warning and draws only its tint. **Layout change:** `GlassBlurTarget` now adds a view with `flex: 1`. Pass `style` if that does not suit.
+- **Optional peers.** `expo-blur` and `expo-haptics` are now optional peers. The package loads them with a `require` inside `try`, which Metro treats as an optional dependency, so `@vvedantb/native-ui` imports and runs without them. Without `expo-haptics`, `selectionHaptic()` does nothing. With it, `FloatingTabBar`, `Tabs` and `Checkbox` presses still fire the selection haptic on iOS and Android.
+- New entries: `@vvedantb/native-ui/blur` (`loadBlur`, `glassMode`) and `@vvedantb/native-ui/haptics` (`loadHaptics`, `selectionHaptic`). The `.`, `./gallery` and `./package.json` entries are unchanged.
+- Known: from expo-blur 55, each Android `BlurView` logs a deprecation warning for `experimentalBlurMethod` when it mounts. A surface with no target also logs a "no `blurTarget`" warning.
+- `types/peers.d.ts`: `BlurView` takes `experimentalBlurMethod`, `blurMethod`, `blurReductionFactor` and `blurTarget`, and `BlurTargetView` and `require` are declared. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.0
 
 Parity with `@vvedantb/ui` 0.29.0. The full audit is in `docs/native-ui-parity.md` at the repository root.

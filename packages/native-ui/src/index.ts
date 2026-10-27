@@ -32,6 +32,7 @@ export {
   GlassBlurProvider,
   GlassBlurTarget,
 } from "./LiquidGlass";
+export type { GlassBlurTargetProps } from "./LiquidGlass";
 export { AmbientBackground } from "./AmbientBackground";
 export { FloatingTabBar } from "./FloatingTabBar";
 export { FloatingFAB } from "./FloatingFAB";
