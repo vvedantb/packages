@@ -49,6 +49,7 @@ import {
   NativeUiProvider,
   PricingModal,
   Progress,
+  SearchInput,
   Select,
   Separator,
   Sheet,
@@ -172,6 +173,8 @@ function GalleryScreen() {
   const [checked, setChecked] = useState<boolean | "indeterminate">("indeterminate");
   const [switchOn, setSwitchOn] = useState(true);
   const [colour, setColour] = useState<string | null | undefined>(undefined);
+  const [emptySearch, setEmptySearch] = useState("");
+  const [search, setSearch] = useState("Pink");
   const [progress, setProgress] = useState(40);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -179,6 +182,8 @@ function GalleryScreen() {
   return (
     <View className="flex-1">
       <ScrollView
+        // So the SearchInput clear button takes the first tap while the keyboard is up.
+        keyboardShouldPersistTaps="handled"
         contentContainerClassName="gap-8 px-4 pt-4"
         contentContainerStyle={{ paddingBottom: GALLERY_END_SPACE }}
       >
@@ -247,6 +252,9 @@ function GalleryScreen() {
             <Label nativeID="gallery-name">Name</Label>
             <Input placeholder="Your name" accessibilityLabel="Name" />
           </View>
+          {/* Empty (`sm`: icon and placeholder) and filled (`md`: the clear button). */}
+          <SearchInput value={emptySearch} onChange={setEmptySearch} />
+          <SearchInput value={search} onChange={setSearch} size="md" label="Search colours" />
           <Textarea placeholder="Notes" accessibilityLabel="Notes" />
           <Select
             value={colour}

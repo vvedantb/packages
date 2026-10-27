@@ -41,6 +41,15 @@ declare module "expo-linear-gradient";
 
 `expo-router` stays an optional peer, but the package does not import it. `FloatingTabBar` declares the props it reads (`FloatingTabBarProps`) and fits the `tabBar` prop of Expo Router's `Tabs` on Expo SDK 57. Expo SDK 58 passes `emitter` and `navigateToTab` to `tabBar` in place of `navigation`, so the bar does not fit it yet.
 
+To hide a tab, give its screen Expo Router's `href: null`. From 0.3.9 `FloatingTabBar` draws no tab for that route. It also hides a route whose `tabBarItemStyle` resolves to `display: "none"`, because Expo Router's `Tabs` can pass `href: null` on in that form. The other tabs keep their focus and navigation, as `state.index` still counts every route:
+
+```tsx
+<Tabs tabBar={(props) => <FloatingTabBar {...props} />}>
+  <Tabs.Screen name="index" options={{ title: "Home" }} />
+  <Tabs.Screen name="details" options={{ href: null }} />
+</Tabs>
+```
+
 ## Entry points
 
 The root entry exports everything. It still imports `BottomSheetContainer` and `DateTimeField`, so Metro resolves `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs` for any import from it. Apps without those peers, such as V Store, should import from the smaller entries below. Between them, they export every name the root exports.
@@ -50,7 +59,9 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
-| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
+| `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | `expo-blur` (loader) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
 | `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
@@ -66,6 +77,8 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 import { FloatingTabBar } from "@vvedantb/native-ui/tab-bar";
 import { AppMark } from "@vvedantb/native-ui/brand";
 import { NativeUiProvider } from "@vvedantb/native-ui/theme";
+import { SearchInput } from "@vvedantb/native-ui/search-input";
+import { toast, Toaster } from "@vvedantb/native-ui/toast";
 ```
 
 The entries re-export the same source files, so they can be mixed: `NativeUiProvider` from `/theme` sets the context that `FloatingTabBar` from `/tab-bar` reads. `tests/subpaths.test.ts` walks the imports from each entry and fails if one of the basic entries reaches a heavy peer other than through its loader.
@@ -118,7 +131,7 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 
 | Area | Exports |
 | --- | --- |
-| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `Input`, `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `DateTimeField` |
+| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `DateTimeField` |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Badge`, `StatusDot`, `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow`, `Chip` |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton` |
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
@@ -152,6 +165,13 @@ From 0.3.7, in a compact window (639 wide or less, or 500 high or less: the web 
 
 From 0.3.8 `UpgradeToProCard` has the web `SidebarUpgradeCard` sizes: a 14 / 600 title, a 32-high pill with a 12 / 500 label (the web `Button` `sm`), `px-3 py-2.5` padding and radius 16. With larger text the title and pill keep their larger sizes.
 
+From 0.3.9 `SearchInput` is the web search field: a search icon, and a clear button while there is text. It is controlled with `value` and `onChange(text)`; `onClear` runs whenever the value becomes empty. `size="sm"` (default) is 32 high and `md` 40, as on the web. The clear button is painted at 24 and reaches 44 with its hit slop. Inside a `ScrollView`, set `keyboardShouldPersistTaps="handled"` so the first tap on it clears while the keyboard is up. The web `shortcut` hint and `toolbar` variant are not ported.
+
+```tsx
+const [query, setQuery] = useState("");
+<SearchInput value={query} onChange={setQuery} label="Search apps" />
+```
+
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.
 
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
@@ -160,7 +180,7 @@ Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Th
 
 ## Phones and accessibility
 
-The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
+The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `SearchInput` clear button (24), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
 
 Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label; only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
 

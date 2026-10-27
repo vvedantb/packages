@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.3.9
+
+APIs for V Store: `SearchInput`, a light `/toast` entry, and hidden tabs in `FloatingTabBar`.
+
+- **New: `SearchInput`**, the web `SearchInput` (`search-input.tsx`, with `clear-input.tsx`). A 16 search icon at the start, in the muted colour. While there is text, a clear button at the end: a 14 cross (stroke 1.75), labelled "Clear search" by default, painted at the web 24 (`h-6 w-6` at `right-2`) and brought to a 44 target with its hit slop (`touchSlop`).
+  - Sizes come from the new `searchInputSize(size, largerText)` in `src/controlStyles.ts`. `sm` (default) is 32 high, `pl-8`, `text-sm`, icon at 8 (web `h-8 pl-8 text-sm`, `left-2`). `md` is 40 high, `pl-9`, the phone `text-base`, icon at 12 (web `h-10 pl-9`, `left-3`). Both end at `px-3.5`, or `pr-9` while filled. `sm` pads 4 above and below, not the web 8, so the field stays 32 high. Heights are minimums, so Dynamic Type grows the field. With larger text both sizes are the larger `Input`: 64 high, `text-xl` medium, a 24 icon and a 32 clear button.
+  - The field has the `Input` look (`fieldStyle`) and the `palette.fieldPlaceholder` placeholder. The font size is a style beside the class, without a line height.
+  - Props: controlled `value` and `onChange(text)`; `label` (the accessibility label and default placeholder, default "Search"); `placeholder`; `size`; `onClear`, called after `onChange` whenever the value becomes empty, as on the web; `clearLabel`; `className` for the field; `wrapperClassName`; and the other `TextInput` props. `returnKeyType` is `"search"` (the web `enterKeyHint`). The ref is the `TextInput`.
+  - Clearing calls `onChange("")` at once and leaves focus where it was. The web default dissolves the text first; native does not animate it. The clear button is hidden when `editable={false}`.
+  - Not ported: the `shortcut` key hint (the web `Kbd`), the `toolbar` variant, `SearchInputConfig` (native has no `UiConfig`) and the dissolve animation.
+  - Exported from the root, `/primitives` and the new `@vvedantb/native-ui/search-input`. That entry exports only `SearchInput` and `SearchInputProps` and reaches no optional peer, not even a loader.
+- **New entry: `@vvedantb/native-ui/toast`.** It exports `toast`, `Toaster`, `ToastOptions` and `ToastVariant`. It reaches `expo-blur` only through its loader (the toast surface). It does not reach `@gorhom/bottom-sheet`, the date picker, `dayjs`, `expo-router`, `expo-haptics` or `expo-linear-gradient`. The root and `/primitives` still export `toast` and `Toaster`.
+  - `Toaster` is unchanged: toasts at the top, inside the safe-area insets, with the success, error, warning and info icons. No trailing alignment was added. The web `SonnerToaster` (`sonner.tsx`) sets no `position` of its own, so there is no web placement to copy.
+- **Fix: hidden tabs in `FloatingTabBar`.** A route with Expo Router's `href: null` no longer gets a tab. Nor does a route whose `tabBarItemStyle` resolves to `display: "none"`, because Expo Router's `Tabs` can pass `href: null` on in that form. A route with no descriptor still gets none.
+  - The new internal `isTabBarRouteVisible(options)` in `src/tabBarRoutes.ts` decides. Hiding is display-only: focus still compares `state.index` with the route's index among all routes, so visible tabs keep their focus, and a press navigates by route name.
+  - The options type moves to `src/tabBarRoutes.ts` and gains `href` and `tabBarItemStyle`. `FloatingTabBarProps` is otherwise unchanged.
+  - Apps hide a tab with `options={{ href: null }}` on its `Tabs.Screen` (README).
+- **V Store app mark: skipped.** A V Store mark was requested, but `@vvedantb/ui` has no artwork to reuse. Its brand data covers only `projectv`, `vibot`, `vhub`, `vmem`, `verve` and `velth` (`APP_NAMES` and `APP_MARKS` in `src/brand/svg.ts`, and `AppIcons.tsx`); there is no `vstore` glyph. No mark was drawn for native. `APP_NAMES`, `APP_ICONS` and `AppMark` are unchanged, and the brand copies stay byte-identical. A V Store mark needs web artwork first.
+- **`expo-linear-gradient` stays optional.** It is still an optional peer (`peerDependenciesMeta`), loaded only by `src/gradient.ts` through its `require` inside `try`. Among the basic entries only `/ambient` reaches it; the new entries do not. A new test in `tests/subpaths.test.ts` checks this.
+- `ParityGallery`: the Fields section shows an empty `sm` `SearchInput` (icon and placeholder) and a filled `md` one (with the clear button). The `ScrollView` sets `keyboardShouldPersistTaps="handled"`, so the clear button takes the first tap while the keyboard is up.
+- `types/peers.d.ts` declares `IconSearch`.
+- Tests:
+  - New `tests/searchInput.test.ts` checks `searchInputSize` against the web `search-input.tsx` and `clear-input.tsx` (sizes, icon, clear button, `pr-9`, default labels). It also checks the component's element tree, with React Native stubbed: the icon and no clear button while empty; the labelled clear button and its slop while filled; `onChange("")` then `onClear` on clear; `onClear` when typing empties the field; label, placeholder and ref; `md`; `editable={false}`; and larger text.
+  - New `tests/tabBar.test.ts` checks `isTabBarRouteVisible` and the rendered bar: no tab for `href: null`, `display: "none"` or a missing descriptor; focus by the index among all routes; navigation by name with params; a focused hidden route; and a prevented press. With the 0.3.8 check (`!options`) in place, two of these tests fail.
+  - `tests/subpaths.test.ts` adds `/search-input` and `/toast` to the V Store list, checks their peers and their exact export lists. `tests/mobile.test.ts` checks the clear button's 44 target and the gallery demos. `tests/exports.test.ts` checks the 0.3.9 version, the new entries and `SearchInput`.
+- Not checked on a device or in Expo captures. No new dependencies; the lockfile is unchanged.
+
 ## 0.3.8
 
 `UpgradeToProCard` sizes, from the phone-width (390 × 844) comparison of Expo web against the web `SidebarUpgradeCard`.

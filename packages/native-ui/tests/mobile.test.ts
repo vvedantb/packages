@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { MIN_TOUCH_TARGET, switchSize, touchSlop } from "../src/controlStyles";
+import { MIN_TOUCH_TARGET, searchInputSize, switchSize, touchSlop } from "../src/controlStyles";
 
 // Phone behaviour that needs React Native to render: these checks read the
 // source instead. Touch targets, accessibility roles and states, Reduce
@@ -186,6 +186,23 @@ describe("accessibility roles and states", () => {
     expect(read("Sheet.tsx")).toMatch(/return <OverlayClose part="SheetClose" \{\.\.\.props\} \/>;/);
   });
 
+  it("the SearchInput clear button is a labelled button, painted at the web 24 with a 44 target", () => {
+    const search = read("SearchInput.tsx");
+    expect(search).toMatch(
+      /accessibilityRole="button"\s+accessibilityLabel=\{clearLabel\}\s+hitSlop=\{touchSlop\(metrics\.clear\)\}/,
+    );
+    expect(search).toMatch(/style=\{\{ width: metrics\.clear, height: metrics\.clear \}\}/);
+    for (const largerText of [false, true]) {
+      for (const size of ["sm", "md"] as const) {
+        const { clear } = searchInputSize(size, largerText);
+        const slop = touchSlop(clear);
+        expect(clear + slop.left + slop.right, `${size} ${largerText}`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+        expect(clear + slop.top + slop.bottom, `${size} ${largerText}`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+      }
+    }
+    expect(searchInputSize("sm", false).clear).toBe(24);
+  });
+
   it("pressable list rows and toast actions are labelled buttons", () => {
     const row = read("ListRow.tsx");
     expect(row).toMatch(/accessibilityRole="button"\s+accessibilityLabel=\{title\}/);
@@ -309,6 +326,7 @@ describe("Dynamic Type", () => {
     expect(read("Select.tsx")).toMatch(/largerText && "min-h-16 px-4"/);
     expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
     expect(read("DateTimeField.tsx")).toMatch(/largerText \? "min-h-16" : "min-h-14"/);
+    expect(read("SearchInput.tsx")).toMatch(/minHeight: metrics\.minHeight,/);
   });
 });
 
@@ -331,6 +349,15 @@ describe("ParityGallery (phone layout)", () => {
     expect(gallery).toMatch(/const GALLERY_END_SPACE = 720;/);
     expect(gallery).toMatch(/contentContainerStyle=\{\{ paddingBottom: GALLERY_END_SPACE \}\}/);
     expect(gallery).toMatch(/contentContainerClassName="gap-8 px-4 pt-4"/);
+  });
+
+  it("shows an empty and a filled SearchInput in Fields, and lets the clear take the first tap", () => {
+    const fields = gallery.slice(gallery.indexOf('<Section title="Fields">'), gallery.indexOf('<Section title="Tabs">'));
+    expect(fields).toMatch(/<SearchInput value=\{emptySearch\} onChange=\{setEmptySearch\} \/>/);
+    expect(fields).toMatch(/<SearchInput value=\{search\} onChange=\{setSearch\} size="md"/);
+    expect(gallery).toMatch(/const \[emptySearch, setEmptySearch\] = useState\(""\);/);
+    expect(gallery).toMatch(/const \[search, setSearch\] = useState\("Pink"\);/);
+    expect(gallery).toMatch(/<ScrollView\s+keyboardShouldPersistTaps="handled"/);
   });
 
   it("lets the collapsed upgrade pill stretch in a column, as the web Button does", () => {

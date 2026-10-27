@@ -3,8 +3,8 @@
  * `Checkbox`, `Tabs`, `Card` and component text, taken from `palette` and
  * `tokens` instead of NativeWind theme keys (`bg-primary`, `bg-input`,
  * `text-foreground`) that apps do not define, or define without a dark value.
- * Also text weights and sizes as styles, the compact window test for dialogs
- * and the touch-target maths. No React Native import, so the tests can load
+ * Also text weights and sizes as styles, the `SearchInput` metrics, the
+ * compact window test for dialogs and the touch-target maths. No React Native import, so the tests can load
  * this file.
  */
 import { palette, withAlpha } from "./palette";
@@ -180,6 +180,49 @@ export function touchSlop(width: number, height: number = width) {
   const x = pad(width);
   const y = pad(height);
   return { top: y, bottom: y, left: x, right: x };
+}
+
+export type SearchInputSize = "sm" | "md";
+
+/**
+ * Field, icon and clear-button metrics for `SearchInput`, in points. Without
+ * larger text these are the web sizes (`search-input.tsx`, `clear-input.tsx`):
+ * `sm` is `h-8 pl-8 text-sm` with the icon at `left-2`, `md` is `h-10 pl-9`
+ * (the phone `text-base`) with the icon at `left-3`. Both have a 16 search
+ * icon, the field `px-3.5` at the end, and the `h-6 w-6` clear button at
+ * `right-2` with a 14 cross, for which a filled field reserves `pr-9`.
+ * `minHeight` is a minimum, so a large Dynamic Type size grows the field. `sm`
+ * pads 4 above and below, not the web 8: a native field adds its padding to
+ * the line height, so 8 would draw it taller than 32. With larger text both
+ * sizes are the larger `Input` (64 high, `text-xl`).
+ */
+export function searchInputSize(size: SearchInputSize, largerText: boolean) {
+  if (largerText) {
+    return {
+      minHeight: 64,
+      paddingY: 16,
+      paddingLeft: 48,
+      paddingRight: 16,
+      filledPaddingRight: 48,
+      text: "text-xl",
+      icon: 24,
+      iconLeft: 16,
+      clear: 32,
+      clearIcon: 20,
+      clearRight: 12,
+    } as const;
+  }
+  const shared = {
+    paddingRight: 14,
+    filledPaddingRight: 36,
+    icon: 16,
+    clear: 24,
+    clearIcon: 14,
+    clearRight: 8,
+  } as const;
+  return size === "md"
+    ? { ...shared, minHeight: 40, paddingY: 8, paddingLeft: 36, text: "text-base", iconLeft: 12 } as const
+    : { ...shared, minHeight: 32, paddingY: 4, paddingLeft: 32, text: "text-sm", iconLeft: 8 } as const;
 }
 
 export type TabsVariant = "pills" | "segmented" | "soft";

@@ -1,6 +1,6 @@
 # `@vvedantb/native-ui` parity with `@vvedantb/ui`
 
-Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.5, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery. 0.3.4 fixes the tab colours and the field placeholders in dark mode. 0.3.5 makes cards flat, sizes tabs and the switch as on the web, sets title and button weights as styles, and covers phone use: 44 pt touch targets, accessibility roles and states, Dynamic Type, Reduce Motion, safe-area insets and the keyboard. See [Phones and accessibility](#phones-and-accessibility).
+Status on 27 October 2026, after `@vvedantb/native-ui` 0.3.9, against `@vvedantb/ui` 0.29.0. The 0.3.3 visual fixes (tokens, text colours, control sizes, dialog footer, checkbox) followed a side-by-side screenshot review of `ParityGallery` against the web gallery. 0.3.4 fixes the tab colours and the field placeholders in dark mode. 0.3.5 makes cards flat, sizes tabs and the switch as on the web, sets title and button weights as styles, and covers phone use: 44 pt touch targets, accessibility roles and states, Dynamic Type, Reduce Motion, safe-area insets and the keyboard. See [Phones and accessibility](#phones-and-accessibility). 0.3.9 ports `SearchInput`, adds the `/search-input` and `/toast` entries, and hides `FloatingTabBar` tabs for routes with Expo Router's `href: null`.
 
 This audit lists every public export of `@vvedantb/ui` and says whether `@vvedantb/native-ui` has an equivalent. It also records how the two packages share design tokens and brand data.
 
@@ -22,7 +22,7 @@ Exports by area and status (`@vvedantb/ui` 0.29.0, counted on 27 October 2026):
 
 | Area | Exports | same | partial | missing | missing (needs dep) | n/a |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Primitives (`src/ui`) | 353 | 87 | 63 | 83 | 28 | 92 |
+| Primitives (`src/ui`) | 353 | 87 | 66 | 80 | 28 | 92 |
 | Brand (`src/brand`, also `@vvedantb/ui/brand`) | 40 | 40 | 0 | 0 | 0 | 0 |
 | Marketing (`src/marketing`) | 42 | 0 | 7 | 0 | 0 | 35 |
 | Shell (`shell/src`) | 86 | 2 | 5 | 0 | 0 | 79 |
@@ -36,7 +36,7 @@ Exports by area and status (`@vvedantb/ui` 0.29.0, counted on 27 October 2026):
 | AI elements (`src/ai-elements`) | 468 | 0 | 0 | 0 | 0 | 468 |
 | Artifact viewers (`src/artifacts`) | 32 | 0 | 0 | 0 | 0 | 32 |
 | Kibo blocks (`src/kibo`) | 118 | 0 | 0 | 0 | 0 | 118 |
-| **Total** | **1362** | **137** | **81** | **101** | **35** | **1008** |
+| **Total** | **1362** | **137** | **84** | **98** | **35** | **1008** |
 
 Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI elements (468), Kibo blocks (118), the composer (72), the web shell (79 of 86) and app helpers tied to web Clerk, Vite or the DOM.
 
@@ -46,6 +46,7 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | --- | --- | --- | --- |
 | `Button` | `Button` (extended) | same | Web variant names `default`, `destructive`, `ghost`, `link`; web sizes `sm`, `default`, `lg`, `icon`; `startContent`, `endContent`, `loading`. Colours from `palette`, as on the web; `outline` is the web bordered neutral and the 0.2 pink `outline` is now `tinted`. From 0.3.3, without larger text: web heights and padding (`sm` 32, `default` 40, `lg` 44), `text-sm` / `text-xs` medium and radius 16 (web `rounded-lg`). From 0.3.5: no shadow by default, as on the web; `loading` shows the web 16 ring and keeps the label. `primary`, `small`, `medium` and `large` are aliases of the web names. |
 | `Input` | `Input` | same | Web field look (white, bordered), web radius (10), height (40) and padding from 0.3.3. Placeholder in `palette.fieldPlaceholder`, also on iOS and Android from 0.3.4. |
+| `SearchInput` | `SearchInput` (0.3.9) | partial | Web sizes (`sm` 32, `md` 40), 16 search icon, and a clear button (24, labelled "Clear search") with a hit slop to 44. `value` / `onChange(text)`, `label`, `placeholder`, `onClear`, `clearLabel`. No `shortcut` hint, `toolbar` variant, `SearchInputConfig` or dissolve animation. Also on `@vvedantb/native-ui/search-input`. |
 | `Textarea` | `Textarea` (new) | same | Multiline `Input`, same field look; web `min-h-20`. |
 | `Label` | `Label` (new) | same | Colour from `tokens` (a style) from 0.3.3. From 0.3.7 the web `text-sm` medium (14 / 500), with size and weight as styles. The web `leading-none` and `text-foreground/90` are not ported (line height 20, full foreground). |
 | `Card` and parts | `Card` and parts (new parts) | same | `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` added. The existing `title` / `leftIcon` / `action` API is unchanged; `description` and `className` added. From 0.3.5 the card is flat, as on the web: `surfaceCard` fill, radius 16, no shadow or blur. |
@@ -60,7 +61,7 @@ Most of the n/a total (1,008 of 1,362 exports) is web-only by design: AI element
 | `Tabs` | `Tabs` (new), `PillTabs` | same | `pills`, `segmented`, `soft`. From 0.3.4 fills and labels are the web tab colours (`tabColors`), not pink. From 0.3.5 the web sizes (30 high, `text-sm` medium), as wide as the tabs and at the start. |
 | `Avatar` | `Avatar` (new) | same | |
 | `Skeleton` | `Skeleton` | same | Now takes `View` props and respects Reduce Motion. |
-| `toast`, `SonnerToaster` | `toast`, `Toaster` (new) | partial | Top toasts, no sonner. |
+| `toast`, `SonnerToaster` | `toast`, `Toaster` (new) | partial | Top toasts, no sonner. From 0.3.9 also on `@vvedantb/native-ui/toast`, which reaches only the `expo-blur` loader. |
 | `Separator` | `Separator` (new) | same | |
 | `Progress` | `Progress` (new) | same | |
 | `Spinner`, `CenteredSpinner` | `Spinner`, `CenteredSpinner` (new) | partial, same | System spinner; no SVG variants. |
@@ -159,10 +160,11 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 - **`AlertDialogAction`** does not close the dialog, as on the web. `ConfirmDialog` closes on either button.
 - **Toasts over modals.** On iOS, `Toaster` draws in a `FullWindowOverlay`, so toasts show over dialogs. On Android an RN `Modal` covers them.
 - **`Tabs` and Expo Router.** `Tabs` shares its name with Expo Router's `Tabs` layout. Import one under another name where a file needs both.
+- **Hidden tabs.** From 0.3.9 `FloatingTabBar` draws no tab for a route with Expo Router's `href: null`, or with a `tabBarItemStyle` that resolves to `display: "none"`. Focus and navigation still use the index among all routes.
 - **`Badge` text contrast.** Badges use the web colours, so they share the web contrast. Computed on 27 October 2026 (WCAG ratio, tint over the 0.3.3 page colour): in dark mode `default` and `secondary` 14.6, `outline` 7.7, `success` 8.0, `warning` 9.6, `destructive` 4.2 and `destructive-soft` 4.3 (under the 4.5 AA level for small text). In light mode `destructive` 2.8, `destructive-soft` 2.9, `success` 1.8 and `warning` 1.7 are low, as on the web. A fix belongs in `tokens.css` first.
 - **Payments.** `PricingModal` does not choose a payment flow. Which purchase flow an iOS or Android paywall may use depends on App Store and Google Play rules and the app's markets. The app owner should confirm this before `onCheckout` is wired.
 - **Portable helpers not yet copied:** `formatCompactRelativeTime`, `convexErrorMessage`, `userFacingErrorMessage`, `useHeldResult`, `useSingleFlight`, `ErrorBoundary`, `projectVelocity` and `rubberband`. Each has no DOM or web-only import.
-- **Feasible next components** (no new dependency): `Collapsible`, `Accordion`, `SearchInput`, `ClearInput`, `InputGroup`, `ButtonGroup`, `LoadingState`, `CountPop`, `ImageLightbox` and `TabsBar`.
+- **Feasible next components** (no new dependency): `Collapsible`, `Accordion`, `ClearInput`, `InputGroup`, `ButtonGroup`, `LoadingState`, `CountPop`, `ImageLightbox` and `TabsBar`.
 
 ## Phones and accessibility
 
@@ -171,7 +173,7 @@ The brand marks render with `react-native-svg`. 0.3.0 declares it as an **option
 - **Flat cards.** `Card`, `SettingsSection` and `CardSkeleton` use `cardStyle`: the web `rounded-lg bg-surface-card`, with no shadow and no blur. Only chrome that floats on the web has a shadow: dialogs, sheets and toasts, plus the native `FloatingTabBar` and `FloatingFAB`. `Button` is flat by default.
 - **Compact tabs.** Tab triggers and `PillTabs` are the web `.t-tab` (30 high, `px-3 py-1`, `text-sm` medium) or soft trigger, as wide as their labels and at the start of the row. The parity gallery shows only the segmented One / Two / Three tabs, as the web gallery does.
 - **Weights.** Weighted text sets `fontWeight` as a style (`typeStyle`): 600 on titles, labels and tab bar labels, 500 on button, badge and tab labels.
-- **Touch targets.** Controls keep the web size on screen and reach 44 pt with `hitSlop` (`touchSlop`): `Checkbox` 16, `Switch` 36 × 20, tab triggers 30 high, the `Select` trigger 40 high. `Button` sizes reach 48. The dialog close button is 44 square, as on the web.
+- **Touch targets.** Controls keep the web size on screen and reach 44 pt with `hitSlop` (`touchSlop`): `Checkbox` 16, `Switch` 36 × 20, tab triggers 30 high, the `Select` trigger 40 high, the `SearchInput` clear button 24. `Button` sizes reach 48. The dialog close button is 44 square, as on the web.
 - **Roles and states.** `Button` (`button`, `disabled`, `busy`), `Checkbox` (`checkbox`, `checked`, `mixed`), `Switch` (`switch`, `checked`, `disabled`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`), the `Select` trigger (`combobox`, `disabled`, `accessibilityLabel`), dialog and sheet closes and pressable list rows (`button`), and section and sheet titles (`header`).
 - **Dynamic Type.** Font scaling is never turned off. Labelled controls have minimum heights, so a large text size grows them instead of clipping. Only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar.
 - **Reduce Motion.** `useReduceMotion` (internal) reads the setting synchronously at mount and follows changes. With it on, the dialog and sheet `Modal`, the sheet slide, toasts, the `Select` popover and `PricingModal` do not animate; `Progress` and `Skeleton` already held still.
@@ -183,12 +185,12 @@ Run on 27 October 2026 in this repository:
 
 | Command | Result |
 | --- | --- |
-| `pnpm --filter @vvedantb/native-ui test` | 10 files, 174 tests passed (0.3.5). |
+| `pnpm --filter @vvedantb/native-ui test` | 12 files, 222 tests passed (0.3.9). |
 | `pnpm --filter @vvedantb/native-ui typecheck` | Passed (against `types/peers.d.ts`). |
 | `pnpm --filter @vvedantb/native-ui build` | Passed. |
-| `pnpm --filter @vvedantb/ui test` | 93 files, 1,798 tests passed; 50 node tests passed, including "native-ui keeps an identical copy of the native tokens". Needs `pnpm --filter @vvedantb/server build` first: without `packages/server/dist`, 19 test files cannot import `@vvedantb/server`. Run for 0.3.3; 0.3.5 changes no `@vvedantb/ui` file and not the native tokens copy, so it was not re-run. |
-| `pnpm --filter @vvedantb/ui typecheck` | Passed (0.3.3; not re-run for 0.3.5). |
-| `git diff pnpm-lock.yaml` | No change in 0.3.3 or 0.3.5 (`pnpm install --frozen-lockfile --offline` passed for 0.3.0). |
+| `pnpm --filter @vvedantb/ui test` | 93 files, 1,798 tests passed; 50 node tests passed, including "native-ui keeps an identical copy of the native tokens". Needs `pnpm --filter @vvedantb/server build` first: without `packages/server/dist`, 19 test files cannot import `@vvedantb/server`. Run for 0.3.3; 0.3.5 to 0.3.9 change no `@vvedantb/ui` file and not the native tokens copy, so it was not re-run. |
+| `pnpm --filter @vvedantb/ui typecheck` | Passed (0.3.3; not re-run since). |
+| `git diff pnpm-lock.yaml` | No change in 0.3.3, 0.3.5 or 0.3.9 (`pnpm install --frozen-lockfile --offline` passed for 0.3.0). |
 
 ## Detailed table
 
@@ -247,7 +249,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/ui/popover.tsx` | `PopoverConfig`ᵀ, `Popover`, `PopoverTrigger`, `PopoverAnchor`, `PopoverContent` | missing (needs dep) | — | Needs `@rn-primitives/popover`. |
 | `src/ui/progress.tsx` | `ProgressConfig`ᵀ, `Progress` | same | `Progress` | Same `value` / `max`. Animated fill; adds `indicatorColor`. |
 | `src/ui/refresh-spin-icon.tsx` | `RefreshSpinIcon` | n/a | — | Native pull-to-refresh uses `RefreshControl`. |
-| `src/ui/search-input.tsx` | `SearchInputConfig`ᵀ, `SearchInputProps`ᵀ, `SearchInput` | missing | — | Feasible: `Input` with a search icon and clear button. |
+| `src/ui/search-input.tsx` | `SearchInputConfig`ᵀ, `SearchInputProps`ᵀ, `SearchInput` | partial | `SearchInput` | From 0.3.9. Web sizes, icon and clear button; `value` / `onChange(text)`, `label`, `placeholder`, `size`, `onClear`, `clearLabel`. No `shortcut`, `toolbar` variant or `inputClassName`; `SearchInputConfig` is n/a (no `UiConfig`). |
 | `src/ui/select.tsx` | `SelectConfig`ᵀ, `Select`, `SelectGroup`, `SelectValue`, `SelectTrigger`, `SelectContent`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` | partial | `Select` | Options-array API over `@rn-primitives/select` (internal parts not exported). `SelectConfig` is n/a. |
 | `src/ui/select-field.tsx` | `SelectFieldProps`ᵀ, `SelectField` | partial | `SettingsField` + `Select` | No single component. |
 | `src/ui/separator.tsx` | `SeparatorConfig`ᵀ, `Separator` | same | `Separator` | Hairline in `tokens.color.separator`; `orientation`, `decorative`. |
@@ -274,7 +276,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `@radix-ui/react-visually-hidden` (re-export) | `VisuallyHidden` | n/a | — | Use `accessibilityLabel`, or a 1 × 1 transparent accessible view (as `PricingModal` does). |
 | `src/ui/clearInputDissolve.ts` | `readCssNumber`, `readCssEase`, `runClearInputDissolve`, `ClearDissolveElements`ᵀ | n/a | — | DOM text-dissolve animation for `ClearInput`. |
 | `src/ui/accordion.tsx` | `AccordionConfig`ᵀ, `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | missing | — | Feasible with Reanimated, or `@rn-primitives/accordion`. |
-| `src/ui/clear-input.tsx` | `ClearInputConfig`ᵀ, `ClearInputProps`ᵀ, `ClearInput` | missing | — | Feasible: `Input` plus a clear button. |
+| `src/ui/clear-input.tsx` | `ClearInputConfig`ᵀ, `ClearInputProps`ᵀ, `ClearInput` | missing | — | Feasible: `Input` plus a clear button. `SearchInput` (0.3.9) has one but does not export it. |
 | `src/ui/input-group.tsx` | `InputGroupConfig`ᵀ, `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea` | missing | — | Feasible: row with addons around `Input`. |
 | `src/ui/scroll-area.tsx` | `ScrollArea`, `ScrollBar` | n/a | `ScrollView` | Custom scrollbars. |
 | `@dnd-kit/core` (re-export) | `SortableListDragEndEvent`ᵀ | n/a | — | dnd-kit type. |

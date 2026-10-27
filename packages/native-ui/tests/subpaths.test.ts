@@ -116,7 +116,7 @@ function heavyRefs(subpath: string): string[] {
 
 describe("granular entries", () => {
   it("cover the V Store entries", () => {
-    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives"]) {
+    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives", "./search-input", "./toast"]) {
       expect(basicEntries, subpath).toContain(subpath);
     }
   });
@@ -130,8 +130,8 @@ describe("granular entries", () => {
     expect(offending.map((ref) => `${ref.file}: ${ref.kind} ${ref.specifier}`)).toEqual([]);
   });
 
-  it("keeps expo-router, gorhom, datetimepicker and dayjs off the brand, button and primitives graphs entirely", () => {
-    for (const subpath of ["./brand", "./button", "./primitives"]) {
+  it("keeps expo-router, gorhom, datetimepicker and dayjs off the brand, button, primitives, search-input and toast graphs entirely", () => {
+    for (const subpath of ["./brand", "./button", "./primitives", "./search-input", "./toast"]) {
       const names = packageRefs(entryFile(subpath)).map((ref) => packageName(ref.specifier));
       for (const peer of ["expo-router", "@gorhom/bottom-sheet", "@react-native-community/datetimepicker", "dayjs"]) {
         expect(names, `${subpath} ${peer}`).not.toContain(peer);
@@ -148,9 +148,14 @@ describe("granular entries", () => {
     ]);
   });
 
-  it("brand and button reach no heavy peer, not even a loader", () => {
+  it("brand, button and search-input reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
+    expect(heavyRefs("./search-input")).toEqual([]);
+  });
+
+  it("gives the toast entry blur through its loader only, and no haptics or gradient", () => {
+    expect(heavyRefs("./toast")).toEqual(["blur.ts: lazy expo-blur", "blur.ts: type expo-blur"]);
   });
 
   it("loads expo-linear-gradient on the ambient entry only through its loader", () => {
@@ -158,6 +163,13 @@ describe("granular entries", () => {
       "gradient.ts: lazy expo-linear-gradient",
       "gradient.ts: type expo-linear-gradient",
     ]);
+  });
+
+  it("reaches expo-linear-gradient from no basic entry but ambient", () => {
+    const reaching = basicEntries.filter((subpath) =>
+      heavyRefs(subpath).some((ref) => ref.endsWith(" expo-linear-gradient")),
+    );
+    expect(reaching).toEqual(["./ambient"]);
   });
 
   // Negative controls: the scanner sees the static imports that the heavy
@@ -215,7 +227,9 @@ describe("granular entries", () => {
         "V_PRO_APP_BENEFITS",
       ],
       "./button": ["Button", "ButtonProps", "ButtonSize", "ButtonVariant"],
-      "./primitives": ["Button", "Input", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
+      "./primitives": ["Button", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
+      "./search-input": ["SearchInput", "SearchInputProps"],
+      "./toast": ["toast", "Toaster", "ToastOptions", "ToastVariant"],
       "./theme": ["NativeUiProvider", "tokens", "palette", "cn"],
       "./floating": ["FloatingSurface", "GlassBlurProvider", "GlassBlurTarget", "FLOATING_INSET"],
       "./ambient": ["AmbientBackground"],
@@ -230,6 +244,12 @@ describe("granular entries", () => {
     for (const name of ["BottomSheetContainer", "DateTimeField", "AmbientBackground"]) {
       expect(primitives.has(name), name).toBe(false);
     }
+  });
+
+  it("keeps the search-input and toast entries to their own names", () => {
+    const names = (subpath: string) => [...exportedNames(join(root, entryFile(subpath)))].sort();
+    expect(names("./search-input")).toEqual(["SearchInput", "SearchInputProps"]);
+    expect(names("./toast")).toEqual(["ToastOptions", "ToastVariant", "Toaster", "toast"]);
   });
 
   it("together export everything the root entry does", () => {

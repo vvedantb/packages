@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
-import { Pressable, Text, View, type ColorValue } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
+import { isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
 import { useLargerText } from "./theme";
 import {
   FLOATING_INSET,
@@ -11,20 +11,6 @@ import {
   FLOATING_TAB_BAR_HEIGHT,
   FLOATING_TAB_BAR_HEIGHT_LARGE,
 } from "./floating";
-
-type FloatingTabOptions = {
-  title?: string;
-  tabBarLabel?: string | ((props: never) => ReactNode);
-  tabBarIcon?: (props: {
-    focused: boolean;
-    color: ColorValue;
-    size: number;
-  }) => ReactNode;
-  tabBarActiveTintColor?: ColorValue;
-  tabBarInactiveTintColor?: ColorValue;
-  tabBarButtonTestID?: string;
-  tabBarAccessibilityLabel?: string;
-};
 
 /**
  * The fields this bar reads from the props Expo Router's `Tabs` passes to
@@ -47,6 +33,12 @@ export type FloatingTabBarProps = {
   };
 };
 
+/**
+ * The floating pill tab bar, for the `tabBar` prop of Expo Router's `Tabs`.
+ * Hide a tab with `options={{ href: null }}` on its `Tabs.Screen`: the bar
+ * draws no tab for it (`isTabBarRouteVisible`), and the other tabs keep their
+ * focus and navigation.
+ */
 export function FloatingTabBar({
   state,
   descriptors,
@@ -76,11 +68,12 @@ export function FloatingTabBar({
           accessibilityRole="tablist"
         >
           {state.routes.map((route, index) => {
-            const focused = state.index === index;
             const options = descriptors[route.key]?.options;
-            if (!options) {
+            if (!isTabBarRouteVisible(options)) {
               return null;
             }
+            // `index` counts hidden routes too, as `state.index` does.
+            const focused = state.index === index;
             const label =
               typeof options.tabBarLabel === "string"
                 ? options.tabBarLabel
