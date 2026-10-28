@@ -249,6 +249,17 @@ describe("granular entries", () => {
     }
   });
 
+  it("exports ThemeToggle from /primitives, beside HeaderIconButton, and keeps /theme free of Tabler", () => {
+    const primitives = exportedNames(join(root, entryFile("./primitives")));
+    for (const name of ["ThemeToggle", "ThemeToggleProps", "HeaderIconButton"]) {
+      expect(primitives.has(name), name).toBe(true);
+    }
+    expect(exportedNames(join(root, entryFile("./theme"))).has("ThemeToggle")).toBe(false);
+    // Metro does not tree-shake by default, so a named Tabler import bundles every icon. /theme stays tokens and the provider.
+    const theme = packageRefs(entryFile("./theme")).map((ref) => packageName(ref.specifier));
+    expect(theme).not.toContain("@tabler/icons-react-native");
+  });
+
   it("keeps the search-input, page-title and toast entries to their own names", () => {
     const names = (subpath: string) => [...exportedNames(join(root, entryFile(subpath)))].sort();
     expect(names("./search-input")).toEqual(["SearchInput", "SearchInputProps"]);

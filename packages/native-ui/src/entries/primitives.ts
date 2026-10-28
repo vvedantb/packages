@@ -44,6 +44,8 @@ export type {
 } from "../Tabs";
 export { ListRow } from "../ListRow";
 export { HeaderIconButton } from "../HeaderIconButton";
+export { ThemeToggle } from "../ThemeToggle";
+export type { ThemeToggleProps } from "../ThemeToggle";
 export {
   Card,
   CardHeader,

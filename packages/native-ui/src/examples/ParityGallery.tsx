@@ -71,6 +71,7 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
+  ThemeToggle,
   Toaster,
   UpgradeToProCard,
   initials,
@@ -203,6 +204,8 @@ function GalleryScreen() {
               </Button>
             }
           />
+          {/* A header icon action: switches the gallery between light and dark. */}
+          <PageHeader title="Settings" safeTop={false} className="px-0" action={<ThemeToggle />} />
         </Section>
 
         <Section title="Brand">
