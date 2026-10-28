@@ -184,9 +184,11 @@ describe("brand Svg props", () => {
   async function svgs(): Promise<[string, Element][]> {
     const { APP_ICONS } = await import("../src/brand/AppIcons");
     const { AppMark } = await import("../src/brand/AppMark");
+    const { GoogleMark } = await import("../src/brand/GoogleMark");
     const out: [string, Element][] = [];
     for (const extra of [{}, { title: "Vibot", testID: "brand" }]) {
       const label = extra.title ? "titled" : "decorative";
+      out.push([`GoogleMark ${label}`, GoogleMark({ ...extra }) as unknown as Element]);
       for (const app of APP_NAMES) {
         out.push([`APP_ICONS.${app} ${label}`, APP_ICONS[app]({ ...extra }) as unknown as Element]);
         for (const variant of ["tile", "tile-light"] as const) {
@@ -203,7 +205,7 @@ describe("brand Svg props", () => {
 
   it("renders an Svg root for every icon and mark", async () => {
     const all = await svgs();
-    expect(all).toHaveLength(APP_NAMES.length * 4 * 2);
+    expect(all).toHaveLength((APP_NAMES.length * 4 + 1) * 2);
     for (const [name, svg] of all) expect(svg.type, name).toBe("Svg");
   });
 
@@ -245,6 +247,17 @@ describe("brand Svg props", () => {
         expect(svg.props.accessibilityLabel, name).toBeUndefined();
       }
     }
+  });
+
+  it("draws GoogleMark as the four-colour G, 18 by default", async () => {
+    const { GoogleMark } = await import("../src/brand/GoogleMark");
+    const svg = GoogleMark({}) as unknown as Element;
+    expect(svg.props).toMatchObject({ width: 18, height: 18, viewBox: "0 0 24 24" });
+    expect((GoogleMark({ size: 24 }) as unknown as Element).props).toMatchObject({ width: 24, height: 24 });
+    const paths = svg.props.children as Element[];
+    expect(paths.map((path) => path.type)).toEqual(["Path", "Path", "Path", "Path"]);
+    expect(paths.map((path) => path.props.fill)).toEqual(["#4285F4", "#34A853", "#FBBC05", "#EA4335"]);
+    for (const path of paths) expect(path.props.d).toMatch(/^M[\d.]+ [\d.]+.*z$/);
   });
 });
 
@@ -390,6 +403,7 @@ describe("Svg and icon tags in src", () => {
   it("finds the tags it checks", () => {
     expect(svgNames(read("brand/AppIcons.tsx")).svg).toEqual(["Svg", "G", "Path"]);
     expect(svgNames(read("brand/AppMark.tsx")).svg).toEqual(["Svg", "G", "Path", "Rect"]);
+    expect(svgNames(read("brand/GoogleMark.tsx")).svg).toEqual(["Svg", "Path"]);
     expect(svgNames(read("Toast.tsx")).svg).toEqual(["Svg", "Path"]);
     expect(svgNames(read("Checkbox.tsx")).icons).toEqual(["IconCheck", "IconMinus"]);
     expect(svgNames(read("SearchInput.tsx")).icons).toEqual(["IconSearch", "IconX"]);
@@ -398,7 +412,7 @@ describe("Svg and icon tags in src", () => {
     expect(svgNames(read("ListRow.tsx")).icons).toEqual(["Icon"]);
     expect(svgNames(read("primitives/select.tsx")).icons).toEqual(["IconCheck", "IconChevronDown", "IconChevronUp"]);
     expect(svgNames(read("primitives/icon.tsx")).icons).toEqual(["Component"]);
-    for (const file of ["brand/AppIcons.tsx", "brand/AppMark.tsx", "Toast.tsx"]) {
+    for (const file of ["brand/AppIcons.tsx", "brand/AppMark.tsx", "brand/GoogleMark.tsx", "Toast.tsx"]) {
       expect(openingTags(read(file), "Svg"), file).toHaveLength(1);
     }
   });
@@ -411,7 +425,7 @@ describe("Svg and icon tags in src", () => {
   });
 
   it("gives the brand Svg its a11y and test id through svgA11yProps only", () => {
-    for (const file of ["brand/AppIcons.tsx", "brand/AppMark.tsx"]) {
+    for (const file of ["brand/AppIcons.tsx", "brand/AppMark.tsx", "brand/GoogleMark.tsx"]) {
       const [tag] = openingTags(read(file), "Svg");
       expect(read(file), file).toMatch(/\{\.\.\.svgA11yProps\(\{ title, testID \}, Platform\.OS\)\}/);
       expect(propNames(tag!), file).toEqual(["width", "height", "viewBox", "preserveAspectRatio", "style"]);

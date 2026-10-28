@@ -214,6 +214,8 @@ describe("granular entries", () => {
       "./brand": [
         "AppMark",
         "AppWordmark",
+        "GoogleMark",
+        "GoogleMarkProps",
         "APP_ICONS",
         "IconVibot",
         "IconProjectV",

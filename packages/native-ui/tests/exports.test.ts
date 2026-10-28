@@ -99,6 +99,8 @@ describe("@vvedantb/native-ui exports", () => {
       "APP_ICONS",
       "AppMark",
       "AppWordmark",
+      "GoogleMark",
+      "GoogleMarkProps",
       "IconVibot",
       "IconProjectV",
       "APP_NAMES",
@@ -158,8 +160,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.14 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.14");
+  it("is 0.3.15 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.15");
     const entries = [
       "./tab-bar",
       "./brand",

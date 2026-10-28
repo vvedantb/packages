@@ -47,6 +47,12 @@ describe("brand components", () => {
     expect(read("AppIcons.tsx")).toMatch(/from "react-native-svg"/);
     expect(read("AppIcons.tsx")).toMatch(/APP_MARK_VIEWBOX_START\[app\] : APP_MARK_VIEWBOX\[app\]/);
     expect(read("AppMark.tsx")).toMatch(/viewBox=\{MARK_VIEWBOX\}/);
+    expect(read("GoogleMark.tsx")).toMatch(/from "react-native-svg"/);
+    expect(read("GoogleMark.tsx")).toMatch(/viewBox="0 0 24 24"/);
+  });
+
+  it("GoogleMark keeps the Google colours: no color prop", () => {
+    expect(read("GoogleMark.tsx")).not.toMatch(/\bcolor\??:/);
   });
 
   it("AppWordmark uses Instrument Sans 500 through WORDMARK", () => {

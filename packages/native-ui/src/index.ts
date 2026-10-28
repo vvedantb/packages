@@ -144,7 +144,7 @@ export { SettingsField } from "./settings/SettingsField";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow";
 export { SettingsStack } from "./settings/SettingsStack";
 export { PINK_50, PINK_100, PINK_600, PINK_700, NEUTRAL_100, NEUTRAL_500, NEUTRAL_900, Colors } from "./colors";
-// Family app marks and their pure data (copied from `@vvedantb/ui/brand`).
+// Family app marks and their pure data (copied from `@vvedantb/ui/brand`), and `GoogleMark`.
 export * from "./brand";
 export { UpgradeToProCard } from "./marketing/UpgradeToProCard";
 export type { UpgradeToProCardProps } from "./marketing/UpgradeToProCard";

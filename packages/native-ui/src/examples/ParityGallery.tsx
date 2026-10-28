@@ -43,6 +43,7 @@ import {
   DialogTitle,
   DialogTrigger,
   EmptyState,
+  GoogleMark,
   Input,
   Label,
   LabeledSwitchRow,
@@ -215,7 +216,11 @@ function GalleryScreen() {
             })}
             <AppMark app="vibot" variant="tile" size={40} />
             <AppMark app="vibot" variant="tile-light" size={40} />
+            <GoogleMark size={28} />
           </View>
+          <Button variant="outline" leftIcon={<GoogleMark />} onPress={() => toast("Continue with Google")}>
+            Continue with Google
+          </Button>
         </Section>
 
         <Section title="Button">
