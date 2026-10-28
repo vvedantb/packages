@@ -23,7 +23,7 @@ Optional, only if you import those components:
 
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
-- `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`) and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
+- `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`), `GoogleMark` and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
 
 Optional and loaded only when installed, so the package imports and runs without them:
 
@@ -57,7 +57,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | Entry | Exports | Optional peers it reaches |
 | --- | --- | --- |
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
-| `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
+| `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `GoogleMark` (from 0.3.15), `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
 | `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
@@ -138,7 +138,7 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton` |
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
 | Feedback | `toast()` and `<Toaster />` |
-| Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
+| Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
 | Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
 
 Overlays hold their own open state, or take `open` and `onOpenChange`:
@@ -197,7 +197,9 @@ The components keep the web sizes on screen and reach a 44 pt touch target with 
 
 Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label (the `SearchInput` lock grows with the font scale); only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress` and `Skeleton` do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
 
-The brand marks (`APP_ICONS`, the `Icon*` exports and `AppMark`) are images named by `title`, and hidden from assistive tech without one. From 0.3.14 they set the props each platform reads: `accessibilityRole="image"` and `accessibilityLabel` on iOS and Android, `role="img"` and `aria-label` on web. Without a title they set `accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"` on native and `aria-hidden` on web. `testID` is `data-testid` on web. On web `react-native-svg` passes its props straight to the DOM `<svg>`, and React Native Web does not map `accessible`, the `accessibility*` props or `testID` there. So do not put them on an `Svg` or on a Tabler icon: put them on the parent `View` or `Pressable`. The package draws no Lucide icon, as a Lucide icon always sets `testID` on its `Svg`. On web the `Select` options are Radix DOM nodes, so from 0.3.14 they take their name and test id as `aria-label` and `data-testid` there, and as `accessibilityLabel` and `testID` on iOS and Android.
+The brand marks (`APP_ICONS`, the `Icon*` exports, `AppMark` and `GoogleMark`) are images named by `title`, and hidden from assistive tech without one. From 0.3.14 they set the props each platform reads: `accessibilityRole="image"` and `accessibilityLabel` on iOS and Android, `role="img"` and `aria-label` on web. Without a title they set `accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"` on native and `aria-hidden` on web. `testID` is `data-testid` on web. On web `react-native-svg` passes its props straight to the DOM `<svg>`, and React Native Web does not map `accessible`, the `accessibility*` props or `testID` there. So do not put them on an `Svg` or on a Tabler icon: put them on the parent `View` or `Pressable`. The package draws no Lucide icon, as a Lucide icon always sets `testID` on its `Svg`. On web the `Select` options are Radix DOM nodes, so from 0.3.14 they take their name and test id as `aria-label` and `data-testid` there, and as `accessibilityLabel` and `testID` on iOS and Android.
+
+`GoogleMark` (from 0.3.15) is the four-colour Google "G", 18 by default, for a "Continue with Google" button: `<Button variant="outline" leftIcon={<GoogleMark />}>Continue with Google</Button>`. Its colours are fixed, so it takes no `color`. Leave it without a `title` there, as the label names the button.
 
 ## Floating UI / Android shadows
 

@@ -7,6 +7,8 @@ export { AppMark } from "./AppMark";
 export type { AppMarkProps } from "./AppMark";
 export { AppWordmark } from "./AppWordmark";
 export type { AppWordmarkProps, ProductAppName } from "./AppWordmark";
+export { GoogleMark } from "./GoogleMark";
+export type { GoogleMarkProps } from "./GoogleMark";
 export {
   APP_MARKS,
   APP_MARK_CROP_VIEWBOX,

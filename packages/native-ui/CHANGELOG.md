@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.15
+
+- **New: `GoogleMark`**, the four-colour Google "G" for a "Continue with Google" button: `<Button variant="outline" leftIcon={<GoogleMark />}>`. It draws the standard four paths of the Google sign-in "G" on a 24 viewBox in blue `#4285F4`, green `#34A853`, yellow `#FBBC05` and red `#EA4335`.
+  - Props: `size` (default 18), `title`, `testID` and `style`, as `AppMark`. The colours are fixed, so it takes no `color`.
+  - It spreads `svgA11yProps({ title, testID }, Platform.OS)` on its `Svg`, as `APP_ICONS` and `AppMark` do. Without a `title` it is hidden from assistive tech, which suits a labelled button.
+  - Exported from the root and `@vvedantb/native-ui/brand`, with `GoogleMarkProps`.
+- **Gallery.** The Brand section shows `GoogleMark` beside the app marks, and an outline "Continue with Google" button.
+- Tests:
+  - `tests/svgA11y.test.ts` renders `GoogleMark` with and without a title and test id on web, iOS and Android, and checks its `Svg` as the other brand marks. It checks the 18 default, the 24 viewBox and the four fills in order, and that the `Svg` tag spreads `svgA11yProps` and sets only size, viewBox, aspect and style.
+  - `tests/brand.test.ts` checks that `GoogleMark` uses `react-native-svg` and takes no `color`.
+  - `tests/exports.test.ts` checks the 0.3.15 version and the new names. `tests/subpaths.test.ts` checks them on `./brand`.
+- No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.14
 
 The brand marks, the `Select` icons and the `Select` options no longer put React Native accessibility props or `testID` on a DOM node on Expo web. The Expo web gallery now loads, and opens and sets a `Select`, with no console error.
