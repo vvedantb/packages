@@ -3,9 +3,9 @@
  * `Checkbox`, `Tabs`, `Card` and component text, taken from `palette` and
  * `tokens` instead of NativeWind theme keys (`bg-primary`, `bg-input`,
  * `text-foreground`) that apps do not define, or define without a dark value.
- * Also text weights and sizes as styles, the `SearchInput` metrics, the
- * compact window test for dialogs and the touch-target maths. No React Native import, so the tests can load
- * this file.
+ * Also text weights and sizes as styles, the page title type, the
+ * `SearchInput` metrics, the compact window test for dialogs and the
+ * touch-target maths. No React Native import, so the tests can load this file.
  */
 import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
@@ -147,6 +147,41 @@ export function sizeStyle(size: TextSize, leading?: "tight" | "snug") {
   const { fontSize, lineHeight } = TEXT_SIZE[size];
   return { fontSize, lineHeight: leading ? fontSize * LEADING[leading] : lineHeight };
 }
+
+/** Tailwind `tracking-tight`, in em. */
+const TRACKING = { tight: -0.025 } as const;
+
+/**
+ * Letter spacing of a `tracking-*` class at `fontSize`, as a style in points.
+ * React Native has no `em`: `tracking-tight` (-0.025em) at 20 is -0.5.
+ */
+export function trackingStyle(fontSize: number, tracking: keyof typeof TRACKING) {
+  return { letterSpacing: fontSize * TRACKING[tracking] };
+}
+
+/**
+ * The web page title, `text-xl font-semibold leading-tight tracking-tight` on
+ * the `Breadcrumb` nav (`breadcrumb.tsx`), with the Instrument Sans semibold
+ * face for `font-semibold`. `PageTitle` sets `pageTitleStyle()` beside it.
+ */
+export const PAGE_TITLE_CLASS = "font-instrument-sans-semibold text-xl leading-tight tracking-tight";
+
+/**
+ * `PAGE_TITLE_CLASS` as a style: Instrument Sans 600 at 20 / 25 with -0.5
+ * letter spacing. On Android and Expo web the face class alone can draw
+ * Regular (see `typeStyle`).
+ */
+export function pageTitleStyle() {
+  const size = sizeStyle("text-xl", "tight");
+  return { ...size, ...typeStyle("semibold"), ...trackingStyle(size.fontSize, "tight") };
+}
+
+/**
+ * Height of the `PageHeader` row below the top inset, in points. A minimum,
+ * so the title sits at the same height with or without an action, and still
+ * grows with the system font size. Native only: the web title has no row.
+ */
+export const PAGE_HEADER_HEIGHT = 56;
 
 /**
  * The web `COMPACT_OVERLAY_QUERY`, `(max-width: 639px), (max-height: 500px)`:

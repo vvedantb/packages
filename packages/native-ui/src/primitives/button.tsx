@@ -47,7 +47,9 @@ const buttonVariants = cva(
   },
 );
 
-const buttonTextVariants = cva("text-sm font-medium text-foreground", {
+// No weight: a class context cannot carry the `typeStyle` that a face class
+// needs, so `Button` sets the medium face and its weight on its label.
+const buttonTextVariants = cva("text-sm text-foreground", {
   variants: {
     variant: {
       default: "text-primary-foreground",

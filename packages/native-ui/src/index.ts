@@ -137,6 +137,8 @@ export { DateTimeField } from "./DateTimeField";
 export { BottomSheetContainer } from "./BottomSheetContainer";
 export { SafeAreaContainer } from "./SafeAreaContainer";
 export { ScreenContainer } from "./ScreenContainer";
+export { PageTitle, PageHeader } from "./PageTitle";
+export type { PageTitleProps, PageHeaderProps } from "./PageTitle";
 export { SettingsSection } from "./settings/SettingsSection";
 export { SettingsField } from "./settings/SettingsField";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow";

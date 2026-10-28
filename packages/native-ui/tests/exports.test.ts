@@ -108,6 +108,10 @@ describe("@vvedantb/native-ui exports", () => {
       "V_PRO_APP_BENEFITS",
       "UpgradeToProCard",
       "PricingModal",
+      "PageTitle",
+      "PageHeader",
+      "PageTitleProps",
+      "PageHeaderProps",
       "tokens",
       "palette",
     ];
@@ -154,14 +158,15 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.12 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.12");
+  it("is 0.3.13 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.13");
     const entries = [
       "./tab-bar",
       "./brand",
       "./button",
       "./primitives",
       "./search-input",
+      "./page-title",
       "./toast",
       "./theme",
       "./floating",

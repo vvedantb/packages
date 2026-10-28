@@ -2,6 +2,7 @@ import * as React from "react";
 import { View } from "react-native";
 import { Text, TextClassContext } from "./text";
 import { cn } from "../cn";
+import { typeStyle } from "../controlStyles";
 
 type CardViewProps = React.ComponentPropsWithoutRef<typeof View> & {
   className?: string;
@@ -40,13 +41,15 @@ const CardHeader = React.forwardRef<
 const CardTitle = React.forwardRef<
   React.ElementRef<typeof Text>,
   React.ComponentPropsWithoutRef<typeof Text> & { className?: string }
->(({ className, ...props }, ref) => {
+>(({ className, style, ...props }, ref) => {
+  // The web `font-semibold`: the semibold face, with its weight as a style.
   return (
     <Text
       ref={ref}
       role="heading"
       aria-level={3}
-      className={cn("font-semibold leading-none", className)}
+      className={cn("font-instrument-sans-semibold leading-none", className)}
+      style={[typeStyle("semibold"), style]}
       {...props}
     />
   );
