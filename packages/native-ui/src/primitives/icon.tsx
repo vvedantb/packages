@@ -1,8 +1,10 @@
 import * as React from "react";
-import type { LucideIcon, LucideProps } from "lucide-react-native";
+import type { IconProps as TablerIconProps } from "@tabler/icons-react-native";
 
-type IconProps = LucideProps & {
-  as: LucideIcon;
+// Tabler, not Lucide: a Lucide icon always sets `testID` on its `Svg`, which
+// on web is a DOM `<svg>`, so React logs it as an unknown DOM prop.
+type IconProps = TablerIconProps & {
+  as: React.ComponentType<TablerIconProps>;
   className?: string;
 };
 

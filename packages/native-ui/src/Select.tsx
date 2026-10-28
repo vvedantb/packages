@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Platform } from "react-native";
 import {
   NativeSelectScrollView,
   Select as PrimitiveSelect,
@@ -17,6 +18,7 @@ import {
   typeStyle,
 } from "./controlStyles";
 import { palette } from "./palette";
+import { selectItemA11yProps } from "./selectA11y";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -138,10 +140,11 @@ function Select<TValue = string | number | null>({
                 ? `${testID}-${String(option.value ?? "null")}`
                 : undefined;
               return (
+                // On web the item is a Radix DOM node: the name and test id
+                // go as `aria-label` and `data-testid` there.
                 <SelectItem
                   key={`${String(option.value)}-${option.label}`}
-                  testID={optionId}
-                  accessibilityLabel={option.label}
+                  {...selectItemA11yProps({ label: option.label, testID: optionId }, Platform.OS)}
                   label={option.label}
                   value={String(option.value ?? NULL_SENTINEL)}
                 />

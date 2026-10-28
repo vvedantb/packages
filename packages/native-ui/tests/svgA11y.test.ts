@@ -3,19 +3,33 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APP_NAMES } from "../src/brand/svg";
+import { selectItemA11yProps } from "../src/selectA11y";
 import { svgA11yProps } from "../src/svgA11y";
 
 // On Expo web `react-native-svg` renders `Svg` as a DOM `<svg>` and passes its
 // props through. React Native Web maps `accessible`, `accessibility*` and
 // `testID` on `View` and `Text` only, so on an `Svg` React logs each one as an
-// unknown DOM prop. These checks call `svgA11yProps`, render the brand icons
-// with React Native and the SVG peer stubbed on web, iOS and Android, and read
-// every `Svg` and icon tag in `src/`.
+// unknown DOM prop. The `Select` options are DOM nodes on web too: the Radix
+// `Select.Item`. These checks call `svgA11yProps` and `selectItemA11yProps`,
+// render the brand icons and `Select` with React Native, the SVG peer and the
+// select primitives stubbed on web, iOS and Android, and read every `Svg`,
+// icon and web DOM tag in `src/`.
 
 const platform = vi.hoisted(() => ({ OS: "web" }));
 vi.mock("react-native", () => ({ Platform: platform }));
 vi.mock("react-native-svg", () => ({ default: "Svg", G: "G", Path: "Path", Rect: "Rect" }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
+vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
+vi.mock("../src/theme", () => ({ useLargerText: () => false }));
+vi.mock("../src/primitives/select", () => ({
+  NativeSelectScrollView: "NativeSelectScrollView",
+  Select: "PrimitiveSelect",
+  SelectContent: "SelectContent",
+  SelectGroup: "SelectGroup",
+  SelectItem: "SelectItem",
+  SelectTrigger: "SelectTrigger",
+  SelectValue: "SelectValue",
+}));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "src");
@@ -27,6 +41,14 @@ const NATIVE_ONLY = /^(?:accessible|accessibility[A-Z]\w*|importantForAccessibil
 const WEB_SAFE = /^(?:width|height|viewBox|preserveAspectRatio|style|children|role|aria-[a-z]+|data-[a-z-]+)$/;
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
+
+const OSES = ["web", "ios", "android"];
+
+/** Keys whose value is `undefined`. React still reads them as props. */
+const undefinedKeys = (props: object) =>
+  Object.entries(props)
+    .filter(([, value]) => value === undefined)
+    .map(([key]) => key);
 
 afterEach(() => {
   platform.OS = "web";
@@ -43,7 +65,18 @@ describe("svgA11yProps", () => {
 
   it("hides the web svg from assistive tech without a title", () => {
     expect(svgA11yProps({ testID: "mark" }, "web")).toEqual({ "aria-hidden": true, "data-testid": "mark" });
-    expect(svgA11yProps({ title: "" }, "web")).toEqual({ "aria-hidden": true, "data-testid": undefined });
+    expect(svgA11yProps({ title: "" }, "web")).toStrictEqual({ "aria-hidden": true });
+  });
+
+  it.each(OSES)("returns no key set to undefined on %s", (os) => {
+    for (const props of [{}, { title: "vibot" }, { testID: "mark" }, { title: "vibot", testID: "mark" }, { title: "" }]) {
+      const out = svgA11yProps(props, os);
+      expect(undefinedKeys(out), JSON.stringify(props)).toEqual([]);
+      if (!("testID" in props)) {
+        expect(Object.keys(out), JSON.stringify(props)).not.toContain("testID");
+        expect(Object.keys(out), JSON.stringify(props)).not.toContain("data-testid");
+      }
+    }
   });
 
   it("gives web no prop that React Native Web leaves unmapped on Svg", () => {
@@ -68,6 +101,81 @@ describe("svgA11yProps", () => {
       importantForAccessibility: "no-hide-descendants",
       testID: "mark",
     });
+    expect(svgA11yProps({}, os)).toStrictEqual({
+      accessible: false,
+      accessibilityElementsHidden: true,
+      importantForAccessibility: "no-hide-descendants",
+    });
+  });
+});
+
+describe("selectItemA11yProps", () => {
+  it("gives web aria-label and data-testid, with no key set to undefined", () => {
+    expect(selectItemA11yProps({ label: "Pink", testID: "colour-pink" }, "web")).toStrictEqual({
+      "aria-label": "Pink",
+      "data-testid": "colour-pink",
+    });
+    expect(selectItemA11yProps({ label: "Pink" }, "web")).toStrictEqual({ "aria-label": "Pink" });
+  });
+
+  it.each(["ios", "android"])("keeps accessibilityLabel and testID on %s", (os) => {
+    expect(selectItemA11yProps({ label: "Pink", testID: "colour-pink" }, os)).toStrictEqual({
+      accessibilityLabel: "Pink",
+      testID: "colour-pink",
+    });
+    expect(selectItemA11yProps({ label: "Pink" }, os)).toStrictEqual({ accessibilityLabel: "Pink" });
+  });
+
+  it("gives web no prop that React DOM does not know", () => {
+    for (const props of [{ label: "Pink" }, { label: "Pink", testID: "colour-pink" }]) {
+      for (const key of Object.keys(selectItemA11yProps(props, "web"))) {
+        expect(key, JSON.stringify(props)).not.toMatch(NATIVE_ONLY);
+        expect(key, JSON.stringify(props)).toMatch(/^(?:aria-[a-z]+|data-[a-z-]+)$/);
+      }
+    }
+  });
+});
+
+describe("Select option props", () => {
+  /** The `SelectItem` elements `Select` renders for a value and a `null` option. */
+  async function items(testID?: string): Promise<Element[]> {
+    const { Select } = await import("../src/Select");
+    const options = [
+      { label: "Pink", value: "pink" },
+      { label: "None", value: null },
+    ];
+    const tree = Select({ value: "pink", onValueChange: () => {}, options, testID }) as unknown as Element;
+    const out: Element[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (!node || typeof node !== "object" || !("props" in node)) return;
+      const element = node as Element;
+      if (element.type === "SelectItem") out.push(element);
+      walk(element.props.children);
+    };
+    walk(tree);
+    return out;
+  }
+
+  it("gives each web option aria-label and data-testid, not the native props", async () => {
+    platform.OS = "web";
+    const [pink, none] = await items("colour");
+    expect(pink?.props).toStrictEqual({ "aria-label": "Pink", "data-testid": "colour-pink", label: "Pink", value: "pink" });
+    expect(none?.props).toStrictEqual({ "aria-label": "None", "data-testid": "colour-null", label: "None", value: "__null__" });
+    for (const item of await items()) {
+      expect(Object.keys(item.props).filter((key) => NATIVE_ONLY.test(key))).toEqual([]);
+      expect(undefinedKeys(item.props)).toEqual([]);
+      expect(item.props).not.toHaveProperty(["data-testid"]);
+    }
+  });
+
+  it.each(["ios", "android"])("keeps accessibilityLabel and testID on each %s option", async (os) => {
+    platform.OS = os;
+    const [pink, none] = await items("colour");
+    expect(pink?.props).toStrictEqual({ accessibilityLabel: "Pink", testID: "colour-pink", label: "Pink", value: "pink" });
+    expect(none?.props).toStrictEqual({ accessibilityLabel: "None", testID: "colour-null", label: "None", value: "__null__" });
+    const [plain] = await items();
+    expect(plain?.props).toStrictEqual({ accessibilityLabel: "Pink", label: "Pink", value: "pink" });
   });
 });
 
@@ -229,6 +337,56 @@ describe("Svg and icon tags in src", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("imports nothing from lucide-react-native in src", () => {
+    // A Lucide icon always sets `testID` on its `Svg` (`Icon.mjs`), even when
+    // it is undefined, so on web React logs it as an unknown DOM prop.
+    const offenders = files(src)
+      .filter((file) => /from\s*"lucide-react-native"/.test(code(file)))
+      .map((file) => relative(root, file));
+    expect(offenders).toEqual([]);
+  });
+
+  /**
+   * Tags that are a Radix DOM node on web, not a React Native view, by file.
+   * `@rn-primitives/select` passes their props to it through a `Slot`.
+   */
+  const WEB_DOM_TAGS: Record<string, string[]> = {
+    "Select.tsx": ["SelectItem"],
+    "primitives/select.tsx": [
+      "SelectPrimitive.Item",
+      "SelectPrimitive.Viewport",
+      "SelectPrimitive.ScrollUpButton",
+      "SelectPrimitive.ScrollDownButton",
+    ],
+  };
+
+  it("puts no native-only a11y prop or testID on a tag that is a Radix DOM node on web", () => {
+    const offenders: string[] = [];
+    for (const [file, names] of Object.entries(WEB_DOM_TAGS)) {
+      for (const name of names) {
+        const tags = openingTags(read(file), name.replace(".", "\\."));
+        expect(tags, `${file}: <${name}>`).toHaveLength(1);
+        const bad = propNames(tags[0]!).filter((prop) => NATIVE_ONLY.test(prop));
+        if (bad.length) offenders.push(`${file}: <${name}> ${bad.join(", ")}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("gives the Select options their name and test id through selectItemA11yProps only", () => {
+    const source = read("Select.tsx");
+    const [tag] = openingTags(source, "SelectItem");
+    expect(source).toMatch(/\{\.\.\.selectItemA11yProps\(\{ label: option\.label, testID: optionId \}, Platform\.OS\)\}/);
+    expect(propNames(tag!)).toEqual(["key", "label", "value"]);
+  });
+
+  it("leaves the Select trigger a React Native Pressable on web", () => {
+    // Without `asChild`, the web `Trigger` renders its own `Pressable`, which
+    // React Native Web maps, so `Select` may give it the native props.
+    const [tag] = openingTags(read("primitives/select.tsx"), "SelectPrimitive\\.Trigger");
+    expect(propNames(tag!)).toEqual(["ref", "disabled", "className"]);
+  });
+
   it("finds the tags it checks", () => {
     expect(svgNames(read("brand/AppIcons.tsx")).svg).toEqual(["Svg", "G", "Path"]);
     expect(svgNames(read("brand/AppMark.tsx")).svg).toEqual(["Svg", "G", "Path", "Rect"]);
@@ -238,7 +396,7 @@ describe("Svg and icon tags in src", () => {
     expect(svgNames(read("EmptyState.tsx")).icons).toEqual(["IconInbox", "Icon", "IconComponent"]);
     expect(svgNames(read("Card.tsx")).icons).toEqual(["Icon"]);
     expect(svgNames(read("ListRow.tsx")).icons).toEqual(["Icon"]);
-    expect(svgNames(read("primitives/select.tsx")).icons).toEqual(["Check", "ChevronDown", "ChevronDownIcon", "ChevronUpIcon"]);
+    expect(svgNames(read("primitives/select.tsx")).icons).toEqual(["IconCheck", "IconChevronDown", "IconChevronUp"]);
     expect(svgNames(read("primitives/icon.tsx")).icons).toEqual(["Component"]);
     for (const file of ["brand/AppIcons.tsx", "brand/AppMark.tsx", "Toast.tsx"]) {
       expect(openingTags(read(file), "Svg"), file).toHaveLength(1);

@@ -20,23 +20,24 @@ export type SvgA11yProps =
 
 /**
  * Spread on the `Svg`. With `title` it is an image with that name; without it,
- * it is hidden from assistive tech. Pass `Platform.OS` as `os`.
+ * it is hidden from assistive tech. Pass `Platform.OS` as `os`. Without
+ * `testID` the result has no test id key, not one set to `undefined`.
  */
 export function svgA11yProps(
   { title, testID }: { title?: string; testID?: string },
   os: string,
 ): SvgA11yProps {
   if (os === "web") {
-    return title
-      ? { role: "img", "aria-label": title, "data-testid": testID }
-      : { "aria-hidden": true, "data-testid": testID };
+    const id = testID === undefined ? {} : { "data-testid": testID };
+    return title ? { role: "img", "aria-label": title, ...id } : { "aria-hidden": true, ...id };
   }
+  const id = testID === undefined ? {} : { testID };
   return title
-    ? { accessible: true, accessibilityRole: "image", accessibilityLabel: title, testID }
+    ? { accessible: true, accessibilityRole: "image", accessibilityLabel: title, ...id }
     : {
         accessible: false,
         accessibilityElementsHidden: true,
         importantForAccessibility: "no-hide-descendants",
-        testID,
+        ...id,
       };
 }
