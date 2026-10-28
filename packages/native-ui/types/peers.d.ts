@@ -544,7 +544,9 @@ declare module "@tabler/icons-react-native" {
   export const IconInbox: Icon;
   export const IconInfoCircle: Icon;
   export const IconMinus: Icon;
+  export const IconMoon: Icon;
   export const IconSearch: Icon;
+  export const IconSun: Icon;
   export const IconX: Icon;
 }
 

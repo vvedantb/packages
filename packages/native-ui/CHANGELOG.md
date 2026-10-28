@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.16
+
+The focused `FloatingTabBar` tab sits on a pill, and a new `ThemeToggle` header button.
+
+- **Visible change: `FloatingTabBar` active pill.** The focused tab sits on a rounded pill, as the web segmented Tabs sliding pill does (`.t-tabs-pill`, `tabs.css`). Before, only the label and icon colour marked it.
+  - Fill: `tabColors("segmented", true, scheme)`, the web `--tabs-pill-bg` (`--segment`, `tabs-pills.css`; `palette.segment`: `#ffffff` light, `#474747` dark). It is lighter than the `--default` selected-pill fill (`#ebebeb` / `#272727`), so it stands out on the glass bar (`tokens.color.fill`). Outline: the `TabsTrigger` pills border (`border border-white/40 dark:border-white/10`). Radius `FLOATING_PILL_RADIUS`.
+  - Size: one tab wide (the tabs share the row equally) and inset 4 from the bar on every side. That is 56 high in the 64 bar and 64 high in the 72 bar, around the 48 (56 with larger text) of icon, gap and label. The row's side padding is now 4 (was 8, `px-2`), so the inset is the same all round and the pill follows the bar's curve. The tabs share the 8 points this frees.
+  - Labels and icons: the focused tab takes `tabColors("segmented", true, scheme).color` (the web `--tabs-text-active`, `palette.segmentForeground`, which is the foreground). The other tabs take the muted colour (`--tabs-text-muted`). A route's `tabBarActiveTintColor` and `tabBarInactiveTintColor` still win. Before, without them, the label set no colour (so it fell back to the default text colour) and the icon was `#737373`.
+  - Motion: the pill slides to a newly focused tab over 200 ms with `cubic-bezier(0.22, 1, 0.36, 1)`, the web `--tabs-dur` and `--tabs-ease` (`tokens.css`). It animates `left` as a percentage with Reanimated (`useSharedValue`, `withTiming`, `useAnimatedStyle`), as `Progress` animates its width. With Reduce Motion on (`useReduceMotion`) it moves at once.
+  - Hidden routes: the pill counts only the tabs drawn (`isTabBarRouteVisible`), so hidden routes do not shift it. While a hidden route is focused there is no pill. When a drawn tab is focused again, the pill appears on it without sliding.
+  - The pill is drawn in the bar's `FloatingSurface`, before and outside the `tablist`, with `pointerEvents="none"`. The tabs, their roles and states, the press feedback, the haptic and the blur are unchanged.
+  - The `/tab-bar` entry now imports `react-native-reanimated`, a required peer that the primitives already use. It still reaches `expo-blur` and `expo-haptics` only through their loaders.
+- **New: `ThemeToggle`**, a sun / moon header button that switches between light and dark.
+  - Built on `HeaderIconButton` (48 round, 56 with larger text). It shows the scheme it switches to: the Tabler `IconMoon` in light and `IconSun` in dark, 22 (26 with larger text), in the foreground colour.
+  - Its accessibility label names the action: "Switch to dark mode" or "Switch to light mode".
+  - It calls NativeWind's `useColorScheme().setColorScheme("dark")` or `("light")`, the scheme that `useScheme` and every component read. An unset scheme counts as light, as in `useScheme`.
+  - It stores nothing, so the choice lasts only as long as NativeWind keeps it. An app that restores it on the next launch must store `useColorScheme().colorScheme` itself. No storage package is added.
+  - Props: `testID`. `HeaderIconButton` takes no `className` or `style`, so neither does `ThemeToggle`.
+  - Exported from the root and `@vvedantb/native-ui/primitives`, beside `HeaderIconButton`, with `ThemeToggleProps`. It is not on `/theme`: Metro does not tree-shake by default, so a named Tabler import bundles every icon, and `/theme` stays tokens and the provider.
+- **Gallery.** The Page title section shows a second `PageHeader` ("Settings") with `ThemeToggle` as its action. It switches the gallery between light and dark.
+- `types/peers.d.ts` declares `IconMoon` and `IconSun`.
+- Page titles are unchanged: `PageTitle`, `pageTitleStyle()` and `PAGE_TITLE_CLASS` still draw Instrument Sans 600 at 20 / 25 (`tests/pageTitle.test.ts`).
+- Tests:
+  - `tests/tabBar.test.ts` stubs Reanimated and the React effects, and calls the pill. It checks one pill at the focused tab's index among the drawn tabs, and no pill while a hidden route is focused. It checks that the pill comes before and outside the `tablist`, the inset of 4 and the row padding, and the pill's width, offset, radius, fill and outline in light and dark. The fill is checked against `palette.segment` and the web `.t-tabs-pill` and `--tabs-pill-bg: var(--segment)`. It checks the slide against the web `--tabs-dur` and `--tabs-ease`, no slide with Reduce Motion, and the label and icon colours with and without the route tint options.
+  - New `tests/themeToggle.test.ts`. It calls `ThemeToggle`, and the `HeaderIconButton` it returns, with React Native, NativeWind and the Tabler icons stubbed. It checks the icon, size, colour, label and `setColorScheme` call in light, in dark and with no scheme set. It also checks `testID`, the larger-text sizes, that the file imports no React Native view and no storage, and the gallery header.
+  - `tests/exports.test.ts` checks the 0.3.16 version and the new names. `tests/subpaths.test.ts` checks that `./primitives` exports them and `./theme` does not, and that `./theme` reaches no Tabler import.
+  - Mutation check: each of these fails at least one test. The pill sliding with Reduce Motion on; the `pills` (`palette.default`) fill; a pill while a hidden route is focused; hidden routes counted in the pill width; the focused colour on every tab; a 300 ms slide; a pill inset of 8; `tabBarInactiveTintColor` ignored; `ThemeToggle` setting the current scheme; the sun and moon swapped; `testID` not passed on.
+- Not checked on a device or in the Expo web gallery. The reference screenshot (`tab-pill-ref.png`) was not in the repository, so the pill follows the written brief. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.15
 
 - **New: `GoogleMark`**, the four-colour Google "G" for a "Continue with Google" button: `<Button variant="outline" leftIcon={<GoogleMark />}>`. It draws the standard four paths of the Google sign-in "G" on a 24 viewBox in blue `#4285F4`, green `#34A853`, yellow `#FBBC05` and red `#EA4335`.

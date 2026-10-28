@@ -114,6 +114,8 @@ describe("@vvedantb/native-ui exports", () => {
       "PageHeader",
       "PageTitleProps",
       "PageHeaderProps",
+      "ThemeToggle",
+      "ThemeToggleProps",
       "tokens",
       "palette",
     ];
@@ -160,8 +162,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.15 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.15");
+  it("is 0.3.16 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.3.16");
     const entries = [
       "./tab-bar",
       "./brand",
