@@ -116,7 +116,7 @@ function heavyRefs(subpath: string): string[] {
 
 describe("granular entries", () => {
   it("cover the V Store entries", () => {
-    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives", "./search-input", "./toast"]) {
+    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives", "./search-input", "./page-title", "./toast"]) {
       expect(basicEntries, subpath).toContain(subpath);
     }
   });
@@ -130,8 +130,8 @@ describe("granular entries", () => {
     expect(offending.map((ref) => `${ref.file}: ${ref.kind} ${ref.specifier}`)).toEqual([]);
   });
 
-  it("keeps expo-router, gorhom, datetimepicker and dayjs off the brand, button, primitives, search-input and toast graphs entirely", () => {
-    for (const subpath of ["./brand", "./button", "./primitives", "./search-input", "./toast"]) {
+  it("keeps expo-router, gorhom, datetimepicker and dayjs off the brand, button, primitives, search-input, page-title, layout and toast graphs entirely", () => {
+    for (const subpath of ["./brand", "./button", "./primitives", "./search-input", "./page-title", "./layout", "./toast"]) {
       const names = packageRefs(entryFile(subpath)).map((ref) => packageName(ref.specifier));
       for (const peer of ["expo-router", "@gorhom/bottom-sheet", "@react-native-community/datetimepicker", "dayjs"]) {
         expect(names, `${subpath} ${peer}`).not.toContain(peer);
@@ -148,10 +148,11 @@ describe("granular entries", () => {
     ]);
   });
 
-  it("brand, button, search-input and toast reach no heavy peer, not even a loader", () => {
+  it("brand, button, search-input, page-title and toast reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
+    expect(heavyRefs("./page-title")).toEqual([]);
     // From 0.3.12 the toast surface is flat, so the entry no longer reaches the expo-blur loader.
     expect(heavyRefs("./toast")).toEqual([]);
   });
@@ -227,6 +228,8 @@ describe("granular entries", () => {
       "./button": ["Button", "ButtonProps", "ButtonSize", "ButtonVariant"],
       "./primitives": ["Button", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
       "./search-input": ["SearchInput", "SearchInputProps"],
+      "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps"],
+      "./layout": ["ScreenContainer", "SafeAreaContainer", "PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps"],
       "./toast": ["toast", "Toaster", "ToastOptions", "ToastVariant"],
       "./theme": ["NativeUiProvider", "tokens", "palette", "cn"],
       "./floating": ["FloatingSurface", "GlassBlurProvider", "GlassBlurTarget", "FLOATING_INSET"],
@@ -244,9 +247,10 @@ describe("granular entries", () => {
     }
   });
 
-  it("keeps the search-input and toast entries to their own names", () => {
+  it("keeps the search-input, page-title and toast entries to their own names", () => {
     const names = (subpath: string) => [...exportedNames(join(root, entryFile(subpath)))].sort();
     expect(names("./search-input")).toEqual(["SearchInput", "SearchInputProps"]);
+    expect(names("./page-title")).toEqual(["PageHeader", "PageHeaderProps", "PageTitle", "PageTitleProps"]);
     expect(names("./toast")).toEqual(["ToastOptions", "ToastVariant", "Toaster", "toast"]);
   });
 

@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Platform, Text as RNText, type Role } from "react-native";
 import { cn } from "../cn";
+import { typeStyle } from "../controlStyles";
 
 const textVariants = cva(
   cn(
@@ -16,27 +17,27 @@ const textVariants = cva(
       variant: {
         default: "",
         h1: cn(
-          "text-4xl font-extrabold tracking-tight",
+          "text-4xl font-instrument-sans-semibold tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h2: cn(
-          "text-3xl font-semibold tracking-tight border-border border-b pb-2",
+          "text-3xl font-instrument-sans-semibold tracking-tight border-border border-b pb-2",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h3: cn(
-          "text-2xl font-semibold tracking-tight",
+          "text-2xl font-instrument-sans-semibold tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h4: cn(
-          "text-xl font-semibold tracking-tight",
+          "text-xl font-instrument-sans-semibold tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         p: "leading-7",
         blockquote: "border-l-2 border-border pl-4 italic",
-        code: "bg-muted rounded px-[0.3rem] py-[0.2rem] text-sm font-semibold",
+        code: "bg-muted rounded px-[0.3rem] py-[0.2rem] text-sm font-instrument-sans-semibold",
         lead: "text-xl text-muted-foreground",
-        large: "text-lg font-semibold",
-        small: "text-sm font-medium",
+        large: "text-lg font-instrument-sans-semibold",
+        small: "text-sm font-instrument-sans-medium",
         muted: "text-sm text-muted-foreground",
       },
     },
@@ -65,6 +66,20 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
   h4: "4",
 };
 
+// The weight of each variant's `font-instrument-sans-*` class, set as a style
+// beside it (`typeStyle`): where an app maps every one of those classes to one
+// family, the class alone draws Regular. Headings are semibold, as the web
+// titles; `h1` was `font-extrabold` before 0.3.13.
+const WEIGHT: Partial<Record<TextVariant, ReturnType<typeof typeStyle>>> = {
+  h1: typeStyle("semibold"),
+  h2: typeStyle("semibold"),
+  h3: typeStyle("semibold"),
+  h4: typeStyle("semibold"),
+  code: typeStyle("semibold"),
+  large: typeStyle("semibold"),
+  small: typeStyle("medium"),
+};
+
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
 type TextProps = React.ComponentPropsWithoutRef<typeof RNText> &
@@ -74,9 +89,10 @@ type TextProps = React.ComponentPropsWithoutRef<typeof RNText> &
   };
 
 const Text = React.forwardRef<React.ElementRef<typeof RNText>, TextProps>(
-  ({ className, asChild = false, variant = "default", ...props }, ref) => {
+  ({ className, asChild = false, variant = "default", style, ...props }, ref) => {
     const textClass = React.useContext(TextClassContext);
     const Component = asChild ? Slot.Text : RNText;
+    const weight = variant ? WEIGHT[variant] : undefined;
 
     return (
       <Component
@@ -84,6 +100,7 @@ const Text = React.forwardRef<React.ElementRef<typeof RNText>, TextProps>(
         className={cn(textVariants({ variant }), textClass, className)}
         role={variant ? ROLE[variant] : undefined}
         aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+        style={weight ? [weight, style] : style}
         {...props}
       />
     );

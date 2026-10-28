@@ -61,10 +61,11 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
 | `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
+| `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13) | none |
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
-| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
+| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader` and their props types, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
@@ -78,6 +79,7 @@ import { FloatingTabBar } from "@vvedantb/native-ui/tab-bar";
 import { AppMark } from "@vvedantb/native-ui/brand";
 import { NativeUiProvider } from "@vvedantb/native-ui/theme";
 import { SearchInput } from "@vvedantb/native-ui/search-input";
+import { PageHeader } from "@vvedantb/native-ui/page-title";
 import { toast, Toaster } from "@vvedantb/native-ui/toast";
 ```
 
@@ -109,7 +111,7 @@ config.resolver.nodeModulesPaths = [
 
 The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes.
 
-From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular.
+From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular. A weight without the face class does not pick the Instrument Sans Medium or Semibold file, so set both. From 0.3.13 every title in the package pairs the two, the internal primitives included, and `tests/fontWeight.test.ts` fails on a face class without its weight, a weight without its face class, or a bare Tailwind `font-medium`, `font-semibold` or `font-bold`.
 
 ## Theme
 
@@ -137,7 +139,7 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
-| Settings and layout | `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
+| Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
 
 Overlays hold their own open state, or take `open` and `onOpenChange`:
 
@@ -170,6 +172,15 @@ From 0.3.9 `SearchInput` is the web search field: a search icon, and a clear but
 ```tsx
 const [query, setQuery] = useState("");
 <SearchInput value={query} onChange={setQuery} label="Search apps" />
+```
+
+From 0.3.13 `PageTitle` is the web page title, the type on the web `Breadcrumb` (`text-xl font-semibold leading-tight tracking-tight`): Instrument Sans 600 at 20 / 25 with -0.5 letter spacing (-0.025em), in the foreground colour. It sets the semibold face class and `fontWeight: "600"` together, so it is not drawn Regular on Android or Expo web. It is a header for VoiceOver and TalkBack, one line (pass `numberOfLines={0}` to wrap), and scales with the system font size. `PageHeader` is a tab-root title row: `PageTitle` at the start and an optional `action` at the end, which keeps its width while a long title is cut off. It has the `ScreenContainer` side padding (`px-4`) and a row at least 56 high, so tabs with and without an action put their titles at the same height. It pads the top by the safe-area inset; pass `safeTop={false}` under a native header or inside a view that already pads it. Give a `Button` in `action` `fullWidth={false}`.
+
+```tsx
+<PageHeader
+  title="Apps"
+  action={<Button variant="ghost" size="sm" fullWidth={false} onPress={updateAll}>Update all</Button>}
+/>
 ```
 
 Toasts need one `<Toaster />` inside `SafeAreaProvider`, after the navigator. Then call `toast("Saved")`, `toast.error("Failed")` or `toast.loading("Syncing")` from anywhere. Pass the returned id to replace a toast (`toast.success("Synced", { id })`). On iOS toasts show over modals; on Android a `Modal` covers them.

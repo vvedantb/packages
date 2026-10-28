@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.3.13
+
+Page titles follow the web, and a weight audit of every title in `src/`.
+
+- **New: `PageTitle`**, the web page title: the classes on the web `Breadcrumb` nav (`breadcrumb.tsx`), `text-xl font-semibold leading-tight tracking-tight`. It draws Instrument Sans 600 at 20 / 25 with -0.5 letter spacing (-0.025em at 20), in `textStyle("foreground", scheme)`.
+  - Class `font-instrument-sans-semibold text-xl leading-tight tracking-tight` (the new `PAGE_TITLE_CLASS`). Style `pageTitleStyle()`: `sizeStyle("text-xl", "tight")`, `typeStyle("semibold")` and the new `trackingStyle(20, "tight")`, so `{ fontSize: 20, lineHeight: 25, fontWeight: "600", letterSpacing: -0.5 }`. All three are internal, in `src/controlStyles.ts`.
+  - `accessibilityRole="header"`, one line (`numberOfLines={1}`, the web `truncate`; pass `numberOfLines={0}` to wrap). Font scaling stays on.
+  - Props: the `Text` props, `className` and `style`. The caller's props come last.
+- **New: `PageHeader`**, a tab-root title row. `PageTitle` (`min-w-0 flex-1`, so a long title is cut off) at the start and an optional `action` at the end, in a view that does not shrink (`shrink-0`). `flex-row items-center justify-between gap-3 px-4`: the side padding of the `ScreenContainer` content (`p-4`).
+  - The top padding is the safe-area inset (`useSafeAreaInsets().top`). `safeTop` (default `true`) turns it off, for a header under a native header or inside a view that already pads the inset.
+  - The row is at least `PAGE_HEADER_HEIGHT` (56) high below the inset, so tabs with and without an action put their titles at the same height. This height is a native choice: the web title sits in the app shell, with no row of its own.
+  - Props: `title`, `action`, `safeTop`, `className` (the row), `titleClassName` and the `View` props. Give a `Button` in `action` `fullWidth={false}`.
+- **Entries.** Both are exported from the root, the new light `@vvedantb/native-ui/page-title` (`PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps`; it reaches no optional peer, not even a loader) and `@vvedantb/native-ui/layout`.
+- **Gallery.** `ParityGallery` opens with a "Page title" section: `PageTitle` ("Updates"), then `PageHeader` ("Apps") with a ghost `sm` "Update all" button.
+- **Fix: title weights in the primitives.** The internal primitives set Tailwind weights on the app's default family, with no Instrument Sans face and no weight style:
+  - `primitives/text.tsx`: `h2`, `h3`, `h4`, `code` and `large` use `font-instrument-sans-semibold` (was `font-semibold`); `small` uses `font-instrument-sans-medium` (was `font-medium`). `h1` uses the semibold face (was `font-extrabold`, 800), as the package titles are semibold. The new `WEIGHT` map sets each variant's `typeStyle` as a style before the caller's `style`.
+  - `primitives/card.tsx`: `CardTitle` uses `font-instrument-sans-semibold` with `typeStyle("semibold")` (was `font-semibold`).
+  - `primitives/button.tsx`: the label class context drops `font-medium`. `Button` already sets the medium face and `typeStyle("medium")` on its label.
+  - Only `Button` and `Card` render these primitives, and both already set the face and weight themselves, so no public component looks different.
+- The audit found no other mismatch: every other JSX tag in `src/` that names a semibold or medium face also sets its weight, and the other way round.
+- Tests:
+  - New `tests/pageTitle.test.ts`. It checks that the web `breadcrumb.tsx` still has `text-xl font-semibold leading-tight tracking-tight`, that `PAGE_TITLE_CLASS` is those classes with the semibold face, and that `pageTitleStyle()` is 20 / 25, `"600"` and -0.5. It calls `PageTitle` and `PageHeader` with React Native, NativeWind and the insets stubbed and checks the title's class, style (light and dark), header role, one line and font scaling. For the header it checks the top inset (and none with `safeTop={false}`), the 56 minimum, the row classes, the title first, the action slot only when given, and the gallery section.
+  - New `tests/fontWeight.test.ts`. It reads every JSX opening tag in `src/`, without comments, and fails on a semibold or medium face class without its weight (`typeStyle` or `fontWeight`) or the other way round. It also fails on a text header with neither a face class and its weight nor the page title class and style. Other checks: face classes outside JSX tags appear only in `typography.ts`, `controlStyles.ts` and `primitives/text.tsx`; `src/` has no bare `font-medium`, `font-semibold`, `font-bold` or other Tailwind weight; there is no bold face outside `fontClass` and no 700 weight; and the `primitives/text.tsx`, `primitives/card.tsx` and `primitives/button.tsx` fixes.
+  - `tests/exports.test.ts` checks the 0.3.13 version, the `./page-title` entry and the new names. `tests/subpaths.test.ts` checks that `/page-title` reaches no heavy peer, that `/page-title` and `/layout` reach no `expo-router`, gorhom, date picker or `dayjs`, and the names of both entries.
+  - Mutation check: the 0.3.12 primitives, a title without its `typeStyle`, a face class switched to Regular, a header with no face, `PageTitle` without `pageTitleStyle()` or with `allowFontScaling={false}`, `PageHeader` without the inset, and zero tracking each fail at least one test.
+- Not checked on a device or in Expo captures. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.12
 
 Toast look and `SearchInput` heights, from the phone-width (390 × 844) comparison of Expo web against the web gallery.

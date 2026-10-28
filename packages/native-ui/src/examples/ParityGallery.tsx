@@ -47,6 +47,8 @@ import {
   Label,
   LabeledSwitchRow,
   NativeUiProvider,
+  PageHeader,
+  PageTitle,
   PricingModal,
   Progress,
   SearchInput,
@@ -187,6 +189,21 @@ function GalleryScreen() {
         contentContainerClassName="gap-8 px-4 pt-4"
         contentContainerStyle={{ paddingBottom: GALLERY_END_SPACE }}
       >
+        <Section title="Page title">
+          <PageTitle>Updates</PageTitle>
+          {/* `safeTop={false}` and `px-0`: here the header is not at the top of the screen, and the scroll view pads the sides. */}
+          <PageHeader
+            title="Apps"
+            safeTop={false}
+            className="px-0"
+            action={
+              <Button variant="ghost" size="sm" fullWidth={false} onPress={() => toast("Updating all apps")}>
+                Update all
+              </Button>
+            }
+          />
+        </Section>
+
         <Section title="Brand">
           {(["vibot", "verve", "velth", "vmem", "vhub"] as const).map((app) => (
             <AppWordmark key={app} app={app} />
