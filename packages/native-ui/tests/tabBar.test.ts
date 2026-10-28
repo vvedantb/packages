@@ -2,8 +2,13 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { tabColors } from "../src/controlStyles";
-import { FLOATING_PILL_RADIUS, FLOATING_TAB_BAR_HEIGHT } from "../src/floating";
+import { floatingTabPillColors, tabColors } from "../src/controlStyles";
+import {
+  FLOATING_PILL_RADIUS,
+  FLOATING_TAB_BAR_HEIGHT,
+  floatingFill,
+  floatingSolidFill,
+} from "../src/floating";
 import { palette } from "../src/palette";
 import { isTabBarRouteVisible } from "../src/tabBarRoutes";
 import { tokens } from "../src/tokens";
@@ -135,6 +140,28 @@ const labelColor = (tabs: Element[], label: string) => {
   return flatten(text.props.style).color;
 };
 
+/** WCAG contrast ratio of two `#rrggbb` colours. */
+function contrast(a: string, b: string): number {
+  const luminance = (hex: string) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => {
+      const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * bl!;
+  };
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi! + 0.05) / (lo! + 0.05);
+}
+
+/** `rgba(r, g, b, a)` laid over the `#rrggbb` behind it, as `#rrggbb`. */
+function over(rgba: string, hex: string): string {
+  const [r, g, b, a] = rgba.match(/[\d.]+/g)!.map(Number);
+  return `#${[r!, g!, b!]
+    .map((c, i) => Math.round(c * a! + Number.parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16) * (1 - a!)))
+    .map((c) => c.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 const labels = (tabs: Element[]) => tabs.map((tab) => tab.props.accessibilityLabel);
 const selected = (tabs: Element[]) =>
   tabs.filter((tab) => (tab.props.accessibilityState as { selected: boolean }).selected).map((tab) => tab.props.accessibilityLabel);
@@ -208,7 +235,7 @@ describe("FloatingTabBar active pill", () => {
     expect(FLOATING_TAB_BAR_HEIGHT - 2 * 4).toBe(56);
   });
 
-  it("is one tab wide, fully rounded, at the tab's offset, in the web segmented pill fill and the pills outline", async () => {
+  it("is one tab wide, fully rounded, at the tab's offset, in the floating pill fill and the pills outline", async () => {
     for (const colorScheme of ["light", "dark"] as const) {
       scheme.colorScheme = colorScheme;
       const { fill } = renderPill((await bar(4)).pills[0]!);
@@ -220,15 +247,58 @@ describe("FloatingTabBar active pill", () => {
         width: "50%",
         left: "50%",
         borderRadius: FLOATING_PILL_RADIUS,
-        backgroundColor: palette.segment[colorScheme],
+        backgroundColor: floatingTabPillColors(colorScheme).backgroundColor,
       });
-      // The web `--tabs-pill-bg` (`--segment`), lighter than the `--default` pill.
-      expect(webTabs).toMatch(/\.t-tabs-pill \{[^}]*background: var\(--tabs-pill-bg\);/);
-      expect(webTabsPills).toMatch(/--tabs-pill-bg: var\(--segment\);/);
-      expect(tabColors("segmented", true, colorScheme).backgroundColor).toBe(palette.segment[colorScheme]);
-      expect(palette.segment[colorScheme]).toBe({ light: "#ffffff", dark: "#474747" }[colorScheme]);
       // The `TabsTrigger` pills outline.
       expect(fill.props.className).toBe("border border-white/40 dark:border-white/10");
+    }
+  });
+
+  it("is the muted --default in light and the --segment in dark, as the web track and pill", () => {
+    // Web segmented Tabs: the `--segment` pill on the muted `--default` track.
+    expect(webTabs).toMatch(/\.t-tabs-pill \{[^}]*background: var\(--tabs-pill-bg\);/);
+    expect(webTabsPills).toMatch(/--tabs-pill-bg: var\(--segment\);/);
+    expect(webTabsPills).toMatch(/--tabs-bar-bg: var\(--default\);/);
+    expect(floatingTabPillColors("light")).toEqual({
+      backgroundColor: palette.default.light,
+      color: palette.segmentForeground.light,
+    });
+    expect(palette.default.light).toBe("#ebebeb");
+    expect(floatingTabPillColors("dark")).toEqual({
+      backgroundColor: palette.segment.dark,
+      color: palette.segmentForeground.dark,
+    });
+    expect(palette.segment.dark).toBe("#474747");
+    // Dark is the 0.3.16 pill; the label is the segmented active label in both.
+    expect(floatingTabPillColors("dark")).toEqual(tabColors("segmented", true, "dark"));
+    for (const colorScheme of ["light", "dark"] as const) {
+      expect(floatingTabPillColors(colorScheme).color).toBe(tabColors("segmented", true, colorScheme).color);
+    }
+  });
+
+  it("stands out from the bar in both schemes", () => {
+    // The bar as drawn: the solid fill (no blur, Reduce Transparency), and
+    // the translucent glass over the page background.
+    const solid = (colorScheme: "light" | "dark") => floatingSolidFill[colorScheme];
+    const glass = (colorScheme: "light" | "dark") =>
+      over(floatingFill[colorScheme], tokens.color.background[colorScheme]);
+    // 0.3.16 drew the white `--segment` pill on the white light bar: 1:1 on
+    // the solid fill, 1.01:1 on the glass.
+    expect(floatingTabPillColors("light").backgroundColor).not.toBe(tokens.color.white);
+    expect(floatingTabPillColors("light").backgroundColor).not.toBe(palette.segment.light);
+    expect(contrast(palette.segment.light, solid("light"))).toBe(1);
+    expect(contrast(palette.segment.light, glass("light"))).toBeLessThan(1.15);
+    for (const colorScheme of ["light", "dark"] as const) {
+      const { backgroundColor, color } = floatingTabPillColors(colorScheme);
+      expect(backgroundColor, colorScheme).not.toBe(solid(colorScheme));
+      // On the solid bar, at least the web pill on its track (in light the
+      // same pair, swapped: white and `#ebebeb`, 1.19:1).
+      const web = contrast(palette.segment[colorScheme], palette.default[colorScheme]);
+      expect(contrast(backgroundColor, solid(colorScheme)), colorScheme).toBeGreaterThanOrEqual(web);
+      // The light glass is a shade under white (`#fefefe`), so 1.18:1 there.
+      expect(contrast(backgroundColor, glass(colorScheme)), colorScheme).toBeGreaterThan(1.15);
+      // The focused label reads on the pill.
+      expect(contrast(color, backgroundColor), colorScheme).toBeGreaterThanOrEqual(4.5);
     }
   });
 

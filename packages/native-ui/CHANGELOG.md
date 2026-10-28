@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.17
+
+The `FloatingTabBar` active pill shows in light mode.
+
+- **Fix: `FloatingTabBar` active pill in light mode.** In 0.3.16 the pill was invisible in light: its fill was `tabColors("segmented", true, scheme)`, the web `--segment` (`palette.segment.light`, `#ffffff`), on a white bar (`tokens.color.fill.light`, `rgba(255, 255, 255, 0.86)`; solid fallback `tokens.color.surface.light`, `#ffffff`).
+  - Fill: new `floatingTabPillColors(scheme)` in `controlStyles.ts`. Light: `palette.default.light` (`#ebebeb`), the web `--default` and segmented track (`--tabs-bar-bg`). Dark: `palette.segment.dark` (`#474747`), unchanged from 0.3.16. On the web the `--segment` pill sits on the muted `--default` track. The floating bar is already the raised surface, so in light the pill takes the track fill.
+  - Contrast with the bar in light: 1.19:1 on the solid fill (the web pill on its track, swapped) and 1.18:1 on the glass over the page background (`#fefefe`). The 0.3.16 pill was 1:1 and 1.01:1. Dark: 1.91:1 on the solid fill (`#181818`).
+  - Labels and icons are unchanged: the focused tab takes the foreground (`palette.segmentForeground`), the others the muted colour, and a route's `tabBarActiveTintColor` and `tabBarInactiveTintColor` still win. `floatingTabPillColors(scheme).color` is the same foreground.
+  - The outline, size, inset, slide, Reduce Motion, blur, haptic, `ThemeToggle` and page titles are unchanged. `tabColors` and `Tabs` are unchanged.
+- Tests:
+  - `tests/tabBar.test.ts` checks the pill fill against `floatingTabPillColors` in light and dark. It checks `palette.default.light` (`#ebebeb`) in light and `palette.segment.dark` (`#474747`) in dark, against the web `--tabs-pill-bg: var(--segment)` and `--tabs-bar-bg: var(--default)`. It checks that the light pill is not white and differs from the bar. On the solid bar it needs at least the web pill-on-track contrast, and on the glass over the page background more than 1.15:1. The focused label needs 4.5:1 on the pill. It also checks that the 0.3.16 white pill fails these checks.
+  - `tests/exports.test.ts` checks the 0.3.17 version.
+  - Mutation check: each of these fails at least one test. The pill fill back on `tabColors("segmented", true, scheme)`, and `floatingTabPillColors` returning `palette.segment` in both schemes.
+- Not checked on a device or in the Expo web gallery. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.16
 
 The focused `FloatingTabBar` tab sits on a pill, and a new `ThemeToggle` header button.
