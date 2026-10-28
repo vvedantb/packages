@@ -338,6 +338,22 @@ export function tabTrackStyle(scheme: Scheme) {
 }
 
 /**
+ * Fill and label of the `FloatingTabBar` active pill. On the web the raised
+ * `--segment` pill sits on a muted `--default` track. The floating bar is
+ * already the raised surface (`tokens.color.fill`, near-white in light), so in
+ * light the pill takes the muted track fill (`palette.default`), as a white
+ * `--segment` pill would not show on it. In dark it keeps `--segment`
+ * (`palette.segment`), lighter than the dark glass. The label is the
+ * segmented `--tabs-text-active`, as `tabColors("segmented", true, scheme)`.
+ */
+export function floatingTabPillColors(scheme: Scheme): TabColors {
+  return {
+    backgroundColor: scheme === "light" ? palette.default.light : palette.segment.dark,
+    color: tabColors("segmented", true, scheme).color,
+  };
+}
+
+/**
  * Box and check colours, from the web `Checkbox` classes: `bg-field-background
  * border-border`, and `bg-primary border-primary text-primary-foreground` when
  * checked (also when indeterminate).

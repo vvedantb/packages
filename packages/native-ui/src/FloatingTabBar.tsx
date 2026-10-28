@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tabColors, typeStyle } from "./controlStyles";
+import { floatingTabPillColors, tabColors, typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
 import { isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
@@ -53,8 +53,8 @@ export type FloatingTabBarProps = {
 
 /**
  * The floating pill tab bar, for the `tabBar` prop of Expo Router's `Tabs`.
- * The focused tab sits on a pill in the web segmented pill fill
- * (`tabColors`), with the foreground label; the others are muted. A route's
+ * The focused tab sits on a pill (`floatingTabPillColors`), with the
+ * foreground label; the others are muted. A route's
  * `tabBarActiveTintColor` and `tabBarInactiveTintColor` override the label
  * and icon colours. Hide a tab with `options={{ href: null }}` on its
  * `Tabs.Screen`: the bar draws no tab for it (`isTabBarRouteVisible`), and
@@ -170,9 +170,10 @@ export function FloatingTabBar({
 
 /**
  * The pill behind tab `index` of `count` drawn tabs: one tab wide (they share
- * the row equally), `TAB_BAR_PADDING` inside the bar, in the web segmented
- * pill fill (`tabColors`, `--tabs-pill-bg`) and the `TabsTrigger` pills
- * outline. It slides to a newly focused tab, as the web segmented pill does,
+ * the row equally), `TAB_BAR_PADDING` inside the bar, in
+ * `floatingTabPillColors` (the muted `--default` in light, `--segment` in
+ * dark, so it shows on the glass bar) and the `TabsTrigger` pills outline.
+ * It slides to a newly focused tab, as the web segmented pill does,
  * and moves at once with Reduce Motion. Behind the tablist, so assistive tech
  * reads only the tabs.
  */
@@ -210,7 +211,7 @@ function ActiveTabPill({ index, count }: { index: number; count: number }) {
             bottom: 0,
             width: `${100 / count}%` as const,
             borderRadius: FLOATING_PILL_RADIUS,
-            backgroundColor: tabColors("segmented", true, scheme).backgroundColor,
+            backgroundColor: floatingTabPillColors(scheme).backgroundColor,
           },
           slide,
         ]}

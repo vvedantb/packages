@@ -50,7 +50,7 @@ To hide a tab, give its screen Expo Router's `href: null`. From 0.3.9 `FloatingT
 </Tabs>
 ```
 
-From 0.3.16 the focused tab sits on a rounded pill in the web segmented pill fill (`tabColors("segmented", …)`: `--tabs-pill-bg`, `palette.segment`, with the `TabsTrigger` pills outline), with the foreground label and icon; the other tabs are muted. A route's `tabBarActiveTintColor` and `tabBarInactiveTintColor` still override the label and icon colours. The pill is one tab wide, inset 4 from the bar on every side, and slides to a newly focused tab over the web `--tabs-dur` (200 ms) and `--tabs-ease`. It counts only the tabs drawn, and there is none while a hidden route is focused.
+From 0.3.16 the focused tab sits on a rounded pill with the `TabsTrigger` pills outline, with the foreground label and icon; the other tabs are muted. From 0.3.17 the pill fill is `floatingTabPillColors(scheme)`: the muted `palette.default` (`--default`, `#ebebeb`) in light, so it shows on the near-white glass bar, and `palette.segment` (`--segment`, `#474747`) in dark. On the web the `--segment` pill sits on a `--default` track; here the bar is the raised surface, so the light pill takes the track fill. A route's `tabBarActiveTintColor` and `tabBarInactiveTintColor` still override the label and icon colours. The pill is one tab wide, inset 4 from the bar on every side, and slides to a newly focused tab over the web `--tabs-dur` (200 ms) and `--tabs-ease`. It counts only the tabs drawn, and there is none while a hidden route is focused.
 
 ## Entry points
 
