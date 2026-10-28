@@ -1,10 +1,7 @@
 import * as SelectPrimitive from "@rn-primitives/select";
-import {
-  Check,
-  ChevronDown,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "lucide-react-native";
+// Tabler, not Lucide: a Lucide icon always sets `testID` on its `Svg`, which
+// on web is a DOM `<svg>`, so React logs it as an unknown DOM prop.
+import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react-native";
 import * as React from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
@@ -72,7 +69,7 @@ const SelectTrigger = React.forwardRef<
       {...props}
     >
       <>{children}</>
-      <ChevronDown size={16} color={tokens.color.muted[scheme]} />
+      <IconChevronDown size={16} color={tokens.color.muted[scheme]} />
     </SelectPrimitive.Trigger>
   );
 });
@@ -153,6 +150,11 @@ const SelectLabel = React.forwardRef<
   );
 });
 
+/**
+ * On web `SelectPrimitive.Item` passes these props to a Radix DOM node, not a
+ * React Native view, so give it `aria-label` and `data-testid` there, not
+ * `accessibilityLabel` or `testID` (`selectItemA11yProps`).
+ */
 type SelectItemProps = React.ComponentPropsWithoutRef<
   typeof SelectPrimitive.Item
 > & {
@@ -177,7 +179,7 @@ const SelectItem = React.forwardRef<
     >
       <View className="absolute right-2 size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check size={16} color={tokens.color.muted[scheme]} />
+          <IconCheck size={16} color={tokens.color.muted[scheme]} />
         </SelectPrimitive.ItemIndicator>
       </View>
       <SelectPrimitive.ItemText
@@ -220,7 +222,7 @@ function SelectScrollUpButton(
       className="items-center justify-center py-1"
       {...props}
     >
-      <ChevronUpIcon size={16} color="#737373" />
+      <IconChevronUp size={16} color="#737373" />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -239,7 +241,7 @@ function SelectScrollDownButton(
       className="items-center justify-center py-1"
       {...props}
     >
-      <ChevronDownIcon size={16} color="#737373" />
+      <IconChevronDown size={16} color="#737373" />
     </SelectPrimitive.ScrollDownButton>
   );
 }

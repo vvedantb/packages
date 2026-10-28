@@ -1,5 +1,6 @@
-import type { StyleProp, ViewStyle } from "react-native";
+import { Platform, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { G, Path } from "react-native-svg";
+import { svgA11yProps } from "../svgA11y";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import {
@@ -19,10 +20,11 @@ export type AppIconProps = {
   color?: string;
   /** Stroke width in rendered points, for stroke glyphs. Default: the glyph's own weight. Fill glyphs ignore it. */
   stroke?: number;
-  /** Accessible name. Without it the icon is hidden from assistive tech. */
+  /** Accessible name. Without it the icon is hidden from assistive tech. On web: `role="img"` and `aria-label`, or `aria-hidden`. */
   title?: string;
   /** `"center"` (default) centres the glyph in its square. `"start"` left-aligns its ink, for vertical lists. */
   align?: "center" | "start";
+  /** Set as `data-testid` on web, where `Svg` does not map `testID`. */
   testID?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -70,12 +72,7 @@ function createAppIcon(app: AppName, displayName: string): AppIconComponent {
           align === "start" ? APP_MARK_VIEWBOX_START[app] : APP_MARK_VIEWBOX[app]
         }
         preserveAspectRatio="xMidYMid meet"
-        accessible={Boolean(title)}
-        accessibilityRole={title ? "image" : undefined}
-        accessibilityLabel={title}
-        accessibilityElementsHidden={!title}
-        importantForAccessibility={title ? "auto" : "no-hide-descendants"}
-        testID={testID}
+        {...svgA11yProps({ title, testID }, Platform.OS)}
         style={style}
       >
         <G {...glyphProps}>

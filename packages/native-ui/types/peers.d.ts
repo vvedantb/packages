@@ -537,6 +537,8 @@ declare module "@tabler/icons-react-native" {
   type Icon = React.ComponentType<IconProps>;
   export const IconAlertTriangle: Icon;
   export const IconCheck: Icon;
+  export const IconChevronDown: Icon;
+  export const IconChevronUp: Icon;
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
   export const IconInbox: Icon;
@@ -544,23 +546,6 @@ declare module "@tabler/icons-react-native" {
   export const IconMinus: Icon;
   export const IconSearch: Icon;
   export const IconX: Icon;
-}
-
-declare module "lucide-react-native" {
-  import type * as React from "react";
-  export interface LucideProps {
-    size?: number | string;
-    color?: string;
-    strokeWidth?: number | string;
-    absoluteStrokeWidth?: boolean;
-  }
-  export type LucideIcon = React.ForwardRefExoticComponent<
-    LucideProps & React.RefAttributes<unknown>
-  >;
-  export const Check: LucideIcon;
-  export const ChevronDown: LucideIcon;
-  export const ChevronDownIcon: LucideIcon;
-  export const ChevronUpIcon: LucideIcon;
 }
 
 declare module "@rn-primitives/slot" {
