@@ -1,5 +1,6 @@
-import type { StyleProp, ViewStyle } from "react-native";
+import { Platform, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { G, Path, Rect } from "react-native-svg";
+import { svgA11yProps } from "../svgA11y";
 import { APP_ICONS } from "./AppIcons";
 import {
   APP_MARKS,
@@ -18,8 +19,9 @@ export type AppMarkProps = {
   variant?: AppMarkVariant;
   /** Width and height in points. Default 24. */
   size?: number;
-  /** Accessible name. Without it the mark is hidden from assistive tech. */
+  /** Accessible name. Without it the mark is hidden from assistive tech. On web: `role="img"` and `aria-label`, or `aria-hidden`. */
   title?: string;
+  /** Set as `data-testid` on web, where `Svg` does not map `testID`. */
   testID?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -64,12 +66,7 @@ export function AppMark({
       height={size}
       viewBox={MARK_VIEWBOX}
       preserveAspectRatio="xMidYMid meet"
-      accessible={Boolean(title)}
-      accessibilityRole={title ? "image" : undefined}
-      accessibilityLabel={title}
-      accessibilityElementsHidden={!title}
-      importantForAccessibility={title ? "auto" : "no-hide-descendants"}
-      testID={testID}
+      {...svgA11yProps({ title, testID }, Platform.OS)}
       style={style}
     >
       <Rect width={1024} height={1024} rx={TILE_RADIUS} fill={tone.bg} />

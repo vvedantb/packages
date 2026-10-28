@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.14
+
+The brand marks no longer put React Native accessibility props on a DOM `<svg>` on Expo web.
+
+- **Fix: brand `Svg` props on web.** On web, `react-native-svg` renders `Svg` as a DOM `<svg>` and passes its props through as they are. React Native Web maps `accessible`, the `accessibility*` props and `testID` on `View` and `Text`, but not on `Svg`. `APP_ICONS` (and the `Icon*` exports) and the `AppMark` tiles set these props on their `Svg`. The Expo web gallery logged React's "does not recognize the `accessibilityElementsHidden` prop on a DOM element" (and the same for `importantForAccessibility`, `accessibilityLabel` and `testID`) and "Received `false` for a non-boolean attribute `accessible`". `AppMark` with `variant="mark"` draws `APP_ICONS`, so it had the same fault. On web a titled mark also had no accessible name, as the unmapped props did nothing there.
+  - The new internal `svgA11yProps({ title, testID }, Platform.OS)` in `src/svgA11y.ts` returns the props for each platform. Both components spread it on their `Svg`, so the `Svg` tag sets no accessibility prop of its own. The file has no React Native import, as `toastChrome.ts`.
+  - Web, with `title`: `role="img"` and `aria-label={title}`. Without it: `aria-hidden`. `testID` becomes `data-testid`.
+  - iOS and Android, with `title`: `accessible`, `accessibilityRole="image"` and `accessibilityLabel={title}`. Without it: `accessible={false}`, `accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"`. `testID` is unchanged. The props that only restated the defaults are dropped (`accessibilityElementsHidden={false}` and `importantForAccessibility="auto"` with a title; an undefined role and label without one), so VoiceOver and TalkBack read the marks as before.
+  - The `title` and `testID` prop docs on `AppIconProps` and `AppMarkProps` say what web gets.
+- **Audit.** No other tag in `src/` puts these props on an SVG.
+  - The `Toaster` `Svg` sets only its size and viewBox. Its `Pressable` carries the role and hint.
+  - The Tabler icons (`Checkbox`, `SearchInput`, `EmptyState`, `Dialog`, `BottomSheetContainer`, `PricingModal`, `Card`, `ListRow` and the gallery) and the Lucide icons in `primitives/select.tsx` take only size, colour and stroke width. Their accessibility sits on the parent `Pressable` or `View`, which React Native Web maps.
+  - The internal `Icon` in `primitives/icon.tsx` passes its props to a Lucide icon as they are. A caller that gives it `accessibilityLabel` or `testID` would still reach the DOM on web. No component in `src/` does.
+- Tests:
+  - New `tests/svgA11y.test.ts`. It checks `svgA11yProps` on web, iOS and Android, with and without `title` and `testID`. It calls every `APP_ICONS` icon and every `AppMark` variant with React Native and `react-native-svg` stubbed, with `Platform.OS` set to web, iOS and Android, and checks the `Svg` props. On web it allows only size, viewBox, aspect, style, `role`, `aria-*` and `data-*`, and expects `role="img"` with `aria-label`, or `aria-hidden`. On native it expects the image or hidden props and `testID`, and no `role`, `aria-*` or `data-*`.
+  - It also reads every file in `src/`, without comments. It fails when an opening tag of a `react-native-svg` element, a Tabler or Lucide icon, or an icon component taken as a prop (`icon: Icon`, `as: Component`) sets `accessible`, an `accessibility*` prop, `importantForAccessibility` or `testID`. Names inside an expression, such as the `svgA11yProps` call, do not count. It checks that it finds the names and tags it reads, that the brand `Svg` tags spread `svgA11yProps` and set only size, viewBox, aspect and style, and that the toast `Svg` sets only size and viewBox.
+  - `tests/exports.test.ts` checks the 0.3.14 version.
+  - Mutation check: each of these fails at least one test. `accessibilityLabel={title}` back on the `AppIcons` `Svg` (beside the spread or in its place); the 0.3.13 props back on the `AppMark` tile; a bare `testID` on the `AppIcons` `Svg`; the helper returning native props on web, or dropping `accessibilityElementsHidden`; `accessible` on the toast `Svg` or `testID` on its `Path`; an accessibility prop or `testID` on a Tabler icon in `Checkbox`, `SearchInput`, `EmptyState` or `Card`, or on a Lucide icon in `primitives/select.tsx`.
+- Not checked in the Expo web gallery or on a device. No new dependencies; the lockfile is unchanged. The web package is unchanged.
+
 ## 0.3.13
 
 Page titles follow the web, and a weight audit of every title in `src/`.
