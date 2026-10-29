@@ -1,6 +1,8 @@
 // `@vvedantb/native-ui/primitives`: fields, display, tabs, overlays and
 // toasts. `BottomSheetContainer`, `DateTimeField` and `AmbientBackground` are
-// not here; they have their own entries.
+// not here; they have their own entries. `Text` and `TextClassContext` are the
+// `primitives/text` variants (from 0.5.0); they are not on the root entry.
+export { Text, TextClassContext } from "../primitives/text";
 export { Button } from "../Button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "../Button";
 export { Input } from "../Input";
@@ -23,6 +25,20 @@ export { Badge } from "../Badge";
 export type { BadgeProps, BadgeVariant } from "../Badge";
 export { StatusDot } from "../StatusDot";
 export type { StatusDotProps, StatusTone } from "../StatusDot";
+export { ColorSwatches } from "../ColorSwatches";
+export type { ColorSwatchesProps, ColorSwatchesSize } from "../ColorSwatches";
+export { StatGrid } from "../StatGrid";
+export type { StatGridItem, StatGridProps } from "../StatGrid";
+export { SectionLabel } from "../SectionLabel";
+export type { SectionLabelProps } from "../SectionLabel";
+export { SheetRow } from "../SheetRow";
+export type { SheetRowProps } from "../SheetRow";
+export { PageIndicator } from "../PageIndicator";
+export type { PageIndicatorProps } from "../PageIndicator";
+export { IconButton } from "../IconButton";
+export type { IconButtonProps, IconButtonSize, IconButtonVariant } from "../IconButton";
+export { CaptureButton } from "../CaptureButton";
+export type { CaptureButtonProps } from "../CaptureButton";
 export { Separator } from "../Separator";
 export type { SeparatorProps } from "../Separator";
 export { Progress } from "../Progress";
@@ -43,6 +59,7 @@ export type {
   TabsContentProps,
 } from "../Tabs";
 export { ListRow } from "../ListRow";
+export type { ListRowProps } from "../ListRow";
 export { HeaderIconButton } from "../HeaderIconButton";
 export { ThemeToggle } from "../ThemeToggle";
 export type { ThemeToggleProps } from "../ThemeToggle";
@@ -54,6 +71,7 @@ export {
   CardContent,
   CardFooter,
 } from "../Card";
+export type { CardProps } from "../Card";
 export { Skeleton, CardSkeleton } from "../Skeleton";
 export { EmptyState } from "../EmptyState";
 export type { EmptyStateVariant } from "../EmptyState";

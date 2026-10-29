@@ -59,6 +59,20 @@ export { Badge } from "./Badge";
 export type { BadgeProps, BadgeVariant } from "./Badge";
 export { StatusDot } from "./StatusDot";
 export type { StatusDotProps, StatusTone } from "./StatusDot";
+export { ColorSwatches } from "./ColorSwatches";
+export type { ColorSwatchesProps, ColorSwatchesSize } from "./ColorSwatches";
+export { StatGrid } from "./StatGrid";
+export type { StatGridItem, StatGridProps } from "./StatGrid";
+export { SectionLabel } from "./SectionLabel";
+export type { SectionLabelProps } from "./SectionLabel";
+export { SheetRow } from "./SheetRow";
+export type { SheetRowProps } from "./SheetRow";
+export { PageIndicator } from "./PageIndicator";
+export type { PageIndicatorProps } from "./PageIndicator";
+export { IconButton } from "./IconButton";
+export type { IconButtonProps, IconButtonSize, IconButtonVariant } from "./IconButton";
+export { CaptureButton } from "./CaptureButton";
+export type { CaptureButtonProps } from "./CaptureButton";
 export { Separator } from "./Separator";
 export type { SeparatorProps } from "./Separator";
 export { Progress } from "./Progress";
@@ -79,6 +93,7 @@ export type {
   TabsContentProps,
 } from "./Tabs";
 export { ListRow } from "./ListRow";
+export type { ListRowProps } from "./ListRow";
 export { HeaderIconButton } from "./HeaderIconButton";
 export { ThemeToggle } from "./ThemeToggle";
 export type { ThemeToggleProps } from "./ThemeToggle";
@@ -90,6 +105,7 @@ export {
   CardContent,
   CardFooter,
 } from "./Card";
+export type { CardProps } from "./Card";
 export { Skeleton, CardSkeleton } from "./Skeleton";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateVariant } from "./EmptyState";
@@ -136,11 +152,14 @@ export { Toaster } from "./Toast";
 export { toast } from "./toastStore";
 export type { ToastOptions, ToastVariant } from "./toastStore";
 export { DateTimeField } from "./DateTimeField";
+export type { DateTimeFieldProps } from "./DateTimeField";
 export { BottomSheetContainer } from "./BottomSheetContainer";
 export { SafeAreaContainer } from "./SafeAreaContainer";
 export { ScreenContainer } from "./ScreenContainer";
 export { PageTitle, PageHeader } from "./PageTitle";
 export type { PageTitleProps, PageHeaderProps } from "./PageTitle";
+export { StackPageHeader } from "./StackPageHeader";
+export type { StackPageHeaderProps } from "./StackPageHeader";
 export { SettingsSection } from "./settings/SettingsSection";
 export { SettingsField } from "./settings/SettingsField";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow";

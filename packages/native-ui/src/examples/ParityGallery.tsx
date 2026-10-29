@@ -1,11 +1,18 @@
 // Reference screen for the components that mirror `@vvedantb/ui`. Render it in
 // an Expo route to compare against the web: it needs the same NativeWind setup
 // as the rest of the package and a `SafeAreaProvider` above it. It always
-// renders the default sizes (larger text off), as the web does. Prices below
-// are placeholders, not real plan prices.
+// renders the default sizes (larger text off), as the web does. Prices, names
+// and figures below are placeholders, not real data.
 import { useState, type ReactNode } from "react";
 import { ScrollView, Text, View, type TextProps } from "react-native";
-import { IconInbox } from "@tabler/icons-react-native";
+import {
+  IconCopy,
+  IconInbox,
+  IconPhoto,
+  IconRefresh,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react-native";
 import {
   APP_ICONS,
   APP_NAMES,
@@ -18,12 +25,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
+  AmbientBackground,
   AppMark,
   AppWordmark,
   Avatar,
   AvatarFallback,
   Badge,
   Button,
+  CaptureButton,
   Card,
   CardContent,
   CardDescription,
@@ -32,7 +41,9 @@ import {
   CardTitle,
   CenteredSpinner,
   Checkbox,
+  ColorSwatches,
   ConfirmDialog,
+  DateTimeField,
   Dialog,
   DialogBody,
   DialogClose,
@@ -44,15 +55,20 @@ import {
   DialogTrigger,
   EmptyState,
   GoogleMark,
+  IconButton,
   Input,
   Label,
   LabeledSwitchRow,
+  ListRow,
+  NEUTRAL_900,
   NativeUiProvider,
   PageHeader,
+  PageIndicator,
   PageTitle,
   PricingModal,
   Progress,
   SearchInput,
+  SectionLabel,
   Select,
   Separator,
   Sheet,
@@ -60,10 +76,13 @@ import {
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetRow,
   SheetTitle,
   SheetTrigger,
   Skeleton,
   Spinner,
+  StackPageHeader,
+  StatGrid,
   StatusDot,
   Switch,
   Tabs,
@@ -75,6 +94,7 @@ import {
   Toaster,
   UpgradeToProCard,
   initials,
+  palette,
   toast,
   tokens,
   useNativeUi,
@@ -125,8 +145,12 @@ const STATUS_TONES: StatusTone[] = [
   "cancelled",
   "active",
   "critical",
+  "info",
   "neutral",
 ];
+
+const SWATCHES = ["#db2777", "#2563eb", "#16a34a", "#f59e0b", "#181818", "#ffffff"];
+const SWATCH_LABELS = ["Pink", "Blue", "Green", "Amber", "Black", "White"];
 
 // Space after the last section, so Card, Upgrade and Overlays can scroll to the
 // top of an 844-tall phone for screenshot crops.
@@ -194,6 +218,13 @@ function GalleryScreen() {
   const [progress, setProgress] = useState(40);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [swatch, setSwatch] = useState(SWATCHES[0]!);
+  const [due, setDue] = useState<Date | null>(null);
+  const [when, setWhen] = useState(() => new Date());
+  const [muted, setMuted] = useState(false);
+  const [sort, setSort] = useState<"newest" | "name">("newest");
+  const [page, setPage] = useState(0);
+  const scheme = useScheme();
 
   return (
     <View className="flex-1">
@@ -367,6 +398,9 @@ function GalleryScreen() {
           <Card title="Today" description="Card props, as before.">
             <GalleryText>Body</GalleryText>
           </Card>
+          <Card title="Pressable" description="onPress makes the whole card a button." onPress={() => toast("Card pressed")}>
+            <GalleryText>Tap anywhere on the card.</GalleryText>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Composed</CardTitle>
@@ -513,6 +547,139 @@ function GalleryScreen() {
             <EmptyState.Title>No messages</EmptyState.Title>
             <EmptyState.Description>New messages land here.</EmptyState.Description>
           </EmptyState.Root>
+        </Section>
+
+        {/* 0.5.0: the Verve, vibot and Velth pieces. */}
+        <Section title="ColorSwatches">
+          <ColorSwatches
+            value={swatch}
+            onChange={setSwatch}
+            colors={SWATCHES}
+            labels={SWATCH_LABELS}
+            accessibilityLabel="Accent colour"
+          />
+          <ColorSwatches
+            value={swatch}
+            onChange={setSwatch}
+            colors={SWATCHES}
+            labels={SWATCH_LABELS}
+            accessibilityLabel="Accent colour"
+            size="sm"
+            disabled
+          />
+        </Section>
+
+        <Section title="DateTimeField">
+          {/* Date only, empty until picked, with a clear button once set. */}
+          <DateTimeField
+            mode="date"
+            value={due}
+            onChange={setDue}
+            placeholder="No due date"
+            onClear={() => setDue(null)}
+          />
+          <DateTimeField value={when} onChange={setWhen} />
+        </Section>
+
+        <Section title="ListRow">
+          {/* Long-press the first row for its second action. */}
+          <ListRow
+            title="Ada Lovelace"
+            meta="See you at nine"
+            leading={
+              <View>
+                <Avatar>
+                  <AvatarFallback>{initials("Ada Lovelace")}</AvatarFallback>
+                </Avatar>
+                <StatusDot tone="info" size="md" className="absolute right-0 top-0" />
+              </View>
+            }
+            titleEnd={<Badge variant="secondary">09:41</Badge>}
+            accessibilityLabel="Ada Lovelace, unread, 09:41"
+            onPress={() => toast("Open thread")}
+            onLongPress={() => toast("Thread actions")}
+          />
+          {/* The switch sits outside the pressable area: it toggles without opening the row. */}
+          <ListRow
+            title="Mute thread"
+            meta="Tap the row or the switch"
+            onPress={() => toast("Row pressed")}
+            control={<Switch checked={muted} onCheckedChange={setMuted} accessibilityLabel="Mute thread" />}
+          />
+        </Section>
+
+        <Section title="SectionLabel and StatGrid">
+          <SectionLabel>Today</SectionLabel>
+          <StatGrid
+            items={[
+              { label: "Done", value: "6" },
+              { label: "This week", value: "31" },
+              { label: "Streak", value: "12 days" },
+            ]}
+          />
+          <SectionLabel uppercase>Library</SectionLabel>
+          <StatGrid
+            columns={3}
+            items={[
+              { label: "Books", value: "24" },
+              { label: "Notes", value: "130" },
+              { label: "Clips", value: "8" },
+            ]}
+          />
+        </Section>
+
+        <Section title="SheetRow">
+          {/* Static rows on the sheet surface; in an app they sit in a `SheetContent`. */}
+          <View className="py-2" style={{ backgroundColor: palette.overlay[scheme], borderRadius: tokens.radius.lg }}>
+            <SheetRow icon={IconCopy} title="Copy link" onPress={() => toast("Copied")} />
+            <SheetRow icon={IconPhoto} title="Save image" detail="To your photo library" onPress={() => toast("Saved")} />
+            <SheetRow title="Newest first" active={sort === "newest"} onPress={() => setSort("newest")} />
+            <SheetRow title="By name" active={sort === "name"} onPress={() => setSort("name")} />
+            <SheetRow icon={IconPhoto} title="Export" detail="Needs V Pro" disabled />
+            <SheetRow icon={IconTrash} title="Delete" danger onPress={() => toast.error("Deleted")} />
+          </View>
+        </Section>
+
+        <Section title="PageIndicator">
+          <PageIndicator count={4} index={page} />
+          <PageIndicator count={4} index={page} onChange={setPage} />
+        </Section>
+
+        <Section title="StackPageHeader">
+          {/* `safeTop={false}`: the strip is not at the top of the screen. */}
+          <AmbientBackground className="flex-none overflow-hidden rounded-lg">
+            <StackPageHeader
+              title="Details"
+              description="Edited 2 min ago"
+              safeTop={false}
+              onBack={() => toast("Back")}
+              headerRight={<ThemeToggle />}
+            />
+          </AmbientBackground>
+          <AmbientBackground className="flex-none overflow-hidden rounded-lg">
+            <StackPageHeader title="A much longer page title that is cut off" safeTop={false} onBack={() => toast("Back")} />
+          </AmbientBackground>
+        </Section>
+
+        <Section title="Camera chrome">
+          {/* A dark stand-in for the live preview. */}
+          <View className="h-72 justify-between overflow-hidden rounded-lg p-4" style={{ backgroundColor: NEUTRAL_900 }}>
+            <View className="flex-row justify-between">
+              <IconButton variant="overlay" icon={IconX} label="Close camera" onPress={() => toast("Close")} />
+              <IconButton variant="overlay" icon={IconRefresh} label="Flip camera" onPress={() => toast("Flip")} />
+            </View>
+            <View className="flex-row items-center justify-between">
+              <IconButton variant="overlay" size="lg" icon={IconPhoto} label="Open library" onPress={() => toast("Library")} />
+              <CaptureButton onPress={() => toast.success("Captured")} />
+              <View style={{ width: 48 }} />
+            </View>
+          </View>
+          <View className="flex-row items-center gap-3">
+            <IconButton icon={IconCopy} label="Copy" size="sm" onPress={() => toast("Copied")} />
+            <IconButton icon={IconCopy} label="Copy" onPress={() => toast("Copied")} />
+            <IconButton icon={IconCopy} label="Copy" size="lg" onPress={() => toast("Copied")} />
+            <IconButton icon={IconTrash} label="Delete" disabled />
+          </View>
         </Section>
 
         {/* The full chat screen, with the composer and keyboard, is `AiChatGallery` (`@vvedantb/native-ui/ai-gallery`). */}

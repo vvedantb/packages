@@ -561,6 +561,7 @@ declare module "@tabler/icons-react-native" {
   export const IconBrain: Icon;
   export const IconCheck: Icon;
   export const IconChevronDown: Icon;
+  export const IconChevronLeft: Icon;
   export const IconChevronRight: Icon;
   export const IconChevronUp: Icon;
   export const IconCircleCheck: Icon;
@@ -582,6 +583,7 @@ declare module "@tabler/icons-react-native" {
   export const IconSun: Icon;
   export const IconThumbDown: Icon;
   export const IconThumbUp: Icon;
+  export const IconTrash: Icon;
   export const IconVideo: Icon;
   export const IconWorld: Icon;
   export const IconX: Icon;

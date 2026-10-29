@@ -4,7 +4,10 @@ import { palette, withAlpha } from "./palette";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
-/** The web `StatusTone`s. */
+/**
+ * The web `StatusTone`s, and `info` (native only, from 0.5.0): neutral news
+ * such as "synced" or "new", in blue.
+ */
 export type StatusTone =
   | "progress"
   | "business-review"
@@ -13,6 +16,7 @@ export type StatusTone =
   | "cancelled"
   | "active"
   | "critical"
+  | "info"
   | "neutral";
 
 export type StatusDotProps = ViewProps & {
@@ -21,6 +25,13 @@ export type StatusDotProps = ViewProps & {
   size?: "sm" | "md";
   className?: string;
 };
+
+/**
+ * The `info` blue: Tailwind `blue-500` in light and the lighter `blue-400` in
+ * dark. Local to the dot: `tokens.css` has no `--info`, so it is not a
+ * `palette` key.
+ */
+const INFO = { light: "#3b82f6", dark: "#60a5fa" } as const;
 
 function toneColor(tone: StatusTone, scheme: "light" | "dark") {
   switch (tone) {
@@ -37,6 +48,8 @@ function toneColor(tone: StatusTone, scheme: "light" | "dark") {
       return withAlpha(tokens.color.muted[scheme], 0.4);
     case "critical":
       return palette.danger[scheme];
+    case "info":
+      return INFO[scheme];
     default:
       return withAlpha(tokens.color.muted[scheme], 0.6);
   }

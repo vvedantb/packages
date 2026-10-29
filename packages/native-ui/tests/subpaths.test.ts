@@ -232,14 +232,25 @@ describe("granular entries", () => {
       "./button": ["Button", "ButtonProps", "ButtonSize", "ButtonVariant"],
       "./primitives": ["Button", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
       "./search-input": ["SearchInput", "SearchInputProps"],
-      "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps"],
-      "./layout": ["ScreenContainer", "SafeAreaContainer", "PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps"],
+      "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps", "StackPageHeader", "StackPageHeaderProps"],
+      "./layout": [
+        "ScreenContainer",
+        "SafeAreaContainer",
+        "PageTitle",
+        "PageHeader",
+        "PageTitleProps",
+        "PageHeaderProps",
+        "StackPageHeader",
+        "StackPageHeaderProps",
+        "SectionLabel",
+        "SectionLabelProps",
+      ],
       "./toast": ["toast", "Toaster", "ToastOptions", "ToastVariant"],
       "./theme": ["NativeUiProvider", "tokens", "palette", "cn"],
       "./floating": ["FloatingSurface", "GlassBlurProvider", "GlassBlurTarget", "FLOATING_INSET"],
       "./ambient": ["AmbientBackground"],
       "./bottom-sheet": ["BottomSheetContainer"],
-      "./date-time": ["DateTimeField"],
+      "./date-time": ["DateTimeField", "DateTimeFieldProps"],
       "./ai": [
         "Conversation",
         "ConversationContent",
@@ -314,10 +325,78 @@ describe("granular entries", () => {
     expect(theme).not.toContain("@tabler/icons-react-native");
   });
 
+  it("exports the 0.5.0 app pieces from /primitives, Text included, and keeps Text off the root", () => {
+    const primitives = exportedNames(join(root, entryFile("./primitives")));
+    const names = [
+      "Text",
+      "TextClassContext",
+      "ColorSwatches",
+      "ColorSwatchesProps",
+      "ColorSwatchesSize",
+      "StatGrid",
+      "StatGridItem",
+      "StatGridProps",
+      "SectionLabel",
+      "SectionLabelProps",
+      "SheetRow",
+      "SheetRowProps",
+      "PageIndicator",
+      "PageIndicatorProps",
+      "IconButton",
+      "IconButtonProps",
+      "IconButtonSize",
+      "IconButtonVariant",
+      "CaptureButton",
+      "CaptureButtonProps",
+      "ListRowProps",
+      "CardProps",
+    ];
+    for (const name of names) expect(primitives.has(name), name).toBe(true);
+    expect(readFileSync(join(root, entryFile("./primitives")), "utf8")).toMatch(
+      /export \{ Text, TextClassContext \} from "\.\.\/primitives\/text";/,
+    );
+    // The root has no `Text`, so it cannot be confused with React Native's.
+    const rootNames = exportedNames(join(root, entryFile(".")));
+    expect(rootNames.has("Text")).toBe(false);
+    expect(rootNames.has("TextClassContext")).toBe(false);
+    for (const name of names.filter((name) => !name.startsWith("Text"))) {
+      expect(rootNames.has(name), `root ${name}`).toBe(true);
+    }
+    // StackPageHeader is a page header, on /layout and /page-title, not /primitives.
+    expect(primitives.has("StackPageHeader")).toBe(false);
+  });
+
+  it("keeps StackPageHeader on /page-title free of heavy peers: it adds only Tabler to the required peers", () => {
+    expect(heavyRefs("./page-title")).toEqual([]);
+    const packages = [...new Set(packageRefs(entryFile("./page-title")).map((ref) => packageName(ref.specifier)))].sort();
+    expect(packages).toEqual([
+      "@tabler/icons-react-native",
+      "clsx",
+      "nativewind",
+      "react",
+      "react-native",
+      "react-native-safe-area-context",
+      "tailwind-merge",
+    ]);
+    // Only the back chevron, through StackPageHeader.
+    expect(
+      packageRefs(entryFile("./page-title"))
+        .filter((ref) => ref.specifier === "@tabler/icons-react-native")
+        .map((ref) => ref.file),
+    ).toEqual(["StackPageHeader.tsx"]);
+  });
+
   it("keeps the search-input, page-title and toast entries to their own names", () => {
     const names = (subpath: string) => [...exportedNames(join(root, entryFile(subpath)))].sort();
     expect(names("./search-input")).toEqual(["SearchInput", "SearchInputProps"]);
-    expect(names("./page-title")).toEqual(["PageHeader", "PageHeaderProps", "PageTitle", "PageTitleProps"]);
+    expect(names("./page-title")).toEqual([
+      "PageHeader",
+      "PageHeaderProps",
+      "PageTitle",
+      "PageTitleProps",
+      "StackPageHeader",
+      "StackPageHeaderProps",
+    ]);
     expect(names("./toast")).toEqual(["ToastOptions", "ToastVariant", "Toaster", "toast"]);
   });
 
