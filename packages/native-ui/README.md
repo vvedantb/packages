@@ -73,8 +73,12 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
 | `@vvedantb/native-ui/date-time` | `DateTimeField` | `@react-native-community/datetimepicker`, `dayjs` (import) |
+| `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |
+| `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
 
-"Loader" means the `require` inside `try` described above, so the entry bundles and runs without that peer. `@vvedantb/native-ui/gallery` imports the root entry.
+"Loader" means the `require` inside `try` described above, so the entry bundles and runs without that peer. `@vvedantb/native-ui/gallery` imports the root entry; `@vvedantb/native-ui/ai-gallery` imports `/ai` only.
+
+The AI chat parts are only on `/ai`. Metro does not tree-shake by default, so on the root entry they would bundle into every app, with or without a chat.
 
 ```tsx
 import { FloatingTabBar } from "@vvedantb/native-ui/tab-bar";
@@ -192,6 +196,76 @@ From 0.3.12 a toast looks like the web `SonnerToaster` at its default density wi
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
 
 `@vvedantb/native-ui/gallery` exports `ParityGallery`, a screen that renders these components. Put it in a dev-only route to check them on a device.
+
+## AI chat (0.4.0)
+
+`@vvedantb/native-ui/ai` ports the `@vvedantb/ui` AI elements for touch: the thread, messages, reasoning and agent trace folds, the composer, suggestions, sources, attachments and code. They are generic (no model names, no app logic) and say "the AI", "Thinking…", "Thought for 12s" and "Worked for 12s". They add no package.
+
+```tsx
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+  Message,
+  MessageAction,
+  MessageActionsBar,
+  MessageContent,
+  PromptInput,
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+  ResponseText,
+} from "@vvedantb/native-ui/ai";
+
+<View className="flex-1">
+  <Conversation>
+    <ConversationContent>
+      <Message from="user">
+        <MessageContent>{question}</MessageContent>
+      </Message>
+      <Message from="assistant">
+        <MessageContent>
+          <Reasoning isStreaming={status === "streaming"}>
+            <ReasoningTrigger />
+            <ReasoningContent>{reasoning}</ReasoningContent>
+          </Reasoning>
+          <ResponseText>{answer}</ResponseText>
+        </MessageContent>
+        <MessageActionsBar>
+          <MessageAction kind="copy" onPress={() => copy(answer)} />
+          <MessageAction kind="retry" onPress={retry} />
+        </MessageActionsBar>
+      </Message>
+    </ConversationContent>
+    <ConversationScrollButton />
+  </Conversation>
+  <PromptInput onSubmit={send} status={status} onStop={stop} />
+</View>
+```
+
+| Part | Notes |
+| --- | --- |
+| `Conversation`, `ConversationContent`, `ConversationEmptyState`, `ConversationScrollButton`, `useConversation` | A `ScrollView` that sticks to the bottom: while the reader is within 70 of the end, new and growing messages stay in view. Once they drag up it stops following, and the scroll button shows: a round outline arrow (40, slop to 48), 16 above the bottom, with an opaque fill and no shadow. Pressing it scrolls down (a jump with Reduce Motion). For very long threads, drive a `FlatList` with `useConversation`. |
+| `Message`, `MessageContent`, `MessageActionsBar`, `MessageAction` | A user message is the web primary bubble (radius 16, bottom-right 14, `px-4 py-3`) at the end of the row; an assistant message has no fill. `MessageAction` is a ghost icon button at the web `icon-sm` size (32, slop to 44). `kind` gives the icon and label: "Copy", "Retry", "Good response", "Bad response". `selected` marks chosen feedback. |
+| `Reasoning`, `ReasoningTrigger`, `ReasoningContent`, `useReasoning` | Opens when streaming starts, times the stream and closes once, a second after it stops. The trigger shows a brain, the shimmering "Thinking…", then "Thought for 12s", and a chevron. The content is muted monospace text on the web `bg-surface-secondary/40` panel. Unlike the web, a reader can close it while it streams. |
+| `AgentTrace`, `AgentTraceLine`, `AgentTraceIcon`, `AgentTraceTitle`, `AgentTraceDescription`, `AgentTraceCollapsible*` | One step per line, with an optional fold behind a rail. `AgentTraceTitle shimmer` pulses a running step. Spread `useStreamingDisclosure(isStreaming)` on `AgentTraceCollapsible` to open it while a step streams. |
+| `ActivityStep` | One tool step as a trace line: icon, label, a spinner while `running`, a check when `complete`, a warning on `error`, and a description such as `` `Worked for ${formatElapsed(12)}` ``. |
+| `ChainOfThought` and its parts | Simplified: header, steps with a rail, search-result chips. |
+| `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls. Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
+| `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
+| `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
+| `FileChip`, `Attachments`, `Attachment` | A monospace file chip (a button with `onOpenFile`), and attachment chips with a media icon or image thumbnail and a labelled remove button. No hover cards and no grid previews. |
+| `CodeBlock`, `CodeBlockCopyButton` | Plain monospace code on the flat panel, scrolling sideways, with the language and a copy button in a header. No highlighting. |
+| `ResponseText` | Plain, selectable reply text with newlines kept. It takes the colour of the `MessageContent` it is in. |
+| `Shimmer` | "Live" text: the foreground fades to 0.45 and back on the UI thread. With Reduce Motion it holds still, muted. |
+
+**Markdown.** There is no markdown renderer: `ResponseText` draws the text as it is. To render markdown, an app can add one of these and use it in place of `ResponseText`: `react-native-markdown-display`, `@ronradtke/react-native-markdown-display` (a maintained fork) or `react-native-marked`.
+
+**Clipboard.** React Native's own `Clipboard` is deprecated (moved out of core), and the package adds no clipboard package. `MessageAction kind="copy"` calls your `onPress`, and `CodeBlock` shows its copy button when given `onCopy(code)`. Pass your own clipboard call, for example `expo-clipboard`'s `setStringAsync`.
+
+Every control has a role, an accessible name and a 44 pt target. Folds report `expanded`, feedback actions `selected`, and the send button `disabled`. Type and icons step up with larger text. Colours come from `palette` and `tokens` as styles, in light and dark.
+
+`@vvedantb/native-ui/ai-gallery` exports `AiChatGallery`, a full chat screen with a sample thread: a user message, a finished assistant message with folded reasoning and trace, code, sources and actions, and a second answer that streams with its reasoning open until you press Stop. It also has suggestions and the composer with sample attachments. Put it in a dev-only route with a `SafeAreaProvider` above it. `ParityGallery` shows the same thread (`AiChatSamples`) in its "AI chat" section.
 
 ## Phones and accessibility
 

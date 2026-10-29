@@ -162,8 +162,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.3.17 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.3.17");
+  it("is 0.4.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.4.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -179,7 +179,9 @@ describe("@vvedantb/native-ui exports", () => {
       "./ambient",
       "./bottom-sheet",
       "./date-time",
+      "./ai",
       "./gallery",
+      "./ai-gallery",
       "./blur",
       "./haptics",
     ];
@@ -196,6 +198,13 @@ describe("@vvedantb/native-ui exports", () => {
       expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
     }
     expect(pkg.dependencies).toBeUndefined();
+  });
+
+  it("keeps the AI chat parts off the root entry: they are on /ai only", () => {
+    expect(index).not.toMatch(/from "\.\/ai"/);
+    for (const name of ["Conversation", "Message", "PromptInput", "Reasoning", "AgentTrace", "Suggestion"]) {
+      expect(names.has(name), name).toBe(false);
+    }
   });
 });
 

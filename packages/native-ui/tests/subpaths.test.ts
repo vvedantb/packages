@@ -148,7 +148,9 @@ describe("granular entries", () => {
     ]);
   });
 
-  it("brand, button, search-input, page-title and toast reach no heavy peer, not even a loader", () => {
+  it("brand, button, search-input, page-title, toast, ai and ai-gallery reach no heavy peer, not even a loader", () => {
+    expect(heavyRefs("./ai")).toEqual([]);
+    expect(heavyRefs("./ai-gallery")).toEqual([]);
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
@@ -238,6 +240,58 @@ describe("granular entries", () => {
       "./ambient": ["AmbientBackground"],
       "./bottom-sheet": ["BottomSheetContainer"],
       "./date-time": ["DateTimeField"],
+      "./ai": [
+        "Conversation",
+        "ConversationContent",
+        "ConversationEmptyState",
+        "ConversationScrollButton",
+        "Message",
+        "MessageContent",
+        "MessageActionsBar",
+        "MessageAction",
+        "Reasoning",
+        "ReasoningTrigger",
+        "ReasoningContent",
+        "useReasoning",
+        "AgentTrace",
+        "AgentTraceLine",
+        "AgentTraceIcon",
+        "AgentTraceTitle",
+        "AgentTraceDescription",
+        "AgentTraceCollapsible",
+        "AgentTraceCollapsibleTrigger",
+        "AgentTraceCollapsibleContent",
+        "ChainOfThought",
+        "ChainOfThoughtHeader",
+        "ChainOfThoughtStep",
+        "ChainOfThoughtContent",
+        "ChainOfThoughtSearchResults",
+        "ChainOfThoughtSearchResult",
+        "ActivityStep",
+        "PromptInput",
+        "PromptInputButton",
+        "PromptInputSubmit",
+        "Suggestions",
+        "Suggestion",
+        "Sources",
+        "SourcesTrigger",
+        "SourcesContent",
+        "Source",
+        "FileChip",
+        "Attachments",
+        "Attachment",
+        "CodeBlock",
+        "CodeBlockCopyButton",
+        "ResponseText",
+        "Shimmer",
+        "Collapsible",
+        "CollapsibleTrigger",
+        "CollapsibleContent",
+        "useStreamingDisclosure",
+        "ChatStatus",
+        "AttachmentData",
+      ],
+      "./ai-gallery": ["AiChatGallery", "AiChatSamples"],
     };
     for (const [subpath, names] of Object.entries(expected)) {
       const exported = exportedNames(join(root, entryFile(subpath)));

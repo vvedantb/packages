@@ -188,6 +188,14 @@ declare module "react-native" {
     clear(): void;
   }
 
+  export interface NativeScrollEvent {
+    contentOffset: { x: number; y: number };
+    contentSize: { width: number; height: number };
+    layoutMeasurement: { width: number; height: number };
+  }
+  export interface NativeSyntheticEvent<T> {
+    nativeEvent: T;
+  }
   export interface ScrollViewProps extends ViewProps {
     contentContainerStyle?: StyleProp<ViewStyle>;
     contentContainerClassName?: string;
@@ -195,10 +203,17 @@ declare module "react-native" {
     showsVerticalScrollIndicator?: boolean;
     showsHorizontalScrollIndicator?: boolean;
     keyboardShouldPersistTaps?: "always" | "never" | "handled";
+    keyboardDismissMode?: "none" | "on-drag" | "interactive";
     bounces?: boolean;
     alwaysBounceVertical?: boolean;
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    scrollEventThrottle?: number;
+    onContentSizeChange?: (width: number, height: number) => void;
   }
-  export class ScrollView extends React.Component<ScrollViewProps> {}
+  export class ScrollView extends React.Component<ScrollViewProps> {
+    scrollToEnd(options?: { animated?: boolean }): void;
+  }
 
   export interface ModalProps {
     children?: React.ReactNode;
@@ -265,6 +280,10 @@ declare module "react-native" {
       handler: (enabled: boolean) => void,
     ): { remove(): void };
     announceForAccessibility(announcement: string): void;
+  };
+
+  export const Linking: {
+    openURL(url: string): Promise<void>;
   };
 
   export function useWindowDimensions(): {
@@ -536,17 +555,35 @@ declare module "@tabler/icons-react-native" {
   }
   type Icon = React.ComponentType<IconProps>;
   export const IconAlertTriangle: Icon;
+  export const IconArrowDown: Icon;
+  export const IconArrowUp: Icon;
+  export const IconBook: Icon;
+  export const IconBrain: Icon;
   export const IconCheck: Icon;
   export const IconChevronDown: Icon;
+  export const IconChevronRight: Icon;
   export const IconChevronUp: Icon;
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
+  export const IconCopy: Icon;
+  export const IconFile: Icon;
+  export const IconFileText: Icon;
   export const IconInbox: Icon;
   export const IconInfoCircle: Icon;
   export const IconMinus: Icon;
   export const IconMoon: Icon;
+  export const IconMusic: Icon;
+  export const IconPaperclip: Icon;
+  export const IconPhoto: Icon;
+  export const IconPlayerStopFilled: Icon;
+  export const IconPointFilled: Icon;
+  export const IconRefresh: Icon;
   export const IconSearch: Icon;
   export const IconSun: Icon;
+  export const IconThumbDown: Icon;
+  export const IconThumbUp: Icon;
+  export const IconVideo: Icon;
+  export const IconWorld: Icon;
   export const IconX: Icon;
 }
 
