@@ -79,12 +79,48 @@ describe("ThemeToggle", () => {
     expect(icon.props.size).toBe(26);
   });
 
+  it("logs the darkMode fix and does not throw when setColorScheme throws", async () => {
+    // NativeWind throws while Tailwind `darkMode` is `media`, its default.
+    const error = new Error("Unable to manually set color scheme without using darkMode: class.");
+    setColorScheme.mockImplementationOnce(() => {
+      throw error;
+    });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { button } = await toggle();
+      expect(() => (button.props.onPress as () => void)()).not.toThrow();
+      expect(setColorScheme).toHaveBeenCalledExactlyOnceWith("dark");
+      expect(consoleError).toHaveBeenCalledExactlyOnceWith(expect.stringContaining('darkMode: "class"'), error);
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it("is built on HeaderIconButton and NativeWind's setColorScheme, with no storage of its own (source contract)", () => {
     const source = read("ThemeToggle.tsx");
     expect(source).toMatch(/import \{ HeaderIconButton \} from "\.\/HeaderIconButton";/);
     expect(source).toMatch(/import \{ useColorScheme \} from "nativewind";/);
-    expect(source).toMatch(/onPress=\{\(\) => setColorScheme\(next\)\}/);
+    expect(source).toMatch(/try \{\s*setColorScheme\(next\);\s*\} catch \(error\) \{\s*console\.error\(DARK_MODE_CLASS_HINT, error\);/);
+    expect(source).toMatch(/onPress=\{toggle\}/);
     expect(source).not.toMatch(/from "react-native"|AsyncStorage|localStorage|SecureStore/);
+  });
+
+  it("sits on a HeaderIconButton with the surface fill and hairline of the scheme, as styles", async () => {
+    const { headerIconButtonColors } = await import("../src/HeaderIconButton");
+    expect(headerIconButtonColors("light")).toEqual({
+      backgroundColor: tokens.color.surface.light,
+      borderColor: "rgba(255, 255, 255, 0.4)",
+    });
+    expect(headerIconButtonColors("dark")).toEqual({
+      backgroundColor: tokens.color.surface.dark,
+      borderColor: "rgba(255, 255, 255, 0.1)",
+    });
+    expect((await toggle()).button.props.style).toEqual(headerIconButtonColors("light"));
+    scheme.colorScheme = "dark";
+    const { button } = await toggle();
+    expect(button.props.style).toEqual(headerIconButtonColors("dark"));
+    // `bg-surface` stays white in dark mode where an app nests `dark` under `surface`.
+    expect(button.props.className).not.toMatch(/bg-|dark:|border-white/);
   });
 
   it("is a header action in the gallery's Page title section", () => {

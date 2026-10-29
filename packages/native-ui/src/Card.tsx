@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import type { IconProps } from "@tabler/icons-react-native";
-import { Text, View, type TextProps, type ViewProps } from "react-native";
+import { Pressable, Text, View, type TextProps, type ViewProps } from "react-native";
 import {
   Card as PrimitiveCard,
   CardContent as PrimitiveCardContent,
@@ -12,15 +12,7 @@ import { cardStyle, sizeStyle, textStyle, typeStyle } from "./controlStyles";
 import { useAccentColor, useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
-export function Card({
-  children,
-  title,
-  description,
-  action,
-  leftIcon: Icon,
-  className,
-  testID,
-}: {
+export type CardProps = {
   children: ReactNode;
   title?: string;
   /** Muted line under the title (the web `CardDescription`). */
@@ -29,8 +21,28 @@ export function Card({
   leftIcon?: ComponentType<IconProps>;
   /** Classes on the card surface. */
   className?: string;
+  /**
+   * Makes the whole card a button that fades while pressed (from 0.5.0). It is
+   * then one element for VoiceOver and TalkBack, so put no other control in it.
+   */
+  onPress?: () => void;
+  /** Names the pressable card. Default `title`; pass one when there is no title. */
+  accessibilityLabel?: string;
+  /** On the button when there is `onPress`, otherwise on the card surface. */
   testID?: string;
-}) {
+};
+
+export function Card({
+  children,
+  title,
+  description,
+  action,
+  leftIcon: Icon,
+  className,
+  onPress,
+  accessibilityLabel,
+  testID,
+}: CardProps) {
   const largerText = useLargerText();
   const accentColor = useAccentColor();
   const scheme = useScheme();
@@ -38,9 +50,9 @@ export function Card({
   const titleSize = largerText ? "text-2xl" : "text-base";
   // The web card: a flat `surfaceCard` fill at radius 16, with no border, no
   // shadow and no blur. Dialogs, sheets and toasts float, as on the web.
-  return (
+  const card = (
     <PrimitiveCard
-      testID={testID}
+      testID={onPress ? undefined : testID}
       className={cn("gap-4 overflow-hidden border-0 py-4", className)}
       style={cardStyle(scheme)}
     >
@@ -73,6 +85,18 @@ export function Card({
         {children}
       </PrimitiveCardContent>
     </PrimitiveCard>
+  );
+  if (!onPress) return card;
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      onPress={onPress}
+      className="active:opacity-70"
+    >
+      {card}
+    </Pressable>
   );
 }
 

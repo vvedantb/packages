@@ -11,6 +11,8 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
+// `src/ThemeToggle.tsx` logs a failed `setColorScheme`.
+declare const console: { error(...data: unknown[]): void };
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`).
 declare function require(id: string): unknown;
@@ -561,6 +563,7 @@ declare module "@tabler/icons-react-native" {
   export const IconBrain: Icon;
   export const IconCheck: Icon;
   export const IconChevronDown: Icon;
+  export const IconChevronLeft: Icon;
   export const IconChevronRight: Icon;
   export const IconChevronUp: Icon;
   export const IconCircleCheck: Icon;
@@ -582,6 +585,7 @@ declare module "@tabler/icons-react-native" {
   export const IconSun: Icon;
   export const IconThumbDown: Icon;
   export const IconThumbUp: Icon;
+  export const IconTrash: Icon;
   export const IconVideo: Icon;
   export const IconWorld: Icon;
   export const IconX: Icon;

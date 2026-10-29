@@ -205,7 +205,8 @@ describe("accessibility roles and states", () => {
 
   it("pressable list rows and toast actions are labelled buttons", () => {
     const row = read("ListRow.tsx");
-    expect(row).toMatch(/accessibilityRole="button"\s+accessibilityLabel=\{title\}/);
+    // From 0.5.0 `accessibilityLabel` can rename the row; the title is the default.
+    expect(row.match(/accessibilityRole="button"\s+accessibilityLabel=\{accessibilityLabel \?\? title\}/g)).toHaveLength(2);
     const toast = read("Toast.tsx");
     expect(toast).toMatch(/accessibilityRole="button"\s+hitSlop=\{8\}/);
   });

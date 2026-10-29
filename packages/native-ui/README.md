@@ -61,18 +61,18 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `GoogleMark` (from 0.3.15), `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
-| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
-| `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13) | none |
+| `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13), `StackPageHeader`, `StackPageHeaderProps` (from 0.5.0; it brings the Tabler package for its chevron) | none |
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
-| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader` and their props types, `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
+| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
-| `@vvedantb/native-ui/date-time` | `DateTimeField` | `@react-native-community/datetimepicker`, `dayjs` (import) |
+| `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
 
@@ -93,10 +93,11 @@ The entries re-export the same source files, so they can be mixed: `NativeUiProv
 
 ## Expo / NativeWind
 
-Source-exported. Point Tailwind at the package so class names are generated:
+Source-exported. Point Tailwind at the package so class names are generated, and set `darkMode: "class"` (see [Theme](#theme)):
 
 ```js
 // tailwind.config.js
+darkMode: "class",
 content: [
   "./app/**/*.{js,ts,tsx}",
   "./components/**/*.{js,ts,tsx}",
@@ -115,9 +116,25 @@ config.resolver.nodeModulesPaths = [
 ];
 ```
 
-The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes.
+The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes. From 0.5.0 the `ListRow`, `DateTimeField` and `HeaderIconButton` fills are styles too, so `ThemeToggle` and the `StackPageHeader` back button follow the scheme.
 
 From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular. A weight without the face class does not pick the Instrument Sans Medium or Semibold file, so set both. From 0.3.13 every title in the package pairs the two, the internal primitives included, and `tests/fontWeight.test.ts` fails on a face class without its weight, a weight without its face class, or a bare Tailwind `font-medium`, `font-semibold` or `font-bold`.
+
+The app loads the font; the package does not. On Expo web, one variable family covers every weight. `@vvedantb/ui` ships the woff2 files (400–700, latin and latin-ext) in `fonts/`. Expo web CSS does not bundle relative `url()`s, so copy the files to the app's `public/fonts/` and copy the `@font-face` rules from `@vvedantb/ui/fonts/instrument-sans.css` with `url("/fonts/…")`. Then map all four classes to that family with a sans-serif fallback, as the components set the weight:
+
+```js
+// tailwind.config.js (Expo web)
+const instrumentSans = ["Instrument Sans", "system-ui", "sans-serif"];
+// theme.extend.fontFamily:
+fontFamily: {
+  "instrument-sans": instrumentSans,
+  "instrument-sans-medium": instrumentSans,
+  "instrument-sans-semibold": instrumentSans,
+  "instrument-sans-bold": instrumentSans,
+},
+```
+
+A class mapped to a family the browser does not have, such as `["System"]`, with no generic fallback draws in the browser default, often a serif.
 
 ## Theme
 
@@ -133,16 +150,20 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 </NativeUiProvider>
 ```
 
+**Dark mode needs `darkMode: "class"`.** Every component reads the scheme with NativeWind's `useColorScheme()` (`useScheme` in `src/useScheme.ts`) and takes its colours from `tokens` and `palette` for it; the AI composer and code block do too. `ThemeToggle`, and any `setColorScheme` call in the app, need `darkMode: "class"` in `tailwind.config.js`. Under Tailwind's default, `media`, NativeWind's `setColorScheme` throws ("Unable to manually set color scheme without using darkMode: class"), on web and native. The scheme then stays on the system setting, and the components keep the light colours, even where the app paints its own page dark.
+
+**Switch the scheme through NativeWind only.** Call `useColorScheme().setColorScheme("dark"|"light")` (or use `ThemeToggle`). That updates `useScheme` and, with `darkMode: "class"`, the `<html>` class together. Do **not** toggle `document.documentElement.classList` (or a page-level CSS `.dark` rule) by hand while leaving NativeWind on light: the page background can go dark while every token-styled part stays on the light set. That dual-owner fault is an app bug, not a native-ui colour bug.
+
 `useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, button 16, field 10, pill 999; rows 20) and spacing (16).
 
 ## Components (0.3.0)
 
 | Area | Exports |
 | --- | --- |
-| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `DateTimeField` |
-| Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`), `Badge`, `StatusDot`, `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow`, `Chip` |
-| Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16) |
-| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
+| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
+| Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
+| Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
+| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `SheetRow` (0.5.0), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
 | Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
@@ -196,6 +217,44 @@ From 0.3.12 a toast looks like the web `SonnerToaster` at its default density wi
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
 
 `@vvedantb/native-ui/gallery` exports `ParityGallery`, a screen that renders these components. Put it in a dev-only route to check them on a device.
+
+## App pieces (0.5.0)
+
+Components and props that the Verve, vibot and Velth apps need. They follow the rest of the package: Instrument Sans with its weight as a style, `tokens` and `palette` colours as styles in light and dark, a step up with larger text, 44 pt targets, and roles, names and states for VoiceOver and TalkBack.
+
+| Part | Notes |
+| --- | --- |
+| `ListRow` `leading`, `titleEnd`, `control`, `onLongPress`, `accessibilityLabel` | `leading` (any node, such as an avatar with an unread dot) replaces `icon`. `titleEnd` sits at the end of the title line. `control` sits outside the pressable area, so a `Switch` there does not fire `onPress`; `right` stays inside it. With a `control`, `testID` is on the pressable body. |
+| `Card` `onPress` | The whole card is a button that fades while pressed, named by `title` or `accessibilityLabel`. It is one element for assistive tech, so put no other control in it. |
+| `DateTimeField` | `mode="date"` for the date button only. `value` may be `null`: the buttons show `placeholder`, and the picker opens on today (or an earlier `maximumDate`). `onClear` adds a 44 clear button while there is a value. |
+| `ColorSwatches` | A radio group of round swatches (`sm` 24, `md` 32, `lg` 40) with a foreground ring and a black or white check on the selected one. `labels` names each swatch. |
+| `StatGrid` | Label and value tiles on the flat card, in rows of 2 or 3. |
+| `SectionLabel` | The muted `text-xs` medium label above a group of rows; `uppercase` for capitals. Add `className="px-4"` to line it up with rows. |
+| `SheetRow` | An action row for a `Sheet`: icon, title, detail; `active` adds a check, `danger` uses the danger colour, `disabled` dims it. |
+| `PageIndicator` | The web carousel dots. With `onChange` each dot is a 44 button named "Page 2 of 5", so the dots sit 44 apart. |
+| `StatusDot` `info` | A blue dot (`#3b82f6`, `#60a5fa` in dark), native only. |
+| `StackPageHeader` | A see-through stack header for screens over `AmbientBackground`: back chevron, centred `PageTitle` with an optional description, and `headerRight`. Pads the top inset unless `safeTop={false}`. |
+| `IconButton`, `CaptureButton` | A round icon button (`default` bordered surface, or `overlay` translucent black for camera chrome) and a 76 white camera shutter. `IconButton` is not the AI chat button. |
+
+```tsx
+<ListRow
+  title="Ada Lovelace"
+  meta="See you at nine"
+  leading={<Avatar><AvatarFallback>AL</AvatarFallback></Avatar>}
+  titleEnd={<Badge variant="secondary">09:41</Badge>}
+  onPress={openThread}
+  onLongPress={showActions}
+  control={<Switch checked={pinned} onCheckedChange={setPinned} accessibilityLabel="Pin" />}
+/>
+
+<DateTimeField mode="date" value={due} onChange={setDue} placeholder="No due date" onClear={() => setDue(null)} />
+
+<AmbientBackground>
+  <StackPageHeader title="Details" onBack={router.back} headerRight={<ThemeToggle />} />
+</AmbientBackground>
+```
+
+`Text` from `@vvedantb/native-ui/primitives` is the variant text (`h1`–`h4`, `p`, `lead`, `large`, `small`, `muted`, `code`, `blockquote`). It is not on the root entry. Unlike the components, it takes its colour from NativeWind classes (`text-foreground`, `text-muted-foreground`); where the app defines `foreground` with a nested `dark` key, give it `style={{ color: tokens.color.foreground[scheme] }}` in dark mode.
 
 ## AI chat (0.4.0)
 
@@ -269,13 +328,13 @@ Every control has a role, an accessible name and a 44 pt target. Folds report `e
 
 ## Phones and accessibility
 
-The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `SearchInput` clear button (24), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
+The components keep the web sizes on screen and reach a 44 pt touch target with `hitSlop` (`touchSlop` in `src/controlStyles.ts`): `Checkbox` (16), `Switch` (36 × 20), tab triggers (30 high), the `Select` trigger (40 high), the `SearchInput` clear button (24), the `UpgradeToProCard` pill (32 high, slop 8) and `Button` (the slop brings each size to at least 48). From 0.5.0 so do `ColorSwatches` swatches and `IconButton` (32 and 40); the `DateTimeField` clear button and the pressable `PageIndicator` dots are 44 squares. Controls set their role and state for VoiceOver and TalkBack: `Button` (`disabled`, `busy` while loading), `Checkbox` (`checked`, `mixed`), `Switch` (`checked`), `Tabs` and `PillTabs` (`tablist`, `tab`, `selected`) and the `Select` trigger (`combobox`, with an `accessibilityLabel` prop). Give a `Button` with no text child an `accessibilityLabel`.
 
 Text scales with the system font size. Labelled controls have minimum heights, so a large Dynamic Type size grows them instead of clipping the label (the `SearchInput` lock grows with the font scale); only the `FloatingTabBar` labels are capped (1.5×), to fit the fixed bar. With Reduce Motion on, dialogs, sheets, toasts, the `Select` popover, `PricingModal`, `Progress`, `Skeleton` and the `FloatingTabBar` pill do not animate. Dialogs, sheets, toasts, `FloatingTabBar` and `FloatingFAB` stay inside the safe-area insets, and dialog and sheet fields stay above the keyboard on iOS and Android.
 
 The brand marks (`APP_ICONS`, the `Icon*` exports, `AppMark` and `GoogleMark`) are images named by `title`, and hidden from assistive tech without one. From 0.3.14 they set the props each platform reads: `accessibilityRole="image"` and `accessibilityLabel` on iOS and Android, `role="img"` and `aria-label` on web. Without a title they set `accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"` on native and `aria-hidden` on web. `testID` is `data-testid` on web. On web `react-native-svg` passes its props straight to the DOM `<svg>`, and React Native Web does not map `accessible`, the `accessibility*` props or `testID` there. So do not put them on an `Svg` or on a Tabler icon: put them on the parent `View` or `Pressable`. The package draws no Lucide icon, as a Lucide icon always sets `testID` on its `Svg`. On web the `Select` options are Radix DOM nodes, so from 0.3.14 they take their name and test id as `aria-label` and `data-testid` there, and as `accessibilityLabel` and `testID` on iOS and Android.
 
-`ThemeToggle` (from 0.3.16) is a `HeaderIconButton` that switches between light and dark with NativeWind's `setColorScheme`, the scheme every component reads through `useColorScheme`. It shows and names the scheme it switches to: a moon and "Switch to dark mode" in light, a sun and "Switch to light mode" in dark. It stores nothing: to restore the choice on the next launch, store `useColorScheme().colorScheme` in the app. It takes `testID`.
+`ThemeToggle` (from 0.3.16) is a `HeaderIconButton` that switches between light and dark with NativeWind's `setColorScheme`, the scheme every component reads through `useColorScheme`. It shows and names the scheme it switches to: a moon and "Switch to dark mode" in light, a sun and "Switch to light mode" in dark. It stores nothing: to restore the choice on the next launch, store `useColorScheme().colorScheme` in the app. It takes `testID`. It needs `darkMode: "class"` (see [Theme](#theme)). Without it, from 0.5.0, a press logs that fix with `console.error` and leaves the scheme as it is, instead of throwing from the press handler.
 
 `GoogleMark` (from 0.3.15) is the four-colour Google "G", 18 by default, for a "Continue with Google" button: `<Button variant="outline" leftIcon={<GoogleMark />}>Continue with Google</Button>`. Its colours are fixed, so it takes no `color`. Leave it without a `title` there, as the label names the button.
 

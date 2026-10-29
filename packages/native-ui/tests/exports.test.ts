@@ -162,8 +162,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.4.0 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.4.0");
+  it("is 0.5.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.5.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -198,6 +198,77 @@ describe("@vvedantb/native-ui exports", () => {
       expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
     }
     expect(pkg.dependencies).toBeUndefined();
+  });
+
+  it("has the 0.5.0 Verve, vibot and Velth names", () => {
+    const added = [
+      "ColorSwatches",
+      "ColorSwatchesProps",
+      "ColorSwatchesSize",
+      "StatGrid",
+      "StatGridItem",
+      "StatGridProps",
+      "SectionLabel",
+      "SectionLabelProps",
+      "SheetRow",
+      "SheetRowProps",
+      "PageIndicator",
+      "PageIndicatorProps",
+      "StackPageHeader",
+      "StackPageHeaderProps",
+      "IconButton",
+      "IconButtonProps",
+      "IconButtonSize",
+      "IconButtonVariant",
+      "CaptureButton",
+      "CaptureButtonProps",
+      "ListRowProps",
+      "CardProps",
+      "DateTimeFieldProps",
+    ];
+    for (const name of added) expect(names.has(name), name).toBe(true);
+    // `IconButton` is new and public; the AI chat button keeps its own name, on /ai only.
+    expect(names.has("ChatIconButton")).toBe(false);
+  });
+
+  it("adds no dependency or peer in 0.5.0", () => {
+    expect(pkg.dependencies).toBeUndefined();
+    expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
+      "@expo/vector-icons",
+      "@gorhom/bottom-sheet",
+      "@react-native-community/datetimepicker",
+      "@rn-primitives/select",
+      "@rn-primitives/slot",
+      "@rn-primitives/switch",
+      "@tabler/icons-react-native",
+      "class-variance-authority",
+      "clsx",
+      "dayjs",
+      "expo-blur",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "expo-router",
+      "lucide-react-native",
+      "nativewind",
+      "react",
+      "react-native",
+      "react-native-reanimated",
+      "react-native-safe-area-context",
+      "react-native-screens",
+      "react-native-svg",
+      "tailwind-merge",
+    ]);
+    expect(Object.keys(pkg.peerDependenciesMeta).sort()).toEqual([
+      "@gorhom/bottom-sheet",
+      "@react-native-community/datetimepicker",
+      "dayjs",
+      "expo-blur",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "expo-router",
+      "react-native-svg",
+    ]);
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
   });
 
   it("keeps the AI chat parts off the root entry: they are on /ai only", () => {
