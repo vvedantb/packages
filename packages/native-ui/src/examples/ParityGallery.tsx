@@ -85,6 +85,18 @@ import {
 } from "../index";
 import { typeStyle } from "../controlStyles";
 import { useScheme } from "../useScheme";
+import {
+  ChainOfThought,
+  ChainOfThoughtContent,
+  ChainOfThoughtHeader,
+  ChainOfThoughtSearchResult,
+  ChainOfThoughtSearchResults,
+  ChainOfThoughtStep,
+  ConversationEmptyState,
+  Suggestion,
+  Suggestions,
+} from "../ai";
+import { AiChatSamples } from "./AiChatGallery";
 
 const BUTTON_VARIANTS: ButtonVariant[] = [
   "default",
@@ -501,6 +513,29 @@ function GalleryScreen() {
             <EmptyState.Title>No messages</EmptyState.Title>
             <EmptyState.Description>New messages land here.</EmptyState.Description>
           </EmptyState.Root>
+        </Section>
+
+        {/* The full chat screen, with the composer and keyboard, is `AiChatGallery` (`@vvedantb/native-ui/ai-gallery`). */}
+        <Section title="AI chat">
+          <AiChatSamples />
+          <ChainOfThought defaultOpen>
+            <ChainOfThoughtHeader />
+            <ChainOfThoughtContent>
+              <ChainOfThoughtStep label="Read the question" />
+              <ChainOfThoughtStep label="Search for sync options" status="active">
+                <ChainOfThoughtSearchResults>
+                  <ChainOfThoughtSearchResult>example.com</ChainOfThoughtSearchResult>
+                  <ChainOfThoughtSearchResult>example.org</ChainOfThoughtSearchResult>
+                </ChainOfThoughtSearchResults>
+              </ChainOfThoughtStep>
+              <ChainOfThoughtStep label="Write the answer" status="pending" />
+            </ChainOfThoughtContent>
+          </ChainOfThought>
+          <Suggestions>
+            <Suggestion suggestion="Summarise this thread" onPress={(text) => toast(text)} />
+            <Suggestion suggestion="Draft a reply" onPress={(text) => toast(text)} />
+          </Suggestions>
+          <ConversationEmptyState className="flex-none" />
         </Section>
       </ScrollView>
 
