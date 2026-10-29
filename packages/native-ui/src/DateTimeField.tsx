@@ -50,7 +50,8 @@ export function pickerSeed(value: Date | null, maximumDate?: Date, now: Date = n
  * placeholder colour, and the picker opens on today (or `maximumDate`, if
  * earlier); picking calls `onChange`. With `onClear`, a 44 clear button
  * follows the buttons while there is a value. On iOS the spinner sets the
- * value when it is turned.
+ * value when it is turned. The buttons have the web `bg-secondary` fill
+ * (`palette.default`) as a style, so it follows the scheme.
  */
 export function DateTimeField({
   value,
@@ -95,7 +96,8 @@ export function DateTimeField({
                 current === button.mode ? null : button.mode,
               )
             }
-            className={`${largerText ? "min-h-16" : "min-h-14"} flex-1 justify-center rounded-lg bg-secondary px-4 py-2 active:opacity-70`}
+            className={`${largerText ? "min-h-16" : "min-h-14"} flex-1 justify-center rounded-lg px-4 py-2 active:opacity-70`}
+            style={{ backgroundColor: palette.default[scheme] }}
           >
             <Text
               className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-semibold`}

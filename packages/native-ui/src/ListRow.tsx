@@ -6,6 +6,7 @@ import { cn } from "./cn";
 import { textStyle, typeStyle } from "./controlStyles";
 import { FLOATING_ROW_RADIUS } from "./floating";
 import { useLargerText } from "./theme";
+import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
 export type ListRowProps = {
@@ -106,14 +107,18 @@ export function ListRow({
   const pressable = Boolean(onPress || onLongPress);
   const height = largerText ? "min-h-[72px]" : "min-h-16";
   const paddingY = largerText ? "py-4" : "py-3";
-  const fill = onCanvas ? "bg-surface" : "bg-surface-secondary";
-  const rowStyle = { borderRadius: FLOATING_ROW_RADIUS };
+  // The fill is a style: an app theme that nests `dark` under `surface` keeps
+  // `bg-surface` and `bg-surface-secondary` light in dark mode.
+  const rowStyle = {
+    backgroundColor: tokens.color[onCanvas ? "surface" : "surfaceSecondary"][scheme],
+    borderRadius: FLOATING_ROW_RADIUS,
+  };
 
   if (control != null) {
     // The control is a sibling of the pressable area, so its presses stay its own.
     const bodyClassName = cn("min-w-0 flex-1 flex-row items-center gap-3 self-stretch pl-4 pr-3", paddingY);
     return (
-      <View className={cn("flex-row items-center", height, fill)} style={rowStyle}>
+      <View className={cn("flex-row items-center", height)} style={rowStyle}>
         {pressable ? (
           <Pressable
             testID={testID}
@@ -135,7 +140,7 @@ export function ListRow({
     );
   }
 
-  const className = cn("flex-row items-center gap-3 px-4", height, paddingY, fill);
+  const className = cn("flex-row items-center gap-3 px-4", height, paddingY);
   if (!pressable) {
     return (
       <View testID={testID} className={className} style={rowStyle}>

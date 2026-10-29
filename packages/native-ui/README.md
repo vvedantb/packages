@@ -93,10 +93,11 @@ The entries re-export the same source files, so they can be mixed: `NativeUiProv
 
 ## Expo / NativeWind
 
-Source-exported. Point Tailwind at the package so class names are generated:
+Source-exported. Point Tailwind at the package so class names are generated, and set `darkMode: "class"` (see [Theme](#theme)):
 
 ```js
 // tailwind.config.js
+darkMode: "class",
 content: [
   "./app/**/*.{js,ts,tsx}",
   "./components/**/*.{js,ts,tsx}",
@@ -115,9 +116,25 @@ config.resolver.nodeModulesPaths = [
 ];
 ```
 
-The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes.
+The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes. From 0.5.0 the `ListRow`, `DateTimeField` and `HeaderIconButton` fills are styles too, so `ThemeToggle` and the `StackPageHeader` back button follow the scheme.
 
 From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular. A weight without the face class does not pick the Instrument Sans Medium or Semibold file, so set both. From 0.3.13 every title in the package pairs the two, the internal primitives included, and `tests/fontWeight.test.ts` fails on a face class without its weight, a weight without its face class, or a bare Tailwind `font-medium`, `font-semibold` or `font-bold`.
+
+The app loads the font; the package does not. On Expo web, one variable family covers every weight. `@vvedantb/ui` ships the woff2 files (400–700, latin and latin-ext) in `fonts/`. Expo web CSS does not bundle relative `url()`s, so copy the files to the app's `public/fonts/` and copy the `@font-face` rules from `@vvedantb/ui/fonts/instrument-sans.css` with `url("/fonts/…")`. Then map all four classes to that family with a sans-serif fallback, as the components set the weight:
+
+```js
+// tailwind.config.js (Expo web)
+const instrumentSans = ["Instrument Sans", "system-ui", "sans-serif"];
+// theme.extend.fontFamily:
+fontFamily: {
+  "instrument-sans": instrumentSans,
+  "instrument-sans-medium": instrumentSans,
+  "instrument-sans-semibold": instrumentSans,
+  "instrument-sans-bold": instrumentSans,
+},
+```
+
+A class mapped to a family the browser does not have, such as `["System"]`, with no generic fallback draws in the browser default, often a serif.
 
 ## Theme
 
@@ -132,6 +149,8 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
   </Card>
 </NativeUiProvider>
 ```
+
+**Dark mode needs `darkMode: "class"`.** Every component reads the scheme with NativeWind's `useColorScheme()` (`useScheme` in `src/useScheme.ts`) and takes its colours from `tokens` and `palette` for it; the AI composer and code block do too. `ThemeToggle`, and any `setColorScheme` call in the app, need `darkMode: "class"` in `tailwind.config.js`. Under Tailwind's default, `media`, NativeWind's `setColorScheme` throws ("Unable to manually set color scheme without using darkMode: class"), on web and native. The scheme then stays on the system setting, and the components keep the light colours, even where the app paints its own page dark. On Expo web, to start dark from the first frame, add the `dark` class to `<html>` before NativeWind loads; NativeWind reads it as the first scheme.
 
 `useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, button 16, field 10, pill 999; rows 20) and spacing (16).
 
@@ -313,7 +332,7 @@ Text scales with the system font size. Labelled controls have minimum heights, s
 
 The brand marks (`APP_ICONS`, the `Icon*` exports, `AppMark` and `GoogleMark`) are images named by `title`, and hidden from assistive tech without one. From 0.3.14 they set the props each platform reads: `accessibilityRole="image"` and `accessibilityLabel` on iOS and Android, `role="img"` and `aria-label` on web. Without a title they set `accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"` on native and `aria-hidden` on web. `testID` is `data-testid` on web. On web `react-native-svg` passes its props straight to the DOM `<svg>`, and React Native Web does not map `accessible`, the `accessibility*` props or `testID` there. So do not put them on an `Svg` or on a Tabler icon: put them on the parent `View` or `Pressable`. The package draws no Lucide icon, as a Lucide icon always sets `testID` on its `Svg`. On web the `Select` options are Radix DOM nodes, so from 0.3.14 they take their name and test id as `aria-label` and `data-testid` there, and as `accessibilityLabel` and `testID` on iOS and Android.
 
-`ThemeToggle` (from 0.3.16) is a `HeaderIconButton` that switches between light and dark with NativeWind's `setColorScheme`, the scheme every component reads through `useColorScheme`. It shows and names the scheme it switches to: a moon and "Switch to dark mode" in light, a sun and "Switch to light mode" in dark. It stores nothing: to restore the choice on the next launch, store `useColorScheme().colorScheme` in the app. It takes `testID`.
+`ThemeToggle` (from 0.3.16) is a `HeaderIconButton` that switches between light and dark with NativeWind's `setColorScheme`, the scheme every component reads through `useColorScheme`. It shows and names the scheme it switches to: a moon and "Switch to dark mode" in light, a sun and "Switch to light mode" in dark. It stores nothing: to restore the choice on the next launch, store `useColorScheme().colorScheme` in the app. It takes `testID`. It needs `darkMode: "class"` (see [Theme](#theme)). Without it, from 0.5.0, a press logs that fix with `console.error` and leaves the scheme as it is, instead of throwing from the press handler.
 
 `GoogleMark` (from 0.3.15) is the four-colour Google "G", 18 by default, for a "Continue with Google" button: `<Button variant="outline" leftIcon={<GoogleMark />}>Continue with Google</Button>`. Its colours are fixed, so it takes no `color`. Leave it without a `title` there, as the label names the button.
 

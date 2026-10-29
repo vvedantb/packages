@@ -255,6 +255,17 @@ describe("DateTimeField", () => {
     expect(buttons(time).map((button) => button.props.testID)).toEqual(["due-time"]);
   });
 
+  it("fills the buttons with palette.default for the scheme, as a style", async () => {
+    const fill = async () =>
+      buttons((await field({ value }))()).map((button) => flatten(button.props.style).backgroundColor);
+    expect(await fill()).toEqual([palette.default.light, palette.default.light]);
+    scheme.colorScheme = "dark";
+    expect(await fill()).toEqual([palette.default.dark, palette.default.dark]);
+    for (const button of buttons((await field({ value }))())) {
+      expect(button.props.className).not.toMatch(/bg-/);
+    }
+  });
+
   it("shows only the date button in date mode", async () => {
     const tree = (await field({ value, mode: "date" }))();
     expect(buttons(tree).map((button) => button.props.testID)).toEqual(["due-date"]);
@@ -410,6 +421,24 @@ describe("ListRow", () => {
     expect((await row({})).props.children).toBeDefined();
     const plain = ofType(await row({}), "Text").find((text) => text.props.children === "Ada")!;
     expect(plain.props.className).not.toMatch(/flex-1/);
+  });
+
+  it("fills the row with surfaceSecondary, or surface on the canvas, for the scheme, as a style", async () => {
+    // The plain row, the pressable row, and the outer view of a row with a control.
+    const shapes = [{}, { onPress: () => {} }, { onPress: () => {}, control: "x" }];
+    for (const [scheme_, onCanvas, token] of [
+      ["light", false, tokens.color.surfaceSecondary.light],
+      ["light", true, tokens.color.surface.light],
+      ["dark", false, tokens.color.surfaceSecondary.dark],
+      ["dark", true, tokens.color.surface.dark],
+    ] as const) {
+      scheme.colorScheme = scheme_;
+      for (const shape of shapes) {
+        const tree = await row({ ...shape, onCanvas });
+        expect(flatten(tree.props.style).backgroundColor, `${scheme_} ${onCanvas}`).toBe(token);
+        expect(all(tree).map((element) => String(element.props.className ?? "")).join(" ")).not.toMatch(/\bbg-/);
+      }
+    }
   });
 
   it("takes an accessibilityLabel in place of the title", async () => {
@@ -796,6 +825,30 @@ describe("0.5.0 package and gallery (source contract)", () => {
       "StackPageHeader.tsx",
     ]) {
       expect(read(file), file).not.toMatch(/["'\s]text-(?:muted-)?foreground(?=["'\s])|dark:/);
+    }
+  });
+
+  it("uses no NativeWind theme fill class in the new and changed components", () => {
+    // `bg-surface`, `bg-secondary` and the like stay light in dark mode where an
+    // app theme nests `dark` under the key; the fills are `tokens` and `palette` styles.
+    for (const file of [
+      "ColorSwatches.tsx",
+      "StatGrid.tsx",
+      "SectionLabel.tsx",
+      "SheetRow.tsx",
+      "PageIndicator.tsx",
+      "IconButton.tsx",
+      "CaptureButton.tsx",
+      "StackPageHeader.tsx",
+      "ListRow.tsx",
+      "DateTimeField.tsx",
+      "HeaderIconButton.tsx",
+    ]) {
+      // Comments name the web classes, so they are left out.
+      const code = read(file).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+      expect(code, file).not.toMatch(
+        /["'`\s](?:bg|border)-(?:surface|secondary|default|background|card|muted|border|field|overlay|segment|input|primary|foreground)\b/,
+      );
     }
   });
 

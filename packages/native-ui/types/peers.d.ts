@@ -11,6 +11,8 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
+// `src/ThemeToggle.tsx` logs a failed `setColorScheme`.
+declare const console: { error(...data: unknown[]): void };
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`).
 declare function require(id: string): unknown;
