@@ -15,6 +15,9 @@
 - `RollingNumber`, `SendQueueIcon` and the `ContextUsage` ring use `m`, so the app must render them inside `LazyMotion`.
 - `EmptyState`: new `UiConfig.EmptyState` (`classes.root`, `iconWrap`, `icon`, `title`, `description`, `actions`, and `enter`). `classes` merge after each part's built-in classes. `classes.iconWrap` puts the `default` icon in a wrapper element (for a circle look) and drops the icon's own margin. New Root prop `enter` (default `UiConfig.EmptyState.enter`, else `false`): parts rise 8 px and fade in, 40 ms apart, over 220 ms. Without config the DOM is unchanged. `enter` uses `m`, so it needs `LazyMotion`.
 - `ConfirmDialog` prop API: new `pending` (passed to Root: Cancel disabled, close requests wait, the confirm button spins beside `confirmLabel`) and `body` (extra content inside the dialog after the description; `children` still renders outside, for a trigger).
+- New `BulkActionBar` (types `BulkActionBarProps`, `BulkBarAction`): the floating selection bar for lists with bulk actions. It shows the count (`CountPop`), Select all / Clear, primary buttons (icon-only below `sm`), a More menu, a destructive slot and a dismiss button. Each action carries its own `onClick`, so confirms and Alt-to-skip stay with the caller (`showSkipHint` shows `ConfirmSkipHint`). It sits `absolute` at the bottom of its container.
+- New `CopyLinkMenuItem`: a "Copy link" `DropdownMenuItem` that copies the page URL, or `path` resolved against the origin. `label` and `iconSize` are optional.
+- New `ViewTransitionSuspense` (next to `PanelTransition`): `<Suspense>` whose fallback leaves with the `exit` view transition class (default `vt-exit`) as the content arrives with `enter` (default `vt-enter`). The app supplies the CSS.
 - No new dependencies.
 
 ## 0.29.1
