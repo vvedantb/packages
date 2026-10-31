@@ -40,6 +40,7 @@ test("root exposes former subpath APIs", () => {
     "usePersistedScrollParent", "ErrorBoundary", "ListEnter", "useFirstPaintGate", "CountPop", "countLabel",
     "UnreadDot", "MarqueeOnHover", "RelativeDateTime", "ImageLightbox", "ImageGalleryPreview",
     "ScreenshotPreview", "VideoPreview", "convexErrorMessage", "userFacingErrorMessage", "useHeldResult",
+    "RollingNumber", "ConfettiBurst", "SendQueueIcon", "useSmoothText",
   ]) {
     expect(root, name).toHaveProperty(name);
   }

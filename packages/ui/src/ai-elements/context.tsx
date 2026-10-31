@@ -11,6 +11,9 @@ import {
 } from "../ui/hover-card";
 import { Progress } from "../ui/progress";
 import { useCn } from "../ui/ui-config";
+import { m } from "motion/react";
+import { springTransition } from "../motion/presets";
+import { RollingNumber } from "../ui/rolling-number";
 
 const PERCENT_MAX = 100;
 const ICON_RADIUS = 10;
@@ -86,7 +89,7 @@ const ContextIcon = () => {
   const { usedTokens, maxTokens } = useContextValue();
   const circumference = 2 * Math.PI * ICON_RADIUS;
   const usedPercent = maxTokens > 0 ? usedTokens / maxTokens : 0;
-  const dashOffset = circumference * (1 - usedPercent);
+  const dashOffset = circumference * (1 - Math.min(usedPercent, 1));
 
   return (
     <svg
@@ -106,7 +109,7 @@ const ContextIcon = () => {
         stroke="currentColor"
         strokeWidth={ICON_STROKE_WIDTH}
       />
-      <circle
+      <m.circle
         cx={ICON_CENTER}
         cy={ICON_CENTER}
         fill="none"
@@ -114,7 +117,9 @@ const ContextIcon = () => {
         r={ICON_RADIUS}
         stroke="currentColor"
         strokeDasharray={`${circumference} ${circumference}`}
-        strokeDashoffset={dashOffset}
+        initial={false}
+        animate={{ strokeDashoffset: dashOffset }}
+        transition={springTransition}
         strokeLinecap="round"
         strokeWidth={ICON_STROKE_WIDTH}
         style={{ transform: "rotate(-90deg)", transformOrigin: "center" }}
@@ -137,9 +142,10 @@ export const ContextUsageTrigger = ({ children, ...props }: ContextUsageTriggerP
     <HoverCardTrigger asChild>
       {children ?? (
         <Button type="button" variant="ghost" size="sm" {...props}>
-          <span className="font-medium text-muted-foreground text-xs tabular-nums">
-            {renderedPercent}
-          </span>
+          <RollingNumber
+            value={renderedPercent}
+            className="font-medium text-muted-foreground text-xs"
+          />
           <ContextIcon />
         </Button>
       )}
@@ -188,9 +194,9 @@ export const ContextUsageContentHeader = ({
       {children ?? (
         <>
           <div className="flex items-center justify-between gap-3 text-xs tabular-nums">
-            <p>{displayPct}</p>
+            <RollingNumber value={displayPct} />
             <p className="font-mono text-muted-foreground">
-              {used} / {total}
+              <RollingNumber value={used} /> / {total}
             </p>
           </div>
           <div className="space-y-2">
@@ -251,9 +257,10 @@ export const ContextUsageContentFooter = ({
       {children ?? (
         <>
           <span className="text-muted-foreground">Total cost</span>
-          <span className="font-mono tabular-nums">
-            {totalCost === undefined ? "—" : formatUSD(totalCost)}
-          </span>
+          <RollingNumber
+            value={totalCost === undefined ? "—" : formatUSD(totalCost)}
+            className="font-mono"
+          />
         </>
       )}
     </div>
@@ -279,12 +286,13 @@ const UsageRow = ({
       {...rest}
     >
       <span className="text-muted-foreground">{label}</span>
-      <span className="tabular-nums">
-        {formatTokens(tokens)}
+      <span className="inline-flex items-baseline">
+        <RollingNumber value={formatTokens(tokens)} />
         {costUSD !== undefined ? (
-          <span className="ml-2 font-mono text-muted-foreground">
-            {formatUSD(costUSD)}
-          </span>
+          <RollingNumber
+            value={formatUSD(costUSD)}
+            className="ml-2 font-mono text-muted-foreground"
+          />
         ) : null}
       </span>
     </div>
