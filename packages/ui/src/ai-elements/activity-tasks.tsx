@@ -63,6 +63,7 @@ import {
   type AgentTraceStatus,
 } from "./trace";
 import { useStreamingDisclosure } from "./use-streaming-disclosure";
+import { RollingNumber } from "../ui/rolling-number";
 
 const streamdownPlugins = { cjk, code, math, mermaid };
 
@@ -94,15 +95,24 @@ const ActivityStreamingHeader = memo(function ActivityStreamingHeader({
   // Reply text is not a status: label the header from the work steps only.
   const work = steps.filter((s) => s.type !== "response");
   const activeStep = work.find((s) => s.status === "active") ?? work[0];
-  const headerText = `${
-    activeStep?.label ?? `${name ?? defaultName} is ${verb.toLowerCase()}...`
-  }${startedAt ? ` (${formatActivityElapsed(elapsed)})` : ""}`;
+  const headerText =
+    activeStep?.label ?? `${name ?? defaultName} is ${verb.toLowerCase()}...`;
   return (
     <div className="flex items-center gap-2 text-muted-foreground text-sm">
       <Spinner size="sm" />
-      <Shimmer as="span" duration={2.5} spread={1.5}>
-        {headerText}
-      </Shimmer>
+      <span>
+        <Shimmer as="span" duration={2.5} spread={1.5}>
+          {headerText}
+        </Shimmer>
+        {/* Outside the shimmer: it takes a string, and the clock rolls. */}
+        {startedAt ? (
+          <>
+            {" ("}
+            <RollingNumber value={formatActivityElapsed(elapsed)} />
+            {")"}
+          </>
+        ) : null}
+      </span>
     </div>
   );
 });
