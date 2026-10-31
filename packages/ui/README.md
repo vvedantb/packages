@@ -1198,7 +1198,7 @@ Generic pieces lifted from an app. Components that use `m` need the app's `LazyM
 import {
   ErrorBoundary, ListEnter, useFirstPaintGate, CountPop, countLabel, UnreadDot,
   MarqueeOnHover, RelativeDateTime, ImageLightbox, ImageGalleryPreview, ScreenshotPreview, VideoPreview,
-  useMediaQuery, useDocumentVisible, useIdleCallback, useSingleFlight, usePersistedScrollParent,
+  useMediaQuery, useDocumentVisible, useDocumentAppearance, useIdleCallback, useSingleFlight, usePersistedScrollParent,
   convexErrorMessage, userFacingErrorMessage, useHeldResult,
 } from "@vvedantb/ui";
 ```
@@ -1209,7 +1209,7 @@ import {
 - `MarqueeOnHover`: a single-line label that scrolls its hidden tail into view on hover (or on hover of a `group` ancestor). Import `@vvedantb/ui/tokens/css/marquee.css`; `--mq-delay` sets the dwell.
 - `RelativeDateTime` (`at`, `emptyLabel` default "—", `exactFormat` default "DD/MM/YYYY HH:mm"): "15m" / "2d" with the exact time in a tooltip.
 - `ImageLightbox` (`images`, `index` or `null`, `onIndexChange`, `onClose`): fullscreen viewer with arrow keys, buttons and swipe. `ImageGalleryPreview` (`images`): up to a 2×2 grid with a "+N" tile. `ScreenshotPreview` (`url`, `alt`) and `VideoPreview` (`url`).
-- Hooks: `useMediaQuery(query)`, `useDocumentVisible()`, `useIdleCallback(ms, fn)` (trailing debounce; `createIdleCallback` is the React-free core), `useSingleFlight(fn)` (one call at a time, latest args run next), `usePersistedScrollParent(storageKey)` (restores a container's `scrollTop` from `sessionStorage`).
+- Hooks: `useMediaQuery(query)`, `useDocumentVisible()`, `useDocumentAppearance()` (`"light" | "dark"` from `<html>`'s `dark` class or `data-theme`; `readDocumentAppearance` / `subscribeDocumentAppearance` are the React-free core), `useIdleCallback(ms, fn)` (trailing debounce; `createIdleCallback` is the React-free core), `useSingleFlight(fn)` (one call at a time, latest args run next), `usePersistedScrollParent(storageKey)` (restores a container's `scrollTop` from `sessionStorage`).
 - Convex: `convexErrorMessage(error, fallback)` reads `ConvexError` data first; `userFacingErrorMessage(error, fallback)` strips the client envelope and stack. `useHeldResult(result, key)` keeps the last result while a query is skipped (`key` `null`). None of these import `convex`.
 
 ## Chrome extensions (0.28.0)

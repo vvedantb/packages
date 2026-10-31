@@ -1,5 +1,7 @@
 /** transitions.dev input clear with dissolve — see 13-input-clear-dissolve.md */
 
+import { readDocumentAppearance } from "../hooks/use-document-appearance";
+
 // Times come back in ms. CSS minifiers rewrite `1000ms` as `1s`, so a value
 // in seconds is converted rather than read as 1.
 export function readCssNumber(
@@ -53,13 +55,6 @@ export function readCssEase(root: HTMLElement, name: string): (t: number) => num
   };
 }
 
-function isDarkTheme(root: HTMLElement): boolean {
-  return (
-    root.classList.contains("dark") ||
-    root.getAttribute("data-theme") === "dark"
-  );
-}
-
 function measureCanvas(): CanvasRenderingContext2D | null {
   const canvas = document.createElement("canvas");
   return canvas.getContext("2d");
@@ -93,7 +88,7 @@ function buildGlowBackground(
     return "";
   }
   canvas.font = getComputedStyle(input).font;
-  const dark = isDarkTheme(root);
+  const dark = readDocumentAppearance() === "dark";
   const rgb = dark ? "255,255,255" : "0,0,0";
   const width = wrap.clientWidth || 280;
   const padLeft = parseFloat(getComputedStyle(input).paddingLeft) || 12;

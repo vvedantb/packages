@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- New hook `useDocumentAppearance()` (`"light" | "dark"`), with `readDocumentAppearance()` and `subscribeDocumentAppearance(onChange)` for code outside React. It reads `<html>`: the `dark` class (neutral is dark-family) or `data-theme="dark"`, and re-renders when either changes. The server snapshot is `"light"`. Use it where a theme provider may be missing, such as a signed-out marketing page.
+- Mermaid and the input-clear dissolve now use it, in place of their own copies. Mermaid now also follows `data-theme="dark"`, as the dissolve already did, and the dissolve's glow colour is unchanged.
+- No new dependencies.
 - `tokens` (`tokens/src/native.ts`, the React Native tokens): the neutrals now equal `tokens.css`, converted from oklch to sRGB hex. The dark values change most: `background` `#060606` (was `#1f1f1f`), `surface` `#181818` (was `#242426`), `border` `#292929` (was `#474747`). `radius.field` is 10 (was 20), the web `--field-radius`. `color.fill.dark` is `rgba(24, 24, 24, 0.88)`. The header now says which values follow `tokens.css`. This keeps the copy in `@vvedantb/native-ui` 0.3.3 in step. Web CSS is unchanged.
 
 ## 0.29.1
