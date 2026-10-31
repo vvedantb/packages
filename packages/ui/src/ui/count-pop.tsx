@@ -65,3 +65,21 @@ export function UnreadDot({ show, className }: { show: boolean; className?: stri
     </CountPop>
   );
 }
+
+/**
+ * Shape and placement of a count badge hung off a tile's bottom-right corner.
+ * Put the tile in a `relative` box; add one tone class (e.g. a live colour).
+ */
+export const CORNER_BADGE_CLASS =
+  "absolute -bottom-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none";
+
+/** An unread count on a tile's corner: `CountPop` in the primary tone, "99+" above 99. */
+export function UnreadCornerBadge({ count, className }: { count: number | undefined; className?: string }) {
+  const cn = useCn();
+  return (
+    <CountPop
+      label={countLabel(count)}
+      className={cn(CORNER_BADGE_CLASS, "bg-primary text-primary-foreground", className)}
+    />
+  );
+}

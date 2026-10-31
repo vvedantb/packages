@@ -19,6 +19,9 @@
 - New `BulkActionBar` (types `BulkActionBarProps`, `BulkBarAction`): the floating selection bar for lists with bulk actions. It shows the count (`CountPop`), Select all / Clear, primary buttons (icon-only below `sm`), a More menu, a destructive slot and a dismiss button. Each action carries its own `onClick`, so confirms and Alt-to-skip stay with the caller (`showSkipHint` shows `ConfirmSkipHint`). It sits `absolute` at the bottom of its container.
 - New `CopyLinkMenuItem`: a "Copy link" `DropdownMenuItem` that copies the page URL, or `path` resolved against the origin. `label` and `iconSize` are optional.
 - New `ViewTransitionSuspense` (next to `PanelTransition`): `<Suspense>` whose fallback leaves with the `exit` view transition class (default `vt-exit`) as the content arrives with `enter` (default `vt-enter`). The app supplies the CSS.
+- New `UnreadCornerBadge` and `CORNER_BADGE_CLASS` (in `count-pop`): a `CountPop` count hung off a tile's bottom-right corner, primary tone by default. Use the class string with your own tone for other badges.
+- New `ToggleSearch` (types `ToggleSearchProps`, `ToggleSearchVariant`): a toolbar search on `SearchInput`. `compact` is an inline field that clears on Escape; `large` is an icon button that opens the field in a popover, with a primary dot while a query is applied. `large` needs the app's `TooltipProvider`.
+- New `MotionProvider`: `LazyMotion strict` plus `MotionConfig`. `features` defaults to `domMax` (layout animations); `reducedMotion` defaults to `"user"`.
 - No new dependencies.
 
 ## 0.29.1
