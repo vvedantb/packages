@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { IconFolder, IconLink } from "@tabler/icons-react";
 import * as rootExports from "../index";
 import { EmptyState } from "./empty-state";
+import { UiConfigProvider } from "./ui-config";
+import { LazyMotion, domAnimation } from "motion/react";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -116,5 +118,49 @@ describe("EmptyState", () => {
     expect(attr(tile, "class")).toBe("flex items-center justify-center rounded-lg bg-surface-tertiary mb-4 h-14 w-14");
     expect(attr(tile?.firstElementChild, "width")).toBe("28");
     expect(attr(tile?.firstElementChild, "stroke-width")).toBe("2");
+  });
+
+  it("applies UiConfig classes and wraps the icon when iconWrap is set", async () => {
+    const host = await mount(
+      <UiConfigProvider
+        config={{
+          EmptyState: {
+            classes: { root: "max-w-xl", iconWrap: "rounded-full bg-muted", title: "tracking-tight", actions: "mt-0" },
+          },
+        }}
+      >
+        <EmptyState.Root>
+          <EmptyState.Icon icon={IconFolder} size={24} />
+          <EmptyState.Title>Nothing yet</EmptyState.Title>
+          <EmptyState.Actions>x</EmptyState.Actions>
+        </EmptyState.Root>
+      </UiConfigProvider>,
+    );
+    const rootEl = first(host);
+    expect(attr(rootEl, "class")).toContain("max-w-xl");
+    const wrap = rootEl.firstElementChild;
+    expect(attr(wrap, "class")).toBe("rounded-full bg-muted");
+    expect(attr(wrap?.firstElementChild, "width")).toBe("24");
+    expect(attr(rootEl.querySelector("p"), "class")).toContain("tracking-tight");
+    expect(attr(rootEl.lastElementChild, "class")).toBe("mt-0");
+  });
+
+  it("renders the same parts when entering, and enter={false} beats the config", async () => {
+    const tree = (enter: boolean | undefined) => (
+      <LazyMotion features={domAnimation}>
+        <UiConfigProvider config={{ EmptyState: { enter: true } }}>
+          <EmptyState.Root enter={enter}>
+            <EmptyState.Title>Nothing yet</EmptyState.Title>
+            <EmptyState.Description>Add one.</EmptyState.Description>
+          </EmptyState.Root>
+        </UiConfigProvider>
+      </LazyMotion>
+    );
+    const host = await mount(tree(undefined));
+    expect(first(host).querySelectorAll("p")).toHaveLength(2);
+    // Entering parts start hidden for the stagger.
+    expect(attr(first(host).querySelector("p"), "style")).toContain("opacity");
+    await act(async () => root?.render(tree(false)));
+    expect(attr(first(host).querySelector("p"), "style")).toBeNull();
   });
 });
