@@ -45,6 +45,7 @@ import type { SettingsSectionConfig } from "../../app/src/settings/SettingsSecti
 import type { ShimmerConfig } from "../ai-elements/shimmer";
 import type { SliderConfig } from "./slider";
 import type { SonnerToasterConfig } from "./sonner";
+import type { EmptyStateConfig } from "./empty-state";
 import type { StatusDotConfig } from "./status-dot";
 import type { SwitchConfig } from "./switch";
 import type { TableConfig } from "./table";
@@ -93,6 +94,7 @@ export interface UiConfig {
   ContextMenu?: ContextMenuConfig;
   Conversation?: ConversationConfig;
   Dialog?: DialogConfig;
+  EmptyState?: EmptyStateConfig;
   DropdownMenu?: DropdownMenuConfig;
   Gantt?: GanttConfig;
   HoverCard?: HoverCardConfig;

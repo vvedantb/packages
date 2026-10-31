@@ -108,6 +108,34 @@ describe('ConfirmDialog size="md"', () => {
   });
 });
 
+describe("ConfirmDialog pending and body", () => {
+  it("renders body inside the dialog and spins the action while pending", async () => {
+    const onOpenChange = vi.fn();
+    await mount(
+      <ConfirmDialog
+        size="md"
+        open
+        onOpenChange={onOpenChange}
+        title="Delete task?"
+        confirmLabel="Delete"
+        pending
+        body={<p data-testid="detail">Files go too.</p>}
+      />,
+    );
+    expect(document.querySelector('[role="dialog"] [data-testid="detail"]')?.textContent).toBe(
+      "Files go too.",
+    );
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-slot="dialog-footer"] button'),
+    );
+    expect(buttons.map((b) => b.disabled)).toEqual([true, true]);
+    expect(buttons[1]?.textContent).toBe("Delete");
+    expect(buttons[1]?.querySelector(".animate-spin")).not.toBeNull();
+    await act(async () => buttons[0]?.click());
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+
 describe('ConfirmDialog size="default"', () => {
   it("still renders the blocking alert dialog", async () => {
     await mount(<ConfirmDialog open title="Discard?" description="Changes are lost." />);

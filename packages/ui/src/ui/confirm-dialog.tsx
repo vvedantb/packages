@@ -20,6 +20,13 @@ export type ConfirmDialogProps = Omit<
   ConfirmDialogRootProps,
   "size" | "alert" | "pending" | "confirmPhrase"
 > & {
+  /**
+   * While `true`, the confirm button shows a spinner beside `confirmLabel`,
+   * Cancel is disabled and close requests wait (see `ConfirmDialog.Root`).
+   */
+  pending?: boolean;
+  /** Extra content after the description, inside the dialog. `children` stays outside (for a trigger). */
+  body?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
   /** Legacy (still supported): compose `ConfirmDialog.Cancel` instead. */
@@ -53,6 +60,8 @@ function LegacyConfirmDialog({
   variant = "default",
   confirmDisabled,
   size = "default",
+  pending,
+  body,
   children,
   ...props
 }: ConfirmDialogProps) {
@@ -60,7 +69,7 @@ function LegacyConfirmDialog({
   const descriptionNode =
     description != null ? <Parts.Description>{description}</Parts.Description> : null;
   return (
-    <Parts.Root {...props} size={size}>
+    <Parts.Root {...props} size={size} pending={pending}>
       {children}
       <Parts.Content>
         {size === "sm" ? (
@@ -79,12 +88,18 @@ function LegacyConfirmDialog({
             {descriptionNode}
           </Parts.Header>
         )}
+        {body != null ? <Parts.Body>{body}</Parts.Body> : null}
         <Parts.Footer>
           {/* The alert cancel passes the click event on; sm and md call onCancel bare. */}
           <Parts.Cancel onClick={size === "default" ? onCancel : () => onCancel?.()}>
             {cancelLabel}
           </Parts.Cancel>
-          <Parts.Action variant={variant} disabled={confirmDisabled} onClick={onConfirm}>
+          <Parts.Action
+            variant={variant}
+            disabled={confirmDisabled}
+            onClick={onConfirm}
+            pendingLabel={confirmLabel}
+          >
             {confirmLabel}
           </Parts.Action>
         </Parts.Footer>
