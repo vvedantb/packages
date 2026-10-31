@@ -6,6 +6,7 @@ export type {
   ConfirmDialogActionProps,
   ConfirmDialogBodyProps,
   ConfirmDialogCancelProps,
+  ConfirmDialogConfig,
   ConfirmDialogContentProps,
   ConfirmDialogDescriptionProps,
   ConfirmDialogFieldProps,

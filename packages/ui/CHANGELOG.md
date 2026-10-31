@@ -14,6 +14,7 @@
 - New `ConfettiBurst`: one canvas burst from the bottom of an `anchor` element, in the theme `--chart-1` … `--chart-5` colours (or `colors`). Calls `onDone` after 1.8 s. For rare moments only.
 - `RollingNumber`, `SendQueueIcon` and the `ContextUsage` ring use `m`, so the app must render them inside `LazyMotion`.
 - `EmptyState`: new `UiConfig.EmptyState` (`classes.root`, `iconWrap`, `icon`, `title`, `description`, `actions`, and `enter`). `classes` merge after each part's built-in classes. `classes.iconWrap` puts the `default` icon in a wrapper element (for a circle look) and drops the icon's own margin. New Root prop `enter` (default `UiConfig.EmptyState.enter`, else `false`): parts rise 8 px and fade in, 40 ms apart, over 220 ms. Without config the DOM is unchanged. `enter` uses `m`, so it needs `LazyMotion`.
+- New `UiConfig.ConfirmDialog` (`classes.content`, `header`, `title`, `description`, `body`, `footer`): merged after each part's size classes, so an app can set its own width and spacing for `md`. Without config the DOM is unchanged.
 - `ConfirmDialog` prop API: new `pending` (passed to Root: Cancel disabled, close requests wait, the confirm button spins beside `confirmLabel`) and `body` (extra content inside the dialog after the description; `children` still renders outside, for a trigger).
 - No new dependencies.
 
