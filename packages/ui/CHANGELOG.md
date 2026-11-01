@@ -4,6 +4,11 @@
 
 - `tokens` (`tokens/src/native.ts`, the React Native tokens): the neutrals now equal `tokens.css`, converted from oklch to sRGB hex. The dark values change most: `background` `#060606` (was `#1f1f1f`), `surface` `#181818` (was `#242426`), `border` `#292929` (was `#474747`). `radius.field` is 10 (was 20), the web `--field-radius`. `color.fill.dark` is `rgba(24, 24, 24, 0.88)`. The header now says which values follow `tokens.css`. This keeps the copy in `@vvedantb/native-ui` 0.3.3 in step. Web CSS is unchanged.
 
+## 0.30.1
+
+- Release fix: the 0.30.0 package on npm was published before `BulkActionBar`, `CopyLinkMenuItem`, `ViewTransitionSuspense`, `UnreadCornerBadge`, `CORNER_BADGE_CLASS`, `ToggleSearch` and `MotionProvider` reached `main`, so it lacks them. 0.30.1 ships everything listed under 0.30.0. No code changes beyond that.
+- No new dependencies.
+
 ## 0.30.0
 
 - New `RollingNumber`: shows an already formatted value ("1m 05s", "42%", "$1.20") and rolls each digit to its new value instead of jumping. Columns are keyed from the right, so "9s" → "10s" mounts only the new column. Full value stays in an `sr-only` span. For numbers that tick while the user watches; `CountPop` stays the badge for changes made while the user looks elsewhere.
