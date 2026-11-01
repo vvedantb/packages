@@ -17,8 +17,24 @@ import {
   DialogTitle,
 } from "./dialog";
 import { Input } from "./input";
+import { useUiConfig } from "./ui-config";
 
 export type ConfirmDialogSize = "default" | "sm" | "md";
+
+/**
+ * App-wide classes for the confirm dialog parts, merged after each part's
+ * size classes (so an app can tighten `md`'s padding or widen its content).
+ */
+export interface ConfirmDialogConfig {
+  classes?: {
+    content?: string;
+    header?: string;
+    title?: string;
+    description?: string;
+    body?: string;
+    footer?: string;
+  };
+}
 
 type ConfirmDialogContextValue = {
   size: ConfirmDialogSize;
@@ -133,8 +149,9 @@ export type ConfirmDialogContentProps = React.ComponentProps<typeof DialogConten
 /** Alert or plain dialog content (from Root `alert`); `sm` and `md` cap the width. */
 function Content({ className, ...props }: ConfirmDialogContentProps) {
   const { size, alert } = useConfirmDialog();
+  const extra = useUiConfig("ConfirmDialog")?.classes?.content;
   const Comp = alert ? AlertDialogContent : DialogContent;
-  return <Comp {...props} className={cn(size !== "default" && "sm:max-w-96", className)} />;
+  return <Comp {...props} className={cn(size !== "default" && "sm:max-w-96", extra, className)} />;
 }
 Content.displayName = "ConfirmDialog.Content";
 
@@ -142,7 +159,8 @@ export type ConfirmDialogHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 function Header({ className, ...props }: ConfirmDialogHeaderProps) {
   const { size } = useConfirmDialog();
-  return <DialogHeader {...props} className={cn(size === "md" && "pb-4", className)} />;
+  const extra = useUiConfig("ConfirmDialog")?.classes?.header;
+  return <DialogHeader {...props} className={cn(size === "md" && "pb-4", extra, className)} />;
 }
 Header.displayName = "ConfirmDialog.Header";
 
@@ -150,7 +168,8 @@ export type ConfirmDialogTitleProps = React.ComponentProps<typeof DialogTitle>;
 
 function Title({ className, ...props }: ConfirmDialogTitleProps) {
   const { size } = useConfirmDialog();
-  return <DialogTitle {...props} className={cn(size === "sm" && "mb-2 text-sm font-medium", className)} />;
+  const extra = useUiConfig("ConfirmDialog")?.classes?.title;
+  return <DialogTitle {...props} className={cn(size === "sm" && "mb-2 text-sm font-medium", extra, className)} />;
 }
 Title.displayName = "ConfirmDialog.Title";
 
@@ -158,12 +177,14 @@ export type ConfirmDialogDescriptionProps = React.ComponentProps<typeof DialogDe
 
 function Description({ className, ...props }: ConfirmDialogDescriptionProps) {
   const { size } = useConfirmDialog();
+  const extra = useUiConfig("ConfirmDialog")?.classes?.description;
   return (
     <DialogDescription
       {...props}
       className={cn(
         size === "sm" && "mb-4 text-sm text-muted-foreground",
         size === "md" && "py-6 text-muted-foreground",
+        extra,
         className,
       )}
     />
@@ -174,9 +195,10 @@ Description.displayName = "ConfirmDialog.Description";
 
 export type ConfirmDialogBodyProps = React.ComponentProps<"div">;
 
-/** Plain `<div>` for extra content. No default classes. */
-function Body(props: ConfirmDialogBodyProps) {
-  return <div {...props} />;
+/** Plain `<div>` for extra content. No default classes (`UiConfig.ConfirmDialog.classes.body` if set). */
+function Body({ className, ...props }: ConfirmDialogBodyProps) {
+  const extra = useUiConfig("ConfirmDialog")?.classes?.body;
+  return <div {...props} className={cn(extra, className) || undefined} />;
 }
 Body.displayName = "ConfirmDialog.Body";
 
@@ -194,11 +216,12 @@ export type ConfirmDialogFooterProps = React.HTMLAttributes<HTMLDivElement> & {
 
 function Footer({ row = false, className, ...props }: ConfirmDialogFooterProps) {
   const { size } = useConfirmDialog();
-  if (size === "sm") return <div {...props} className={cn("flex justify-end gap-2", className)} />;
+  const extra = useUiConfig("ConfirmDialog")?.classes?.footer;
+  if (size === "sm") return <div {...props} className={cn("flex justify-end gap-2", extra, className)} />;
   return (
     <DialogFooter
       {...props}
-      className={cn(size === "md" && "pt-4", row && "justify-end flex-row!", className)}
+      className={cn(size === "md" && "pt-4", row && "justify-end flex-row!", extra, className)}
     />
   );
 }

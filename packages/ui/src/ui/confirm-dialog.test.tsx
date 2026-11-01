@@ -3,6 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConfirmDialog } from "./confirm-dialog";
+import { UiConfigProvider } from "./ui-config";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -105,6 +106,57 @@ describe('ConfirmDialog size="md"', () => {
       document.querySelectorAll<HTMLButtonElement>('[data-slot="dialog-footer"] button'),
     );
     expect(buttons.map((b) => b.disabled)).toEqual([false, true]);
+  });
+});
+
+describe("ConfirmDialog pending and body", () => {
+  it("renders body inside the dialog and spins the action while pending", async () => {
+    const onOpenChange = vi.fn();
+    await mount(
+      <ConfirmDialog
+        size="md"
+        open
+        onOpenChange={onOpenChange}
+        title="Delete task?"
+        confirmLabel="Delete"
+        pending
+        body={<p data-testid="detail">Files go too.</p>}
+      />,
+    );
+    expect(document.querySelector('[role="dialog"] [data-testid="detail"]')?.textContent).toBe(
+      "Files go too.",
+    );
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-slot="dialog-footer"] button'),
+    );
+    expect(buttons.map((b) => b.disabled)).toEqual([true, true]);
+    expect(buttons[1]?.textContent).toBe("Delete");
+    expect(buttons[1]?.querySelector(".animate-spin")).not.toBeNull();
+    await act(async () => buttons[0]?.click());
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("UiConfig.ConfirmDialog", () => {
+  it("merges app classes after the size classes", async () => {
+    await mount(
+      <UiConfigProvider
+        config={{
+          ConfirmDialog: {
+            classes: { content: "sm:max-w-md", header: "pb-0", description: "py-0", body: "-mt-1", footer: "pt-0" },
+          },
+        }}
+      >
+        <ConfirmDialog size="md" open title="Delete?" description="Gone." body={<p>Sure?</p>} confirmLabel="Delete" />
+      </UiConfigProvider>,
+    );
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog?.className).toContain("sm:max-w-md");
+    expect(dialog?.className).not.toContain("sm:max-w-96");
+    expect(document.querySelector("h2")?.parentElement?.className).not.toContain("pb-4");
+    const description = Array.from(document.querySelectorAll("p")).find((p) => p.textContent === "Gone.");
+    expect(description?.className).not.toContain("py-6");
+    expect(document.querySelector('[data-slot="dialog-footer"]')?.className).not.toContain("pt-4");
   });
 });
 
