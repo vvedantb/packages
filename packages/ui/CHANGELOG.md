@@ -4,6 +4,11 @@
 
 - `tokens` (`tokens/src/native.ts`, the React Native tokens): the neutrals now equal `tokens.css`, converted from oklch to sRGB hex. The dark values change most: `background` `#060606` (was `#1f1f1f`), `surface` `#181818` (was `#242426`), `border` `#292929` (was `#474747`). `radius.field` is 10 (was 20), the web `--field-radius`. `color.fill.dark` is `rgba(24, 24, 24, 0.88)`. The header now says which values follow `tokens.css`. This keeps the copy in `@vvedantb/native-ui` 0.3.3 in step. Web CSS is unchanged.
 
+## 0.30.1
+
+- Release fix: the 0.30.0 package on npm was published before `BulkActionBar`, `CopyLinkMenuItem`, `ViewTransitionSuspense`, `UnreadCornerBadge`, `CORNER_BADGE_CLASS`, `ToggleSearch` and `MotionProvider` reached `main`, so it lacks them. 0.30.1 ships everything listed under 0.30.0. No code changes beyond that.
+- No new dependencies.
+
 ## 0.30.0
 
 - New `RollingNumber`: shows an already formatted value ("1m 05s", "42%", "$1.20") and rolls each digit to its new value instead of jumping. Columns are keyed from the right, so "9s" → "10s" mounts only the new column. Full value stays in an `sr-only` span. For numbers that tick while the user watches; `CountPop` stays the badge for changes made while the user looks elsewhere.
@@ -16,6 +21,12 @@
 - `EmptyState`: new `UiConfig.EmptyState` (`classes.root`, `iconWrap`, `icon`, `title`, `description`, `actions`, and `enter`). `classes` merge after each part's built-in classes. `classes.iconWrap` puts the `default` icon in a wrapper element (for a circle look) and drops the icon's own margin. New Root prop `enter` (default `UiConfig.EmptyState.enter`, else `false`): parts rise 8 px and fade in, 40 ms apart, over 220 ms. Without config the DOM is unchanged. `enter` uses `m`, so it needs `LazyMotion`.
 - New `UiConfig.ConfirmDialog` (`classes.content`, `header`, `title`, `description`, `body`, `footer`): merged after each part's size classes, so an app can set its own width and spacing for `md`. Without config the DOM is unchanged.
 - `ConfirmDialog` prop API: new `pending` (passed to Root: Cancel disabled, close requests wait, the confirm button spins beside `confirmLabel`) and `body` (extra content inside the dialog after the description; `children` still renders outside, for a trigger).
+- New `BulkActionBar` (types `BulkActionBarProps`, `BulkBarAction`): the floating selection bar for lists with bulk actions. It shows the count (`CountPop`), Select all / Clear, primary buttons (icon-only below `sm`), a More menu, a destructive slot and a dismiss button. Each action carries its own `onClick`, so confirms and Alt-to-skip stay with the caller (`showSkipHint` shows `ConfirmSkipHint`). It sits `absolute` at the bottom of its container.
+- New `CopyLinkMenuItem`: a "Copy link" `DropdownMenuItem` that copies the page URL, or `path` resolved against the origin. `label` and `iconSize` are optional.
+- New `ViewTransitionSuspense` (next to `PanelTransition`): `<Suspense>` whose fallback leaves with the `exit` view transition class (default `vt-exit`) as the content arrives with `enter` (default `vt-enter`). The app supplies the CSS.
+- New `UnreadCornerBadge` and `CORNER_BADGE_CLASS` (in `count-pop`): a `CountPop` count hung off a tile's bottom-right corner, primary tone by default. Use the class string with your own tone for other badges.
+- New `ToggleSearch` (types `ToggleSearchProps`, `ToggleSearchVariant`): a toolbar search on `SearchInput`. `compact` is an inline field that clears on Escape; `large` is an icon button that opens the field in a popover, with a primary dot while a query is applied. `large` needs the app's `TooltipProvider`.
+- New `MotionProvider`: `LazyMotion strict` plus `MotionConfig`. `features` defaults to `domMax` (layout animations); `reducedMotion` defaults to `"user"`.
 - No new dependencies.
 
 ## 0.29.1
