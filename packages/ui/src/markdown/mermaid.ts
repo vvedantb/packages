@@ -1,6 +1,10 @@
 import type { MermaidConfig } from "@streamdown/mermaid";
 import { useSyncExternalStore } from "react";
 import type { DiagramPlugin } from "streamdown";
+import {
+  readDocumentAppearance,
+  subscribeDocumentAppearance,
+} from "../hooks/use-document-appearance";
 
 /**
  * Mermaid for markdown, loaded on first use. `@streamdown/mermaid` imports
@@ -102,18 +106,9 @@ function subscribe(key: string, notify: () => void): () => void {
   };
 }
 
-/** The app theme lives as a `dark` class on `<html>` (neutral is dark-family). */
+/** Mermaid's theme for the page's current appearance (neutral is dark-family). */
 function readTheme(): MermaidTheme {
-  return document.documentElement.classList.contains("dark") ? "dark" : "default";
-}
-
-function subscribeTheme(notify: () => void): () => void {
-  const observer = new MutationObserver(notify);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
-  return () => observer.disconnect();
+  return readDocumentAppearance() === "dark" ? "dark" : "default";
 }
 
 /**
@@ -145,7 +140,7 @@ export function useMermaidRender(
   code: string,
   enabled: boolean,
 ): { theme: MermaidTheme; status: Entry["status"] } {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme);
+  const theme = useSyncExternalStore(subscribeDocumentAppearance, readTheme);
   const key = enabled ? cacheKey(theme, code) : "";
   const entry = useSyncExternalStore(
     (notify) => (key === "" ? () => {} : subscribe(key, notify)),
