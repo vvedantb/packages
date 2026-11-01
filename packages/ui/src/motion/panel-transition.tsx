@@ -36,3 +36,42 @@ export function PanelTransition({
     </ViewTransition>
   );
 }
+
+export interface ViewTransitionSuspenseProps {
+  fallback: ReactNode;
+  children: ReactNode;
+  /** View transition class on the content as it arrives. Default `vt-enter`. */
+  enter?: string;
+  /** View transition class on the fallback as it leaves. Default `vt-exit`. */
+  exit?: string;
+}
+
+/**
+ * `<Suspense>` whose fallback fades out as the content comes in, through React
+ * `<ViewTransition>`. Suspense reveals commit on retry lanes, which React
+ * animates even outside `startTransition`. Needs a React build that exports
+ * `ViewTransition`; the app supplies the `::view-transition-old(.vt-exit)` and
+ * `::view-transition-new(.vt-enter)` CSS. Routers that commit route changes
+ * synchronously (through `useSyncExternalStore`) do not animate here; use the
+ * router's own view transition for pages.
+ */
+export function ViewTransitionSuspense({
+  fallback,
+  children,
+  enter = "vt-enter",
+  exit = "vt-exit",
+}: ViewTransitionSuspenseProps) {
+  return (
+    <React.Suspense
+      fallback={
+        <ViewTransition default="none" exit={exit}>
+          {fallback}
+        </ViewTransition>
+      }
+    >
+      <ViewTransition default="none" enter={enter}>
+        {children}
+      </ViewTransition>
+    </React.Suspense>
+  );
+}
