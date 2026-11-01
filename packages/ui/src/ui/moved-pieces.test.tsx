@@ -7,6 +7,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ViewTransitionSuspense } from "../motion/panel-transition";
 import { BulkActionBar } from "./bulk-action-bar";
 import { CopyLinkMenuItem } from "./copy-link-menu-item";
+import { UnreadCornerBadge } from "./count-pop";
+import { ToggleSearch } from "./toggle-search";
+import { TooltipProvider } from "./tooltip";
+import { MotionProvider } from "../motion/motion-provider";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./dropdown-menu";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -109,5 +113,53 @@ describe("ViewTransitionSuspense", () => {
       </ViewTransitionSuspense>,
     );
     expect(host.textContent).toBe("ready");
+  });
+});
+
+describe("UnreadCornerBadge", () => {
+  it("shows 99+ above 99", async () => {
+    const host = await mount(<UnreadCornerBadge count={120} />);
+    expect(host.textContent).toBe("99+");
+  });
+
+  it("shows nothing for zero", async () => {
+    const host = await mount(<UnreadCornerBadge count={0} />);
+    expect(host.textContent).toBe("");
+  });
+});
+
+describe("ToggleSearch", () => {
+  it("compact clears on Escape", async () => {
+    const onChange = vi.fn();
+    await mount(<ToggleSearch value="abc" onChange={onChange} />);
+    const input = document.querySelector("input");
+    await act(async () => input?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(onChange).toHaveBeenCalledWith(null);
+  });
+
+  it("large marks an applied query on the button", async () => {
+    // Apps render one TooltipProvider at the root; the component relies on it.
+    await mount(
+      <TooltipProvider>
+        <ToggleSearch value="abc" onChange={() => {}} variant="large" />
+      </TooltipProvider>,
+    );
+    expect(document.querySelector('[aria-label="Search, filter applied"]')).not.toBeNull();
+    expect(document.querySelector("input")).toBeNull();
+  });
+
+  it("renders nothing when not visible", async () => {
+    const host = await mount(<ToggleSearch value="" onChange={() => {}} visible={false} />);
+    expect(host.textContent).toBe("");
+  });
+});
+
+describe("MotionProvider", () => {
+  it("renders its children", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<MotionProvider><p>ok</p></MotionProvider>));
+    expect(host.textContent).toBe("ok");
   });
 });
