@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.30.2 (2026-11-01)
+
 - New hook `useDocumentAppearance()` (`"light" | "dark"`), with `readDocumentAppearance()` and `subscribeDocumentAppearance(onChange)` for code outside React. It reads `<html>`: the `dark` class (neutral is dark-family) or `data-theme="dark"`, and re-renders when either changes. The server snapshot is `"light"`. Use it where a theme provider may be missing, such as a signed-out marketing page.
 - Mermaid and the input-clear dissolve now use it, in place of their own copies. Mermaid now also follows `data-theme="dark"`, as the dissolve already did, and the dissolve's glow colour is unchanged.
 - New hook `useCountUpDisplay(value)`, with its parser `parseCountable(value)`, lifted from an app. It counts a number, or a label with one number (`"45%"`, `"12h"`, `"$1.20"`), from the last value to the new one over `tokenTransition.base` (220 ms, `motionEase`), keeping the prefix, suffix and decimal places. The first value counts up from 0, and the same amount again does not replay. Labels it cannot count (`"1h 12m"`, `"—"`) show as they are, and so does every value while `PageMotionProvider` is `disabled`. `parseCountable` returns `{ amount, prefix, suffix, decimals }` or `null`; the suffix may be empty or `%`, `h`, `k`, `m`, `s` or `ms` (any case). Exported from the root and `@vvedantb/ui/client`.
