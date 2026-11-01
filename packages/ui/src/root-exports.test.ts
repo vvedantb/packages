@@ -37,7 +37,7 @@ test("root exposes former subpath APIs", () => {
     "appMarkSvg", "appTileSvg", "appAdaptiveSvg", "appExtension128Svg", "FAMILY_APPS", "familyApp",
     "V_PRO_APP_BENEFITS",
     "useMediaQuery", "useDocumentVisible", "useDocumentAppearance", "readDocumentAppearance", "subscribeDocumentAppearance", "useIdleCallback", "createIdleCallback", "useSingleFlight",
-    "usePersistedScrollParent", "ErrorBoundary", "ListEnter", "useFirstPaintGate", "CountPop", "countLabel",
+    "usePersistedScrollParent", "useCountUpDisplay", "parseCountable", "ErrorBoundary", "ListEnter", "useFirstPaintGate", "CountPop", "countLabel",
     "UnreadDot", "MarqueeOnHover", "RelativeDateTime", "ImageLightbox", "ImageGalleryPreview",
     "ScreenshotPreview", "VideoPreview", "convexErrorMessage", "userFacingErrorMessage", "useHeldResult",
     "RollingNumber", "ConfettiBurst", "SendQueueIcon", "useSmoothText",

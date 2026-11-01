@@ -9,3 +9,4 @@ export {
 export { createIdleCallback, useIdleCallback } from "./use-idle-callback";
 export { useSingleFlight } from "./use-single-flight";
 export { usePersistedScrollParent } from "./use-persisted-scroll-parent";
+export { parseCountable, useCountUpDisplay } from "./use-count-up-display";
