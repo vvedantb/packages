@@ -48,6 +48,7 @@ import {
   SelectValue,
 } from "../ui/radix-select";
 import { CrossfadeIconSlot } from "../ui/crossfade-icon";
+import { SendQueueIcon } from "../ui/send-queue-icon";
 import { Spinner } from "../ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useCn, useUiConfig } from "../ui/ui-config";
@@ -929,6 +930,12 @@ export const PromptInputActionMenuItem = ({
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   status?: ChatStatus;
   onStop?: () => void;
+  /**
+   * Set when a send would join a queue (the agent is still working). The send
+   * icon becomes `SendQueueIcon`: an up arrow that morphs into a stack of
+   * bars while `true`. Leave unset to keep `submitIcons.send`.
+   */
+  queued?: boolean;
 };
 export const PromptInputSubmit = ({
   className,
@@ -936,6 +943,7 @@ export const PromptInputSubmit = ({
   size = "icon-sm",
   status,
   onStop,
+  queued,
   onClick,
   children,
   ...props
@@ -948,7 +956,12 @@ export const PromptInputSubmit = ({
     status === "submitted" || status === "streaming" || status === "error"
       ? status
       : "send";
-  let Icon = icons?.send ?? <IconCornerDownLeft className="size-4" />;
+  let Icon =
+    queued === undefined ? (
+      (icons?.send ?? <IconCornerDownLeft className="size-4" />)
+    ) : (
+      <SendQueueIcon queued={queued} />
+    );
   if (status === "submitted") {
     Icon = icons?.submitted ?? <Spinner size="sm" />;
   } else if (status === "streaming") {

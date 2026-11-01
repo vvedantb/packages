@@ -23,6 +23,7 @@ import { copyMarkdownSelection } from "./markdownClipboard";
 import { rehypeGithubAlerts } from "./rehypeGithubAlerts";
 // The math plugin renders KaTeX markup but ships no stylesheet with it.
 import "katex/dist/katex.min.css";
+import { useSmoothText } from "./useSmoothText";
 
 const PLUGINS = { cjk, code, math, mermaid: mermaidPlugin };
 
@@ -69,6 +70,11 @@ export type MarkdownProps = Omit<
   "plugins" | "rehypePlugins" | "parseMarkdownIntoBlocksFn"
 > & {
   children: string;
+  /**
+   * With `mode="streaming"`, ease text that arrives in bursts onto the screen
+   * (`useSmoothText`). Default `true`; `false` shows each chunk as it lands.
+   */
+  smooth?: boolean;
 };
 
 /**
@@ -84,9 +90,11 @@ export const Markdown = memo(function Markdown({
   components,
   remarkPlugins,
   children,
+  smooth = true,
   ...props
 }: MarkdownProps) {
   const merge = useCn();
+  const text = useSmoothText(children, smooth && props.mode === "streaming");
   return (
     <div className="contents" onCopy={copyMarkdownSelection}>
       <Streamdown
@@ -105,7 +113,7 @@ export const Markdown = memo(function Markdown({
         parseMarkdownIntoBlocksFn={parseMarkdownIntoBlocksIncremental}
         {...props}
       >
-        {children}
+        {text}
       </Streamdown>
     </div>
   );

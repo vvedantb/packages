@@ -4,6 +4,17 @@
 
 - `tokens` (`tokens/src/native.ts`, the React Native tokens): the neutrals now equal `tokens.css`, converted from oklch to sRGB hex. The dark values change most: `background` `#060606` (was `#1f1f1f`), `surface` `#181818` (was `#242426`), `border` `#292929` (was `#474747`). `radius.field` is 10 (was 20), the web `--field-radius`. `color.fill.dark` is `rgba(24, 24, 24, 0.88)`. The header now says which values follow `tokens.css`. This keeps the copy in `@vvedantb/native-ui` 0.3.3 in step. Web CSS is unchanged.
 
+## 0.30.0
+
+- New `RollingNumber`: shows an already formatted value ("1m 05s", "42%", "$1.20") and rolls each digit to its new value instead of jumping. Columns are keyed from the right, so "9s" → "10s" mounts only the new column. Full value stays in an `sr-only` span. For numbers that tick while the user watches; `CountPop` stays the badge for changes made while the user looks elsewhere.
+- `ActivityTasks`: the live header clock ("Agent is working... (1m 05s)") now rolls. The clock sits outside the `Shimmer`, which takes a string, so the time no longer shimmers.
+- `ContextUsage`: the trigger percent, header percent and used tokens, usage rows (tokens and cost) and the footer total cost roll. The ring animates `strokeDashoffset` on `springTransition` and stops at full.
+- `Markdown`: with `mode="streaming"`, text that arrives in bursts eases onto the screen at 8% of the unshown text per frame (`useSmoothText`, also exported). Text present on mount shows at once, and the full text shows when the stream ends. New `smooth` prop, default `true`; pass `false` for the old chunk-by-chunk render. This also covers `ActivityTasks` reply blocks, which render `Markdown` in streaming mode.
+- New `SendQueueIcon` and `PromptInputSubmit` `queued?: boolean`. When set, the send icon is a three-line up arrow that morphs into a stack of bars while `queued` is `true` (a send joins the queue while the agent works). Leave it unset to keep `submitIcons.send`. Status icons (spinner, stop, error) still cross-fade as before.
+- New `ConfettiBurst`: one canvas burst from the bottom of an `anchor` element, in the theme `--chart-1` … `--chart-5` colours (or `colors`). Calls `onDone` after 1.8 s. For rare moments only.
+- `RollingNumber`, `SendQueueIcon` and the `ContextUsage` ring use `m`, so the app must render them inside `LazyMotion`.
+- No new dependencies.
+
 ## 0.29.1
 
 - Fix: the `filledToastIcons` success, info, warning and error SVGs set `fill="none"` and relied on the Tailwind class `fill-current` to paint. In apps whose Tailwind build did not emit that utility, the icons rendered blank. They now set `fill="currentColor"`, so they paint without it. `fill-current` stays in the class list. The close cross is unchanged (stroke icon, `fill="none"`).
