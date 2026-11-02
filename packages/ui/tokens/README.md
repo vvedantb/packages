@@ -17,6 +17,7 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps. The CSS and 
 | `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). Imported by `tokens.css` from 0.15.0. |
 | `@vvedantb/ui/tokens/css/clear-input.css` | `src/css/clear-input.css` | `ClearInput` layers (`.t-clear*`) and the `--clear-*` / `--glow-*` timings. Imported by `tokens.css`. From 0.15.1 the layers clip in `.t-clear-clip`, so `.t-clear` keeps the focus ring, and the placeholder layer only shows during `.is-clearing`. |
 | `@vvedantb/ui/tokens/css/motion.css` | `src/css/motion.css` | `.ui-page-enter`, `.ui-enter`, `.ui-enter-up`, `.ui-stagger`, their keyframes and reduced-motion rules, and the `html[data-page-motion="off"]` overrides for `PageMotionProvider`. Imported by `tokens.css`. |
+| `@vvedantb/ui/tokens/css/type-scale.css` | `src/css/type-scale.css` | The `text-*` scale (`3xs` 10px to `7xl` 72px, with `2xs` 11px and `2sm` 13px) as `@theme` variables. Each tier has its own line height and letter-spacing: positive below 14px (`+0.01em` at 10-11px), `0` at `sm`, negative above (`-0.03em` at `7xl`). Imported by `tokens.css`. |
 | `@vvedantb/ui/tokens/css/animations.css` | `src/css/animations.css` | `animate-aurora`, `animate-fade-in-up`, `animate-indeterminate` as `@theme` (CSS-first apps). |
 | `@vvedantb/ui/tokens/css/compat-shadcn-rgb.css`, `@vvedantb/ui/tokens/compat/shadcn-rgb.css` | `src/css/compat-shadcn-rgb.css` | Replaces `tokens.css` for apps with shadcn-style `R G B` channel variables. Defines only the UI-only `--color-*` names as `rgb(var(--x) / alpha)` references, `--radius-field`, `--scrollbar`, `--field-radius` (both `min(var(--radius), 0.625rem)` from 0.16.3), the same three radius utilities as `tokens.css` and `.glass-panel-strong` (solid `--popover` from 0.15.0). Import it **or** `tokens.css`, never both. |
 | `@vvedantb/ui/tokens/css/index.css` | `src/css/index.css` | base + dialog + modal + tabs + tabs-pills + utilities + animations + nav-icons, for new CSS-first apps (`tokens.css` brings scrollbar-thin). |
@@ -74,6 +75,7 @@ Tailwind inlines an `@import` where it sits, even in the middle of a file (it mu
 | `utilities.css` | `--breakpoint-sm` (Tailwind default or app theme) | Tailwind |
 | `scrollbar-thin.css` | `--scrollbar` | tokens.css or the app theme |
 | `clear-input.css`, `motion.css` | none (own `:root` defaults) | |
+| `type-scale.css` | none (own `@theme` values) | |
 | `animations.css` | none | |
 | `tailwind-preset` | the CSS variables named in its colour map, `--radius`, `--field-radius` | tokens.css or the app theme |
 

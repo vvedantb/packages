@@ -43,6 +43,25 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
   }
 });
 
+test("type-scale.css gives each text tier its own tracking", { skip }, async () => {
+  for (const css of [`@import "tailwindcss"; @import "./src/css/type-scale.css";`, head]) {
+    const out = await build(css, ["text-3xs", "text-2xs", "text-2sm", "text-sm", "text-7xl"]);
+    for (const [cls, size, tracking] of [
+      ["text-3xs", ".625rem", ".01em"],
+      ["text-2xs", ".6875rem", ".01em"],
+      ["text-2sm", ".8125rem", ".005em"],
+      ["text-sm", ".875rem", "0em"],
+      ["text-7xl", "4.5rem", "-.03em"],
+    ]) {
+      const rule = out.slice(out.indexOf(`.${cls} {`), out.indexOf("}", out.indexOf(`.${cls} {`)));
+      assert.ok(rule.includes(`font-size: var(--text-${cls.slice(5)})`), `${cls}: font-size`);
+      assert.ok(rule.includes(`letter-spacing: var(--tw-tracking, var(--text-${cls.slice(5)}--letter-spacing))`), `${cls}: tracking`);
+      assert.ok(out.includes(`--text-${cls.slice(5)}: ${size}`), `${cls}: size ${size}`);
+      assert.ok(out.includes(`--text-${cls.slice(5)}--letter-spacing: ${tracking}`), `${cls}: tracking ${tracking}`);
+    }
+  }
+});
+
 test("tokens.css alone emits the app CSS moved in 0.15.0", { skip }, async () => {
   const out = await build(head, []);
   assert.doesNotMatch(out, /@import/, "every @import is inlined");

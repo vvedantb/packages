@@ -82,7 +82,7 @@ test("no @import follows a rule in shared CSS", () => {
 
 test("tokens.css brings the 0.15.0 app CSS by default", () => {
   const css = readFileSync(join(TOKENS, "src/tokens.css"), "utf8");
-  for (const file of ["clear-input.css", "scrollbar-thin.css", "motion.css"]) assert.match(css, new RegExp(`^@import "\\./css/${file.replace(".", "\\.")}";`, "m"), file);
+  for (const file of ["clear-input.css", "scrollbar-thin.css", "motion.css", "type-scale.css"]) assert.match(css, new RegExp(`^@import "\\./css/${file.replace(".", "\\.")}";`, "m"), file);
   for (const [name, value] of [
     ["--modal-open-dur", "180ms"],
     ["--modal-close-dur", "120ms"],

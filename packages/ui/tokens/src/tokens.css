@@ -23,11 +23,15 @@
  * modal / tabs motion variables. Every rule sits in a Tailwind layer and the
  * timings and strengths are `:root` variables, so app rules and app `:root`
  * values win.
+ *
+ * It also brings the `text-*` type scale with size-specific
+ * tracking (css/type-scale.css), including the `3xs`, `2xs` and `2sm` tiers.
  */
 
 @import "./css/clear-input.css";
 @import "./css/scrollbar-thin.css";
 @import "./css/motion.css";
+@import "./css/type-scale.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
