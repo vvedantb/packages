@@ -72,3 +72,5 @@ export const IconVmem = APP_ICONS.vmem;
 export const IconVerve = APP_ICONS.verve;
 export const IconVelth = APP_ICONS.velth;
 export const IconProjectV = APP_ICONS.projectv;
+export const IconEva = APP_ICONS.eva;
+export const IconBee = APP_ICONS.bee;

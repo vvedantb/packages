@@ -893,8 +893,10 @@ links under a separator.
 ### `Icon*` app icons
 
 Tabler-style plain app glyphs: `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`,
-`IconVelth` and `IconProjectV`. No background. Each sits on an equalised square viewBox, so all apps look the same size. `APP_ICONS[app]`
+`IconVelth`, `IconProjectV`, `IconEva` and `IconBee`. No background. Each sits on an equalised square viewBox, so all apps look the same size. `APP_ICONS[app]`
 looks one up by `AppName`.
+
+`IconEva` (a filled four-point star) and `IconBee` (an orb with eyes, stripes and antennae) are icons only. `eva` and `bee` are in `APP_NAMES`, `APP_MARKS` and `APP_ICONS`, but not in `FAMILY_APPS` or `V_PRO_APP_BENEFITS`, and `AppWordmark` and `PricingModal` do not take them.
 
 ```tsx
 import { IconVerve } from "@vvedantb/ui"
@@ -951,13 +953,14 @@ import { AppWordmark } from "@vvedantb/ui"
 ### `AppMark` (deprecated)
 
 Deprecated in favour of the `Icon*` components for plain marks. Tiles stay here.
-Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`),
+Family app icons: `app` (`projectv`, `vibot`, `vhub`, `vmem`, `verve`, `velth`, and the icon-only `eva` and `bee`),
 `variant`, `size`, `title`.
 
 - `variant="mark"` (default) is the plain logo in `currentColor`. It sits
   on a square viewBox. The five apps (`vibot`, `vhub`, `vmem`, `verve`, `velth`) keep one
   frame size, 629 x 629 (`APP_MARK_CROP_VIEWBOX` is the historical `173 197 629 629`), so relative
-  glyph sizes match the tiles. Each viewBox origin is centred on that glyph's `markBBox`, so no
+  glyph sizes match the tiles. `eva` and `bee` use the same 629 side, but the historical crop does not
+  include them. Each viewBox origin is centred on that glyph's `markBBox`, so no
   glyph sits off-centre in its square. `projectv` is a brand mark, so it keeps its own 687 frame,
   centred on its bbox (`PROJECTV_MARK_VIEWBOX`, `171.5 181 687 687`). `size` sets both width and
   height; a string `size` (for example `"2rem"`) is any CSS length. `APP_MARK_VIEWBOX` holds the
@@ -982,7 +985,7 @@ default) and `renderCheckout`.
 
 #### Multi-plan (0.22.0)
 
-Header: `apps` (an `AppName[]`, shown as plain `Icon*` logos at the top left; each links to the app's site in a new tab and shows its display name in a tooltip, from `FAMILY_APPS`),
+Header: `apps` (a `FamilyAppName[]`, shown as plain `Icon*` logos at the top left; each links to the app's site in a new tab and shows its display name in a tooltip, from `FAMILY_APPS`),
 `headline` (centre), a Monthly / Annual switch and a close button (top right).
 Then one card per entry of `plans` (2 to 4 fit) and one `finePrint` line. Cards
 stack on narrow screens.
@@ -997,7 +1000,7 @@ outlined "Current plan" button and does not call `renderCheckout`.
 
 `appBenefits` (`{ app, items }[]`, type `PricingPlanAppBenefit`) groups benefits per app, each under a small heading with that app's icon and display name. It renders after `benefits` and scrolls inside the card when long. Set `currentApp` on the modal to put that app's group first; the other groups keep the array order. The `featured` / `highlighted` plan uses `V_PRO_APP_BENEFITS` (the approved V Pro copy, in the order vibot, vmem, vhub, velth, verve) when it omits `appBenefits`, so apps usually pass only `currentApp`. Other plans show app benefits only when set.
 
-`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites (`vibot`, `Verve`, `Velth`, `vmem`, `vhub`, `Project V`; URLs without a trailing slash). App names live only under `src/brand/`.
+`FAMILY_APPS` (and `familyApp(app)`), exported from the root and `@vvedantb/ui/brand`, is the single list of app display names and sites (`vibot`, `Verve`, `Velth`, `vmem`, `vhub`, `Project V`; URLs without a trailing slash). Its app type is `FamilyAppName`: `AppName` without the icon-only `eva` and `bee`. App names live only under `src/brand/`.
 
 The `featured` plan's button is a solid primary button (`Button` `variant="default"`). Other plans use `secondary`.
 

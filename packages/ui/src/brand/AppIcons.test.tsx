@@ -25,7 +25,7 @@ afterEach(async () => {
   host?.remove();
 });
 
-const EXPORTS = { vibot: "IconVibot", vhub: "IconVhub", vmem: "IconVmem", verve: "IconVerve", velth: "IconVelth", projectv: "IconProjectV" } as const;
+const EXPORTS = { vibot: "IconVibot", vhub: "IconVhub", vmem: "IconVmem", verve: "IconVerve", velth: "IconVelth", projectv: "IconProjectV", eva: "IconEva", bee: "IconBee" } as const;
 
 describe("Icon* app icons", () => {
   it("exports one icon per app from the root, with displayName", () => {

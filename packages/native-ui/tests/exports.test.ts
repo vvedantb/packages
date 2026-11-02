@@ -103,6 +103,8 @@ describe("@vvedantb/native-ui exports", () => {
       "GoogleMarkProps",
       "IconVibot",
       "IconProjectV",
+      "IconEva",
+      "IconBee",
       "APP_NAMES",
       "APP_MARKS",
       "FAMILY_APPS",

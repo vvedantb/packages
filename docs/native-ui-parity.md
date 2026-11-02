@@ -308,8 +308,8 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 | `src/brand/AppWordmark.tsx` | `AppWordmark`, `AppWordmarkProps`ᵀ, `ProductAppName`ᵀ | same | `AppWordmark` | Same `app`, `size`, `icon`; Instrument Sans 500 (`font-instrument-sans-medium`), -0.02em, icon 1.4×, gap 0.2em. `href` becomes `onPress`; adds `color`. |
 | `src/brand/AppMark.tsx` | `AppMark`, `AppMarkProps`ᵀ | same | `AppMark` | Same `app`, `variant` (`mark`, `tile`, `tile-light`), `size`, `title`. Size is a number of points. |
 | `src/brand/svg.ts` | `APP_MARKS`, `APP_MARK_CROP_VIEWBOX`, `APP_MARK_VIEWBOX`, `APP_MARK_VIEWBOX_START`, `PROJECTV_MARK_VIEWBOX`, `APP_MARK_SVG`, `APP_NAMES`, `APP_TILE_LIGHT_SVG`, `APP_TILE_SVG`, `appAdaptiveSvg`, `appExtension128Svg`, `appMarkSvg`, `appTileSvg`, `markAspect`, `markBBox`, `markLinecap`, `markStrokeWidth`, `pathBBox`, `AppMarkVariant`ᵀ, `AppName`ᵀ, `MarkShape`ᵀ | same | same exports | Byte-identical copy, checked by a native-ui test. The raw SVG strings are for web and store assets but cost nothing to keep. |
-| `src/brand/familyApps.ts` | `FAMILY_APPS`, `familyApp`, `FamilyApp`ᵀ | same | `FAMILY_APPS`, `familyApp` | Byte-identical copy. |
-| `src/brand/AppIcons.tsx` | `AppIconProps`ᵀ, `AppIconComponent`ᵀ, `APP_ICONS`, `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`, `IconVelth`, `IconProjectV` | same | `APP_ICONS`, `Icon*` | Rendered with `react-native-svg` on the same paths and viewBoxes. `size` is a number; default colour is the scheme foreground (no `currentColor`). |
+| `src/brand/familyApps.ts` | `FAMILY_APPS`, `familyApp`, `FamilyApp`ᵀ, `FamilyAppName`ᵀ | same | `FAMILY_APPS`, `familyApp` | Byte-identical copy. |
+| `src/brand/AppIcons.tsx` | `AppIconProps`ᵀ, `AppIconComponent`ᵀ, `APP_ICONS`, `IconVibot`, `IconVhub`, `IconVmem`, `IconVerve`, `IconVelth`, `IconProjectV`, `IconEva`, `IconBee` | same | `APP_ICONS`, `Icon*` | Rendered with `react-native-svg` on the same paths and viewBoxes. `size` is a number; default colour is the scheme foreground (no `currentColor`). |
 
 ### Marketing (`src/marketing`)
 

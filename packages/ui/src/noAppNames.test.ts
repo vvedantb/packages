@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 // The shared package names no app: app-specific details are passed in by the app. This mirrors
 // packages/server/tests/artifacts/noAppNames.test.ts for the shipped UI source.
 //
-// One exception: `src/brand/` holds the family marks and must name all six apps. The exception is
-// that folder only. A name anywhere else under src, shell/src or app/src still fails.
+// One exception: `src/brand/` holds the family marks and must name all six apps and the icon-only
+// eva and bee marks. The exception is that folder only. A name anywhere else under src, shell/src or app/src still fails.
 const pkgDir = fileURLToPath(new URL("..", import.meta.url));
 const BRAND_DIR = join("src", "brand");
 const SCANNED_DIRS = ["src", "shell/src", "app/src"];
@@ -52,7 +52,7 @@ describe("no app name", () => {
 
   it("src/brand does name the apps (the exception is in use)", () => {
     const text = readFileSync(join(pkgDir, BRAND_DIR, "svg.ts"), "utf8");
-    for (const app of ["projectv", "vibot", "vhub", "vmem", "verve", "velth"]) expect(text).toContain(app);
+    for (const app of ["projectv", "vibot", "vhub", "vmem", "verve", "velth", "eva", "bee"]) expect(text).toContain(`"${app}"`);
   });
 
   it.each(files.map((file) => [relative(pkgDir, file), file]))("%s", (_name, file) => {

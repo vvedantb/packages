@@ -2,7 +2,7 @@ import type { AppName } from "./svg";
 
 /** Benefits for one app, shown under that app's icon and name. */
 export type PricingPlanAppBenefit = {
-  app: Exclude<AppName, "projectv">;
+  app: Exclude<AppName, "projectv" | "eva" | "bee">;
   items: readonly string[];
 };
 

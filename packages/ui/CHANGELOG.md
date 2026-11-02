@@ -13,6 +13,9 @@
   - `classes.actionButton` and `classes.cancelButton` still replace the default, and `toastOptions.classNames` still appends after it. `closeButton` is unchanged.
 - The `SonnerToaster` DOM snapshot is regenerated. The only difference is the `content` class on `[data-content]`. The DOM test now mounts the toaster with no `position` and gets the same top-right snapshot. A new DOM test checks the action and cancel classes.
 - Fixture `examples/toaster/update.html` (not in the package): the update toast from `showUpdateAvailableToast` on load, with "Show update toast" and a theme switch (`?theme=dark`). Both toaster fixture pages pass no `position` and show toasts at the top right.
+- New icon-only marks `eva` (a filled four-point star) and `bee` (an orb with eyes, stripes and antennae), with `IconEva` and `IconBee`. Both are in `APP_NAMES`, `APP_MARKS`, `APP_ICONS`, `APP_MARK_VIEWBOX`, `APP_MARK_VIEWBOX_START` and the raw SVG strings, on the same 629 side as the five apps, each centred on its own `markBBox` (`eva` `197.45 197.45 629 629`, `bee` `197.55 187.2807619340906 629 629`). `APP_MARK_CROP_VIEWBOX` is unchanged and still covers the five apps only.
+- `eva` and `bee` are not family apps. They are not in `FAMILY_APPS` or `V_PRO_APP_BENEFITS`. New type `FamilyAppName` (`AppName` without them). `FamilyApp.app` and `familyApp()` take `FamilyAppName`. `ProductAppName`, `PricingPlanAppBenefit.app` and `PricingModal` `currentApp` also leave them out. `PricingModal` `apps` is now `FamilyAppName[]`. Code that passes an `AppName` variable to `familyApp()` or `apps` must narrow it first.
+- `brand:assets` and `build-brand-sheet.mjs` loop over `APP_NAMES`, so they now also write `eva` and `bee`. The committed `brand/family-sheet.png` is not regenerated.
 - No new dependencies.
 
 ## 0.31.0 (2026-11-02)

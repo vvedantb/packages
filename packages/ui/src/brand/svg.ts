@@ -1,7 +1,8 @@
 // Geometry and raw SVG strings for the family app marks. No imports, so the
 // asset script can load this file directly with Node.
 
-export const APP_NAMES = ["projectv", "vibot", "vhub", "vmem", "verve", "velth"] as const;
+/** Every mark. `eva` and `bee` are marks and icons only: they are not family apps, so `FAMILY_APPS` leaves them out. */
+export const APP_NAMES = ["projectv", "vibot", "vhub", "vmem", "verve", "velth", "eva", "bee"] as const;
 
 export type AppName = (typeof APP_NAMES)[number];
 
@@ -36,7 +37,9 @@ export function markLinecap(app: AppName): "butt" | "round" {
 /**
  * Glyphs sized by one rule: longest side = 512 * min(1.2, aspect^0.25), centred halfway between
  * the bounding-box centre and the centre of mass. `verve` and `velth` are the final vectors.
- * The others are traced from the approved 1024px renders.
+ * `vibot`, `vhub`, `vmem` and `projectv` are traced from the approved 1024px renders. `eva` (option A,
+ * a filled four-point star) and `bee` (option D, an orb with eyes, stripes and antennae) are the final
+ * vectors from their design sheet, as drawn there.
  */
 export const APP_MARKS: Record<AppName, MarkShape> = {
   projectv: {
@@ -75,6 +78,22 @@ export const APP_MARKS: Record<AppName, MarkShape> = {
     paths: [
       "M512 732.3C379.8 652.1 289.7 471.9 299.7 301.6C419.9 371.7 500 552 512 732.3Z",
       "M512 732.3C644.2 652.1 734.3 471.9 724.3 301.6C604.1 371.7 524 552 512 732.3Z",
+    ],
+  },
+  eva: {
+    kind: "fill",
+    paths: ["M242.9 512Q485.1 485.1 512 278.8Q538.9 485.1 781 512Q538.9 538.9 512 745.1Q485.1 538.9 242.9 512Z"],
+  },
+  bee: {
+    kind: "stroke",
+    paths: [
+      "M304 530.7A208.1 208.1 0 1 1 720.1 530.7A208.1 208.1 0 1 1 304 530.7",
+      "M447.5 414.2L447.5 445.4",
+      "M576.5 414.2L576.5 445.4",
+      "M306.3 561.9L717.7 561.9",
+      "M344 653.4L680 653.4",
+      "M468.3 341.4Q455.8 291.4 420.5 260.2",
+      "M555.7 341.4Q568.2 291.4 603.5 260.2",
     ],
   },
 };
@@ -180,6 +199,7 @@ export function markBBox(app: AppName): Box {
  * (x 186 to 789, y 259.96 to 761.7) at side max(width, height) x 1.04 (about 4% padding), rounded outward.
  * All five use this side, so glyph scale stays equal. Only the size is shared: each app has its own origin in
  * `APP_MARK_VIEWBOX`. `projectv` is left out so its wide brand mark does not shrink the app glyphs.
+ * Historical: this union covers those five only. `eva` and `bee` reuse the 629 side but are not part of it.
  */
 export const APP_MARK_CROP_VIEWBOX = "173 197 629 629";
 
@@ -190,9 +210,9 @@ export const APP_MARK_CROP_VIEWBOX = "173 197 629 629";
 export const PROJECTV_MARK_VIEWBOX = "171.5 181 687 687";
 
 /**
- * Plain-mark viewBox per app. Always square. The five apps keep one 629 side (equal scale), and each origin is
- * `markBBox(app)` centre minus 314.5 on both axes, so every glyph sits centred in its own frame. `projectv` uses
- * its 687 frame, centre minus 343.5. Hardcoded; checked against `markBBox` in tests.
+ * Plain-mark viewBox per app. Always square. Every mark except `projectv` keeps one 629 side (equal scale), and each
+ * origin is `markBBox(app)` centre minus 314.5 on both axes, so every glyph sits centred in its own frame. `projectv`
+ * uses its 687 frame, centre minus 343.5. Hardcoded; checked against `markBBox` in tests.
  */
 export const APP_MARK_VIEWBOX: Record<AppName, string> = {
   projectv: PROJECTV_MARK_VIEWBOX,
@@ -201,6 +221,8 @@ export const APP_MARK_VIEWBOX: Record<AppName, string> = {
   vmem: "197.24772201231343 196.33100022273135 629 629",
   verve: "197.5 210.9 629 629",
   velth: "197.5 202.45 629 629",
+  eva: "197.45 197.45 629 629",
+  bee: "197.55 187.2807619340906 629 629",
 };
 
 /**
@@ -215,6 +237,8 @@ export const APP_MARK_VIEWBOX_START: Record<AppName, string> = {
   vmem: "255.5301217210191 196.33100022273135 629 629",
   verve: "260.4 210.9 629 629",
   velth: "273.9433593555699 202.45 629 629",
+  eva: "242.9 197.45 629 629",
+  bee: "278.94999999999993 187.2807619340906 629 629",
 };
 
 /** Width over height of a mark's viewBox. Always about 1, because the viewBoxes are square. Kept for API stability; do not use it for sizing. */
