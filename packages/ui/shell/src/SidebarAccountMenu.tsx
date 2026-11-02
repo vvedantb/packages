@@ -238,19 +238,23 @@ export function AccountAvatar({ imageUrl, userName, className }: SidebarAccountA
   );
 }
 
-export type SidebarAccountTriggerProps = Omit<ButtonProps, "asChild"> & {
+export type SidebarAccountTriggerProps = Omit<ButtonProps, "asChild" | "shape"> & {
   /** Default `title` and `aria-label`, and the avatar initials. Native `name` goes to the button. */
   userName: string;
   imageUrl?: string;
 };
 
-/** Rail-tile-sized avatar button that opens the menu. Children replace the avatar. */
+/**
+ * Rail-tile-sized avatar button that opens the menu. Children replace the avatar.
+ * A rail tile (`rounded-lg`), so `shape="rounded"`; change the radius with `className`.
+ */
 export function AccountTrigger({ userName, imageUrl, className, children, ...props }: SidebarAccountTriggerProps) {
   return (
     <DropdownMenuTrigger asChild>
       <Button
         type="button"
         variant="ghost"
+        shape="rounded"
         title={userName}
         aria-label={`Account menu for ${userName}`}
         {...props}

@@ -36,6 +36,8 @@ import {
   MessageBranch,
   MessageBranchContent,
   MessageBranchNext,
+  MessageBranchPage,
+  MessageBranchPrevious,
   MessageBranchSelector,
   MessageContent,
 } from "./message";
@@ -339,6 +341,24 @@ describe("Message", () => {
     expect(el(host, "button").getAttribute("data-state")).toBe("closed");
     expect(el(host, ".sr-only").textContent).toBe("Copy");
   });
+
+  it("keeps the branch arrows at shape=\"rounded\" inside the group, and lets a prop win", async () => {
+    const branch = (next: ReactNode) => (
+      <MessageBranch>
+        <MessageBranchContent>
+          <Message from="assistant" key="a"><MessageContent>A</MessageContent></Message>
+          <Message from="assistant" key="b"><MessageContent>B</MessageContent></Message>
+        </MessageBranchContent>
+        <MessageBranchSelector><MessageBranchPrevious /><MessageBranchPage />{next}</MessageBranchSelector>
+      </MessageBranch>
+    );
+    const isRadius = (c: string) => /^rounded(-|$)/.test(c);
+    const host = await mount(branch(<MessageBranchNext />));
+    expect(cls(host, "button[aria-label='Previous branch']").filter(isRadius)).toEqual(["rounded-lg"]);
+    expect(cls(host, "button[aria-label='Next branch']").filter(isRadius)).toEqual(["rounded-lg"]);
+    const pill = await mount(branch(<MessageBranchNext shape="pill" />));
+    expect(cls(pill, "button[aria-label='Next branch']").filter(isRadius)).toEqual(["rounded-full"]);
+  });
 });
 
 describe("PromptInput", () => {
@@ -373,6 +393,16 @@ describe("PromptInput", () => {
     expect(cls(host, "[data-align=block-end]")).toContain("ft");
     expect(cls(host, "button[type=submit]")).toContain("rounded-full");
     expect(cls(host, "form > div > div:last-child")).toEqual(["ti"]);
+  });
+
+  it("keeps the submit at the field-addon radius (InputGroupButton), not Button's pill", async () => {
+    const host = await mount(
+      <PromptInput onSubmit={noop}>
+        <PromptInputTextarea />
+        <PromptInputFooter><PromptInputSubmit /></PromptInputFooter>
+      </PromptInput>,
+    );
+    expect(cls(host, "button[type=submit]").filter((c) => /^rounded(-|$)/.test(c))).toEqual(["rounded-lg"]);
   });
 
   it("takes inputGroupClassName / containerClassName over groupDefault", async () => {

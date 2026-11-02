@@ -289,6 +289,8 @@ export const MessageBranchSelector = ({
   );
 };
 export type MessageBranchPreviousProps = ComponentProps<typeof Button>;
+// Prev and next sit in a `ButtonGroup` with `rounded-md` inner corners, so they
+// default to `shape="rounded"`; a pill would pair a round outer end with them.
 export const MessageBranchPrevious = ({
   children,
   ...props
@@ -301,6 +303,7 @@ export const MessageBranchPrevious = ({
       disabled={totalBranches <= 1}
       onClick={goToPrevious}
       size="icon-sm"
+      shape="rounded"
       type="button"
       variant="ghost"
       {...props}
@@ -327,6 +330,7 @@ export const MessageBranchNext = ({
       disabled={totalBranches <= 1}
       onClick={goToNext}
       size="icon-sm"
+      shape="rounded"
       type="button"
       variant="ghost"
       {...props}

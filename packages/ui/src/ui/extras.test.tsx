@@ -89,6 +89,55 @@ describe("Button", () => {
   });
 });
 
+describe("Button shape", () => {
+  const variants = ["default", "destructive", "outline", "secondary", "ghost", "link", "flat", "success", "warning"] as const;
+  const sizes = ["default", "xs", "sm", "lg", "icon", "icon-sm", "icon-xs"] as const;
+  // 0.30.2 radius: `rounded-lg` in the base, `rounded-md` on the 28px sizes.
+  const roundedBefore = {
+    default: "rounded-lg",
+    xs: "rounded-md",
+    sm: "rounded-lg",
+    lg: "rounded-lg",
+    icon: "rounded-lg",
+    "icon-sm": "rounded-lg",
+    "icon-xs": "rounded-md",
+  } as const;
+
+  /** The radius utilities on the button. */
+  function radius(): string[] {
+    return Array.from(button().classList).filter((c) => /^rounded(-|$)/.test(c));
+  }
+
+  it("is a pill by default for every variant and size", async () => {
+    await mount(<Button>Go</Button>);
+    for (const variant of variants) {
+      for (const size of sizes) {
+        await act(async () => root?.render(<Button variant={variant} size={size}>Go</Button>));
+        expect(radius(), `${variant} ${size}`).toEqual(["rounded-full"]);
+      }
+    }
+    // explicit pill is the default
+    await act(async () => root?.render(<Button shape="pill" size="icon-xs">Go</Button>));
+    expect(radius()).toEqual(["rounded-full"]);
+  });
+
+  it("restores the 0.30.2 radius with shape=\"rounded\"", async () => {
+    await mount(<Button shape="rounded">Go</Button>);
+    for (const size of sizes) {
+      await act(async () => root?.render(<Button shape="rounded" size={size}>Go</Button>));
+      expect(radius(), size).toEqual([roundedBefore[size]]);
+    }
+  });
+
+  it("lets a className radius win and keeps shape off the DOM", async () => {
+    await mount(<Button className="rounded-xl">Go</Button>);
+    expect(radius()).toEqual(["rounded-xl"]);
+    expect(button().hasAttribute("shape")).toBe(false);
+    await act(async () => root?.render(<Button shape="rounded" size="xs" className="rounded-none">Go</Button>));
+    expect(radius()).toEqual(["rounded-none"]);
+  });
+});
+
 describe("DropdownMenuItem endContent", () => {
   it("keeps the plain layout without endContent", async () => {
     await mount(
