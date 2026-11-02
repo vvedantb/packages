@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.5.1 (2026-11-02)
+
+- The `controlStyles` Button source-contract tests now follow the web pill `Button` default from `@vvedantb/ui` 0.31.0 (`shape="pill"`, `rounded-full`), with the `shape="rounded"` opt-out (`rounded-lg`) and `text-sm font-medium` in the base classes. The native `Button` keeps radius 16 (the web `rounded` radius) and is not a pill. Tests only; no runtime change.
 - New icon-only marks `eva` and `bee`, with `IconEva` and `IconBee` (root and `/brand`). `svg.ts`, `familyApps.ts` and `vProAppBenefits.ts` are again byte-identical to `@vvedantb/ui`, so `APP_NAMES`, `APP_MARKS` and `APP_ICONS` include them. They are not family apps: not in `FAMILY_APPS` or `V_PRO_APP_BENEFITS`. New type `FamilyAppName`. `familyApp()` takes it, `ProductAppName` leaves out `eva` and `bee`, and `PricingModal` `apps` is now `FamilyAppName[]`.
 - No new dependencies.
 

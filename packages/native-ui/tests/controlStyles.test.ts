@@ -135,8 +135,25 @@ describe("Button (source contract)", () => {
     expect(button).toMatch(/"font-instrument-sans-medium",/);
   });
 
-  it("has the web rounded-lg radius (tokens.radius.lg), not a pill", () => {
-    expect(web).toMatch(/rounded-lg text-sm font-medium/);
+  it('has the web shape="rounded" radius (rounded-lg, tokens.radius.lg), not the web pill default', () => {
+    // From @vvedantb/ui 0.31.0 the radius is the `shape` variant, not a base class.
+    const base = web.match(/const buttonBaseClasses =\s*"([^"]+)"/)?.[1] ?? "";
+    expect(base.split(" ")).toEqual(expect.arrayContaining(["text-sm", "font-medium"]));
+    expect(base).not.toMatch(/(?:^|\s)rounded-/);
+    // The web default is a pill; `shape="rounded"` opts out to `rounded-lg`.
+    expect(web).toMatch(
+      /const buttonShapeClasses = \{\s*pill: "rounded-full",\s*rounded: "rounded-lg",\s*\};/,
+    );
+    expect(web).toMatch(/defaultVariants: \{[^}]*\bshape: "pill",[^}]*\}/);
+    expect(web).toMatch(/const sh = shape \?\? "pill";/);
+    // `rounded` drops to `rounded-md` only at `xs` and `icon-xs`, which the
+    // native Button does not have, so every native size is the `rounded-lg` one.
+    expect(web).toMatch(/const roundedSmallSizes: ButtonSize\[\] = \["xs", "icon-xs"\];/);
+    expect(web).toMatch(/const roundedSmallClass = "rounded-md";/);
+    expect(web).toMatch(
+      /compoundVariants: \[\{ shape: "rounded", size: roundedSmallSizes, class: roundedSmallClass \}\]/,
+    );
+    // The native Button keeps the 16 radius at every size and is not a pill.
     expect(button).toMatch(/const RADIUS = tokens\.radius\.lg;/);
     expect(button).toMatch(/\{ borderRadius: RADIUS \},/);
     expect(button).not.toMatch(/rounded-full/);
@@ -622,7 +639,9 @@ describe("type sizes (source contract)", () => {
 
   it("Button labels are the web text-sm medium: 14 / 20, weight 500", () => {
     const button = read("Button.tsx");
-    expect(webUi("button.tsx")).toMatch(/rounded-lg text-sm font-medium/);
+    // In the web base classes; the radius left the base for `shape` in @vvedantb/ui 0.31.0.
+    const webBase = webUi("button.tsx").match(/const buttonBaseClasses =\s*"([^"]+)"/)?.[1] ?? "";
+    expect(webBase.split(" ")).toEqual(expect.arrayContaining(["text-sm", "font-medium"]));
     const regular = button.match(/regular: \{ small: "(text-\w+)", medium: "(text-\w+)"/);
     expect(regular?.[2]).toBe("text-sm");
     expect(sizeStyle(regular![2] as "text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
