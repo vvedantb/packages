@@ -39,6 +39,7 @@ export function UpdateToastFixture() {
           <Button onClick={fireUpdateToast}>Show update toast</Button>
         </div>
       </main>
+      {/* No `position`: the package default, top-right, as Eva mounts it. */}
       <SonnerToaster
         theme={dark ? "dark" : "light"}
         toastRadius="surface"

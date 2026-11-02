@@ -1,12 +1,12 @@
 # toaster fixture
 
-Renders `SonnerToaster` with every opt-in prop on (`toastRadius="surface"`, `toastIcons="filled24"`, `closeButtonStyle="hoverChip"`, `sonnerVars`, `descriptionMuted`). It fires one sample toast with a title and a description on load. The toast stays open. Use "Show toast" to fire another.
+Renders `SonnerToaster` with every opt-in prop on (`toastRadius="surface"`, `toastIcons="filled24"`, `closeButtonStyle="hoverChip"`, `sonnerVars`, `descriptionMuted`). It passes no `position`, so toasts show at the top right, the package default from 0.31.1. It fires one sample toast with a title and a description on load. The toast stays open. Use "Show toast" to fire another.
 
 | Page | Stylesheet |
 | --- | --- |
 | `/tokens.html` | `tokens.css` plus `utilities.css` (`styles-tokens.css`) |
 | `/compat.html` | `compat-shadcn-rgb.css` plus `utilities.css`, with sample `R G B` variables (`styles-compat.css`) |
-| `/update.html` | `tokens.css` plus `utilities.css` (`styles-tokens.css`). Fires the update toast from `showUpdateAvailableToast` on load: title, description and a Refresh action that reloads the page. "Show update toast" fires it again. |
+| `/update.html` | `tokens.css` plus `utilities.css` (`styles-tokens.css`). Fires the update toast from `showUpdateAvailableToast` on load, at the top right: title, description and a Refresh action that reloads the page. The Refresh button uses the package default (28px tall, `rounded-control`). "Show update toast" fires it again. |
 
 Each stylesheet declares `glass-panel-strong` (tokens page only) and `smooth-shadow-ring-md`. The app owns those toast classes. The compat page also defines `--success` and `--warning` and maps them to `--color-success` and `--color-warning`.
 

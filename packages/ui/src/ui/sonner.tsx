@@ -14,6 +14,9 @@ import "./sonner.css";
 // neutral. Callers should pass `theme` so sonner's internal `data-theme`
 // attribute matches the active app theme.
 //
+// Position: `top-right` by default (sonner's own default is `bottom-right`), as
+// apps mount it. A `position` prop or `UiConfig.SonnerToaster.position` wins.
+//
 // Stacking: `expand={false}` keeps toasts collapsed (offset + scale). Hovering
 // the stack expands them. `sonner.css` hides back-toast content while collapsed
 // because `unstyled` disables sonner's built-in `data-styled` stack rules.
@@ -83,6 +86,20 @@ const hoverChipCloseButtonClassName =
 const defaultCloseButtonClassName =
   "rounded-lg bg-default px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-default/78";
 
+// Action and cancel buttons: 28px tall (`h-7`), 10px side padding, 12px text,
+// `rounded-control` (10px), the classes apps already set through `classes`.
+// Measured on the toaster fixture's Refresh button: 28px tall, up from 24px with the 0.31.0
+// `px-2.5 py-1 rounded-lg` (16px radius) string. `shrink-0` keeps the button
+// from squeezing when the text column grows. `motion-press` is an app utility
+// (not in `tokens.css`), as in `BulkActionBar`.
+const defaultActionButtonClassName =
+  "h-7 shrink-0 rounded-control bg-primary px-2.5 text-xs font-medium text-primary-foreground motion-press active:scale-[0.96] hover:bg-primary/90";
+
+const defaultCancelButtonClassName =
+  "h-7 shrink-0 rounded-control bg-surface-secondary px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-tertiary";
+
+const defaultToasterPosition = "top-right" satisfies ToasterProps["position"];
+
 const toastRadiusClasses = {
   lg: "rounded-lg",
   surface: "rounded-surface",
@@ -91,7 +108,8 @@ const toastRadiusClasses = {
 
 /**
  * Default `classNames`, with the opt-in variants applied. No options gives the
- * 0.2.1 defaults plus `content` (from 0.31.1).
+ * 0.2.1 defaults, plus `content` and the 28px `actionButton` and `cancelButton`
+ * (from 0.31.1).
  */
 function createToasterClassNames({
   toastRadius = "lg",
@@ -121,10 +139,8 @@ function createToasterClassNames({
     description: descriptionMuted
       ? `${descriptionSize} leading-snug text-muted-foreground!`
       : `${descriptionSize} leading-snug text-muted-foreground`,
-    actionButton:
-      "rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90",
-    cancelButton:
-      "rounded-lg bg-surface-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-tertiary",
+    actionButton: defaultActionButtonClassName,
+    cancelButton: defaultCancelButtonClassName,
     closeButton:
       closeButtonStyle === "hoverChip"
         ? hoverChipCloseButtonClassName
@@ -198,6 +214,9 @@ function withConfigDefaults<T extends object>(defaults: Partial<T> | undefined, 
 function SonnerToaster(props: ToasterProps & SonnerToasterOptions) {
   const {
     classes,
+    // Defaulted here, not by spreading after a literal, so `position={undefined}`
+    // still gets top-right rather than sonner's bottom-right.
+    position = defaultToasterPosition,
     toastRadius,
     density,
     toastIcons = "default",
@@ -229,6 +248,7 @@ function SonnerToaster(props: ToasterProps & SonnerToasterOptions) {
       visibleToasts={4}
       gap={12}
       {...rest}
+      position={position}
       closeButton={closeButton ?? (closeButtonStyle === "hoverChip" ? true : undefined)}
       className={
         toasterClassName && className

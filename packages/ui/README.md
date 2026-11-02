@@ -1308,7 +1308,13 @@ import { SonnerToaster, toast } from "@vvedantb/ui";
 />;
 ```
 
-With no new props and no `UiConfig.SonnerToaster` entry the toaster looks as it did in 0.2.1, except that from 0.31.1 the text column grows (`content`: `flex min-w-0 grow flex-col`). `unstyled` drops sonner's own grow, so without it the action button left a gap at the right edge. Apps no longer need to set `classes.content` for this. An entry sets app defaults for any prop (see "App config: AI chat" below). Caller props merge with the package defaults instead of replacing them:
+With no new props and no `UiConfig.SonnerToaster` entry the toaster looks as it did in 0.2.1, except for three changes from 0.31.1:
+
+- Toasts sit at the top right (`position="top-right"`). Sonner's own default is bottom-right. Pass `position`, or set `UiConfig.SonnerToaster.position`, to move them.
+- The text column grows (`content`: `flex min-w-0 grow flex-col`). `unstyled` drops sonner's own grow, so without it the action button left a gap at the right edge. Apps no longer need to set `classes.content` for this.
+- The action and cancel buttons are 28px tall (`h-7 shrink-0 rounded-control px-2.5 text-xs`), up from 24px. The action button presses with `motion-press active:scale-[0.96]` (`motion-press` is an app utility) and hovers with `hover:bg-primary/90`. `classes.actionButton` replaces the string, and `toastOptions.classNames.actionButton` appends to it.
+
+A `UiConfig.SonnerToaster` entry sets app defaults for any prop (see "App config: AI chat" below). Caller props merge with the package defaults instead of replacing them:
 
 - `toastOptions.classNames`: per key, the package classes come first and the caller classes follow, so callers can override utilities. Other `toastOptions` fields (such as `duration`) take the caller value.
 - `icons`: merged per key. With `toastIcons="filled24"` the caller overrides single icons and keeps the rest.
