@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.31.1 (2026-11-02)
+
+- Fix: `SonnerToaster` toasts now grow their text column. `unstyled: true` drops sonner's own `[data-content]` grow, so in a fixed-width toast the content shrank to its text and left a gap to the right of the action button. `createToasterClassNames()` gains a `content` key, `flex min-w-0 grow flex-col`. The action and cancel buttons now sit at the right edge, and long text wraps instead of pushing them out. `classes.content` replaces it (`""` removes it) and `toastOptions.classNames.content` appends after it, as for the other keys. An app that already sets `classes.content: "flex min-w-0 grow flex-col"` gets the same classes and can drop the entry.
+- New `showUpdateAvailableToast({ toast, closeConvex?, toastId?, reload? })` (type `ShowUpdateAvailableToastOptions`): the sticky "Update available" toast with "Refresh to load the latest version." and a Refresh action. Refresh calls `closeConvex` (errors ignored), then reloads. `toastId` defaults to `app-update-available`, `reload` to `window.location.reload()`. `startUpdateAvailableWatcher` now calls it. Its options and the toast it shows are unchanged. Exported from the root and `@vvedantb/ui/client`.
+- The `SonnerToaster` DOM snapshot is regenerated. The only difference is the `content` class on `[data-content]`.
+- Fixture `examples/toaster/update.html` (not in the package): the update toast from `showUpdateAvailableToast` on load, with "Show update toast" and a theme switch (`?theme=dark`).
+- No new dependencies.
+
 ## 0.31.0 (2026-11-02)
 
 - `Button` is a pill by default. New prop `shape`: `"pill"` (default) or `"rounded"`. `pill` is `rounded-full` for every variant and size, so `icon`, `icon-sm` and `icon-xs` are circles. `rounded` keeps the 0.30.2 radius: `rounded-lg`, and `rounded-md` on `xs` and `icon-xs`. A caller `className` radius still wins. With the default `--radius` (1rem), buttons 32px tall or less were already fully round, so the visible change is on `default`, `lg` and `icon` and on taller custom heights. Apps with a smaller `--radius` see it at every size.

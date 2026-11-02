@@ -89,7 +89,10 @@ const toastRadiusClasses = {
   control: "rounded-field",
 } as const;
 
-/** Default `classNames`, with the opt-in variants applied. No options gives the 0.2.1 defaults. */
+/**
+ * Default `classNames`, with the opt-in variants applied. No options gives the
+ * 0.2.1 defaults plus `content` (from 0.31.1).
+ */
 function createToasterClassNames({
   toastRadius = "lg",
   density = "default",
@@ -111,6 +114,9 @@ function createToasterClassNames({
   const descriptionSize = compact ? "text-xs" : "text-[13px]";
   return {
     toast: `group toast glass-panel-strong flex w-full items-center ${compact ? "gap-2" : "gap-3"} ${radius} ${compact ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm"} text-foreground smooth-shadow-ring-md${hideStackedContent ? ` ${hideStackedContentClassName}` : ""}`,
+    // `unstyled` drops sonner's `[data-content]` grow, so the text column grows
+    // here and the action and cancel buttons sit at the right edge.
+    content: "flex min-w-0 grow flex-col",
     title: titleLeading === "5" ? "font-medium leading-5" : "font-medium leading-snug",
     description: descriptionMuted
       ? `${descriptionSize} leading-snug text-muted-foreground!`

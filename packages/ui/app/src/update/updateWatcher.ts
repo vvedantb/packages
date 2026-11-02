@@ -16,6 +16,7 @@ export type UpdateAvailableWatcherOptions = {
   closeConvex?: () => void;
   /** Poll interval in ms. Default 60000. */
   pollMs?: number;
+  /** Default `app-update-available`. */
   toastId?: string;
   /** Pass `!import.meta.env.DEV`. When false, nothing starts. Default true. */
   enabled?: boolean;
@@ -23,13 +24,47 @@ export type UpdateAvailableWatcherOptions = {
   reload?: () => void;
 };
 
+export type ShowUpdateAvailableToastOptions = Pick<
+  UpdateAvailableWatcherOptions,
+  "toast" | "closeConvex" | "toastId" | "reload"
+>;
+
 const DEFAULT_POLL_MS = 60_000;
 const DEFAULT_TOAST_ID = "app-update-available";
 
 /**
+ * Show the sticky "Update available" toast with a Refresh action. Refresh
+ * calls `closeConvex` (errors ignored), then reloads. The same `toastId`
+ * replaces an open toast instead of stacking a second one.
+ */
+export function showUpdateAvailableToast({
+  toast,
+  closeConvex,
+  toastId = DEFAULT_TOAST_ID,
+  reload = () => window.location.reload(),
+}: ShowUpdateAvailableToastOptions): void {
+  toast.message("Update available", {
+    id: toastId,
+    description: "Refresh to load the latest version.",
+    duration: Number.POSITIVE_INFINITY,
+    action: {
+      label: "Refresh",
+      onClick: () => {
+        try {
+          closeConvex?.();
+        } catch {
+          // socket may already be closed during teardown
+        }
+        reload();
+      },
+    },
+  });
+}
+
+/**
  * Poll the live index HTML for a new Vite asset fingerprint (and re-check when
- * the tab becomes visible). Shows a sticky "Update available" toast with a
- * Refresh action when a newer deploy is serving. Returns a stop function.
+ * the tab becomes visible). Calls `showUpdateAvailableToast` once when a newer
+ * deploy is serving. Returns a stop function.
  */
 export function startUpdateAvailableWatcher(
   options: UpdateAvailableWatcherOptions,
@@ -39,9 +74,9 @@ export function startUpdateAvailableWatcher(
     toast,
     closeConvex,
     pollMs = DEFAULT_POLL_MS,
-    toastId = DEFAULT_TOAST_ID,
+    toastId,
     enabled = true,
-    reload = () => window.location.reload(),
+    reload,
   } = options;
   if (!enabled) return () => {};
 
@@ -52,22 +87,7 @@ export function startUpdateAvailableWatcher(
   const showToast = (): void => {
     if (shown) return;
     shown = true;
-    toast.message("Update available", {
-      id: toastId,
-      description: "Refresh to load the latest version.",
-      duration: Number.POSITIVE_INFINITY,
-      action: {
-        label: "Refresh",
-        onClick: () => {
-          try {
-            closeConvex?.();
-          } catch {
-            // socket may already be closed during teardown
-          }
-          reload();
-        },
-      },
-    });
+    showUpdateAvailableToast({ toast, closeConvex, toastId, reload });
   };
 
   const check = async (): Promise<void> => {

@@ -7,6 +7,7 @@ import {
   hoverChipCloseButtonClassName,
   mergeToastClassNames,
 } from "./sonner";
+import { UiConfigProvider } from "./ui-config";
 
 // sonner's `Toaster` is replaced by a stub that records the props it gets, so
 // rendering `SonnerToaster` exposes what it passes to sonner.
@@ -28,10 +29,11 @@ function render(props: Parameters<typeof SonnerToaster>[0] = {}) {
 }
 
 describe("createToasterClassNames", () => {
-  it("keeps the 0.2.1 default strings", () => {
+  it("keeps the 0.2.1 default strings, plus the 0.31.1 content class", () => {
     expect(createToasterClassNames()).toEqual({
       toast:
         "group toast glass-panel-strong flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground smooth-shadow-ring-md",
+      content: "flex min-w-0 grow flex-col",
       title: "font-medium leading-snug",
       description: "text-[13px] leading-snug text-muted-foreground",
       actionButton:
@@ -81,6 +83,42 @@ describe("createToasterClassNames variants", () => {
       .toast;
     expect(toast).toContain("py-2");
     expect(toast).toContain("rounded-field");
+  });
+});
+
+describe("content grow default", () => {
+  // `unstyled: true` drops sonner's `[data-content] { flex: 1 }`, which left a gap
+  // to the right of the action button. The package class puts the grow back.
+  const grow = "flex min-w-0 grow flex-col";
+
+  it("grows the content column in every variant", () => {
+    expect(createToasterClassNames().content).toBe(grow);
+    expect(createToasterClassNames({ density: "compact", toastRadius: "control" }).content).toBe(grow);
+    expect(render().toastOptions.classNames.content).toBe(grow);
+  });
+
+  it("lets classes.content replace the default, and an empty string remove it", () => {
+    expect(render({ classes: { content: "flex grow" } }).toastOptions.classNames.content).toBe("flex grow");
+    expect(render({ classes: { content: "" } }).toastOptions.classNames.content).toBe("");
+  });
+
+  it("appends toastOptions.classNames.content after the default or the classes entry", () => {
+    expect(
+      render({ toastOptions: { classNames: { content: "gap-0.5" } } }).toastOptions.classNames.content,
+    ).toBe(`${grow} gap-0.5`);
+    expect(
+      render({ classes: { content: "flex" }, toastOptions: { classNames: { content: "grow" } } })
+        .toastOptions.classNames.content,
+    ).toBe("flex grow");
+  });
+
+  it("gives an app config that already sets the grow class one copy of it", () => {
+    renderToStaticMarkup(
+      <UiConfigProvider config={{ SonnerToaster: { classes: { content: grow } } }}>
+        <SonnerToaster />
+      </UiConfigProvider>,
+    );
+    expect(sonner.props.toastOptions.classNames.content).toBe(grow);
   });
 });
 

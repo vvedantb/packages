@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  showUpdateAvailableToast,
   startUpdateAvailableWatcher,
   type UpdateToastOptions,
 } from "../src/update/updateWatcher.js";
@@ -8,17 +9,72 @@ import {
 const htmlFor = (hash: string) =>
   `<script type="module" src="/assets/index-${hash}.js"></script>`;
 
-function setup(extra: { enabled?: boolean; closeConvex?: () => void } = {}) {
+type ShownToast = { title: string; opts: UpdateToastOptions };
+
+function fakeToast() {
+  const toasts: ShownToast[] = [];
+  return {
+    toasts,
+    toast: { message: (title: string, opts: UpdateToastOptions) => void toasts.push({ title, opts }) },
+  };
+}
+
+describe("showUpdateAvailableToast", () => {
+  it("shows the sticky update toast with the default id", () => {
+    const { toast, toasts } = fakeToast();
+    showUpdateAvailableToast({ toast, reload: vi.fn() });
+    expect(toasts).toHaveLength(1);
+    const [first] = toasts;
+    expect(first?.title).toBe("Update available");
+    expect(first?.opts).toMatchObject({
+      id: "app-update-available",
+      description: "Refresh to load the latest version.",
+      duration: Number.POSITIVE_INFINITY,
+    });
+    expect(first?.opts.action.label).toBe("Refresh");
+  });
+
+  it("uses a caller toastId", () => {
+    const { toast, toasts } = fakeToast();
+    showUpdateAvailableToast({ toast, toastId: "custom-update" });
+    expect(toasts[0]?.opts.id).toBe("custom-update");
+  });
+
+  it("Refresh closes Convex first, then reloads, even if close throws", () => {
+    const { toast, toasts } = fakeToast();
+    const order: string[] = [];
+    showUpdateAvailableToast({
+      toast,
+      closeConvex: () => {
+        order.push("close");
+        throw new Error("already closed");
+      },
+      reload: () => order.push("reload"),
+    });
+    toasts[0]?.opts.action.onClick();
+    expect(order).toEqual(["close", "reload"]);
+  });
+
+  it("Refresh reloads without closeConvex", () => {
+    const { toast, toasts } = fakeToast();
+    const reload = vi.fn();
+    showUpdateAvailableToast({ toast, reload });
+    toasts[0]?.opts.action.onClick();
+    expect(reload).toHaveBeenCalledOnce();
+  });
+});
+
+function setup(extra: { enabled?: boolean; closeConvex?: () => void; toastId?: string } = {}) {
   let html = htmlFor("one");
   const fetchMock = vi.fn(async (_url: string | URL | Request) =>
     new Response(html, { status: 200 }),
   );
   vi.stubGlobal("fetch", fetchMock);
-  const toasts: Array<{ title: string; opts: UpdateToastOptions }> = [];
+  const { toast, toasts } = fakeToast();
   const reload = vi.fn();
   const stop = startUpdateAvailableWatcher({
     origin: "https://app.example.test",
-    toast: { message: (title, opts) => void toasts.push({ title, opts }) },
+    toast,
     pollMs: 1000,
     reload,
     ...extra,
@@ -76,6 +132,21 @@ describe("startUpdateAvailableWatcher", () => {
     await vi.advanceTimersByTimeAsync(1000);
     toasts[0]?.opts.action.onClick();
     expect(order).toEqual(["close", "reload"]);
+    stop();
+  });
+
+  it("shows the same toast as showUpdateAvailableToast, with a caller toastId", async () => {
+    const { toasts, setHtml, stop } = setup({ toastId: "custom-update" });
+    await vi.advanceTimersByTimeAsync(0);
+    setHtml(htmlFor("two"));
+    await vi.advanceTimersByTimeAsync(1000);
+    const expected = fakeToast();
+    showUpdateAvailableToast({ toast: expected.toast, toastId: "custom-update" });
+    const { action, ...opts } = expected.toasts[0]!.opts;
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0]?.title).toBe(expected.toasts[0]?.title);
+    expect(toasts[0]?.opts).toMatchObject(opts);
+    expect(toasts[0]?.opts.action.label).toBe(action.label);
     stop();
   });
 
