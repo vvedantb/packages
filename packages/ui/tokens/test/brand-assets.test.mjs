@@ -43,7 +43,7 @@ test("--dry-run lists files and writes nothing", () => {
 
 test("writes every app by default and rejects bad input", () => {
   const dry = run("--out", join(tmpdir(), "brand-assets-all"), "--dry-run", "--no-png");
-  for (const app of ["projectv", "vibot", "vhub", "vmem", "verve", "velth"]) assert.match(dry.stdout, new RegExp(`${app}/mark\\.svg`), app);
+  for (const app of ["projectv", "vibot", "vhub", "vmem", "verve", "velth", "eva", "bee"]) assert.match(dry.stdout, new RegExp(`${app}/mark\\.svg`), app);
   assert.notEqual(run("--out", tmpdir(), "--app", "nope").status, 0);
   assert.notEqual(run().status, 0);
 });

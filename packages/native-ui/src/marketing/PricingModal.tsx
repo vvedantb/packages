@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconCheck, IconX } from "@tabler/icons-react-native";
 import { APP_ICONS, IconProjectV } from "../brand/AppIcons";
 import type { ProductAppName } from "../brand/AppWordmark";
-import { familyApp } from "../brand/familyApps";
+import { familyApp, type FamilyAppName } from "../brand/familyApps";
 import type { AppName } from "../brand/svg";
 import { Button } from "../Button";
 import { cn } from "../cn";
@@ -41,8 +41,8 @@ export type PricingModalProps = {
   description?: string;
   /** Cards, top to bottom. */
   plans: readonly PricingPlan[];
-  /** App marks at the top left. */
-  apps?: readonly AppName[];
+  /** App marks at the top left. Family apps only: each links to its `FAMILY_APPS` site. */
+  apps?: readonly FamilyAppName[];
   /** App the modal is shown in. Its `appBenefits` group comes first. */
   currentApp?: ProductAppName;
   /** Centred headline, for example "One plan. Every V app." */

@@ -21,8 +21,10 @@ describe("brand data copies", () => {
     });
   }
 
-  it("every family app has a mark and a centred square viewBox", () => {
-    expect(FAMILY_APPS.map((entry) => entry.app).sort()).toEqual([...APP_NAMES].sort());
+  it("every family app has a mark, and every mark has a centred square viewBox", () => {
+    // `eva` and `bee` are marks and icons only, not family apps.
+    const familyNames = APP_NAMES.filter((app) => app !== "eva" && app !== "bee");
+    expect(FAMILY_APPS.map((entry) => entry.app).sort()).toEqual([...familyNames].sort());
     for (const app of APP_NAMES) {
       const [x, y, w, h] = APP_MARK_VIEWBOX[app].split(" ").map(Number);
       expect(w, app).toBe(h);

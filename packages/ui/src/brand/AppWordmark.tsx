@@ -3,8 +3,8 @@ import { cn } from "../utils/cn";
 import { APP_ICONS } from "./AppIcons";
 import type { AppName } from "./svg";
 
-/** The five product apps. `projectv` keeps its Michroma wordmark and never uses `AppWordmark`. */
-export type ProductAppName = Exclude<AppName, "projectv">;
+/** The five product apps. `projectv` keeps its Michroma wordmark and never uses `AppWordmark`. `eva` and `bee` are icons only. */
+export type ProductAppName = Exclude<AppName, "projectv" | "eva" | "bee">;
 
 export type AppWordmarkProps = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, "target" | "rel" | "aria-label" | "title" | "id"> & {
   /** Which product app's name to show. The label is always the lowercase app id. */

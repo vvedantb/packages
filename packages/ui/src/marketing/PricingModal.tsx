@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactElement, type ReactNode } from "react";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { APP_ICONS, IconProjectV, V_PRO_APP_BENEFITS, familyApp, type AppIconProps, type AppName, type PricingPlanAppBenefit } from "../brand";
+import { APP_ICONS, IconProjectV, V_PRO_APP_BENEFITS, familyApp, type AppIconProps, type AppName, type FamilyAppName, type PricingPlanAppBenefit, type ProductAppName } from "../brand";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
@@ -101,10 +101,10 @@ export type PricingModalMultiProps = {
   description?: string;
   /** Cards, left to right. Sized for 1 to 4. */
   plans: readonly PricingPlan[];
-  /** App marks at the top left. */
-  apps?: readonly AppName[];
+  /** App marks at the top left. Family apps only: each links to its `FAMILY_APPS` site. */
+  apps?: readonly FamilyAppName[];
   /** App the dialog is shown in. Its `appBenefits` group comes first. */
-  currentApp?: Exclude<AppName, "projectv">;
+  currentApp?: ProductAppName;
   /** Centred headline, for example "One plan. Every V app." */
   headline?: ReactNode;
   /** Small print under the cards. */

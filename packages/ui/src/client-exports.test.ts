@@ -24,7 +24,7 @@ test("client has the pieces extension pages use", () => {
   for (const name of [
     "Button", "Card", "CardHeader", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Spinner",
     "Dialog", "DialogContent", "Select", "Input", "Switch", "Tooltip", "SonnerToaster", "toast",
-    "AppWordmark", "AppMark", "APP_ICONS", "IconVibot", "IconVmem", "IconVerve",
+    "AppWordmark", "AppMark", "APP_ICONS", "IconVibot", "IconVmem", "IconVerve", "IconEva", "IconBee",
     "createThemeProvider", "applyThemeClass", "getSystemTheme", "cn", "tokens",
   ]) {
     expect(client, name).toHaveProperty(name);
