@@ -294,6 +294,27 @@ function GalleryScreen() {
             <Button size="lg" fullWidth={false}>
               Large
             </Button>
+            <Button size="icon" variant="outline" accessibilityLabel="Copy" onPress={() => toast("Copied")}>
+              <IconCopy size={16} color={tokens.color.foreground[scheme]} />
+            </Button>
+          </View>
+          {/* Pills by default, as on the web. `shape="rounded"` keeps radius 16, the look before 0.6.0. */}
+          <View className="flex-row flex-wrap items-center gap-2">
+            <Button shape="rounded" size="sm" fullWidth={false}>
+              Rounded
+            </Button>
+            <Button shape="rounded" variant="secondary" fullWidth={false}>
+              Rounded
+            </Button>
+            <Button
+              shape="rounded"
+              size="icon"
+              variant="outline"
+              accessibilityLabel="Copy"
+              onPress={() => toast("Copied")}
+            >
+              <IconCopy size={16} color={tokens.color.foreground[scheme]} />
+            </Button>
           </View>
         </Section>
 

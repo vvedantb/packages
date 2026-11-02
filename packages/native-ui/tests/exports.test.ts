@@ -164,8 +164,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.5.1 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.5.1");
+  it("is 0.6.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.6.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -231,6 +231,10 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of added) expect(names.has(name), name).toBe(true);
     // `IconButton` is new and public; the AI chat button keeps its own name, on /ai only.
     expect(names.has("ChatIconButton")).toBe(false);
+  });
+
+  it("exports the 0.6.0 Button shape type", () => {
+    expect(names.has("ButtonShape")).toBe(true);
   });
 
   it("adds no dependency or peer in 0.5.0", () => {

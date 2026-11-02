@@ -60,8 +60,8 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | --- | --- | --- |
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `GoogleMark` (from 0.3.15), `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
-| `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonSize`, `ButtonVariant` | none |
-| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonShape` (0.6.0), `ButtonSize`, `ButtonVariant` | none |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types. From 0.6.0: the `ButtonShape` type | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
 | `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13), `StackPageHeader`, `StackPageHeaderProps` (from 0.5.0; it brings the Tabler package for its chevron) | none |
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
@@ -154,19 +154,28 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 
 **Switch the scheme through NativeWind only.** Call `useColorScheme().setColorScheme("dark"|"light")` (or use `ThemeToggle`). That updates `useScheme` and, with `darkMode: "class"`, the `<html>` class together. Do **not** toggle `document.documentElement.classList` (or a page-level CSS `.dark` rule) by hand while leaving NativeWind on light: the page background can go dark while every token-styled part stays on the light set. That dual-owner fault is an app bug, not a native-ui colour bug.
 
-`useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, button 16, field 10, pill 999; rows 20) and spacing (16).
+`useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, field 10, pill 999; rows 20) and spacing (16). `Button` is a pill (999) by default, and 16 with `shape="rounded"`.
 
 ## Components (0.3.0)
 
 | Area | Exports |
 | --- | --- |
-| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
+| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `SheetRow` (0.5.0), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
 | Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
+
+**`Button` `shape` (0.6.0).** `Button` is a pill by default, as the web `Button` from `@vvedantb/ui` 0.31.0: `shape="pill"` is fully round (`tokens.radius.pill`, web `rounded-full`) for every variant and size, so `size="icon"` is a circle. `shape="rounded"` keeps the radius from before 0.6.0: 16 at every size (web `rounded-lg`). The web `rounded` is 14 (`rounded-md`) on `xs` and `icon-xs`; native has neither size. The radius is a style, so a `style` radius such as `style={{ borderRadius: 8 }}` wins over either shape; a `className` radius does not.
+
+```tsx
+<Button>Save</Button>                 {/* pill */}
+<Button shape="rounded">Save</Button> {/* radius 16, the 0.5.1 look */}
+```
+
+Parts that render `Button` are pills too. As on the web: `AlertDialogAction`, `AlertDialogCancel` and so the `ConfirmDialog` buttons (also full width in the compact sheet), the `PricingModal` CTA, and in `/ai` `MessageAction`, `CodeBlockCopyButton` and `ConversationScrollButton`. `PromptInputSubmit` and `PromptInputButton` are pills as well, so they are circles at 32 and at 44 with larger text. The web keeps them `shape="rounded"`, but its 16 radius on their 32 size draws the same circle. `AlertDialogAction`, `AlertDialogCancel` and `PromptInputButton` pass `shape` on; `MessageAction`, `CodeBlockCopyButton`, `ConversationScrollButton` and `PromptInputSubmit` take no `shape` and stay round. Components that do not render `Button`, such as `IconButton`, `HeaderIconButton`, `CaptureButton`, `UpgradeToProCard`, inputs, cards, dialogs and sheets, keep their radius.
 
 Overlays hold their own open state, or take `open` and `onOpenChange`:
 

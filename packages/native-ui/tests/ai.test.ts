@@ -532,8 +532,10 @@ describe("Message", () => {
       accessibilityLabel: "Good response",
       className: "h-8 w-8",
       hitSlop: touchSlop(32),
-      style: { borderRadius: 16 },
     });
+    // Round from the `Button` pill default (0.6.0), not a radius of its own.
+    expect(button.props).not.toHaveProperty("style");
+    expect(button.props).not.toHaveProperty("shape");
     expect(32 + 2 * touchSlop(32).top).toBe(44);
     expect((button.props.children as Element).props).toEqual({ size: 16, color: buttonColors("ghost", "light")!.color });
     (button.props.onPress as () => void)();
@@ -553,7 +555,8 @@ describe("Message", () => {
     larger.value = true;
     const { MessageAction } = await import("../src/ai/message");
     const button = render(MessageAction({ kind: "copy" }) as unknown as Element) as Element;
-    expect(button.props).toMatchObject({ className: "h-11 w-11", hitSlop: touchSlop(44), style: { borderRadius: 22 } });
+    expect(button.props).toMatchObject({ className: "h-11 w-11", hitSlop: touchSlop(44) });
+    expect(button.props).not.toHaveProperty("style");
     expect((button.props.children as Element).props.size).toBe(20);
   });
 });
