@@ -13,7 +13,7 @@ Design tokens and shared Tailwind v4 CSS for the vvedantb web apps. The CSS and 
 | `@vvedantb/ui/tokens/css/modal.css` | `src/css/modal.css` | `.t-modal`, `.is-open`, `.is-closing` and `t-modal-presence-wait` (`@layer components`). |
 | `@vvedantb/ui/tokens/css/tabs.css` | `src/css/tabs.css` | `.t-tabs` container (0.15.0), `.t-tab` with its press scale, active colour, `.t-tabs-pill`, small-screen `.t-tabs` scrolling. |
 | `@vvedantb/ui/tokens/css/tabs-pills.css` | `src/css/tabs-pills.css` | `--tabs-*` colour variables, `.t-tabs--segmented`, `.t-tabs--pills` and pill hover / active fills. |
-| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target` and `@utility reveal-on-hover`. `rounded-surface` moved to `tokens.css` in 0.7.1. |
+| `@vvedantb/ui/tokens/css/utilities.css` | `src/css/utilities.css` | `@utility hit-target`, `reveal-on-hover`, `motion-press`, `motion-base`, `motion-emphasized` and `scrollbar-none`. The motion utilities read `--motion-fast`, `--motion-base`, `--motion-ease-out` and `--motion-ease-emphasized`, with defaults in the utility. `rounded-surface` moved to `tokens.css` in 0.7.1. |
 | `@vvedantb/ui/tokens/css/scrollbar-thin.css` | `src/css/scrollbar-thin.css` | `.scrollbar-thin` (`@layer utilities`, always emitted). Imported by `tokens.css` from 0.15.0. |
 | `@vvedantb/ui/tokens/css/clear-input.css` | `src/css/clear-input.css` | `ClearInput` layers (`.t-clear*`) and the `--clear-*` / `--glow-*` timings. Imported by `tokens.css`. From 0.15.1 the layers clip in `.t-clear-clip`, so `.t-clear` keeps the focus ring, and the placeholder layer only shows during `.is-clearing`. |
 | `@vvedantb/ui/tokens/css/motion.css` | `src/css/motion.css` | `.ui-page-enter`, `.ui-enter`, `.ui-enter-up`, `.ui-stagger`, their keyframes and reduced-motion rules, and the `html[data-page-motion="off"]` overrides for `PageMotionProvider`. Imported by `tokens.css`. |
@@ -72,7 +72,7 @@ Tailwind inlines an `@import` where it sits, even in the middle of a file (it mu
 | `modal.css` | `--modal-open-dur`, `--modal-close-dur`, `--modal-scale`, `--modal-scale-close`, `--modal-ease` | tokens.css (0.15.0), or app `:root` with the compat file |
 | `tabs.css` | `--tabs-dur`, `--tabs-ease` (tokens.css, or app `:root` with the compat file); `--tabs-text-muted`, `--tabs-text-active`, `--tabs-pill-bg` | colours: tabs-pills.css or the app theme |
 | `tabs-pills.css` | `--muted`, `--segment`, `--segment-foreground`, `--default` | tokens.css or the app theme |
-| `utilities.css` | `--breakpoint-sm` (Tailwind default or app theme) | Tailwind |
+| `utilities.css` | `--breakpoint-sm` (Tailwind default or app theme); optional `--motion-*` | Tailwind |
 | `scrollbar-thin.css` | `--scrollbar` | tokens.css or the app theme |
 | `clear-input.css`, `motion.css` | none (own `:root` defaults) | |
 | `type-scale.css` | none (own `@theme` values) | |

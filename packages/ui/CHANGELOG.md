@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- `tokens/css/utilities.css` gains `motion-press`, `motion-base`, `motion-emphasized` and `scrollbar-none`, moved from Eva. Package components already used them (`SonnerToaster`, `BulkActionBar`, `ImageLightbox`, `MediaPreview`, `ToggleSearch`, `ModelPicker`, `ActivityTasks` and others: 12 files), but only Eva defined them. In other apps those classes did nothing, so presses snapped with no transition and `scrollbar-none` showed the scrollbar.
+  - `motion-press`: transforms on `--motion-fast` (default `150ms`), colour, shadow and opacity on `--motion-base` (default `220ms`), `--motion-ease-out`. It lists `scale`, `translate` and `rotate`, because Tailwind v4 `scale-*` and `translate-*` set those properties, not `transform`.
+  - `motion-base`: colour, shadow, opacity and transforms on `--motion-base`. `motion-emphasized`: transforms, opacity and shadow on `--motion-ease-emphasized` (default `cubic-bezier(0.2, 0.8, 0.2, 1)`).
+  - Each variable has a fallback in the utility, so no `:root` setup is needed. Apps that set `--motion-*` (as Eva does) keep their values.
+  - Visible change for apps other than Eva: the package controls above now animate press, hover and colour, and `scrollbar-none` hides the scrollbar.
+- New `rounded-t-surface` and `rounded-b-surface` (top or bottom corners only, same `clamp(0.75rem, var(--radius), 1rem)` as `rounded-surface`), in `tokens.css` and `compat-shadcn-rgb.css`. Moved from Eva.
+- No new dependencies.
+
 ## 0.32.0 (2026-11-02)
 
 - New `tokens/css/type-scale.css`: a `text-*` scale with size-specific tracking, moved from Eva. `tokens.css` imports it. Small text gets positive letter-spacing and large text gets negative letter-spacing, because one value for all sizes is wrong at one end. Line heights are the Tailwind defaults.
