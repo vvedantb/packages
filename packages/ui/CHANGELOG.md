@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.32.0 (2026-11-02)
+
 - New `tokens/css/type-scale.css`: a `text-*` scale with size-specific tracking, moved from Eva. `tokens.css` imports it. Small text gets positive letter-spacing and large text gets negative letter-spacing, because one value for all sizes is wrong at one end. Line heights are the Tailwind defaults.
   - Tracking: `3xs` and `2xs` `0.01em`, `xs` and `2sm` `0.005em`, `sm` `0em`, `base` `-0.006em`, `lg` `-0.01em`, `xl` `-0.012em`, `2xl` `-0.015em`, `3xl` `-0.018em`, `4xl` `-0.022em`, `5xl` `-0.025em`, `6xl` `-0.028em`, `7xl` `-0.03em`.
   - New tiers: `text-3xs` (10px / 14px), `text-2xs` (11px / 16px) and `text-2sm` (13px / 18px), so call sites do not need `text-[11px]`-style classes.
