@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.31.0 (2026-11-02)
+
+- `Button` is a pill by default. New prop `shape`: `"pill"` (default) or `"rounded"`. `pill` is `rounded-full` for every variant and size, so `icon`, `icon-sm` and `icon-xs` are circles. `rounded` keeps the 0.30.2 radius: `rounded-lg`, and `rounded-md` on `xs` and `icon-xs`. A caller `className` radius still wins. With the default `--radius` (1rem), buttons 32px tall or less were already fully round, so the visible change is on `default`, `lg` and `icon` and on taller custom heights. Apps with a smaller `--radius` see it at every size.
+- `UiConfig.Button`: new `classes.shape.<pill|rounded>`, one string per shape for every size. The radius moved out of the base and the `xs`, `sm`, `icon-sm` and `icon-xs` size strings into this part, which merges after `size` and before `className`. An app that replaced `classes.base` or a size string now also gets the shape radius (`rounded-full` unless it sets `classes.shape` or passes `shape`). An empty `classes` entry renders the same classes as no entry.
+- Opt-outs in the package, with unchanged looks: `InputGroupButton` and the deprecated `InputGroupButtonAlt` set `shape="rounded"`, so `PromptInputButton` and `PromptInputSubmit` keep the field-addon radius. `MessageBranchPrevious` and `MessageBranchNext` default to `shape="rounded"` inside the branch `ButtonGroup`; a `shape` prop wins. The sidebar `AccountTrigger`, `MobileMenuButton` and `PanelClose` set `shape="rounded"`; their DOM is unchanged. `InputGroupButton`, `InputGroupButtonAlt` and the three sidebar parts do not take `shape`, because their own classes set `rounded-lg`; change their radius with `className`.
+- Now pills or circles: other `Button`s without a radius class of their own. These include the `AlertDialog`, `ConfirmDialog` and `SignOutDialog` footer buttons, `Pagination`, `ToggleSearch`, the `SlideOverPanel` close button, `MessageAction`, `ArtifactAction`, `CodeBlockCopyButton`, the queue widget actions, the artifact list toolbar and the landing menu and GitHub buttons. Buttons that set a radius class keep it, for example `QueueItemAction` (`rounded-md`), `PricingModal` (`rounded-xl`) and the `SiteFooter` social buttons (`rounded-lg`).
+- `ButtonGroup` is unchanged. Its edge classes sit on the group, so pill children still join on their inner edges, but the outer ends become half circles. Pass `shape="rounded"` to the children to keep the 0.30.2 look.
+- `tokens/test/fixtures/default-dom.json`, `legacy-dom.json` and the queue snapshot are regenerated. The only difference is the button radius classes.
+- New fixture `examples/button-shapes/` (not in the package): every variant and size as pills, the `shape="rounded"` opt-out, `ButtonGroup` with `rounded` children and `InputGroup` with `InputGroupButton`, with a theme switch.
+- No new dependencies.
+
 ## 0.30.2 (2026-11-01)
 
 - New hook `useDocumentAppearance()` (`"light" | "dark"`), with `readDocumentAppearance()` and `subscribeDocumentAppearance(onChange)` for code outside React. It reads `<html>`: the `dark` class (neutral is dark-family) or `data-theme="dark"`, and re-renders when either changes. The server snapshot is `"light"`. Use it where a theme provider may be missing, such as a signed-out marketing page.

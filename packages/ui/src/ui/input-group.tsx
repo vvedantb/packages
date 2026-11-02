@@ -131,13 +131,16 @@ const inputGroupButtonVariants = cva(inputGroupButtonBaseClasses, {
   },
 });
 
+// `shape="rounded"` keeps the field-addon radius under Button's pill default.
+// `shape` is not a prop: the size classes set `rounded-lg`, so radius changes
+// go through `className` (or `UiConfig.InputGroup.classes.button`).
 function InputGroupButton({
   className,
   type = "button",
   variant = "ghost",
   size = "xs",
   ...props
-}: Omit<React.ComponentProps<typeof Button>, "size"> &
+}: Omit<React.ComponentProps<typeof Button>, "size" | "shape"> &
   VariantProps<typeof inputGroupButtonVariants>) {
   const classes = useUiConfig("InputGroup")?.classes?.button;
   const merge = useCn();
@@ -147,6 +150,7 @@ function InputGroupButton({
       type={type}
       data-size={size}
       variant={variant}
+      shape="rounded"
       className={
         classes
           ? merge(

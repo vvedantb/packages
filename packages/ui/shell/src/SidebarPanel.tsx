@@ -120,12 +120,15 @@ export function PanelActions({ className, ...props }: SidebarPanelActionsProps) 
   return <div {...props} className={cn("flex items-center justify-end gap-0.5", className)} />;
 }
 
-export type SidebarPanelCloseProps = ButtonProps & {
+export type SidebarPanelCloseProps = Omit<ButtonProps, "shape"> & {
   /** `aria-label`. Default `"Close navigation"`. */
   label?: string;
 };
 
-/** Ghost close button. Without `onClick` it closes the `Sidebar.Root` drawer. */
+/**
+ * Ghost close button. Without `onClick` it closes the `Sidebar.Root` drawer.
+ * `shape="rounded"` (`rounded-lg`); change the radius with `className`.
+ */
 export function PanelClose({ label = "Close navigation", onClick, className, children, ...props }: SidebarPanelCloseProps) {
   const sidebar = useOptionalSidebar();
   return (
@@ -133,6 +136,7 @@ export function PanelClose({ label = "Close navigation", onClick, className, chi
       type="button"
       variant="ghost"
       size="icon-sm"
+      shape="rounded"
       {...props}
       onClick={onClick ?? (() => sidebar?.onMobileOpenChange(false))}
       aria-label={label}

@@ -260,6 +260,17 @@ import {
 <FadePresence show={visible} variants={fadeUpSpring}>…</FadePresence>
 ```
 
+- `Button` `shape` (0.31.0, a default change): `"pill"` (default) is `rounded-full` for every variant and size, so the icon sizes are circles. `"rounded"` keeps the radius from before 0.31.0: `rounded-lg`, and `rounded-md` on `xs` and `icon-xs`. Use `shape="rounded"` for buttons that join other edges (inside a `ButtonGroup`) or sit in square chrome. A `className` radius still wins over both. `InputGroupButton`, the message branch arrows and the sidebar `AccountTrigger`, `MobileMenuButton` and `PanelClose` already use `"rounded"`. With the default `--radius` (1rem), buttons 32px tall or less were already fully round, so the visible change is on `default`, `lg` and `icon`.
+
+  ```tsx
+  <Button>Save</Button>                          {/* pill */}
+  <Button size="icon" aria-label="Add"><IconPlus /></Button>  {/* circle */}
+  <ButtonGroup>
+    <Button variant="outline" shape="rounded">Day</Button>
+    <Button variant="outline" shape="rounded">Week</Button>
+  </ButtonGroup>
+  ```
+
 - `Button`: variants `flat`, `success` and `warning` (each is `ghost` plus an override). `loading` disables the button, sets `data-loading="true"` and shows a spinner in place of `startContent`; without `loading` there is no `data-loading` attribute. `endContent` renders after the children. Both are ignored with `asChild` (`loading` still disables).
 - `DropdownMenuContent`: `fitViewport` caps the height on small screens and scrolls. It reads the optional `--vv-height` CSS variable, which the app may set to the visual viewport height (falls back to `70dvh`). `suppressAltKey` stops a bare Alt press from moving focus. `restoreScrollLockOnClose` calls `restoreModalScrollLock` on close (now and on the next tick). `ContextMenuContent` takes `suppressAltKey` too.
 - `DropdownMenuItem` `endContent` and `ContextMenuItem` `startContent`, `description` and `endContent`: the label moves into a growing column (`min-w-0 flex-1`), the description sits under it and `endContent` sits at the end. `DropdownMenuSubTrigger` and `ContextMenuSubTrigger` take `startContent`.
@@ -438,7 +449,7 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | --- | --- |
 | `Root` | No DOM. Holds `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `collapsed`, `panelHidden` and the drawer `id`. Closes the drawer at the desktop breakpoint. The chrome parts need it. |
 | `MobileHeader` | Fixed header below `md`, a three-column grid (menu button, title, actions). Escape closes the drawer. Keep all three children so the columns line up. |
-| `MobileMenuButton` | Opens the drawer. `label`, `icon` (`(open) => node`). |
+| `MobileMenuButton` | Opens the drawer. `label`, `icon` (`(open) => node`). Keeps `rounded-lg` (`Button` `shape="rounded"`); change it with `className`. |
 | `MobileTitle` | Centred `<h1>` that truncates. Without children, an empty `<span>` keeps the middle column. |
 | `MobileActions` | Trailing header actions. Without children, a spacer that keeps the title centred. |
 | `Backdrop` | Drawer backdrop; a click closes the drawer. `label` (`"Close navigation"`). |
@@ -452,11 +463,11 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | `Panel` | Panel column. `collapsed` (`md:hidden`) and `panelHidden` (renders nothing) default to the Root values. |
 | `PanelHeader` | Padded header row for `PanelTitle` and `PanelActions`. |
 | `PanelTitle` / `PanelActions` | The `<h2>` and the trailing actions. |
-| `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. |
+| `PanelClose` | Ghost close button. `label` (`"Close navigation"`). Without `onClick` it closes the drawer. Keeps `rounded-lg` (`Button` `shape="rounded"`); change it with `className`. |
 | `NavItem` | Panel nav row (`sidebarNavItemClass`). `active` (fill, `font-medium`, `aria-current="page"`), `iconOnly`, `icon` (element; gets `sidebarNavIconClass`), `asChild` for a router link. A `<button type="button">` without `asChild`. 0.7.2: `selected`, `indent`, `dragging`, `dropTarget`; see [Sidebar nav row parts (0.7.2)](#sidebar-nav-row-parts-072). |
 | `NavItemLeading` / `NavItemLabel` / `NavItemTrailing` / `NavItemActions` | Row parts (0.7.2): leading slot, truncated label, always-visible trailing content and hover-revealed actions. `<span>`, or the child with `asChild`. |
 | `AccountMenu` | Dropdown root. `badge` adds the unread dot (`AccountBadge`) in a `relative` wrapper. |
-| `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props; native `name` goes to the button. |
+| `AccountTrigger` | Rail-tile-sized avatar button. `userName` (default `title` and `aria-label`, and the initials), `imageUrl`, plus `Button` props except `asChild` and `shape` (it keeps the rail tile `rounded-lg`); native `name` goes to the button. |
 | `AccountAvatar` | Avatar image or initials. `userName`, `imageUrl`. |
 | `AccountContent` | Menu content. Defaults `align="center"`, `side="right"`, `sideOffset={8}`, `w-56`. |
 | `AccountLabel` | Identity label: avatar, `userName`, optional `email`, `stacked`. |
@@ -1354,7 +1365,7 @@ const config = {
 } satisfies UiConfig;
 ```
 
-- `Button`: `classes.base`, `classes.variant.<variant>`, `classes.size.<size>`. New size `xs` (`h-7 rounded-md px-2 text-xs hit-target`, 14px icons).
+- `Button`: `classes.base`, `classes.variant.<variant>`, `classes.size.<size>`, `classes.shape.<pill|rounded>` (0.31.0). New size `xs` (`h-7 px-2 text-xs hit-target`, 14px icons). Since 0.31.0 the radius is not in `base` or the size strings: `classes.shape` sets it, one string per shape for every size (built in: `pill` `rounded-full`; `rounded` `rounded-lg`, or `rounded-md` on `xs` and `icon-xs`).
 - `Badge`: `classes.base`, `classes.variant.<variant>`.
 - `Input`, `Textarea`: `classes.base`.
 - `Checkbox`: `classes.root`, `classes.indicator`, `icon`. New prop `icon`: the indicator content (default a 14px check). The `CheckboxProps` type is exported.

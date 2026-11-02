@@ -103,11 +103,12 @@ const inputGroupButtonVariants = cva("shrink-0 shadow-none", {
 /** @deprecated Use `InputGroupButton`. Kept for existing consumers; removed in a later minor after they move. */
 const InputGroupButtonAlt = React.forwardRef<
   HTMLButtonElement,
-  ButtonProps & VariantProps<typeof inputGroupButtonVariants>
+  Omit<ButtonProps, "shape"> & VariantProps<typeof inputGroupButtonVariants>
 >(({ className, size, variant = "ghost", ...props }, ref) => (
   <Button
     ref={ref}
     variant={variant}
+    shape="rounded"
     className={cn(inputGroupButtonVariants({ size }), className)}
     {...props}
   />

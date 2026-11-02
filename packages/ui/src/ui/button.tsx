@@ -8,7 +8,7 @@ const ghostClass =
   "text-muted-foreground hover:bg-surface-tertiary hover:text-foreground";
 
 const buttonBaseClasses =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium tracking-normal transition-[transform,background-color,box-shadow,opacity,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.96] [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium tracking-normal transition-[transform,background-color,box-shadow,opacity,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.96] [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0";
 
 const buttonVariantClasses = {
   default:
@@ -26,29 +26,52 @@ const buttonVariantClasses = {
   warning: `${ghostClass} bg-warning text-warning-foreground hover:bg-warning/90`,
 };
 
+// No radius here: `shape` sets it.
 const buttonSizeClasses = {
   default: "h-10 px-4 py-2",
-  xs: "h-7 rounded-md px-2 text-xs hit-target [&_svg:not([class*='size-'])]:size-3.5",
-  sm: "h-8 rounded-lg px-3 text-xs max-sm:hit-target",
+  xs: "h-7 px-2 text-xs hit-target [&_svg:not([class*='size-'])]:size-3.5",
+  sm: "h-8 px-3 text-xs max-sm:hit-target",
   lg: "h-11 px-6",
   icon: "h-10 w-10",
-  "icon-sm": "h-8 w-8 rounded-lg max-sm:hit-target",
-  "icon-xs": "h-7 w-7 rounded-md hit-target",
+  "icon-sm": "h-8 w-8 max-sm:hit-target",
+  "icon-xs": "h-7 w-7 hit-target",
 };
+
+// `pill` (default) is fully round, so icon sizes are circles. `rounded` is
+// the radius from before 0.31.0, for joined edges and field addons.
+const buttonShapeClasses = {
+  pill: "rounded-full",
+  rounded: "rounded-lg",
+};
+
+type ButtonVariant = keyof typeof buttonVariantClasses;
+type ButtonSize = keyof typeof buttonSizeClasses;
+type ButtonShape = keyof typeof buttonShapeClasses;
+
+// `rounded` keeps the smaller radius the two 28px sizes had.
+const roundedSmallSizes: ButtonSize[] = ["xs", "icon-xs"];
+const roundedSmallClass = "rounded-md";
 
 const buttonVariants = cva(buttonBaseClasses, {
   variants: {
     variant: buttonVariantClasses,
     size: buttonSizeClasses,
+    shape: buttonShapeClasses,
   },
+  compoundVariants: [{ shape: "rounded", size: roundedSmallSizes, class: roundedSmallClass }],
   defaultVariants: {
     variant: "default",
     size: "default",
+    shape: "pill",
   },
 });
 
-type ButtonVariant = keyof typeof buttonVariantClasses;
-type ButtonSize = keyof typeof buttonSizeClasses;
+/** Built-in radius for the config path. Matches the cva variant and compound variant. */
+function buttonShapeClass(shape: ButtonShape, size: ButtonSize): string {
+  return shape === "rounded" && roundedSmallSizes.includes(size)
+    ? roundedSmallClass
+    : buttonShapeClasses[shape];
+}
 
 /** `UiConfig.Button`: each given class string replaces the built-in one. */
 export interface ButtonConfig {
@@ -56,9 +79,12 @@ export interface ButtonConfig {
     base?: string;
     variant?: Partial<Record<ButtonVariant, string>>;
     size?: Partial<Record<ButtonSize, string>>;
+    /** Radius per shape. Replaces it for every size, `xs` and `icon-xs` included. */
+    shape?: Partial<Record<ButtonShape, string>>;
   };
 }
 
+/** `shape`: `"pill"` (default, `rounded-full`) or `"rounded"` (the radius from before 0.31.0). */
 export interface ButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -74,7 +100,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, asChild = false, startContent, endContent, loading, children, ...props },
+    { className, variant, size, shape, asChild = false, startContent, endContent, loading, children, ...props },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
@@ -82,6 +108,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const merge = useCn();
     const v = variant ?? "default";
     const s = size ?? "default";
+    const sh = shape ?? "pill";
     return (
       <Comp
         className={
@@ -90,9 +117,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 classes.base ?? buttonBaseClasses,
                 classes.variant?.[v] ?? buttonVariantClasses[v],
                 classes.size?.[s] ?? buttonSizeClasses[s],
+                classes.shape?.[sh] ?? buttonShapeClass(sh, s),
                 className,
               )
-            : merge(buttonVariants({ variant, size, className }))
+            : merge(buttonVariants({ variant, size, shape, className }))
         }
         ref={ref}
         {...props}

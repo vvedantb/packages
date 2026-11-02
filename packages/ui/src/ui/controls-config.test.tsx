@@ -121,13 +121,19 @@ describe("UiConfig.cn", () => {
   });
 });
 
+/** The radius utilities on an element. */
+function radius(found: Element): string[] {
+  return Array.from(found.classList).filter((c) => /^rounded(-|$)/.test(c));
+}
+
 describe("Button", () => {
   it("replaces the base, variant and size classes it names, and merges className last", async () => {
     const config: UiConfig = {
       Button: { classes: { base: "btn", variant: { ghost: "ghost" }, size: { sm: "small" } } },
     };
+    // `shape` is not in the entry: the built-in pill radius stays
     expect(cls(await mount(<Button variant="ghost" size="sm" className="mt-1">Go</Button>, config), "button")).toBe(
-      "btn ghost small mt-1",
+      "btn ghost small rounded-full mt-1",
     );
     // `default` variant and size are not in the entry: built-in classes stay
     const host = await mount(<Button>Go</Button>, config);
@@ -140,6 +146,38 @@ describe("Button", () => {
     const host = await mount(<Button size="xs">Go</Button>);
     expect(el(host, "button").classList.contains("h-7")).toBe(true);
     expect(el(host, "button").classList.contains("hit-target")).toBe(true);
+  });
+
+  it("replaces the radius per shape with classes.shape, for every size", async () => {
+    const config: UiConfig = { Button: { classes: { shape: { pill: "rounded-2xl", rounded: "rounded-sm" } } } };
+    expect(radius(el(await mount(<Button>Go</Button>, config), "button"))).toEqual(["rounded-2xl"]);
+    // one string per shape: it replaces the `rounded-md` of the 28px sizes too
+    expect(radius(el(await mount(<Button shape="rounded" size="icon-xs">Go</Button>, config), "button"))).toEqual([
+      "rounded-sm",
+    ]);
+    // a shape left out keeps its built-in radius
+    const pillOnly: UiConfig = { Button: { classes: { shape: { pill: "rounded-2xl" } } } };
+    expect(radius(el(await mount(<Button shape="rounded" size="xs">Go</Button>, pillOnly), "button"))).toEqual([
+      "rounded-md",
+    ]);
+    expect(radius(el(await mount(<Button shape="rounded" size="sm">Go</Button>, pillOnly), "button"))).toEqual([
+      "rounded-lg",
+    ]);
+  });
+
+  it("renders the built-in classes under an empty classes entry, for every variant, size and shape", async () => {
+    const variants = ["default", "destructive", "outline", "secondary", "ghost", "link", "flat", "success", "warning"] as const;
+    const sizes = ["default", "xs", "sm", "lg", "icon", "icon-sm", "icon-xs"] as const;
+    const empty: UiConfig = { Button: { classes: {} } };
+    for (const variant of variants) {
+      for (const size of sizes) {
+        for (const shape of [undefined, "pill", "rounded"] as const) {
+          const node = <Button variant={variant} size={size} shape={shape}>Go</Button>;
+          const plain = cls(await mount(node), "button");
+          expect(cls(await mount(node, empty), "button"), `${variant} ${size} ${shape}`).toBe(plain);
+        }
+      }
+    }
   });
 });
 
@@ -220,6 +258,19 @@ describe("ButtonGroup and InputGroup", () => {
     expect(el(input, "[data-slot=input-group-addon]").classList.contains("end")).toBe(true);
     expect(el(input, "[data-slot=input-group-addon]").classList.contains("order-last")).toBe(false);
     expect(el(input, "button").classList.contains("s")).toBe(true);
+  });
+
+  it("keeps InputGroupButton at the field-addon radius under Button's pill default", async () => {
+    const node = (
+      <InputGroup>
+        <InputGroupInput />
+        <InputGroupAddon align="inline-end"><InputGroupButton size="icon-xs">x</InputGroupButton></InputGroupAddon>
+      </InputGroup>
+    );
+    expect(radius(el(await mount(node), "button"))).toEqual(["rounded-lg"]);
+    // an entry that replaces the size classes drops their `rounded-lg`; `shape="rounded"` still sets it
+    const config: UiConfig = { InputGroup: { classes: { button: { size: { "icon-xs": "size-7 p-0" } } } } };
+    expect(radius(el(await mount(node, config), "button"))).toEqual(["rounded-lg"]);
   });
 });
 

@@ -110,14 +110,14 @@ function MobileHeader({ className, onKeyDown, ...props }: SidebarMobileHeaderPro
 
 const defaultMobileMenuIcon = () => <IconMenu2 size={20} />;
 
-export type SidebarMobileMenuButtonProps = Omit<ButtonProps, "children"> & {
+export type SidebarMobileMenuButtonProps = Omit<ButtonProps, "children" | "shape"> & {
   /** `aria-label`. Default `"Open navigation menu"`. */
   label?: string;
   /** Icon for the drawer state. Default a 20px menu icon. */
   icon?: (open: boolean) => ReactNode;
 };
 
-/** Opens the drawer. */
+/** Opens the drawer. `shape="rounded"` (`rounded-lg`); change the radius with `className`. */
 function MobileMenuButton({
   label = "Open navigation menu",
   icon = defaultMobileMenuIcon,
@@ -131,6 +131,7 @@ function MobileMenuButton({
       type="button"
       variant="ghost"
       size="icon"
+      shape="rounded"
       {...props}
       onClick={(event) => {
         onClick?.(event);
