@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## 0.6.0 (2026-11-02)
+
+- **`Button` is a pill by default**, as the web `Button` from `@vvedantb/ui` 0.31.0. New prop `shape`: `"pill"` (default) or `"rounded"`, with the type `ButtonShape` (root, `/button` and `/primitives`).
+  - `pill` is fully round for every variant and size: `tokens.radius.pill` (999), the web `rounded-full`. `size="icon"` is a circle.
+  - `rounded` keeps the 0.5.1 radius exactly: 16 (`tokens.radius.lg`, the web `rounded-lg`) at every size. The web `rounded` is `rounded-md` (14) on `xs` and `icon-xs`; native has neither size.
+  - The radius is still a style, so a caller `style` radius still wins over either shape, and a `className` radius still does not.
+  - Visible change: with radius 16, `sm` (32 high) was already fully round. The change shows on `default` (40), `lg` (44) and `icon` (40, now a circle), on every larger-text size (56 to 72), and on any `sm` button taller than 32 (Dynamic Type, or `min-h-11` in the compact dialog).
+- The internal primitive (`src/primitives/button.tsx`, not exported) moves `rounded-lg` out of its base class into a `shape` variant: `pill` (`rounded-full`, default) or `rounded` (`rounded-lg`). `Button` passes its `shape`, so the class agrees with the style.
+- **Composites.**
+  - Now pills, as on the web: `AlertDialogAction` and `AlertDialogCancel`, and so the `ConfirmDialog` buttons. In the compact sheet footer they are still full width and at least 44 high, as the web on phones. Both take `shape`.
+  - Now a pill, as the web multi-plan CTA (`rounded-full`): the `PricingModal` plan button. It was 16.
+  - `/ai`: the internal `ChatIconButton` drops its own `borderRadius: size / 2` style. It is round from the pill default and now honours `shape`. `MessageAction`, `CodeBlockCopyButton`, `PromptInputSubmit` and `PromptInputButton` look the same: circles at 32, and at 44 with larger text. `PromptInputButton` passes `shape` on.
+  - Not opted out: the web keeps `shape="rounded"` on `PromptInputSubmit` and `PromptInputButton` (through `InputGroupButton`). On their 32 size the web 16 radius is already a circle. Native `rounded` would draw a rounded square at 44 with larger text, so native keeps them pills.
+  - No native counterpart, so nothing to opt out: `InputGroupButton`, `InputGroupButtonAlt`, `MessageBranchPrevious`, `MessageBranchNext` and the sidebar `AccountTrigger`, `MobileMenuButton` and `PanelClose`.
+  - Unchanged: `ConversationScrollButton`, which already sets the pill radius as a style. Components that do not render `Button` keep their radius: `IconButton`, `HeaderIconButton` (and so `ThemeToggle` and the `StackPageHeader` back button), `CaptureButton`, `UpgradeToProCard`, `DateTimeField`, the `Dialog` close button, `Sheet`, `SheetRow`, `Select`, inputs, cards, toasts and dialog and sheet surfaces.
+- **Keep the 0.5.1 look:** pass `shape="rounded"` to each `Button`, `AlertDialogAction`, `AlertDialogCancel` and `PromptInputButton`. Native has no `UiConfig`, so there is no app-wide switch. `ConfirmDialog` takes no `shape`: compose the `AlertDialog` parts instead. For `PricingModal`, clone the button in `renderCheckout` with `shape="rounded"`; the `current` plan's button is not passed to `renderCheckout`, so it stays a pill.
+- `ParityGallery`: the Button section adds an `icon` circle and a `shape="rounded"` row (`sm`, `default` and `icon`).
+- Docs: the README documents `shape` and `ButtonShape` and corrects the radius line (it said "button 16"). `docs/native-ui-parity.md` updates the `Button` rows, the `Button` shape note and the status line.
+- Tests:
+  - `tests/controlStyles.test.ts` asserted that the native `Button` kept radius 16 and was not a pill. It now asserts the pill default and the `rounded` opt-out against the web `button.tsx`, that a caller style comes after the shape radius, and the primitive `shape` classes.
+  - New `tests/buttonShape.test.ts` (12 tests). It calls `Button` with React Native and the primitives stubbed: the pill radius for every variant and size, with and without larger text; the icon circle; 16 for `rounded` at every size; that only the radius differs between the shapes; a caller style radius (object or function) winning; the shape in the compact dialog footer. It also checks the composites: `AlertDialogAction` and `AlertDialogCancel`, `ChatIconButton` at 32 and 44, the composer buttons, the `PricingModal` CTA, the list of files that render `Button`, and the gallery.
+  - `tests/ai.test.ts`: `ChatIconButton` sets no radius style. `tests/exports.test.ts` checks 0.6.0 and `ButtonShape`; `tests/subpaths.test.ts` checks `ButtonShape` on `/button` and `/primitives`.
+  - Mutation check: each of these fails 3 to 7 tests. A `rounded` default; a pill radius of 16; the caller style before the shape radius; `ChatIconButton` with its own radius again; `shape` not passed to the primitive.
+- No new dependencies.
+
 ## 0.5.1 (2026-11-02)
 
 - The `controlStyles` Button source-contract tests now follow the web pill `Button` default from `@vvedantb/ui` 0.31.0 (`shape="pill"`, `rounded-full`), with the `shape="rounded"` opt-out (`rounded-lg`) and `text-sm font-medium` in the base classes. The native `Button` keeps radius 16 (the web `rounded` radius) and is not a pill. Tests only; no runtime change.

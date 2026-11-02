@@ -6,7 +6,7 @@ import { Platform, Pressable } from "react-native";
 
 const buttonVariants = cva(
   cn(
-    "group flex-row items-center justify-center gap-2 rounded-lg shadow-none active:opacity-80",
+    "group flex-row items-center justify-center gap-2 shadow-none active:opacity-80",
     Platform.select({
       web: "outline-none transition-all",
     }),
@@ -39,10 +39,17 @@ const buttonVariants = cva(
         lg: "h-11 px-6",
         icon: "h-10 w-10",
       },
+      // The web `shape`: `pill` (default) is fully round, `rounded` the radius
+      // before 0.6.0. `Button` also sets the radius as a style, which wins.
+      shape: {
+        pill: "rounded-full",
+        rounded: "rounded-lg",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      shape: "pill",
     },
   },
 );
@@ -80,13 +87,13 @@ type ButtonProps = React.ComponentPropsWithoutRef<typeof Pressable> &
 const Button = React.forwardRef<
   React.ElementRef<typeof Pressable>,
   ButtonProps
->(({ className, variant, size, ...props }, ref) => {
+>(({ className, variant, size, shape, ...props }, ref) => {
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         ref={ref}
         className={cn(
-          buttonVariants({ variant, size }),
+          buttonVariants({ variant, size, shape }),
           props.disabled && "opacity-45",
           className,
         )}

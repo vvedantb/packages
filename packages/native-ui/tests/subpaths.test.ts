@@ -231,8 +231,8 @@ describe("granular entries", () => {
         "familyApp",
         "V_PRO_APP_BENEFITS",
       ],
-      "./button": ["Button", "ButtonProps", "ButtonSize", "ButtonVariant"],
-      "./primitives": ["Button", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
+      "./button": ["Button", "ButtonProps", "ButtonShape", "ButtonSize", "ButtonVariant"],
+      "./primitives": ["Button", "ButtonShape", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
       "./search-input": ["SearchInput", "SearchInputProps"],
       "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps", "StackPageHeader", "StackPageHeaderProps"],
       "./layout": [

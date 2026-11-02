@@ -27,6 +27,11 @@ export type PromptInputSubmitProps = {
   testID?: string;
 };
 
+// The web `PromptInputSubmit` and `PromptInputButton` keep `shape="rounded"`
+// (`rounded-lg`, 16) as field addons. At the 32 `icon-sm` size 16 is half the
+// side, so the web draws a circle. These stay pills: the same circle at 32, and
+// still a circle at 44 with larger text, where 16 would draw a rounded square.
+
 /**
  * Send, or stop while the AI answers: the web `default` `icon-sm` button
  * (32, round, slop to 44). Send is an up arrow on the primary fill, and the

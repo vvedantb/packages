@@ -22,6 +22,7 @@ export type ChatIconButtonProps = Omit<ButtonProps, "children" | "size" | "icon"
  * A round `Button` at the web `icon-sm` size (32), with the slop to 44. With
  * larger text it is painted 44 with a 20 icon. The message
  * actions, the composer tools and its send button, and the code copy button.
+ * Round from the `Button` pill default; `shape="rounded"` gives radius 16.
  */
 export function ChatIconButton({
   icon: Icon,
@@ -42,7 +43,6 @@ export function ChatIconButton({
       accessibilityLabel={label}
       hitSlop={touchSlop(size)}
       className={cn(largerText ? "h-11 w-11" : "h-8 w-8", className)}
-      style={{ borderRadius: size / 2 }}
       {...props}
     >
       <Icon size={largerText ? 20 : 16} color={color} />

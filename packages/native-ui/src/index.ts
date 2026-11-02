@@ -38,7 +38,7 @@ export { FloatingTabBar } from "./FloatingTabBar";
 export type { FloatingTabBarProps } from "./FloatingTabBar";
 export { FloatingFAB } from "./FloatingFAB";
 export { Button } from "./Button";
-export type { ButtonProps, ButtonSize, ButtonVariant } from "./Button";
+export type { ButtonProps, ButtonShape, ButtonSize, ButtonVariant } from "./Button";
 export { Input } from "./Input";
 export type { InputProps } from "./Input";
 export { SearchInput } from "./SearchInput";

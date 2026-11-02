@@ -135,7 +135,7 @@ describe("Button (source contract)", () => {
     expect(button).toMatch(/"font-instrument-sans-medium",/);
   });
 
-  it('has the web shape="rounded" radius (rounded-lg, tokens.radius.lg), not the web pill default', () => {
+  it('is the web pill by default (rounded-full, tokens.radius.pill), with the shape="rounded" opt-out (rounded-lg, 16)', () => {
     // From @vvedantb/ui 0.31.0 the radius is the `shape` variant, not a base class.
     const base = web.match(/const buttonBaseClasses =\s*"([^"]+)"/)?.[1] ?? "";
     expect(base.split(" ")).toEqual(expect.arrayContaining(["text-sm", "font-medium"]));
@@ -153,10 +153,39 @@ describe("Button (source contract)", () => {
     expect(web).toMatch(
       /compoundVariants: \[\{ shape: "rounded", size: roundedSmallSizes, class: roundedSmallClass \}\]/,
     );
-    // The native Button keeps the 16 radius at every size and is not a pill.
-    expect(button).toMatch(/const RADIUS = tokens\.radius\.lg;/);
-    expect(button).toMatch(/\{ borderRadius: RADIUS \},/);
-    expect(button).not.toMatch(/rounded-full/);
+    expect(button).toMatch(
+      /type ButtonSize = "small" \| "medium" \| "large" \| "sm" \| "default" \| "lg" \| "icon";/,
+    );
+    // The native Button: the same two shapes and default, one radius per shape at every size.
+    expect(button).toMatch(/type ButtonShape = "pill" \| "rounded";/);
+    expect(button).toMatch(
+      /const RADIUS: Record<ButtonShape, number> = \{\s+pill: tokens\.radius\.pill,\s+rounded: tokens\.radius\.lg,\s+\};/,
+    );
+    expect(button).toMatch(/\n {2}shape = "pill",\n/);
+    expect(button).toMatch(/\{ borderRadius: RADIUS\[shape\] \},/);
+    expect(button).toMatch(/shape=\{shape\}/);
+    expect(tokens.radius.lg).toBe(16);
+    // `rounded-full` on the web; more than half the tallest painted size (72, `large` with larger text).
+    expect(tokens.radius.pill).toBe(999);
+    expect(tokens.radius.pill).toBeGreaterThan(72 / 2);
+  });
+
+  it("lets a caller style radius win over either shape, as before", () => {
+    // The shape radius is in `baseStyle`, which comes before the caller's style.
+    expect(button).toMatch(/const baseStyle = \[\s+\{ borderRadius: RADIUS\[shape\] \},/);
+    expect(button).toMatch(
+      /typeof callerStyle === "function"\s+\? \(state\) => \[baseStyle, callerStyle\(state\)\]\s+: \[baseStyle, callerStyle\]/,
+    );
+  });
+
+  it("passes the shape to the primitive, whose cva class matches the web shape classes", () => {
+    const primitive = read("primitives/button.tsx");
+    const nativeBase = primitive.match(/const buttonVariants = cva\(\s+cn\(\s+"([^"]+)"/)?.[1] ?? "";
+    expect(nativeBase).toMatch(/flex-row/);
+    expect(nativeBase).not.toMatch(/(?:^|\s)rounded-/);
+    expect(primitive).toMatch(/shape: \{\s+pill: "rounded-full",\s+rounded: "rounded-lg",\s+\},/);
+    expect(primitive).toMatch(/defaultVariants: \{[^}]*\bshape: "pill",[^}]*\}/);
+    expect(primitive).toMatch(/buttonVariants\(\{ variant, size, shape \}\)/);
   });
 
   it("applies buttonColors to the fill and the label", () => {

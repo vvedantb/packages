@@ -16,9 +16,12 @@ import { useScheme } from "./useScheme";
 /** `sm`, `default` and `lg` are the web names for `small`, `medium` and `large`. `icon` is a square button. */
 type ButtonSize = "small" | "medium" | "large" | "sm" | "default" | "lg" | "icon";
 
+/** The web `shape`. `"pill"` (default) is fully round; `"rounded"` is radius 16, the look before 0.6.0. */
+type ButtonShape = "pill" | "rounded";
+
 interface ButtonProps extends Omit<
   React.ComponentPropsWithoutRef<typeof PrimitiveButton>,
-  "variant" | "size" | "children" | "onPress"
+  "variant" | "size" | "shape" | "children" | "onPress"
 > {
   onPress?: () => void;
   variant?: ButtonVariant;
@@ -30,6 +33,13 @@ interface ButtonProps extends Omit<
   endContent?: React.ReactNode;
   loading?: boolean;
   size?: ButtonSize;
+  /**
+   * Default `"pill"`: fully round at every size and variant, so `icon` is a
+   * circle (web `rounded-full`). `"rounded"`: radius 16 at every size, the
+   * look before 0.6.0 (web `shape="rounded"`, `rounded-lg`). A `style`
+   * radius wins over either.
+   */
+  shape?: ButtonShape;
   /**
    * Default `true`. In the stacked footer of a compact dialog the button fills
    * the width whatever this says, as on the web.
@@ -84,8 +94,16 @@ const HIT_SLOP = {
   larger: { small: 8, medium: undefined, large: undefined, icon: 8 },
 };
 
-/** Web `rounded-lg` (`--radius`, 16). A style, because apps' NativeWind themes set their own `rounded-lg`. */
-const RADIUS = tokens.radius.lg;
+// The web `shape` (from @vvedantb/ui 0.31.0). `pill` is `rounded-full`:
+// `tokens.radius.pill` (999), far more than half the tallest minimum height
+// (72), so the ends are half circles. `rounded` is `rounded-lg` (`--radius`, 16). The web
+// `rounded` is `rounded-md` on `xs` and `icon-xs`, sizes native does not have,
+// so here it is 16 at every size. Styles, because apps' NativeWind themes set
+// their own `rounded-lg`.
+const RADIUS: Record<ButtonShape, number> = {
+  pill: tokens.radius.pill,
+  rounded: tokens.radius.lg,
+};
 
 // Colours come from `buttonColors` as styles, except `tinted`, which keeps
 // the pink classes that `outline` used before 0.3.0.
@@ -110,7 +128,7 @@ const PRIMITIVE_VARIANT = {
   tinted: "secondary",
 } as const;
 
-export type { ButtonProps, ButtonSize, ButtonVariant };
+export type { ButtonProps, ButtonShape, ButtonSize, ButtonVariant };
 
 export function Button({
   onPress,
@@ -121,6 +139,7 @@ export function Button({
   endContent,
   loading,
   size = "medium",
+  shape = "pill",
   fullWidth = true,
   children,
   shadowType = "flat",
@@ -136,7 +155,7 @@ export function Button({
   const elevate =
     shadowType === "shadow" && (variant === "primary" || variant === "default");
   const baseStyle = [
-    { borderRadius: RADIUS },
+    { borderRadius: RADIUS[shape] },
     elevate ? floatingShadow : null,
     colors
       ? { backgroundColor: colors.backgroundColor, borderColor: colors.borderColor }
@@ -159,6 +178,7 @@ export function Button({
     <PrimitiveButton
       onPress={onPress}
       variant={PRIMITIVE_VARIANT[variant]}
+      shape={shape}
       hitSlop={HIT_SLOP[scale][resolvedSize]}
       accessibilityRole="button"
       className={cn(
