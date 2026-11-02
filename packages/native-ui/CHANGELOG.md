@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New icon-only marks `eva` and `bee`, with `IconEva` and `IconBee` (root and `/brand`). `svg.ts`, `familyApps.ts` and `vProAppBenefits.ts` are again byte-identical to `@vvedantb/ui`, so `APP_NAMES`, `APP_MARKS` and `APP_ICONS` include them. They are not family apps: not in `FAMILY_APPS` or `V_PRO_APP_BENEFITS`. New type `FamilyAppName`. `familyApp()` takes it, `ProductAppName` leaves out `eva` and `bee`, and `PricingModal` `apps` is now `FamilyAppName[]`.
+- No new dependencies.
+
 ## 0.5.0
 
 Pieces the Verve, vibot and Velth phone apps need, from their API specs (the app sources were not available here). New components, optional props on existing ones, and `Text` on `/primitives`. Every existing prop keeps working. No new dependency or peer; the lockfile is unchanged.

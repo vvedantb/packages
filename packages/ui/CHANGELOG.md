@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- New icon-only marks `eva` (a filled four-point star) and `bee` (an orb with eyes, stripes and antennae), with `IconEva` and `IconBee`. Both are in `APP_NAMES`, `APP_MARKS`, `APP_ICONS`, `APP_MARK_VIEWBOX`, `APP_MARK_VIEWBOX_START` and the raw SVG strings, on the same 629 side as the five apps, each centred on its own `markBBox` (`eva` `197.45 197.45 629 629`, `bee` `197.55 187.2807619340906 629 629`). `APP_MARK_CROP_VIEWBOX` is unchanged and still covers the five apps only.
+- `eva` and `bee` are not family apps. They are not in `FAMILY_APPS` or `V_PRO_APP_BENEFITS`. New type `FamilyAppName` (`AppName` without them). `FamilyApp.app` and `familyApp()` take `FamilyAppName`. `ProductAppName`, `PricingPlanAppBenefit.app` and `PricingModal` `currentApp` also leave them out. `PricingModal` `apps` is now `FamilyAppName[]`. Code that passes an `AppName` variable to `familyApp()` or `apps` must narrow it first.
+- `brand:assets` and `build-brand-sheet.mjs` loop over `APP_NAMES`, so they now also write `eva` and `bee`. The committed `brand/family-sheet.png` is not regenerated.
+- No new dependencies.
+
 ## 0.31.0 (2026-11-02)
 
 - `Button` is a pill by default. New prop `shape`: `"pill"` (default) or `"rounded"`. `pill` is `rounded-full` for every variant and size, so `icon`, `icon-sm` and `icon-xs` are circles. `rounded` keeps the 0.30.2 radius: `rounded-lg`, and `rounded-md` on `xs` and `icon-xs`. A caller `className` radius still wins. With the default `--radius` (1rem), buttons 32px tall or less were already fully round, so the visible change is on `default`, `lg` and `icon` and on taller custom heights. Apps with a smaller `--radius` see it at every size.

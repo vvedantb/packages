@@ -39,8 +39,8 @@ afterEach(cleanup);
 const glyph = (svg: Element) => svg.querySelector("g") as SVGGElement;
 
 describe("brand exports", () => {
-  it("lists the six apps", () => {
-    expect([...APP_NAMES]).toEqual(["projectv", "vibot", "vhub", "vmem", "verve", "velth"]);
+  it("lists every mark: the six family apps, then the icon-only eva and bee", () => {
+    expect([...APP_NAMES]).toEqual(["projectv", "vibot", "vhub", "vmem", "verve", "velth", "eva", "bee"]);
   });
 
   it("is re-exported from the root", () => {
@@ -147,7 +147,9 @@ describe("AppMark props", () => {
   });
 });
 
-const FIVE_APPS = APP_NAMES.filter((app) => app !== "projectv");
+/** The historical five product apps behind `APP_MARK_CROP_VIEWBOX`. Not `projectv` (its own frame), and not the icon-only `eva` and `bee`. */
+const FIVE_APPS = APP_NAMES.filter((app) => app !== "projectv" && app !== "eva" && app !== "bee");
+const ICON_ONLY = ["eva", "bee"] as const;
 const parseBox = (vb: string) => vb.split(" ").map(Number) as [number, number, number, number];
 const contains = (vb: string, [x0, y0, x1, y1]: ReturnType<typeof markBBox>) => {
   const [x, y, w, h] = parseBox(vb);
@@ -165,6 +167,20 @@ describe("APP_MARK_VIEWBOX", () => {
       expect(contains(APP_MARK_VIEWBOX[app], markBBox(app))).toBe(true);
     }
     expect(new Set(FIVE_APPS.map((app) => APP_MARK_VIEWBOX[app])).size).toBe(5);
+  });
+
+  it("gives eva and bee the same 629 side, centred on their own markBBox", () => {
+    for (const app of ICON_ONLY) {
+      const vb = APP_MARK_VIEWBOX[app];
+      const [x, y, w, h] = parseBox(vb);
+      const [x0, y0, x1, y1] = markBBox(app);
+      expect(w).toBe(629);
+      expect(h).toBe(629);
+      expect(contains(vb, markBBox(app))).toBe(true);
+      expect(x).toBeCloseTo((x0 + x1) / 2 - 314.5, 6);
+      expect(y).toBeCloseTo((y0 + y1) / 2 - 314.5, 6);
+      expect(vb).not.toBe(APP_MARK_CROP_VIEWBOX);
+    }
   });
 
   it("centres every glyph in its frame to within 1% of the side", () => {

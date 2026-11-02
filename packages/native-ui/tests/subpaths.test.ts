@@ -221,6 +221,8 @@ describe("granular entries", () => {
         "APP_ICONS",
         "IconVibot",
         "IconProjectV",
+        "IconEva",
+        "IconBee",
         "APP_MARKS",
         "APP_NAMES",
         "appMarkSvg",

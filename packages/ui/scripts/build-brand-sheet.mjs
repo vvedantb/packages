@@ -1,4 +1,4 @@
-// Regenerates brand/family-sheet.png: the six marks at 200px and 32px on #111, with lowercase labels.
+// Regenerates brand/family-sheet.png: every mark in `APP_NAMES` at 200px and 32px on #111, with lowercase labels.
 //
 //   node scripts/build-brand-sheet.mjs [output.png]
 //

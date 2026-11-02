@@ -1,7 +1,10 @@
 import type { AppName } from "./svg";
 
+/** Apps in the Project V family. `eva` and `bee` have marks and icons but are not family apps. */
+export type FamilyAppName = Exclude<AppName, "eva" | "bee">;
+
 export type FamilyApp = {
-  app: AppName;
+  app: FamilyAppName;
   /** Display name. */
   name: string;
   /** Home page of the app. */
@@ -19,6 +22,6 @@ export const FAMILY_APPS: readonly FamilyApp[] = [
 ];
 
 /** Entry of `FAMILY_APPS` for an app. */
-export function familyApp(app: AppName): FamilyApp {
+export function familyApp(app: FamilyAppName): FamilyApp {
   return FAMILY_APPS.find((entry) => entry.app === app)!;
 }
