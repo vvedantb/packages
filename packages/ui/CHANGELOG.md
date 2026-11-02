@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `SheetContent` / `DrawerContent` opt-in `motionBlur?: boolean` (default `false`). When `true`, the sliding vaul content stays transparent and an inner `data-slot="sheet-surface"` holds the fill, shadow, corners and scroll, so `@web-kits/motion-blur` (Echo, 180° shutter) can blur only while the panel moves. Off under `prefers-reduced-motion`. New `surfaceClassName` styles that surface (or the content itself when blur is off). Without the prop, the DOM and classes are unchanged.
+- `Drawer`, `DrawerContent` and the other `Drawer*` names are aliases of the `Sheet*` parts (same implementation), for apps that call the sliding panel a drawer.
+- Dependency: `@web-kits/motion-blur` (`^0.1.0`).
+
 ## 0.32.0 (2026-11-02)
 
 - New `tokens/css/type-scale.css`: a `text-*` scale with size-specific tracking, moved from Eva. `tokens.css` imports it. Small text gets positive letter-spacing and large text gets negative letter-spacing, because one value for all sizes is wrong at one end. Line heights are the Tailwind defaults.

@@ -212,13 +212,30 @@ import { SessionsHoverCard } from "@vvedantb/ui";
 ## Panels, search and confirm
 
 ```tsx
-import { ConfirmDialog, SearchInput, SlideOverPanel } from "@vvedantb/ui";
+import {
+  ConfirmDialog, Drawer, DrawerContent, DrawerTitle, SearchInput, Sheet, SheetContent,
+  SheetTitle, SlideOverPanel,
+} from "@vvedantb/ui";
 
 <div className="relative">
   <SlideOverPanel open={open} onClose={() => setOpen(false)} header={<h2>Details</h2>}>
     <div className="p-4">Body</div>
   </SlideOverPanel>
 </div>
+
+<Sheet open={open} onOpenChange={setOpen} direction="right">
+  <SheetContent motionBlur surfaceClassName="p-4">
+    <SheetTitle>Details</SheetTitle>
+    Body
+  </SheetContent>
+</Sheet>
+
+{/* Drawer* names are aliases of Sheet* */}
+<Drawer open={open} onOpenChange={setOpen}>
+  <DrawerContent motionBlur>
+    <DrawerTitle>Share</DrawerTitle>
+  </DrawerContent>
+</Drawer>
 
 <SearchInput value={query} onChange={setQuery} label="Search files" shortcut="/" />
 
@@ -229,7 +246,8 @@ import { ConfirmDialog, SearchInput, SlideOverPanel } from "@vvedantb/ui";
 <ConfirmDialog size="md" open={open} onOpenChange={setOpen} title="Delete item?" description="This cannot be undone." confirmLabel="Delete" variant="destructive" onConfirm={remove} />
 ```
 
-- `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last.
+- `Sheet` / `Drawer` (vaul): mobile sheet and side drawer. `SheetContent` / `DrawerContent` take `side` (defaults to the root `direction`), opt-in `motionBlur` (default `false`) and `surfaceClassName`. With `motionBlur`, `@web-kits/motion-blur` blurs the panel only while it slides or is dragged (Echo, 180° shutter; off under `prefers-reduced-motion`). The moving element stays transparent; an inner `data-slot="sheet-surface"` holds the fill, shadow, corners and scroll. `className` then styles the moving host; `surfaceClassName` styles the surface. Without `motionBlur`, the DOM matches the previous single-element surface (`surfaceClassName` merges onto it after `className`). `Drawer*` exports are aliases of the `Sheet*` parts.
+- `SlideOverPanel`: a right-side panel, absolutely positioned inside its nearest positioned parent. It is not a portal or dialog. It slides in with a spring and is hidden below `md`. Only the close button closes it (no Escape, no outside click). `width` is `"w-96"` (default) or `"w-80"`. `closeLabel` defaults to `"Close panel"`. `className` merges last. Does not use `motionBlur`.
 - `SearchInput`: the search field. A `ClearInput` with a search icon on the left and the clear button on the right (shown while there is text; clearing calls `onChange("")`). `label` (default `"Search"`) is the `aria-label` and, without `placeholder`, the placeholder. `clearLabel` defaults to `"Clear search"`. `shortcut` (such as `"/"` or `"⌘K"`) shows a `Kbd` hint on the right while the value is empty. `size`: `"sm"` (`h-8`, default) or `"md"` (`h-10`). `variant`: `"default"` or `"toolbar"` (transparent until hover or focus, `rounded-field`, full width on mobile and `sm:w-44 md:w-52`). Other input props pass through; `enterKeyHint="search"`. `className` goes to the `<input>`, `wrapperClassName` to the wrapper, the ref to the `<input>`.
 - `ToolbarSearchInput` (deprecated in 0.17.0): a wrapper over `<SearchInput variant="toolbar">` with `placeholder="Search..."`. `className` goes to the wrapper, `inputClassName` to the `<input>`.
 - Field focus: every field (`Input`, `Textarea`, `Select` and `RadixSelect` triggers, `ClearInput`, `SearchInput`, `InputGroup`, date and time picker triggers) uses `fieldFocusClass`: the border turns `focus-border` and a 1px `ring-focus-ring` shows. Wrappers use `fieldFocusWithinClass` (`has-focus-visible:`). Both are exported for app fields.
