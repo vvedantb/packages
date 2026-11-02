@@ -1,0 +1,61 @@
+/*
+ * @vvedantb/ui/tokens/css/type-scale.css: the `text-*` scale with size-specific
+ * tracking. tokens.css imports it. Apps that pick files one by one can import
+ * it alone, after tailwindcss.
+ *
+ * Tracking is never one value for all sizes. Small UI text gets positive
+ * letter-spacing to stay legible. Display text gets negative letter-spacing,
+ * because letters look further apart as they grow. Line heights are the
+ * Tailwind defaults, so only tracking changes for the standard tiers.
+ *
+ * `3xs` (10px), `2xs` (11px) and `2sm` (13px) fill the gaps below `text-base`,
+ * so call sites do not need arbitrary `text-[11px]` classes.
+ *
+ * An explicit `tracking-*` or `leading-*` utility still wins. To change a tier,
+ * set its variable in the app's own `@theme` block.
+ */
+
+@theme {
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+  --text-3xs--letter-spacing: 0.01em;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-2xs--letter-spacing: 0.01em;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-xs--letter-spacing: 0.005em;
+  --text-2sm: 0.8125rem;
+  --text-2sm--line-height: 1.125rem;
+  --text-2sm--letter-spacing: 0.005em;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-sm--letter-spacing: 0em;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-base--letter-spacing: -0.006em;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-lg--letter-spacing: -0.01em;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-xl--letter-spacing: -0.012em;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-2xl--letter-spacing: -0.015em;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-3xl--letter-spacing: -0.018em;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-4xl--letter-spacing: -0.022em;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-5xl--letter-spacing: -0.025em;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-6xl--letter-spacing: -0.028em;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-7xl--letter-spacing: -0.03em;
+}

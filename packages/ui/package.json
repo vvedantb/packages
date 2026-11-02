@@ -35,6 +35,7 @@
     "./tokens/css/border-beam.css": "./tokens/src/css/border-beam.css",
     "./tokens/css/markdown.css": "./tokens/src/css/markdown.css",
     "./tokens/css/marquee.css": "./tokens/src/css/marquee.css",
+    "./tokens/css/type-scale.css": "./tokens/src/css/type-scale.css",
     "./tokens/compat/shadcn-rgb.css": "./tokens/src/css/compat-shadcn-rgb.css",
     "./tokens/css/*.css": "./tokens/src/css/*.css",
     "./tokens/tailwind-preset": {
