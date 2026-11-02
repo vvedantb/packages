@@ -29,7 +29,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "modal.css": [".t-modal.is-closing", "@keyframes t-modal-presence-wait"],
     "tabs.css": [".t-tabs-pill", ".t-tab", ".t-tab:active", "transform .1s ease-out"],
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
-    "utilities.css": [".hit-target:after", ".reveal-on-hover"],
+    "utilities.css": [".hit-target:after", ".reveal-on-hover", ".motion-press", ".motion-base", ".motion-emphasized", ".scrollbar-none::-webkit-scrollbar"],
     "scrollbar-thin.css": [".scrollbar-thin:hover::-webkit-scrollbar-thumb", "--scrollbar-thin-rest: 40%", "--scrollbar-thin-hover: 80%"],
     "clear-input.css": [".t-clear-glow", ".t-clear-clip", ".t-clear.is-clearing > input::placeholder", ".t-clear.has-value > input", "--clear-dur: 1s"],
     "motion.css": ["@keyframes ui-enter-up", '[data-page-motion="off"] .t-tabs-pill'],
@@ -38,7 +38,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "index.css": ["::selection", ".hit-target", ".scrollbar-thin", ".t-modal.is-open", ".t-tabs--pills", "@keyframes fade-in-up", "@keyframes vv-icon-gear-spin"],
   };
   for (const [file, needles] of Object.entries(expect)) {
-    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "rounded-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
+    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "motion-press", "motion-base", "motion-emphasized", "scrollbar-none", "rounded-surface", "rounded-t-surface", "rounded-b-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
     for (const n of needles) assert.ok(out.includes(n), `${file}: missing ${n}`);
   }
 });
@@ -59,6 +59,23 @@ test("type-scale.css gives each text tier its own tracking", { skip }, async () 
       assert.ok(out.includes(`--text-${cls.slice(5)}: ${size}`), `${cls}: size ${size}`);
       assert.ok(out.includes(`--text-${cls.slice(5)}--letter-spacing: ${tracking}`), `${cls}: tracking ${tracking}`);
     }
+  }
+});
+
+test("motion-press transitions the individual transform properties", { skip }, async () => {
+  const out = await build(`@import "tailwindcss"; @import "./src/css/utilities.css";`, ["motion-press"]);
+  const rule = out.slice(out.indexOf(".motion-press {"), out.indexOf("}", out.indexOf(".motion-press {")));
+  for (const n of ["transform, scale, translate, rotate, color", "var(--motion-fast, .15s)", "var(--motion-base, .22s)"]) {
+    assert.ok(rule.includes(n), `motion-press: missing ${n}`);
+  }
+});
+
+test("rounded-t-surface and rounded-b-surface round one edge", { skip }, async () => {
+  for (const css of [head, `@import "tailwindcss"; @import "./src/css/compat-shadcn-rgb.css";`]) {
+    const out = await build(css, ["rounded-t-surface", "rounded-b-surface"]);
+    assert.ok(out.includes(".rounded-t-surface"), "rounded-t-surface");
+    assert.ok(/\.rounded-t-surface \{\s*border-radius: clamp\(\.75rem, var\(--radius\), 1rem\) clamp\(\.75rem, var\(--radius\), 1rem\) 0 0/.test(out), "rounded-t-surface value");
+    assert.ok(/\.rounded-b-surface \{\s*border-radius: 0 0 clamp/.test(out), "rounded-b-surface value");
   }
 });
 

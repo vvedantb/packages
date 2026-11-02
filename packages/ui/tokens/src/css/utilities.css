@@ -1,6 +1,13 @@
 /*
  * @vvedantb/ui/tokens/css/utilities.css: Tailwind `@utility` helpers. Generated
  * only when used, and they take variants (e.g. `max-sm:hit-target`).
+ *
+ * The motion utilities read these variables. Set them on :root to change
+ * (defaults shown):
+ *   --motion-fast: 150ms (press feedback)
+ *   --motion-base: 220ms (colour, shadow, opacity)
+ *   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1)
+ *   --motion-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1)
  */
 
 /* Extends sub-40px controls to a 40x40px tap target without changing layout.
@@ -30,5 +37,54 @@
     &:focus-visible {
       opacity: 1;
     }
+  }
+}
+
+/* Each motion utility lists `scale`, `translate` and `rotate` as well as
+   `transform`. Tailwind v4 compiles `scale-[0.98]` to `scale: 0.98` and
+   `translate-x-*` to `translate: ...`, the individual transform properties.
+   `transition-property: transform` does not match them, so without them a
+   press or slide would not animate. */
+
+/* Hover and state changes: colour, shadow, opacity and transforms. */
+@utility motion-base {
+  transition-property:
+    color, background-color, border-color, box-shadow, transform, scale,
+    translate, rotate, opacity;
+  transition-duration: var(--motion-base, 220ms);
+  transition-timing-function: var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* Movement on screen: transforms, opacity and shadow on the emphasized curve. */
+@utility motion-emphasized {
+  transition-property: transform, scale, translate, rotate, opacity, box-shadow;
+  transition-duration: var(--motion-base, 220ms);
+  transition-timing-function: var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+/* Pressable controls: pair with `active:scale-[0.97]`. The press runs on
+   --motion-fast and colour trails on --motion-base. It covers colour too,
+   because Tailwind's `transition-colors` comes later in the sheet at the same
+   specificity and would replace this whole declaration. So call sites need no
+   separate `transition-*` class. */
+@utility motion-press {
+  transition-property:
+    transform, scale, translate, rotate, color, background-color, border-color,
+    box-shadow, opacity, fill, stroke;
+  transition-duration:
+    var(--motion-fast, 150ms), var(--motion-fast, 150ms),
+    var(--motion-fast, 150ms), var(--motion-fast, 150ms),
+    var(--motion-base, 220ms), var(--motion-base, 220ms),
+    var(--motion-base, 220ms), var(--motion-base, 220ms),
+    var(--motion-base, 220ms), var(--motion-base, 220ms),
+    var(--motion-base, 220ms);
+  transition-timing-function: var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* Hides the scrollbar. The element still scrolls (wheel, drag, script). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
