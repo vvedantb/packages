@@ -5,11 +5,15 @@
 - `SheetContent` / `DrawerContent` opt-in `motionBlur?: boolean` (default `false`). When `true`, the sliding vaul content stays transparent and an inner `data-slot="sheet-surface"` holds the fill, shadow, corners and scroll, so `@web-kits/motion-blur` (Echo, 180° shutter) can blur only while the panel moves. Off under `prefers-reduced-motion`. New `surfaceClassName` styles that surface (or the content itself when blur is off). Without the prop, the DOM and classes are unchanged.
 - `Drawer`, `DrawerContent` and the other `Drawer*` names are aliases of the `Sheet*` parts (same implementation), for apps that call the sliding panel a drawer.
 - Dependency: `@web-kits/motion-blur` (`^0.1.0`).
+
+## 0.32.0 (2026-11-02)
+
 - New `tokens/css/type-scale.css`: a `text-*` scale with size-specific tracking, moved from Eva. `tokens.css` imports it. Small text gets positive letter-spacing and large text gets negative letter-spacing, because one value for all sizes is wrong at one end. Line heights are the Tailwind defaults.
   - Tracking: `3xs` and `2xs` `0.01em`, `xs` and `2sm` `0.005em`, `sm` `0em`, `base` `-0.006em`, `lg` `-0.01em`, `xl` `-0.012em`, `2xl` `-0.015em`, `3xl` `-0.018em`, `4xl` `-0.022em`, `5xl` `-0.025em`, `6xl` `-0.028em`, `7xl` `-0.03em`.
   - New tiers: `text-3xs` (10px / 14px), `text-2xs` (11px / 16px) and `text-2sm` (13px / 18px), so call sites do not need `text-[11px]`-style classes.
   - Visible change for apps that import `tokens.css`: every `text-*` class except `text-sm` now sets a letter-spacing. Before, they used Tailwind's default of none. Sizes and line heights are unchanged. A `tracking-*` utility still wins. To change a tier, set its `--text-<tier>--letter-spacing` in the app's own `@theme`.
   - Apps that import CSS files one by one (as Eva does) get nothing until they import `@vvedantb/ui/tokens/css/type-scale.css`.
+- No new dependencies.
 
 ## 0.31.1 (2026-11-02)
 
