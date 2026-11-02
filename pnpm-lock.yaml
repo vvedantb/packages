@@ -88,6 +88,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.3.0)
+      '@web-kits/motion-blur':
+        specifier: ^0.1.0
+        version: 0.1.0(react@19.3.0)
       dayjs:
         specifier: ^1.11.13
         version: 1.11.23
@@ -1980,6 +1983,14 @@ packages:
 
   '@vitest/utils@3.2.7':
     resolution: {integrity: sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw==}
+
+  '@web-kits/motion-blur@0.1.0':
+    resolution: {integrity: sha512-lAOkIj7KOeMgCWDIjgRjZV4sbLpcGuiwHp8r4h6Z4MsJF+D8/b+j35rRddZJsZ9GY84wQTrMlmIwiDE/o8Kt0g==}
+    peerDependencies:
+      react: '>=19'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -5380,6 +5391,10 @@ snapshots:
       '@vitest/pretty-format': 3.2.7
       loupe: 3.2.1
       tinyrainbow: 2.0.0
+
+  '@web-kits/motion-blur@0.1.0(react@19.3.0)':
+    optionalDependencies:
+      react: 19.3.0
 
   accepts@2.0.0:
     dependencies:

@@ -89,6 +89,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@web-kits/motion-blur": "^0.1.0",
     "dayjs": "^1.11.13",
     "katex": "^0.16.45",
     "media-chrome": "^4.14.0",
