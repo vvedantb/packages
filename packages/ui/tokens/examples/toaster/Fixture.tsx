@@ -44,6 +44,7 @@ export function Fixture() {
           <Button onClick={fire}>Show toast</Button>
         </div>
       </main>
+      {/* No `position`: the package default, top-right. */}
       <SonnerToaster
         theme={dark ? "dark" : "light"}
         toastRadius={compact ? "control" : "surface"}

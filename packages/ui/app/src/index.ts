@@ -17,7 +17,9 @@ export {
   fingerprintFromHtml,
 } from "./update/deployFingerprint.js";
 export {
+  showUpdateAvailableToast,
   startUpdateAvailableWatcher,
+  type ShowUpdateAvailableToastOptions,
   type UpdateAvailableWatcherOptions,
   type UpdateToastOptions,
 } from "./update/updateWatcher.js";

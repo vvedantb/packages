@@ -56,7 +56,17 @@ useEffect(
 );
 ```
 
-Options: `origin`, `toast`, `closeConvex?`, `pollMs?` (default 60000), `toastId?` (default `app-update-available`), `enabled?` (default true), `reload?` (default `window.location.reload`). On a changed asset fingerprint it shows a sticky "Update available" toast. Refresh calls `closeConvex` (errors ignored), then reloads. `fingerprintFromHtml` and `fetchDeployFingerprint` are exported too. The fingerprint looks for Vite `/assets/*.js` URLs in the index HTML.
+Options: `origin`, `toast`, `closeConvex?`, `pollMs?` (default 60000), `toastId?` (default `app-update-available`), `enabled?` (default true), `reload?` (default `window.location.reload`). On a changed asset fingerprint it calls `showUpdateAvailableToast` once. `fingerprintFromHtml` and `fetchDeployFingerprint` are exported too. The fingerprint looks for Vite `/assets/*.js` URLs in the index HTML.
+
+`showUpdateAvailableToast({ toast, closeConvex?, toastId?, reload? })` (from 0.31.1) shows the toast on its own, for an app with its own update signal:
+
+```ts
+import { showUpdateAvailableToast, toast } from "@vvedantb/ui";
+
+showUpdateAvailableToast({ toast, closeConvex: () => void convex.close() });
+```
+
+It shows a sticky "Update available" toast, "Refresh to load the latest version.", with a Refresh action. Refresh calls `closeConvex` (errors ignored), then reloads. The same `toastId` replaces an open toast instead of adding a second one. Mount `SonnerToaster`: from 0.31.1 its default `content` class grows the text column, so Refresh sits at the right edge without app classes.
 
 ## Settings chrome
 

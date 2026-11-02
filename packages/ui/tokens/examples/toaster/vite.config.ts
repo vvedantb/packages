@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [tailwindcss()],
   esbuild: { jsx: "automatic" },
   resolve: { dedupe: ["react", "react-dom"] },
-  build: { rollupOptions: { input: ["tokens.html", "compat.html"] } },
+  build: { rollupOptions: { input: ["tokens.html", "compat.html", "update.html"] } },
   server: { fs: { allow: ["../../.."] } },
 });

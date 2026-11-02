@@ -5,7 +5,7 @@ test("root exposes former subpath APIs", () => {
   for (const name of [
     "cn", "toast", "SonnerToaster", "playChime", "useReplyChime", "InputArea",
     "SidebarHeader", "SidebarUpgradeCard", "PillTabs", "SessionsHoverCard",
-    "requestConfirm", "useRequestConfirm", "startUpdateAvailableWatcher",
+    "requestConfirm", "useRequestConfirm", "startUpdateAvailableWatcher", "showUpdateAvailableToast",
     "SettingsPage", "useStableAuth", "tokens",
     "SlideOverPanel", "ToolbarSearchInput", "ConfirmDialog", "SettingsField",
     "CardHeader", "SelectField", "FadePresence", "PanelTransition",

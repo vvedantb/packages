@@ -7,6 +7,7 @@ import {
   hoverChipCloseButtonClassName,
   mergeToastClassNames,
 } from "./sonner";
+import { UiConfigProvider } from "./ui-config";
 
 // sonner's `Toaster` is replaced by a stub that records the props it gets, so
 // rendering `SonnerToaster` exposes what it passes to sonner.
@@ -28,16 +29,17 @@ function render(props: Parameters<typeof SonnerToaster>[0] = {}) {
 }
 
 describe("createToasterClassNames", () => {
-  it("keeps the 0.2.1 default strings", () => {
+  it("keeps the 0.2.1 default strings, plus the 0.31.1 content class and button size", () => {
     expect(createToasterClassNames()).toEqual({
       toast:
         "group toast glass-panel-strong flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground smooth-shadow-ring-md",
+      content: "flex min-w-0 grow flex-col",
       title: "font-medium leading-snug",
       description: "text-[13px] leading-snug text-muted-foreground",
       actionButton:
-        "rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90",
+        "h-7 shrink-0 rounded-control bg-primary px-2.5 text-xs font-medium text-primary-foreground motion-press active:scale-[0.96] hover:bg-primary/90",
       cancelButton:
-        "rounded-lg bg-surface-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-tertiary",
+        "h-7 shrink-0 rounded-control bg-surface-secondary px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-tertiary",
       closeButton:
         "rounded-lg bg-default px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-default/78",
       loader: "text-muted-foreground",
@@ -84,6 +86,95 @@ describe("createToasterClassNames variants", () => {
   });
 });
 
+describe("content grow default", () => {
+  // `unstyled: true` drops sonner's `[data-content] { flex: 1 }`, which left a gap
+  // to the right of the action button. The package class puts the grow back.
+  const grow = "flex min-w-0 grow flex-col";
+
+  it("grows the content column in every variant", () => {
+    expect(createToasterClassNames().content).toBe(grow);
+    expect(createToasterClassNames({ density: "compact", toastRadius: "control" }).content).toBe(grow);
+    expect(render().toastOptions.classNames.content).toBe(grow);
+  });
+
+  it("lets classes.content replace the default, and an empty string remove it", () => {
+    expect(render({ classes: { content: "flex grow" } }).toastOptions.classNames.content).toBe("flex grow");
+    expect(render({ classes: { content: "" } }).toastOptions.classNames.content).toBe("");
+  });
+
+  it("appends toastOptions.classNames.content after the default or the classes entry", () => {
+    expect(
+      render({ toastOptions: { classNames: { content: "gap-0.5" } } }).toastOptions.classNames.content,
+    ).toBe(`${grow} gap-0.5`);
+    expect(
+      render({ classes: { content: "flex" }, toastOptions: { classNames: { content: "grow" } } })
+        .toastOptions.classNames.content,
+    ).toBe("flex grow");
+  });
+
+  it("gives an app config that already sets the grow class one copy of it", () => {
+    renderToStaticMarkup(
+      <UiConfigProvider config={{ SonnerToaster: { classes: { content: grow } } }}>
+        <SonnerToaster />
+      </UiConfigProvider>,
+    );
+    expect(sonner.props.toastOptions.classNames.content).toBe(grow);
+  });
+});
+
+describe("action and cancel button size", () => {
+  // Measured on the fixture Refresh button: Eva's `h-7 … px-2.5 text-xs` is 28px
+  // tall with 10px radius; the 0.31.0 `px-2.5 py-1 text-xs rounded-lg` was 24px
+  // tall with 16px radius. Both 12px text, 10px side padding.
+  const size = ["h-7", "shrink-0", "rounded-control", "px-2.5", "text-xs"];
+
+  it("gives both buttons the same height, padding, radius and text size", () => {
+    const { actionButton, cancelButton } = createToasterClassNames();
+    for (const [name, value] of Object.entries({ actionButton, cancelButton })) {
+      const tokens = value!.split(" ");
+      expect(tokens, name).toEqual(expect.arrayContaining(size));
+      expect(tokens, name).not.toContain("py-1");
+      expect(tokens, name).not.toContain("rounded-lg");
+    }
+  });
+
+  it("uses Eva's press and hover on the action button, and keeps token surfaces on cancel", () => {
+    const { actionButton, cancelButton } = createToasterClassNames();
+    expect(actionButton).toContain("motion-press active:scale-[0.96] hover:bg-primary/90");
+    expect(actionButton).not.toContain("hover:opacity-90");
+    expect(actionButton).not.toContain("transition-opacity");
+    expect(cancelButton).toContain("bg-surface-secondary");
+    expect(cancelButton).toContain("hover:bg-surface-tertiary");
+  });
+
+  it("keeps the button strings in every variant", () => {
+    const defaults = createToasterClassNames();
+    const compact = createToasterClassNames({ density: "compact", toastRadius: "control" });
+    expect(compact.actionButton).toBe(defaults.actionButton);
+    expect(compact.cancelButton).toBe(defaults.cancelButton);
+  });
+
+  it("lets classes.actionButton replace the default, and toastOptions.classNames append", () => {
+    const app = "rounded-lg bg-primary px-3 py-1 text-xs";
+    expect(render({ classes: { actionButton: app } }).toastOptions.classNames.actionButton).toBe(app);
+    expect(render({ classes: { actionButton: "" } }).toastOptions.classNames.actionButton).toBe("");
+    expect(
+      render({ toastOptions: { classNames: { actionButton: "px-3" } } }).toastOptions.classNames
+        .actionButton,
+    ).toBe(`${createToasterClassNames().actionButton} px-3`);
+    expect(
+      render({ classes: { actionButton: app }, toastOptions: { classNames: { actionButton: "px-3" } } })
+        .toastOptions.classNames.actionButton,
+    ).toBe(`${app} px-3`);
+  });
+
+  it("lets classes.cancelButton replace the default", () => {
+    expect(
+      render({ classes: { cancelButton: "bg-muted" } }).toastOptions.classNames.cancelButton,
+    ).toBe("bg-muted");
+  });
+});
+
 describe("mergeToastClassNames", () => {
   it("appends caller classes after the defaults and keeps untouched keys", () => {
     const defaults = createToasterClassNames();
@@ -106,10 +197,38 @@ describe("SonnerToaster defaults", () => {
     expect(props.gap).toBe(12);
     expect(props.expand).toBe(false);
     expect(props.visibleToasts).toBe(4);
+    expect(props.position).toBe("top-right");
   });
 
   it("passes theme through", () => {
     expect(render({ theme: "dark" }).theme).toBe("dark");
+  });
+});
+
+describe("SonnerToaster position", () => {
+  // Sonner's own default is bottom-right; the package default is top-right.
+  it("defaults to top-right, also when position is passed as undefined", () => {
+    expect(render().position).toBe("top-right");
+    expect(render({ position: undefined }).position).toBe("top-right");
+  });
+
+  it("lets a prop override the default", () => {
+    expect(render({ position: "bottom-center" }).position).toBe("bottom-center");
+  });
+
+  it("lets UiConfig.SonnerToaster.position override the default, and a prop override the config", () => {
+    renderToStaticMarkup(
+      <UiConfigProvider config={{ SonnerToaster: { position: "bottom-right" } }}>
+        <SonnerToaster />
+      </UiConfigProvider>,
+    );
+    expect(sonner.props.position).toBe("bottom-right");
+    renderToStaticMarkup(
+      <UiConfigProvider config={{ SonnerToaster: { position: "bottom-right" } }}>
+        <SonnerToaster position="top-left" />
+      </UiConfigProvider>,
+    );
+    expect(sonner.props.position).toBe("top-left");
   });
 });
 

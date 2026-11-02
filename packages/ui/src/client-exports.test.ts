@@ -26,6 +26,7 @@ test("client has the pieces extension pages use", () => {
     "Dialog", "DialogContent", "Select", "Input", "Switch", "Tooltip", "SonnerToaster", "toast",
     "AppWordmark", "AppMark", "APP_ICONS", "IconVibot", "IconVmem", "IconVerve", "IconEva", "IconBee",
     "createThemeProvider", "applyThemeClass", "getSystemTheme", "cn", "tokens",
+    "startUpdateAvailableWatcher", "showUpdateAvailableToast",
   ]) {
     expect(client, name).toHaveProperty(name);
   }

@@ -342,7 +342,9 @@ export { useRequestConfirm } from "../app/src/confirm/useRequestConfirm";
 export { ConfirmSkipHint, skipConfirmTitle } from "../app/src/confirm/ConfirmSkipHint";
 export { fetchDeployFingerprint, fingerprintFromHtml } from "../app/src/update/deployFingerprint";
 export {
+  showUpdateAvailableToast,
   startUpdateAvailableWatcher,
+  type ShowUpdateAvailableToastOptions,
   type UpdateAvailableWatcherOptions,
   type UpdateToastOptions,
 } from "../app/src/update/updateWatcher";
