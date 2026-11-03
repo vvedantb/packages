@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.34.0 (2026-11-03)
+
 - `tokens/css/utilities.css` gains `motion-press`, `motion-base`, `motion-emphasized` and `scrollbar-none`, moved from Eva. Package components already used them (`SonnerToaster`, `BulkActionBar`, `ImageLightbox`, `MediaPreview`, `ToggleSearch`, `ModelPicker`, `ActivityTasks` and others: 12 files), but only Eva defined them. In other apps those classes did nothing, so presses snapped with no transition and `scrollbar-none` showed the scrollbar.
   - `motion-press`: transforms on `--motion-fast` (default `150ms`), colour, shadow and opacity on `--motion-base` (default `220ms`), `--motion-ease-out`. It lists `scale`, `translate` and `rotate`, because Tailwind v4 `scale-*` and `translate-*` set those properties, not `transform`.
   - `motion-base`: colour, shadow, opacity and transforms on `--motion-base`. `motion-emphasized`: transforms, opacity and shadow on `--motion-ease-emphasized` (default `cubic-bezier(0.2, 0.8, 0.2, 1)`).
