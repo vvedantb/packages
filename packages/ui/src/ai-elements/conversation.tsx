@@ -101,7 +101,7 @@ export const ConversationEmptyState = ({
   );
 };
 export type ConversationScrollButtonProps = ComponentProps<typeof Button> & {
-  /** Text after the icon; also the button's `aria-label` and `title`. */
+  /** Text after the icon; also the button's `aria-label` and `title`. Without it, the icon-only button's `aria-label` is "Scroll to bottom". */
   label?: string;
   /** Replaces the arrow icon. */
   icon?: ReactNode;
@@ -184,7 +184,9 @@ export const ConversationScrollButton = ({
     hide();
     scrollToBottom();
   };
-  const motionClass = classes?.scrollButtonMotion ?? "absolute bottom-4 left-0 right-0 z-10 flex justify-center";
+  // The full-width row lets clicks through to the messages; the button takes them.
+  const motionClass =
+    classes?.scrollButtonMotion ?? "pointer-events-none absolute bottom-4 left-0 right-0 z-10 flex justify-center";
   const presence = (
     <LazyMotion features={domAnimation}>
       <AnimatePresence initial={false}>
@@ -198,12 +200,16 @@ export const ConversationScrollButton = ({
             transition={defaults?.transition ?? fastTransition}
           >
             <Button
-              className={merge(classes?.scrollButton ?? [flatInteractiveClass, "rounded-full"], className)}
+              className={merge(
+                classes?.scrollButton ?? [flatInteractiveClass, "rounded-full"],
+                "pointer-events-auto",
+                className,
+              )}
               onClick={handleScrollToBottom}
               size={size ?? defaults?.size ?? "icon"}
               type="button"
               variant="outline"
-              {...(label ? { "aria-label": label, title: label } : {})}
+              {...(label ? { "aria-label": label, title: label } : { "aria-label": "Scroll to bottom" })}
               {...props}
             >
               {icon ?? <IconArrowDown className="size-4" />}

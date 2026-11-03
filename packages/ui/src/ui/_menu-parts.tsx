@@ -25,7 +25,7 @@ export interface MenuConfig {
     /** `RadioItem` indicator. */
     radio?: React.ReactNode;
   };
-  /** Default for `Content` `collisionPadding`. */
+  /** Default for `Content` `collisionPadding` (built-in: `8`). */
   collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
 }
 

@@ -127,7 +127,7 @@ const DropdownMenuContent = React.forwardRef<
         <DropdownMenuPrimitive.Content
           ref={ref}
           sideOffset={sideOffset ?? config?.sideOffset ?? 4}
-          collisionPadding={collisionPadding ?? config?.collisionPadding}
+          collisionPadding={collisionPadding ?? config?.collisionPadding ?? 8}
           className={merge(
             config?.classes?.content ?? menuContentClass,
             fitViewport && fitViewportClass,

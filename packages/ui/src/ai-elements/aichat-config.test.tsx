@@ -219,8 +219,8 @@ describe("no entry", () => {
     const host = await mount(nodes.PromptInput);
     expect(el(host, "button[type=submit]").innerHTML).toContain("animate-spin");
     expect(cls(host, "textarea")).toContain("max-h-48");
-    // The menu trigger stays a button inside the Radix trigger button.
-    expect(host.querySelectorAll("button button")).toHaveLength(1);
+    // The menu trigger is the Radix trigger, not a button inside it.
+    expect(host.querySelectorAll("button button")).toHaveLength(0);
   });
 });
 
@@ -248,7 +248,10 @@ describe("Conversation", () => {
       </Conversation>,
     );
     expect(host.querySelector("button")).not.toBeNull();
-    expect(host.querySelector("button")?.getAttribute("aria-label")).toBeNull();
+    expect(host.querySelector("button")?.getAttribute("aria-label")).toBe("Scroll to bottom");
+    // The full-width row lets clicks through; only the button takes them.
+    expect(cls(host, "[role=log] > div:last-child")).toContain("pointer-events-none");
+    expect(cls(host, "button")).toContain("pointer-events-auto");
   });
 
   it("delays the button, renders frame, label and icon from config, and hides on reset", async () => {
@@ -456,14 +459,14 @@ describe("PromptInput", () => {
     expect(button.querySelector("span.relative > span.absolute")).not.toBeNull();
   });
 
-  it("makes the menu trigger the Radix trigger with menuTriggerAsChild", async () => {
-    const host = await mount(
-      <PromptInputActionMenu><PromptInputActionMenuTrigger aria-label="Add" /></PromptInputActionMenu>,
-      { PromptInput: { menuTriggerAsChild: true } },
-    );
+  it("makes the menu trigger the Radix trigger by default; menuTriggerAsChild: false nests it", async () => {
+    const trigger = <PromptInputActionMenu><PromptInputActionMenuTrigger aria-label="Add" /></PromptInputActionMenu>;
+    const host = await mount(trigger);
     expect(host.querySelectorAll("button")).toHaveLength(1);
     expect(el(host, "button").getAttribute("aria-label")).toBe("Add");
     expect(el(host, "button").getAttribute("aria-haspopup")).toBe("menu");
+    const nested = await mount(trigger, { PromptInput: { menuTriggerAsChild: false } });
+    expect(nested.querySelectorAll("button button")).toHaveLength(1);
   });
 
   it.each(["mouse", "Enter", " "])("add attachments opens the file picker and keeps the menu open (%j)", async (how) => {

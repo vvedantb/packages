@@ -135,6 +135,9 @@ function createToasterClassNames({
     // `unstyled` drops sonner's `[data-content]` grow, so the text column grows
     // here and the action and cancel buttons sit at the right edge.
     content: "flex min-w-0 grow flex-col",
+    // `unstyled` also drops sonner's `position: relative` on `[data-icon]`, so
+    // the absolutely positioned `.sonner-loader` anchors here, not to the toast.
+    icon: "relative",
     title: titleLeading === "5" ? "font-medium leading-5" : "font-medium leading-snug",
     description: descriptionMuted
       ? `${descriptionSize} leading-snug text-muted-foreground!`

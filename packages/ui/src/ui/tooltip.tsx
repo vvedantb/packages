@@ -10,7 +10,7 @@ export interface TooltipConfig {
   delayDuration?: number;
   /** Default for `TooltipContent` `sideOffset`. */
   sideOffset?: number;
-  /** Default for `TooltipContent` `portal`. */
+  /** Default for `TooltipContent` `portal` (built-in: `true`). */
   portal?: boolean;
 }
 
@@ -32,7 +32,7 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 const TooltipContent = React.forwardRef<
   React.ComponentRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> & {
-    /** Render into `document.body` so a clipping parent cannot cut it off. */
+    /** Render into `document.body` so a clipping parent cannot cut it off (default `true`). */
     portal?: boolean;
   }
 >(({ className, sideOffset, portal, ...props }, ref) => {
@@ -50,7 +50,7 @@ const TooltipContent = React.forwardRef<
       {...props}
     />
   );
-  return (portal ?? config?.portal) ? (
+  return (portal ?? config?.portal ?? true) ? (
     <TooltipPrimitive.Portal>{content}</TooltipPrimitive.Portal>
   ) : (
     content

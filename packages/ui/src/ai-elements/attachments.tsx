@@ -317,12 +317,12 @@ export const AttachmentRemove = ({
         remove === undefined && variant === "grid" && [
           "absolute top-2 right-2 size-6 rounded-full p-0",
           cn(flatPanelSubtleClass, flatElevatedSurfaceHoverClass),
-          "opacity-0 transition-opacity group-hover:opacity-100",
+          "reveal-on-hover transition-opacity",
           "[&>svg]:size-3",
         ],
         remove === undefined && variant === "inline" && [
           "size-5 rounded p-0",
-          "opacity-0 transition-opacity group-hover:opacity-100",
+          "reveal-on-hover transition-opacity",
           "[&>svg]:size-2.5",
         ],
         remove === undefined && variant === "list" && ["size-8 shrink-0 rounded p-0", "[&>svg]:size-4"],

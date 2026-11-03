@@ -16,7 +16,7 @@ export interface ButtonGroupConfig {
 }
 
 const buttonGroupBaseClasses =
-  "flex w-fit items-stretch focus-visible:*:z-10 focus-visible:*:relative [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1 [&>[data-slot=select-trigger]:last-of-type]:has-[select[aria-hidden=true]:last-child]:rounded-r-md has-[>[data-slot=button-group]]:gap-2";
+  "flex w-fit items-stretch focus-visible:*:z-10 focus-visible:*:relative [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1 [&>[data-slot=select-trigger]:last-of-type]:has-[select[aria-hidden=true]:last-child]:rounded-r-md has-[>[data-slot=button-group]]:gap-2 max-sm:[&>*]:after:content-none";
 
 const buttonGroupOrientationClasses = {
   horizontal:

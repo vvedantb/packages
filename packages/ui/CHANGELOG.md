@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Overlays portal by default. `TooltipContent` and `HoverCardContent` `portal` default to `true`, and so does `ContextMenuSubContent` (`ContextMenu.subContentPortal`). A clipping or `overflow-hidden` parent can no longer cut them off. Pass `portal={false}` (or set the config key to `false`) to render inline.
+  - Visible change for apps: these overlays now render in `document.body`. CSS that reached them through a parent selector, or a parent stacking context, no longer applies.
+- `PopoverContent`, `DropdownMenuContent`, `ContextMenuContent` and `SelectContent` default `collisionPadding` to `8`, so they keep 8px from the viewport edge. A prop or `UiConfig.<Component>.collisionPadding` still wins. `PopoverContent` `fitViewport` already did this; it now only adds its origin and small-screen caps.
+- `Select`: `triggerSlot` defaults to `true`, so `SelectTrigger` has `data-slot="select-trigger"` and the `ButtonGroup` selectors reach it. Set `Select.triggerSlot: false` to drop it. `SelectContent` adds `max-sm:max-h-[85dvh]`.
+- `Command`: the list adds `max-sm:max-h-[60dvh]`, and each item adds `max-sm:min-h-10` (40px touch rows).
+- `SearchInput` `size="sm"` uses `text-base sm:text-sm` in place of `text-sm`, as `Input` does. Before, `text-sm` overrode the field's `text-base`, so iOS Safari zoomed the page on focus.
+- `ClearInput`: the input adds `max-sm:min-w-0` (as `Input`), and the clear button adds `max-sm:hit-target` (24px button, 40px tap target).
+- `InputGroupButton`: every size (`xs`, `sm`, `icon-xs`, `icon-sm`) adds `max-sm:hit-target`.
+- `ButtonGroup` base adds `max-sm:[&>*]:after:content-none`, so the `max-sm:hit-target` bleed of abutting buttons does not take a neighbour's taps.
+- `SonnerToaster`: `createToasterClassNames()` gains `icon: "relative"`. `unstyled: true` drops sonner's `position: relative` on `[data-icon]`, so the absolute `.sonner-loader` centred on the toast, not the icon slot. `classes.icon` replaces it (`""` removes it).
+- `CodeBlockCopyButton`: without `CodeBlock.copyLabel` and without `children`, the icon-only button gets `aria-label="Copy code"`. No visible change. A caller `aria-label` wins.
+- `ConversationScrollButton`: without `label`, the icon-only button gets `aria-label="Scroll to bottom"`. The default motion row adds `pointer-events-none` and the button adds `pointer-events-auto`, so the full-width row no longer catches clicks over the messages. Position is unchanged.
+- `PromptInput`: `menuTriggerAsChild` defaults to `true`. Before, `PromptInputActionMenuTrigger` rendered a `<button>` inside the Radix trigger `<button>` (invalid HTML). `false` keeps the old nesting. `PromptInputFooter` adds `max-sm:flex-wrap`.
+- `AttachmentRemove` (`grid` and `inline`): `opacity-0 transition-opacity group-hover:opacity-100` becomes `reveal-on-hover transition-opacity`. Touch has no hover, so the button never showed on phones. It now shows on touch and narrow screens, and also on keyboard focus.
+- `ActivityTasks`: the default `markdown` renderer is the package `Markdown`, in place of bare `Streamdown`. Reply blocks now ease in through `useSmoothText`, as 0.30.0 said. Same plugins (`cjk`, `code`, `math`, `mermaid`, now lazy-loaded).
+  - Visible change for apps without `ActivityTasks.markdown`: reasoning and reply text get the `markdown` class (typography from `markdown.css`), the package code blocks, links and callouts, and a `contents` wrapper.
+- `tokens/test/fixtures/default-dom.json` and `legacy-dom.json` are regenerated. The only differences are the classes above, the `data-slot` on the `Select` trigger, `Tooltip` and `HoverCard` content moving to `document.body`, and popper offsets from the new `collisionPadding`.
+- No new dependencies.
+
 ## 0.34.0 (2026-11-03)
 
 - `tokens/css/utilities.css` gains `motion-press`, `motion-base`, `motion-emphasized` and `scrollbar-none`, moved from Eva. Package components already used them (`SonnerToaster`, `BulkActionBar`, `ImageLightbox`, `MediaPreview`, `ToggleSearch`, `ModelPicker`, `ActivityTasks` and others: 12 files), but only Eva defined them. In other apps those classes did nothing, so presses snapped with no transition and `scrollbar-none` showed the scrollbar.
