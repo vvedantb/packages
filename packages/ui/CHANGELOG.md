@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.35.0 (2026-11-03)
+
 - Overlays portal by default. `TooltipContent` and `HoverCardContent` `portal` default to `true`, and so does `ContextMenuSubContent` (`ContextMenu.subContentPortal`). A clipping or `overflow-hidden` parent can no longer cut them off. Pass `portal={false}` (or set the config key to `false`) to render inline.
   - Visible change for apps: these overlays now render in `document.body`. CSS that reached them through a parent selector, or a parent stacking context, no longer applies.
 - `PopoverContent`, `DropdownMenuContent`, `ContextMenuContent` and `SelectContent` default `collisionPadding` to `8`, so they keep 8px from the viewport edge. A prop or `UiConfig.<Component>.collisionPadding` still wins. `PopoverContent` `fitViewport` already did this; it now only adds its origin and small-screen caps.
