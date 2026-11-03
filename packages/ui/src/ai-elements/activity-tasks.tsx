@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, memo, useCallback, useContext, useRef, useState } from "react";
-import type { ComponentProps, ReactNode, Ref } from "react";
+import type { ComponentProps, ComponentType, ReactNode, Ref } from "react";
 import { flushSync } from "react-dom";
 
 import { Collapsible, CollapsibleContent } from "../ui/collapsible";
@@ -14,11 +14,7 @@ import {
   IconSearch,
   IconTerminal2,
 } from "@tabler/icons-react";
-import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
-import { mermaid } from "@streamdown/mermaid";
-import { Streamdown } from "streamdown";
+import { Markdown as PackageMarkdown } from "../markdown/Markdown";
 import { useCn, useUiConfig } from "../ui/ui-config";
 import { Spinner } from "../ui/spinner";
 import { CrossfadeIconSlot } from "../ui/crossfade-icon";
@@ -65,19 +61,9 @@ import {
 import { useStreamingDisclosure } from "./use-streaming-disclosure";
 import { RollingNumber } from "../ui/rolling-number";
 
-const streamdownPlugins = { cjk, code, math, mermaid };
-
-function StreamdownMarkdown({ className, mode, children }: ActivityMarkdownProps) {
-  return (
-    <Streamdown className={className} mode={mode} plugins={streamdownPlugins}>
-      {children}
-    </Streamdown>
-  );
-}
-
-/** The app's Markdown renderer (`UiConfig.ActivityTasks.markdown`), or Streamdown. */
-function useActivityMarkdown() {
-  return useUiConfig("ActivityTasks")?.markdown ?? StreamdownMarkdown;
+/** The app's Markdown renderer (`UiConfig.ActivityTasks.markdown`), or the package `Markdown`. */
+function useActivityMarkdown(): ComponentType<ActivityMarkdownProps> {
+  return useUiConfig("ActivityTasks")?.markdown ?? PackageMarkdown;
 }
 
 const ActivityStreamingHeader = memo(function ActivityStreamingHeader({

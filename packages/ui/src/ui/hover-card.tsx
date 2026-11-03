@@ -16,7 +16,7 @@ export interface HoverCardConfig {
   closeDelay?: number;
   /** Default for `HoverCardContent` `sideOffset`. */
   sideOffset?: number;
-  /** Default for `HoverCardContent` `portal`. */
+  /** Default for `HoverCardContent` `portal` (built-in: `true`). */
   portal?: boolean;
 }
 
@@ -40,7 +40,7 @@ const HoverCardTrigger = HoverCardPrimitive.Trigger;
 const HoverCardContent = React.forwardRef<
   React.ComponentRef<typeof HoverCardPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content> & {
-    /** Render into `document.body` so a clipping parent cannot cut it off. */
+    /** Render into `document.body` so a clipping parent cannot cut it off (default `true`). */
     portal?: boolean;
   }
 >(({ className, align = "center", sideOffset, portal, ...props }, ref) => {
@@ -62,7 +62,7 @@ const HoverCardContent = React.forwardRef<
       {...props}
     />
   );
-  return (portal ?? config?.portal) ? (
+  return (portal ?? config?.portal ?? true) ? (
     <HoverCardPrimitive.Portal>{content}</HoverCardPrimitive.Portal>
   ) : (
     content

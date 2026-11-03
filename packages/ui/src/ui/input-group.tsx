@@ -116,10 +116,10 @@ function InputGroupAddon({
 const inputGroupButtonBaseClasses = "text-sm shadow-none flex gap-2 items-center";
 
 const inputGroupButtonSizeClasses = {
-  xs: "h-7 gap-1 rounded-lg px-2 text-xs [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
-  sm: "h-8 rounded-lg px-2.5 gap-1.5 text-xs has-[>svg]:px-2.5",
-  "icon-xs": "size-7 rounded-lg p-0 has-[>svg]:p-0",
-  "icon-sm": "size-8 rounded-lg p-0 has-[>svg]:p-0",
+  xs: "h-7 gap-1 rounded-lg px-2 text-xs [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2 max-sm:hit-target",
+  sm: "h-8 rounded-lg px-2.5 gap-1.5 text-xs has-[>svg]:px-2.5 max-sm:hit-target",
+  "icon-xs": "size-7 rounded-lg p-0 has-[>svg]:p-0 max-sm:hit-target",
+  "icon-sm": "size-8 rounded-lg p-0 has-[>svg]:p-0 max-sm:hit-target",
 };
 
 const inputGroupButtonVariants = cva(inputGroupButtonBaseClasses, {

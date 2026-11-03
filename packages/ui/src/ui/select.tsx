@@ -33,9 +33,9 @@ export interface SelectConfig {
     /** `SelectItem` indicator. */
     check?: React.ReactNode;
   };
-  /** Adds `data-slot="select-trigger"` to the trigger, for parent selectors such as `ButtonGroup`'s. */
+  /** Adds `data-slot="select-trigger"` to the trigger, for parent selectors such as `ButtonGroup`'s (built-in: `true`). */
   triggerSlot?: boolean;
-  /** Default for `SelectContent` `collisionPadding`. */
+  /** Default for `SelectContent` `collisionPadding` (built-in: `8`). */
   collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
 }
 
@@ -52,7 +52,7 @@ const SelectTrigger = React.forwardRef<
   return (
     <SelectPrimitive.Trigger
       ref={ref}
-      data-slot={config?.triggerSlot ? "select-trigger" : undefined}
+      data-slot={(config?.triggerSlot ?? true) ? "select-trigger" : undefined}
       className={merge(
         config?.classes?.trigger ?? [
           "flex h-10 w-full max-sm:min-w-0 items-center justify-between whitespace-nowrap rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm ring-offset-background placeholder:text-field-placeholder transition-[border-color,box-shadow,background-color] duration-200 ease-smooth disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
@@ -127,10 +127,10 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={ref}
-        collisionPadding={collisionPadding ?? config?.collisionPadding}
+        collisionPadding={collisionPadding ?? config?.collisionPadding ?? 8}
         className={merge(
           classes?.content ?? [
-            "relative z-50 max-h-96 min-w-32 overflow-hidden outline-none",
+            "relative z-50 max-h-96 max-sm:max-h-[85dvh] min-w-32 overflow-hidden outline-none",
             floatingSurfaceClass,
             floatingSurfaceAnimateClass,
           ],

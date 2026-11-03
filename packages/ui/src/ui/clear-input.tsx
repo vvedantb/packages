@@ -49,10 +49,10 @@ export interface ClearInputProps extends Omit<
 }
 
 const inputClasses =
-  "flex h-10 w-full rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50";
+  "flex h-10 w-full max-sm:min-w-0 rounded-field border border-border bg-field-background px-3.5 py-2 text-base sm:text-sm transition-[border-color,box-shadow,background-color] duration-200 ease-smooth placeholder:text-field-placeholder disabled:cursor-not-allowed disabled:opacity-50";
 
 const buttonClasses =
-  "absolute right-2 top-1/2 z-4 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.92] hover:bg-surface-tertiary/50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring";
+  "absolute right-2 top-1/2 z-4 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color,transform] duration-100 ease-out active:scale-[0.92] hover:bg-surface-tertiary/50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring max-sm:hit-target";
 
 const ClearInput = React.forwardRef<HTMLInputElement, ClearInputProps>(
   ({ animation, clearButton, classes, ...props }, ref) => {

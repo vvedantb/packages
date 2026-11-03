@@ -105,8 +105,9 @@ const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
  * (added when no `containerClassName` is given), `textarea`, `footer`,
  * `submit` and `tabItem`. `submitIcons` replace the submit
  * button's icon per status; `submitCrossfade` cross-fades between them.
- * `menuTriggerAsChild` makes `PromptInputActionMenuTrigger` the trigger
- * itself rather than a button inside the menu's trigger button.
+ * `menuTriggerAsChild` (default `true`) makes `PromptInputActionMenuTrigger`
+ * the trigger itself; `false` nests its button inside the menu's trigger
+ * button (invalid HTML).
  */
 export interface PromptInputConfig {
   classes?: {
@@ -823,7 +824,7 @@ export const PromptInputFooter = ({
   return (
     <InputGroupAddon
       align="block-end"
-      className={merge(footer ?? "justify-between gap-1", className)}
+      className={merge(footer ?? "justify-between gap-1 max-sm:flex-wrap", className)}
       {...props}
     />
   );
@@ -895,7 +896,7 @@ export const PromptInputActionMenuTrigger = ({
   children,
   ...props
 }: PromptInputActionMenuTriggerProps) => {
-  const asChild = useUiConfig("PromptInput")?.menuTriggerAsChild;
+  const asChild = useUiConfig("PromptInput")?.menuTriggerAsChild ?? true;
   const button = (
     <PromptInputButton className={className} {...props}>
       {children ?? <IconPlus className="size-4" />}

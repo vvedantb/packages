@@ -101,7 +101,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
 /**
  * `UiConfig.CodeBlock`: `plain` default, and classes that replace the
  * container, the plain-mode `pre`, the copy button and its icon. A
- * `copyLabel` adds a screen-reader label to the copy button.
+ * `copyLabel` adds a screen-reader label to the copy button. Without it, the
+ * icon-only button gets `aria-label="Copy code"`.
  * `copyEveryClick` makes the copy button copy again while it still shows
  * the check; by default those clicks do nothing until it resets.
  */
@@ -482,6 +483,7 @@ export const CodeBlockCopyButton = ({
       onClick={copyToClipboard}
       size={config?.copyButtonSize ?? "icon"}
       variant="ghost"
+      aria-label={config?.copyLabel || children !== undefined ? undefined : "Copy code"}
       {...props}
     >
       {children ?? (iconClass === undefined ? <Icon size={14} /> : <Icon className={iconClass} />)}

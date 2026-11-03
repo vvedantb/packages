@@ -207,14 +207,14 @@ describe("HoverCard config", () => {
     </UI.HoverCard>
   );
 
-  it("renders inline without config and in a portal with `portal`", async () => {
+  it("renders in a portal without config and inline with `portal={false}`", async () => {
     await mount(tree());
-    expect(el("#host").textContent).toContain("Body");
-    await act(async () => root?.unmount());
-    document.body.innerHTML = "";
-    await mount(tree({ portal: true }));
     expect(el("#host").textContent).not.toContain("Body");
     expect(document.body.textContent).toContain("Body");
+    await act(async () => root?.unmount());
+    document.body.innerHTML = "";
+    await mount(tree({ portal: false }));
+    expect(el("#host").textContent).toContain("Body");
   });
 
   it("takes portal, classes and the open delay from config", async () => {
@@ -354,20 +354,20 @@ describe("ContextMenu config", () => {
       el("[data-ctx]").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
     });
 
-  it("keeps w-40 and an inline sub menu without config", async () => {
+  it("keeps w-40 and portals the sub menu without config", async () => {
     await mount(tree());
     await open();
     const menus = document.querySelectorAll('[role="menu"]');
     expect(menus).toHaveLength(2);
     expect(menus[0]?.className).toContain("w-40");
-    expect(menus[0]?.contains(menus[1] ?? null)).toBe(true);
+    expect(menus[0]?.contains(menus[1] ?? null)).toBe(false);
   });
 
-  it("portals the sub menu with the prop", async () => {
-    await mount(tree({ portal: true }));
+  it("renders the sub menu inline with `portal={false}`", async () => {
+    await mount(tree({ portal: false }));
     await open();
     const menus = document.querySelectorAll('[role="menu"]');
-    expect(menus[0]?.contains(menus[1] ?? null)).toBe(false);
+    expect(menus[0]?.contains(menus[1] ?? null)).toBe(true);
   });
 
   it("takes classes, icons and subContentPortal from config", async () => {
@@ -397,10 +397,14 @@ describe("Select config", () => {
     </UI.Select>
   );
 
-  it("has no data-slot and the built-in icons without config", async () => {
+  it("has data-slot and the built-in icons without config; triggerSlot: false drops it", async () => {
     await mount(tree);
-    expect(el('[role="combobox"]').hasAttribute("data-slot")).toBe(false);
+    expect(el('[role="combobox"]').getAttribute("data-slot")).toBe("select-trigger");
     expect(el('[role="combobox"] svg').getAttribute("class")).toContain("text-muted-foreground/85");
+    await act(async () => root?.unmount());
+    document.body.innerHTML = "";
+    await mount(tree, { Select: { triggerSlot: false } });
+    expect(el('[role="combobox"]').hasAttribute("data-slot")).toBe(false);
   });
 
   it("takes triggerSlot, classes and icons from config", async () => {

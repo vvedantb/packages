@@ -150,7 +150,7 @@ const CommandList = React.forwardRef<
   return (
     <CommandPrimitive.List
       ref={ref}
-      className={merge(list ?? "max-h-80 overflow-y-auto overflow-x-hidden pb-2", className)}
+      className={merge(list ?? "max-h-80 max-sm:max-h-[60dvh] overflow-y-auto overflow-x-hidden pb-2", className)}
       {...props}
     />
   );
@@ -225,7 +225,7 @@ const CommandItem = React.forwardRef<
       ref={ref}
       className={merge(
         item ??
-          "relative flex cursor-default gap-2 select-none items-center rounded-menu-item px-2.5 py-2 text-sm outline-none transition-colors data-[disabled=true]:pointer-events-none data-[selected=true]:bg-surface-tertiary/80 data-[selected=true]:text-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+          "relative flex cursor-default gap-2 select-none items-center rounded-menu-item px-2.5 py-2 max-sm:min-h-10 text-sm outline-none transition-colors data-[disabled=true]:pointer-events-none data-[selected=true]:bg-surface-tertiary/80 data-[selected=true]:text-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}

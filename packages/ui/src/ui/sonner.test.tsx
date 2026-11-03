@@ -29,11 +29,12 @@ function render(props: Parameters<typeof SonnerToaster>[0] = {}) {
 }
 
 describe("createToasterClassNames", () => {
-  it("keeps the 0.2.1 default strings, plus the 0.31.1 content class and button size", () => {
+  it("keeps the 0.2.1 default strings, plus the 0.31.1 content class and button size and the relative icon", () => {
     expect(createToasterClassNames()).toEqual({
       toast:
         "group toast glass-panel-strong flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground smooth-shadow-ring-md",
       content: "flex min-w-0 grow flex-col",
+      icon: "relative",
       title: "font-medium leading-snug",
       description: "text-[13px] leading-snug text-muted-foreground",
       actionButton:

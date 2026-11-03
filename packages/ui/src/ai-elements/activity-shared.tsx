@@ -41,7 +41,7 @@ export interface ActivityMarkdownProps {
 export interface ActivityTasksConfig {
   /** Agent name in the streaming header ("<name> is thinking..."). Default "Agent"; the `name` prop wins. */
   name?: string;
-  /** Renders reasoning and mid-turn reply text. Default: `Streamdown`. */
+  /** Renders reasoning and mid-turn reply text. Default: the package `Markdown` (smooth streaming). */
   markdown?: ComponentType<ActivityMarkdownProps>;
   /**
    * An image for `ActivityThinkingIcon` (for example the app's logo mark),

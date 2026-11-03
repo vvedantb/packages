@@ -15,7 +15,7 @@ export interface PopoverConfig {
   classes?: { trigger?: string; content?: string };
   /** Default for `PopoverContent` `sideOffset`. */
   sideOffset?: number;
-  /** Default for `PopoverContent` `collisionPadding`. */
+  /** Default for `PopoverContent` `collisionPadding` (built-in: `8`). */
   collisionPadding?: PopoverContentProps["collisionPadding"];
 }
 
@@ -40,22 +40,20 @@ const PopoverContent = React.forwardRef<
   React.ComponentRef<typeof PopoverPrimitive.Content>,
   PopoverContentProps & {
     /**
-     * Grow from the trigger, keep 8px from the viewport edge (unless
-     * `collisionPadding` is set) and, on small screens, cap width and height.
+     * Grow from the trigger and, on small screens, cap width and height.
      */
     fitViewport?: boolean;
   }
 >(({ className, align = "center", sideOffset, fitViewport, collisionPadding, ...props }, ref) => {
   const config = useUiConfig("Popover");
   const merge = useCn();
-  const padding = collisionPadding ?? config?.collisionPadding;
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         ref={ref}
         align={align}
         sideOffset={sideOffset ?? config?.sideOffset ?? 6}
-        collisionPadding={fitViewport ? (padding ?? 8) : padding}
+        collisionPadding={collisionPadding ?? config?.collisionPadding ?? 8}
         className={merge(
           config?.classes?.content ?? [
             "z-50 w-72 max-sm:max-w-[calc(100vw-2rem)] max-sm:max-h-[85dvh] max-sm:overflow-y-auto p-4 outline-none",

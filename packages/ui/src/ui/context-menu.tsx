@@ -24,7 +24,7 @@ import { useCn, useUiConfig } from "./ui-config";
 
 /** App defaults for `ContextMenu*` (see `UiConfigProvider`). */
 export interface ContextMenuConfig extends MenuConfig {
-  /** Default for `ContextMenuSubContent` `portal`. */
+  /** Default for `ContextMenuSubContent` `portal` (built-in: `true`). */
   subContentPortal?: boolean;
 }
 
@@ -88,7 +88,7 @@ const ContextMenuSubContent = React.forwardRef<
       {...props}
     />
   );
-  return (portal ?? config?.subContentPortal) ? (
+  return (portal ?? config?.subContentPortal ?? true) ? (
     <ContextMenuPrimitive.Portal>{content}</ContextMenuPrimitive.Portal>
   ) : (
     content
@@ -109,7 +109,7 @@ const ContextMenuContent = React.forwardRef<
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.Content
         ref={ref}
-        collisionPadding={collisionPadding ?? config?.collisionPadding}
+        collisionPadding={collisionPadding ?? config?.collisionPadding ?? 8}
         className={merge(config?.classes?.content ?? [menuContentClass, "w-40"], className)}
         onKeyDown={suppressAltKey ? suppressAltKeyDown(onKeyDown) : onKeyDown}
         {...props}
