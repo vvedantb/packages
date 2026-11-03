@@ -11,6 +11,8 @@ import { expectTypeOf } from "vitest";
 import {
   activePlanSlugs,
   createVProModule,
+  GRANTING_STATUSES_ACTIVE_ONLY,
+  GRANTING_STATUSES_ACTIVE_PAST_DUE,
   parseClerkBillingEvent,
   verifyClerkWebhook,
   type ClerkBillingChange,
@@ -28,6 +30,7 @@ const schema = defineSchema({
     clerkUserId: v.string(),
     billingPlanSlugs: v.array(v.string()),
     createdAt: v.number(),
+    billingPlansUpdatedAt: v.optional(v.number()),
   }).index("by_clerk_user", ["clerkUserId"]),
 });
 type DataModel = DataModelFromSchemaDefinition<typeof schema>;
@@ -99,6 +102,45 @@ export function vProModuleTypeChecks(): void {
   {
     expectTypeOf(activePlanSlugs([{ status: "active", plan: { slug: "v_pro" } }])).toEqualTypeOf<string[]>();
     expectTypeOf(parseClerkBillingEvent({ type: "user.created", data: {} })).toEqualTypeOf<ClerkBillingChange | null>();
+  }
+
+  // 0.12.0 options: createUser gets a typed insert ctx; extraPatch is checked against the document
+  {
+    const creating = createVProModule<DataModel>()({
+      table: "accounts",
+      index: "by_clerk_user",
+      clerkIdField: "clerkUserId",
+      planSlugsField: "billingPlanSlugs",
+      grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE,
+      createUser: async (ctx, { clerkId, planSlugs }) => {
+        await ctx.db.insert("accounts", { clerkUserId: clerkId, billingPlanSlugs: planSlugs, createdAt: Date.now() });
+      },
+    });
+    const change: ClerkBillingChange = { kind: "replace", clerkId: "user_a", planSlugs: [] };
+    expectTypeOf(creating.writeBillingChange(mutationCtx, change)).resolves.toEqualTypeOf<boolean>();
+    const timestamped = createVProModule<DataModel>()({
+      table: "accounts",
+      index: "by_clerk_user",
+      clerkIdField: "clerkUserId",
+      planSlugsField: "billingPlanSlugs",
+      grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY,
+      eventMatch: "prefix",
+      extraPatch: () => ({ billingPlansUpdatedAt: Date.now() }),
+    });
+    expectTypeOf(timestamped.parseBillingEvent({ type: "subscription.foo", data: {} })).toEqualTypeOf<ClerkBillingChange | null>();
+    expectTypeOf(parseClerkBillingEvent({ type: "subscription.foo", data: {} }, { eventMatch: "prefix", grantingStatuses: ["active"] })).toEqualTypeOf<ClerkBillingChange | null>();
+
+    const base = { table: "accounts", index: "by_clerk_user", clerkIdField: "clerkUserId", planSlugsField: "billingPlanSlugs" } as const;
+    // @ts-expect-error createUser must insert a full row
+    createVProModule<DataModel>()({ ...base, createUser: async (ctx, { clerkId }) => ctx.db.insert("accounts", { clerkUserId: clerkId }) });
+    // @ts-expect-error extraPatch fields must be on the document
+    createVProModule<DataModel>()({ ...base, extraPatch: () => ({ notAField: 1 }) });
+    // @ts-expect-error onMissingUser "create" needs createUser
+    createVProModule<DataModel>()({ ...base, onMissingUser: "create" });
+    // @ts-expect-error onMissingUser "noop" with createUser is contradictory
+    createVProModule<DataModel>()({ ...base, onMissingUser: "noop", createUser: async () => undefined });
+    // @ts-expect-error unknown eventMatch
+    createVProModule<DataModel>()({ ...base, eventMatch: "regex" });
   }
 
   // rejects wrong contexts and configs

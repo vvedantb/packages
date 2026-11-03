@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createVProModule,
+  GRANTING_STATUSES_ACTIVE_ONLY,
+  GRANTING_STATUSES_ACTIVE_PAST_DUE,
   parseClerkBillingEvent,
   parseVProCompUserIds,
   verifyClerkWebhook,
@@ -12,7 +14,14 @@ import {
 // `planSlugs` by `clerkId`; one stores `billingPlanSlugs` by `clerkUserId`.
 
 type UserRow = { _id: string; _creationTime: number; clerkId: string; planSlugs?: string[]; email?: string };
-type AccountRow = { _id: string; _creationTime: number; clerkUserId: string; billingPlanSlugs?: string[] };
+type AccountRow = {
+  _id: string;
+  _creationTime: number;
+  clerkUserId: string;
+  billingPlanSlugs?: string[];
+  billingPlansUpdatedAt?: number;
+  createdAt?: number;
+};
 
 type DataModel = {
   users: { document: UserRow; indexes: { by_clerk_id: ["clerkId", "_creationTime"] } };
@@ -24,10 +33,19 @@ type FieldEq = { field: string; value: string };
 /** A fake ctx.db: index lookups filter on `field === value`; `unique()` throws on two matches like Convex. */
 function fakeDb<Doc extends { _id: string }>(table: string, rows: Doc[]) {
   const patches: Array<{ id: string; value: object }> = [];
+  const inserts: Array<{ table: string; value: object }> = [];
   return {
     rows,
     patches,
+    inserts,
     db: {
+      insert: async (name: string, value: Omit<Doc, "_id" | "_creationTime">) => {
+        expect(name).toBe(table);
+        const id = `${table}_${rows.length + 1}`;
+        rows.push({ ...value, _id: id, _creationTime: rows.length + 1 } as unknown as Doc);
+        inserts.push({ table: name, value });
+        return id;
+      },
       query(name: string) {
         expect(name).toBe(table);
         return {
@@ -149,6 +167,103 @@ describe("writeBillingChange", () => {
     const unique = fakeDb<AccountRow>("accounts", dupes("accounts"));
     await expect(accounts.writeBillingChange(unique, replace(["v_pro"]))).rejects.toThrow(/more than one/);
     expect(unique.patches).toEqual([]);
+  });
+});
+
+describe("createVProModule options", () => {
+  it("grantingStatuses applies to nextPlanSlugs and writeBillingChange", async () => {
+    const activeOnly = createVProModule<DataModel>()({
+      table: "users",
+      index: "by_clerk_id",
+      clerkIdField: "clerkId",
+      planSlugsField: "planSlugs",
+      grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY,
+    });
+    const activePastDue = createVProModule<DataModel>()({
+      table: "users",
+      index: "by_clerk_id",
+      clerkIdField: "clerkId",
+      planSlugsField: "planSlugs",
+      grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE,
+    });
+    expect(users.nextPlanSlugs({ planSlugs: [] }, itemChange("canceled"))).toEqual(["v_pro"]);
+    expect(activePastDue.nextPlanSlugs({ planSlugs: ["v_pro"] }, itemChange("canceled"))).toEqual([]);
+    expect(activePastDue.nextPlanSlugs({ planSlugs: [] }, itemChange("past_due"))).toEqual(["v_pro"]);
+    expect(activeOnly.nextPlanSlugs({ planSlugs: ["v_pro"] }, itemChange("past_due"))).toEqual([]);
+    const ctx = fakeDb<UserRow>("users", [{ _id: "users_1", _creationTime: 1, clerkId: "user_a", planSlugs: ["v_pro"] }]);
+    expect(await activeOnly.writeBillingChange(ctx, itemChange("past_due"))).toBe(true);
+    expect(ctx.rows[0]?.planSlugs).toEqual([]);
+  });
+
+  it("parseBillingEvent uses the module's grantingStatuses and eventMatch", () => {
+    const prefixActiveOnly = createVProModule<DataModel>()({
+      table: "accounts",
+      index: "by_clerk_user",
+      clerkIdField: "clerkUserId",
+      planSlugsField: "billingPlanSlugs",
+      grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY,
+      eventMatch: "prefix",
+    });
+    const event = {
+      type: "subscription.foo",
+      data: { payer: { user_id: "user_a" }, items: [{ status: "active", plan: { slug: "v_pro" } }, { status: "past_due", plan: { slug: "extra" } }] },
+    };
+    expect(users.parseBillingEvent(event)).toBeNull();
+    expect(prefixActiveOnly.parseBillingEvent(event)).toEqual({ kind: "replace", clerkId: "user_a", planSlugs: ["v_pro"] });
+    expect(users.parseBillingEvent({ ...event, type: "subscription.updated" })).toEqual({ kind: "replace", clerkId: "user_a", planSlugs: ["extra", "v_pro"] });
+  });
+
+  it("extraPatch merges into the patch; the slugs field wins", async () => {
+    const timestamped = createVProModule<DataModel>()({
+      table: "accounts",
+      index: "by_clerk_user",
+      clerkIdField: "clerkUserId",
+      planSlugsField: "billingPlanSlugs",
+      extraPatch: (planSlugs) => ({ billingPlansUpdatedAt: 123, billingPlanSlugs: ["ignored", ...planSlugs] }),
+    });
+    const ctx = fakeDb<AccountRow>("accounts", [{ _id: "accounts_1", _creationTime: 1, clerkUserId: "user_a" }]);
+    expect(await timestamped.writeBillingChange(ctx, replace(["v_pro"]))).toBe(true);
+    expect(ctx.patches).toEqual([{ id: "accounts_1", value: { billingPlansUpdatedAt: 123, billingPlanSlugs: ["v_pro"] } }]);
+    expect(timestamped.planSlugsPatch(["v_pro"])).toEqual({ billingPlanSlugs: ["v_pro"] });
+    // No row and no createUser: still a no-op.
+    expect(await timestamped.writeBillingChange(ctx, replace(["v_pro"], "user_missing"))).toBe(false);
+    expect(ctx.patches).toHaveLength(1);
+  });
+
+  it("createUser inserts a missing row with the next slugs and returns true", async () => {
+    const createUser = vi.fn(async (ctx: { db: { insert(table: "accounts", value: Omit<AccountRow, "_id" | "_creationTime">): Promise<string> } }, args: { clerkId: string; planSlugs: string[] }) => {
+      await ctx.db.insert("accounts", { clerkUserId: args.clerkId, billingPlanSlugs: args.planSlugs, createdAt: 5 });
+    });
+    const creating = createVProModule<DataModel>()({
+      table: "accounts",
+      index: "by_clerk_user",
+      clerkIdField: "clerkUserId",
+      planSlugsField: "billingPlanSlugs",
+      createUser,
+    });
+    const ctx = fakeDb<AccountRow>("accounts", []);
+    expect(await creating.writeBillingChange(ctx, itemChange("active", "v_pro", "user_new"))).toBe(true);
+    expect(createUser).toHaveBeenCalledWith(expect.anything(), { clerkId: "user_new", planSlugs: ["v_pro"] });
+    expect(ctx.inserts).toEqual([{ table: "accounts", value: { clerkUserId: "user_new", billingPlanSlugs: ["v_pro"], createdAt: 5 } }]);
+    // The row now exists: the next change patches it.
+    expect(await creating.writeBillingChange(ctx, itemChange("ended", "v_pro", "user_new"))).toBe(true);
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(ctx.rows[0]?.billingPlanSlugs).toEqual([]);
+    // A non-granting item for a missing row inserts with no slugs.
+    expect(await creating.writeBillingChange(ctx, itemChange("ended", "v_pro", "user_other"))).toBe(true);
+    expect(ctx.inserts[1]).toEqual({ table: "accounts", value: { clerkUserId: "user_other", billingPlanSlugs: [], createdAt: 5 } });
+  });
+
+  it("onMissingUser create needs createUser; createUser needs ctx.db.insert", async () => {
+    const base = { table: "users", index: "by_clerk_id", clerkIdField: "clerkId", planSlugsField: "planSlugs" } as const;
+    expect(() => createVProModule<DataModel>()({ ...base, onMissingUser: "create" } as never)).toThrow(/needs a createUser/);
+    const noop = createVProModule<DataModel>()({ ...base, onMissingUser: "noop" });
+    const ctx = fakeDb<UserRow>("users", []);
+    expect(await noop.writeBillingChange(ctx, replace(["v_pro"]))).toBe(false);
+    expect(ctx.inserts).toEqual([]);
+    const create = createVProModule<DataModel>()({ ...base, onMissingUser: "create", createUser: async () => undefined });
+    const { insert: _insert, ...dbWithoutInsert } = ctx.db;
+    await expect(create.writeBillingChange({ db: dbWithoutInsert }, replace(["v_pro"]))).rejects.toThrow(/ctx\.db\.insert/);
   });
 });
 

@@ -25,6 +25,7 @@ import {
   authenticateClerkBearer,
   authenticateWithTokenCache,
   extractBearerToken,
+  GRANTING_STATUSES_ACTIVE_ONLY,
   hasMcpOAuthTokens,
   hasVPro,
   isAccessTokenExpiring,
@@ -42,7 +43,7 @@ const verifyWebhook = async (request) => JSON.parse(await request.text());
 export const clerkWebhook = httpActionGeneric(async (_ctx, request) => {
   const verified = await verifyClerkWebhook(verifyWebhook, request);
   if (!verified.ok) return new Response(verified.reason, { status: 400 });
-  const change = parseClerkBillingEvent(verified.event);
+  const change = parseClerkBillingEvent(verified.event, { grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY, eventMatch: "prefix" });
   return jsonResponse({ change, pro: change?.kind === "replace" && hasVPro({ planSlugs: change.planSlugs }) });
 });
 

@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.12.0
+
+Config options for the Clerk Billing helpers, so apps whose webhook copies differ from 0.11.0 can adopt them with no change users can see. Additive: every option is optional and defaults to the 0.11.0 behaviour. No new dependency.
+
+### Added
+
+- `ClerkBillingOptions` (`grantingStatuses?`, `eventMatch?`) as an optional last argument to `itemGrantsPlan`, `activePlanSlugs`, `applyItemToPlanSlugs`, `applyBillingChange` and `parseClerkBillingEvent`.
+  - `grantingStatuses`: the item statuses that grant. Default `GRANTING_ITEM_STATUSES` (`active`, `past_due`, `canceled`).
+  - `eventMatch`: `"exact"` (default, the listed event types) or `"prefix"` (any `subscription.*` type gives `replace`, any `subscriptionItem.*` type gives `item`). Read only by `parseClerkBillingEvent`.
+- `GRANTING_STATUSES_ACTIVE_PAST_DUE` (`active`, `past_due`) and `GRANTING_STATUSES_ACTIVE_ONLY` (`active`) presets.
+- `createVProModule` config:
+  - `grantingStatuses` and `eventMatch`, used by `nextPlanSlugs`, `writeBillingChange` and the new `parseBillingEvent`.
+  - `createUser(ctx, { clerkId, planSlugs })`: called by `writeBillingChange` when there is no row, which then returns `true`. The app supplies every other field; the package invents none. `ctx.db.insert` is typed against the table.
+  - `onMissingUser`: `"noop"` (default) or `"create"` (implied by `createUser`). `"create"` without `createUser` is a type error and throws at configure time.
+  - `extraPatch(planSlugs)`: fields merged into the `writeBillingChange` patch of an existing row, typed as `Partial` of the document. The slugs field always wins.
+- `vPro.parseBillingEvent(event)`: `parseClerkBillingEvent` with the module's `grantingStatuses` and `eventMatch`, so the parser and the writer cannot disagree.
+- Types `ClerkBillingOptions`, `VProCreateUser`, `VProCreateUserCtx`. `VProModuleConfig` takes an optional fifth `Doc` type argument. `VProWriterCtx` gains an optional `db.insert`, which a `MutationCtx` has.
+
+### Unchanged
+
+- Stored slugs stay unique and sorted. Apps that stored them unsorted get the same members in a different order.
+- Webhook runtime (V8 or Node), the HTTP status for a missing secret, refetching the subscription on each event, custom JWT plan claims and backfill paging stay in the apps. See `docs/convex.md`.
+
+### Tests
+
+- `tests/convex/clerkBilling.test.ts`: each `grantingStatuses` preset across every helper, `eventMatch` exact against prefix, and prefix giving the same change as exact for every listed type.
+- `tests/convex/vProModule.test.ts`: module `grantingStatuses`, `parseBillingEvent`, `extraPatch`, `createUser` (insert, then patch), `onMissingUser` and a ctx with no `insert`. `tests/convex/vProModule.types.ts`: `createUser` and `extraPatch` against a real Convex schema, and rejected configs.
+- `tests-node/esm-exports.mjs` and `tests-node/bundle.mjs`: the presets and options with no peer installed and in a Convex V8 bundle.
+
 ## 0.11.0
 
 Shared V Pro checks and Clerk Billing webhook helpers, so apps stop keeping their own copies. Additive; nothing in 0.10.0 changes. No new dependency: `@clerk/backend` stays an optional peer and is never imported.

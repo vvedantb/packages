@@ -6,9 +6,12 @@ export {
   applyBillingChange,
   applyItemToPlanSlugs,
   GRANTING_ITEM_STATUSES,
+  GRANTING_STATUSES_ACTIVE_ONLY,
+  GRANTING_STATUSES_ACTIVE_PAST_DUE,
   itemGrantsPlan,
   parseClerkBillingEvent,
   type ClerkBillingChange,
+  type ClerkBillingOptions,
   type ClerkWebhookEventLike,
   type PlanItem,
 } from "./clerkBilling.js";
@@ -123,6 +126,8 @@ export {
 export {
   createVProModule,
   type UserHasVProOptions,
+  type VProCreateUser,
+  type VProCreateUserCtx,
   type VProModuleConfig,
   type VProPlanSlugsFieldOf,
   type VProWriterCtx,

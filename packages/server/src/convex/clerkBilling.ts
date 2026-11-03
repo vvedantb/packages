@@ -11,6 +11,29 @@
  */
 export const GRANTING_ITEM_STATUSES: readonly string[] = ["active", "past_due", "canceled"];
 
+/** `active` and `past_due` grant; `canceled` does not. Pass as `grantingStatuses`. */
+export const GRANTING_STATUSES_ACTIVE_PAST_DUE: readonly string[] = ["active", "past_due"];
+
+/** Only `active` grants. Pass as `grantingStatuses`. */
+export const GRANTING_STATUSES_ACTIVE_ONLY: readonly string[] = ["active"];
+
+/**
+ * Options for the Clerk Billing helpers. Every field is optional; the
+ * defaults are the 0.11.0 behaviour. Use the same `grantingStatuses` when
+ * parsing an event and when applying the change it gives.
+ */
+export type ClerkBillingOptions = {
+  /** Item statuses that grant the item's plan. Default `GRANTING_ITEM_STATUSES`. */
+  readonly grantingStatuses?: readonly string[];
+  /**
+   * How `parseClerkBillingEvent` matches event types. `"exact"` (default)
+   * handles the listed `subscription.*` and `subscriptionItem.*` types only.
+   * `"prefix"` handles any type that starts with `subscription.` or
+   * `subscriptionItem.`. Read only by `parseClerkBillingEvent`.
+   */
+  readonly eventMatch?: "exact" | "prefix";
+};
+
 /**
  * One subscription item. Webhook `data.items` entries and the Clerk backend
  * client's `subscription.subscriptionItems` both fit without mapping. Billing
@@ -54,15 +77,16 @@ const SUBSCRIPTION_ITEM_EVENTS: ReadonlySet<string> = new Set([
   "subscriptionItem.pastDue",
 ]);
 
-export function itemGrantsPlan(item: PlanItem): boolean {
-  return GRANTING_ITEM_STATUSES.includes(item.status);
+/** True when the item's status is one of `options.grantingStatuses` (default `GRANTING_ITEM_STATUSES`). */
+export function itemGrantsPlan(item: PlanItem, options: ClerkBillingOptions = {}): boolean {
+  return (options.grantingStatuses ?? GRANTING_ITEM_STATUSES).includes(item.status);
 }
 
 /** Slugs of the items that grant their plan, unique and sorted. */
-export function activePlanSlugs(items: readonly PlanItem[]): string[] {
+export function activePlanSlugs(items: readonly PlanItem[], options: ClerkBillingOptions = {}): string[] {
   const slugs = new Set<string>();
   for (const item of items) {
-    if (item.plan && itemGrantsPlan(item)) slugs.add(item.plan.slug);
+    if (item.plan && itemGrantsPlan(item, options)) slugs.add(item.plan.slug);
   }
   return [...slugs].sort();
 }
@@ -74,22 +98,28 @@ export function activePlanSlugs(items: readonly PlanItem[]): string[] {
 export function applyItemToPlanSlugs(
   current: readonly string[] | null | undefined,
   item: PlanItem,
+  options: ClerkBillingOptions = {},
 ): string[] {
   const slugs = new Set(current ?? []);
   if (item.plan) {
-    if (itemGrantsPlan(item)) slugs.add(item.plan.slug);
+    if (itemGrantsPlan(item, options)) slugs.add(item.plan.slug);
     else slugs.delete(item.plan.slug);
   }
   return [...slugs].sort();
 }
 
-/** The slugs to store after `change`, given the slugs stored now. Unique and sorted. */
+/**
+ * The slugs to store after `change`, given the slugs stored now. Unique and
+ * sorted. `options.grantingStatuses` decides an `item` change; a `replace`
+ * change was already filtered when it was parsed.
+ */
 export function applyBillingChange(
   current: readonly string[] | null | undefined,
   change: ClerkBillingChange,
+  options: ClerkBillingOptions = {},
 ): string[] {
   if (change.kind === "replace") return [...new Set(change.planSlugs)].sort();
-  return applyItemToPlanSlugs(current, { status: change.status, plan: { slug: change.slug } });
+  return applyItemToPlanSlugs(current, { status: change.status, plan: { slug: change.slug } }, options);
 }
 
 /**
@@ -97,9 +127,14 @@ export function applyBillingChange(
  * changes nothing: another event type, a payer with no `user_id` (an
  * organisation), an item with no status or plan slug, or a subscription with
  * no `items` array. Reads `data` defensively and never throws.
+ *
+ * `options.eventMatch` picks exact types (default) or the `subscription.` and
+ * `subscriptionItem.` prefixes. `options.grantingStatuses` filters the slugs
+ * of a `replace` change.
  */
 export function parseClerkBillingEvent(
   event: ClerkWebhookEventLike | null | undefined,
+  options: ClerkBillingOptions = {},
 ): ClerkBillingChange | null {
   if (!isRecord(event) || typeof event.type !== "string") return null;
   const data = event.data;
@@ -107,15 +142,28 @@ export function parseClerkBillingEvent(
   const clerkId = nonEmptyString(isRecord(data.payer) ? data.payer.user_id : undefined);
   if (clerkId === undefined) return null;
 
-  if (SUBSCRIPTION_EVENTS.has(event.type)) {
+  const kind = eventKind(event.type, options.eventMatch ?? "exact");
+  if (kind === "replace") {
     if (!Array.isArray(data.items)) return null;
-    return { kind: "replace", clerkId, planSlugs: activePlanSlugs(data.items.flatMap(toPlanItem)) };
+    return { kind: "replace", clerkId, planSlugs: activePlanSlugs(data.items.flatMap(toPlanItem), options) };
   }
-  if (SUBSCRIPTION_ITEM_EVENTS.has(event.type)) {
+  if (kind === "item") {
     const [item] = toPlanItem(data);
     if (!item?.plan) return null;
     return { kind: "item", clerkId, status: item.status, slug: item.plan.slug };
   }
+  return null;
+}
+
+function eventKind(type: string, match: "exact" | "prefix"): ClerkBillingChange["kind"] | null {
+  if (match === "prefix") {
+    // "subscriptionItem.x" does not start with "subscription.", so the order does not matter.
+    if (type.startsWith("subscriptionItem.")) return "item";
+    if (type.startsWith("subscription.")) return "replace";
+    return null;
+  }
+  if (SUBSCRIPTION_EVENTS.has(type)) return "replace";
+  if (SUBSCRIPTION_ITEM_EVENTS.has(type)) return "item";
   return null;
 }
 

@@ -431,11 +431,12 @@ Pure helpers for the webhook that keeps the stored slugs current, and a factory 
 | Export | What it does |
 | --- | --- |
 | `verifyClerkWebhook(verifyWebhook, request, options?)` | Verify a Clerk (Svix) webhook. Pass `verifyWebhook` from `@clerk/backend/webhooks`; the event type is inferred from it. The secret is `options.signingSecret`, else `CLERK_WEBHOOK_SIGNING_SECRET` from `options.env` (default `process.env`). Returns `{ ok: true, event }` or `{ ok: false, reason, error }`; never throws. |
-| `parseClerkBillingEvent(event)` | `{ kind: "replace", clerkId, planSlugs }`, `{ kind: "item", clerkId, status, slug }`, or `null` when the event changes nothing. Reads `data` defensively; never throws. |
-| `applyBillingChange(current, change)` | The slugs to store after a change: `replace` overwrites, `item` merges. |
-| `activePlanSlugs(items)` | Slugs of the items that grant their plan, unique and sorted. Takes webhook `data.items` and the Clerk backend client's `subscription.subscriptionItems` as they are. |
-| `applyItemToPlanSlugs(current, item)` | Add the item's slug when it grants, remove it when it does not. |
-| `itemGrantsPlan(item)`, `GRANTING_ITEM_STATUSES` | `active`, `past_due` and `canceled` grant. |
+| `parseClerkBillingEvent(event, options?)` | `{ kind: "replace", clerkId, planSlugs }`, `{ kind: "item", clerkId, status, slug }`, or `null` when the event changes nothing. Reads `data` defensively; never throws. |
+| `applyBillingChange(current, change, options?)` | The slugs to store after a change: `replace` overwrites, `item` merges. |
+| `activePlanSlugs(items, options?)` | Slugs of the items that grant their plan, unique and sorted. Takes webhook `data.items` and the Clerk backend client's `subscription.subscriptionItems` as they are. |
+| `applyItemToPlanSlugs(current, item, options?)` | Add the item's slug when it grants, remove it when it does not. |
+| `itemGrantsPlan(item, options?)`, `GRANTING_ITEM_STATUSES` | By default `active`, `past_due` and `canceled` grant. See [Options](#options). |
+| `GRANTING_STATUSES_ACTIVE_PAST_DUE`, `GRANTING_STATUSES_ACTIVE_ONLY` | Presets for `grantingStatuses`: `["active", "past_due"]` and `["active"]`. |
 | `createVProModule<DataModel>()(config)` | Helpers bound to one users table and its field names. See below. |
 
 ### Events
@@ -446,16 +447,44 @@ Pure helpers for the webhook that keeps the stored slugs current, and a factory 
 | `subscriptionItem.updated`, `.active`, `.canceled`, `.ended`, `.abandoned`, `.incomplete`, `.pastDue` | `item` with `data.status` and `data.plan.slug` |
 | anything else | `null` |
 
-- **Granting statuses.** `active`, `past_due` and `canceled` grant. `canceled` means cancel at period end, so access stays until the item is `ended`. `ended`, `expired`, `abandoned`, `incomplete`, `upcoming` and any other status remove the slug.
+With `eventMatch: "prefix"`, any type that starts with `subscription.` gives `replace` and any type that starts with `subscriptionItem.` gives `item`. The listed types give the same change in both modes.
+
+- **Granting statuses.** By default `active`, `past_due` and `canceled` grant. `canceled` means cancel at period end, so access stays until the item is `ended`. `ended`, `expired`, `abandoned`, `incomplete`, `upcoming` and any other status remove the slug.
 - **Billing period.** Only `status` and `plan.slug` are read. Monthly and yearly items of `v_pro` both store `v_pro`.
 - **Organisation payers.** An event whose `data.payer.user_id` is missing or empty returns `null`, so the app answers 200 and writes nothing.
 - **Malformed data.** A subscription event without an `items` array returns `null` rather than revoking access. An item event without a string `status` or a plan slug returns `null`. Malformed entries in `items` are skipped.
 - **Free plans.** A free plan's slug (for example `free_user`) is stored like any other granting slug. It does not count as V Pro. A subscription with no granting items stores `[]`.
 - **Order.** The helpers do not assume events arrive in order. A subscription event lists every item, so it overwrites the stored set and corrects earlier drift. An item event knows only its own item and merges it. So an `ended` item event after `subscription.active` still removes the slug, and a later `active` item event restores it. One limit: when two items share a slug (for example a monthly and a yearly item of one plan), an item event with a non-granting status for one of them (`ended`, `upcoming`, `abandoned`, `incomplete`) removes the slug while the other still grants. The next subscription event, or a backfill, restores it.
 
+### Options
+
+The pure helpers take an optional `ClerkBillingOptions`. Defaults are the 0.11.0 behaviour, so leaving them out changes nothing.
+
+| Option | Default | Read by | Effect |
+| --- | --- | --- | --- |
+| `grantingStatuses` | `GRANTING_ITEM_STATUSES` (`active`, `past_due`, `canceled`) | `itemGrantsPlan`, `activePlanSlugs`, `applyItemToPlanSlugs`, `applyBillingChange`, `parseClerkBillingEvent` | Item statuses that grant the plan. Any other status removes the slug. |
+| `eventMatch` | `"exact"` | `parseClerkBillingEvent` | `"exact"`: the listed event types only. `"prefix"`: any `subscription.*` or `subscriptionItem.*` type. |
+
+Pass the same `grantingStatuses` to the parser and to the writer. A `replace` change is filtered when it is parsed; an `item` change keeps the raw `status` and is decided when it is applied. Mixed settings give a stored set that neither setting would give. `vPro.parseBillingEvent` and `vPro.writeBillingChange` share the module's settings, so using both avoids the mismatch.
+
+Behaviours an app can keep through config:
+
+| App behaviour | Config |
+| --- | --- |
+| `canceled` (cancel at period end) keeps access until `ended` | default |
+| `past_due` keeps access; `canceled` removes it at once | `grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE` |
+| Only `active` grants | `grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY` |
+| Event types matched by `startsWith("subscription.")` / `startsWith("subscriptionItem.")` | `eventMatch: "prefix"` |
+| Refetch the subscription from Clerk on each billing event, ignoring the payload | Call `activePlanSlugs(subscription.subscriptionItems, { grantingStatuses })` on the fetched items and write a `replace` change |
+| Insert a users row when the webhook arrives first | module `createUser` |
+| Stamp a field on every write (for example `billingPlansUpdatedAt`) | module `extraPatch` |
+| Different stored field names | module `clerkIdField`, `planSlugsField` |
+
+Stored slugs are always unique and sorted. Apps that stored them unsorted see a different order after the next write, but the same members, so plan checks do not change.
+
 ### `verifyClerkWebhook` result
 
-It never throws, so the route needs no `try`. Map both failure reasons to HTTP 400, so Clerk retries:
+It never throws, so the route needs no `try`. Map both failure reasons to an HTTP error so Clerk retries. 400 for both is the suggested mapping; an app that answers 500 for a missing secret can keep doing so by checking `reason`:
 
 | `reason` | When | `verifyWebhook` called |
 | --- | --- | --- |
@@ -482,10 +511,46 @@ export const vPro = createVProModule<DataModel>()({
 });
 ```
 
+Optional config. Every field defaults to the 0.11.0 behaviour.
+
+| Field | Default | Effect |
+| --- | --- | --- |
+| `grantingStatuses` | `GRANTING_ITEM_STATUSES` | Used by `nextPlanSlugs`, `writeBillingChange` and `parseBillingEvent`. |
+| `eventMatch` | `"exact"` | Used by `parseBillingEvent`. |
+| `createUser(ctx, { clerkId, planSlugs })` | none | Called by `writeBillingChange` when there is no row. `ctx.db.insert` is typed against the table, so the app supplies its own fields (for example `createdAt`, `lastSeenAt`); the package adds none. `writeBillingChange` then returns `true`. |
+| `onMissingUser` | `"noop"`, or `"create"` when `createUser` is set | `"create"` without `createUser` is a type error and throws at configure time. `"noop"` with `createUser` is a type error. |
+| `extraPatch(planSlugs)` | none | Extra fields merged into the `writeBillingChange` patch of an existing row, typed as `Partial` of the document. The slugs field always wins. Not used by `planSlugsPatch` or `createUser`. |
+
+```ts
+// Insert a row when the webhook arrives first; only `active` grants; prefix event matching.
+export const vPro = createVProModule<DataModel>()({
+  table: "users",
+  index: "by_clerk_user_id",
+  clerkIdField: "clerkUserId",
+  planSlugsField: "planSlugs",
+  grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY,
+  eventMatch: "prefix",
+  createUser: async (ctx, { clerkId, planSlugs }) => {
+    const now = Date.now();
+    await ctx.db.insert("users", { clerkUserId: clerkId, planSlugs, createdAt: now, lastSeenAt: now });
+  },
+});
+
+// Stamp a timestamp on every write.
+export const vPro = createVProModule<DataModel>()({
+  table: "users",
+  index: "by_clerk_id",
+  clerkIdField: "clerkId",
+  planSlugsField: "billingPlanSlugs",
+  extraPatch: () => ({ billingPlansUpdatedAt: Date.now() }),
+});
+```
+
 | Function | Semantics |
 | --- | --- |
-| `writeBillingChange(ctx, change)` | Look up the row by `change.clerkId` through the index, then `ctx.db.patch(row._id, { [planSlugsField]: next })`. Returns `false` with no write when there is no row (the next event or a backfill fills it in), otherwise `true`. A `MutationCtx` fits without a cast. |
-| `nextPlanSlugs(user, change)` | `applyBillingChange(planSlugsOf(user), change)`. |
+| `writeBillingChange(ctx, change)` | Look up the row by `change.clerkId` through the index, then `ctx.db.patch(row._id, { ...extraPatch?.(next), [planSlugsField]: next })`. With no row: returns `false` with no write (the next event or a backfill fills it in), or calls `createUser` and returns `true`. Otherwise `true`. A `MutationCtx` fits without a cast. |
+| `nextPlanSlugs(user, change)` | `applyBillingChange(planSlugsOf(user), change, { grantingStatuses })`. |
+| `parseBillingEvent(event)` | `parseClerkBillingEvent(event, { grantingStatuses, eventMatch })`. |
 | `planSlugsOf(user)` | The stored slugs; `[]` for no row, a missing field or a non-array value. |
 | `planSlugsPatch(planSlugs)` | `{ [planSlugsField]: [...planSlugs] }`, for your own `ctx.db.patch`. |
 | `userHasVPro(user, { identity?, compIds? })` | `hasVPro` over the row's stored slugs and Clerk id, plus the identity and comp ids given. |
@@ -557,6 +622,14 @@ await ctx.runMutation(internal.clerkBilling.applyBillingChangeInternal, {
 ```
 
 Moving from an app copy: `planSlugsFromItems` is `activePlanSlugs`. `userHasVPlan(user, env)` is `vPro.userHasVPro(user, { compIds: parseVProCompUserIds(env.V_PRO_COMP_USER_IDS) })`. `identityHasVPlan(identity)` is `hasVPlan(identity)`. The replace and apply-item mutations can become one `writeBillingChange` mutation, or keep their names and call `vPro.writeBillingChange` with `{ kind: "replace", ... }` or `{ kind: "item", ... }`. Stays in the apps: the route, the mutation and query wrappers, the paged user listing and the backfill action.
+
+Also stays in the apps, by design:
+
+- **Webhook runtime.** V8 `httpAction` or a Node action that verifies a forwarded body and headers. `verifyClerkWebhook` takes any `verifyWebhook`-shaped function, so a Node action can pass a wrapper around Svix's `Webhook`.
+- **HTTP status for a missing secret.** Map `reason` to 400 or 500 in the route.
+- **Refetch on each event.** An app that ignores the payload and refetches the subscription from Clerk calls `activePlanSlugs` with its `grantingStatuses` on the fetched items.
+- **Custom JWT claims.** Checks on app-specific claims (for example a custom `plans` or `plan` claim) stay beside `hasVPro`; `hasVPro` reads only `pla`.
+- **Backfill.** Page size, scheduling and how a 404 from Clerk is stored. Pass the same `grantingStatuses` to `activePlanSlugs` as the webhook uses.
 
 ## Develop
 

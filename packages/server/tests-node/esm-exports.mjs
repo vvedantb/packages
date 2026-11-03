@@ -56,7 +56,8 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `if (m.MCP_TOKEN_CACHE_TTL_MS !== 300000 || m.MCP_TOKEN_CACHE_PURGE_BATCH !== 500 || m.MCP_TOKEN_CACHE_TABLE !== "mcpTokenCache") throw new Error("token cache constants");\n` +
       `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n` +
       `if (m.V_PRO_PLAN_KEY !== "v_pro" || !m.hasVPlan({ pla: "u:v_pro" }) || m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n` +
-      `if (m.GRANTING_ITEM_STATUSES.join() !== "active,past_due,canceled") throw new Error("granting statuses");\n`,
+      `if (m.GRANTING_ITEM_STATUSES.join() !== "active,past_due,canceled") throw new Error("granting statuses");\n` +
+      `if (m.GRANTING_STATUSES_ACTIVE_PAST_DUE.join() !== "active,past_due" || m.GRANTING_STATUSES_ACTIVE_ONLY.join() !== "active") throw new Error("granting presets");\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });
@@ -113,7 +114,13 @@ test("without @clerk/backend: webhook verify (injected), billing events and the 
       `assert.deepEqual(vPro.planSlugsPatch(vPro.nextPlanSlugs(null, change)), { billingPlanSlugs: ["v_pro"] });\n` +
       `assert.equal(m.hasVPro({ planSlugs: ["v_pro"] }), true);\n` +
       `assert.equal(m.hasVPro({ clerkId: "user_b", compIds: m.parseVProCompUserIds("user_b, user_c") }), true);\n` +
-      `assert.equal(m.hasVPro({ identity: null, planSlugs: ["vibot_pro"] }), false);\n`,
+      `assert.equal(m.hasVPro({ identity: null, planSlugs: ["vibot_pro"] }), false);\n` +
+      `const opts = { grantingStatuses: m.GRANTING_STATUSES_ACTIVE_ONLY, eventMatch: "prefix" };\n` +
+      `const pastDue = { type: "subscription.other", data: { payer: { user_id: "user_a" }, items: [{ status: "past_due", plan: { slug: "v_pro" } }] } };\n` +
+      `assert.equal(m.parseClerkBillingEvent(pastDue), null);\n` +
+      `assert.deepEqual(m.parseClerkBillingEvent(pastDue, opts), { kind: "replace", clerkId: "user_a", planSlugs: [] });\n` +
+      `const strict = m.createVProModule()({ table: "users", index: "by_clerk_id", clerkIdField: "clerkId", planSlugsField: "billingPlanSlugs", ...opts });\n` +
+      `assert.deepEqual(strict.parseBillingEvent(pastDue), { kind: "replace", clerkId: "user_a", planSlugs: [] });\n`,
   );
   assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
 });

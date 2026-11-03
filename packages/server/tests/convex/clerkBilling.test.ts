@@ -4,10 +4,13 @@ import {
   applyBillingChange,
   applyItemToPlanSlugs,
   GRANTING_ITEM_STATUSES,
+  GRANTING_STATUSES_ACTIVE_ONLY,
+  GRANTING_STATUSES_ACTIVE_PAST_DUE,
   hasVPro,
   itemGrantsPlan,
   parseClerkBillingEvent,
   type ClerkBillingChange,
+  type ClerkBillingOptions,
   type ClerkWebhookEventLike,
 } from "@vvedantb/server";
 
@@ -350,5 +353,105 @@ describe("event sequences (Clerk does not guarantee order)", () => {
         ["v_pro"],
       ),
     ).toEqual(["v_pro"]);
+  });
+});
+
+// Per-app behaviour from config. Defaults are the 0.11.0 behaviour.
+const PRESETS: Array<{ app: string; options: ClerkBillingOptions; grants: string[] }> = [
+  { app: "default", options: {}, grants: ["active", "past_due", "canceled"] },
+  { app: "active and past_due", options: { grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE }, grants: ["active", "past_due"] },
+  { app: "active only", options: { grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY }, grants: ["active"] },
+];
+const STATUSES = ["active", "past_due", "canceled", "ended", "upcoming"];
+
+describe("grantingStatuses option", () => {
+  it("exports the presets", () => {
+    expect([...GRANTING_STATUSES_ACTIVE_PAST_DUE]).toEqual(["active", "past_due"]);
+    expect([...GRANTING_STATUSES_ACTIVE_ONLY]).toEqual(["active"]);
+  });
+
+  it.each(PRESETS)("itemGrantsPlan grants only the configured statuses: $app", ({ options, grants }) => {
+    for (const status of STATUSES) {
+      expect(itemGrantsPlan({ status, plan: { slug: "v_pro" } }, options), status).toBe(grants.includes(status));
+    }
+  });
+
+  it.each(PRESETS)("activePlanSlugs keeps only configured statuses: $app", ({ options, grants }) => {
+    const items = STATUSES.map((status) => ({ status, plan: { slug: `plan_${status}` } }));
+    expect(activePlanSlugs(items, options)).toEqual(grants.map((status) => `plan_${status}`).sort());
+  });
+
+  it.each(PRESETS)("an item change adds or removes by the configured statuses: $app", ({ options, grants }) => {
+    for (const status of STATUSES) {
+      const expected = grants.includes(status) ? ["extra", "v_pro"] : ["extra"];
+      expect(applyItemToPlanSlugs(["extra", "v_pro"], { status, plan: { slug: "v_pro" } }, options), status).toEqual(expected);
+      expect(applyBillingChange(["extra"], { kind: "item", clerkId: "user_a", status, slug: "v_pro" }, options), status).toEqual(expected);
+    }
+  });
+
+  it.each(PRESETS)("parseClerkBillingEvent filters a replace by the configured statuses: $app", ({ options, grants }) => {
+    const event = subscriptionEvent("subscription.updated", STATUSES.map((status) => item(status, `plan_${status}`)));
+    expect(parseClerkBillingEvent(event, options)).toEqual({
+      kind: "replace",
+      clerkId: "user_a",
+      planSlugs: grants.map((status) => `plan_${status}`).sort(),
+    });
+  });
+
+  it("active-only removes the slug on past_due and canceled item events; the default keeps it", () => {
+    const events = [
+      subscriptionEvent("subscription.active", [item("active", "v_pro")]),
+      itemEvent("subscriptionItem.pastDue", "past_due", "v_pro"),
+    ];
+    const fold = (options: ClerkBillingOptions) =>
+      events.reduce<string[]>((slugs, event) => {
+        const change = parseClerkBillingEvent(event, options);
+        return change ? applyBillingChange(slugs, change, options) : slugs;
+      }, []);
+    expect(fold({})).toEqual(["v_pro"]);
+    expect(fold({ grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE })).toEqual(["v_pro"]);
+    expect(fold({ grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY })).toEqual([]);
+    expect(applyBillingChange(["v_pro"], { kind: "item", clerkId: "user_a", status: "canceled", slug: "v_pro" }, { grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE })).toEqual([]);
+  });
+
+  it("an empty list grants nothing", () => {
+    expect(itemGrantsPlan({ status: "active", plan: { slug: "v_pro" } }, { grantingStatuses: [] })).toBe(false);
+  });
+});
+
+describe("eventMatch option", () => {
+  const unlisted = subscriptionEvent("subscription.foo", [item("active", "v_pro")]);
+  const unlistedItem = itemEvent("subscriptionItem.foo", "active", "v_pro");
+
+  it("exact (default) ignores unlisted subscription types", () => {
+    expect(parseClerkBillingEvent(unlisted)).toBeNull();
+    expect(parseClerkBillingEvent(unlisted, { eventMatch: "exact" })).toBeNull();
+    expect(parseClerkBillingEvent(unlistedItem)).toBeNull();
+  });
+
+  it("prefix handles any subscription. or subscriptionItem. type", () => {
+    expect(parseClerkBillingEvent(unlisted, { eventMatch: "prefix" })).toEqual({ kind: "replace", clerkId: "user_a", planSlugs: ["v_pro"] });
+    expect(parseClerkBillingEvent(unlistedItem, { eventMatch: "prefix" })).toEqual({ kind: "item", clerkId: "user_a", status: "active", slug: "v_pro" });
+  });
+
+  it.each([...SUBSCRIPTION_TYPES, ...ITEM_TYPES])("prefix gives the same change as exact for %s", (type) => {
+    const event = type.startsWith("subscriptionItem.")
+      ? itemEvent(type, "active", "v_pro")
+      : subscriptionEvent(type, [item("active", "v_pro")]);
+    expect(parseClerkBillingEvent(event, { eventMatch: "prefix" })).toEqual(parseClerkBillingEvent(event));
+  });
+
+  it("prefix still ignores other types, organisation payers and malformed data", () => {
+    const prefix = { eventMatch: "prefix" } as const;
+    for (const event of [
+      { type: "user.created", data: { payer: userPayer } },
+      { type: "subscriptions.active", data: { payer: userPayer, items: [] } },
+      { type: "subscription", data: { payer: userPayer, items: [] } },
+      subscriptionEvent("subscription.foo", [item("active", "v_pro")], orgPayer),
+      { type: "subscription.foo", data: { payer: userPayer } },
+      itemEvent("subscriptionItem.foo", "active", null),
+    ]) {
+      expect(parseClerkBillingEvent(event, prefix), event.type).toBeNull();
+    }
   });
 });
