@@ -1,6 +1,6 @@
 import * as SwitchPrimitives from "@rn-primitives/switch";
 import * as React from "react";
-import { Platform, type ViewStyle } from "react-native";
+import { Platform, type ViewProps, type ViewStyle } from "react-native";
 import { cn } from "../cn";
 
 type SwitchProps = React.ComponentPropsWithoutRef<
@@ -13,7 +13,7 @@ type SwitchProps = React.ComponentPropsWithoutRef<
    * which spreads `style`, so these are the only styles applied there.
    */
   trackStyle?: ViewStyle;
-  thumbStyle?: ViewStyle;
+  thumbStyle?: ViewProps["style"];
 };
 
 const Switch = React.forwardRef<

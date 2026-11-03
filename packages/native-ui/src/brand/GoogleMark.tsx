@@ -1,4 +1,4 @@
-import { Platform, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, type ViewProps } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { svgA11yProps } from "../svgA11y";
 
@@ -9,7 +9,7 @@ export type GoogleMarkProps = {
   title?: string;
   /** Set as `data-testid` on web, where `Svg` does not map `testID`. */
   testID?: string;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewProps["style"];
 };
 
 /** The four paths of the Google "G" on the 24 grid, each in its brand colour. */

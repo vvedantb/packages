@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Types for React Native 0.88 apps.** With React Native 0.88, Expo SDK 58 (its `expo-env.d.ts` and the react-native-web types widen `ViewStyle` with `position: "fixed"` and `backgroundImage`) and react-native-svg 15, the shipped `src/` failed the app's `tsc`: a `ViewStyle` is no longer assignable to a View `style`. Apps no longer need a local patch for it.
+  - `AppIcons` (every `Icon*`), `AppMark` and `GoogleMark`: `style` is `ViewProps["style"]`, not `StyleProp<ViewStyle>`. The glyph props are typed as react-native-svg `GProps`.
+  - `Switch` primitive (`/primitives`): `thumbStyle` is `ViewProps["style"]`, not `ViewStyle`. Wider, so existing callers still compile.
+  - `floatingShadow`: typed with its shadow keys only (`shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`, `boxShadow`), not `ViewStyle`. Still assignable to `ViewStyle` and a View `style`, and `floatingShadow.shadowColor` and the rest still compile. Left to inference it would be `{}`. Other `ViewStyle` keys (such as `elevation`) are no longer on its type; it never set them.
+  - `types/peers.d.ts` (the typecheck stub, not shipped) exports `GProps`.
+- New `tests/styleTypes.test.ts` (7 tests): source contracts for these types.
+- Types only; no runtime change. No new dependencies.
+
 ## 0.6.0 (2026-11-02)
 
 - **`Button` is a pill by default**, as the web `Button` from `@vvedantb/ui` 0.31.0. New prop `shape`: `"pill"` (default) or `"rounded"`, with the type `ButtonShape` (root, `/button` and `/primitives`).

@@ -1,5 +1,5 @@
-import { Platform, type StyleProp, type ViewStyle } from "react-native";
-import Svg, { G, Path } from "react-native-svg";
+import { Platform, type ViewProps } from "react-native";
+import Svg, { G, Path, type GProps } from "react-native-svg";
 import { svgA11yProps } from "../svgA11y";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
@@ -26,7 +26,7 @@ export type AppIconProps = {
   align?: "center" | "start";
   /** Set as `data-testid` on web, where `Svg` does not map `testID`. */
   testID?: string;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewProps["style"];
 };
 
 export type AppIconComponent = ((props: AppIconProps) => React.JSX.Element) & {
@@ -54,7 +54,7 @@ function createAppIcon(app: AppName, displayName: string): AppIconComponent {
       stroke === undefined
         ? markStrokeWidth(app)
         : stroke * (viewBoxSide(app) / size);
-    const glyphProps =
+    const glyphProps: GProps =
       kind === "fill"
         ? { fill }
         : {
