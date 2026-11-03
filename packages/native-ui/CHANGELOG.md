@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.1 (2026-11-03)
+
 - **Types for React Native 0.88 apps.** With React Native 0.88, Expo SDK 58 (its `expo-env.d.ts` and the react-native-web types widen `ViewStyle` with `position: "fixed"` and `backgroundImage`) and react-native-svg 15, the shipped `src/` failed the app's `tsc`: a `ViewStyle` is no longer assignable to a View `style`. Apps no longer need a local patch for it.
   - `AppIcons` (every `Icon*`), `AppMark` and `GoogleMark`: `style` is `ViewProps["style"]`, not `StyleProp<ViewStyle>`. The glyph props are typed as react-native-svg `GProps`.
   - `Switch` primitive (`/primitives`): `thumbStyle` is `ViewProps["style"]`, not `ViewStyle`. Wider, so existing callers still compile.
