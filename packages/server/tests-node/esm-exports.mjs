@@ -12,7 +12,7 @@ let bare;
 
 before(() => {
   build();
-  // No peer installed: no zod, convex, @clerk/backend, @modelcontextprotocol/sdk or QuickJS.
+  // No peer installed: no zod, convex, @clerk/backend, @modelcontextprotocol/sdk, QuickJS, ai or @ai-sdk/gateway.
   bare = installFixture("esm");
 });
 
@@ -26,9 +26,10 @@ function runIn(dir, name, source) {
   return spawnSync(process.execPath, [file], { cwd: dir, encoding: "utf8" });
 }
 
-test("exports map has only the root and package.json", () => {
-  assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./package.json"]);
+test("exports map has the root, ./ai and package.json", () => {
+  assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./ai", "./package.json"]);
   assert.deepEqual(pkg.exports["."], { types: "./dist/index.d.ts", import: "./dist/index.js" });
+  assert.deepEqual(pkg.exports["./ai"], { types: "./dist/ai/index.d.ts", import: "./dist/ai/index.js" });
 });
 
 test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
@@ -57,7 +58,11 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n` +
       `if (m.V_PRO_PLAN_KEY !== "v_pro" || !m.hasVPlan({ pla: "u:v_pro" }) || m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n` +
       `if (m.GRANTING_ITEM_STATUSES.join() !== "active,past_due,canceled") throw new Error("granting statuses");\n` +
-      `if (m.GRANTING_STATUSES_ACTIVE_PAST_DUE.join() !== "active,past_due" || m.GRANTING_STATUSES_ACTIVE_ONLY.join() !== "active") throw new Error("granting presets");\n`,
+      `if (m.GRANTING_STATUSES_ACTIVE_PAST_DUE.join() !== "active,past_due" || m.GRANTING_STATUSES_ACTIVE_ONLY.join() !== "active") throw new Error("granting presets");\n` +
+      // The AI Gateway helpers are only on the ./ai subpath.
+      `for (const name of ["classifyGatewayError", "gatewayServiceTier", "readGatewayCost", "FLEX_GATEWAY_PROVIDER_OPTIONS"]) {\n` +
+      `  if (name in m) throw new Error("root exports " + name);\n` +
+      `}\n`,
   );
   assert.equal(run.status, 0, `import failed:\n${run.stderr}`);
 });
@@ -196,6 +201,94 @@ test("with the SDK installed, a non-interactive provider rejects with the SDK's 
         `assert.equal(error.message, "Sign in first");\n`,
     );
     assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test(`${pkg.name}/ai needs ai and @ai-sdk/gateway: without them it fails with a missing package`, () => {
+  const run = runIn(
+    bare,
+    "ai-no-peers",
+    `import assert from "node:assert/strict";\n` +
+      `await assert.rejects(import(${JSON.stringify(`${pkg.name}/ai`)}), (err) => err.code === "ERR_MODULE_NOT_FOUND" && /'ai'|'@ai-sdk\\/gateway'/.test(err.message));\n`,
+  );
+  assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+});
+
+test(`with ai and @ai-sdk/gateway installed, ${pkg.name}/ai runs from the built package`, () => {
+  const dir = installFixture("ai", { ai: "ai", "@ai-sdk/gateway": "@ai-sdk/gateway" });
+  try {
+    const run = runIn(
+      dir,
+      "ai",
+      `import assert from "node:assert/strict";\n` +
+        `import { GatewayRateLimitError } from "@ai-sdk/gateway";\n` +
+        `import { RetryError } from "ai";\n` +
+        `import * as m from ${JSON.stringify(`${pkg.name}/ai`)};\n` +
+        `assert.deepEqual(Object.keys(m).sort(), ["FLEX_GATEWAY_PROVIDER_OPTIONS", "FLEX_PROVIDER_OPTIONS", "classifyGatewayError", "errorMessageOf",\n` +
+        `  "gatewayServiceTier", "gatewayTier", "readGatewayCost", "withFlexGatewayOptions"]);\n` +
+        `assert.deepEqual(m.gatewayServiceTier("default"), {});\n` +
+        `assert.deepEqual(m.FLEX_PROVIDER_OPTIONS, { gateway: { serviceTier: "flex" } });\n` +
+        `assert.deepEqual(m.withFlexGatewayOptions({ alibaba: { enableThinking: false } }), { gateway: { serviceTier: "flex" }, alibaba: { enableThinking: false } });\n` +
+        `assert.equal(m.readGatewayCost({ gateway: { marketCost: "0.5" } }), 0.5);\n` +
+        `const retry = new RetryError({ message: "x", reason: "maxRetriesExceeded", errors: [new GatewayRateLimitError({ message: "slow" })] });\n` +
+        `assert.deepEqual(m.classifyGatewayError(retry), { kind: "rate_limit", message: "slow", retryable: true, statusCode: 429 });\n` +
+        `assert.deepEqual(m.classifyGatewayError(new GatewayRateLimitError({ message: "x", statusCode: 402 })).kind, "quota");\n`,
+    );
+    assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test(`the published ${pkg.name}/ai types check on their own and fit the AI SDK`, () => {
+  const dir = installFixture("ai-types", { ai: "ai", "@ai-sdk/gateway": "@ai-sdk/gateway", zod: "zod", "@types/node": "@types/node" });
+  try {
+    writeFileSync(
+      join(dir, "consumer.ts"),
+      `import { generateText, type ProviderMetadata } from "ai";
+import {
+  classifyGatewayError,
+  FLEX_GATEWAY_PROVIDER_OPTIONS,
+  gatewayTier,
+  readGatewayCost,
+  withFlexGatewayOptions,
+  type GatewayErrorKind,
+  type GatewayFailure,
+  type GatewayServiceTier,
+} from "${pkg.name}/ai";
+
+type ProviderOptions = NonNullable<Parameters<typeof generateText>[0]["providerOptions"]>;
+const tier: GatewayServiceTier = "flex";
+const options: ProviderOptions[] = [gatewayTier(tier), FLEX_GATEWAY_PROVIDER_OPTIONS, withFlexGatewayOptions({ alibaba: { enableThinking: false } })];
+declare const metadata: ProviderMetadata | undefined;
+const cost: number | undefined = readGatewayCost(metadata);
+const failure: GatewayFailure = classifyGatewayError(new Error("x"));
+const kind: GatewayErrorKind = failure.kind;
+export { cost, kind, options };
+`,
+    );
+    const compilerOptions = {
+      target: "ES2022",
+      module: "NodeNext",
+      moduleResolution: "NodeNext",
+      lib: ["ES2022", "DOM"],
+      strict: true,
+      noEmit: true,
+      types: ["node"],
+    };
+    // Our declarations import nothing from the SDK, so check them alone with skipLibCheck off. The SDK's own
+    // declarations need @types/json-schema, which is not installed here, so the consumer check skips lib checks.
+    const checks = {
+      "tsconfig.dist.json": { compilerOptions: { ...compilerOptions, skipLibCheck: false }, files: [`node_modules/${pkg.name}/dist/ai/index.d.ts`] },
+      "tsconfig.json": { compilerOptions: { ...compilerOptions, skipLibCheck: true }, files: ["consumer.ts"] },
+    };
+    for (const [file, config] of Object.entries(checks)) {
+      writeFileSync(join(dir, file), JSON.stringify(config));
+      const check = spawnSync(process.execPath, [tsc, "-p", file], { cwd: dir, encoding: "utf8" });
+      assert.equal(check.status, 0, `tsc -p ${file} failed:\n${check.stdout}${check.stderr}`);
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

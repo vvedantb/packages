@@ -356,7 +356,7 @@ describe("event sequences (Clerk does not guarantee order)", () => {
   });
 });
 
-// Per-app behaviour from config. Defaults are the 0.11.0 behaviour.
+// Per-app behaviour from config. Leaving the options out keeps the defaults.
 const PRESETS: Array<{ app: string; options: ClerkBillingOptions; grants: string[] }> = [
   { app: "default", options: {}, grants: ["active", "past_due", "canceled"] },
   { app: "active and past_due", options: { grantingStatuses: GRANTING_STATUSES_ACTIVE_PAST_DUE }, grants: ["active", "past_due"] },

@@ -16,8 +16,8 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.35.0", () => {
-  assert.equal(pkg.version, "0.35.0");
+test("version is 0.36.0", () => {
+  assert.equal(pkg.version, "0.36.0");
 });
 
 test("field radius matches rounded-control (10px cap)", () => {
@@ -163,11 +163,14 @@ test("native-ui keeps an identical copy of the native tokens", () => {
   assert.equal(body(copy), body(join(TOKENS, "src/native.ts")));
 });
 
-test("root, ./brand and ./client are the only JS entries; other exports are CSS or the Tailwind preset", () => {
+test("root, ./brand, ./logos, ./icons/animated and ./client are the only JS entries; other exports are CSS or the Tailwind preset", () => {
   assert.equal(pkg.exports["./brand"].default, "./src/brand/index.ts");
+  assert.deepEqual(pkg.exports["./logos"], { types: "./src/logos/index.ts", default: "./src/logos/index.ts" });
+  assert.deepEqual(pkg.exports["./icons/animated"], { types: "./src/icons/animated/index.ts", default: "./src/icons/animated/index.ts" });
   assert.deepEqual(pkg.exports["./client"], { types: "./src/client.ts", default: "./src/client.ts" });
+  const js = new Set([".", "./brand", "./logos", "./icons/animated", "./client", "./package.json", "./tokens/tailwind-preset"]);
   for (const [key, value] of Object.entries(pkg.exports)) {
-    if (key === "." || key === "./brand" || key === "./client" || key === "./package.json" || key === "./tokens/tailwind-preset") continue;
+    if (js.has(key)) continue;
     assert.ok(typeof value === "string" && value.endsWith(".css"), `${key} is not CSS`);
   }
 });

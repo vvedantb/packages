@@ -18,8 +18,8 @@ export const GRANTING_STATUSES_ACTIVE_PAST_DUE: readonly string[] = ["active", "
 export const GRANTING_STATUSES_ACTIVE_ONLY: readonly string[] = ["active"];
 
 /**
- * Options for the Clerk Billing helpers. Every field is optional; the
- * defaults are the 0.11.0 behaviour. Use the same `grantingStatuses` when
+ * Options for the Clerk Billing helpers. Every field is optional, and
+ * leaving them out keeps the defaults. Use the same `grantingStatuses` when
  * parsing an event and when applying the change it gives.
  */
 export type ClerkBillingOptions = {

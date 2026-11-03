@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 0.36.0 (2026-11-03)
+
+- New `@vvedantb/ui/logos`: third-party brand logos, also exported from the root and `/client`. `ChromeIcon`, `ClaudeIcon`, `ConvexIcon`, `CursorIcon`, `DropboxIcon`, `FigmaIcon`, `GitHubIcon`, `GmailIcon`, `GoogleDriveIcon`, `LinearIcon`, `NotionIcon`, `OneDriveIcon`, `SharePointIcon`, `SlackIcon`, `VercelIcon`, and the `LogoProps` type. Moved from openwork (`brand-icons`, `ClaudeLogo`), vmem (`icons/logos`, `ClaudeLogo`) and Eva (`providerLogos.tsx`). Family app marks stay in `@vvedantb/ui/brand`.
+  - One copy of each logo. Where the apps differed: `GitHubIcon` and `GmailIcon` take openwork's paths (24x24 GitHub mark, svgl Gmail). `LinearIcon` takes Eva's current four-band mark in place of openwork's older one. `FigmaIcon` takes vmem's square viewBox. `VercelIcon` and `ConvexIcon` are Eva's. Paths are unchanged.
+  - Names: every logo ends in `Icon`. Renames for adopters: `ClaudeLogo` to `ClaudeIcon`; Eva's `VercelLogo`, `ConvexLogo`, `FigmaLogo` and `LinearLogo` to `VercelIcon`, `ConvexIcon`, `FigmaIcon` and `LinearIcon`.
+  - Props: `size` (default `24`; Eva's logos defaulted to `16`, and `ClaudeLogo` had no size), `title` (labelled `role="img"`), other SVG props. Without `title` or `aria-label` a logo is `aria-hidden`, as in openwork and vmem. Eva's `VercelLogo` and friends were always labelled, and `VercelLogo` set `text-black dark:text-white`: pass `title` and a text class to keep that.
+  - `OneDriveIcon` and `SharePointIcon` gradient ids now come from `useId`, so two on one page no longer share ids.
+  - Not moved: openwork's `EvaIcon` (a product mark; the family `IconEva` is in `@vvedantb/ui/brand`) and Eva's `ClaudeLogo`, `OpenAILogo`, `CursorLogo` and `OpenCodeLogo` wrappers (they wrap `ProviderIcon`, which is already in the package).
+- New `@vvedantb/ui/icons/animated`: motion-driven animated SVG icons. Not in the root or `/client`, so apps that do not import them do not load them. `AnimatedNotificationIcon` (type `NotificationIconType`), `AnimatedBellIcon`, `AnimatedKeyIcon`, `MorphingMenuIcon`, `MorphingMicIcon`, `PulsingRings`, `AnimatedStatusDot` (type `StatusDotPhase`), `AnimatedProgress`, `AnimatedCounter`, and a `*Props` type for each. Moved from openwork (`svg-animations`) and vmem (`icons/animations`); the four shared icons take openwork's versions.
+  - They use `m.*`, not `motion.*`, so they work under the package `MotionProvider` (`LazyMotion strict`). Without a `LazyMotion` they render their resting frame. No stylesheet.
+  - Colours read package tokens: `--color-success`, `--color-warning`, `--color-danger`, `--color-primary` (`info`, and the `AnimatedProgress` fill), `--color-muted-foreground` (`idle` dot), `--color-surface-secondary` (progress track). The apps read `--success`, `--warning`, `--danger`, `--info`, `--accent` and `--muted`. `AnimatedNotificationIcon` gains a `color` override.
+  - Other changes from the app copies: the icons are `aria-hidden`; `AnimatedProgress` is a labelled `role="progressbar"` (`label`, `aria-valuenow`) with per-instance gradient ids; `AnimatedStatusDot` and `PulsingRings` take `className`; `AnimatedNotificationIcon` wraps in a `span` (was a `div`); `MorphingMenuIcon` and `MorphingMicIcon` start at their resting frame (`initial={false}`) and set `data-state`.
+  - Not moved: the vmem logo loaders (`VmemPaths`, `VmemDrawInIcon`, `VmemSpinner`, `VmemThinkingLoader`) and `vmem-anim.css`. They are product marks.
+- After adoption the apps can delete:
+
+  | App | Deletable |
+  | --- | --- |
+  | openwork | `apps/web/src/components/brand-icons/**` except `EvaIcon.tsx`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/svg-animations/`, every file except `VmemPaths.tsx`, `VmemDrawInIcon.tsx`, `VmemSpinner.tsx`, `VmemThinkingLoader.tsx` and `vmem-anim.css` (trim `index.ts` to those) |
+  | vmem | `apps/web/src/components/icons/logos/**`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/icons/animations/`, `AnimatedBellIcon.tsx`, `AnimatedCounter.tsx`, `AnimatedKeyIcon.tsx`, `AnimatedNotificationIcon.tsx` and `MorphingMenuIcon.tsx` (keep the `Vmem*` loaders and `vmem-anim.css`) |
+  | Eva | In `apps/web/src/lib/components/ui/providerLogos.tsx`: `VercelLogo`, `ConvexLogo`, `FigmaLogo`, `LinearLogo`. Keep the `ProviderIcon` wrappers (`ClaudeLogo`, `OpenAILogo`, `CursorLogo`, `OpenCodeLogo`) if still wanted |
+
+- No new dependencies. The animated icons use the existing optional `motion` peer.
+
 ## 0.35.0 (2026-11-03)
 
 - Overlays portal by default. `TooltipContent` and `HoverCardContent` `portal` default to `true`, and so does `ContextMenuSubContent` (`ContextMenu.subContentPortal`). A clipping or `overflow-hidden` parent can no longer cut them off. Pass `portal={false}` (or set the config key to `false`) to render inline.

@@ -458,7 +458,7 @@ With `eventMatch: "prefix"`, any type that starts with `subscription.` gives `re
 
 ### Options
 
-The pure helpers take an optional `ClerkBillingOptions`. Defaults are the 0.11.0 behaviour, so leaving them out changes nothing.
+The pure helpers take an optional `ClerkBillingOptions`. Leaving it out keeps the defaults listed below.
 
 | Option | Default | Read by | Effect |
 | --- | --- | --- | --- |
@@ -511,7 +511,7 @@ export const vPro = createVProModule<DataModel>()({
 });
 ```
 
-Optional config. Every field defaults to the 0.11.0 behaviour.
+Optional config. Every field has a default, so leaving it out changes nothing.
 
 | Field | Default | Effect |
 | --- | --- | --- |

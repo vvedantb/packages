@@ -2,7 +2,8 @@
 // `convex deploy` bundles for the default (V8) runtime: Convex's own esbuild
 // with the options from convex/dist/esm/bundler/debugBundle.js (1.47). The
 // root also carries Node-only MCP client OAuth (node:http, the MCP SDK) and the
-// QuickJS code sandbox, so this checks none of it reaches a V8 bundle.
+// QuickJS code sandbox, so this checks none of it reaches a V8 bundle. It also
+// bundles a Convex action that uses the ./ai subpath with the AI SDK.
 // Run with: node --test tests-node/bundle.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -66,10 +67,30 @@ export const status = httpActionGeneric(async (_ctx, request) => {
 });
 `;
 
-async function convexBundle(dir) {
+// A Convex action in the default runtime that calls the AI Gateway and uses the ./ai helpers.
+const aiFunctionFile = `
+import { actionGeneric } from "convex/server";
+import { generateText } from "ai";
+import { classifyGatewayError, readGatewayCost, withFlexGatewayOptions } from ${JSON.stringify(`${pkg.name}/ai`)};
+
+export const status = actionGeneric(async () => {
+  try {
+    const result = await generateText({
+      model: "openai/gpt-test",
+      prompt: "hi",
+      providerOptions: withFlexGatewayOptions({ alibaba: { enableThinking: false } }),
+    });
+    return { text: result.text, cost: readGatewayCost(result.providerMetadata) ?? null };
+  } catch (error) {
+    return { failure: classifyGatewayError(error) };
+  }
+});
+`;
+
+async function convexBundle(dir, source = functionFile, external = []) {
   const entry = join(dir, "convex", "status.ts");
   mkdirSync(join(dir, "convex"));
-  writeFileSync(entry, functionFile);
+  writeFileSync(entry, source);
   return esbuild.build({
     entryPoints: [entry],
     absWorkingDir: dir,
@@ -91,6 +112,7 @@ async function convexBundle(dir) {
     keepNames: true,
     define: { "process.env.NODE_ENV": '"production"' },
     metafile: true,
+    external,
     logLevel: "silent",
   });
 }
@@ -208,6 +230,60 @@ test("a Convex V8 bundle of the root, with QuickJS installed, has no QuickJS in 
     assertNoNode(result);
     assertNoQuickJs(result);
     assert.equal(extraOutputs(result), 0, "no extra chunks");
+    t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// The AI SDK itself (@ai-sdk/provider-utils) carries guarded `globalThis.process?.getBuiltinModule?.("node:dns")`
+// calls for its Node-only download fetch. They are strings, not imports: Convex V8 bundles them, and outside Node they
+// fall back to globalThis.fetch. A bundle of a bare `generateText` has them too. So check the ./ai helpers with the
+// SDK external (fully Node-free), and the whole bundle for real imports and requires of built-ins.
+const aiSdk = ["ai", "@ai-sdk/gateway"];
+
+test(`a Convex V8 bundle of ${pkg.name}/ai, with the SDK external, has no Node built-in`, async () => {
+  const dir = installFixture("convex-v8-ai-external", { convex: "convex" });
+  try {
+    const result = await convexBundle(dir, aiFunctionFile, aiSdk);
+    assert.deepEqual(result.errors, []);
+    assertNoNode(result);
+    const text = entryOutput(result);
+    for (const marker of ["serviceTier", "marketCost", "GatewayTimeoutError"]) {
+      assert.ok(text.includes(marker), `entry output lacks ${marker}`);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test(`a Convex V8 bundle of ${pkg.name}/ai, with ai and @ai-sdk/gateway installed, imports no Node built-in`, async (t) => {
+  const dir = installFixture("convex-v8-ai", {
+    convex: "convex",
+    zod: "zod",
+    ai: "ai",
+    "@ai-sdk/gateway": "@ai-sdk/gateway",
+  });
+  try {
+    const result = await convexBundle(dir, aiFunctionFile);
+    assert.deepEqual(result.errors, []);
+    for (const [path, output] of Object.entries(result.metafile.outputs)) {
+      assert.deepEqual(output.imports.filter((entry) => entry.external), [], `${path} has external imports`);
+    }
+    for (const input of Object.keys(result.metafile.inputs)) {
+      assert.doesNotMatch(input, /^node:/, `bundled ${input}`);
+    }
+    for (const file of result.outputFiles) {
+      assert.doesNotMatch(file.text, builtinRequire, `${file.path} requires a Node built-in`);
+      assert.doesNotMatch(file.text, builtinSpecifier, `${file.path} imports a Node built-in`);
+      // Every node: specifier left is an argument to the SDK's guarded getBuiltinModule loader.
+      for (const match of file.text.matchAll(/(.{0,40})["']node:[a-z_/]+["']/g)) {
+        assert.match(match[1], /\(\s*$/, `${file.path}: node: specifier outside a call: ${match[0]}`);
+      }
+    }
+    assert.ok(result.outputFiles.some((file) => file.text.includes("getBuiltinModule")));
+    // The SDK error classes the helpers check are in the bundle, not left external.
+    assert.ok(result.outputFiles.some((file) => file.text.includes("vercel.ai.gateway.error")));
     t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
