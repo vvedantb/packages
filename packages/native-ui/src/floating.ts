@@ -1,4 +1,4 @@
-import { Platform, type ViewStyle } from "react-native";
+import { Platform } from "react-native";
 import { tokens } from "./tokens";
 
 export const FLOATING_INSET = tokens.spacing.unit;
@@ -14,7 +14,21 @@ export const FLOATING_PILL_RADIUS = tokens.radius.pill;
 
 const FLOATING_BOX_SHADOW = "0px 8px 24px rgba(10, 10, 10, 0.12)";
 
-export const floatingShadow: ViewStyle =
+/**
+ * Only the shadow keys, not `ViewStyle`: an Expo-widened `ViewStyle`
+ * (`position: "fixed"`, `backgroundImage`) is not assignable to a React
+ * Native 0.88 View `style`. A plain inferred type would be `{}` and lose
+ * `floatingShadow.shadowColor` and the rest for callers.
+ */
+type FloatingShadowStyle = {
+  shadowColor?: string;
+  shadowOffset?: { width: number; height: number };
+  shadowOpacity?: number;
+  shadowRadius?: number;
+  boxShadow?: string;
+};
+
+export const floatingShadow: FloatingShadowStyle =
   Platform.select({
     ios: {
       shadowColor: "#0a0a0a",

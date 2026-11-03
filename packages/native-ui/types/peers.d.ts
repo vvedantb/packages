@@ -395,7 +395,8 @@ declare module "react-native-svg" {
     color?: string;
     style?: StyleProp<ViewStyle>;
   }
-  export const G: React.ComponentType<PaintProps & { children?: React.ReactNode }>;
+  export type GProps = PaintProps & { children?: React.ReactNode };
+  export const G: React.ComponentType<GProps>;
   export const Path: React.ComponentType<PaintProps & { d: string }>;
   export const Rect: React.ComponentType<
     PaintProps & { x?: number; y?: number; width: number; height: number; rx?: number }

@@ -1,5 +1,5 @@
-import { Platform, type StyleProp, type ViewStyle } from "react-native";
-import Svg, { G, Path, Rect } from "react-native-svg";
+import { Platform, type ViewProps } from "react-native";
+import Svg, { G, Path, Rect, type GProps } from "react-native-svg";
 import { svgA11yProps } from "../svgA11y";
 import { APP_ICONS } from "./AppIcons";
 import {
@@ -23,7 +23,7 @@ export type AppMarkProps = {
   title?: string;
   /** Set as `data-testid` on web, where `Svg` does not map `testID`. */
   testID?: string;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewProps["style"];
 };
 
 const TILE_TONES = {
@@ -50,7 +50,7 @@ export function AppMark({
   }
   const { kind, paths } = APP_MARKS[app];
   const tone = TILE_TONES[variant];
-  const glyphProps =
+  const glyphProps: GProps =
     kind === "fill"
       ? { fill: tone.fg }
       : {
