@@ -1,0 +1,691 @@
+name: Release Android APK (reusable)
+
+# Reusable workflow for the five Expo apps (velth, verve, vmem, vibot,
+# v-store). It builds a signed sideload APK with Gradle (no EAS, no
+# EXPO_TOKEN) and publishes it with release.json as a GitHub Release tagged
+# mobile-apk-<versionName>. V Store installs from there and its catalog sync
+# reads the tag, the asset names and release.json, so none of those formats
+# is an input. dry_run builds and signs the APK but publishes nothing. The
+# sideload key is not a Google Play key.
+#
+# Ported from vmem .github/workflows/release-android.yml. This repo only
+# defines the workflow; it never runs a release itself, so the only trigger
+# is workflow_call. Each app keeps a thin caller with its own push paths
+# filter, workflow_dispatch inputs, permissions (contents: write) and
+# concurrency group. See the README, "Android APK release workflow".
+#
+# The caller's build script must:
+#   - read VERSION_NAME, VERSION_CODE, ANDROID_KEYSTORE_PATH,
+#     ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD
+#     from the environment;
+#   - write apk, release_json, version_name, version_code and sha256 to
+#     $GITHUB_OUTPUT, with the APK named <apk_basename>-<versionName>-android.apk
+#     and release.json shaped {"versionName","versionCode","sha256"}.
+# The "Check build outputs" step fails the run if any of that is wrong.
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: "Short app name, like vmem. Default for release_title, apk_basename and the keystore file name."
+        required: true
+        type: string
+      release_title:
+        description: "Release title before the versionName (\"<release_title> 1.0.1\"). Default: app_name."
+        required: false
+        type: string
+        default: ""
+      apk_basename:
+        description: "APK asset name before -<versionName>-android.apk. Default: app_name. Must match the name the build script writes and the name V Store expects."
+        required: false
+        type: string
+        default: ""
+      app_dir:
+        description: "Expo app folder, relative to the repo root."
+        required: false
+        type: string
+        default: apps/mobile
+      package_id:
+        description: "Android applicationId, like com.projectvdotuk.vmem. If set, the workflow checks the built APK's package, versionCode and versionName with aapt2 (the vmem build script also checks them). Empty skips that check."
+        required: false
+        type: string
+        default: ""
+      app_config_path:
+        description: "File with the DEFAULT_VERSION_NAME literal (the versionName floor). Default: <app_dir>/app.config.ts."
+        required: false
+        type: string
+        default: ""
+      build_script:
+        description: "Build script, relative to the repo root. Run with bash from the repo root."
+        required: false
+        type: string
+        default: scripts/build-android-release.sh
+      release_notes_path:
+        description: "Release notes template with {{versionName}}, {{versionCode}} and {{sha256}}. Empty publishes the generated What's changed notes only."
+        required: false
+        type: string
+        default: .github/android-release-notes.md
+      keystore_filename:
+        description: "File name (no folders) for the decoded keystore in RUNNER_TEMP. Default: <app_name>-release.p12."
+        required: false
+        type: string
+        default: ""
+      node_version:
+        description: "Node.js version for actions/setup-node."
+        required: false
+        type: string
+        default: "22"
+      java_version:
+        description: "Temurin JDK version for actions/setup-java."
+        required: false
+        type: string
+        default: "21"
+      sdk_packages:
+        description: "sdkmanager packages to install, separated by spaces or new lines."
+        required: false
+        type: string
+        default: platform-tools platforms;android-36 build-tools;36.0.0 ndk;27.1.12297006 cmake;3.22.1
+      version_code_floor:
+        description: "Lowest versionCode a release can get."
+        required: false
+        type: number
+        default: 1000
+      mark_as_latest:
+        description: "Mark the release as the repo's latest release. False keeps the flag on other products' releases in the same repo."
+        required: false
+        type: boolean
+        default: false
+      version:
+        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName (at least DEFAULT_VERSION_NAME)."
+        required: false
+        type: string
+        default: ""
+      dry_run:
+        description: "Build and sign the APK, but skip gh release create and post-publish (no tag, no release)."
+        required: false
+        type: boolean
+        default: false
+      build_env:
+        description: "Extra environment for the pre-build, build and post-publish steps. One NAME=value per line; # starts a comment line. Not masked, so no secrets here (use the BUILD_ENV_SECRETS secret)."
+        required: false
+        type: string
+        default: ""
+      pre_build_script:
+        description: "Optional script run with bash from the repo root after the toolchain is set up and before the build script, like a patch to a config plugin. Empty skips it."
+        required: false
+        type: string
+        default: ""
+      pre_build_command:
+        description: "Optional inline bash run from the repo root after pre_build_script and before the build script. Empty skips it."
+        required: false
+        type: string
+        default: ""
+      post_publish_script:
+        description: "Optional script run with bash from the repo root after the release is published. Skipped on dry_run. Empty skips it."
+        required: false
+        type: string
+        default: ""
+      post_publish_command:
+        description: "Optional inline bash run from the repo root after post_publish_script. Skipped on dry_run. Empty skips it."
+        required: false
+        type: string
+        default: ""
+      runs_on:
+        description: "Runner label. It needs the Android SDK at ANDROID_HOME, as GitHub's Ubuntu images have."
+        required: false
+        type: string
+        default: ubuntu-latest
+      timeout_minutes:
+        description: "Job timeout in minutes."
+        required: false
+        type: number
+        default: 90
+    secrets:
+      ANDROID_KEYSTORE_BASE64:
+        description: "Base64 of the PKCS12 sideload keystore."
+        required: false
+      ANDROID_KEYSTORE_PASSWORD:
+        description: "Keystore password."
+        required: false
+      ANDROID_KEY_ALIAS:
+        description: "Key alias in the keystore."
+        required: false
+      ANDROID_KEY_PASSWORD:
+        description: "Key password."
+        required: false
+      BUILD_ENV_SECRETS:
+        description: "Optional secret environment for the pre-build, build and post-publish steps, in the build_env format. Values are masked in logs."
+        required: false
+    outputs:
+      tag:
+        description: "Release tag, mobile-apk-<versionName>."
+        value: ${{ jobs.release.outputs.tag }}
+      version_name:
+        description: "versionName of the built APK."
+        value: ${{ jobs.release.outputs.version_name }}
+      version_code:
+        description: "versionCode of the built APK."
+        value: ${{ jobs.release.outputs.version_code }}
+      sha256:
+        description: "SHA-256 of the APK."
+        value: ${{ jobs.release.outputs.sha256 }}
+      published:
+        description: "true when a release was created, false on dry_run."
+        value: ${{ jobs.release.outputs.published }}
+      release_url:
+        description: "URL of the published release. Empty on dry_run."
+        value: ${{ jobs.release.outputs.release_url }}
+
+jobs:
+  release:
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    # A called workflow can only keep or lower the caller's permissions, so
+    # the caller must grant contents: write too.
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version_name: ${{ steps.check.outputs.version_name }}
+      version_code: ${{ steps.check.outputs.version_code }}
+      sha256: ${{ steps.check.outputs.sha256 }}
+      published: ${{ steps.publish.outputs.published }}
+      release_url: ${{ steps.publish.outputs.release_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      APP_NAME: ${{ inputs.app_name }}
+      APP_DIR: ${{ inputs.app_dir }}
+      KEYSTORE_FILENAME: ${{ inputs.keystore_filename != '' && inputs.keystore_filename || format('{0}-release.p12', inputs.app_name) }}
+    defaults:
+      run:
+        # -eo pipefail, unlike the default shell.
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+
+      # Inputs are checked before anything slow runs. Paths in inputs are
+      # read through env, never pasted into a script.
+      - name: Check inputs
+        env:
+          APP_CONFIG_PATH: ${{ inputs.app_config_path }}
+          BUILD_SCRIPT: ${{ inputs.build_script }}
+          RELEASE_NOTES_PATH: ${{ inputs.release_notes_path }}
+          PRE_BUILD_SCRIPT: ${{ inputs.pre_build_script }}
+          POST_PUBLISH_SCRIPT: ${{ inputs.post_publish_script }}
+          APK_BASENAME: ${{ inputs.apk_basename }}
+          BUILD_ENV: ${{ inputs.build_env }}
+          BUILD_ENV_SECRETS: ${{ secrets.BUILD_ENV_SECRETS }}
+        run: |
+          failed=""
+          fail() {
+            echo "::error::$1"
+            failed=1
+          }
+
+          name_rule='^[A-Za-z0-9][A-Za-z0-9._-]*$'
+          [[ "$APP_NAME" =~ $name_rule ]] || fail "app_name '$APP_NAME' must be letters, digits, '.', '_' or '-'."
+          [[ "${APK_BASENAME:-$APP_NAME}" =~ $name_rule ]] || fail "apk_basename '$APK_BASENAME' must be letters, digits, '.', '_' or '-'."
+          [[ "$KEYSTORE_FILENAME" =~ $name_rule ]] || fail "keystore_filename '$KEYSTORE_FILENAME' must be a file name with no folders."
+
+          [ -d "$APP_DIR" ] || fail "app_dir '$APP_DIR' is not a folder in this repo."
+          app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
+          [ -f "$app_config" ] || fail "app_config_path '$app_config' does not exist."
+          [ -f "$BUILD_SCRIPT" ] || fail "build_script '$BUILD_SCRIPT' does not exist."
+          if [ -n "$RELEASE_NOTES_PATH" ] && [ ! -f "$RELEASE_NOTES_PATH" ]; then
+            fail "release_notes_path '$RELEASE_NOTES_PATH' does not exist. Set it to an empty string to publish without a template."
+          fi
+          if [ -n "$PRE_BUILD_SCRIPT" ] && [ ! -f "$PRE_BUILD_SCRIPT" ]; then
+            fail "pre_build_script '$PRE_BUILD_SCRIPT' does not exist."
+          fi
+          if [ -n "$POST_PUBLISH_SCRIPT" ] && [ ! -f "$POST_PUBLISH_SCRIPT" ]; then
+            fail "post_publish_script '$POST_PUBLISH_SCRIPT' does not exist."
+          fi
+
+          # build_env and BUILD_ENV_SECRETS: NAME=value lines. Names the
+          # workflow sets itself are refused, so extra env cannot change the
+          # version, the signing key or the runner.
+          reserved='^(VERSION_NAME|VERSION_CODE|ANDROID_KEYSTORE_[A-Z0-9_]*|ANDROID_KEY_[A-Z0-9_]*|ANDROID_HOME|ANDROID_SDK_ROOT|GITHUB_[A-Z0-9_]*|RUNNER_[A-Z0-9_]*|ACTIONS_[A-Z0-9_]*|PATH)$'
+          check_env() {
+            local source="$1" masked="$2" line name
+            while IFS= read -r line || [ -n "$line" ]; do
+              line="${line%$'\r'}"
+              if [ -z "${line//[[:space:]]/}" ] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+                continue
+              fi
+              name="${line%%=*}"
+              if [ "$name" = "$line" ] || ! [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+                fail "$source has a line that is not NAME=value (name '${name:0:40}')."
+              elif [[ "$name" =~ $reserved ]]; then
+                fail "$source sets $name, which this workflow sets or protects."
+              elif [ "$masked" = 1 ] && [ -n "${line#*=}" ]; then
+                echo "::add-mask::${line#*=}"
+              fi
+            done <<<"$3"
+          }
+          check_env build_env 0 "$BUILD_ENV"
+          check_env BUILD_ENV_SECRETS 1 "$BUILD_ENV_SECRETS"
+
+          [ -z "$failed" ] || exit 1
+
+      - name: Choose versionName, versionCode and tag
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          APP_CONFIG_PATH: ${{ inputs.app_config_path }}
+          VERSION_CODE_FLOOR: ${{ inputs.version_code_floor }}
+        run: |
+          semver='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+
+          if ! [[ "$VERSION_CODE_FLOOR" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::version_code_floor must be a whole number from 1."
+            exit 1
+          fi
+
+          # DEFAULT_VERSION_NAME in app.config.ts is the versionName floor.
+          # vmem writes `const DEFAULT_VERSION_NAME = "1.0.0";`; an `export`
+          # in front is also read.
+          app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
+          app_version="$(sed -n -E 's/^(export )?const DEFAULT_VERSION_NAME = "([^"]*)";$/\2/p' "$app_config")"
+          if ! [[ "$app_version" =~ $semver ]]; then
+            echo "::error::Could not read the DEFAULT_VERSION_NAME literal from $app_config."
+            exit 1
+          fi
+
+          # Highest versionName and versionCode in published mobile-apk-*
+          # release.json files. A release without release.json (before this
+          # workflow) counts as versionCode 1. Any other gh error stops the
+          # run rather than undercounting.
+          # releases has a "versionName tag" line for each release.json, so
+          # the release notes can start from the highest published version.
+          names="$app_version"
+          releases=""
+          highest_code=0
+          tags="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1000 \
+            --json tagName --jq '.[].tagName | select(startswith("mobile-apk-"))')"
+          for tag in $tags; do
+            manifest="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
+              --json assets --jq '.assets[] | select(.name == "release.json") | .name')"
+            if [ -z "$manifest" ]; then
+              code=1
+            else
+              release_json="$(gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern release.json --output -)"
+              code="$(jq -r '.versionCode // empty' <<<"$release_json")"
+              name="$(jq -r '.versionName // empty' <<<"$release_json")"
+              if ! [[ "$code" =~ ^[0-9]+$ ]]; then
+                echo "::error::$tag release.json has no valid versionCode."
+                exit 1
+              fi
+              # A legacy release with a non-semver versionName still counts
+              # for versionCode, but not for versionName or release notes.
+              if [[ "$name" =~ $semver ]]; then
+                names="$names"$'\n'"$name"
+                releases="$releases"$'\n'"$name $tag"
+              else
+                echo "::warning::$tag release.json versionName '$name' is not like 1.0.1. Ignored for versionName."
+              fi
+            fi
+            if [ "$code" -gt "$highest_code" ]; then
+              highest_code="$code"
+            fi
+          done
+
+          if [ -n "$INPUT_VERSION" ]; then
+            version_name="$INPUT_VERSION"
+            if ! [[ "$version_name" =~ $semver ]]; then
+              echo "::error::version must look like 1.0.1."
+              exit 1
+            fi
+          else
+            highest_name="$(sort -V <<<"$names" | tail -n 1)"
+            IFS=. read -r major minor patch <<<"$highest_name"
+            version_name="$major.$minor.$((patch + 1))"
+          fi
+
+          # Sideload versionCodes start at version_code_floor (1000), apart
+          # from local builds (DEFAULT_VERSION_CODE in app.config.ts).
+          version_code=$((highest_code + 1))
+          if [ "$version_code" -lt "$VERSION_CODE_FLOOR" ]; then
+            version_code="$VERSION_CODE_FLOOR"
+          fi
+
+          tag="mobile-apk-$version_name"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists."
+            exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists without a release. Delete it or choose another version."
+            exit 1
+          fi
+
+          # The release with the highest semver versionName. GitHub's "latest
+          # release" can be another product's release in the same repo.
+          previous_tag="$(sort -V <<<"$releases" | tail -n 1 | cut -s -d ' ' -f 2)"
+
+          echo "Releasing $tag: versionName $version_name, versionCode $version_code (highest release: $highest_code, floor: $VERSION_CODE_FLOOR). Previous release: ${previous_tag:-none}"
+          {
+            echo "previous_tag=$previous_tag"
+            echo "tag=$tag"
+            echo "version_name=$version_name"
+            echo "version_code=$version_code"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Decode signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          missing=""
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing. Pass them with secrets: inherit or by name. Release builds never fall back to the debug key."
+            exit 1
+          fi
+          keystore="$RUNNER_TEMP/$KEYSTORE_FILENAME"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          chmod 600 "$keystore"
+          echo "ANDROID_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
+
+      # Version from packageManager in the caller's root package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: pnpm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+
+      # The runner image has the Android SDK at $ANDROID_HOME with current
+      # cmdline-tools. android-actions/setup-android@v3 swaps in older ones and
+      # installs the removed "tools" package, so it is not used. The default
+      # sdk_packages are what React Native 0.86 pins, and AGP's default CMake,
+      # installed before Gradle needs them.
+      - name: Install Android SDK packages
+        env:
+          SDK_PACKAGES: ${{ inputs.sdk_packages }}
+        run: |
+          # Ubuntu runners set ANDROID_HOME. Set it and ANDROID_SDK_ROOT to the
+          # same SDK for later steps, so the build script (which prefers
+          # ANDROID_SDK_ROOT) uses the SDK these packages go into.
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$sdk" ] || [ ! -d "$sdk" ]; then
+            echo "::error::ANDROID_HOME and ANDROID_SDK_ROOT do not point to an Android SDK. This workflow needs a runner image with the Android SDK."
+            exit 1
+          fi
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+
+          # cmdline-tools/latest, else the highest versioned cmdline-tools/<n.n>
+          # (an image may have only, say, cmdline-tools/16.0).
+          sdkmanager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$sdkmanager" ]; then
+            sdkmanager=""
+            while IFS= read -r dir; do
+              dir="${dir%/}"
+              if [[ "${dir##*/}" =~ ^[0-9]+(\.[0-9]+)*$ ]] && [ -x "$dir/bin/sdkmanager" ]; then
+                sdkmanager="$dir/bin/sdkmanager"
+              fi
+            done < <(ls -d "$sdk"/cmdline-tools/*/ 2>/dev/null | sort -V)
+          fi
+          if [ -z "$sdkmanager" ]; then
+            echo "::error::No sdkmanager in $sdk/cmdline-tools/latest or a versioned cmdline-tools folder."
+            exit 1
+          fi
+          echo "Using $sdkmanager"
+
+          read -r -d '' -a packages <<<"$SDK_PACKAGES" || true
+          if [ "${#packages[@]}" -eq 0 ]; then
+            echo "::error::sdk_packages is empty."
+            exit 1
+          fi
+
+          # yes dies of SIGPIPE when sdkmanager stops reading; that is not a failure.
+          { yes || true; } | "$sdkmanager" --licenses > /dev/null
+          "$sdkmanager" --install "${packages[@]}"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Pre-build
+        if: inputs.pre_build_script != '' || inputs.pre_build_command != ''
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          PRE_BUILD_SCRIPT: ${{ inputs.pre_build_script }}
+          PRE_BUILD_COMMAND: ${{ inputs.pre_build_command }}
+          BUILD_ENV: ${{ inputs.build_env }}
+          BUILD_ENV_SECRETS: ${{ secrets.BUILD_ENV_SECRETS }}
+        run: |
+          # Lines were checked in "Check inputs".
+          while IFS= read -r line || [ -n "$line" ]; do
+            line="${line%$'\r'}"
+            if [ -z "${line//[[:space:]]/}" ] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+              continue
+            fi
+            export "${line%%=*}=${line#*=}"
+          done <<<"$BUILD_ENV"$'\n'"$BUILD_ENV_SECRETS"
+          unset BUILD_ENV BUILD_ENV_SECRETS line
+
+          if [ -n "$PRE_BUILD_SCRIPT" ]; then
+            echo "Running $PRE_BUILD_SCRIPT"
+            bash "$PRE_BUILD_SCRIPT"
+          fi
+          if [ -n "$PRE_BUILD_COMMAND" ]; then
+            echo "Running pre_build_command"
+            bash -eo pipefail -c "$PRE_BUILD_COMMAND"
+          fi
+
+      # The vmem script installs the mobile workspace deps, runs expo
+      # prebuild, builds with Gradle and writes release.json.
+      - name: Build signed APK
+        id: build
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          BUILD_SCRIPT: ${{ inputs.build_script }}
+          BUILD_ENV: ${{ inputs.build_env }}
+          BUILD_ENV_SECRETS: ${{ secrets.BUILD_ENV_SECRETS }}
+        run: |
+          # Lines were checked in "Check inputs".
+          while IFS= read -r line || [ -n "$line" ]; do
+            line="${line%$'\r'}"
+            if [ -z "${line//[[:space:]]/}" ] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+              continue
+            fi
+            export "${line%%=*}=${line#*=}"
+          done <<<"$BUILD_ENV"$'\n'"$BUILD_ENV_SECRETS"
+          unset BUILD_ENV BUILD_ENV_SECRETS line
+
+          bash "$BUILD_SCRIPT"
+
+      # The publish step trusts these values, and V Store's catalog sync
+      # trusts the tag, asset names and release.json. Check them against the
+      # chosen version and the APK on disk.
+      - name: Check build outputs
+        id: check
+        env:
+          EXPECTED_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          EXPECTED_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          APK: ${{ steps.build.outputs.apk }}
+          RELEASE_JSON: ${{ steps.build.outputs.release_json }}
+          VERSION_NAME: ${{ steps.build.outputs.version_name }}
+          VERSION_CODE: ${{ steps.build.outputs.version_code }}
+          SHA256: ${{ steps.build.outputs.sha256 }}
+          APK_BASENAME: ${{ inputs.apk_basename }}
+          PACKAGE_ID: ${{ inputs.package_id }}
+        run: |
+          failed=""
+          fail() {
+            echo "::error::$1"
+            failed=1
+          }
+
+          for name in APK RELEASE_JSON VERSION_NAME VERSION_CODE SHA256; do
+            [ -n "${!name}" ] || fail "The build script wrote no ${name,,} to \$GITHUB_OUTPUT."
+          done
+          [ -z "$failed" ] || exit 1
+
+          expected_apk="${APK_BASENAME:-$APP_NAME}-$EXPECTED_VERSION_NAME-android.apk"
+          [ -f "$APK" ] || fail "APK $APK does not exist."
+          [ -f "$RELEASE_JSON" ] || fail "release.json $RELEASE_JSON does not exist."
+          [ "$(basename -- "$APK")" = "$expected_apk" ] || fail "APK is named $(basename -- "$APK"); expected $expected_apk."
+          [ "$(basename -- "$RELEASE_JSON")" = release.json ] || fail "release_json is named $(basename -- "$RELEASE_JSON"); expected release.json."
+          [ "$VERSION_NAME" = "$EXPECTED_VERSION_NAME" ] || fail "Build reports versionName $VERSION_NAME; expected $EXPECTED_VERSION_NAME."
+          [ "$VERSION_CODE" = "$EXPECTED_VERSION_CODE" ] || fail "Build reports versionCode $VERSION_CODE; expected $EXPECTED_VERSION_CODE."
+          [ -z "$failed" ] || exit 1
+
+          actual_sha256="$(sha256sum -- "$APK" | cut -d ' ' -f 1)"
+          [ "$SHA256" = "$actual_sha256" ] || fail "Build reports SHA-256 $SHA256; the APK has $actual_sha256."
+
+          # release.json shape: {"versionName","versionCode","sha256"}, with
+          # versionCode a number. Extra keys only warn: V Store reads these 3.
+          if ! jq -e --arg n "$EXPECTED_VERSION_NAME" --argjson c "$EXPECTED_VERSION_CODE" --arg s "$actual_sha256" \
+            '.versionName == $n and .versionCode == $c and .sha256 == $s' \
+            "$RELEASE_JSON" >/dev/null; then
+            fail "release.json is not {\"versionName\": \"$EXPECTED_VERSION_NAME\", \"versionCode\": $EXPECTED_VERSION_CODE, \"sha256\": \"$actual_sha256\"}."
+            cat -- "$RELEASE_JSON" || true
+          elif extra="$(jq -r 'keys - ["sha256", "versionCode", "versionName"] | join(", ")' "$RELEASE_JSON")" && [ -n "$extra" ]; then
+            echo "::warning::release.json has keys beyond versionName, versionCode and sha256: $extra."
+          fi
+
+          if [ -n "$PACKAGE_ID" ]; then
+            build_tools=""
+            while IFS= read -r dir; do
+              [ -x "$dir/aapt2" ] && build_tools="$dir"
+            done < <(ls -d "$ANDROID_SDK_ROOT"/build-tools/*/ 2>/dev/null | sort -V)
+            if [ -z "$build_tools" ]; then
+              fail "No build-tools with aapt2 in $ANDROID_SDK_ROOT/build-tools to check package_id."
+            else
+              badging="$("$build_tools/aapt2" dump badging "$APK")"
+              field() { sed -n "s/^package:.* $1='\([^']*\)'.*/\1/p" <<<"$badging"; }
+              built="$(field name) $(field versionCode) $(field versionName)"
+              expected="$PACKAGE_ID $EXPECTED_VERSION_CODE $EXPECTED_VERSION_NAME"
+              [ "$built" = "$expected" ] || fail "APK is $built (package, versionCode, versionName); expected $expected."
+            fi
+          fi
+          [ -z "$failed" ] || exit 1
+
+          echo "Checked $expected_apk: versionName $VERSION_NAME, versionCode $VERSION_CODE, SHA-256 $actual_sha256"
+          {
+            echo "version_name=$VERSION_NAME"
+            echo "version_code=$VERSION_CODE"
+            echo "sha256=$actual_sha256"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        id: publish
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          APK: ${{ steps.build.outputs.apk }}
+          RELEASE_JSON: ${{ steps.build.outputs.release_json }}
+          VERSION_NAME: ${{ steps.check.outputs.version_name }}
+          VERSION_CODE: ${{ steps.check.outputs.version_code }}
+          SHA256: ${{ steps.check.outputs.sha256 }}
+          PREVIOUS_TAG: ${{ steps.version.outputs.previous_tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          RELEASE_TITLE: ${{ inputs.release_title }}
+          RELEASE_NOTES_PATH: ${{ inputs.release_notes_path }}
+          MARK_AS_LATEST: ${{ inputs.mark_as_latest }}
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          if [ -n "$RELEASE_NOTES_PATH" ]; then
+            sed -e "s/{{versionName}}/$VERSION_NAME/g" \
+              -e "s/{{versionCode}}/$VERSION_CODE/g" \
+              -e "s/{{sha256}}/$SHA256/g" \
+              "$RELEASE_NOTES_PATH" > "$notes"
+          else
+            : > "$notes"
+          fi
+
+          # Merged PR titles since the previous release of this app. They are
+          # appended after sed, so no title can change the template. A
+          # failure only drops this section; the release still publishes.
+          notes_args=(-f tag_name="$TAG" -f target_commitish="$GITHUB_SHA")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            notes_args+=(-f previous_tag_name="$PREVIOUS_TAG")
+          fi
+          if changes="$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${notes_args[@]}" \
+            --jq '.body | sub("^## What.s Changed[[:space:]]*"; "")')" && [ -n "$changes" ]; then
+            printf "\n## What's changed\n\n%s\n" "$changes" >> "$notes"
+          else
+            echo "::warning::Could not generate the What's changed notes. Publishing with the template only."
+          fi
+          cat "$notes"
+
+          if [ "$DRY_RUN" = true ]; then
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "dry_run: skipped publish. No tag or release $TAG (versionCode $VERSION_CODE) was created."
+            exit 0
+          fi
+
+          # gh uploads the assets to a draft, then publishes it, so nobody
+          # sees a release without its APK. mark_as_latest defaults to false:
+          # other products' releases in the same repo keep the "latest" flag.
+          latest=false
+          [ "$MARK_AS_LATEST" = true ] && latest=true
+          gh release create "$TAG" "$APK" "$RELEASE_JSON" --target "$GITHUB_SHA" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "${RELEASE_TITLE:-$APP_NAME} $VERSION_NAME" \
+            --latest="$latest" \
+            --notes-file "$notes"
+          url="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          {
+            echo "published=true"
+            echo "release_url=$url"
+          } >> "$GITHUB_OUTPUT"
+          echo "Published $url"
+
+      - name: Post-publish
+        if: steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != '')
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_URL: ${{ steps.publish.outputs.release_url }}
+          APK: ${{ steps.build.outputs.apk }}
+          RELEASE_JSON: ${{ steps.build.outputs.release_json }}
+          VERSION_NAME: ${{ steps.check.outputs.version_name }}
+          VERSION_CODE: ${{ steps.check.outputs.version_code }}
+          SHA256: ${{ steps.check.outputs.sha256 }}
+          POST_PUBLISH_SCRIPT: ${{ inputs.post_publish_script }}
+          POST_PUBLISH_COMMAND: ${{ inputs.post_publish_command }}
+          BUILD_ENV: ${{ inputs.build_env }}
+          BUILD_ENV_SECRETS: ${{ secrets.BUILD_ENV_SECRETS }}
+        run: |
+          # Lines were checked in "Check inputs".
+          while IFS= read -r line || [ -n "$line" ]; do
+            line="${line%$'\r'}"
+            if [ -z "${line//[[:space:]]/}" ] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+              continue
+            fi
+            export "${line%%=*}=${line#*=}"
+          done <<<"$BUILD_ENV"$'\n'"$BUILD_ENV_SECRETS"
+          unset BUILD_ENV BUILD_ENV_SECRETS line
+
+          # The keystore is not needed after the build.
+          unset ANDROID_KEYSTORE_PATH
+
+          if [ -n "$POST_PUBLISH_SCRIPT" ]; then
+            echo "Running $POST_PUBLISH_SCRIPT"
+            bash "$POST_PUBLISH_SCRIPT"
+          fi
+          if [ -n "$POST_PUBLISH_COMMAND" ]; then
+            echo "Running post_publish_command"
+            bash -eo pipefail -c "$POST_PUBLISH_COMMAND"
+          fi
+
+      - name: Remove keystore
+        if: always()
+        run: |
+          # Only a plain file name, as "Check inputs" requires, so this never
+          # removes anything outside RUNNER_TEMP.
+          if [[ "$KEYSTORE_FILENAME" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            rm -f "$RUNNER_TEMP/$KEYSTORE_FILENAME"
+          fi
