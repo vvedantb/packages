@@ -125,6 +125,241 @@ import { SidebarHeader, PillTabs } from "@vvedantb/ui/shell";
 
 Navigation layout (icon rails, sidebars, sidebar and header size variables), page layouts, segmented controls, view-transition names and timings, any tab or modal rules that differ from the shared files, `smooth-shadow-ring-*` and app `glass-panel-*` variants other than `glass-panel-strong`, the `[cmdk-*]` look of an app's own command menu, app colours and fonts (app-d's pink accent, app-c's chart colours, app-b's feature colours), Tailwind plugins, marketing fonts, page animations, markdown/editor styles and landing CSS. `packages/ui/tokens/verify/ANALYSIS.md` lists every duplicated block that was left in the apps and why.
 
+## Android APK release workflow
+
+`.github/workflows/release-android-apk.yml` is a reusable workflow (`on: workflow_call` only) for the five Expo apps: velth, verve, vmem, vibot and v-store. It never runs in this repo. It is a port of vmem's `.github/workflows/release-android.yml`. Each app keeps a thin caller.
+
+### What it does
+
+1. Checks the inputs, then picks versionName, versionCode and the tag. With no `version`, it bumps the patch of the highest semver `versionName` in published `mobile-apk-*` `release.json` files, with `DEFAULT_VERSION_NAME` in `app.config.ts` as the floor. versionCode is the highest published versionCode plus 1, and at least `version_code_floor` (1000). A release with no `release.json` counts as versionCode 1. The run stops if the tag or release already exists.
+2. Decodes the keystore into `$RUNNER_TEMP/<keystore_filename>` and sets `ANDROID_KEYSTORE_PATH`. It stops if any of the four signing secrets is missing, so a release never falls back to the debug key.
+3. Sets up pnpm (version from `packageManager`), Node with the pnpm cache, Temurin Java and Gradle, then installs the Android SDK packages with the runner's own `sdkmanager`. It does not use `android-actions/setup-android`.
+4. Runs the optional pre-build hook, then the app's build script (Expo prebuild and a signed Gradle `assembleRelease`). Next it checks the outputs: the APK name, the SHA-256, the `release.json` values, and, with `package_id`, the APK badging.
+5. Publishes `mobile-apk-<versionName>` with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), the notes template and the generated "What's changed" notes. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
+6. Removes the keystore (`if: always()`).
+
+The tag format `mobile-apk-<versionName>`, the asset names and the `release.json` shape `{"versionName","versionCode","sha256"}` are fixed, not inputs. V Store's catalog sync depends on them.
+
+### What stays in the caller
+
+- The `push` trigger and its `paths` filter, and the `workflow_dispatch` inputs.
+- `concurrency` (vmem: `group: release-android`, `cancel-in-progress: false`). The version is chosen inside the job, so runs must not overlap.
+- `permissions: contents: write`. A called workflow cannot get more than the caller grants, and publishing needs `contents: write`.
+- The secrets, passed with `secrets: inherit` (or by name).
+- The build script, the notes template and `app.config.ts`. The workflow changes no app code. If an app needs a patch before the build, such as the Groovy `${}` escape that vmem's `withReleaseSigning.js` has as `\${...}`, use `pre_build_script` or `pre_build_command`.
+
+### Build script contract
+
+The workflow runs `bash <build_script>` from the repo root. vmem's `scripts/build-android-release.sh` already meets this contract. The script:
+
+- reads `VERSION_NAME`, `VERSION_CODE`, `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` from the environment;
+- writes `apk`, `release_json`, `version_name`, `version_code` and `sha256` to `$GITHUB_OUTPUT`;
+- names the APK `<apk_basename>-<versionName>-android.apk` and the manifest `release.json`.
+
+The "Check build outputs" step fails the run if a value is missing or does not match the chosen version or the APK on disk.
+
+### Secrets
+
+| Secret | Required | What it is |
+| --- | --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Yes | Base64 of the PKCS12 sideload keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Yes | Keystore password |
+| `ANDROID_KEY_ALIAS` | Yes | Key alias |
+| `ANDROID_KEY_PASSWORD` | Yes | Key password |
+| `BUILD_ENV_SECRETS` | No | Secret extra environment, in the `build_env` format; values are masked |
+
+The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inherit` works. The first job step then stops with a clear error if one is missing. The workflow uses `github.token` for `gh`.
+
+### Inputs
+
+| Input | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `app_name` | string | required | Short name, like `vmem`. Default for `release_title`, `apk_basename` and the keystore file name |
+| `release_title` | string | `app_name` | Release title is `<release_title> <versionName>` |
+| `apk_basename` | string | `app_name` | Asset is `<apk_basename>-<versionName>-android.apk`. Must match the build script and V Store |
+| `app_dir` | string | `apps/mobile` | Expo app folder |
+| `package_id` | string | empty | If set, checks the APK package, versionCode and versionName with `aapt2` |
+| `app_config_path` | string | `<app_dir>/app.config.ts` | File with `const DEFAULT_VERSION_NAME = "x.y.z";` (an `export` in front also works) |
+| `build_script` | string | `scripts/build-android-release.sh` | Build script, run with bash from the repo root |
+| `release_notes_path` | string | `.github/android-release-notes.md` | Template with `{{versionName}}`, `{{versionCode}}` and `{{sha256}}`. Empty: generated notes only |
+| `keystore_filename` | string | `<app_name>-release.p12` | Keystore file name in `RUNNER_TEMP` |
+| `node_version` | string | `22` | `actions/setup-node` version |
+| `java_version` | string | `21` | Temurin version |
+| `sdk_packages` | string | `platform-tools platforms;android-36 build-tools;36.0.0 ndk;27.1.12297006 cmake;3.22.1` | `sdkmanager` packages, separated by spaces or new lines |
+| `version_code_floor` | number | `1000` | Lowest versionCode |
+| `mark_as_latest` | boolean | `false` | Mark the release as the repo's latest release |
+| `version` | string | empty | versionName to release, like `1.0.1`. Empty: next patch |
+| `dry_run` | boolean | `false` | Build and sign, publish nothing |
+| `build_env` | string | empty | Extra environment for the pre-build, build and post-publish steps. One `NAME=value` per line, `#` for comments, no multi-line values. Not masked. Names the workflow sets (`VERSION_*`, `ANDROID_KEY*`, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `GITHUB_*`, `RUNNER_*`, `ACTIONS_*`, `PATH`) are refused |
+| `pre_build_script` | string | empty | Script run with bash after toolchain setup, before the build |
+| `pre_build_command` | string | empty | Inline bash run after `pre_build_script` |
+| `post_publish_script` | string | empty | Script run with bash after a real publish. Gets `TAG`, `RELEASE_URL`, `APK`, `RELEASE_JSON`, `VERSION_NAME`, `VERSION_CODE`, `SHA256` and `GH_TOKEN` |
+| `post_publish_command` | string | empty | Inline bash run after `post_publish_script` |
+| `runs_on` | string | `ubuntu-latest` | Runner. It needs the Android SDK at `ANDROID_HOME` |
+| `timeout_minutes` | number | `90` | Job timeout |
+
+Outputs: `tag`, `version_name`, `version_code`, `sha256`, `published` (`true` or `false`) and `release_url`.
+
+Pass `dry_run: ${{ inputs.dry_run == true }}`, not `${{ inputs.dry_run }}`. On a push run the dispatch inputs are empty, and a `boolean` input does not accept an empty string.
+
+`@main` follows this repo. To control when a change reaches the apps, pin a tag or commit SHA instead. If this repo is ever made private, allow access under Settings, Actions, General, Access.
+
+### Callers
+
+#### vmem
+
+The paths match vmem's current `release-android.yml`.
+
+```yaml
+name: Release Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "!apps/mobile/tests/**"
+      - "!apps/mobile/**/*.md"
+      - "!apps/mobile/.env.example"
+      - "packages/sdk/package.json"
+      - "packages/sdk/src/**"
+      - "!packages/sdk/**/*.test.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".npmrc"
+      - "scripts/build-android-release.sh"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName."
+        required: false
+        type: string
+      dry_run:
+        description: "Build and sign the APK, but publish nothing."
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: vvedantb/packages/.github/workflows/release-android-apk.yml@main
+    with:
+      app_name: vmem
+      package_id: com.projectvdotuk.vmem
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run == true }}
+    secrets: inherit
+```
+
+#### velth, verve, vibot
+
+These callers are examples. The velth, verve and vibot repos were not available when they were written. Before you switch, check each one against the app's current workflow: the `paths`, the `package_id`, the `apk_basename` and any extra steps.
+
+```yaml
+# velth: .github/workflows/release-android.yml (example; verify against the current workflow)
+name: Release Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "!apps/mobile/**/*.md"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".npmrc"
+      - "scripts/build-android-release.sh"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName."
+        required: false
+        type: string
+      dry_run:
+        description: "Build and sign the APK, but publish nothing."
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+jobs:
+  release:
+    uses: vvedantb/packages/.github/workflows/release-android-apk.yml@main
+    with:
+      app_name: velth
+      package_id: com.projectvdotuk.velth # verify
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run == true }}
+    secrets: inherit
+```
+
+verve and vibot use the same file. Change `app_name` to `verve` or `vibot`, and set `package_id` (for example `com.projectvdotuk.verve` or `com.projectvdotuk.vibot`; verify both). Set `paths` to the app's own sources.
+
+#### v-store
+
+v-store's workflow has steps the others do not. The inputs below show where each one goes. The values are examples, not v-store's real settings. Copy the real names, paths and commands from v-store's current workflow.
+
+```yaml
+# v-store: .github/workflows/release-android.yml (example; verify against the current workflow)
+name: Release Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "!apps/mobile/**/*.md"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".npmrc"
+      - "scripts/build-android-release.sh"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName."
+        required: false
+        type: string
+      dry_run:
+        description: "Build and sign the APK, but publish nothing."
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+jobs:
+  release:
+    uses: vvedantb/packages/.github/workflows/release-android-apk.yml@main
+    with:
+      app_name: v-store
+      release_title: V Store                 # verify
+      apk_basename: v-store                  # must match the existing asset names (v-store or vstore)
+      package_id: com.projectvdotuk.vstore   # verify; an applicationId cannot contain "-"
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run == true }}
+      # Extras: use only the ones v-store's current workflow has.
+      build_env: |
+        EXPO_PUBLIC_EXAMPLE_URL=https://example.invalid
+      pre_build_script: scripts/android-pre-build.sh       # example
+      post_publish_script: scripts/android-post-publish.sh # example
+    secrets: inherit # includes BUILD_ENV_SECRETS if the repo defines it
+```
+
 ## Develop
 
 Needs Node 22 and pnpm.
@@ -144,7 +379,7 @@ pnpm typecheck
 
 ## Publish
 
-No CI workflow. Publish from a logged-in npm machine (`NPM_CONFIG_USERCONFIG` if the token lives in a non-default rc). Bump each version in its `package.json` first.
+No CI workflow publishes the npm packages. Publish from a logged-in npm machine (`NPM_CONFIG_USERCONFIG` if the token lives in a non-default rc). Bump each version in its `package.json` first.
 
 ```sh
 pnpm --filter @vvedantb/ui exec npm publish --access public
