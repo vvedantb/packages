@@ -144,7 +144,7 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ### Feature-only releases
 
-On a `push`, with the default `release_on: feat`, a release runs only for a feature merge. The workflow reads `github.event.head_commit.message` (the caller's pushed commit):
+On a branch `push`, with the default `release_on: feat`, a release runs only for a feature merge. The workflow reads `github.event.head_commit.message` (the caller's pushed commit):
 
 - For a merge commit, `Merge pull request #N from <branch>`, it reads the PR title, which is the first non-empty line after the subject. For any other commit, such as a squash merge or a direct push, it reads the commit subject.
 - It releases if that line starts with `feat:`, `feat(scope):`, `feat!:` or `feat(scope)!:`, in any case, followed by whitespace or the end of the line.
@@ -152,7 +152,7 @@ On a `push`, with the default `release_on: feat`, a release runs only for a feat
 
 Anything else, such as `fix:` or `chore:`, skips the release. To release a change that is not a feature, put `[release]` in the PR title, like `fix: crash on start [release]`. GitHub copies the PR title into the merge commit message.
 
-`workflow_dispatch` always releases, `dry_run` included; the rule never applies to it. The rule applies only to `push` events; other events release as before. A tag push is a `push`, so with `release_on: feat` it releases only if the tagged commit's message passes the rule. Start a manual run on the tag to release it regardless.
+`workflow_dispatch` always releases, `dry_run` included; the rule never applies to it. A tag push (`refs/tags/…`) always releases, because the tag is the release; the rule never applies to it either. The rule applies only to branch `push` events; other events release as before.
 
 Set `release_on: always` to release on every push, as before this rule. Other values are refused.
 
@@ -213,7 +213,7 @@ The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inheri
 | `version_code` | string | empty | versionCode to release, a whole number of at least the highest published versionCode plus 1 and `version_code_floor`. Empty: that minimum |
 | `mark_as_latest` | boolean | `false` | Mark the release as the repo's latest release |
 | `version` | string | empty | versionName to release, like `1.0.1`. Must match the tag on a tag push. Empty: the tag's version on a tag push, else the next patch |
-| `release_on` | string | `feat` | Which pushes release. `feat`: only feature merges or messages with `[release]` (see "Feature-only releases"). `always`: every push. `workflow_dispatch` always releases |
+| `release_on` | string | `feat` | Which pushes release. `feat`: only feature merges or messages with `[release]` (see "Feature-only releases"). `always`: every push. Tag pushes and `workflow_dispatch` always release |
 | `dry_run` | boolean | `false` | Build and sign, publish nothing |
 | `upload_dry_run_artifact` | boolean | `false` | With `dry_run`, upload the APK and `release.json` as the artifact `<app_name>-android-dry-run` |
 | `pre_setup_command` | string | empty | Inline bash run from the repo root before the Node, pnpm and Java setup, like freeing disk space. Does not get `build_env` |
