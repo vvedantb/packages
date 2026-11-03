@@ -181,6 +181,8 @@ declare module "react-native" {
     keyboardType?: string;
     returnKeyType?: string;
     secureTextEntry?: boolean;
+    autoComplete?: string;
+    textContentType?: string;
     maxLength?: number;
     scrollEnabled?: boolean;
   }
@@ -470,6 +472,106 @@ declare module "expo-router" {
   }
   export const Tabs: React.ComponentType<{
     tabBar?: (props: BottomTabBarProps) => React.ReactNode;
+    children?: React.ReactNode;
+  }>;
+  // `src/auth` navigates after sign-in.
+  export interface Router {
+    push(href: string, options?: object): void;
+    replace(href: string, options?: object): void;
+    back(): void;
+  }
+  export function useRouter(): Router;
+}
+
+declare module "expo-router/html" {
+  import type * as React from "react";
+  export const ScrollViewStyleReset: React.ComponentType;
+}
+
+declare module "expo-auth-session" {
+  export function makeRedirectUri(options?: { scheme?: string; path?: string; native?: string }): string;
+}
+
+declare module "expo-web-browser" {
+  export function maybeCompleteAuthSession(options?: { skipRedirectCheck?: boolean }): { type: string; message: string };
+  export function warmUpAsync(browserPackage?: string): Promise<unknown>;
+  export function coolDownAsync(browserPackage?: string): Promise<unknown>;
+}
+
+declare module "@clerk/clerk-expo" {
+  import type * as React from "react";
+
+  export interface TokenCache {
+    getToken(key: string): Promise<string | undefined | null>;
+    saveToken(key: string, token: string): Promise<void>;
+    clearToken?(key: string): void | Promise<void>;
+  }
+  export const ClerkProvider: React.ComponentType<{
+    publishableKey?: string;
+    tokenCache?: TokenCache;
+    children?: React.ReactNode;
+  }>;
+  export const ClerkLoaded: React.ComponentType<{ children?: React.ReactNode }>;
+  export function useAuth(options?: { treatPendingAsSignedOut?: boolean }): {
+    isLoaded: boolean;
+    isSignedIn: boolean | undefined;
+    sessionId: string | null | undefined;
+    getToken(options?: { template?: string; skipCache?: boolean }): Promise<string | null>;
+    orgId?: string | null;
+    orgRole?: string | null;
+  };
+  type SetActive = (params: { session: string | null }) => Promise<void>;
+  interface Attempt {
+    status: string | null;
+    createdSessionId: string | null;
+  }
+  export function useSignIn():
+    | { isLoaded: false; signIn: undefined; setActive: undefined }
+    | {
+        isLoaded: true;
+        signIn: { create(params: { identifier: string; password?: string }): Promise<Attempt> };
+        setActive: SetActive;
+      };
+  export function useSignUp():
+    | { isLoaded: false; signUp: undefined; setActive: undefined }
+    | {
+        isLoaded: true;
+        signUp: {
+          create(params: { emailAddress: string; password?: string }): Promise<Attempt>;
+          prepareEmailAddressVerification(params: { strategy: "email_code" }): Promise<unknown>;
+          attemptEmailAddressVerification(params: { code: string }): Promise<Attempt>;
+        };
+        setActive: SetActive;
+      };
+  export function useSSO(): {
+    startSSOFlow(params: { strategy: string; redirectUrl?: string }): Promise<{
+      createdSessionId: string | null;
+      setActive?: SetActive;
+    }>;
+  };
+  export function isClerkAPIResponseError(
+    error: unknown,
+  ): error is { errors: Array<{ code: string; message: string; longMessage?: string }> };
+}
+
+declare module "convex/react" {
+  import type * as React from "react";
+  export class ConvexReactClient {
+    constructor(address: string, options?: object);
+  }
+  export const ConvexProvider: React.ComponentType<{ client: ConvexReactClient; children?: React.ReactNode }>;
+}
+
+declare module "convex/react-clerk" {
+  import type * as React from "react";
+  import type { ConvexReactClient } from "convex/react";
+  export const ConvexProviderWithClerk: React.ComponentType<{
+    client: ConvexReactClient;
+    useAuth: () => {
+      isLoaded: boolean;
+      isSignedIn: boolean | undefined;
+      getToken(options?: { template?: string; skipCache?: boolean }): Promise<string | null>;
+    };
     children?: React.ReactNode;
   }>;
 }

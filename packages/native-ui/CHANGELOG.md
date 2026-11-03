@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+## 0.7.0 (2026-11-03)
+
+Shared Expo helpers from the vibot, Verve, Velth, vmem and V Store phone apps: a NativeWind preset, the Expo web root and an auth subpath. The new entries are off the root entry. No new dependency; four new optional peers, which the apps already have.
+
+- **`@vvedantb/native-ui/tailwind-preset`** (new). CommonJS (`src/tailwind-preset.cjs`, types in `src/tailwind-preset.d.cts`), so `tailwind.config.js` can `require` it outside Metro. It exports `nativeUiPreset(options)`, `nativeUiContent()`, `cssVar`, `hslVar`, `rgbAlpha`, `cssVariables`, `schemeColors`, `INSTRUMENT_SANS` and a default preset.
+  - `nativeUiPreset()` nests `nativewind/preset`, so an app passes only this preset. `darkMode` is `"class"` by default (`ThemeToggle` needs it); pass `darkMode: "media"` to keep the V Store setting.
+  - Font classes: `instrument-sans`, `-medium`, `-semibold` and `-bold` map to the Expo Google Fonts faces (`InstrumentSans_400Regular` to `InstrumentSans_700Bold`), and `sans` maps to the regular face.
+  - Colour keys: `background`, `foreground`, `border`, `input`, `ring`, `separator`, `surface` (with `foreground`, `secondary`, `tertiary`, `card`), and `primary`, `secondary`, `destructive`, `muted`, `accent`, `popover`, `card`, `danger`, `success`, `warning`, `default` and `overlay`, each with `foreground`, and `field` (with `placeholder`). The `color` option maps a variable name to a value, as the web `tokensPreset({ color })`. The default is `cssVar` (`var(--name)`). `hslVar` gives `hsl(var(--name))` (Velth, vmem) and `rgbAlpha` gives `rgb(var(--name) / <alpha-value>)` (Verve, V Store).
+  - `injectCssVariables: true` adds a plugin that writes every colour variable from `tokens.ts` and `palette.ts` as `r g b` channels, with `--radius` (16px), in `:root` and `.dark:root, .dark`, or in `@media (prefers-color-scheme: dark)` with `darkMode: "media"`. The default `color` is then `rgbAlpha`. An app can then drop most of its `global.css` token block. The preset reads the object literals in `tokens.ts` and `palette.ts`, so those stay the one source of the colours.
+  - `borderWidth.hairline` comes from `nativewind/theme` `hairlineWidth()` when NativeWind is installed. `borderRadius` `lg`, `md` and `sm` from `var(--radius)` are on with `injectCssVariables` or `radiusVariable: true`. They are off by default, so an app without `--radius` keeps the Tailwind radii.
+  - `nativeUiContent()` is the absolute glob of this package's `src/**/*.{js,ts,tsx}`, at its real path, so pnpm symlinks resolve.
+  - Not in the preset, kept in each app: vibot `feature-*` colours, the Velth pink primary, Michroma, the geist and host-grotesk aliases, accordion keyframes, `corePlugins.fontWeight: false` and the font-weight plugins. The preset does not add `tailwindcss-animate`; apps that use it keep it in their own `plugins`.
+- **`@vvedantb/native-ui/expo-web-root`** (new). `ExpoWebRoot` is the whole of `app/+html.tsx`. It replaces the vibot, Verve, Velth and V Store copies; vmem has none.
+  - It renders `<html lang>` (default `"en"`), the charset and `X-UA-Compatible` meta tags, the viewport, `ScrollViewStyleReset` from `expo-router/html` (`scrollReset`, default `true`), a body background style and `<body>`.
+  - `viewport="native"` (default; vibot, V Store) stops pinch-zoom. `viewport="accessible"` (Velth, Verve) allows it. Both set `viewport-fit=cover`. The strings are in `EXPO_WEB_VIEWPORT`.
+  - The body fill is `tokens.color.background` light and dark by default; `lightBackground` and `darkBackground` override it. The dark fill follows `prefers-color-scheme` and the `html.dark` class. `head` adds nodes to `<head>`.
+  - New types `ExpoWebRootProps` and `ExpoWebRootViewport`. `expoWebBackgroundCss` is exported too.
+- **`@vvedantb/native-ui/auth`** (new). The Clerk and Convex root providers and a shared sign-in and sign-up screen.
+  - `AuthProviders`: `ClerkProvider` › `ConvexProviderWithClerk` (with `convex`) › `ClerkLoaded` (with `loaded`, default `true`) › children. Without `convex` it is Clerk only (vmem). `clerk={false}` gives a plain `ConvexProvider`, as the web `ConvexClerkProvider` does for UI preview builds. The app passes `publishableKey`, `tokenCache` and, if it wants, its own `useAuth`. The component reads no env var and throws no error about a missing key.
+  - `SignInScreen` (`mode="sign-in"` or `"sign-up"`) and `SignUpScreen`: email and password, Google, and on sign-up an emailed code (`prepareEmailAddressVerification({ strategy: "email_code" })`, then `attemptEmailAddressVerification`) before `setActive`. On success it calls `onSuccess` or `router.replace(afterAuthHref, replaceOptions)` (default `"/"`; vibot passes `{ withAnchor: true }`). Other props: `title`, `subtitle`, `scheme`, `redirectPath` (default `"sso-callback"`), `showGoogle`, `googleLabel` (default "Continue with Google"), `signUpHref`, `signInHref`, `minPasswordLength`, `errorDisplay` (`"toast"`, default, or `"inline"`), `testIDPrefix`, `header` and `footer`.
+  - `GoogleSignInButton` (the Verve `GoogleButton` with `scheme`, `redirectPath`, `onSuccess` and `onError`), `useGoogleSignIn` and `useWarmUpBrowser`. `WebBrowser.maybeCompleteAuthSession()` runs once at module scope. The custom tab warms up on Android only.
+  - `AuthScreen` (the keyboard-avoiding frame with title and subtitle), `OrDivider` and `FieldError`.
+  - Messages are generic and never name the provider: "Sign in failed", "Invalid email or password", "Could not create account", "Invalid code", "Could not continue with Google" (`AUTH_MESSAGES`, `GOOGLE_ERROR_MESSAGE`). `authErrorMessage(error, fallback)` shows an API error's own message only when it does not name the provider. It never shows a raw exception message.
+- **Optional peers** (new, `peerDependenciesMeta.optional`): `@clerk/clerk-expo`, `convex`, `expo-auth-session` and `expo-web-browser`. Only `/auth` imports them; `/expo-web-root` and `/auth` import `expo-router`. Other entries reach none of them.
+- **Adoption.**
+  - `tailwind.config.js`: `presets: [nativeUiPreset()]` and `nativeUiContent()` in `content`, then keep the app's own extensions. Apps whose variables have another name or prefix (Verve's `--color-*`) pass ``color: (name) => `rgb(var(--color-${name}) / <alpha-value>)` ``.
+  - `app/+html.tsx`: `<ExpoWebRoot viewport="accessible">` for Velth and Verve; the default for vibot and V Store. Velth, vibot and Verve now get the token background in place of `#fff`/`#000` or `#ffffff`/`#181818`, unless they pass `lightBackground` and `darkBackground`.
+  - Root `_layout.tsx`: `<AuthProviders publishableKey={key} tokenCache={tokenCache} convex={convex} useAuth={useAuth}>`.
+- **Not unified; stays in the apps:** the Velth pink auth chrome and Michroma wordmark (pass them as `header`), the V Store forgot-password flow and its `@clerk/expo` package (the shared code uses `@clerk/clerk-expo`; V Store can alias the package or migrate), app ThemeProviders, font loading, splash screens, `UI_PREVIEW` gates, `EnsureUserRow`, `PoweredByPV`, vibot feature colours and the font-weight plugins.
+- `types/peers.d.ts` (the typecheck stub, not shipped) declares `@clerk/clerk-expo`, `convex/react`, `convex/react-clerk`, `expo-router/html`, `expo-auth-session`, `expo-web-browser`, `useRouter` from `expo-router`, and `autoComplete` and `textContentType` on `TextInput`.
+- Tests:
+  - New `tests/tailwindPreset.test.ts` (13 tests), `tests/expoWebRoot.test.ts` (5) and `tests/auth.test.ts` (16).
+  - `tests/exports.test.ts` checks 0.7.0, the three new entries, the new optional peers and that none of the new names is on the root.
+  - `tests/subpaths.test.ts` adds the auth peers to `HEAVY_PEERS` and `./auth` and `./expo-web-root` to `HEAVY_ENTRIES`, checks each graph and keeps the auth peers off every other entry.
+  - `tests/buttonShape.test.ts` lists the two auth files that render `Button` (default pill).
+
 ## 0.6.1 (2026-11-03)
 
 - **Types for React Native 0.88 apps.** With React Native 0.88, Expo SDK 58 (its `expo-env.d.ts` and the react-native-web types widen `ViewStyle` with `position: "fixed"` and `backgroundImage`) and react-native-svg 15, the shipped `src/` failed the app's `tsc`: a `ViewStyle` is no longer assignable to a View `style`. Apps no longer need a local patch for it.
