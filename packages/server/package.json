@@ -1,8 +1,8 @@
 {
   "name": "@vvedantb/server",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "MIT",
-  "description": "Shared Convex backend helpers, MCP server scaffolding and Node-side MCP OAuth client helpers from one root import: query-limit errors, Clerk auth and token verification, an MCP bearer-token cache, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools, WebCrypto primitives, Convex optimistic-update helpers, MCP OAuth client helpers (provider, sign-in, refresh, revocation, loopback redirect server) for desktop apps, a QuickJS code sandbox that bridges script tool calls to host handlers, and a pure artifacts core (Zod contract, state limits and ops, quiz and flashcards pages, a sandboxed document wrapper with CSP and a guest state bridge).",
+  "description": "Shared Convex backend helpers, MCP server scaffolding and Node-side MCP OAuth client helpers from one root import: query-limit errors, Clerk auth and token verification, an MCP bearer-token cache, Clerk-user lookups and ensure-user for Convex functions, bearer tokens, env, CORS, JSON responses, MCP route registration, a bearer-auth MCP HTTP handler, OAuth metadata, a JSON-RPC dispatcher, explorer tools, WebCrypto primitives, Convex optimistic-update helpers, MCP OAuth client helpers (provider, sign-in, refresh, revocation, loopback redirect server) for desktop apps, a QuickJS code sandbox that bridges script tool calls to host handlers, and a pure artifacts core (Zod contract, state limits and ops, quiz and flashcards pages, a sandboxed document wrapper with CSP and a guest state bridge); and, from the `@vvedantb/server/ai` subpath, Vercel AI Gateway helpers (service tier provider options, cost from provider metadata, error classification).",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -17,10 +17,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "import": "./dist/ai/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "docs/ai.md",
     "docs/artifacts.md",
     "docs/convex.md",
     "docs/crypto.md",
@@ -43,14 +48,19 @@
     "prepack": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
+    "@ai-sdk/gateway": ">=1",
     "@clerk/backend": ">=1",
     "@jitl/quickjs-singlefile-cjs-release-sync": "^0.32.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai": ">=5",
     "convex": "^1.24.0",
     "quickjs-emscripten-core": "^0.32.0",
     "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
+    "@ai-sdk/gateway": {
+      "optional": true
+    },
     "@clerk/backend": {
       "optional": true
     },
@@ -58,6 +68,9 @@
       "optional": true
     },
     "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
+    "ai": {
       "optional": true
     },
     "convex": {
@@ -71,9 +84,11 @@
     }
   },
   "devDependencies": {
+    "@ai-sdk/gateway": "^4.0.135",
     "@jitl/quickjs-singlefile-cjs-release-sync": "^0.32.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@types/node": "^22.0.0",
+    "ai": "^7.0.162",
     "convex": "^1.47.0",
     "quickjs-emscripten-core": "^0.32.0",
     "typescript": "^5.9.0",

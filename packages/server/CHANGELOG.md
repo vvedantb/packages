@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.11.0
+
+Additive: Vercel AI Gateway helpers on a new subpath, `@vvedantb/server/ai`, taken from three apps' local copies. The root is unchanged and does not re-export them. No new dependency: `ai` (`>=5`) and `@ai-sdk/gateway` (`>=1`) are new optional peers, needed only by the subpath. See `docs/ai.md`.
+
+### Added
+
+- Export `./ai` (`dist/ai/index.js`). Works in the Convex default runtime: no Node built-ins, no `"use node"`.
+- `GatewayServiceTier` (`"flex" | "default" | "ultrafast"`), `gatewayServiceTier(tier)` and its alias `gatewayTier`: `{}` for `"default"`, else `{ gateway: { serviceTier: tier } }`.
+- `FLEX_GATEWAY_PROVIDER_OPTIONS` (replaces inline `{ gateway: { serviceTier: "flex" } }` literals) and its alias `FLEX_PROVIDER_OPTIONS`, frozen.
+- `withFlexGatewayOptions(extra?)`: flex with the caller's provider options on top. Unlike the local `buildChatProviderOptions` it replaces, a caller `gateway` key is merged over flex instead of replacing it.
+- `readGatewayCost(metadata)`: `gateway.cost`, else `gateway.marketCost`, as a number or numeric string. Takes a structural type that the SDK's `ProviderMetadata` fits; no SDK import.
+- `classifyGatewayError(error)`, `errorMessageOf(error)`, `GatewayErrorKind` and `GatewayFailure` (from a local `gatewayErrors.ts`). Changes from that copy:
+  - New kind `quota`: status 402, a billing message, or "quota" on a Gateway error that is not a rate limit. Not retryable. A rate-limit error that only says "quota" stays `rate_limit`.
+  - `auth` also matches the error that `generateText` and the other `ai` calls put in place of `GatewayAuthenticationError` (a plain `Error` named `GatewayAuthenticationError`, or in production an `AISDKError` named `GatewayError`). The local copy returned `other` for both.
+  - The Gateway's `GatewayTimeoutError` is `timeout` (retryable), not `gateway`.
+  - `statusCode` is set for every Gateway error; `message` has ANSI colour codes removed.
+- Types `GatewayServiceTierOptions`, `GatewayProviderOptions`, `GatewayJsonObject`, `GatewayJsonValue`, `GatewayCostMetadata`.
+- `docs/ai.md`, with which app files can be deleted once each app adopts it.
+
+### Tests
+
+- `tests/ai/`: tier builder, flex merge, cost parsing, every classifier branch with real SDK error instances, marker matching for a foreign copy, and errors built by `generateText` through `createGateway` with a fake `fetch` (429, 402, 401, 404, 400, 503). Types are checked against the SDK's `providerOptions` and `ProviderMetadata`.
+- `tests-node/esm-exports.mjs`: the exports map has `./ai`; the root has no AI exports; `./ai` fails with a missing package when the peers are absent and runs when they are installed; the published `./ai` types check alone and fit the SDK.
+- `tests-node/bundle.mjs`: a Convex V8 bundle of an action that uses `./ai` has no Node built-in with the SDK external, and imports no Node built-in with the SDK bundled. The SDK itself carries guarded `process.getBuiltinModule("node:…")` calls; the test allows those and nothing else.
+- `ai` and `@ai-sdk/gateway` are dev dependencies.
+
 ## 0.10.0
 
 Retires the per-app `vibot_pro` plan. Only the shared `v_pro` plan counts as V Pro. No new dependency.

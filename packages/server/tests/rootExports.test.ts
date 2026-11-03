@@ -30,3 +30,12 @@ describe("@vvedantb/server root export", () => {
     }
   });
 });
+
+describe("@vvedantb/server/ai is a subpath only", () => {
+  it("the root re-exports none of it", async () => {
+    const ai = await import("../src/ai/index.js");
+    for (const name of Object.keys(ai)) {
+      expect(name in root, name).toBe(false);
+    }
+  });
+});
