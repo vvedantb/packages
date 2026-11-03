@@ -399,6 +399,9 @@ export { useHeldResult } from "../app/src/convex/useHeldResult";
 // Family app marks (Icon* components, deprecated AppMark and raw SVG strings for favicons).
 export * from "./brand";
 
+// Third-party brand logos (`GitHubIcon`, `SlackIcon`, `ClaudeIcon`, ...). Also `@vvedantb/ui/logos`.
+export * from "./logos";
+
 // Native tokens (JS values that match tokens.css).
 export { tokens } from "../tokens/src/native";
 export type { Tokens } from "../tokens/src/native";

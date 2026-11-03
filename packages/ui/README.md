@@ -7,6 +7,8 @@ Shared React 19 web UI. Source-exported: no build step.
 | `@vvedantb/ui` | The main JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/client` | The root without `@vvedantb/server`, convex or Clerk, for Chrome extensions (0.28.0). Leaves out the artifact viewers, `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`. See [Chrome extensions](#chrome-extensions-0280). |
 | `@vvedantb/ui/brand` | App icons (`Icon*`, `APP_ICONS`), `AppWordmark`, deprecated `AppMark`, raw SVG strings and `FAMILY_APPS`. Also in the root and `/client`. |
+| `@vvedantb/ui/logos` | Third-party brand logos (`GitHubIcon`, `GoogleDriveIcon`, `SlackIcon`, `ClaudeIcon`, `VercelIcon`, ...) and `LogoProps` (0.36.0). Also in the root and `/client`. See [Third-party logos](#third-party-logos-0360). |
+| `@vvedantb/ui/icons/animated` | Motion-driven animated SVG icons (`AnimatedNotificationIcon`, `MorphingMenuIcon`, `AnimatedBellIcon`, ...) (0.36.0). Not in the root or `/client`. Needs the optional `motion` peer. See [Animated SVG icons](#animated-svg-icons-0360). |
 | `@vvedantb/ui/tokens` | `tokens.css`: colour, radius, shadow, ease and font tokens for Tailwind v4. CSS. |
 | `@vvedantb/ui/tokens/tokens.css` | Same file as `@vvedantb/ui/tokens`. CSS. |
 | `@vvedantb/ui/tokens/css/*.css` | `index`, `base`, `dialog`, `modal`, `tabs`, `tabs-pills`, `utilities`, `scrollbar-thin`, `clear-input`, `motion`, `animations`, `nav-icons`, `compat-shadcn-rgb`, `border-beam` (opt-in, for `BorderBeam`), `markdown` (opt-in, for `Markdown`). CSS. `tokens.css` imports `scrollbar-thin`, `clear-input` and `motion`. |
@@ -1154,6 +1156,47 @@ Props (type `IconProps`; all optional):
 | `variant` | `"spin"` | `SettingsIcon` only (`SettingsIconProps`, 0.12.0). `"spin"`: continuous linear spin, stroke 1.7, 1.15 spring hover scale. `"turn"`: a second gear drawing (hub first) that turns 60deg at a time with the emphasized ease over 2400 ms, stroke 1.75, 1.12 hover scale like the other 1.75-stroke icons. `duration` scales against the variant's own loop. |
 
 Other SVG props (`id`, `data-*`, handlers, `ref`) go to the svg. On group hover the svg scales to 1.15 (the first six icons, spring ease) or 1.12 (the rest). `NavIconBase` is the shared svg wrapper, for icons drawn in the same style. The stylesheet has no reduced-motion override.
+
+## Third-party logos (0.36.0)
+
+Full-colour vendor logos, separate from the family marks in `@vvedantb/ui/brand`. Import from `@vvedantb/ui/logos` (also in the root and `/client`):
+
+```tsx
+import { GitHubIcon, GoogleDriveIcon, SlackIcon } from "@vvedantb/ui/logos";
+
+<GoogleDriveIcon />                      // 24px, aria-hidden
+<SlackIcon size={16} title="Slack" />    // role="img", aria-label and <title>
+<GitHubIcon className="text-foreground" /> // monochrome marks follow currentColor
+```
+
+| Logo | Colour |
+| --- | --- |
+| `ChromeIcon`, `ConvexIcon`, `DropboxIcon`, `FigmaIcon`, `GmailIcon`, `GoogleDriveIcon`, `LinearIcon`, `NotionIcon`, `OneDriveIcon`, `SharePointIcon`, `SlackIcon` | Brand colours |
+| `ClaudeIcon`, `CursorIcon`, `GitHubIcon`, `VercelIcon` | `currentColor` |
+
+Props (`LogoProps`): `size` (number or CSS length, default `24`, sets width and height), `title` (accessible name: the svg becomes `role="img"` with `aria-label` and a `<title>`; without `title` or `aria-label` it is `aria-hidden`), and any other SVG prop (`className`, `style`, `data-*`, `ref`). `OneDriveIcon` and `SharePointIcon` use `useId` for their gradient ids, so several on one page do not clash. Paths are the vendors' own: do not recolour the full-colour marks. For the AI provider marks in model pickers, keep using `ProviderIcon`.
+
+## Animated SVG icons (0.36.0)
+
+Motion-driven icons, on their own entry so apps that do not use them do not load them. They are not in the root or `/client`.
+
+```tsx
+import { AnimatedNotificationIcon, MorphingMenuIcon } from "@vvedantb/ui/icons/animated";
+```
+
+They need the optional `motion` peer and animate through `m.*`, so they need the app's `MotionProvider` (or its own `LazyMotion`). Without it they render their resting frame. No stylesheet. All are decorative (`aria-hidden`) except `AnimatedProgress` (`role="progressbar"`) and `AnimatedCounter` (text).
+
+| Component | Props | What it does |
+| --- | --- | --- |
+| `AnimatedNotificationIcon` | `type` (`NotificationIconType`: `success`, `warning`, `error`, `info`), `size` (20), `color`, `className` | On mount the check draws itself, the warning shakes, the error pops in, the info icon rises. Colour: `--color-success`, `--color-warning`, `--color-danger`, `--color-primary` (`info`); `color` overrides. |
+| `AnimatedBellIcon` | `size` (32), `muted` (`true`), `className` | Bell draws itself, then swings every 4.5 s. `muted` adds the slash. |
+| `AnimatedKeyIcon` | `size` (48), `className` | Bolt draws itself, sparkles twinkle, soft pulse. For empty API-key states. |
+| `MorphingMenuIcon` | `isOpen`, `size` (20), `className` | Three bars morph to an X. `data-state="open"` or `"closed"`. Label the button and set its `aria-expanded`. |
+| `MorphingMicIcon` | `isListening`, `size` (32), `strokeWidth` (2), `className` | Cross-fades a microphone and a stop square. |
+| `PulsingRings` | `size`, `ringCount` (3), `color` (`var(--color-danger)`), `active` (`true`), `className` | Staggered expanding rings, absolutely centred in a `relative` parent. `active={false}` renders nothing. |
+| `AnimatedStatusDot` | `phase` (`StatusDotPhase`: `idle`, `listening`, `thinking`, `speaking`, `error`), `size` (10; svg is 3x), `className` | Ripples while listening, glow while listening or speaking. |
+| `AnimatedProgress` | `value` (0 to 100, clamped), `height` (4), `showGradient` (`true`), `label`, `className` | Spring fill in `--color-primary` on `--color-surface-secondary`, with a moving gradient and shimmer. |
+| `AnimatedCounter` | `value`, `duration` (1 s), `formatValue`, `animateOnView` (`true`), `className` | Springs from 0 to `value` once in view. `tabular-nums`. The spring runs without `LazyMotion`. |
 
 ## Artifact viewers (0.13.0)
 
