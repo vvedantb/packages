@@ -36,6 +36,7 @@ test("root exposes former subpath APIs", () => {
     "AppMark", "AppWordmark", "APP_ICONS", "IconVibot", "IconVhub", "IconVmem", "IconVerve", "IconVelth", "IconProjectV", "IconEva", "IconBee", "APP_NAMES", "APP_MARKS", "APP_MARK_SVG", "APP_TILE_SVG", "APP_TILE_LIGHT_SVG",
     "appMarkSvg", "appTileSvg", "appAdaptiveSvg", "appExtension128Svg", "FAMILY_APPS", "familyApp",
     "V_PRO_APP_BENEFITS",
+    "GitHubIcon", "SlackIcon", "ClaudeIcon", "GoogleDriveIcon", "VercelIcon", "ConvexIcon",
     "useMediaQuery", "useDocumentVisible", "useDocumentAppearance", "readDocumentAppearance", "subscribeDocumentAppearance", "useIdleCallback", "createIdleCallback", "useSingleFlight",
     "usePersistedScrollParent", "useCountUpDisplay", "parseCountable", "ErrorBoundary", "ListEnter", "useFirstPaintGate", "CountPop", "countLabel",
     "UnreadDot", "MarqueeOnHover", "RelativeDateTime", "ImageLightbox", "ImageGalleryPreview",
