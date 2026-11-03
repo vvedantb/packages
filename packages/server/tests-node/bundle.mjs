@@ -26,13 +26,27 @@ import {
   authenticateClerkBearer,
   authenticateWithTokenCache,
   extractBearerToken,
+  GRANTING_STATUSES_ACTIVE_ONLY,
   hasMcpOAuthTokens,
+  hasVPro,
   isAccessTokenExpiring,
   jsonResponse,
+  parseClerkBillingEvent,
   sha256Hex,
   utcDayKey,
+  verifyClerkWebhook,
   wrapArtifactDocument,
 } from ${JSON.stringify(pkg.name)};
+
+// Apps pass verifyWebhook from @clerk/backend/webhooks; a stand-in keeps this fixture free of it.
+const verifyWebhook = async (request) => JSON.parse(await request.text());
+
+export const clerkWebhook = httpActionGeneric(async (_ctx, request) => {
+  const verified = await verifyClerkWebhook(verifyWebhook, request);
+  if (!verified.ok) return new Response(verified.reason, { status: 400 });
+  const change = parseClerkBillingEvent(verified.event, { grantingStatuses: GRANTING_STATUSES_ACTIVE_ONLY, eventMatch: "prefix" });
+  return jsonResponse({ change, pro: change?.kind === "replace" && hasVPro({ planSlugs: change.planSlugs }) });
+});
 
 export const status = httpActionGeneric(async (_ctx, request) => {
   const token = extractBearerToken(request.headers.get("authorization"));
@@ -174,6 +188,8 @@ test("a Convex V8 bundle of the root, without the MCP SDK installed (most backen
     assertNoMcpClientRuntime(entryOutput(result));
     // The artifacts core is pure strings and data, so it bundles into the entry as is.
     assert.match(entryOutput(result), /artifact:ready/);
+    // So do the billing helpers.
+    assert.match(entryOutput(result), /subscriptionItem\.ended/);
     assertNoQuickJs(result);
     assert.equal(extraOutputs(result), 0, "no extra chunks");
     t.diagnostic(`${result.outputFiles.length} outputs, ${entryOutput(result).length} bytes in the entry`);

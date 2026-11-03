@@ -47,7 +47,8 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `  "authenticateWithTokenCache", "createMcpTokenCacheFunctions", "hashMcpToken", "jwtExpiryMs", "tokenCacheExpiresAt",\n` +
       `  "mcpTokenCacheFields", "mcpTokenCacheTable",\n` +
       `  "authenticateClerkBearer", "verifyClerkOAuthJwt", "clearClerkJwksCache", "looksLikeJwt",\n` +
-      `  "isOAuthAccessTokenJwt", "hasVPlan"]) {\n` +
+      `  "isOAuthAccessTokenJwt", "hasVPlan", "hasVPro", "parseVProCompUserIds", "verifyClerkWebhook", "parseClerkBillingEvent",\n` +
+      `  "activePlanSlugs", "applyBillingChange", "applyItemToPlanSlugs", "itemGrantsPlan", "createVProModule"]) {\n` +
       `  if (typeof m[name] !== "function") throw new Error("missing export " + name);\n` +
       `}\n` +
       `if (m.LOOPBACK_PATH !== "/callback" || m.LOOPBACK_TIMEOUT_MS !== 300000) throw new Error("loopback constants");\n` +
@@ -56,6 +57,8 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `if (m.MCP_TOKEN_CACHE_TTL_MS !== 300000 || m.MCP_TOKEN_CACHE_PURGE_BATCH !== 500 || m.MCP_TOKEN_CACHE_TABLE !== "mcpTokenCache") throw new Error("token cache constants");\n` +
       `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n` +
       `if (m.V_PRO_PLAN_KEY !== "v_pro" || !m.hasVPlan({ pla: "u:v_pro" }) || m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n` +
+      `if (m.GRANTING_ITEM_STATUSES.join() !== "active,past_due,canceled") throw new Error("granting statuses");\n` +
+      `if (m.GRANTING_STATUSES_ACTIVE_PAST_DUE.join() !== "active,past_due" || m.GRANTING_STATUSES_ACTIVE_ONLY.join() !== "active") throw new Error("granting presets");\n` +
       // The AI Gateway helpers are only on the ./ai subpath.
       `for (const name of ["classifyGatewayError", "gatewayServiceTier", "readGatewayCost", "FLEX_GATEWAY_PROVIDER_OPTIONS"]) {\n` +
       `  if (name in m) throw new Error("root exports " + name);\n` +
@@ -94,6 +97,35 @@ test("without the SDK: the pure MCP client helpers, the store and the loopback w
       `assert.equal(await m.refreshMcpOAuth({ url: "https://mcp.example.test/mcp", provider }), false);\n` +
       `await assert.rejects(provider.redirectToAuthorization(new URL("https://as.example.test/authorize")), /need the @modelcontextprotocol\\/sdk package/);\n` +
       `assert.equal(await m.revokeMcpOAuth({ url: "https://mcp.example.test/mcp", state: { tokens: { access_token: "a", token_type: "bearer" } } }), false);\n`,
+  );
+  assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
+});
+
+test("without @clerk/backend: webhook verify (injected), billing events and the V Pro check work", () => {
+  const run = runIn(
+    bare,
+    "billing",
+    `import assert from "node:assert/strict";\n` +
+      `import * as m from ${JSON.stringify(pkg.name)};\n` +
+      `await assert.rejects(import("@clerk/backend/webhooks"), /Cannot find package/);\n` +
+      `const event = { type: "subscription.active", data: { payer: { user_id: "user_a" }, items: [{ status: "active", plan: { slug: "v_pro" } }] } };\n` +
+      `const req = new Request("https://example.test/clerk/webhooks", { method: "POST", body: "{}" });\n` +
+      `const verified = await m.verifyClerkWebhook(async (_r, o) => (o.signingSecret === "whsec_1" ? event : Promise.reject(new Error("bad"))), req, { signingSecret: "whsec_1" });\n` +
+      `assert.deepEqual(verified, { ok: true, event });\n` +
+      `assert.deepEqual(await m.verifyClerkWebhook(async () => event, req, { env: {} }), { ok: false, reason: "missing-secret", error: "CLERK_WEBHOOK_SIGNING_SECRET is not set in Convex env" });\n` +
+      `const change = m.parseClerkBillingEvent(verified.event);\n` +
+      `assert.deepEqual(change, { kind: "replace", clerkId: "user_a", planSlugs: ["v_pro"] });\n` +
+      `const vPro = m.createVProModule()({ table: "users", index: "by_clerk_id", clerkIdField: "clerkId", planSlugsField: "billingPlanSlugs" });\n` +
+      `assert.deepEqual(vPro.planSlugsPatch(vPro.nextPlanSlugs(null, change)), { billingPlanSlugs: ["v_pro"] });\n` +
+      `assert.equal(m.hasVPro({ planSlugs: ["v_pro"] }), true);\n` +
+      `assert.equal(m.hasVPro({ clerkId: "user_b", compIds: m.parseVProCompUserIds("user_b, user_c") }), true);\n` +
+      `assert.equal(m.hasVPro({ identity: null, planSlugs: ["vibot_pro"] }), false);\n` +
+      `const opts = { grantingStatuses: m.GRANTING_STATUSES_ACTIVE_ONLY, eventMatch: "prefix" };\n` +
+      `const pastDue = { type: "subscription.other", data: { payer: { user_id: "user_a" }, items: [{ status: "past_due", plan: { slug: "v_pro" } }] } };\n` +
+      `assert.equal(m.parseClerkBillingEvent(pastDue), null);\n` +
+      `assert.deepEqual(m.parseClerkBillingEvent(pastDue, opts), { kind: "replace", clerkId: "user_a", planSlugs: [] });\n` +
+      `const strict = m.createVProModule()({ table: "users", index: "by_clerk_id", clerkIdField: "clerkId", planSlugsField: "billingPlanSlugs", ...opts });\n` +
+      `assert.deepEqual(strict.parseBillingEvent(pastDue), { kind: "replace", clerkId: "user_a", planSlugs: [] });\n`,
   );
   assert.equal(run.status, 0, `failed:\n${run.stdout}${run.stderr}`);
 });

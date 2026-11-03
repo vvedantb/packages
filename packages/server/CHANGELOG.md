@@ -1,5 +1,58 @@
 # Changelog
 
+## 0.12.0
+
+Shared V Pro checks and Clerk Billing webhook helpers, so apps stop keeping their own copies, with config options so apps whose webhook copies differ from the defaults can adopt them with no change users can see. Additive; nothing in 0.11.0 changes. No new dependency: `@clerk/backend` stays an optional peer and is never imported. (These helpers were first drafted as 0.11.0; 0.11.0 shipped the AI Gateway helpers instead.)
+
+### Added
+
+- `hasVPro({ identity, planSlugs, compIds, clerkId })`: true when `hasVPlan(identity)` is true, a stored slug is in `V_PRO_PLAN_KEYS`, or the Clerk id (`clerkId`, else `identity.subject`) is in `compIds`. Missing or malformed fields count as no plan; it never throws. Reads no env.
+- `parseVProCompUserIds(value)`: a comma-separated id list (for example `V_PRO_COMP_USER_IDS`), trimmed, empty ids dropped.
+- `verifyClerkWebhook(verifyWebhook, request, options?)`: verifies a Clerk (Svix) webhook with an injected `verifyWebhook` from `@clerk/backend/webhooks`. The secret is `options.signingSecret`, else `CLERK_WEBHOOK_SIGNING_SECRET` from `options.env` (default `process.env`). Returns `{ ok: true, event }` or `{ ok: false, reason: "missing-secret" | "invalid", error }`; never throws. Map both failures to HTTP 400.
+- `parseClerkBillingEvent(event)`: `subscription.created`, `.updated`, `.active` and `.pastDue` give `{ kind: "replace", clerkId, planSlugs }`. `subscriptionItem.updated`, `.active`, `.canceled`, `.ended`, `.abandoned`, `.incomplete` and `.pastDue` give `{ kind: "item", clerkId, status, slug }`. Returns `null` for other events, a payer with no `user_id` (an organisation), and malformed data, including a subscription event with no `items` array.
+- `applyBillingChange(current, change)`, `applyItemToPlanSlugs(current, item)`, `activePlanSlugs(items)`, `itemGrantsPlan(item)` and `GRANTING_ITEM_STATUSES` (`active`, `past_due`, `canceled`). `canceled` still grants until the item ends. Billing period fields are not read, so monthly and yearly items of one plan store the same slug.
+- `createVProModule<DataModel>()({ table, index, clerkIdField, planSlugsField, lookup? })`: `writeBillingChange(ctx, change)` (looks up the row and patches the slugs field; `false` with no write when there is no row), `nextPlanSlugs`, `planSlugsOf`, `planSlugsPatch` and `userHasVPro`. `planSlugsField` is configurable (for example `planSlugs` or `billingPlanSlugs`), so no data migration. Typed structurally; a Convex `MutationCtx` fits without a cast.
+- Types `ClerkBillingChange`, `ClerkWebhookEventLike`, `PlanItem`, `HasVProInput`, `ClerkWebhookEnv`, `ClerkWebhookRejection`, `VerifyClerkWebhookOptions`, `VerifyClerkWebhookResult`, `UserHasVProOptions`, `VProModuleConfig`, `VProPlanSlugsFieldOf`, `VProWriterCtx`.
+
+### Added: config options
+
+Every option is optional and defaults to the behaviour above.
+
+- `ClerkBillingOptions` (`grantingStatuses?`, `eventMatch?`) as an optional last argument to `itemGrantsPlan`, `activePlanSlugs`, `applyItemToPlanSlugs`, `applyBillingChange` and `parseClerkBillingEvent`.
+  - `grantingStatuses`: the item statuses that grant. Default `GRANTING_ITEM_STATUSES` (`active`, `past_due`, `canceled`).
+  - `eventMatch`: `"exact"` (default, the listed event types) or `"prefix"` (any `subscription.*` type gives `replace`, any `subscriptionItem.*` type gives `item`). Read only by `parseClerkBillingEvent`.
+- `GRANTING_STATUSES_ACTIVE_PAST_DUE` (`active`, `past_due`) and `GRANTING_STATUSES_ACTIVE_ONLY` (`active`) presets.
+- `createVProModule` config:
+  - `grantingStatuses` and `eventMatch`, used by `nextPlanSlugs`, `writeBillingChange` and the new `parseBillingEvent`.
+  - `createUser(ctx, { clerkId, planSlugs })`: called by `writeBillingChange` when there is no row, which then returns `true`. The app supplies every other field; the package invents none. `ctx.db.insert` is typed against the table.
+  - `onMissingUser`: `"noop"` (default) or `"create"` (implied by `createUser`). `"create"` without `createUser` is a type error and throws at configure time.
+  - `extraPatch(planSlugs)`: fields merged into the `writeBillingChange` patch of an existing row, typed as `Partial` of the document. The slugs field always wins.
+- `vPro.parseBillingEvent(event)`: `parseClerkBillingEvent` with the module's `grantingStatuses` and `eventMatch`, so the parser and the writer cannot disagree.
+- Types `ClerkBillingOptions`, `VProCreateUser`, `VProCreateUserCtx`. `VProModuleConfig` takes an optional fifth `Doc` type argument. `VProWriterCtx` gains an optional `db.insert`, which a `MutationCtx` has.
+
+### Renamed from the app copies
+
+- `planSlugsFromItems` is `activePlanSlugs`. `userHasVPlan(user, env)` is `hasVPro` (or `vPro.userHasVPro`) with an explicit `compIds`. `identityHasVPlan` is `hasVPlan`. The replace and apply-item writers are one `writeBillingChange`.
+
+### Known limit
+
+- An item event knows only its own item. When two items share a slug (for example a monthly and a yearly item of one plan), an item event with a non-granting status for one of them (`ended`, `upcoming`, `abandoned`, `incomplete`) removes the slug while the other still grants. The next subscription event or a backfill restores it. The app copy these helpers came from behaves the same.
+
+### Unchanged
+
+- Stored slugs stay unique and sorted. Apps that stored them unsorted get the same members in a different order.
+- Webhook runtime (V8 or Node), the HTTP status for a missing secret, refetching the subscription on each event, custom JWT plan claims and backfill paging stay in the apps. See `docs/convex.md`.
+
+### Tests
+
+- `tests/convex/clerkBilling.test.ts`: every handled event type, granting and removing statuses, monthly against yearly items, free plan and empty items, organisation payers, ignored and malformed events, and out-of-order event sequences.
+- `tests/convex/clerkWebhook.test.ts`: secret from options, env and `process.env`; missing and empty secrets; `verifyWebhook` rejecting, throwing synchronously and throwing a non-`Error`.
+- `tests/convex/vProModule.test.ts` and `tests/convex/vProModule.types.ts`: `planSlugs` against `billingPlanSlugs`, missing rows, `lookup`, `userHasVPro`, a webhook handler built from the helpers, and real Convex ctx and validator types.
+- `tests/convex/vPlan.test.ts`: `hasVPro` and `parseVProCompUserIds`. `tests-node/esm-exports.mjs` checks the new exports with no peer installed; `tests-node/bundle.mjs` bundles the webhook helpers for Convex V8.
+- `tests/convex/clerkBilling.test.ts`: each `grantingStatuses` preset across every helper, `eventMatch` exact against prefix, and prefix giving the same change as exact for every listed type.
+- `tests/convex/vProModule.test.ts`: module `grantingStatuses`, `parseBillingEvent`, `extraPatch`, `createUser` (insert, then patch), `onMissingUser` and a ctx with no `insert`. `tests/convex/vProModule.types.ts`: `createUser` and `extraPatch` against a real Convex schema, and rejected configs.
+- `tests-node/esm-exports.mjs` and `tests-node/bundle.mjs`: the presets and options with no peer installed and in a Convex V8 bundle.
+
 ## 0.11.0
 
 Additive: Vercel AI Gateway helpers on a new subpath, `@vvedantb/server/ai`, taken from three apps' local copies. The root is unchanged and does not re-export them. No new dependency: `ai` (`>=5`) and `@ai-sdk/gateway` (`>=1`) are new optional peers, needed only by the subpath. See `docs/ai.md`.

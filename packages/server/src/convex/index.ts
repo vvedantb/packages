@@ -2,6 +2,20 @@ export { clerkAuthConfig, type ClerkAuthConfigEnv } from "./authConfig.js";
 export { extractBearerToken } from "./bearerToken.js";
 export { getClerkClient, type ClerkClientEnv } from "./clerk.js";
 export {
+  activePlanSlugs,
+  applyBillingChange,
+  applyItemToPlanSlugs,
+  GRANTING_ITEM_STATUSES,
+  GRANTING_STATUSES_ACTIVE_ONLY,
+  GRANTING_STATUSES_ACTIVE_PAST_DUE,
+  itemGrantsPlan,
+  parseClerkBillingEvent,
+  type ClerkBillingChange,
+  type ClerkBillingOptions,
+  type ClerkWebhookEventLike,
+  type PlanItem,
+} from "./clerkBilling.js";
+export {
   createClerkUserAuth,
   type ClerkUserAuthConfig,
   type ClerkUserDataModelLike,
@@ -15,6 +29,13 @@ export {
   type EnsureClerkUserOptions,
   type EnsureClerkUserResult,
 } from "./clerkUserAuth.js";
+export {
+  verifyClerkWebhook,
+  type ClerkWebhookEnv,
+  type ClerkWebhookRejection,
+  type VerifyClerkWebhookOptions,
+  type VerifyClerkWebhookResult,
+} from "./clerkWebhook.js";
 export {
   corsPreflight,
   jsonWithCors,
@@ -96,6 +117,18 @@ export {
 } from "./verifyClerkOAuthJwt.js";
 export {
   hasVPlan,
+  hasVPro,
+  parseVProCompUserIds,
   V_PRO_PLAN_KEY,
   V_PRO_PLAN_KEYS,
+  type HasVProInput,
 } from "./vPlan.js";
+export {
+  createVProModule,
+  type UserHasVProOptions,
+  type VProCreateUser,
+  type VProCreateUserCtx,
+  type VProModuleConfig,
+  type VProPlanSlugsFieldOf,
+  type VProWriterCtx,
+} from "./vProModule.js";
