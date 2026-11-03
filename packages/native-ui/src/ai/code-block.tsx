@@ -27,7 +27,7 @@ export type CodeBlockCopyButtonProps = {
 /** Ghost copy button: the copy icon, then a check for `timeout` after a copy. */
 export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Copy code" }: CodeBlockCopyButtonProps) {
   const [copied, setCopied] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
