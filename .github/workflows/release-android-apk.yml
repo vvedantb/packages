@@ -3,10 +3,11 @@ name: Release Android APK (reusable)
 # Reusable workflow for the five Expo apps (velth, verve, vmem, vibot,
 # v-store). It builds a signed sideload APK with Gradle (no EAS, no
 # EXPO_TOKEN) and publishes it with release.json as a GitHub Release tagged
-# mobile-apk-<versionName>. V Store installs from there and its catalog sync
-# reads the tag, the asset names and release.json, so none of those formats
-# is an input. dry_run builds and signs the APK but publishes nothing. The
-# sideload key is not a Google Play key.
+# <tag_prefix><versionName> (mobile-apk-<versionName> by default). V Store
+# installs from there and its catalog sync reads the tag, the asset names and
+# release.json, so the asset and release.json formats are not inputs. On a
+# tag push the caller's tag is the release tag. dry_run builds and signs the
+# APK but publishes nothing. The sideload key is not a Google Play key.
 #
 # Ported from vmem .github/workflows/release-android.yml. This repo only
 # defines the workflow; it never runs a release itself, so the only trigger
@@ -50,10 +51,25 @@ on:
         type: string
         default: ""
       app_config_path:
-        description: "File with the DEFAULT_VERSION_NAME literal (the versionName floor). Default: <app_dir>/app.config.ts."
+        description: "File with the DEFAULT_VERSION_NAME literal (the versionName floor) when version_name_source is default_version_name. Default: <app_dir>/app.config.ts."
         required: false
         type: string
         default: ""
+      version_name_source:
+        description: "Where the versionName floor comes from. default_version_name: the DEFAULT_VERSION_NAME literal in app_config_path. app_json: expo.version in app_json_path (v-store's rules)."
+        required: false
+        type: string
+        default: default_version_name
+      app_json_path:
+        description: "app.json with expo.version, relative to the repo root. Used only when version_name_source is app_json."
+        required: false
+        type: string
+        default: app.json
+      tag_prefix:
+        description: "Release tag prefix. Tags are <tag_prefix><versionName>. V Store's catalog sync reads mobile-apk-* tags."
+        required: false
+        type: string
+        default: mobile-apk-
       build_script:
         description: "Build script, relative to the repo root. Run with bash from the repo root."
         required: false
@@ -89,13 +105,18 @@ on:
         required: false
         type: number
         default: 1000
+      version_code:
+        description: "versionCode, a whole number. Must be at least the highest published versionCode + 1 and version_code_floor. Empty uses that minimum."
+        required: false
+        type: string
+        default: ""
       mark_as_latest:
         description: "Mark the release as the repo's latest release. False keeps the flag on other products' releases in the same repo."
         required: false
         type: boolean
         default: false
       version:
-        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName (at least DEFAULT_VERSION_NAME)."
+        description: "versionName, like 1.0.1. On a tag push it must match the tag. Empty takes the tag's version on a tag push, else bumps the patch of the highest published release.json versionName (see version_name_source for the floor)."
         required: false
         type: string
         default: ""
@@ -104,8 +125,18 @@ on:
         required: false
         type: boolean
         default: false
+      upload_dry_run_artifact:
+        description: "On dry_run, upload the APK and release.json as the Actions artifact <app_name>-android-dry-run."
+        required: false
+        type: boolean
+        default: false
       build_env:
         description: "Extra environment for the pre-build, build and post-publish steps. One NAME=value per line; # starts a comment line. Not masked, so no secrets here (use the BUILD_ENV_SECRETS secret)."
+        required: false
+        type: string
+        default: ""
+      pre_setup_command:
+        description: "Optional inline bash run from the repo root after the input checks and before the Node, pnpm and Java setup, like freeing runner disk space. Empty skips it."
         required: false
         type: string
         default: ""
@@ -157,7 +188,7 @@ on:
         required: false
     outputs:
       tag:
-        description: "Release tag, mobile-apk-<versionName>."
+        description: "Release tag, <tag_prefix><versionName>, or the pushed tag on a tag push."
         value: ${{ jobs.release.outputs.tag }}
       version_name:
         description: "versionName of the built APK."
@@ -207,6 +238,9 @@ jobs:
       - name: Check inputs
         env:
           APP_CONFIG_PATH: ${{ inputs.app_config_path }}
+          VERSION_NAME_SOURCE: ${{ inputs.version_name_source }}
+          APP_JSON_PATH: ${{ inputs.app_json_path }}
+          TAG_PREFIX: ${{ inputs.tag_prefix }}
           BUILD_SCRIPT: ${{ inputs.build_script }}
           RELEASE_NOTES_PATH: ${{ inputs.release_notes_path }}
           PRE_BUILD_SCRIPT: ${{ inputs.pre_build_script }}
@@ -225,10 +259,22 @@ jobs:
           [[ "$APP_NAME" =~ $name_rule ]] || fail "app_name '$APP_NAME' must be letters, digits, '.', '_' or '-'."
           [[ "${APK_BASENAME:-$APP_NAME}" =~ $name_rule ]] || fail "apk_basename '$APK_BASENAME' must be letters, digits, '.', '_' or '-'."
           [[ "$KEYSTORE_FILENAME" =~ $name_rule ]] || fail "keystore_filename '$KEYSTORE_FILENAME' must be a file name with no folders."
+          # tag_prefix goes into a gh --jq filter, so only these characters.
+          [[ "$TAG_PREFIX" =~ $name_rule ]] || fail "tag_prefix '$TAG_PREFIX' must be letters, digits, '.', '_' or '-'."
 
           [ -d "$APP_DIR" ] || fail "app_dir '$APP_DIR' is not a folder in this repo."
-          app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
-          [ -f "$app_config" ] || fail "app_config_path '$app_config' does not exist."
+          case "$VERSION_NAME_SOURCE" in
+            default_version_name)
+              app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
+              [ -f "$app_config" ] || fail "app_config_path '$app_config' does not exist."
+              ;;
+            app_json)
+              [ -f "$APP_JSON_PATH" ] || fail "app_json_path '$APP_JSON_PATH' does not exist."
+              ;;
+            *)
+              fail "version_name_source '$VERSION_NAME_SOURCE' must be default_version_name or app_json."
+              ;;
+          esac
           [ -f "$BUILD_SCRIPT" ] || fail "build_script '$BUILD_SCRIPT' does not exist."
           if [ -n "$RELEASE_NOTES_PATH" ] && [ ! -f "$RELEASE_NOTES_PATH" ]; then
             fail "release_notes_path '$RELEASE_NOTES_PATH' does not exist. Set it to an empty string to publish without a template."
@@ -266,41 +312,80 @@ jobs:
 
           [ -z "$failed" ] || exit 1
 
+      # Before the toolchain, so it can free disk space for the setup steps.
+      - name: Pre-setup
+        if: inputs.pre_setup_command != ''
+        env:
+          PRE_SETUP_COMMAND: ${{ inputs.pre_setup_command }}
+        run: |
+          echo "Running pre_setup_command"
+          bash -eo pipefail -c "$PRE_SETUP_COMMAND"
+
       - name: Choose versionName, versionCode and tag
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          INPUT_VERSION_CODE: ${{ inputs.version_code }}
           APP_CONFIG_PATH: ${{ inputs.app_config_path }}
+          VERSION_NAME_SOURCE: ${{ inputs.version_name_source }}
+          APP_JSON_PATH: ${{ inputs.app_json_path }}
+          TAG_PREFIX: ${{ inputs.tag_prefix }}
           VERSION_CODE_FLOOR: ${{ inputs.version_code_floor }}
         run: |
           semver='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          # True if X.Y.Z $1 is higher than $2.
+          version_gt() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n 1)" = "$1" ]
+          }
 
           if ! [[ "$VERSION_CODE_FLOOR" =~ ^[1-9][0-9]{0,9}$ ]]; then
             echo "::error::version_code_floor must be a whole number from 1."
             exit 1
           fi
 
-          # DEFAULT_VERSION_NAME in app.config.ts is the versionName floor.
-          # vmem writes `const DEFAULT_VERSION_NAME = "1.0.0";`; an `export`
-          # in front is also read.
-          app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
-          app_version="$(sed -n -E 's/^(export )?const DEFAULT_VERSION_NAME = "([^"]*)";$/\2/p' "$app_config")"
-          if ! [[ "$app_version" =~ $semver ]]; then
-            echo "::error::Could not read the DEFAULT_VERSION_NAME literal from $app_config."
-            exit 1
+          # On a tag push the tag names the version: <tag_prefix><versionName>.
+          tag_version=""
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            if [[ "$GITHUB_REF_NAME" != "$TAG_PREFIX"* ]]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not start with $TAG_PREFIX, so V Store's catalog sync would never pick it up."
+              exit 1
+            fi
+            tag_version="${GITHUB_REF_NAME#"$TAG_PREFIX"}"
+            if ! [[ "$tag_version" =~ $semver ]]; then
+              echo "::error::Tag $GITHUB_REF_NAME must be $TAG_PREFIX followed by a versionName like 1.0.1."
+              exit 1
+            fi
           fi
 
-          # Highest versionName and versionCode in published mobile-apk-*
+          # default_version_name: DEFAULT_VERSION_NAME in app.config.ts is the
+          # versionName floor. vmem writes `const DEFAULT_VERSION_NAME = "1.0.0";`;
+          # an `export` in front is also read. app_json reads expo.version
+          # further down, as v-store did.
+          app_version=""
+          if [ "$VERSION_NAME_SOURCE" = default_version_name ]; then
+            app_config="${APP_CONFIG_PATH:-$APP_DIR/app.config.ts}"
+            app_version="$(sed -n -E 's/^(export )?const DEFAULT_VERSION_NAME = "([^"]*)";$/\2/p' "$app_config")"
+            if ! [[ "$app_version" =~ $semver ]]; then
+              echo "::error::Could not read the DEFAULT_VERSION_NAME literal from $app_config."
+              exit 1
+            fi
+          fi
+
+          # Highest versionName and versionCode in published <tag_prefix>*
           # release.json files. A release without release.json (before this
           # workflow) counts as versionCode 1. Any other gh error stops the
           # run rather than undercounting.
           # releases has a "versionName tag" line for each release.json, so
           # the release notes can start from the highest published version.
+          # name_tags maps each semver versionName to its tag, and
+          # highest_name is the highest one (no floor), for app_json.
           names="$app_version"
           releases=""
           highest_code=0
+          highest_name=""
+          declare -A name_tags=()
           tags="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1000 \
-            --json tagName --jq '.[].tagName | select(startswith("mobile-apk-"))')"
+            --json tagName --jq ".[].tagName | select(startswith(\"$TAG_PREFIX\"))")"
           for tag in $tags; do
             manifest="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
               --json assets --jq '.assets[] | select(.name == "release.json") | .name')"
@@ -319,6 +404,10 @@ jobs:
               if [[ "$name" =~ $semver ]]; then
                 names="$names"$'\n'"$name"
                 releases="$releases"$'\n'"$name $tag"
+                name_tags["$name"]="$tag"
+                if [ -z "$highest_name" ] || version_gt "$name" "$highest_name"; then
+                  highest_name="$name"
+                fi
               else
                 echo "::warning::$tag release.json versionName '$name' is not like 1.0.1. Ignored for versionName."
               fi
@@ -328,38 +417,103 @@ jobs:
             fi
           done
 
-          if [ -n "$INPUT_VERSION" ]; then
+          if [ "$VERSION_NAME_SOURCE" = app_json ]; then
+            # v-store's rules: the version input; else the tag's version;
+            # else the highest published versionName with the patch bumped,
+            # or expo.version if that is higher (a minor or major bump
+            # committed there) or nothing is published yet.
+            if [ -n "$INPUT_VERSION" ]; then
+              version_name="$INPUT_VERSION"
+            elif [ -n "$tag_version" ]; then
+              version_name="$tag_version"
+            else
+              version_name="$(jq -r '.expo.version // empty' "$APP_JSON_PATH")"
+              if [ -n "$highest_name" ]; then
+                IFS=. read -r major minor patch <<<"$highest_name"
+                bumped="$major.$minor.$((patch + 1))"
+                if ! [[ "$version_name" =~ $semver ]] || version_gt "$bumped" "$version_name"; then
+                  version_name="$bumped"
+                fi
+              fi
+            fi
+            if ! [[ "$version_name" =~ $semver ]]; then
+              echo "::error::versionName must be X.Y.Z, for example 1.0.1. Check the version input, or expo.version in $APP_JSON_PATH."
+              exit 1
+            fi
+          elif [ -n "$INPUT_VERSION" ]; then
             version_name="$INPUT_VERSION"
             if ! [[ "$version_name" =~ $semver ]]; then
               echo "::error::version must look like 1.0.1."
               exit 1
             fi
+          elif [ -n "$tag_version" ]; then
+            version_name="$tag_version"
           else
             highest_name="$(sort -V <<<"$names" | tail -n 1)"
             IFS=. read -r major minor patch <<<"$highest_name"
             version_name="$major.$minor.$((patch + 1))"
           fi
 
-          # Sideload versionCodes start at version_code_floor (1000), apart
-          # from local builds (DEFAULT_VERSION_CODE in app.config.ts).
-          version_code=$((highest_code + 1))
-          if [ "$version_code" -lt "$VERSION_CODE_FLOOR" ]; then
-            version_code="$VERSION_CODE_FLOOR"
+          if [ -n "$tag_version" ] && [ "$version_name" != "$tag_version" ]; then
+            echo "::error::The version input ($version_name) does not match the tag $GITHUB_REF_NAME."
+            exit 1
+          fi
+          if [ "$VERSION_NAME_SOURCE" = app_json ]; then
+            if [ -n "${name_tags[$version_name]:-}" ]; then
+              echo "::error::versionName $version_name is already published in ${name_tags[$version_name]}."
+              exit 1
+            fi
+            if [ -n "$highest_name" ] && ! version_gt "$version_name" "$highest_name"; then
+              echo "::error::versionName $version_name must be higher than $highest_name, the highest published release.json."
+              exit 1
+            fi
           fi
 
-          tag="mobile-apk-$version_name"
+          # Sideload versionCodes start at version_code_floor (1000), apart
+          # from local builds (DEFAULT_VERSION_CODE in app.config.ts). The
+          # version_code input can only raise that minimum.
+          min_code=$((highest_code + 1))
+          if [ "$min_code" -lt "$VERSION_CODE_FLOOR" ]; then
+            min_code="$VERSION_CODE_FLOOR"
+          fi
+          version_code="${INPUT_VERSION_CODE:-$min_code}"
+          if ! [[ "$version_code" =~ ^[1-9][0-9]*$ ]] || [ "$version_code" -lt "$min_code" ]; then
+            echo "::error::version_code '$version_code' must be a whole number of at least $min_code (above $highest_code, the highest published release.json, and at least version_code_floor $VERSION_CODE_FLOOR)."
+            exit 1
+          fi
+
+          # A tag push releases that tag, which already exists. Otherwise the
+          # workflow creates <tag_prefix><versionName>, which must not exist:
+          # gh release create would reuse it and ignore --target.
+          if [ -n "$tag_version" ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="$TAG_PREFIX$version_name"
+          fi
+          if [[ "$tag" != "$TAG_PREFIX"* ]]; then
+            echo "::error::$tag does not start with $TAG_PREFIX, so V Store's catalog sync would never pick it up."
+            exit 1
+          fi
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::error::Release $tag already exists."
             exit 1
           fi
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
+          if [ -z "$tag_version" ] && gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
             echo "::error::Tag $tag already exists without a release. Delete it or choose another version."
             exit 1
           fi
 
           # The release with the highest semver versionName. GitHub's "latest
           # release" can be another product's release in the same repo.
-          previous_tag="$(sort -V <<<"$releases" | tail -n 1 | cut -s -d ' ' -f 2)"
+          # app_json takes the tag that carries highest_name, as v-store did.
+          if [ "$VERSION_NAME_SOURCE" = app_json ]; then
+            previous_tag=""
+            if [ -n "$highest_name" ]; then
+              previous_tag="${name_tags[$highest_name]}"
+            fi
+          else
+            previous_tag="$(sort -V <<<"$releases" | tail -n 1 | cut -s -d ' ' -f 2)"
+          fi
 
           echo "Releasing $tag: versionName $version_name, versionCode $version_code (highest release: $highest_code, floor: $VERSION_CODE_FLOOR). Previous release: ${previous_tag:-none}"
           {
@@ -581,6 +735,17 @@ jobs:
             echo "sha256=$actual_sha256"
           } >> "$GITHUB_OUTPUT"
 
+      # Lets a dry_run's APK be installed and checked without a release.
+      - name: Upload dry-run artifact
+        if: inputs.dry_run && inputs.upload_dry_run_artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.app_name }}-android-dry-run
+          path: |
+            ${{ steps.build.outputs.apk }}
+            ${{ steps.build.outputs.release_json }}
+          if-no-files-found: error
+
       - name: Publish GitHub Release
         id: publish
         env:
@@ -630,9 +795,15 @@ jobs:
           # gh uploads the assets to a draft, then publishes it, so nobody
           # sees a release without its APK. mark_as_latest defaults to false:
           # other products' releases in the same repo keep the "latest" flag.
+          # A tag push releases the pushed tag, so gh must not move it.
           latest=false
           [ "$MARK_AS_LATEST" = true ] && latest=true
-          gh release create "$TAG" "$APK" "$RELEASE_JSON" --target "$GITHUB_SHA" \
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            target=(--verify-tag)
+          else
+            target=(--target "$GITHUB_SHA")
+          fi
+          gh release create "$TAG" "$APK" "$RELEASE_JSON" "${target[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --title "${RELEASE_TITLE:-$APP_NAME} $VERSION_NAME" \
             --latest="$latest" \
