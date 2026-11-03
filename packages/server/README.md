@@ -14,7 +14,7 @@ There are no subpath exports (0.2.0 removed `/convex` and `/mcp`; see [CHANGELOG
 
 | Area | What it holds | Docs |
 | --- | --- | --- |
-| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification (Node `verifyClerkAccessToken`, V8 `authenticateClerkBearer` for OAuth access token JWTs, with `verifyFallback` for opaque tokens and session JWTs; the MCP token cache is deprecated), Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
+| Convex helpers | Query-limit errors, Clerk auth config and client, Clerk token verification (Node `verifyClerkAccessToken`, V8 `authenticateClerkBearer` for OAuth access token JWTs, with `verifyFallback` for opaque tokens and session JWTs; the MCP token cache is deprecated), Clerk-user lookups and `ensureUser` (`createClerkUserAuth`), V Pro checks and Clerk Billing webhook helpers (`hasVPro`, `verifyClerkWebhook`, `parseClerkBillingEvent`, `createVProModule`), bearer tokens, env, MCP CORS, origin-allowlist CORS, `jsonResponse`, server info, test helpers. | [docs/convex.md](docs/convex.md) |
 | MCP scaffolding | For Convex `httpAction`s: bearer-auth handler, OAuth metadata, route registration, a pure JSON-RPC dispatcher, tool helpers and explorer tools. | [docs/mcp.md](docs/mcp.md) |
 | Crypto | WebCrypto-only base64/base64url/hex, SHA-256, random tokens, `timingSafeEqual`, AES-GCM. Convex default runtime and Node 20+. | [docs/crypto.md](docs/crypto.md) |
 | Optimistic updates | `mapLoadedQuery` (also `forEachLoadedQuery`, `updateAllCachedQueries`), `patchLoadedQuery`, `tempId`, `createMemoryOptimisticStore`. Client-side, no React. | [docs/convex.md](docs/convex.md#optimistic-updates-client-side) |
@@ -28,7 +28,7 @@ Migration steps per app: [docs/migration.md](docs/migration.md).
 
 All are optional. None is imported when the root loads.
 
-- `@clerk/backend` `>=1`: only for `getClerkClient` and `verifyClerkAccessToken`, which take its client or factory as an argument.
+- `@clerk/backend` `>=1`: only for `getClerkClient`, `verifyClerkAccessToken` and `verifyClerkWebhook`, which take its factory, client or `verifyWebhook` as an argument.
 - `zod` `^3.25.0 || ^4.0.0`: only if you pass zod schemas to `defineTool`, or your `z` to `createMcpOAuthStateSchema` or `createArtifactSchemas`.
 - `convex` `^1.24.0`: types only, for the optimistic-update helpers. The package never imports `convex` at runtime: `registerMcpRoutes` and `createClerkUserAuth` type the router and ctx structurally, and `createMemoryOptimisticStore` carries its own copy of `getFunctionName` (`convex` is a dev dependency, used to check that real Convex types fit).
 - `@modelcontextprotocol/sdk` `^1.29.0`: only for the MCP client OAuth calls, which import it on first use.
