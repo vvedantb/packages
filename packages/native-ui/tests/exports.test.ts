@@ -164,8 +164,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.6.1 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.6.1");
+  it("is 0.7.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.7.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -186,8 +186,10 @@ describe("@vvedantb/native-ui exports", () => {
       "./ai-gallery",
       "./blur",
       "./haptics",
+      "./auth",
+      "./expo-web-root",
     ];
-    expect(Object.keys(pkg.exports).sort()).toEqual([".", ...entries, "./package.json"].sort());
+    expect(Object.keys(pkg.exports).sort()).toEqual([".", ...entries, "./tailwind-preset", "./package.json"].sort());
     for (const entry of entries) {
       expect(existsSync(join(root, pkg.exports[entry].default)), entry).toBe(true);
       expect(pkg.exports[entry].types, entry).toBe(pkg.exports[entry].default);
@@ -195,7 +197,25 @@ describe("@vvedantb/native-ui exports", () => {
     expect(pkg.exports["./package.json"]).toBe("./package.json");
     expect(pkg.exports["."].default).toBe("./src/index.ts");
     expect(pkg.scripts.typecheck).toBe("tsc -p tsconfig.typecheck.json");
-    for (const peer of ["react-native-svg", "expo-blur", "expo-haptics", "expo-linear-gradient"]) {
+    // The preset is CommonJS for `tailwind.config.js`, with its own declarations.
+    expect(pkg.exports["./tailwind-preset"]).toEqual({
+      types: "./src/tailwind-preset.d.cts",
+      require: "./src/tailwind-preset.cjs",
+      default: "./src/tailwind-preset.cjs",
+    });
+    for (const file of Object.values(pkg.exports["./tailwind-preset"]) as string[]) {
+      expect(existsSync(join(root, file)), file).toBe(true);
+    }
+    for (const peer of [
+      "react-native-svg",
+      "expo-blur",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "@clerk/clerk-expo",
+      "convex",
+      "expo-auth-session",
+      "expo-web-browser",
+    ]) {
       expect(pkg.peerDependencies[peer], peer).toBe("*");
       expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
     }
@@ -237,9 +257,10 @@ describe("@vvedantb/native-ui exports", () => {
     expect(names.has("ButtonShape")).toBe(true);
   });
 
-  it("adds no dependency or peer in 0.5.0", () => {
+  it("adds no dependency, and only the 0.7.0 optional auth peers", () => {
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
+      "@clerk/clerk-expo",
       "@expo/vector-icons",
       "@gorhom/bottom-sheet",
       "@react-native-community/datetimepicker",
@@ -249,11 +270,14 @@ describe("@vvedantb/native-ui exports", () => {
       "@tabler/icons-react-native",
       "class-variance-authority",
       "clsx",
+      "convex",
       "dayjs",
+      "expo-auth-session",
       "expo-blur",
       "expo-haptics",
       "expo-linear-gradient",
       "expo-router",
+      "expo-web-browser",
       "lucide-react-native",
       "nativewind",
       "react",
@@ -265,16 +289,30 @@ describe("@vvedantb/native-ui exports", () => {
       "tailwind-merge",
     ]);
     expect(Object.keys(pkg.peerDependenciesMeta).sort()).toEqual([
+      "@clerk/clerk-expo",
       "@gorhom/bottom-sheet",
       "@react-native-community/datetimepicker",
+      "convex",
       "dayjs",
+      "expo-auth-session",
       "expo-blur",
       "expo-haptics",
       "expo-linear-gradient",
       "expo-router",
+      "expo-web-browser",
       "react-native-svg",
     ]);
+    // No tailwindcss-animate (or Tailwind itself): apps that want it keep it in their config.
+    expect(Object.keys(pkg.peerDependencies)).not.toContain("tailwindcss-animate");
     expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
+  });
+
+  it("keeps auth, the Expo web root and the Tailwind preset off the root entry", () => {
+    expect(index).not.toMatch(/from "\.\/auth"/);
+    expect(index).not.toMatch(/ExpoWebRoot|tailwind-preset/);
+    for (const name of ["AuthProviders", "SignInScreen", "SignUpScreen", "GoogleSignInButton", "OrDivider", "ExpoWebRoot"]) {
+      expect(names.has(name), name).toBe(false);
+    }
   });
 
   it("keeps the AI chat parts off the root entry: they are on /ai only", () => {

@@ -43,14 +43,15 @@ describe("searchInputSize (web contract)", () => {
   const webSize = (size: string) =>
     web.match(new RegExp(`${size}: \\{ input: "h-(\\d+) pl-(\\d+)([^"]*)", icon: "left-(\\d+)" \\}`));
 
-  it("is the web sm: h-8 pl-8 text-sm, icon at left-2", () => {
+  it("is the web sm: h-8 pl-8, with the web responsive text class; native keeps text-sm", () => {
     const [, h, pl, rest, left] = webSize("sm")!;
     const sm = searchInputSize("sm", false);
     expect(points(h!)).toBe(32);
     expect(sm.height).toBe(points(h!));
     expect(sm.minHeight).toBe(points(h!));
     expect(sm.paddingLeft).toBe(points(pl!));
-    expect(rest!.trim()).toBe("text-sm");
+    // Web SearchInput now ships `text-base sm:text-sm` (was bare `text-sm`).
+    expect(rest!.trim()).toBe("text-base sm:text-sm");
     expect(sm.text).toBe("text-sm");
     expect(sm.iconLeft).toBe(points(left!));
   });

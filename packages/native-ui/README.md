@@ -23,6 +23,7 @@ Optional, only if you import those components:
 
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
+- `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
 - `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`), `GoogleMark` and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
 
 Optional and loaded only when installed, so the package imports and runs without them:
@@ -75,10 +76,13 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
+| `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
+| `@vvedantb/native-ui/expo-web-root` | From 0.7.0: `ExpoWebRoot`, `ExpoWebRootProps`, `ExpoWebRootViewport`, `EXPO_WEB_VIEWPORT`, `expoWebBackgroundCss`. Not on the root entry. | `expo-router` (import of `expo-router/html`) |
+| `@vvedantb/native-ui/tailwind-preset` | From 0.7.0, CommonJS for `tailwind.config.js`: `nativeUiPreset`, `nativeUiContent`, `cssVar`, `hslVar`, `rgbAlpha`, `cssVariables`, `schemeColors` and a default preset. See [Expo / NativeWind](#expo--nativewind). | `nativewind` (`require`, when installed) |
 
 "Loader" means the `require` inside `try` described above, so the entry bundles and runs without that peer. `@vvedantb/native-ui/gallery` imports the root entry; `@vvedantb/native-ui/ai-gallery` imports `/ai` only.
 
-The AI chat parts are only on `/ai`. Metro does not tree-shake by default, so on the root entry they would bundle into every app, with or without a chat.
+The AI chat parts are only on `/ai`, and the auth screens and Expo web root only on `/auth` and `/expo-web-root`. Metro does not tree-shake by default, so on the root entry they would bundle into every app, with or without a chat or sign-in.
 
 ```tsx
 import { FloatingTabBar } from "@vvedantb/native-ui/tab-bar";
@@ -93,17 +97,32 @@ The entries re-export the same source files, so they can be mixed: `NativeUiProv
 
 ## Expo / NativeWind
 
-Source-exported. Point Tailwind at the package so class names are generated, and set `darkMode: "class"` (see [Theme](#theme)):
+Source-exported. From 0.7.0 the preset sets up Tailwind for the package: it nests `nativewind/preset`, sets `darkMode: "class"` (see [Theme](#theme)), maps the Instrument Sans font classes and adds the colour keys the components and apps share. `nativeUiContent()` points Tailwind at the package source, at its real path, so class names are generated:
 
 ```js
 // tailwind.config.js
-darkMode: "class",
-content: [
-  "./app/**/*.{js,ts,tsx}",
-  "./components/**/*.{js,ts,tsx}",
-  "./node_modules/@vvedantb/native-ui/src/**/*.{js,ts,tsx}",
-],
+const { nativeUiPreset, nativeUiContent } = require("@vvedantb/native-ui/tailwind-preset");
+
+module.exports = {
+  content: ["./app/**/*.{js,ts,tsx}", "./components/**/*.{js,ts,tsx}", nativeUiContent()],
+  presets: [nativeUiPreset()],
+  // App colours, display fonts, keyframes and plugins (such as tailwindcss-animate) stay here.
+  theme: { extend: {} },
+};
 ```
+
+`nativeUiPreset(options)`:
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `darkMode` | `"class"` | `"media"` follows the system only. `ThemeToggle` and `setColorScheme` need `"class"`. |
+| `color` | `cssVar`, or `rgbAlpha` with `injectCssVariables` | Maps a variable name to a colour value. `cssVar` gives `var(--name)`, `hslVar` gives `hsl(var(--name))` and `rgbAlpha` gives `rgb(var(--name) / <alpha-value>)`. For another prefix, pass your own, such as ``(name) => `rgb(var(--color-${name}) / <alpha-value>)` ``. |
+| `injectCssVariables` | `false` | Writes every colour variable from `tokens.ts` and `palette.ts` as `r g b` channels, and `--radius` (16px), for light (`:root`) and dark (`.dark`, or the media query with `darkMode: "media"`). The app's `global.css` then needs no token block. |
+| `radiusVariable` | `injectCssVariables` | `rounded-lg`, `-md` and `-sm` from `var(--radius)`. |
+
+The colour keys are `background`, `foreground`, `border`, `input`, `ring`, `separator`, `surface` (`DEFAULT`, `foreground`, `secondary`, `tertiary`, `card`), `field` (`DEFAULT`, `placeholder`) and, each with `DEFAULT` and `foreground`, `primary`, `secondary`, `destructive`, `muted`, `accent`, `popover`, `card`, `danger`, `success`, `warning`, `default` and `overlay`. Each reads the variable of the same name (`surface.secondary` reads `--surface-secondary`; `muted.foreground` reads `--muted-foreground`). `borderWidth.hairline` is NativeWind's `hairlineWidth()`.
+
+Before 0.7.0, list the package in `content` by hand (`"./node_modules/@vvedantb/native-ui/src/**/*.{js,ts,tsx}"`) and set `darkMode: "class"`.
 
 Metro already resolves `node_modules`. In a pnpm monorepo, if a peer resolves to the wrong copy, add:
 
@@ -116,7 +135,7 @@ config.resolver.nodeModulesPaths = [
 ];
 ```
 
-The app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes. From 0.5.0 the `ListRow`, `DateTimeField` and `HeaderIconButton` fills are styles too, so `ThemeToggle` and the `StackPageHeader` back button follow the scheme.
+Without the preset, the app must define NativeWind tokens (`bg-surface`, `bg-secondary`, pink utilities) and Instrument Sans font classes (`font-instrument-sans-*`). Accent pink stays in the app stylesheet. `Button`, `Input`, `Textarea`, the `Select` trigger, `Switch`, `Checkbox`, `Badge`, `Tabs` and `PillTabs` take their colours from `tokens` and `palette`, so they do not need `primary`, `input` or other theme keys. From 0.3.3 so does component text (titles, descriptions, labels, rows, toasts): it no longer uses `text-foreground` or `text-muted-foreground`, which stay light-mode colours in dark mode when an app defines `foreground` with a nested `dark` key. Override those colours with `style`, not `className`. App text needs the same care: `tokens.color.foreground[scheme]` reads in both schemes. From 0.5.0 the `ListRow`, `DateTimeField` and `HeaderIconButton` fills are styles too, so `ThemeToggle` and the `StackPageHeader` back button follow the scheme.
 
 From 0.3.5 text that uses `font-instrument-sans-medium` or `-semibold` also sets `fontWeight` as a style (`typeStyle` in `src/controlStyles.ts`). Where an app maps every `font-instrument-sans-*` class to one family with no weight, as Expo web does, the class alone draws Regular. A weight without the face class does not pick the Instrument Sans Medium or Semibold file, so set both. From 0.3.13 every title in the package pairs the two, the internal primitives included, and `tests/fontWeight.test.ts` fails on a face class without its weight, a weight without its face class, or a bare Tailwind `font-medium`, `font-semibold` or `font-bold`.
 
@@ -135,6 +154,62 @@ fontFamily: {
 ```
 
 A class mapped to a family the browser does not have, such as `["System"]`, with no generic fallback draws in the browser default, often a serif.
+
+### Expo web root (0.7.0)
+
+`app/+html.tsx` can be one component:
+
+```tsx
+import { ExpoWebRoot } from "@vvedantb/native-ui/expo-web-root";
+
+export default function Root({ children }: { children: React.ReactNode }) {
+  return <ExpoWebRoot>{children}</ExpoWebRoot>;
+}
+```
+
+It renders `<html lang="en">`, the charset, `X-UA-Compatible` and viewport meta tags, `ScrollViewStyleReset` from `expo-router/html`, a body background style and `<body>`. Props: `lang`; `viewport` (`"native"`, the default, stops pinch-zoom; `"accessible"` allows it; both set `viewport-fit=cover`); `scrollReset` (default `true`); `lightBackground` and `darkBackground` (default `tokens.color.background`); `head` for more `<head>` nodes. The dark fill follows `prefers-color-scheme` and the `html.dark` class.
+
+## Auth (0.7.0)
+
+`@vvedantb/native-ui/auth` has the Clerk and Convex providers and a sign-in and sign-up screen. It needs `@clerk/clerk-expo`, `expo-auth-session`, `expo-web-browser` and `expo-router`, and `convex` when you pass a Convex client.
+
+```tsx
+// app/_layout.tsx
+import { useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { AuthProviders } from "@vvedantb/native-ui/auth";
+
+<AuthProviders publishableKey={publishableKey} tokenCache={tokenCache} convex={convex} useAuth={useAuth}>
+  <Stack screenOptions={{ headerShown: false }} />
+</AuthProviders>
+```
+
+`AuthProviders` nests `ClerkProvider`, `ConvexProviderWithClerk` (only with `convex`) and `ClerkLoaded` (with `loaded`, default `true`). Without `convex` the children sit under Clerk only. `clerk={false}` gives a plain `ConvexProvider`, for UI preview builds. The app reads its own key; the component checks nothing.
+
+```tsx
+// app/(auth)/sign-in.tsx
+import { SignInScreen } from "@vvedantb/native-ui/auth";
+
+export default function SignIn() {
+  return <SignInScreen scheme="myapp" signUpHref="/sign-up" />;
+}
+
+// app/(auth)/sign-up.tsx
+import { SignUpScreen } from "@vvedantb/native-ui/auth";
+
+export default function SignUp() {
+  return <SignUpScreen scheme="myapp" signInHref="/sign-in" minPasswordLength={8} />;
+}
+```
+
+- Email and password, and "Continue with Google" (`useSSO`, `oauth_google`, redirect `AuthSession.makeRedirectUri({ scheme, path: redirectPath })`; `redirectPath` defaults to `"sso-callback"`). Sign-up sends an email code and checks it before the session starts.
+- On success: `onSuccess()`, or `router.replace(afterAuthHref, replaceOptions)` (default `"/"`; for example `replaceOptions={{ withAnchor: true }}`).
+- `title`, `subtitle`, `showGoogle`, `googleLabel`, `errorDisplay` (`"toast"`, default, needs a `<Toaster />`; or `"inline"`), `testIDPrefix` (default the mode: `sign-in-email`, `sign-in-password`, `sign-in-submit`, `sign-in-google` and the rest).
+- `header` and `footer` slots for app chrome, such as a brand header or credit. The screen itself is neutral: background fill, title, subtitle, fields.
+- Messages are generic ("Sign in failed", "Invalid email or password", "Could not continue with Google") and never name the auth provider. `authErrorMessage(error, fallback)` shows an API error's own text only when it does not name it.
+- No forgot-password step. An app that needs one keeps its own screen.
+
+`GoogleSignInButton` (`scheme`, `redirectPath`, `afterAuthHref`, `replaceOptions`, `onSuccess`, `onError`, `label` and the `Button` props), `AuthScreen`, `OrDivider` and `FieldError` build custom screens. The module calls `WebBrowser.maybeCompleteAuthSession()` once when it loads, so the app no longer needs its own call.
 
 ## Theme
 

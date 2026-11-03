@@ -98,10 +98,15 @@ const HEAVY_PEERS: Record<string, string | null> = {
   "@react-native-community/datetimepicker": null,
   dayjs: null,
   "expo-router": null,
+  // 0.7.0: only /auth (and /expo-web-root, for `expo-router/html`) import these.
+  "@clerk/clerk-expo": null,
+  convex: null,
+  "expo-auth-session": null,
+  "expo-web-browser": null,
 };
 
 // Entries that may import heavy peers. Every other entry in `exports` must not.
-const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./date-time"];
+const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./date-time", "./auth", "./expo-web-root"];
 
 const basicEntries = Object.keys(pkg.exports).filter(
   (subpath) => subpath !== "./package.json" && !HEAVY_ENTRIES.includes(subpath),
@@ -405,10 +410,62 @@ describe("granular entries", () => {
   it("together export everything the root entry does", () => {
     const granular = new Set<string>();
     for (const subpath of Object.keys(pkg.exports)) {
-      if ([".", "./gallery", "./package.json"].includes(subpath)) continue;
+      if ([".", "./gallery", "./package.json", "./tailwind-preset"].includes(subpath)) continue;
       for (const name of exportedNames(join(root, entryFile(subpath)))) granular.add(name);
     }
     const missing = [...exportedNames(join(root, entryFile(".")))].filter((name) => !granular.has(name));
     expect(missing).toEqual([]);
+  });
+  it("gives /auth Clerk, Convex, the browser session and expo-router, and nothing else heavy", () => {
+    const heavy = [...new Set(heavyRefs("./auth").map((ref) => ref.replace(/^[^:]+: /, "")))].sort();
+    expect(heavy).toEqual([
+      "static @clerk/clerk-expo",
+      "static convex/react",
+      "static convex/react-clerk",
+      "static expo-auth-session",
+      "static expo-router",
+      "static expo-web-browser",
+    ]);
+  });
+
+  it("gives /expo-web-root expo-router/html only", () => {
+    expect(heavyRefs("./expo-web-root")).toEqual(["ExpoWebRoot.tsx: static expo-router/html"]);
+  });
+
+  it("keeps Clerk, Convex and the browser-session peers off every other entry", () => {
+    const authPeers = ["@clerk/clerk-expo", "convex", "expo-auth-session", "expo-web-browser"];
+    for (const subpath of Object.keys(pkg.exports)) {
+      if (["./auth", "./package.json"].includes(subpath)) continue;
+      const names = packageRefs(entryFile(subpath)).map((ref) => packageName(ref.specifier));
+      for (const peer of authPeers) expect(names, `${subpath} ${peer}`).not.toContain(peer);
+    }
+  });
+
+  it("export the 0.7.0 auth and Expo web root names", () => {
+    const auth = exportedNames(join(root, entryFile("./auth")));
+    for (const name of [
+      "AuthProviders",
+      "AuthProvidersProps",
+      "SignInScreen",
+      "SignInScreenProps",
+      "SignUpScreen",
+      "SignUpScreenProps",
+      "AuthScreen",
+      "AuthScreenProps",
+      "OrDivider",
+      "FieldError",
+      "GoogleSignInButton",
+      "GoogleSignInButtonProps",
+      "useGoogleSignIn",
+      "authErrorMessage",
+    ]) {
+      expect(auth.has(name), `./auth ${name}`).toBe(true);
+    }
+    const web = exportedNames(join(root, entryFile("./expo-web-root")));
+    for (const name of ["ExpoWebRoot", "ExpoWebRootProps", "ExpoWebRootViewport"]) {
+      expect(web.has(name), `./expo-web-root ${name}`).toBe(true);
+    }
+    const rootNames = exportedNames(join(root, entryFile(".")));
+    for (const name of [...auth, ...web]) expect(rootNames.has(name), `root ${name}`).toBe(false);
   });
 });

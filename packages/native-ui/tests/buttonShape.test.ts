@@ -238,9 +238,15 @@ describe("Button shape in composites", () => {
       "AlertDialog.tsx",
       "ai/conversation.tsx",
       "ai/icon-button.tsx",
+      // 0.7.0 auth screens: the default pill, no shape or radius of their own.
+      "auth/GoogleSignInButton.tsx",
+      "auth/SignInScreen.tsx",
       "examples/ParityGallery.tsx",
       "marketing/PricingModal.tsx",
     ]);
+    for (const file of ["auth/GoogleSignInButton.tsx", "auth/SignInScreen.tsx"]) {
+      expect(code(read(file)), file).not.toMatch(/shape=|borderRadius/);
+    }
     // `ConversationScrollButton` already sets the pill radius as a style, which wins.
     expect(read("ai/conversation.tsx")).toMatch(/style=\{\{ borderRadius: tokens\.radius\.pill,/);
   });
