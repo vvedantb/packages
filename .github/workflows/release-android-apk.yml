@@ -8,6 +8,10 @@ name: Release Android APK (reusable)
 # release.json, so the asset and release.json formats are not inputs. On a
 # tag push the caller's tag is the release tag. dry_run builds and signs the
 # APK but publishes nothing. The sideload key is not a Google Play key.
+# With release_on: feat (the default), a push releases only for a feature
+# merge (feat: PR title or commit subject) or a message with [release];
+# any other push skips cleanly before checkout. workflow_dispatch always
+# releases.
 #
 # Ported from vmem .github/workflows/release-android.yml. This repo only
 # defines the workflow; it never runs a release itself, so the only trigger
@@ -120,6 +124,11 @@ on:
         required: false
         type: string
         default: ""
+      release_on:
+        description: "Which push events release. feat (default): only a push whose PR title (for a 'Merge pull request' commit) or commit subject starts with feat:, feat(scope):, feat!: or feat(scope)!: (any case), or whose commit message contains [release]. always: every push, as before. workflow_dispatch always releases."
+        required: false
+        type: string
+        default: feat
       dry_run:
         description: "Build and sign the APK, but skip gh release create and post-publish (no tag, no release)."
         required: false
@@ -200,7 +209,7 @@ on:
         description: "SHA-256 of the APK."
         value: ${{ jobs.release.outputs.sha256 }}
       published:
-        description: "true when a release was created, false on dry_run."
+        description: "true when a release was created, false on dry_run, empty when the push was skipped (release_on: feat)."
         value: ${{ jobs.release.outputs.published }}
       release_url:
         description: "URL of the published release. Empty on dry_run."
@@ -231,11 +240,67 @@ jobs:
         # -eo pipefail, unlike the default shell.
         shell: bash
     steps:
+      # First, before checkout and anything slow: on a push with
+      # release_on: feat, release only for a feature merge. The github
+      # context is the caller's, so head_commit is the pushed commit. Every
+      # later step runs only when should_release is true.
+      - name: Decide whether to release
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_ON: ${{ inputs.release_on }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          case "$RELEASE_ON" in
+            feat|always) ;;
+            *)
+              echo "::error::release_on '$RELEASE_ON' must be feat or always."
+              exit 1
+              ;;
+          esac
+
+          if [ "$EVENT_NAME" != push ] || [ "$RELEASE_ON" = always ]; then
+            echo "Event $EVENT_NAME, release_on $RELEASE_ON: releasing"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A merge commit is "Merge pull request #N from <branch>", a blank
+          # line, then the PR title, so decide on the first non-empty line
+          # after the first. Any other commit is decided on its subject.
+          message="${COMMIT_MESSAGE//$'\r'/}"
+          subject="$(head -n 1 <<<"$message")"
+          if [[ "$subject" =~ ^Merge\ pull\ request\ \#[0-9]+\ from\  ]]; then
+            subject="$(tail -n +2 <<<"$message" | grep -m 1 -v '^[[:space:]]*$' || true)"
+          fi
+          echo "Deciding on: ${subject:-<empty>}"
+
+          # Conventional feat:, feat(scope):, feat!: or feat(scope)!:, any case.
+          feat_rule='^[[:space:]]*feat(\([^)]+\))?!?:([[:space:]]|$)'
+          shopt -s nocasematch
+          is_feat=""
+          [[ "$subject" =~ $feat_rule ]] && is_feat=1
+          shopt -u nocasematch
+
+          # [release] anywhere in the message forces a release (exact case).
+          if [ -n "$is_feat" ]; then
+            echo "Feature merge, releasing"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$message" == *"[release]"* ]]; then
+            echo "Commit message contains [release], releasing"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not a feature merge, skipping release"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v6
+        if: steps.gate.outputs.should_release == 'true'
 
       # Inputs are checked before anything slow runs. Paths in inputs are
       # read through env, never pasted into a script.
       - name: Check inputs
+        if: steps.gate.outputs.should_release == 'true'
         env:
           APP_CONFIG_PATH: ${{ inputs.app_config_path }}
           VERSION_NAME_SOURCE: ${{ inputs.version_name_source }}
@@ -314,7 +379,7 @@ jobs:
 
       # Before the toolchain, so it can free disk space for the setup steps.
       - name: Pre-setup
-        if: inputs.pre_setup_command != ''
+        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_setup_command != '')
         env:
           PRE_SETUP_COMMAND: ${{ inputs.pre_setup_command }}
         run: |
@@ -322,6 +387,7 @@ jobs:
           bash -eo pipefail -c "$PRE_SETUP_COMMAND"
 
       - name: Choose versionName, versionCode and tag
+        if: steps.gate.outputs.should_release == 'true'
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -524,6 +590,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Decode signing keystore
+        if: steps.gate.outputs.should_release == 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -545,13 +612,16 @@ jobs:
 
       # Version from packageManager in the caller's root package.json.
       - uses: pnpm/action-setup@v6
+        if: steps.gate.outputs.should_release == 'true'
 
       - uses: actions/setup-node@v6
+        if: steps.gate.outputs.should_release == 'true'
         with:
           node-version: ${{ inputs.node_version }}
           cache: pnpm
 
       - uses: actions/setup-java@v5
+        if: steps.gate.outputs.should_release == 'true'
         with:
           distribution: temurin
           java-version: ${{ inputs.java_version }}
@@ -562,6 +632,7 @@ jobs:
       # sdk_packages are what React Native 0.86 pins, and AGP's default CMake,
       # installed before Gradle needs them.
       - name: Install Android SDK packages
+        if: steps.gate.outputs.should_release == 'true'
         env:
           SDK_PACKAGES: ${{ inputs.sdk_packages }}
         run: |
@@ -605,9 +676,10 @@ jobs:
           "$sdkmanager" --install "${packages[@]}"
 
       - uses: gradle/actions/setup-gradle@v4
+        if: steps.gate.outputs.should_release == 'true'
 
       - name: Pre-build
-        if: inputs.pre_build_script != '' || inputs.pre_build_command != ''
+        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_build_script != '' || inputs.pre_build_command != '')
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
           VERSION_CODE: ${{ steps.version.outputs.version_code }}
@@ -638,6 +710,7 @@ jobs:
       # The vmem script installs the mobile workspace deps, runs expo
       # prebuild, builds with Gradle and writes release.json.
       - name: Build signed APK
+        if: steps.gate.outputs.should_release == 'true'
         id: build
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -665,6 +738,7 @@ jobs:
       # trusts the tag, asset names and release.json. Check them against the
       # chosen version and the APK on disk.
       - name: Check build outputs
+        if: steps.gate.outputs.should_release == 'true'
         id: check
         env:
           EXPECTED_VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -737,7 +811,7 @@ jobs:
 
       # Lets a dry_run's APK be installed and checked without a release.
       - name: Upload dry-run artifact
-        if: inputs.dry_run && inputs.upload_dry_run_artifact
+        if: steps.gate.outputs.should_release == 'true' && (inputs.dry_run && inputs.upload_dry_run_artifact)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.app_name }}-android-dry-run
@@ -747,6 +821,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub Release
+        if: steps.gate.outputs.should_release == 'true'
         id: publish
         env:
           TAG: ${{ steps.version.outputs.tag }}
@@ -816,7 +891,7 @@ jobs:
           echo "Published $url"
 
       - name: Post-publish
-        if: steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != '')
+        if: steps.gate.outputs.should_release == 'true' && (steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != ''))
         env:
           TAG: ${{ steps.version.outputs.tag }}
           RELEASE_URL: ${{ steps.publish.outputs.release_url }}
@@ -853,7 +928,7 @@ jobs:
           fi
 
       - name: Remove keystore
-        if: always()
+        if: always() && steps.gate.outputs.should_release == 'true'
         run: |
           # Only a plain file name, as "Check inputs" requires, so this never
           # removes anything outside RUNNER_TEMP.
