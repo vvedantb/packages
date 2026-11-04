@@ -38,6 +38,13 @@ if (request.method === "OPTIONS") return corsPreflight();
 return jsonWithCors({ error: "Unauthorized" }, { status: 401, extraHeaders: { "WWW-Authenticate": "Bearer" } });
 
 const serverInfo = defineMcpServerInfo({ name: "my-mcp", version: "1.0.0" });
+const withIcon = defineMcpServerInfo({
+  name: "my-mcp",
+  version: "1.0.0",
+  title: "My app",
+  websiteUrl: "https://my-app.example",
+  icons: [{ src: "https://my-app.example/icon.png", mimeType: "image/png", sizes: ["any"] }],
+});
 ```
 
 ```ts
@@ -56,7 +63,7 @@ expectMcpToolCount(toolNames, 2);
 | `extractBearerToken(header)` | Token from an `Authorization` header, or `null`. |
 | `requiredEnv(name, env?)`, `requiredEnvUrl(name, env?)` | Required env value, optionally stripping a trailing slash. |
 | `mcpCorsHeaders`, `corsPreflight`, `jsonWithCors` | CORS for MCP HTTP handlers. Methods `GET,POST,DELETE,OPTIONS`; headers `Authorization,Content-Type`; credentials `false`. |
-| `defineMcpServerInfo({ name, version })` | MCP `serverInfo`. The caller owns both values. |
+| `defineMcpServerInfo({ name, version, title?, websiteUrl?, icons? })` | MCP `serverInfo`. The caller owns every value. `name` and `version` must not be empty. Optional fields appear only when passed; each icon is `{ src, mimeType?, sizes?, theme? }` and an empty `src` throws. See [mcp.md](mcp.md). |
 | `expectMcpToolCount`, `assertMcpTools` | Test helpers. They throw plain errors, so they work with any runner. |
 | `jsonResponse(data, status, extraHeaders?)` | `JSON.stringify(data)` with `Content-Type: application/json`; `extraHeaders` spread after it. |
 | `createOriginAllowlistCors(allowedOrigins)` | `{ headers(origin), preflightHeaders(origin) }` for credentialed browser CORS on a fixed origin list. |

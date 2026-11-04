@@ -192,6 +192,18 @@ registerMcpRoutes(http, {
 
 ### JSON-RPC dispatcher
 
+`defineMcpServerInfo` requires a non-empty `name` and `version`. It also takes optional `title`, `websiteUrl` and `icons` (MCP 2025-11-25 `Implementation`). Each icon is `{ src, mimeType?, sizes?, theme? }`, where `theme` is `"light"` or `"dark"`; an empty `src` throws. Optional fields appear only when passed, so `{ name, version }` alone gives the same object as before. An absolute https URL to the app's public icon is enough for `src`; the package serves no icon files.
+
+```ts
+defineMcpServerInfo({
+  name: "my-mcp",
+  version: "1.0.0",
+  title: "My app",
+  websiteUrl: "https://my-app.example",
+  icons: [{ src: "https://my-app.example/icon.png", mimeType: "image/png", sizes: ["any"] }],
+});
+```
+
 | Export | What it does |
 | --- | --- |
 | `createMcpDispatcher(config)` | `{ handleRpc }` for stateless HTTP: `initialize`, `ping`, `tools/list`, `tools/call`, notifications (202, empty body), batches. Other methods: -32601 "Method not found". |
@@ -200,7 +212,7 @@ registerMcpRoutes(http, {
 | `parseRpcBody(text)` | Parse a body, or the SDK's 400 -32700 "Parse error: Invalid JSON" result. |
 | `rpcResult`, `rpcError`, `JSON_RPC_ERROR` | Response builders with the SDK's key order. |
 
-Config: `serverInfo` (or a function of the scope), `tools`, `protocol` (`versions`, `fallback`; default SDK list, fallback `"2025-11-25"` as the SDK), `capabilities` (default `{ tools: { listChanged: true } }` as `McpServer`), `instructions`, `toJsonSchema`.
+Config: `serverInfo` (or a function of the scope; returned in the initialize result as given), `tools`, `protocol` (`versions`, `fallback`; default SDK list, fallback `"2025-11-25"` as the SDK), `capabilities` (default `{ tools: { listChanged: true } }` as `McpServer`), `instructions`, `toJsonSchema`.
 
 ### Tools
 
