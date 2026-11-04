@@ -288,6 +288,7 @@ declare module "react-native" {
 
   export const Linking: {
     openURL(url: string): Promise<void>;
+    canOpenURL(url: string): Promise<boolean>;
   };
 
   export function useWindowDimensions(): {

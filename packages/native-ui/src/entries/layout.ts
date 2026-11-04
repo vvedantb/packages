@@ -12,3 +12,21 @@ export { SettingsSection } from "../settings/SettingsSection";
 export { SettingsField } from "../settings/SettingsField";
 export { SettingsToggleRow } from "../settings/SettingsToggleRow";
 export { SettingsStack } from "../settings/SettingsStack";
+export { MoreFromProjectV, FromProjectV } from "../settings/MoreFromProjectV";
+export type { MoreFromProjectVProps, FromProjectVProps } from "../settings/MoreFromProjectV";
+export {
+  PROJECT_V_MOBILE_APPS,
+  projectVMobileApp,
+  otherProjectVMobileApps,
+  openProjectVApp,
+  projectVAppOpenSteps,
+  VSTORE_HOME_URL,
+  androidIntentUrl,
+} from "../settings/projectVMobileApps";
+export type {
+  ProjectVMobileApp,
+  ProjectVMobileAppId,
+  ProjectVOpenTarget,
+  ProjectVOpenStep,
+  ProjectVLinking,
+} from "../settings/projectVMobileApps";

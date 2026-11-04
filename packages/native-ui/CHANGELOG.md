@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## 0.8.0 (2026-11-04)
+
+"More from Project V": a settings section that lists the other Project V phone apps, as WhatsApp's "from Meta". On the root and `/layout`. No new dependency or peer.
+
+- **`MoreFromProjectV`** (new). `<MoreFromProjectV current="velth" />` is a `SettingsSection` (`bodyVariant="list"`, title "More from Project V") with one `ListRow` per phone app except `current`: the app mark, the name and a one-line description. Props: `current` (`ProjectVMobileAppId`: `"vibot" | "verve" | "velth" | "vmem" | "vstore"`), `variant` (`"section"`, default, or `"footer"`), `title`, `onOpen(id, target)` and `className`. Rows have the test ID `more-from-project-v-<id>`.
+- **`FromProjectV`** (new), and `variant="footer"`: a small muted "from Project V" line with the Project V mark, for the end of a settings screen.
+- **Open order.** A row calls `openProjectVApp(id, Linking, Platform.OS)`, which tries in turn:
+  1. The app: `canOpenURL("<scheme>://")`, then `openURL`. On Android it then tries `intent://#Intent;scheme=<scheme>;package=<androidPackage>;end`.
+  2. V Store's home, if V Store is installed and the app is not V Store: `VSTORE_HOME_URL` (`vstore://`). V Store's `app/[id]` route takes the app's Convex document `_id`, not its catalog id (`vibot`) or Android package, and native-ui cannot know live Convex ids, so it does not deep-link to the app's page.
+  3. The website.
+  It resolves to `"app"`, `"store"`, `"website"` or `null`. A rejected `canOpenURL` or `openURL` moves on to the next URL. `projectVAppOpenSteps(id, os)` returns the URLs without opening anything.
+- **Apps must declare the schemes** they check, or `canOpenURL` returns `false` and the row falls through to V Store or the website: `LSApplicationQueriesSchemes` on iOS (`ios.infoPlist` in `app.json`) and `<queries>` on Android 11+.
+- **Data** (new, `src/settings/projectVMobileApps.ts`): `PROJECT_V_MOBILE_APPS` (id, name, description, `androidPackage`, `scheme`, `website`), `projectVMobileApp`, `otherProjectVMobileApps`, `VSTORE_HOME_URL` and `androidIntentUrl`. Types `ProjectVMobileApp`, `ProjectVMobileAppId`, `ProjectVOpenTarget`, `ProjectVOpenStep` and `ProjectVLinking`.
+  - Packages are `com.projectvdotuk.<id>` and schemes are the ids. Names and sites for vibot, Verve, Velth and vmem come from `FAMILY_APPS`. V Store is "V Store" at `https://v-store-chi.vercel.app` (`store.projectv.uk` has no DNS record).
+  - `svg.ts`, `familyApps.ts` and `vProAppBenefits.ts` are unchanged, so they stay byte-identical to `@vvedantb/ui`.
+- **V Store icon.** V Store has no mark (skipped in 0.3.9), so its row shows the Project V mark (`AppMark app="projectv"`) as a stand-in. `APP_NAMES` and the brand SVGs are unchanged.
+- `/layout` now reaches `react-native-svg` through `AppMark`. Apps with `@tabler/icons-react-native` or `lucide-react-native` already have it.
+- `ParityGallery` has a "More from Project V" section (`current="velth"`, then `FromProjectV`).
+- `types/peers.d.ts` (the typecheck stub, not shipped) adds `Linking.canOpenURL`.
+- Tests: new `tests/moreFromProjectV.test.ts` (16 tests): the data, the open order with a stub `Linking`, and the component source. `tests/exports.test.ts` checks 0.8.0 and the new names; `tests/subpaths.test.ts` checks them on `/layout`.
+
 ## 0.7.0 (2026-11-03)
 
 Shared Expo helpers from the vibot, Verve, Velth, vmem and V Store phone apps: a NativeWind preset, the Expo web root and an auth subpath. The new entries are off the root entry. No new dependency; four new optional peers, which the apps already have.

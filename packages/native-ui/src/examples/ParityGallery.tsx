@@ -54,12 +54,14 @@ import {
   DialogTitle,
   DialogTrigger,
   EmptyState,
+  FromProjectV,
   GoogleMark,
   IconButton,
   Input,
   Label,
   LabeledSwitchRow,
   ListRow,
+  MoreFromProjectV,
   NEUTRAL_900,
   NativeUiProvider,
   PageHeader,
@@ -680,6 +682,15 @@ function GalleryScreen() {
           <AmbientBackground className="flex-none overflow-hidden rounded-lg">
             <StackPageHeader title="A much longer page title that is cut off" safeTop={false} onBack={() => toast("Back")} />
           </AmbientBackground>
+        </Section>
+
+        <Section title="More from Project V">
+          {/* As in Velth's settings: the other four phone apps. A row opens the app, else V Store, else the website. */}
+          <MoreFromProjectV
+            current="velth"
+            onOpen={(id, target) => toast(target ? `Opened ${id} (${target})` : `Could not open ${id}`)}
+          />
+          <FromProjectV />
         </Section>
 
         <Section title="Camera chrome">
