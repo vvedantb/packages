@@ -117,6 +117,38 @@ describe("defineMcpServerInfo", () => {
     expect(() => defineMcpServerInfo({ name: "", version: "1" })).toThrow("name");
     expect(() => defineMcpServerInfo({ name: "a", version: "" })).toThrow("version");
   });
+
+  it("omits optional fields that are not passed", () => {
+    const info = defineMcpServerInfo({ name: "app-mcp", version: "1.2.3" });
+    expect(Object.keys(info)).toEqual(["name", "version"]);
+    expect(JSON.stringify(info)).toBe('{"name":"app-mcp","version":"1.2.3"}');
+  });
+
+  it("includes title, websiteUrl and icons when passed", () => {
+    const icons = [
+      { src: "https://app.example.test/icon.png", mimeType: "image/png", sizes: ["any"] },
+      { src: "https://app.example.test/icon-dark.svg", mimeType: "image/svg+xml", sizes: ["48x48"], theme: "dark" as const },
+    ];
+    expect(
+      defineMcpServerInfo({
+        name: "app-mcp",
+        version: "1.2.3",
+        title: "App",
+        websiteUrl: "https://app.example.test",
+        icons,
+      }),
+    ).toEqual({ name: "app-mcp", version: "1.2.3", title: "App", websiteUrl: "https://app.example.test", icons });
+  });
+
+  it("includes only the optional fields passed and adds no icon fields", () => {
+    const info = defineMcpServerInfo({ name: "a", version: "1", icons: [{ src: "https://x.test/i.png" }] });
+    expect(info).toStrictEqual({ name: "a", version: "1", icons: [{ src: "https://x.test/i.png" }] });
+    expect(Object.keys(defineMcpServerInfo({ name: "a", version: "1", title: "A" }))).toEqual(["name", "version", "title"]);
+  });
+
+  it("rejects an icon with an empty src", () => {
+    expect(() => defineMcpServerInfo({ name: "a", version: "1", icons: [{ src: "" }] })).toThrow("src");
+  });
 });
 
 describe("MCP tool test helpers", () => {

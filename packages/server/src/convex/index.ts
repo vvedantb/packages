@@ -88,7 +88,7 @@ export {
   type OriginAllowlistCors,
 } from "./originAllowlistCors.js";
 export { requiredEnv, requiredEnvUrl, type EnvSource } from "./env.js";
-export { defineMcpServerInfo, type McpServerInfo } from "./mcpServerInfo.js";
+export { defineMcpServerInfo, type McpServerIcon, type McpServerInfo } from "./mcpServerInfo.js";
 export { assertMcpTools, expectMcpToolCount } from "./mcpTestHelpers.js";
 export { tempId, type TempIdFormat, type TempIdOptions } from "./tempId.js";
 export {

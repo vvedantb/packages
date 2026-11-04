@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.13.0
+
+Optional `title`, `websiteUrl` and `icons` in MCP `serverInfo` (MCP 2025-11-25 `Implementation`), so MCP clients can show an app's name and icon. Additive; nothing in 0.12.0 changes. `defineMcpServerInfo({ name, version })` returns the same object as before.
+
+### Added
+
+- `defineMcpServerInfo` takes optional `title`, `websiteUrl` and `icons`. Each is included only when passed; no `undefined` keys. Icons are copied as given, with no `mimeType`, `sizes` or `theme` invented. An icon with an empty `src` throws. `name` and `version` checks are unchanged.
+- Type `McpServerIcon` (`{ src, mimeType?, sizes?, theme? }`, `theme` is `"light"` or `"dark"`). `McpServerInfo` gains the optional fields.
+- `createMcpDispatcher` already returns `serverInfo` as given, so the optional fields reach the initialize result with no dispatcher change.
+
+### Tests
+
+- `defineMcpServerInfo`: title, websiteUrl and icons included when passed, omitted when not, and empty icon `src` rejected.
+- Dispatcher: an initialize result carries `title`, `websiteUrl` and `icons`.
+
 ## 0.12.0
 
 Shared V Pro checks and Clerk Billing webhook helpers, so apps stop keeping their own copies, with config options so apps whose webhook copies differ from the defaults can adopt them with no change users can see. Additive; nothing in 0.11.0 changes. No new dependency: `@clerk/backend` stays an optional peer and is never imported. (These helpers were first drafted as 0.11.0; 0.11.0 shipped the AI Gateway helpers instead.)

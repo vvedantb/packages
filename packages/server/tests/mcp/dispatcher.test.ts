@@ -13,6 +13,7 @@ import {
   type McpTool,
   type ToolContext,
 } from "../../src/mcp/index.js";
+import { defineMcpServerInfo } from "../../src/convex/index.js";
 
 type P = { userId: string };
 type Ctx = { tag: string };
@@ -143,6 +144,25 @@ describe("createMcpDispatcher options", () => {
       },
       jsonrpc: "2.0",
       id: "a",
+    });
+  });
+
+  it("returns optional serverInfo title, websiteUrl and icons in initialize", async () => {
+    const serverInfo = defineMcpServerInfo({
+      name: "app-mcp",
+      version: "2.0.0",
+      title: "App",
+      websiteUrl: "https://app.example.test",
+      icons: [{ src: "https://app.example.test/icon.png", mimeType: "image/png", sizes: ["any"], theme: "light" }],
+    });
+    const dispatcher = createMcpDispatcher<P, Ctx, "personal" | "team">({ ...base, serverInfo });
+    const res = await call(dispatcher, { jsonrpc: "2.0", id: "a", method: "initialize", params: { protocolVersion: "2025-11-25" } });
+    expect(JSON.parse(res.body).result.serverInfo).toEqual({
+      name: "app-mcp",
+      version: "2.0.0",
+      title: "App",
+      websiteUrl: "https://app.example.test",
+      icons: [{ src: "https://app.example.test/icon.png", mimeType: "image/png", sizes: ["any"], theme: "light" }],
     });
   });
 
