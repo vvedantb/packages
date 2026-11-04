@@ -10,12 +10,12 @@
 - **`FromProjectV`** (new), and `variant="footer"`: a small muted "from Project V" line with the Project V mark, for the end of a settings screen.
 - **Open order.** A row calls `openProjectVApp(id, Linking, Platform.OS)`, which tries in turn:
   1. The app: `canOpenURL("<scheme>://")`, then `openURL`. On Android it then tries `intent://#Intent;scheme=<scheme>;package=<androidPackage>;end`.
-  2. V Store, if installed and the app is not V Store: `vstore://app/<id>`. No V Store deep link is documented in this repo, so this is a new convention; V Store needs to route `app/<id>` to the app's page.
+  2. V Store's home, if V Store is installed and the app is not V Store: `VSTORE_HOME_URL` (`vstore://`). V Store's `app/[id]` route takes the app's Convex document `_id`, not its catalog id (`vibot`) or Android package, and native-ui cannot know live Convex ids, so it does not deep-link to the app's page.
   3. The website.
   It resolves to `"app"`, `"store"`, `"website"` or `null`. A rejected `canOpenURL` or `openURL` moves on to the next URL. `projectVAppOpenSteps(id, os)` returns the URLs without opening anything.
 - **Apps must declare the schemes** they check, or `canOpenURL` returns `false` and the row falls through to V Store or the website: `LSApplicationQueriesSchemes` on iOS (`ios.infoPlist` in `app.json`) and `<queries>` on Android 11+.
-- **Data** (new, `src/settings/projectVMobileApps.ts`): `PROJECT_V_MOBILE_APPS` (id, name, description, `androidPackage`, `scheme`, `website`), `projectVMobileApp`, `otherProjectVMobileApps`, `vStoreAppUrl` and `androidIntentUrl`. Types `ProjectVMobileApp`, `ProjectVMobileAppId`, `ProjectVOpenTarget`, `ProjectVOpenStep` and `ProjectVLinking`.
-  - Packages are `com.projectvdotuk.<id>` and schemes are the ids. Names and sites for vibot, Verve, Velth and vmem come from `FAMILY_APPS`. V Store is "V Store" at `https://store.projectv.uk`.
+- **Data** (new, `src/settings/projectVMobileApps.ts`): `PROJECT_V_MOBILE_APPS` (id, name, description, `androidPackage`, `scheme`, `website`), `projectVMobileApp`, `otherProjectVMobileApps`, `VSTORE_HOME_URL` and `androidIntentUrl`. Types `ProjectVMobileApp`, `ProjectVMobileAppId`, `ProjectVOpenTarget`, `ProjectVOpenStep` and `ProjectVLinking`.
+  - Packages are `com.projectvdotuk.<id>` and schemes are the ids. Names and sites for vibot, Verve, Velth and vmem come from `FAMILY_APPS`. V Store is "V Store" at `https://v-store-chi.vercel.app` (`store.projectv.uk` has no DNS record).
   - `svg.ts`, `familyApps.ts` and `vProAppBenefits.ts` are unchanged, so they stay byte-identical to `@vvedantb/ui`.
 - **V Store icon.** V Store has no mark (skipped in 0.3.9), so its row shows the Project V mark (`AppMark app="projectv"`) as a stand-in. `APP_NAMES` and the brand SVGs are unchanged.
 - `/layout` now reaches `react-native-svg` through `AppMark`. Apps with `@tabler/icons-react-native` or `lucide-react-native` already have it.

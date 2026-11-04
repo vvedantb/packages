@@ -20,7 +20,7 @@ export {
   otherProjectVMobileApps,
   openProjectVApp,
   projectVAppOpenSteps,
-  vStoreAppUrl,
+  VSTORE_HOME_URL,
   androidIntentUrl,
 } from "../settings/projectVMobileApps";
 export type {

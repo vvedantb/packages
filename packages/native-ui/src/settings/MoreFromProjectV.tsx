@@ -65,15 +65,15 @@ export type MoreFromProjectVProps = {
   variant?: "section" | "footer";
   /** Section title. Default "More from Project V". */
   title?: string;
-  /** Called after a row opens something: the app, its V Store page or its website (`null` if nothing opened). */
+  /** Called after a row opens something: the app, V Store or its website (`null` if nothing opened). */
   onOpen?: (id: ProjectVMobileAppId, target: ProjectVOpenTarget | null) => void;
   className?: string;
 };
 
 /**
  * Settings section listing the other Project V phone apps, each with its mark,
- * name and one line. A row opens the app if it is installed, else its page in
- * V Store, else its website (`openProjectVApp`).
+ * name and one line. A row opens the app if it is installed, else V Store's
+ * home, else its website (`openProjectVApp`).
  */
 export function MoreFromProjectV({
   current,

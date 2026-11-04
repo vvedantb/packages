@@ -10,7 +10,7 @@ import {
   otherProjectVMobileApps,
   projectVAppOpenSteps,
   projectVMobileApp,
-  vStoreAppUrl,
+  VSTORE_HOME_URL,
   type ProjectVLinking,
 } from "../src/settings/projectVMobileApps";
 
@@ -46,7 +46,7 @@ describe("PROJECT_V_MOBILE_APPS", () => {
       expect(app.description.length).toBeGreaterThan(0);
       expect(app.description).not.toMatch(/\n/);
     }
-    expect(projectVMobileApp("vstore").website).toBe("https://store.projectv.uk");
+    expect(projectVMobileApp("vstore").website).toBe("https://v-store-chi.vercel.app");
     // The family apps take their name and site from FAMILY_APPS.
     for (const id of ["vibot", "verve", "velth", "vmem"] as const) {
       const family = FAMILY_APPS.find((entry) => entry.app === id)!;
@@ -62,7 +62,8 @@ describe("PROJECT_V_MOBILE_APPS", () => {
   });
 
   it("builds the V Store and Android intent URLs", () => {
-    expect(vStoreAppUrl("vmem")).toBe("vstore://app/vmem");
+    // V Store's `app/[id]` takes a Convex `_id`, so the store step opens its home.
+    expect(VSTORE_HOME_URL).toBe("vstore://");
     expect(androidIntentUrl(projectVMobileApp("verve"))).toBe(
       "intent://#Intent;scheme=verve;package=com.projectvdotuk.verve;end",
     );
@@ -73,7 +74,7 @@ describe("projectVAppOpenSteps", () => {
   it("tries the app, then V Store, then the website on iOS", () => {
     expect(projectVAppOpenSteps("vibot", "ios")).toEqual([
       { target: "app", url: "vibot://", check: true },
-      { target: "store", url: "vstore://app/vibot", check: true },
+      { target: "store", url: "vstore://", check: true },
       { target: "website", url: "https://vibot.projectv.uk", check: false },
     ]);
   });
@@ -82,7 +83,7 @@ describe("projectVAppOpenSteps", () => {
     expect(projectVAppOpenSteps("velth", "android").map((step) => step.url)).toEqual([
       "velth://",
       "intent://#Intent;scheme=velth;package=com.projectvdotuk.velth;end",
-      "vstore://app/velth",
+      "vstore://",
       "https://velth.projectv.uk",
     ]);
   });
@@ -99,10 +100,10 @@ describe("openProjectVApp", () => {
     expect(opened).toEqual(["verve://"]);
   });
 
-  it("opens V Store to the app when only V Store is installed", async () => {
+  it("opens V Store's home when only V Store is installed", async () => {
     const { stub, opened } = linking(["vstore"]);
     await expect(openProjectVApp("vmem", stub, "ios")).resolves.toBe("store");
-    expect(opened).toEqual(["vstore://app/vmem"]);
+    expect(opened).toEqual(["vstore://"]);
   });
 
   it("falls back to the website", async () => {
@@ -120,7 +121,7 @@ describe("openProjectVApp", () => {
   it("moves on from a failed intent to V Store, then the website on Android", async () => {
     const store = linking(["vstore"], ["intent:"]);
     await expect(openProjectVApp("velth", store.stub, "android")).resolves.toBe("store");
-    expect(store.opened).toEqual(["vstore://app/velth"]);
+    expect(store.opened).toEqual(["vstore://"]);
     const web = linking([], ["intent:"]);
     await expect(openProjectVApp("velth", web.stub, "android")).resolves.toBe("website");
     expect(web.opened).toEqual(["https://velth.projectv.uk"]);

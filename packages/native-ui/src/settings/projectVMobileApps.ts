@@ -18,12 +18,11 @@ export type ProjectVMobileApp = {
 };
 
 /**
- * V Store's link to one app's page: `vstore://app/<id>`. No V Store deep link
- * is documented in this repo, so this is the convention V Store should route.
+ * V Store's home screen. V Store's `app/[id]` route takes the app's Convex
+ * document `_id`, not its catalog id or Android package, and native-ui cannot
+ * know live Convex ids. So the store step opens V Store's home, not the app's page.
  */
-export function vStoreAppUrl(id: ProjectVMobileAppId): string {
-  return `vstore://app/${id}`;
-}
+export const VSTORE_HOME_URL = "vstore://";
 
 // Names and sites come from `FAMILY_APPS` where it has the app. V Store is not
 // a family app there (that file is a byte-identical copy of `@vvedantb/ui`).
@@ -72,7 +71,7 @@ export const PROJECT_V_MOBILE_APPS: readonly ProjectVMobileApp[] = [
     description: "Install Project V apps",
     androidPackage: "com.projectvdotuk.vstore",
     scheme: "vstore",
-    website: "https://store.projectv.uk",
+    website: "https://v-store-chi.vercel.app",
   },
 ];
 
@@ -103,13 +102,13 @@ export type ProjectVOpenStep = {
 
 /**
  * The URLs `openProjectVApp` tries, in order: the app's scheme; on Android an
- * intent to its package; V Store's page for it; the website.
+ * intent to its package; V Store's home (`VSTORE_HOME_URL`); the website.
  */
 export function projectVAppOpenSteps(id: ProjectVMobileAppId, os: string): ProjectVOpenStep[] {
   const app = projectVMobileApp(id);
   const steps: ProjectVOpenStep[] = [{ target: "app", url: `${app.scheme}://`, check: true }];
   if (os === "android") steps.push({ target: "app", url: androidIntentUrl(app), check: false });
-  if (id !== "vstore") steps.push({ target: "store", url: vStoreAppUrl(id), check: true });
+  if (id !== "vstore") steps.push({ target: "store", url: VSTORE_HOME_URL, check: true });
   steps.push({ target: "website", url: app.website, check: false });
   return steps;
 }
@@ -121,8 +120,8 @@ export type ProjectVLinking = {
 };
 
 /**
- * Opens a Project V app: the app if installed, else its page in V Store if
- * V Store is installed, else its website. Resolves to what it opened, or
+ * Opens a Project V app: the app if installed, else V Store's home if V Store
+ * is installed, else its website. Resolves to what it opened, or
  * `null` when every URL failed. Pass React Native `Linking` and `Platform.OS`.
  *
  * `canOpenURL` needs the schemes declared by the calling app:

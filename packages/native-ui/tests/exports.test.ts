@@ -233,7 +233,7 @@ describe("@vvedantb/native-ui exports", () => {
       "otherProjectVMobileApps",
       "openProjectVApp",
       "projectVAppOpenSteps",
-      "vStoreAppUrl",
+      "VSTORE_HOME_URL",
       "androidIntentUrl",
       "ProjectVMobileApp",
       "ProjectVMobileAppId",

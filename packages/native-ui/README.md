@@ -304,7 +304,7 @@ From 0.3.12 a toast looks like the web `SonnerToaster` at its default density wi
 
 ## More from Project V (0.8.0)
 
-`<MoreFromProjectV current="velth" />` is a settings section listing the other Project V phone apps (vibot, Verve, Velth, vmem, V Store). A row opens the app if installed, else its V Store page (`vstore://app/<id>`), else its website. Add the other apps' schemes to `LSApplicationQueriesSchemes` (iOS) and `<queries>` (Android 11+), or `canOpenURL` returns `false`. `<FromProjectV />` (or `variant="footer"`) is a small "from Project V" line. `openProjectVApp(id, Linking, Platform.OS)` and `PROJECT_V_MOBILE_APPS` are exported for custom rows.
+`<MoreFromProjectV current="velth" />` is a settings section listing the other Project V phone apps (vibot, Verve, Velth, vmem, V Store). A row opens the app if installed, else V Store's home (`vstore://`), else its website. Add the other apps' schemes to `LSApplicationQueriesSchemes` (iOS) and `<queries>` (Android 11+), or `canOpenURL` returns `false`. `<FromProjectV />` (or `variant="footer"`) is a small "from Project V" line. `openProjectVApp(id, Linking, Platform.OS)` and `PROJECT_V_MOBILE_APPS` are exported for custom rows.
 
 ## App pieces (0.5.0)
 
