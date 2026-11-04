@@ -164,6 +164,24 @@ export { SettingsSection } from "./settings/SettingsSection";
 export { SettingsField } from "./settings/SettingsField";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow";
 export { SettingsStack } from "./settings/SettingsStack";
+export { MoreFromProjectV, FromProjectV } from "./settings/MoreFromProjectV";
+export type { MoreFromProjectVProps, FromProjectVProps } from "./settings/MoreFromProjectV";
+export {
+  PROJECT_V_MOBILE_APPS,
+  projectVMobileApp,
+  otherProjectVMobileApps,
+  openProjectVApp,
+  projectVAppOpenSteps,
+  vStoreAppUrl,
+  androidIntentUrl,
+} from "./settings/projectVMobileApps";
+export type {
+  ProjectVMobileApp,
+  ProjectVMobileAppId,
+  ProjectVOpenTarget,
+  ProjectVOpenStep,
+  ProjectVLinking,
+} from "./settings/projectVMobileApps";
 export { PINK_50, PINK_100, PINK_600, PINK_700, NEUTRAL_100, NEUTRAL_500, NEUTRAL_900, Colors } from "./colors";
 // Family app marks and their pure data (copied from `@vvedantb/ui/brand`), and `GoogleMark`.
 export * from "./brand";

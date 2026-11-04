@@ -68,7 +68,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
-| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack` | `expo-blur` (loader) |
+| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `MoreFromProjectV` and `FromProjectV` (0.8.0) | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
@@ -301,6 +301,10 @@ From 0.3.12 a toast looks like the web `SonnerToaster` at its default density wi
 `Tabs` shares its name with Expo Router's `Tabs` layout. In a file that needs both, import one under another name.
 
 `@vvedantb/native-ui/gallery` exports `ParityGallery`, a screen that renders these components. Put it in a dev-only route to check them on a device.
+
+## More from Project V (0.8.0)
+
+`<MoreFromProjectV current="velth" />` is a settings section listing the other Project V phone apps (vibot, Verve, Velth, vmem, V Store). A row opens the app if installed, else its V Store page (`vstore://app/<id>`), else its website. Add the other apps' schemes to `LSApplicationQueriesSchemes` (iOS) and `<queries>` (Android 11+), or `canOpenURL` returns `false`. `<FromProjectV />` (or `variant="footer"`) is a small "from Project V" line. `openProjectVApp(id, Linking, Platform.OS)` and `PROJECT_V_MOBILE_APPS` are exported for custom rows.
 
 ## App pieces (0.5.0)
 

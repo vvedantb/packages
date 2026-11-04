@@ -164,8 +164,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.7.0 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.7.0");
+  it("is 0.8.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.8.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -220,6 +220,29 @@ describe("@vvedantb/native-ui exports", () => {
       expect(pkg.peerDependenciesMeta[peer], peer).toEqual({ optional: true });
     }
     expect(pkg.dependencies).toBeUndefined();
+  });
+
+  it("has the 0.8.0 More from Project V names", () => {
+    for (const name of [
+      "MoreFromProjectV",
+      "MoreFromProjectVProps",
+      "FromProjectV",
+      "FromProjectVProps",
+      "PROJECT_V_MOBILE_APPS",
+      "projectVMobileApp",
+      "otherProjectVMobileApps",
+      "openProjectVApp",
+      "projectVAppOpenSteps",
+      "vStoreAppUrl",
+      "androidIntentUrl",
+      "ProjectVMobileApp",
+      "ProjectVMobileAppId",
+      "ProjectVOpenTarget",
+      "ProjectVOpenStep",
+      "ProjectVLinking",
+    ]) {
+      expect(names.has(name), name).toBe(true);
+    }
   });
 
   it("has the 0.5.0 Verve, vibot and Velth names", () => {
