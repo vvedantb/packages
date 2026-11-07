@@ -318,6 +318,7 @@ Components and props that the Verve, vibot and Velth apps need. They follow the 
 | `ColorSwatches` | A radio group of round swatches (`sm` 24, `md` 32, `lg` 40) with a foreground ring and a black or white check on the selected one. `labels` names each swatch. |
 | `StatGrid` | Label and value tiles on the flat card, in rows of 2 or 3. |
 | `SectionLabel` | The muted `text-xs` medium label above a group of rows; `uppercase` for capitals. Add `className="px-4"` to line it up with rows. |
+| `DividedList` | Flat rows with a hairline between each pair, as the web `divide-y divide-border` lists. `inset` starts the dividers under the row text. |
 | `SheetRow` | An action row for a `Sheet`: icon, title, detail; `active` adds a check, `danger` uses the danger colour, `disabled` dims it. |
 | `PageIndicator` | The web carousel dots. With `onChange` each dot is a 44 button named "Page 2 of 5", so the dots sit 44 apart. |
 | `StatusDot` `info` | A blue dot (`#3b82f6`, `#60a5fa` in dark), native only. |
@@ -399,6 +400,7 @@ import {
 | `ActivityStep` | One tool step as a trace line: icon, label, a spinner while `running`, a check when `complete`, a warning on `error`, and a description such as `` `Worked for ${formatElapsed(12)}` ``. |
 | `ChainOfThought` and its parts | Simplified: header, steps with a rail, search-result chips. |
 | `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls. Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
+| `PromptInput layout="inline"` | One row, as the web `Composer layout="inline"` (Eva's chat pill): `leading` (such as a + button), the field (one line to start, then it grows), `toolbar`, then send, in a 20-radius field with `p-1.5`. 44 high on one line. |
 | `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
 | `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
 | `FileChip`, `Attachments`, `Attachment` | A monospace file chip (a button with `onOpenFile`), and attachment chips with a media icon or image thumbnail and a labelled remove button. No hover cards and no grid previews. |

@@ -38,3 +38,17 @@ describe("MessageMeta", () => {
     expect(message).toMatch(/chatTextSize\("caption", largerText\)/);
   });
 });
+
+describe("PromptInput layout=\"inline\"", () => {
+  const composer = readFileSync(join(root, "..", "ui", "src", "composer", "Composer.tsx"), "utf8");
+  const input = readFileSync(join(root, "src", "ai", "prompt-input.tsx"), "utf8");
+
+  it("is the web Composer inline row: rounded-[1.25rem], p-1.5, leading, field, toolbar, send", () => {
+    expect(composer).toMatch(/rounded-\[1\.25rem\]/);
+    expect(composer).toMatch(/data-slot="composer-row" className="flex min-w-0 items-end gap-1 p-1\.5"/);
+    expect(input).toMatch(/const INLINE_RADIUS = 20;/);
+    expect(input).toMatch(/<View className="flex-row items-end gap-1 p-1\.5">/);
+    expect(input).toMatch(/layout = "stacked"/);
+    expect(input.indexOf("{leading}")).toBeLessThan(input.indexOf('className={cn(\n                  "min-h-8 flex-1'));
+  });
+});
