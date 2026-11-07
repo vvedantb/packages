@@ -59,6 +59,8 @@ export type {
   TabsContentProps,
 } from "../Tabs";
 export { ListRow } from "../ListRow";
+export { DividedList } from "../DividedList";
+export type { DividedListProps } from "../DividedList";
 export type { ListRowProps } from "../ListRow";
 export { HeaderIconButton } from "../HeaderIconButton";
 export { ThemeToggle } from "../ThemeToggle";
