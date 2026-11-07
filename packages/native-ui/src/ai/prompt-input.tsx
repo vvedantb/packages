@@ -93,6 +93,15 @@ export type PromptInputProps = {
   header?: ReactNode;
   /** Before the send button, such as `PromptInputButton`s. */
   toolbar?: ReactNode;
+  /**
+   * `stacked` (default): the field over a footer of tools and send, the web
+   * `PromptInput`. `inline`: one row, as the web `Composer layout="inline"`
+   * (Eva's chat): `leading`, the field, `toolbar`, then send, in a 20-radius
+   * field with `p-1.5`, 44 high on one line.
+   */
+  layout?: "stacked" | "inline";
+  /** `inline` only: before the field, such as a + (attach) `PromptInputButton`. */
+  leading?: ReactNode;
   disabled?: boolean;
   /** Pad the bottom safe-area inset (home indicator). Default `true`; turn it off when a tab bar below already does. */
   safeBottom?: boolean;
@@ -101,6 +110,9 @@ export type PromptInputProps = {
   className?: string;
   testID?: string;
 };
+
+/** The web `Composer` inline radius, `rounded-[1.25rem]`. */
+const INLINE_RADIUS = 20;
 
 /** The field grows to this height, then scrolls: about 6 lines of `text-base` (24 each, with `py-2.5`), and about 8 of `text-xl` with larger text. */
 const MAX_FIELD_HEIGHT = { regular: 160, larger: 240 } as const;
@@ -124,6 +136,8 @@ export function PromptInput({
   accessibilityLabel = "Message",
   header,
   toolbar,
+  layout = "stacked",
+  leading,
   disabled = false,
   safeBottom = true,
   keyboardVerticalOffset = 0,
@@ -156,35 +170,72 @@ export function PromptInput({
         className={cn("pt-2", className)}
         style={{ paddingBottom: bottom + 8, paddingLeft: insets.left + 12, paddingRight: insets.right + 12 }}
       >
-        <View className="border" style={fieldStyle(scheme)}>
-          {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
-          {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
-          <FieldInput
-            multiline
-            value={text}
-            onChangeText={setText}
-            placeholder={placeholder}
-            accessibilityLabel={accessibilityLabel}
-            editable={!disabled}
-            textAlignVertical="top"
-            className={cn(
-              "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
-              largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
-            )}
-            style={[
-              fieldTextStyle(scheme),
-              largerText ? typeStyle("medium") : null,
-              {
-                backgroundColor: "transparent",
-                maxHeight: largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular,
-              },
-            ]}
-          />
-          <View className="flex-row items-center justify-between gap-1 px-2 pb-2">
-            <View className="min-w-0 shrink flex-row items-center gap-1">{toolbar}</View>
-            <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
+        {layout === "inline" ? (
+          // Web `Composer` inline: `rounded-[1.25rem]` and a `p-1.5` row, items at the bottom as the field grows.
+          <View className="border" style={[fieldStyle(scheme), { borderRadius: INLINE_RADIUS }]}>
+            {header ? <View className="flex-row flex-wrap gap-1 px-1.5 pt-1.5">{header}</View> : null}
+            <View className="flex-row items-end gap-1 p-1.5">
+              {leading ? <View className="shrink-0 flex-row items-center gap-1">{leading}</View> : null}
+              <FieldInput
+                multiline
+                value={text}
+                onChangeText={setText}
+                placeholder={placeholder}
+                accessibilityLabel={accessibilityLabel}
+                editable={!disabled}
+                textAlignVertical="center"
+                // One line to start (a multiline field is two rows on react-native-web); it grows from there.
+                numberOfLines={1}
+                className={cn(
+                  "min-h-8 flex-1 border-0 px-2 py-1 text-base font-instrument-sans",
+                  largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
+                )}
+                style={[
+                  fieldTextStyle(scheme),
+                  largerText ? typeStyle("medium") : null,
+                  {
+                    backgroundColor: "transparent",
+                    maxHeight: largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular,
+                  },
+                ]}
+              />
+              <View className="shrink-0 flex-row items-center gap-1">
+                {toolbar}
+                <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
+              </View>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View className="border" style={fieldStyle(scheme)}>
+            {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
+            {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
+            <FieldInput
+              multiline
+              value={text}
+              onChangeText={setText}
+              placeholder={placeholder}
+              accessibilityLabel={accessibilityLabel}
+              editable={!disabled}
+              textAlignVertical="top"
+              className={cn(
+                "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
+                largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
+              )}
+              style={[
+                fieldTextStyle(scheme),
+                largerText ? typeStyle("medium") : null,
+                {
+                  backgroundColor: "transparent",
+                  maxHeight: largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular,
+                },
+              ]}
+            />
+            <View className="flex-row items-center justify-between gap-1 px-2 pb-2">
+              <View className="min-w-0 shrink flex-row items-center gap-1">{toolbar}</View>
+              <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
+            </View>
+          </View>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
