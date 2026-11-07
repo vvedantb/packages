@@ -36,11 +36,13 @@ export {
   MessageAction,
   MESSAGE_ACTIONS,
   userBubbleStyle,
+  tintBubbleStyle,
 } from "./message";
 export type {
   MessageRole,
   MessageProps,
   MessageContentProps,
+  MessageBubble,
   MessageActionsBarProps,
   MessageActionKind,
   MessageActionProps,

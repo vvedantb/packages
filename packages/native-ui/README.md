@@ -406,7 +406,9 @@ import {
 | `ResponseText` | Plain, selectable reply text with newlines kept. It takes the colour of the `MessageContent` it is in. |
 | `Shimmer` | "Live" text: the foreground fades to 0.45 and back on the UI thread. With Reduce Motion it holds still, muted. |
 
-**Markdown.** There is no markdown renderer: `ResponseText` draws the text as it is. To render markdown, an app can add one of these and use it in place of `ResponseText`: `react-native-markdown-display`, `@ronradtke/react-native-markdown-display` (a maintained fork) or `react-native-marked`.
+**Markdown.** `ResponseText` draws text as it is. For markdown, install the optional peer `react-native-marked` and use `Markdown` from `@vvedantb/native-ui/markdown` in place of `ResponseText`: `<Markdown onCopyCode={copy}>{reply}</Markdown>`. It follows the web `markdown.css`: compact headings (1.43, 1.29, 1.14 em), primary links underlined at 30%, inline code on a 6% foreground wash, and fenced code as `CodeBlock`. Text takes the `MessageContent` colour. It renders through `useMarkdown`, so it nests in `ConversationContent` without a `FlatList`. No highlighting. Other markdown packages (`react-native-markdown-display`, `@ronradtke/react-native-markdown-display`) still work in place of `ResponseText`.
+
+**Eva's tinted bubble.** `MessageContent bubble="tint"` draws a user message as Eva's web chat does (`rounded-surface bg-primary/10 px-3 py-2 text-foreground`): a 10% wash of the primary colour with foreground text, radius 16 on every corner. The default, `"primary"`, stays the web `MessageContent` bubble.
 
 **Clipboard.** React Native's own `Clipboard` is deprecated (moved out of core), and the package adds no clipboard package. `MessageAction kind="copy"` calls your `onPress`, and `CodeBlock` shows its copy button when given `onCopy(code)`. Pass your own clipboard call, for example `expo-clipboard`'s `setStringAsync`.
 

@@ -187,6 +187,7 @@ describe("@vvedantb/native-ui exports", () => {
       "./blur",
       "./haptics",
       "./auth",
+      "./markdown",
       "./expo-web-root",
     ];
     expect(Object.keys(pkg.exports).sort()).toEqual([".", ...entries, "./tailwind-preset", "./package.json"].sort());
@@ -280,7 +281,7 @@ describe("@vvedantb/native-ui exports", () => {
     expect(names.has("ButtonShape")).toBe(true);
   });
 
-  it("adds no dependency, and only the 0.7.0 optional auth peers", () => {
+  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown)", () => {
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
       "@clerk/clerk-expo",
@@ -305,6 +306,7 @@ describe("@vvedantb/native-ui exports", () => {
       "nativewind",
       "react",
       "react-native",
+      "react-native-marked",
       "react-native-reanimated",
       "react-native-safe-area-context",
       "react-native-screens",
@@ -323,6 +325,7 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-linear-gradient",
       "expo-router",
       "expo-web-browser",
+      "react-native-marked",
       "react-native-svg",
     ]);
     // No tailwindcss-animate (or Tailwind itself): apps that want it keep it in their config.

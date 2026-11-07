@@ -79,7 +79,9 @@ const where = (file: string, source: string, index: number) =>
 // Files that name a face class or weight outside a JSX tag, each paired in its
 // own way and checked below: the `fontClass` map, the page title class and
 // style, and the `primitives/text.tsx` variants.
-const PAIRED_ELSEWHERE = ["typography.ts", "controlStyles.ts", "primitives/text.tsx"];
+// `markdown/Markdown.tsx` sets the face as a style beside `fontWeight: "600"`:
+// `react-native-marked` takes style objects, not class names.
+const PAIRED_ELSEWHERE = ["typography.ts", "controlStyles.ts", "primitives/text.tsx", "markdown/Markdown.tsx"];
 
 /** Tailwind weight utilities, which set a weight on the app's default family. */
 const BARE_WEIGHT = /(?<![\w-])font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)(?![\w-])/;
