@@ -1,5 +1,5 @@
-import { createContext, useContext, type ComponentType } from "react";
-import { View, type ViewProps } from "react-native";
+import { createContext, useContext, type ComponentType, type ReactNode } from "react";
+import { Text, View, type ViewProps } from "react-native";
 import {
   IconCopy,
   IconRefresh,
@@ -8,9 +8,12 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
+import { sizeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
+import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
+import { chatTextSize } from "./chat-text";
 import { ChatIconButton } from "./icon-button";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
@@ -102,6 +105,27 @@ export function MessageContent({ children, bubble = "primary", className, style,
         {typeof children === "string" ? <ResponseText>{children}</ResponseText> : children}
       </View>
     </ChatTextColorContext.Provider>
+  );
+}
+
+export type MessageMetaProps = { children: ReactNode; className?: string };
+
+/**
+ * The muted clock and duration after a message's actions, as Eva's web chat
+ * (`text-2xs tabular-nums text-muted-foreground/60`, "10:21 PM · 1m"): the
+ * caption size on phones, the muted colour at 60%, tabular figures.
+ */
+export function MessageMeta({ children, className }: MessageMetaProps) {
+  const scheme = useScheme();
+  const largerText = useLargerText();
+  const size = chatTextSize("caption", largerText);
+  return (
+    <Text
+      className={cn(size, "font-instrument-sans", className)}
+      style={[sizeStyle(size), { color: withAlpha(tokens.color.muted[scheme], 0.6), fontVariant: ["tabular-nums"] }]}
+    >
+      {children}
+    </Text>
   );
 }
 

@@ -7,7 +7,7 @@ import { palette } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
-import { chatTextSize } from "./chat-text";
+import { chatTextSize, formatElapsed } from "./chat-text";
 import {
   Collapsible,
   CollapsibleChevron,
@@ -230,5 +230,36 @@ export function AgentTraceCollapsibleContent({
         )}
       </View>
     </CollapsibleContent>
+  );
+}
+
+export type AgentTraceFoldProps = Omit<CollapsibleProps, "children"> & {
+  /** How long the turn ran, in seconds. The title reads "Worked for 1m 5s". */
+  seconds: number;
+  /** The settled turn's steps, shown in an `AgentTrace` when open. */
+  children: ReactNode;
+};
+
+/**
+ * A settled turn folded behind one line, as the web `ActivityTasks` in its
+ * folded (Codex-style) mode: "Worked for …" over a hairline
+ * (`border-b border-border pb-1.5`), closed by default, and the steps in an
+ * `AgentTrace` 8 below when open.
+ */
+export function AgentTraceFold({ seconds, children, defaultOpen = false, className, ...props }: AgentTraceFoldProps) {
+  const scheme = useScheme();
+  return (
+    <Collapsible className={cn("w-full min-w-0", className)} defaultOpen={defaultOpen} {...props}>
+      <View style={{ borderBottomWidth: 1, borderBottomColor: tokens.color.border[scheme], paddingBottom: 6 }}>
+        <AgentTraceCollapsibleTrigger>
+          <AgentTraceLine>
+            <AgentTraceTitle>{`Worked for ${formatElapsed(seconds)}`}</AgentTraceTitle>
+          </AgentTraceLine>
+        </AgentTraceCollapsibleTrigger>
+      </View>
+      <CollapsibleContent>
+        <AgentTrace className="mt-2">{children}</AgentTrace>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

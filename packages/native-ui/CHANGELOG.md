@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **`AgentTraceFold`** (new, `/ai` and root): a settled turn folded behind "Worked for 1m 5s" (`formatElapsed(seconds)`), as the web `ActivityTasks` folded mode. A hairline under the line (`border-b border-border pb-1.5`), closed by default, and the children in an `AgentTrace` 8 below when open. Props: `seconds`, `children`, plus `Collapsible`'s `open`, `defaultOpen` and `onOpenChange`.
+- **`MessageMeta`** (new): the muted clock after a message's actions ("10:21 PM · 1m"), as Eva's web chat (`text-2xs tabular-nums text-muted-foreground/60`): the caption size, the muted colour at 60%, tabular figures. Put it in `MessageActionsBar` after the actions.
+- Tests: new `tests/turnFold.test.ts` (3) checks the fold against the web `activity-tasks.tsx` and the meta style.
+
 - **`ChoiceQuestion`** (new, `/ai` and root): an agent's blocking multiple-choice question (AskUserQuestion), ported from Eva's web `ChatQuestionDock` + `MultipleChoiceQuestion`, which live in the Eva app, not `@vvedantb/ui`.
   - Layout: the question (15/20 semibold) with a compact `secondary` `Badge` header and a `1/2` step count, then option rows. Each row is `default` fill, radius 16, `py-2 px-2.5`, with a round 24 mark (letter A-Z, or a pencil for "Other...") and the label (`text-sm` medium, muted) over its description (`text-xs`, muted).
   - A picked row gets a 2-wide primary ring on the background fill, a check on the primary fill, and a primary label. "Other..." opens an `Input` ("Type your answer...") that replaces the picks.

@@ -34,6 +34,7 @@ export {
   MessageContent,
   MessageActionsBar,
   MessageAction,
+  MessageMeta,
   MESSAGE_ACTIONS,
   userBubbleStyle,
   tintBubbleStyle,
@@ -44,6 +45,7 @@ export type {
   MessageContentProps,
   MessageBubble,
   MessageActionsBarProps,
+  MessageMetaProps,
   MessageActionKind,
   MessageActionProps,
 } from "./message";
@@ -64,6 +66,7 @@ export {
   AgentTraceCollapsible,
   AgentTraceCollapsibleTrigger,
   AgentTraceCollapsibleContent,
+  AgentTraceFold,
   traceLineColor,
 } from "./trace";
 export type {
@@ -72,6 +75,7 @@ export type {
   AgentTraceIconProps,
   AgentTraceTitleProps,
   AgentTraceCollapsibleTriggerProps,
+  AgentTraceFoldProps,
 } from "./trace";
 export {
   ChainOfThought,
