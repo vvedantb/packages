@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **`DividedList`** (new, `/primitives` and root): flat rows with a 1-high `border` hairline between each pair, as the web `divide-y divide-border` lists (Eva's inbox). No fill, radius or outer border; `null` children are skipped; `inset` starts each divider under the row text. Tests: new `tests/dividedList.test.ts` (2).
+
 - **`AgentTraceFold`** (new, `/ai` and root): a settled turn folded behind "Worked for 1m 5s" (`formatElapsed(seconds)`), as the web `ActivityTasks` folded mode. A hairline under the line (`border-b border-border pb-1.5`), closed by default, and the children in an `AgentTrace` 8 below when open. Props: `seconds`, `children`, plus `Collapsible`'s `open`, `defaultOpen` and `onOpenChange`.
 - **`MessageMeta`** (new): the muted clock after a message's actions ("10:21 PM · 1m"), as Eva's web chat (`text-2xs tabular-nums text-muted-foreground/60`): the caption size, the muted colour at 60%, tabular figures. Put it in `MessageActionsBar` after the actions.
 - Tests: new `tests/turnFold.test.ts` (3) checks the fold against the web `activity-tasks.tsx` and the meta style.
