@@ -402,6 +402,7 @@ import {
 | `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
 | `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
 | `FileChip`, `Attachments`, `Attachment` | A monospace file chip (a button with `onOpenFile`), and attachment chips with a media icon or image thumbnail and a labelled remove button. No hover cards and no grid previews. |
+| `ChoiceQuestion`, `choiceAnswers` | An agent's blocking multiple-choice question, as Eva's web question dock: question with a header badge and step count, lettered option rows with descriptions (a check on the primary fill when picked), "Other..." with a text field, then Back and Next or Submit. `onSubmit` gets question text to label (multi-select joined with ", "), the AskUserQuestion answer shape. `framed` (default) puts it in the dock card. |
 | `CodeBlock`, `CodeBlockCopyButton` | Plain monospace code on the flat panel, scrolling sideways, with the language and a copy button in a header. No highlighting. |
 | `ResponseText` | Plain, selectable reply text with newlines kept. It takes the colour of the `MessageContent` it is in. |
 | `Shimmer` | "Live" text: the foreground fades to 0.45 and back on the UI thread. With Reduce Motion it holds still, muted. |

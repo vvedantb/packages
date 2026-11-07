@@ -703,6 +703,8 @@ declare module "@tabler/icons-react-native" {
   type Icon = React.ComponentType<IconProps>;
   export const IconAlertTriangle: Icon;
   export const IconArrowDown: Icon;
+  export const IconArrowLeft: Icon;
+  export const IconArrowRight: Icon;
   export const IconArrowUp: Icon;
   export const IconBook: Icon;
   export const IconBrain: Icon;
@@ -722,6 +724,7 @@ declare module "@tabler/icons-react-native" {
   export const IconMoon: Icon;
   export const IconMusic: Icon;
   export const IconPaperclip: Icon;
+  export const IconPencil: Icon;
   export const IconPhoto: Icon;
   export const IconPlayerStopFilled: Icon;
   export const IconPointFilled: Icon;

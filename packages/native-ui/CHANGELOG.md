@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **`ChoiceQuestion`** (new, `/ai` and root): an agent's blocking multiple-choice question (AskUserQuestion), ported from Eva's web `ChatQuestionDock` + `MultipleChoiceQuestion`, which live in the Eva app, not `@vvedantb/ui`.
+  - Layout: the question (15/20 semibold) with a compact `secondary` `Badge` header and a `1/2` step count, then option rows. Each row is `default` fill, radius 16, `py-2 px-2.5`, with a round 24 mark (letter A-Z, or a pencil for "Other...") and the label (`text-sm` medium, muted) over its description (`text-xs`, muted).
+  - A picked row gets a 2-wide primary ring on the background fill, a check on the primary fill, and a primary label. "Other..." opens an `Input` ("Type your answer...") that replaces the picks.
+  - Buttons: ghost Back with a left arrow, then Next or Submit with a right arrow, both default pills.
+  - `framed` (default `true`) wraps it in the dock card: white surface, radius 16, `p-3`, scrolling past 544 (web `max-h-[min(60dvh,34rem)]`). It scales with larger text.
+  - Props: `questions`, `onSubmit`, `loading`, `otherLabel`, `otherPlaceholder`, `framed`.
+- **`choiceAnswers(questions, picked, other, otherOn)`**: question text to label, multi-select joined with ", ", or the trimmed typed answer when "Other" is on.
+- `types/peers.d.ts` adds `IconArrowLeft`, `IconArrowRight` and `IconPencil`. Tests: new `tests/choiceQuestion.test.ts` (3); `tests/buttonShape.test.ts` lists `ai/choice-question.tsx`.
+
 Chat parity with Eva's web chat: a tinted user bubble and a markdown entry. No new dependency; one new optional peer.
 
 - **`MessageContent bubble`** (new prop, `/ai` and root): `"primary"` (default, unchanged) or `"tint"`, Eva's web override `rounded-surface bg-primary/10 px-3 py-2 text-foreground`: the primary colour at 10% alpha, radius 16 on every corner, foreground text (`ChatTextColorContext` hands down the foreground). Assistant messages ignore it. New `tintBubbleStyle(scheme)` and type `MessageBubble`.

@@ -236,6 +236,8 @@ describe("Button shape in composites", () => {
     );
     expect(users.sort()).toEqual([
       "AlertDialog.tsx",
+      // Unreleased: the question dock's Back and Next/Submit, the default pill as on the web.
+      "ai/choice-question.tsx",
       "ai/conversation.tsx",
       "ai/icon-button.tsx",
       // 0.7.0 auth screens: the default pill, no shape or radius of their own.

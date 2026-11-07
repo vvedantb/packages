@@ -123,3 +123,5 @@ export { CodeBlock, CodeBlockCopyButton } from "./code-block";
 export type { CodeBlockProps, CodeBlockCopyButtonProps } from "./code-block";
 export { ResponseText, ChatTextColorContext } from "./response-text";
 export type { ResponseTextProps } from "./response-text";
+export { ChoiceQuestion, choiceAnswers } from "./choice-question";
+export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
