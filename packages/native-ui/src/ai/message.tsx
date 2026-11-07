@@ -8,7 +8,7 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
-import { palette } from "../palette";
+import { palette, withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import { ChatIconButton } from "./icon-button";
@@ -56,24 +56,47 @@ export function userBubbleStyle(scheme: "light" | "dark") {
   };
 }
 
-export type MessageContentProps = ViewProps & { className?: string };
+/**
+ * A user bubble's look. `primary` is the web default (`bg-primary` with the
+ * label colour). `tint` is the chat override Eva uses (`rounded-surface
+ * bg-primary/10 px-3 py-2 text-foreground`): a 10% wash of the primary colour
+ * with foreground text and every corner at 16.
+ */
+export type MessageBubble = "primary" | "tint";
+
+/** The `tint` bubble: the primary colour at 10% alpha, radius 16 on every corner. */
+export function tintBubbleStyle(scheme: "light" | "dark") {
+  return {
+    backgroundColor: withAlpha(palette.primary[scheme], 0.1),
+    borderRadius: tokens.radius.lg,
+  };
+}
+
+export type MessageContentProps = ViewProps & {
+  /** User messages only. Default `"primary"`. */
+  bubble?: MessageBubble;
+  className?: string;
+};
 
 /**
- * The message body. A user message is a filled bubble (`px-4 py-3`, the
- * primary fill and label colour); an assistant message has no fill and the
- * foreground colour. A string child is drawn as `ResponseText`, and
- * `ResponseText` inside takes the colour.
+ * The message body. A user message is a filled bubble: by default `px-4 py-3`
+ * with the primary fill and label colour, or with `bubble="tint"` `px-3 py-2`
+ * on a 10% primary wash with the foreground colour. An assistant message has
+ * no fill and the foreground colour. A string child is drawn as
+ * `ResponseText`, and `ResponseText` inside takes the colour.
  */
-export function MessageContent({ children, className, style, ...props }: MessageContentProps) {
+export function MessageContent({ children, bubble = "primary", className, style, ...props }: MessageContentProps) {
   const from = useContext(MessageContext);
   const scheme = useScheme();
   const user = from === "user";
-  const color = user ? palette.primaryForeground[scheme] : tokens.color.foreground[scheme];
+  const tint = user && bubble === "tint";
+  const color = user && !tint ? palette.primaryForeground[scheme] : tokens.color.foreground[scheme];
+  const bubbleStyle = !user ? null : tint ? tintBubbleStyle(scheme) : userBubbleStyle(scheme);
   return (
     <ChatTextColorContext.Provider value={color}>
       <View
-        className={cn("min-w-0 max-w-full gap-2", user && "px-4 py-3", className)}
-        style={[user ? userBubbleStyle(scheme) : null, style]}
+        className={cn("min-w-0 max-w-full gap-2", user && (tint ? "px-3 py-2" : "px-4 py-3"), className)}
+        style={[bubbleStyle, style]}
         {...props}
       >
         {typeof children === "string" ? <ResponseText>{children}</ResponseText> : children}

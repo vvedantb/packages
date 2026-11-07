@@ -97,6 +97,10 @@
       "types": "./src/entries/auth.ts",
       "default": "./src/entries/auth.ts"
     },
+    "./markdown": {
+      "types": "./src/entries/markdown.ts",
+      "default": "./src/entries/markdown.ts"
+    },
     "./expo-web-root": {
       "types": "./src/entries/expo-web-root.ts",
       "default": "./src/entries/expo-web-root.ts"
@@ -143,6 +147,7 @@
     "nativewind": ">=4.0.0",
     "react": ">=19.0.0",
     "react-native": ">=0.76.0",
+    "react-native-marked": ">=8.0.0",
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
@@ -181,6 +186,9 @@
       "optional": true
     },
     "expo-web-browser": {
+      "optional": true
+    },
+    "react-native-marked": {
       "optional": true
     },
     "react-native-svg": {

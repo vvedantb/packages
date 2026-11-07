@@ -577,6 +577,47 @@ declare module "convex/react-clerk" {
   }>;
 }
 
+declare module "react-native-marked" {
+  import type { ReactNode } from "react";
+  import type { TextStyle, ViewStyle } from "react-native";
+  export type MarkedStyles = {
+    text?: TextStyle;
+    paragraph?: ViewStyle;
+    strong?: TextStyle;
+    em?: TextStyle;
+    link?: TextStyle;
+    h1?: TextStyle;
+    h2?: TextStyle;
+    h3?: TextStyle;
+    h4?: TextStyle;
+    h5?: TextStyle;
+    h6?: TextStyle;
+    list?: ViewStyle;
+    li?: TextStyle;
+    blockquote?: ViewStyle;
+    hr?: ViewStyle;
+    codespan?: TextStyle;
+    code?: ViewStyle;
+    codeText?: TextStyle;
+  };
+  export class Renderer {
+    constructor(options?: { selectable?: boolean });
+    code(text: string, language?: string, containerStyle?: ViewStyle, textStyle?: TextStyle): ReactNode;
+    codespan(text: string, styles?: TextStyle): ReactNode;
+    list(ordered: boolean, li: ReactNode[], listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode;
+    getKey(): string;
+  }
+  export function useMarkdown(
+    value: string,
+    options?: {
+      colorScheme?: "light" | "dark";
+      renderer?: Renderer;
+      theme?: { colors?: { text: string; link: string; code: string; border: string } };
+      styles?: MarkedStyles;
+    },
+  ): ReactNode[];
+}
+
 declare module "@gorhom/bottom-sheet" {
   import type * as React from "react";
   import type { ViewProps } from "react-native";

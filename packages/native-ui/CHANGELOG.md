@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+Chat parity with Eva's web chat: a tinted user bubble and a markdown entry. No new dependency; one new optional peer.
+
+- **`MessageContent bubble`** (new prop, `/ai` and root): `"primary"` (default, unchanged) or `"tint"`, Eva's web override `rounded-surface bg-primary/10 px-3 py-2 text-foreground`: the primary colour at 10% alpha, radius 16 on every corner, foreground text (`ChatTextColorContext` hands down the foreground). Assistant messages ignore it. New `tintBubbleStyle(scheme)` and type `MessageBubble`.
+- **`@vvedantb/native-ui/markdown`** (new entry, off the root): `Markdown` (`children`, `onCopyCode`), `markdownStyles`, `inlineCodeStyle` and `MARKDOWN_SCALE`. Renders through `react-native-marked`'s `useMarkdown` (so it nests in `ConversationContent` with no `FlatList`) with a renderer that draws fenced code as `CodeBlock` and inline code as a chip. Values from the web `markdown.css`: headings 1.43, 1.29, 1.14 and 1 em in the semibold face at line height 1.3, h6 muted; links in the primary colour, underlined at 30%; inline code 0.86 em mono on a 6% foreground wash at radius 6; blocks 10 apart; quotes with a 2-wide border. Text takes the enclosing `MessageContent` colour.
+- **Optional peer** `react-native-marked` (`>=8.0.0`), only for `/markdown`. `/ai` still imports no markdown package; the `ResponseText` stub now points to `/markdown`.
+- `types/peers.d.ts` (the typecheck stub, not shipped) adds `react-native-marked` (`Renderer`, `useMarkdown`, `MarkedStyles`).
+- Tests: new `tests/markdown.test.ts` (5 tests) reads `markdown.css` and checks the scale, link and inline-code values and the renderer source. `tests/ai.test.ts` adds the tint bubble; the markdown source contract now allows the peer only outside `/ai`. `tests/exports.test.ts` lists `./markdown` and the peer; `tests/fontWeight.test.ts` lists `markdown/Markdown.tsx` as pairing face and weight in a style.
+
 ## 0.8.0 (2026-11-04)
 
 "More from Project V": a settings section that lists the other Project V phone apps, as WhatsApp's "from Meta". On the root and `/layout`. No new dependency or peer.

@@ -31,12 +31,12 @@ Exports by area and status (`@vvedantb/ui` 0.29.0, counted on 27 October 2026):
 | Utilities, hooks and motion | 42 | 1 | 0 | 10 | 0 | 31 |
 | Audio (`src/audio`) | 10 | 0 | 0 | 3 | 7 | 0 |
 | Animated nav icons (`src/icons`) | 25 | 0 | 0 | 0 | 0 | 25 |
-| Markdown (`src/markdown`) | 3 | 0 | 0 | 0 | 0 | 3 |
+| Markdown (`src/markdown`) | 3 | 0 | 2 | 0 | 0 | 1 |
 | Composer (`src/composer`) | 72 | 0 | 0 | 0 | 0 | 72 |
 | AI elements (`src/ai-elements`) | 468 | 15 | 197 | 0 | 0 | 256 |
 | Artifact viewers (`src/artifacts`) | 32 | 0 | 0 | 0 | 0 | 32 |
 | Kibo blocks (`src/kibo`) | 118 | 0 | 0 | 0 | 0 | 118 |
-| **Total** | **1362** | **152** | **281** | **98** | **35** | **796** |
+| **Total** | **1362** | **152** | **283** | **98** | **35** | **794** |
 
 Most of the n/a total (796 of 1,362 exports) is web-only by design: the AI elements not ported (256 of 468), Kibo blocks (118), the composer (72), the web shell (79 of 86) and app helpers tied to web Clerk, Vite or the DOM.
 
@@ -431,7 +431,7 @@ Every root export of `@vvedantb/ui` 0.29.0, by source module. ᵀ marks a type-o
 
 | Module | Exports | Status | Native equivalent | Notes |
 | --- | --- | --- | --- | --- |
-| `src/markdown/Markdown.tsx` | `Markdown`, `MarkdownProps`ᵀ | n/a | — | Streamdown, shiki and KaTeX render to the DOM. |
+| `src/markdown/Markdown.tsx` | `Markdown`, `MarkdownProps`ᵀ | partial | `Markdown`, `MarkdownProps`ᵀ (`/markdown`, optional peer `react-native-marked`) | Streamdown, shiki and KaTeX render to the DOM. The native `Markdown` follows `markdown.css` (heading scale, links, inline code, `CodeBlock` for fences); no highlighting, KaTeX, mermaid, tables styling or alerts. |
 | `src/markdown/MarkdownLink.tsx` | `MarkdownLink` | n/a | — | DOM link for the markdown renderer. |
 
 ### Composer (`src/composer`)

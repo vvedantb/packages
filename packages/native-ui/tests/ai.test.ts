@@ -470,12 +470,12 @@ describe("Shimmer", () => {
 });
 
 describe("Message", () => {
-  async function message(from: "user" | "assistant", children: unknown = "Hello") {
+  async function message(from: "user" | "assistant", children: unknown = "Hello", bubble?: "primary" | "tint") {
     const { Message, MessageContent } = await import("../src/ai/message");
     return hooks.mount(() => {
       const row = Message({ from, children: null }) as unknown as Element;
       provide(row);
-      return { row, content: MessageContent({ children } as never) as unknown as Element };
+      return { row, content: MessageContent({ children, bubble } as never) as unknown as Element };
     }).tree;
   }
 
@@ -498,6 +498,24 @@ describe("Message", () => {
         borderBottomRightRadius: 14,
       });
     }
+  });
+
+  it("draws bubble=\"tint\" as a 10% primary wash with foreground text, every corner 16", async () => {
+    const { withAlpha } = await import("../src/palette");
+    for (const colorScheme of ["light", "dark"] as const) {
+      scheme.colorScheme = colorScheme;
+      const { content } = await message("user", "Hello", "tint");
+      expect(content.props.value).toBe(tokens.color.foreground[colorScheme]);
+      const bubble = content.props.children as Element;
+      expect(bubble.props.className).toBe("min-w-0 max-w-full gap-2 px-3 py-2");
+      expect(flatten(bubble.props.style)).toEqual({
+        backgroundColor: withAlpha(palette.primary[colorScheme], 0.1),
+        borderRadius: 16,
+      });
+    }
+    // An assistant message ignores the bubble.
+    const { content } = await message("assistant", "Hello", "tint");
+    expect(flatten((content.props.children as Element).props.style)).toEqual({});
   });
 
   it("draws an assistant message with no fill, in the foreground", async () => {
@@ -943,7 +961,8 @@ describe("AI parts (source contract)", () => {
   const gallery = code(read("examples/AiChatGallery.tsx"));
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
-  it("adds no markdown, highlighter or clipboard package, and names the markdown options in the stub", () => {
+  it("adds no markdown, highlighter or clipboard package to /ai, and names the markdown options in the stub", () => {
+    // `/ai` stays free of markdown: apps opt in through `/markdown` (optional peer react-native-marked).
     for (const [file, source] of Object.entries(sources)) {
       expect(source, file).not.toMatch(/from "(?:react-native-markdown-display|@ronradtke\/react-native-markdown-display|react-native-marked|shiki|streamdown|expo-clipboard|@react-native-clipboard\/clipboard)"/);
       expect(source, file).not.toMatch(/\bClipboard\b/);
@@ -953,9 +972,11 @@ describe("AI parts (source contract)", () => {
       expect(stub).toContain(`\`${name}\``);
     }
     const all = { ...pkg.peerDependencies, ...pkg.devDependencies };
-    for (const name of ["react-native-markdown-display", "react-native-marked", "shiki", "expo-clipboard", "@react-native-clipboard/clipboard"]) {
+    for (const name of ["react-native-markdown-display", "shiki", "expo-clipboard", "@react-native-clipboard/clipboard"]) {
       expect(all[name], name).toBeUndefined();
     }
+    expect(pkg.peerDependencies["react-native-marked"]).toBe(">=8.0.0");
+    expect(pkg.peerDependenciesMeta["react-native-marked"]).toEqual({ optional: true });
     expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
     expect(pkg.dependencies).toBeUndefined();
   });
