@@ -44,8 +44,11 @@ export function FloatingFAB({
           accessibilityRole="button"
           accessibilityLabel={label}
           onPress={onPress}
-          className="items-center justify-center"
+          // Layout in the function style and no `className`: NativeWind drops a
+          // function `style` next to a `className`.
           style={({ pressed }) => ({
+            alignItems: "center",
+            justifyContent: "center",
             width: size,
             height: size,
             backgroundColor: accentColor,

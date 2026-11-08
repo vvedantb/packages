@@ -306,8 +306,11 @@ function MenuRow({
         onSelect?.();
         if (closeOnSelect) setOpen(false);
       }}
-      className={cn("flex-row items-center", className)}
+      // No `className` on this Pressable: NativeWind drops a function `style`
+      // when a `className` is set, and the row's layout lives in the style.
       style={({ pressed }) => ({
+        flexDirection: "row",
+        alignItems: "center",
         minHeight: metrics.minHeight,
         gap: DROPDOWN_MENU.itemGap,
         paddingLeft,
@@ -319,13 +322,16 @@ function MenuRow({
       })}
     >
       {leading}
-      {typeof children === "string" ? (
-        <Text className="flex-1 font-instrument-sans" style={[metrics.text, { color }]}>
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      {/* A caller `className` lands here, off the Pressable (see the style note above). */}
+      <View className={cn("min-w-0 flex-1 flex-row items-center", className)}>
+        {typeof children === "string" ? (
+          <Text className="flex-1 font-instrument-sans" style={[metrics.text, { color }]}>
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+      </View>
     </Pressable>
   );
 }

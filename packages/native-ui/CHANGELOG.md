@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Fix: `DropdownMenu` rows and `FloatingFAB` lost their layout.** NativeWind drops a `Pressable`'s function `style` when a `className` is set. Menu rows kept their height, padding and check offset only in that style, so in Eva's app they collapsed with the check over the label. The FAB lost its size the same way. Both Pressables now take no `className`: the layout is in the style, and a menu item's caller `className` moves to an inner row. New `tests/pressableStyle.test.ts` fails if layout sits in a function style beside a `className` (it flags the old `DropdownMenu`).
+
 - **`ActivityStepDetail`** (new, `/ai` and root): a tool step's body, ported from the web `ActivityStepDetail`. It shows exit code and "Truncated" badges, the shell transcript (`$ command`, then the output) in a `CodeBlock`, edits as a red before block over a green after block (web `bg-destructive/10` and `bg-emerald-500/10`), a written file's preview, and "Loading output..." while `hasHiddenDetail` is set and nothing has loaded. Props: `step` (`ActivityStepDetailStep`), `onCopy`, `loadingLabel`. Put it in an `AgentTraceCollapsibleContent` under the step's line.
 - **Fix:** `loadPrismReactRenderer` returns `prismReactRenderer ?? null`. An app with the real `prism-react-renderer` types failed to typecheck (`undefined` was not assignable). The package typecheck only sees a stub.
 - Tests: new `tests/activityStepDetail.test.ts` (3), checked against the web `activity-step-detail.tsx`.
