@@ -173,8 +173,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.8.0 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.8.0");
+  it("is 0.9.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.9.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -195,6 +195,7 @@ describe("@vvedantb/native-ui exports", () => {
       "./ai-gallery",
       "./blur",
       "./haptics",
+      "./push",
       "./auth",
       "./markdown",
       "./expo-web-root",
@@ -307,8 +308,11 @@ describe("@vvedantb/native-ui exports", () => {
       "dayjs",
       "expo-auth-session",
       "expo-blur",
+      "expo-constants",
+      "expo-device",
       "expo-haptics",
       "expo-linear-gradient",
+      "expo-notifications",
       "expo-router",
       "expo-web-browser",
       "lucide-react-native",
@@ -331,8 +335,11 @@ describe("@vvedantb/native-ui exports", () => {
       "dayjs",
       "expo-auth-session",
       "expo-blur",
+      "expo-constants",
+      "expo-device",
       "expo-haptics",
       "expo-linear-gradient",
+      "expo-notifications",
       "expo-router",
       "expo-web-browser",
       "prism-react-renderer",

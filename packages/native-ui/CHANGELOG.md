@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0
+
+Expo push registration hook. Additive; three new optional peers.
+
+### Added
+
+- `@vvedantb/native-ui/push` (new): `useExpoPushRegistration({ register, onNotificationTap?, channelName?, ask?, showInForeground? })` registers this device's token through the `register` function the app passes (for example `useMutation(api.push.register)`, so the package names no Convex `api`) and reports taps, the cold-start tap included, once per push through `onNotificationTap({ identifier, data, response })`. Navigation stays in the app. `getExpoPushToken({ ask, channelName? })` checks the device, the EAS project id (`Constants.expoConfig?.extra?.eas?.projectId`) and permission, sets the Android channel and returns the token or `null`. Also `showPushesInForeground`, the loaders `loadNotifications`, `loadConstants` and `loadDevice`, and the types `ExpoPushRegisterArgs`, `ExpoPushTap`, `GetExpoPushTokenOptions` and `UseExpoPushRegistrationOptions`. Pairs with `createExpoPushFunctions` in `@vvedantb/server` 0.14.0.
+- Optional peers `expo-notifications`, `expo-constants` and `expo-device`, loaded with a `require` in `try` (only `src/push.ts` names them). Without them the hook does nothing. Not on the root entry.
+- Tests: new `tests/push.test.ts` (9, mocked peers). `tests/exports.test.ts` and `tests/subpaths.test.ts` list the entry and peers.
+
 ## Unreleased
 
 - **Fix: `DropdownMenu` rows and `FloatingFAB` lost their layout.** NativeWind drops a `Pressable`'s function `style` when a `className` is set. Menu rows kept their height, padding and check offset only in that style, so in Eva's app they collapsed with the check over the label. The FAB lost its size the same way. Both Pressables now take no `className`: the layout is in the style, and a menu item's caller `className` moves to an inner row. New `tests/pressableStyle.test.ts` fails if layout sits in a function style beside a `className` (it flags the old `DropdownMenu`).

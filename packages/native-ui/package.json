@@ -1,6 +1,6 @@
 {
   "name": "@vvedantb/native-ui",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "MIT",
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, overlays, toasts, settings chrome, tab bar, AI chat parts, the family app marks, a NativeWind preset, the Expo web root and Clerk + Convex auth screens.",
   "type": "module",
@@ -93,6 +93,10 @@
       "types": "./src/haptics.ts",
       "default": "./src/haptics.ts"
     },
+    "./push": {
+      "types": "./src/push.ts",
+      "default": "./src/push.ts"
+    },
     "./auth": {
       "types": "./src/entries/auth.ts",
       "default": "./src/entries/auth.ts"
@@ -139,8 +143,11 @@
     "dayjs": ">=1.11.0",
     "expo-auth-session": "*",
     "expo-blur": "*",
+    "expo-constants": "*",
+    "expo-device": "*",
     "expo-haptics": "*",
     "expo-linear-gradient": "*",
+    "expo-notifications": "*",
     "expo-router": "*",
     "expo-web-browser": "*",
     "lucide-react-native": "*",
@@ -177,10 +184,19 @@
     "expo-blur": {
       "optional": true
     },
+    "expo-constants": {
+      "optional": true
+    },
+    "expo-device": {
+      "optional": true
+    },
     "expo-haptics": {
       "optional": true
     },
     "expo-linear-gradient": {
+      "optional": true
+    },
+    "expo-notifications": {
       "optional": true
     },
     "expo-router": {

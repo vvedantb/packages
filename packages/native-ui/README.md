@@ -30,6 +30,7 @@ Optional and loaded only when installed, so the package imports and runs without
 
 - `expo-blur` — glass blur on `FloatingSurface` and the chrome built on it. Without it, those surfaces draw a solid fill.
 - `expo-haptics` — the selection haptic on `FloatingTabBar`, `Tabs` and `Checkbox` presses. Without it, presses are silent.
+- `expo-notifications`, `expo-constants`, `expo-device` — only for `@vvedantb/native-ui/push` (0.9.0). Without them, `useExpoPushRegistration` does nothing and `getExpoPushToken` returns `null`.
 - `expo-linear-gradient` — the gradient in `AmbientBackground`. Without it, the background is the solid `tokens.color.background`.
 - `prism-react-renderer` (`>=2.0.0`) — syntax highlighting in `CodeBlock` and the `Markdown` code fences. Without it, code is plain text.
 
@@ -74,6 +75,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/push` | `useExpoPushRegistration`, `getExpoPushToken`, `showPushesInForeground`, the three loaders and the types (0.9.0). Pass `register` from your backend (for `@vvedantb/server`: `useMutation(api.push.register)`) and route taps in `onNotificationTap` | `expo-notifications`, `expo-constants`, `expo-device` (loaders) |
 | `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |

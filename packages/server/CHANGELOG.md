@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.14.0
+
+Reusable Expo push notification helpers, generalised from an app's own push code. Additive; nothing in 0.13.0 changes. `convex` is used for types only and `zod` is not needed.
+
+### Added
+
+- `createExpoPushFunctions({ v, userId, mutation, internalQuery, internalMutation, internalAction, requireCurrentUserId, listTokensRef, removeTokensRef, sendRef, checkReceiptsRef, tableName?, receiptDelayMs?, fetch?, accessToken? })` returns `register`, `unregister`, `listTokensForUser`, `removeTokens`, `send`, `checkReceipts` and a bound `schedulePush`. `requireCurrentUserId` takes `createClerkUserAuth(...).requireCurrentUserId`.
+- Table helpers `pushTokensFields(v, userId?)` and `pushTokensTable(defineTable, v, userId?)` (deprecated for schema use, as the MCP token cache), constants `PUSH_TOKENS_TABLE` (`"pushTokens"`), `PUSH_TOKENS_USER_INDEX` (`by_user`) and `PUSH_TOKENS_TOKEN_INDEX` (`by_token`). Apps copy the table into their own schema (`NoImportModuleInSchema`).
+- `register` validates tokens against `EXPO_PUSH_TOKEN_PATTERN` and upserts by token; `unregister` deletes only the caller's row.
+- `send` posts to the Expo Push API in batches of `EXPO_PUSH_BATCH_SIZE` (100), removes `DeviceNotRegistered` tokens from tickets and schedules `checkReceipts` after `EXPO_RECEIPT_DELAY_MS` (15 minutes, set with `receiptDelayMs`). `checkReceipts` fetches receipts (1000 ids per request, `EXPO_RECEIPT_BATCH_SIZE`) and removes `DeviceNotRegistered` tokens. Only that error removes a token.
+- Plain helpers with an injectable `fetch`: `sendExpoPushMessages`, `fetchExpoPushReceipts`, `tokensToRemoveFromTickets`, `receiptRefsFromTickets`, `tokensToRemoveFromReceipts`, `parseExpoTickets`, `parseExpoReceipts`, `isExpoPushToken`, `isDeviceNotRegistered`; constants `EXPO_PUSH_SEND_URL` and `EXPO_PUSH_RECEIPTS_URL`; a standalone `schedulePush(ctx, params, { sendRef, tableName })`.
+- Docs: "Expo push notifications" in `docs/convex.md`.
+
+### Tests
+
+- `tests/convex/expoPush.test.ts` (12, mocked `fetch`, fake in-memory db): schema helpers, register upsert and takeover, invalid token, unregister ownership, batching (250 tokens, 3 calls), ticket and receipt cleanup, `schedulePush` no-op. `tests/convex/expoPush.types.ts` checks the factory against real Convex builders. `tests-node/esm-exports.mjs` checks the new exports.
+
 ## 0.13.0
 
 Optional `title`, `websiteUrl` and `icons` in MCP `serverInfo` (MCP 2025-11-25 `Implementation`), so MCP clients can show an app's name and icon. Additive; nothing in 0.12.0 changes. `defineMcpServerInfo({ name, version })` returns the same object as before.

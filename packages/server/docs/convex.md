@@ -350,6 +350,90 @@ crons.hourly("purge MCP token cache", { minuteUTC: 0 }, internal.mcp.tokenCache.
 
 The ctx types are structural, so the factory checks that the table exists and has both indexes. `getInternal`, `putInternal` and `purgeExpired` are real registered functions, so `ctx.runQuery(internal.mcp.tokenCache.getInternal, …)` is typed. `tests/convex/mcpTokenCache.types.ts` checks this against a codegen-shaped app with `convex/server` 1.47.
 
+## Expo push notifications
+
+Device-token storage, a batched send through the Expo Push API, and push receipts that drop dead tokens. Like the MCP token cache, the package cannot own a table: define it in your schema and wire one `convex/push.ts`. `convex` is used for types only.
+
+Define the table locally. `convex/schema.ts` cannot import runtime code from a package (`NoImportModuleInSchema`), so do not call `pushTokensTable` or `pushTokensFields` there.
+
+```ts
+// convex/schema.ts
+pushTokens: defineTable({
+  userId: v.id("users"), // pushTokensFields(v) uses v.string(); pass v.id("users") as its second argument to match
+  token: v.string(),
+  platform: v.union(v.literal("android"), v.literal("ios")),
+  updatedAt: v.number(),
+})
+  .index("by_user", ["userId"])
+  .index("by_token", ["token"]),
+```
+
+Check it in a test outside the schema: `expect(schema.tables.pushTokens.validator).toEqual(v.object(pushTokensFields(v, v.id("users"))))`, and compare `table[" indexes"]()` with `pushTokensTable(defineTable, v, v.id("users"))[" indexes"]()`, as in the MCP token cache section.
+
+```ts
+// convex/push.ts
+import { v } from "convex/values";
+import {
+  createClerkUserAuth,
+  createExpoPushFunctions,
+  type ExpoPushCheckReceiptsRef,
+  type ExpoPushListTokensRef,
+  type ExpoPushRemoveTokensRef,
+  type ExpoPushSendRef,
+} from "@vvedantb/server";
+import { internal } from "./_generated/api";
+import type { DataModel, Id } from "./_generated/dataModel";
+import { internalAction, internalMutation, internalQuery, mutation, type MutationCtx } from "./_generated/server";
+
+const userAuth = createClerkUserAuth<DataModel>()({ table: "users", index: "by_clerk_id", field: "clerkId" });
+
+export const { register, unregister, listTokensForUser, removeTokens, send, checkReceipts, schedulePush } =
+  createExpoPushFunctions({
+    v,
+    userId: v.id("users"),
+    mutation,
+    internalQuery,
+    internalMutation,
+    internalAction,
+    // Annotate ctx with your MutationCtx.
+    requireCurrentUserId: (ctx: MutationCtx) => userAuth.requireCurrentUserId(ctx),
+    // Keep the return annotations: without them `internal` refers to itself (TS7022).
+    listTokensRef: (): ExpoPushListTokensRef<Id<"users">> => internal.push.listTokensForUser,
+    removeTokensRef: (): ExpoPushRemoveTokensRef => internal.push.removeTokens,
+    sendRef: (): ExpoPushSendRef<Id<"users">> => internal.push.send,
+    checkReceiptsRef: (): ExpoPushCheckReceiptsRef => internal.push.checkReceipts,
+    // tableName: "pushTokens", receiptDelayMs: 15 * 60 * 1000, accessToken: () => process.env.EXPO_ACCESS_TOKEN,
+  });
+```
+
+Send from any mutation. `schedulePush` returns at once when the user has no token, so most users cost no action:
+
+```ts
+import { schedulePush } from "./push";
+
+await schedulePush(ctx, { userId: task.ownerId, title: "Task done", body: task.title, data: { target: task._id } });
+```
+
+Mobile: pass `api.push.register` to the hook from `@vvedantb/native-ui/push` (see its README), or call `register({ token, platform })` yourself with a token from `expo-notifications`.
+
+```tsx
+const register = useMutation(api.push.register);
+useExpoPushRegistration({ register, onNotificationTap: ({ data }) => router.push(`/chat/${String(data.target)}`) });
+```
+
+| Export | Semantics |
+| --- | --- |
+| `register({ token, platform })` | Public mutation. Rejects tokens that do not match `/^Expo(nent)?PushToken\[.+\]$/`. Upserts by `by_token`: an existing token is patched to the caller (a token moves with the device), otherwise inserted. No duplicates. |
+| `unregister({ token })` | Public mutation. Deletes the row only when it belongs to the caller. |
+| `listTokensForUser({ userId })` | Internal query: the user's tokens. |
+| `removeTokens({ tokens })` | Internal mutation: deletes rows by token. |
+| `send({ userId, title, body?, data? })` | Internal action. Sends `{ to, title, body?, sound: "default", priority: "high", data? }` to `https://exp.host/--/api/v2/push/send` in batches of `EXPO_PUSH_BATCH_SIZE` (100). Removes tokens whose ticket has `details.error` `DeviceNotRegistered`. Schedules `checkReceipts` after `receiptDelayMs` (default 15 minutes) with each `ok` ticket id and its token. A failed batch is logged and skipped. |
+| `checkReceipts({ receipts })` | Internal action. Posts the ids to `.../push/getReceipts` (1000 per request) and removes tokens whose receipt says `DeviceNotRegistered`. Ids Expo has no receipt for are ignored; receipts last 24 hours. |
+| `schedulePush(ctx, { userId, title, body?, data? })` | Checks `by_user` for a token; none: returns. Otherwise `ctx.scheduler.runAfter(0, sendRef, params)`. The factory returns it bound; the standalone export takes `{ sendRef, tableName }` as a third argument. |
+| `sendExpoPushMessages`, `fetchExpoPushReceipts`, `tokensToRemoveFromTickets`, `receiptRefsFromTickets`, `tokensToRemoveFromReceipts`, `parseExpoTickets`, `parseExpoReceipts` | The HTTP and cleanup logic as plain functions with an injectable `fetch`, for Node scripts and tests. |
+
+Only `DeviceNotRegistered` removes a token. `InvalidCredentials`, `MessageTooBig` and `MessageRateExceeded` describe your credentials or the message, not the device, so the token stays. The `userId` validator sets the user id type; with `v.id("users")` it is `Id<"users">`.
+
 ## Optimistic updates (client side)
 
 Client-side helpers for Convex optimistic updates. They live here, not in `@vvedantb/ui`, because they have no React: a backend package's client folder, its tests and a React Native app import them, and none of those can load the `@vvedantb/ui` root.
