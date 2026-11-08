@@ -129,3 +129,5 @@ export { ResponseText, ChatTextColorContext } from "./response-text";
 export type { ResponseTextProps } from "./response-text";
 export { ChoiceQuestion, choiceAnswers } from "./choice-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
+export { ActivityStepDetail } from "./activity-step-detail";
+export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";

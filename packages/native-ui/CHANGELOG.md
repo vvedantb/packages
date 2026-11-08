@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **`ActivityStepDetail`** (new, `/ai` and root): a tool step's body, ported from the web `ActivityStepDetail`. It shows exit code and "Truncated" badges, the shell transcript (`$ command`, then the output) in a `CodeBlock`, edits as a red before block over a green after block (web `bg-destructive/10` and `bg-emerald-500/10`), a written file's preview, and "Loading output..." while `hasHiddenDetail` is set and nothing has loaded. Props: `step` (`ActivityStepDetailStep`), `onCopy`, `loadingLabel`. Put it in an `AgentTraceCollapsibleContent` under the step's line.
+- **Fix:** `loadPrismReactRenderer` returns `prismReactRenderer ?? null`. An app with the real `prism-react-renderer` types failed to typecheck (`undefined` was not assignable). The package typecheck only sees a stub.
+- Tests: new `tests/activityStepDetail.test.ts` (3), checked against the web `activity-step-detail.tsx`.
+
 Per-app colours, a dropdown menu, the bulk selection bar and code highlighting. No new dependency; one new optional peer.
 
 - **`configureTheme({ color?, palette? })`** (new, root and `/theme`): sets an app's own colours. It writes into the shared `tokens.color` and `palette` objects, which every component reads at render, so call it once at app start, before the first render. Each key is a `{ light, dark }` pair (`white`, `black` and `palette.destructive` are single strings); keys left out keep the package value, and `undefined` values are skipped. Types `ThemeConfig`, `ThemeColors` and `ThemePalette` (the `tokens.color` and `palette` shapes with `string` values). Pairs are written in place, so `floatingFill`, `floatingHairline` and `floatingSolidFill` follow. `floatingSolidFill` is now the `tokens.color.surface` pair itself (same values). Only the JS colours change: NativeWind classes and the `tailwind-preset` CSS variables keep the package values, and a call after the first render does not redraw mounted components. README maps the keys to the shadcn-style variables of an app theme such as Eva's `globals.css`.

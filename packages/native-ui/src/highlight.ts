@@ -18,7 +18,9 @@ export function loadPrismReactRenderer(): PrismReactRendererModule | null {
       prismReactRenderer = null;
     }
   }
-  return prismReactRenderer;
+  // `?? null`: with the real peer types installed, TypeScript keeps `undefined`
+  // in the type after the `try` (the package typecheck only sees a stub).
+  return prismReactRenderer ?? null;
 }
 
 export type CodeColorRole =
