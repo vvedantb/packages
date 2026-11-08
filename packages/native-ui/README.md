@@ -438,6 +438,7 @@ import {
 | `ChoiceQuestion`, `choiceAnswers` | An agent's blocking multiple-choice question, as Eva's web question dock: question with a header badge and step count, lettered option rows with descriptions (a check on the primary fill when picked), "Other..." with a text field, then Back and Next or Submit. `onSubmit` gets question text to label (multi-select joined with ", "), the AskUserQuestion answer shape. `framed` (default) puts it in the dock card. |
 | `AgentTraceFold` | A finished turn folded behind "Worked for 1m 5s" over a hairline, as the web `ActivityTasks` folded mode; the steps show in an `AgentTrace` when open. |
 | `MessageMeta` | The muted clock after a message's actions ("10:21 PM · 1m"), caption size, tabular figures. |
+| `ActivityStepDetail` | A tool step's body, as the web: exit code and "Truncated" badges, the shell transcript in a `CodeBlock`, red/green edit blocks, a write preview, and "Loading output..." while trimmed detail loads. |
 | `CodeBlock`, `CodeBlockCopyButton` | Monospace code on the flat panel, scrolling sideways, with the language and a copy button in a header. With the optional peer `prism-react-renderer` and a `language`, tokens take the GitHub light or dark colours of the web shiki block; `highlight={false}` turns that off. Without the peer, plain text. |
 | `ResponseText` | Plain, selectable reply text with newlines kept. It takes the colour of the `MessageContent` it is in. |
 | `Shimmer` | "Live" text: the foreground fades to 0.45 and back on the UI thread. With Reduce Motion it holds still, muted. |
