@@ -14,7 +14,9 @@ declare function clearTimeout(handle: number | undefined): void;
 // `src/ThemeToggle.tsx` logs a failed `setColorScheme`.
 declare const console: { error(...data: unknown[]): void };
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
-// `src/gradient.ts`).
+// `src/gradient.ts`, `src/highlight.ts`). React Native's own typing returns
+// `any`; `src/highlight.ts` assigns without a cast, so its peer has an overload.
+declare function require(id: "prism-react-renderer"): typeof import("prism-react-renderer");
 declare function require(id: string): unknown;
 
 declare module "react-native" {
@@ -117,7 +119,9 @@ declare module "react-native" {
     onAccessibilityEscape?: () => void;
     collapsable?: boolean;
   }
-  export class View extends React.Component<ViewProps> {}
+  export class View extends React.Component<ViewProps> {
+    measureInWindow(callback: (x: number, y: number, width: number, height: number) => void): void;
+  }
 
   export interface TextProps extends AccessibilityProps {
     children?: React.ReactNode;
@@ -330,6 +334,7 @@ declare module "react-native-reanimated" {
   export const FadeOut: LayoutAnimationBuilder;
   export const FadeInUp: LayoutAnimationBuilder;
   export const FadeOutUp: LayoutAnimationBuilder;
+  export const FadeOutDown: LayoutAnimationBuilder;
   export const SlideInDown: LayoutAnimationBuilder;
   export const SlideOutDown: LayoutAnimationBuilder;
   export const LinearTransition: LayoutAnimationBuilder;
@@ -618,6 +623,23 @@ declare module "react-native-marked" {
   ): ReactNode[];
 }
 
+declare module "prism-react-renderer" {
+  import type { ReactElement, ReactNode } from "react";
+  export type Token = { types: string[]; content: string; empty?: boolean };
+  export type PrismTheme = {
+    plain: { color?: string; backgroundColor?: string };
+    styles: Array<{ types: string[]; style: { color?: string; fontStyle?: string } }>;
+  };
+  export type RenderProps = { tokens: Token[][] };
+  export function Highlight(props: {
+    code: string;
+    language: string;
+    theme?: PrismTheme;
+    children: (props: RenderProps) => ReactElement;
+  }): ReactNode;
+  export const themes: Record<string, PrismTheme>;
+}
+
 declare module "@gorhom/bottom-sheet" {
   import type * as React from "react";
   import type { ViewProps } from "react-native";
@@ -716,6 +738,7 @@ declare module "@tabler/icons-react-native" {
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
   export const IconCopy: Icon;
+  export const IconDots: Icon;
   export const IconFile: Icon;
   export const IconFileText: Icon;
   export const IconInbox: Icon;

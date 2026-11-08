@@ -120,6 +120,15 @@ describe("@vvedantb/native-ui exports", () => {
       "ThemeToggleProps",
       "tokens",
       "palette",
+      "configureTheme",
+      "DropdownMenu",
+      "DropdownMenuTrigger",
+      "DropdownMenuContent",
+      "DropdownMenuLabel",
+      "DropdownMenuItem",
+      "DropdownMenuRadioItem",
+      "DropdownMenuSeparator",
+      "BulkActionBar",
     ];
     for (const name of expected) expect(names.has(name), name).toBe(true);
   });
@@ -281,7 +290,7 @@ describe("@vvedantb/native-ui exports", () => {
     expect(names.has("ButtonShape")).toBe(true);
   });
 
-  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown)", () => {
+  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown, then highlighting)", () => {
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
       "@clerk/clerk-expo",
@@ -304,6 +313,7 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-web-browser",
       "lucide-react-native",
       "nativewind",
+      "prism-react-renderer",
       "react",
       "react-native",
       "react-native-marked",
@@ -325,6 +335,7 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-linear-gradient",
       "expo-router",
       "expo-web-browser",
+      "prism-react-renderer",
       "react-native-marked",
       "react-native-svg",
     ]);

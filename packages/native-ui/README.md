@@ -31,13 +31,15 @@ Optional and loaded only when installed, so the package imports and runs without
 - `expo-blur` — glass blur on `FloatingSurface` and the chrome built on it. Without it, those surfaces draw a solid fill.
 - `expo-haptics` — the selection haptic on `FloatingTabBar`, `Tabs` and `Checkbox` presses. Without it, presses are silent.
 - `expo-linear-gradient` — the gradient in `AmbientBackground`. Without it, the background is the solid `tokens.color.background`.
+- `prism-react-renderer` (`>=2.0.0`) — syntax highlighting in `CodeBlock` and the `Markdown` code fences. Without it, code is plain text.
 
-The package loads these three with a `require` inside `try`. Metro treats that as an optional dependency when `transformer.allowOptionalDependencies` is on, which is the default in the Expo and React Native Metro configs. `@vvedantb/native-ui/blur` exports the loader (`loadBlur`) and `@vvedantb/native-ui/haptics` exports `loadHaptics` and `selectionHaptic`. TypeScript still resolves their types: an app that type-checks without them reports a missing module in `src/blur.ts`, `src/haptics.ts` or `src/gradient.ts`. Declare the missing ones in a `.d.ts` file in the app:
+The package loads these with a `require` inside `try`. Metro treats that as an optional dependency when `transformer.allowOptionalDependencies` is on, which is the default in the Expo and React Native Metro configs. `@vvedantb/native-ui/blur` exports the loader (`loadBlur`) and `@vvedantb/native-ui/haptics` exports `loadHaptics` and `selectionHaptic`. TypeScript still resolves their types: an app that type-checks without them reports a missing module in `src/blur.ts`, `src/haptics.ts`, `src/gradient.ts` or `src/highlight.ts`. Declare the missing ones in a `.d.ts` file in the app:
 
 ```ts
 declare module "expo-blur";
 declare module "expo-haptics";
 declare module "expo-linear-gradient";
+declare module "prism-react-renderer";
 ```
 
 `expo-router` stays an optional peer, but the package does not import it. `FloatingTabBar` declares the props it reads (`FloatingTabBarProps`) and fits the `tabBar` prop of Expo Router's `Tabs` on Expo SDK 57. Expo SDK 58 passes `emitter` and `navigateToTab` to `tabBar` in place of `navigation`, so the bar does not fit it yet.
@@ -62,11 +64,11 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `GoogleMark` (from 0.3.15), `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonShape` (0.6.0), `ButtonSize`, `ButtonVariant` | none |
-| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types. From 0.6.0: the `ButtonShape` type | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types. From 0.6.0: the `ButtonShape` type. Unreleased: `DropdownMenu` and its parts, `BulkActionBar` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
 | `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13), `StackPageHeader`, `StackPageHeaderProps` (from 0.5.0; it brings the Tabler package for its chevron) | none |
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
-| `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `fontClass`, `cn`, `Colors` and the colour constants | none |
+| `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `configureTheme` (with the `ThemeConfig`, `ThemeColors` and `ThemePalette` types), `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
 | `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `MoreFromProjectV` and `FromProjectV` (0.8.0) | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
@@ -229,6 +231,34 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 
 **Switch the scheme through NativeWind only.** Call `useColorScheme().setColorScheme("dark"|"light")` (or use `ThemeToggle`). That updates `useScheme` and, with `darkMode: "class"`, the `<html>` class together. Do **not** toggle `document.documentElement.classList` (or a page-level CSS `.dark` rule) by hand while leaving NativeWind on light: the page background can go dark while every token-styled part stays on the light set. That dual-owner fault is an app bug, not a native-ui colour bug.
 
+### App colours (`configureTheme`)
+
+An app with its own palette calls `configureTheme` once at start, before the first render: at the top of the root `_layout.tsx`, outside the component. It writes into the shared `tokens.color` and `palette` objects, which every component reads at render. Keys you leave out keep the package value. Each pair needs both schemes. On the root entry and `/theme`.
+
+```ts
+import { configureTheme } from "@vvedantb/native-ui/theme";
+
+// Eva's web theme (`globals.css`, RGB channels as hex).
+configureTheme({
+  color: {
+    background: { light: "#f4f5f6", dark: "#020202" }, // --background
+    foreground: { light: "#09090b", dark: "#fafafa" }, // --foreground
+    muted: { light: "#646567", dark: "#9fa0a2" }, // --muted-foreground
+    border: { light: "#dddedf", dark: "#242424" }, // --border
+    surface: { light: "#ffffff", dark: "#101010" }, // --card
+    surfaceSecondary: { light: "#eaebec", dark: "#202020" }, // --secondary
+  },
+  palette: {
+    primary: { light: "#09090b", dark: "#fafafa" }, // --primary
+    primaryForeground: { light: "#fafafa", dark: "#09090b" }, // --primary-foreground
+  },
+});
+```
+
+The keys map to the shadcn-style variables as follows. `tokens.color`: `background` (`--background`), `foreground` (`--foreground`), `muted` (`--muted-foreground`), `border` and `separator` (`--border`), `surface` and `surfaceCard` (`--card`), `surfaceSecondary` (`--secondary`). `palette`: `primary` (`--primary`), `danger` (`--destructive`), `default` (`--secondary`), `overlay` (`--popover`), each with its `Foreground`, and `fieldPlaceholder` (`--muted-foreground`).
+
+Limits: a call after the first render does not redraw mounted components. Only the JS colours change. NativeWind classes keep the app's Tailwind theme, and `nativeUiPreset({ injectCssVariables: true })` still writes the package values. Constants copied out at import (`NEUTRAL_500`) keep the package value; `floatingFill`, `floatingHairline` and `floatingSolidFill` follow. The `tokens` and `palette` types still name the package hex values.
+
 `useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, field 10, pill 999; rows 20) and spacing (16). `Button` is a pill (999) by default, and 16 with `shape="rounded"`.
 
 ## Components (0.3.0)
@@ -238,7 +268,8 @@ import { NativeUiProvider, Button, Card } from "@vvedantb/native-ui";
 | Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger`, `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
-| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `SheetRow` (0.5.0), `BottomSheetContainer` (`@gorhom/bottom-sheet`) |
+| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names), `SheetRow` (0.5.0), `BottomSheetContainer` (`@gorhom/bottom-sheet`), `DropdownMenu` (Unreleased; see below) |
+| Selection | `BulkActionBar` (Unreleased; see below) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
 | Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
@@ -407,11 +438,11 @@ import {
 | `ChoiceQuestion`, `choiceAnswers` | An agent's blocking multiple-choice question, as Eva's web question dock: question with a header badge and step count, lettered option rows with descriptions (a check on the primary fill when picked), "Other..." with a text field, then Back and Next or Submit. `onSubmit` gets question text to label (multi-select joined with ", "), the AskUserQuestion answer shape. `framed` (default) puts it in the dock card. |
 | `AgentTraceFold` | A finished turn folded behind "Worked for 1m 5s" over a hairline, as the web `ActivityTasks` folded mode; the steps show in an `AgentTrace` when open. |
 | `MessageMeta` | The muted clock after a message's actions ("10:21 PM · 1m"), caption size, tabular figures. |
-| `CodeBlock`, `CodeBlockCopyButton` | Plain monospace code on the flat panel, scrolling sideways, with the language and a copy button in a header. No highlighting. |
+| `CodeBlock`, `CodeBlockCopyButton` | Monospace code on the flat panel, scrolling sideways, with the language and a copy button in a header. With the optional peer `prism-react-renderer` and a `language`, tokens take the GitHub light or dark colours of the web shiki block; `highlight={false}` turns that off. Without the peer, plain text. |
 | `ResponseText` | Plain, selectable reply text with newlines kept. It takes the colour of the `MessageContent` it is in. |
 | `Shimmer` | "Live" text: the foreground fades to 0.45 and back on the UI thread. With Reduce Motion it holds still, muted. |
 
-**Markdown.** `ResponseText` draws text as it is. For markdown, install the optional peer `react-native-marked` and use `Markdown` from `@vvedantb/native-ui/markdown` in place of `ResponseText`: `<Markdown onCopyCode={copy}>{reply}</Markdown>`. It follows the web `markdown.css`: compact headings (1.43, 1.29, 1.14 em), primary links underlined at 30%, inline code on a 6% foreground wash, and fenced code as `CodeBlock`. Text takes the `MessageContent` colour. It renders through `useMarkdown`, so it nests in `ConversationContent` without a `FlatList`. No highlighting. Other markdown packages (`react-native-markdown-display`, `@ronradtke/react-native-markdown-display`) still work in place of `ResponseText`.
+**Markdown.** `ResponseText` draws text as it is. For markdown, install the optional peer `react-native-marked` and use `Markdown` from `@vvedantb/native-ui/markdown` in place of `ResponseText`: `<Markdown onCopyCode={copy}>{reply}</Markdown>`. It follows the web `markdown.css`: compact headings (1.43, 1.29, 1.14 em), primary links underlined at 30%, inline code on a 6% foreground wash, and fenced code as `CodeBlock`. Text takes the `MessageContent` colour. It renders through `useMarkdown`, so it nests in `ConversationContent` without a `FlatList`. Fences with a language are highlighted when `prism-react-renderer` is installed. Other markdown packages (`react-native-markdown-display`, `@ronradtke/react-native-markdown-display`) still work in place of `ResponseText`.
 
 **Eva's tinted bubble.** `MessageContent bubble="tint"` draws a user message as Eva's web chat does (`rounded-surface bg-primary/10 px-3 py-2 text-foreground`): a 10% wash of the primary colour with foreground text, radius 16 on every corner. The default, `"primary"`, stays the web `MessageContent` bubble.
 
@@ -420,6 +451,61 @@ import {
 Every control has a role, an accessible name and a 44 pt target. Folds report `expanded`, feedback actions `selected`, and the send button `disabled`. Type and icons step up with larger text. Colours come from `palette` and `tokens` as styles, in light and dark.
 
 `@vvedantb/native-ui/ai-gallery` exports `AiChatGallery`, a full chat screen with a sample thread: a user message, a finished assistant message with folded reasoning and trace, code, sources and actions, and a second answer that streams with its reasoning open until you press Stop. It also has suggestions and the composer with sample attachments. Put it in a dev-only route with a `SafeAreaProvider` above it. `ParityGallery` shows the same thread (`AiChatSamples`) in its "AI chat" section.
+
+## DropdownMenu (Unreleased)
+
+A small menu anchored to its trigger, the native counterpart of the web `DropdownMenu`. On `/primitives` and the root.
+
+```tsx
+<DropdownMenu>
+  <DropdownMenuTrigger accessibilityLabel="List options">
+    <IconDots size={18} color={tokens.color.muted[scheme]} />
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuLabel>Sort</DropdownMenuLabel>
+    <DropdownMenuRadioItem checked={sort === "new"} onSelect={() => setSort("new")}>Newest first</DropdownMenuRadioItem>
+    <DropdownMenuRadioItem checked={sort === "old"} onSelect={() => setSort("old")}>Oldest first</DropdownMenuRadioItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem icon={IconPencil} onSelect={rename}>Rename</DropdownMenuItem>
+    <DropdownMenuItem icon={IconTrash} destructive onSelect={remove}>Delete</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+| Part | Props |
+| --- | --- |
+| `DropdownMenu` | `open`, `defaultOpen`, `onOpenChange`. Holds the open state; renders no view. |
+| `DropdownMenuTrigger` | `Pressable` props and `asChild`. On press it measures itself (`measureInWindow`) and opens the menu; pressed again it closes it. Reports `expanded`. With `asChild` the child must pass `ref` on to its native view (`Button` and `IconButton` do). |
+| `DropdownMenuContent` | `align` (`"start"`, default, or `"end"`), `sideOffset` (default 4), `View` props. A transparent RN `Modal`; the menu sits under the trigger and flips above it when it does not fit below. |
+| `DropdownMenuLabel` | `children`. |
+| `DropdownMenuItem` | `children`, `onSelect`, `icon` (a Tabler icon), `destructive`, `disabled`, `closeOnSelect` (default `true`). |
+| `DropdownMenuRadioItem` | The same without `icon` and `destructive`, plus `checked`. |
+| `DropdownMenuSeparator` | none. |
+
+Sizes come from the web menu classes: content at least 192 wide, `p-1.5`, radius 16, on the opaque overlay surface of `Dialog` and `Sheet` (`FloatingSurface` without blur); items `px-2.5 py-2` at radius 8, `text-sm` with a 16 icon, at least 44 high; radio items `pl-8` with a 16 check; the label `text-xs` semibold, uppercase, `tracking-widest`, muted; the separator a 1-high `separator` line. Items are `palette.overlayForeground` (`palette.danger` when `destructive`) and take the `default` fill while pressed. A tap outside, Android back and the VoiceOver escape gesture close the menu. Roles: `menu`, `menuitem`, `radio` (with `checked`), `header`. With larger text, items are `text-lg` and 56 high. No sub-menus, checkbox items, shortcuts or `align="center"`.
+
+## BulkActionBar (Unreleased)
+
+The floating selection bar, as the web `BulkActionBar`. On `/primitives` and the root. Put it last in a full-size container: it sits at the bottom, centred.
+
+```tsx
+<BulkActionBar
+  isSelecting={selecting}
+  selectedCount={selected.size}
+  totalCount={rows.length}
+  onExitSelect={exit}
+  onSelectAll={selectAll}
+  onClearSelection={clear}
+  primaryActions={[{ key: "archive", label: "Archive tasks", shortLabel: "Archive", icon: IconArchive, onClick: archive }]}
+  moreActions={[{ key: "move", label: "Move to project", icon: IconFolder, onClick: move }]}
+  destructiveAction={{ key: "delete", label: "Delete tasks", shortLabel: "Delete", icon: IconTrash, destructive: true, onClick: remove }}
+  bottomOffset={tabBarReserve(largerText, insets.bottom)}
+/>
+```
+
+Props are the web names: `isSelecting`, `selectedCount`, `totalCount`, `onExitSelect`, `onSelectAll`, `onClearSelection`, `primaryActions`, `moreActions`, `destructiveAction` and `barKey` (here the `testID`). Each `BulkBarAction` has `key`, `label`, `shortLabel`, `icon`, `destructive`, `showSkipHint` (no effect on a phone) and `onClick`, plus a native-only `disabled`. Native also takes `bottomOffset`: the space under the bar before its 12 gap, by default the bottom safe-area inset. Above a `FloatingTabBar`, pass `tabBarReserve(largerText, insets.bottom)`.
+
+The bar is the glass `FloatingSurface` at radius 16 with `px-2.5 py-2`. It holds the count chip (`text-xs` semibold, tabular figures, on `surface-secondary`), "Select all (n)" or "Clear", a divider, the actions, a More (dots) `DropdownMenu`, the destructive action after a divider, and "Cancel selection" (X). Buttons are the web `h-9` at radius 16, at least 44 wide and slopped to 44 high, with a 17 icon. Below 640 wide (the web `sm`) the actions are icon-only and "selected" is hidden, as on the web; labels stay as the accessible names. Actions are off (30% opacity) with no selection. It fades in from below over 150 ms (off with Reduce Motion) and scrolls sideways when it does not fit. With larger text, buttons are 48 high with a 22 icon and `text-lg`. No count pop animation or tooltip.
 
 ## Phones and accessibility
 

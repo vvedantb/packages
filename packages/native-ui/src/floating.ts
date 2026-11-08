@@ -45,10 +45,8 @@ export const floatingHairline = tokens.color.hairline;
 
 export const floatingFill = tokens.color.fill;
 
-export const floatingSolidFill = {
-  light: tokens.color.surface.light,
-  dark: tokens.color.surface.dark,
-} as const;
+/** The `tokens.color.surface` pair itself, so `configureTheme` reaches it. */
+export const floatingSolidFill = tokens.color.surface;
 
 export function tabBarReserve(largerText: boolean, bottomInset: number) {
   const bar = largerText

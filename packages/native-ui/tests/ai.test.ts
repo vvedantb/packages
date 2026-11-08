@@ -911,7 +911,7 @@ describe("CodeBlock", () => {
   it("draws plain monospace code on the flat panel, with a header only for a language or copy", async () => {
     const { CodeBlock, CodeBlockCopyButton } = await import("../src/ai/code-block");
     const { MONO_FONT } = await import("../src/ai/chat-text");
-    const block = CodeBlock({ code: "a\nb", language: "ts", onCopy: vi.fn() }) as unknown as Element;
+    const block = CodeBlock({ code: "a\nb", language: "ts", highlight: false, onCopy: vi.fn() }) as unknown as Element;
     expect(block.props.style).toEqual({ borderRadius: 16, backgroundColor: tokens.color.surfaceSecondary.light });
     expect(byType(block, CodeBlockCopyButton)).toHaveLength(1);
     const code = byType(block, "Text").find((text) => text.props.children === "a\nb")!;
@@ -961,7 +961,7 @@ describe("AI parts (source contract)", () => {
   const gallery = code(read("examples/AiChatGallery.tsx"));
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
-  it("adds no markdown, highlighter or clipboard package to /ai, and names the markdown options in the stub", () => {
+  it("adds no markdown or clipboard package to /ai, reaches the highlighter only through its optional loader, and names the markdown options in the stub", () => {
     // `/ai` stays free of markdown: apps opt in through `/markdown` (optional peer react-native-marked).
     for (const [file, source] of Object.entries(sources)) {
       expect(source, file).not.toMatch(/from "(?:react-native-markdown-display|@ronradtke\/react-native-markdown-display|react-native-marked|shiki|streamdown|expo-clipboard|@react-native-clipboard\/clipboard)"/);
@@ -977,6 +977,13 @@ describe("AI parts (source contract)", () => {
     }
     expect(pkg.peerDependencies["react-native-marked"]).toBe(">=8.0.0");
     expect(pkg.peerDependenciesMeta["react-native-marked"]).toEqual({ optional: true });
+    // Highlighting: the optional peer prism-react-renderer, reached only through the lazy loader in src/highlight.ts.
+    expect(pkg.peerDependencies["prism-react-renderer"]).toBe(">=2.0.0");
+    expect(pkg.peerDependenciesMeta["prism-react-renderer"]).toEqual({ optional: true });
+    for (const [file, source] of Object.entries(sources)) {
+      expect(source, file).not.toMatch(/from "prism-react-renderer"|require\("prism-react-renderer"\)/);
+    }
+    expect(sources["code-block.tsx"]).toMatch(/loadPrismReactRenderer\(\)/);
     expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
     expect(pkg.dependencies).toBeUndefined();
   });
