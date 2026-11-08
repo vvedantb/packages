@@ -237,7 +237,7 @@ describe("granular entries", () => {
         "V_PRO_APP_BENEFITS",
       ],
       "./button": ["Button", "ButtonProps", "ButtonShape", "ButtonSize", "ButtonVariant"],
-      "./primitives": ["Button", "ButtonShape", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast"],
+      "./primitives": ["Button", "ButtonShape", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast", "DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuLabel", "DropdownMenuItem", "DropdownMenuRadioItem", "DropdownMenuSeparator", "DropdownMenuItemProps", "BulkActionBar", "BulkActionBarProps", "BulkBarAction"],
       "./search-input": ["SearchInput", "SearchInputProps"],
       "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps", "StackPageHeader", "StackPageHeaderProps"],
       "./layout": [
@@ -260,7 +260,7 @@ describe("granular entries", () => {
         "ProjectVMobileAppId",
       ],
       "./toast": ["toast", "Toaster", "ToastOptions", "ToastVariant"],
-      "./theme": ["NativeUiProvider", "tokens", "palette", "cn"],
+      "./theme": ["NativeUiProvider", "tokens", "palette", "cn", "configureTheme", "ThemeConfig", "ThemeColors", "ThemePalette"],
       "./floating": ["FloatingSurface", "GlassBlurProvider", "GlassBlurTarget", "FLOATING_INSET"],
       "./ambient": ["AmbientBackground"],
       "./bottom-sheet": ["BottomSheetContainer"],

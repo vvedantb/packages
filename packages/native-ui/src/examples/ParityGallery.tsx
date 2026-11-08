@@ -7,7 +7,9 @@ import { useState, type ReactNode } from "react";
 import { ScrollView, Text, View, type TextProps } from "react-native";
 import {
   IconCopy,
+  IconDots,
   IconInbox,
+  IconPencil,
   IconPhoto,
   IconRefresh,
   IconTrash,
@@ -28,6 +30,14 @@ import {
   AmbientBackground,
   AppMark,
   AppWordmark,
+  BulkActionBar,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Avatar,
   AvatarFallback,
   Badge,
@@ -226,6 +236,8 @@ function GalleryScreen() {
   const [muted, setMuted] = useState(false);
   const [sort, setSort] = useState<"newest" | "name">("newest");
   const [page, setPage] = useState(0);
+  const [menuSort, setMenuSort] = useState<"newest" | "oldest">("newest");
+  const [picked, setPicked] = useState(2);
   const scheme = useScheme();
 
   return (
@@ -560,6 +572,50 @@ function GalleryScreen() {
             >
               Action
             </Button>
+          </View>
+        </Section>
+
+        <Section title="DropdownMenu and BulkActionBar">
+          <View className="flex-row justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                accessibilityLabel="List options"
+                hitSlop={6}
+                className="h-8 w-8 items-center justify-center"
+              >
+                <IconDots size={18} color={tokens.color.muted[scheme]} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Sort</DropdownMenuLabel>
+                <DropdownMenuRadioItem checked={menuSort === "newest"} onSelect={() => setMenuSort("newest")}>
+                  Newest first
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem checked={menuSort === "oldest"} onSelect={() => setMenuSort("oldest")}>
+                  Oldest first
+                </DropdownMenuRadioItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem icon={IconPencil} onSelect={() => toast("Rename")}>
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem icon={IconTrash} destructive onSelect={() => toast.error("Deleted")}>
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </View>
+          <View style={{ height: 88 }}>
+            <BulkActionBar
+              isSelecting
+              selectedCount={picked}
+              totalCount={5}
+              bottomOffset={0}
+              onExitSelect={() => setPicked(0)}
+              onSelectAll={() => setPicked(5)}
+              onClearSelection={() => setPicked(0)}
+              primaryActions={[{ key: "copy", label: "Copy items", shortLabel: "Copy", icon: IconCopy, onClick: () => toast("Copied") }]}
+              moreActions={[{ key: "rename", label: "Rename", icon: IconPencil, onClick: () => toast("Rename") }]}
+              destructiveAction={{ key: "delete", label: "Delete items", shortLabel: "Delete", icon: IconTrash, destructive: true, onClick: () => toast.error("Deleted") }}
+            />
           </View>
         </Section>
 

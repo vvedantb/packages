@@ -10,6 +10,8 @@ export {
 export type { NativeUiTheme } from "./theme";
 export { palette, withAlpha } from "./palette";
 export type { Palette } from "./palette";
+export { configureTheme } from "./configureTheme";
+export type { ThemeConfig, ThemeColors, ThemePalette } from "./configureTheme";
 export { fontClass } from "./typography";
 export {
   FLOATING_INSET,
@@ -136,6 +138,26 @@ export {
 } from "./AlertDialog";
 export type { AlertDialogProps, AlertDialogContentProps } from "./AlertDialog";
 export { ConfirmDialog } from "./ConfirmDialog";
+export { BulkActionBar, BULK_BAR_LABEL_MIN_WIDTH } from "./BulkActionBar";
+export type { BulkActionBarProps, BulkBarAction } from "./BulkActionBar";
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+} from "./DropdownMenu";
+export type {
+  DropdownMenuProps,
+  DropdownMenuTriggerProps,
+  DropdownMenuContentProps,
+  DropdownMenuAlign,
+  DropdownMenuLabelProps,
+  DropdownMenuItemProps,
+  DropdownMenuRadioItemProps,
+} from "./DropdownMenu";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 export {
   Sheet,

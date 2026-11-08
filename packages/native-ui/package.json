@@ -145,6 +145,7 @@
     "expo-web-browser": "*",
     "lucide-react-native": "*",
     "nativewind": ">=4.0.0",
+    "prism-react-renderer": ">=2.0.0",
     "react": ">=19.0.0",
     "react-native": ">=0.76.0",
     "react-native-marked": ">=8.0.0",
@@ -186,6 +187,9 @@
       "optional": true
     },
     "expo-web-browser": {
+      "optional": true
+    },
+    "prism-react-renderer": {
       "optional": true
     },
     "react-native-marked": {
