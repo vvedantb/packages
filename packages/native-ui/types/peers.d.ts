@@ -445,6 +445,37 @@ declare module "expo-linear-gradient" {
   >;
 }
 
+declare module "expo-constants" {
+  const Constants: { expoConfig?: { extra?: { eas?: { projectId?: unknown } } } | null };
+  export default Constants;
+}
+
+declare module "expo-device" {
+  export const isDevice: boolean;
+}
+
+declare module "expo-notifications" {
+  export type NotificationRequest = { identifier: string; content: { data: Record<string, unknown> } };
+  export type NotificationResponse = { notification: { request: NotificationRequest } };
+  export const AndroidImportance: { HIGH: number };
+  export function setNotificationChannelAsync(id: string, channel: { name: string; importance: number }): Promise<unknown>;
+  export function getPermissionsAsync(): Promise<{ granted: boolean }>;
+  export function requestPermissionsAsync(): Promise<{ granted: boolean }>;
+  export function getExpoPushTokenAsync(options: { projectId: string }): Promise<{ data: string }>;
+  export function setNotificationHandler(handler: {
+    handleNotification: () => Promise<{
+      shouldShowBanner: boolean;
+      shouldShowList: boolean;
+      shouldPlaySound: boolean;
+      shouldSetBadge: boolean;
+    }>;
+  }): void;
+  export function getLastNotificationResponseAsync(): Promise<NotificationResponse | null>;
+  export function addNotificationResponseReceivedListener(
+    listener: (response: NotificationResponse) => void,
+  ): { remove(): void };
+}
+
 declare module "expo-haptics" {
   export function selectionAsync(): Promise<void>;
 }

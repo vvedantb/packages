@@ -46,6 +46,8 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `  "buildQuizHtml", "buildFlashcardsHtml", "htmlFromArtifactTemplate", "wrapArtifactDocument", "artifactGuestScript",\n` +
       `  "authenticateWithTokenCache", "createMcpTokenCacheFunctions", "hashMcpToken", "jwtExpiryMs", "tokenCacheExpiresAt",\n` +
       `  "mcpTokenCacheFields", "mcpTokenCacheTable",\n` +
+      `  "createExpoPushFunctions", "pushTokensFields", "pushTokensTable", "schedulePush", "sendExpoPushMessages", "fetchExpoPushReceipts",\n` +
+      `  "tokensToRemoveFromTickets", "tokensToRemoveFromReceipts", "receiptRefsFromTickets", "parseExpoTickets", "parseExpoReceipts", "isExpoPushToken",\n` +
       `  "authenticateClerkBearer", "verifyClerkOAuthJwt", "clearClerkJwksCache", "looksLikeJwt",\n` +
       `  "isOAuthAccessTokenJwt", "hasVPlan", "hasVPro", "parseVProCompUserIds", "verifyClerkWebhook", "parseClerkBillingEvent",\n` +
       `  "activePlanSlugs", "applyBillingChange", "applyItemToPlanSlugs", "itemGrantsPlan", "createVProModule"]) {\n` +
@@ -56,6 +58,10 @@ test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
       `if (m.ARTIFACT_READY_TYPE !== "artifact:ready" || m.ARTIFACT_STATE_MAX_KEYS !== 32) throw new Error("artifact constants");\n` +
       `if (m.MCP_TOKEN_CACHE_TTL_MS !== 300000 || m.MCP_TOKEN_CACHE_PURGE_BATCH !== 500 || m.MCP_TOKEN_CACHE_TABLE !== "mcpTokenCache") throw new Error("token cache constants");\n` +
       `if (m.MCP_TOKEN_CACHE_HASH_INDEX !== "by_token_hash" || m.MCP_TOKEN_CACHE_EXPIRES_INDEX !== "by_expires") throw new Error("token cache indexes");\n` +
+      `if (m.EXPO_PUSH_BATCH_SIZE !== 100 || m.EXPO_RECEIPT_BATCH_SIZE !== 1000 || m.PUSH_TOKENS_TABLE !== "pushTokens") throw new Error("expo push constants");\n` +
+      `if (m.PUSH_TOKENS_USER_INDEX !== "by_user" || m.PUSH_TOKENS_TOKEN_INDEX !== "by_token") throw new Error("expo push indexes");\n` +
+      `if (m.EXPO_PUSH_SEND_URL !== "https://exp.host/--/api/v2/push/send" || m.EXPO_PUSH_RECEIPTS_URL !== "https://exp.host/--/api/v2/push/getReceipts") throw new Error("expo push urls");\n` +
+      `if (!m.isExpoPushToken("ExponentPushToken[x]") || !m.isExpoPushToken("ExpoPushToken[x]") || m.isExpoPushToken("nope")) throw new Error("expo push token");\n` +
       `if (m.V_PRO_PLAN_KEY !== "v_pro" || !m.hasVPlan({ pla: "u:v_pro" }) || m.hasVPlan({ pla: "u:vibot_pro" })) throw new Error("v plan");\n` +
       `if (m.GRANTING_ITEM_STATUSES.join() !== "active,past_due,canceled") throw new Error("granting statuses");\n` +
       `if (m.GRANTING_STATUSES_ACTIVE_PAST_DUE.join() !== "active,past_due" || m.GRANTING_STATUSES_ACTIVE_ONLY.join() !== "active") throw new Error("granting presets");\n` +
