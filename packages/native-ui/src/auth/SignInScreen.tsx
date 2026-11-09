@@ -9,6 +9,8 @@ import { toast } from "../toastStore";
 import { useScheme } from "../useScheme";
 import { AuthScreen, FieldError, OrDivider } from "./AuthScreen";
 import { authErrorMessage } from "./authErrors";
+import { SecondFactorScreen } from "./SecondFactorScreen";
+import { useSecondFactor } from "./totp";
 import { GoogleSignInButton, type AuthNavigationOptions } from "./GoogleSignInButton";
 
 export type SignInMode = "sign-in" | "sign-up";
@@ -22,6 +24,8 @@ export const AUTH_MESSAGES = {
   verifyFailed: "Invalid code",
   missingCode: "Enter the code from the email",
   needsAnotherStep: "This account needs another step to sign in. Finish it on the web.",
+  secondFactorTitle: "Two-step verification",
+  secondFactorDescription: "Enter the code from your authenticator app.",
 } as const;
 
 export type SignInScreenProps = AuthNavigationOptions & {
@@ -89,6 +93,8 @@ export function SignInScreen({
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
+  const [pendingSecondFactor, setPendingSecondFactor] = useState(false);
+  const secondFactor = useSecondFactor();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const signUp = mode === "sign-up";
@@ -115,6 +121,8 @@ export function SignInScreen({
       if (attempt.status === "complete" && attempt.createdSessionId) {
         await setActive({ session: attempt.createdSessionId });
         done();
+      } else if (attempt.status === "needs_second_factor") {
+        setPendingSecondFactor(true);
       } else {
         fail(AUTH_MESSAGES.signInFailed, AUTH_MESSAGES.needsAnotherStep);
       }
@@ -123,6 +131,19 @@ export function SignInScreen({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onSecondFactor = async (secondFactorCode: string) => {
+    const result = await secondFactor.submit(secondFactorCode);
+    if (result.ok) done();
+  };
+
+  const onSecondFactorBack = () => {
+    // The pending attempt stays; the next `signIn.create` replaces it.
+    setPendingSecondFactor(false);
+    setPassword("");
+    setError("");
+    secondFactor.clearError();
   };
 
   const onSignUp = async () => {
@@ -189,6 +210,22 @@ export function SignInScreen({
     </>
   );
   const hasFooter = Boolean((linkHref && !pendingVerification) || footer);
+
+  if (pendingSecondFactor) {
+    return (
+      <SecondFactorScreen
+        title={AUTH_MESSAGES.secondFactorTitle}
+        description={AUTH_MESSAGES.secondFactorDescription}
+        onSubmit={onSecondFactor}
+        error={secondFactor.error}
+        loading={secondFactor.loading}
+        onBack={onSecondFactorBack}
+        backLabel="Use a different account"
+        header={header}
+        testIDPrefix={id("second-factor")}
+      />
+    );
+  }
 
   if (pendingVerification) {
     return (

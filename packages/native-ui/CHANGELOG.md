@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.10.0
+
+Second-factor (TOTP) step for sign-in. Additive; no new dependency or peer.
+
+### Added
+
+- `SecondFactorScreen` (`/auth`): a Clerk-free one-time code step, ported from Eva with the same props. `title`, `description`, `codeLength` (default 6), `onSubmit(code)`, `error`, `loading`, `onBack`, `backLabel` (default "Back"), `header` and `testIDPrefix` (default `"second-factor"`). Digits only, Verify off until the code is full, an inline error and an optional ghost Back button. The title goes through `AuthScreen`. Type `SecondFactorScreenProps`.
+- `submitTotpSecondFactor({ signIn, setActive, code })` and `TOTP_MESSAGES` (`invalidCode`, `needsAnotherStep`, `notReady`): call `attemptSecondFactor({ strategy: "totp", code })`, then `setActive({ session })`. Never throws: the result is `{ ok: true }` or `{ ok: false, error }`. An API error shows its own text unless it names the provider (`authErrorMessage`); anything else gives `invalidCode`. No `zod`. Types `TotpResult`, `TotpSignIn` and `TotpSetActive`.
+- `useSecondFactor()`: wraps the helper with `useSignIn`. Returns `{ submit(code), loading, error, clearError }` (type `UseSecondFactorResult`).
+
+### Changed
+
+- `SignInScreen`: when `signIn.create` returns `needs_second_factor`, it shows `SecondFactorScreen` ("Two-step verification", "Enter the code from your authenticator app.") instead of the "needs another step" failure. A valid code starts the session and runs the same `onSuccess` or `router.replace`. Back returns to the email and password form. New `AUTH_MESSAGES` keys `secondFactorTitle` and `secondFactorDescription`. Test IDs use the mode prefix, such as `sign-in-second-factor-code`.
+- Tests: new `tests/totp.test.ts`; `tests/auth.test.ts`, `tests/exports.test.ts`, `tests/subpaths.test.ts` and `tests/buttonShape.test.ts` cover the new names and sources.
+
 ## 0.9.0
 
 Expo push registration hook. Additive; three new optional peers.

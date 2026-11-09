@@ -566,7 +566,10 @@ declare module "@clerk/clerk-expo" {
     | { isLoaded: false; signIn: undefined; setActive: undefined }
     | {
         isLoaded: true;
-        signIn: { create(params: { identifier: string; password?: string }): Promise<Attempt> };
+        signIn: {
+          create(params: { identifier: string; password?: string }): Promise<Attempt>;
+          attemptSecondFactor(params: { strategy: "totp"; code: string }): Promise<Attempt>;
+        };
         setActive: SetActive;
       };
   export function useSignUp():

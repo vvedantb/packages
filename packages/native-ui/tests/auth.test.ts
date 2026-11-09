@@ -155,6 +155,17 @@ describe("auth screens (source contract)", () => {
     expect(screen).not.toMatch(/forgot/i);
   });
 
+  it("shows the second-factor step when sign-in needs one, and goes back to the form", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/attempt\.status === "needs_second_factor"/);
+    expect(screen).toMatch(/setPendingSecondFactor\(true\)/);
+    expect(screen).toMatch(/useSecondFactor\(\)/);
+    expect(screen).toMatch(/<SecondFactorScreen/);
+    expect(screen).toMatch(/if \(result\.ok\) done\(\)/);
+    expect(screen).toMatch(/setPendingSecondFactor\(false\)/);
+    expect(auth.AUTH_MESSAGES.secondFactorTitle).toBe("Two-step verification");
+  });
+
   it("exports SignUpScreen as the sign-up mode", () => {
     expect(code(read("SignInScreen.tsx"))).toMatch(/<SignInScreen \{\.\.\.props\} mode="sign-up" \/>/);
   });
@@ -202,5 +213,53 @@ describe("auth screens (source contract)", () => {
       expect(source, file).not.toMatch(/michroma|PINK_|#db2777|pink-/i);
       expect(source, file).not.toMatch(/scheme: "(vibot|verve|velth|vmem|vstore)"/);
     }
+  });
+});
+
+describe("SecondFactorScreen (source contract)", () => {
+  const source = read("SecondFactorScreen.tsx");
+  const body = code(source);
+
+  it("is Clerk-free and imports relatively", () => {
+    expect(source.replace(/\/\/.*$/gm, "")).not.toMatch(/clerk|@vvedantb\/native-ui|\beva\b/i);
+    expect(source).toMatch(/from "\.\/AuthScreen"/);
+    expect(source).toMatch(/import \{ Button \} from "\.\.\/Button"/);
+    expect(source).toMatch(/import \{ Input \} from "\.\.\/Input"/);
+  });
+
+  it("renders the title through AuthScreen with no title typography of its own", () => {
+    expect(body).toMatch(/<AuthScreen testID=\{`\$\{testIDPrefix\}-screen`\} title=\{title\} subtitle=\{description\}/);
+    expect(source).not.toMatch(/typeStyle|fontWeight|font-light|font-normal/);
+  });
+
+  it("has the documented defaults", () => {
+    expect(body).toMatch(/codeLength = 6/);
+    expect(body).toMatch(/backLabel = "Back"/);
+    expect(body).toMatch(/testIDPrefix = "second-factor"/);
+    expect(body).toMatch(/loading = false/);
+  });
+
+  it("takes digits only, up to codeLength, and waits for the full code", () => {
+    expect(body).toMatch(/text\.replace\(\/\\D\/g, ""\)/);
+    expect(body).toMatch(/maxLength=\{codeLength\}/);
+    expect(body).toMatch(/keyboardType="number-pad"/);
+    expect(body).toMatch(/textContentType="oneTimeCode"/);
+    expect(body).toMatch(/const ready = code\.length === codeLength && !loading/);
+    expect(body).toMatch(/disabled=\{!ready\}/);
+    expect(body).toMatch(/if \(ready\) void onSubmit\(code\)/);
+  });
+
+  it("has -screen, -code, -error, -verify and -back test IDs, and Back only with onBack", () => {
+    for (const name of ["screen", "code", "error", "verify", "back"]) {
+      expect(body, name).toContain(`\`\${testIDPrefix}-${name}\``);
+    }
+    expect(body).toMatch(/onBack \? \(/);
+  });
+
+  it("exports the screen and its props from /auth, and the helper names", () => {
+    expect(typeof auth.SecondFactorScreen).toBe("function");
+    expect(typeof auth.useSecondFactor).toBe("function");
+    expect(typeof auth.submitTotpSecondFactor).toBe("function");
+    expect(auth.TOTP_MESSAGES.invalidCode).toMatch(/Incorrect code/);
   });
 });

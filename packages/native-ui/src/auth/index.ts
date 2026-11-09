@@ -20,3 +20,7 @@ export type {
 } from "./GoogleSignInButton";
 export { SignInScreen, SignUpScreen, AUTH_MESSAGES } from "./SignInScreen";
 export type { SignInMode, SignInScreenProps, SignUpScreenProps } from "./SignInScreen";
+export { SecondFactorScreen } from "./SecondFactorScreen";
+export type { SecondFactorScreenProps } from "./SecondFactorScreen";
+export { submitTotpSecondFactor, useSecondFactor, TOTP_MESSAGES } from "./totp";
+export type { TotpResult, TotpSignIn, TotpSetActive, UseSecondFactorResult } from "./totp";

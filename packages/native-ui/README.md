@@ -80,7 +80,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
-| `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
+| `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage`, `SecondFactorScreen`, `useSecondFactor`, `submitTotpSecondFactor`, `TOTP_MESSAGES` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
 | `@vvedantb/native-ui/expo-web-root` | From 0.7.0: `ExpoWebRoot`, `ExpoWebRootProps`, `ExpoWebRootViewport`, `EXPO_WEB_VIEWPORT`, `expoWebBackgroundCss`. Not on the root entry. | `expo-router` (import of `expo-router/html`) |
 | `@vvedantb/native-ui/tailwind-preset` | From 0.7.0, CommonJS for `tailwind.config.js`: `nativeUiPreset`, `nativeUiContent`, `cssVar`, `hslVar`, `rgbAlpha`, `cssVariables`, `schemeColors` and a default preset. See [Expo / NativeWind](#expo--nativewind). | `nativewind` (`require`, when installed) |
 
@@ -211,9 +211,45 @@ export default function SignUp() {
 - `title`, `subtitle`, `showGoogle`, `googleLabel`, `errorDisplay` (`"toast"`, default, needs a `<Toaster />`; or `"inline"`), `testIDPrefix` (default the mode: `sign-in-email`, `sign-in-password`, `sign-in-submit`, `sign-in-google` and the rest).
 - `header` and `footer` slots for app chrome, such as a brand header or credit. The screen itself is neutral: background fill, title, subtitle, fields.
 - Messages are generic ("Sign in failed", "Invalid email or password", "Could not continue with Google") and never name the auth provider. `authErrorMessage(error, fallback)` shows an API error's own text only when it does not name it.
+- Two-step verification: when sign-in returns `needs_second_factor`, the screen shows `SecondFactorScreen` ("Two-step verification") and checks an authenticator-app code (TOTP) with `useSecondFactor`. A valid code runs the same success path. Back returns to the email and password form. Other extra steps still show "This account needs another step to sign in. Finish it on the web."
 - No forgot-password step. An app that needs one keeps its own screen.
 
 `GoogleSignInButton` (`scheme`, `redirectPath`, `afterAuthHref`, `replaceOptions`, `onSuccess`, `onError`, `label` and the `Button` props), `AuthScreen`, `OrDivider` and `FieldError` build custom screens. The module calls `WebBrowser.maybeCompleteAuthSession()` once when it loads, so the app no longer needs its own call.
+
+### Second factor (0.10.0)
+
+`SecondFactorScreen` is a one-time code step with no Clerk import. The caller owns the check.
+
+| Prop | Default | Use |
+| --- | --- | --- |
+| `title` | required | Screen title, through `AuthScreen` |
+| `description` | none | Text under the title |
+| `codeLength` | `6` | Digits in the code |
+| `onSubmit(code)` | required | Called with the full code |
+| `error` | none | Inline error under the field |
+| `loading` | `false` | Verify spinner; blocks a second submit |
+| `onBack` | none | Shows a ghost Back button |
+| `backLabel` | `"Back"` | Back button text |
+| `header` | none | Above the title |
+| `testIDPrefix` | `"second-factor"` | `-screen`, `-code`, `-error`, `-verify`, `-back` |
+
+For Clerk, `useSecondFactor()` returns `{ submit(code), loading, error, clearError }`. It calls `signIn.attemptSecondFactor({ strategy: "totp", code })`, then `setActive({ session: createdSessionId })`. `submit` never throws: it resolves `{ ok: true }` or `{ ok: false, error }`.
+
+```tsx
+const { submit, loading, error } = useSecondFactor();
+
+<SecondFactorScreen
+  title="Two-step verification"
+  description="Enter the code from your authenticator app."
+  onSubmit={async (code) => {
+    if ((await submit(code)).ok) router.replace("/");
+  }}
+  error={error}
+  loading={loading}
+/>
+```
+
+`submitTotpSecondFactor({ signIn, setActive, code })` is the same call without the hook. `TOTP_MESSAGES` holds `invalidCode`, `needsAnotherStep` and `notReady`. An API error shows its own text unless it names the provider.
 
 ## Theme
 
