@@ -588,6 +588,13 @@ declare module "@clerk/clerk-expo" {
         isLoaded: true;
         signIn: {
           create(params: { identifier: string; password?: string }): Promise<Attempt>;
+          supportedFirstFactors: SecondFactorInfo[] | null;
+          prepareFirstFactor(params: {
+            strategy: "phone_code" | "email_code";
+            phoneNumberId?: string;
+            emailAddressId?: string;
+          }): Promise<Attempt>;
+          attemptFirstFactor(params: { strategy: "phone_code" | "email_code"; code: string }): Promise<Attempt>;
           supportedSecondFactors: SecondFactorInfo[] | null;
           prepareSecondFactor(params: {
             strategy: "phone_code" | "email_code";
@@ -817,6 +824,8 @@ declare module "@tabler/icons-react-native" {
   export const IconPointFilled: Icon;
   export const IconRefresh: Icon;
   export const IconSearch: Icon;
+  export const IconEye: Icon;
+  export const IconEyeOff: Icon;
   export const IconSun: Icon;
   export const IconThumbDown: Icon;
   export const IconThumbUp: Icon;

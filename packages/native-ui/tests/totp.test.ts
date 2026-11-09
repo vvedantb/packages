@@ -18,6 +18,10 @@ const {
   prepareSecondFactorIfNeeded,
   pickSecondFactorStrategy,
   supportedSecondFactorStrategies,
+  prepareFirstFactorIfNeeded,
+  submitFirstFactor,
+  pickFirstFactorStrategy,
+  supportedFirstFactorStrategies,
   TOTP_MESSAGES,
 } = await import("../src/auth/totp");
 
@@ -57,21 +61,21 @@ describe("submitTotpSecondFactor", () => {
     };
     const setActive = vi.fn();
     const result = await submitTotpSecondFactor({ signIn, code: "000000", setActive });
-    expect(result).toEqual({ ok: false, error: "Incorrect code" });
+    expect(result).toEqual({ ok: false, error: "Incorrect code (code: form_code_incorrect)" });
     expect(setActive).not.toHaveBeenCalled();
   });
 
-  it("unknown failure and provider-named messages fall back to the generic message", async () => {
+  it("unknown failure falls back to the generic message; provider names are rephrased", async () => {
     const network = { attemptSecondFactor: async () => Promise.reject(new Error("fetch failed")) };
     const branded = {
       attemptSecondFactor: async () => {
-        throw { clerkError: true, errors: [{ longMessage: "Clerk could not verify" }] };
+        throw { clerkError: true, errors: [{ code: "x", longMessage: "Clerk could not verify" }] };
       },
     };
-    for (const signIn of [network, branded]) {
-      const result = await submitTotpSecondFactor({ signIn, code: "111111", setActive: noopSetActive });
-      expect(result).toEqual({ ok: false, error: TOTP_MESSAGES.invalidCode });
-    }
+    const first = await submitTotpSecondFactor({ signIn: network, code: "111111", setActive: noopSetActive });
+    expect(first).toEqual({ ok: false, error: TOTP_MESSAGES.invalidCode });
+    const second = await submitTotpSecondFactor({ signIn: branded, code: "111111", setActive: noopSetActive });
+    expect(second).toEqual({ ok: false, error: "the sign-in service could not verify (code: x)" });
   });
 
   it("a status that is not complete reports the another-step message", async () => {
@@ -172,6 +176,69 @@ describe("prepareSecondFactorIfNeeded", () => {
     expect(await prepareSecondFactorIfNeeded({ signIn: {}, strategy: "email_code" })).toEqual({
       ok: false,
       error: TOTP_MESSAGES.sendFailed,
+    });
+  });
+});
+
+describe("first-factor helpers", () => {
+  const factors = [
+    { strategy: "password" },
+    { strategy: "phone_code", phoneNumberId: "idn_phone" },
+    { strategy: "email_code", emailAddressId: "idn_email" },
+  ];
+
+  it("prefers email_code, then phone_code, and ignores other strategies", () => {
+    expect(supportedFirstFactorStrategies(factors)).toEqual(["email_code", "phone_code"]);
+    expect(pickFirstFactorStrategy(factors)).toBe("email_code");
+    expect(pickFirstFactorStrategy([factors[0]!, factors[1]!])).toBe("phone_code");
+    expect(pickFirstFactorStrategy([{ strategy: "password" }, { strategy: "totp" }])).toBeNull();
+    expect(pickFirstFactorStrategy(null)).toBeNull();
+  });
+
+  it("needs the matching id before a strategy counts", () => {
+    expect(pickFirstFactorStrategy([{ strategy: "email_code" }, { strategy: "phone_code" }])).toBeNull();
+  });
+
+  it("prepares with the matching id", async () => {
+    const prepareFirstFactor = vi.fn(async () => ({}));
+    const signIn = { prepareFirstFactor, supportedFirstFactors: factors };
+    expect(await prepareFirstFactorIfNeeded({ signIn, strategy: "email_code" })).toEqual({ ok: true });
+    expect(prepareFirstFactor).toHaveBeenCalledWith({ strategy: "email_code", emailAddressId: "idn_email" });
+    await prepareFirstFactorIfNeeded({ signIn, strategy: "phone_code" });
+    expect(prepareFirstFactor).toHaveBeenCalledWith({ strategy: "phone_code", phoneNumberId: "idn_phone" });
+  });
+
+  it("makes no call and returns an error without the id or the method", async () => {
+    const prepareFirstFactor = vi.fn(async () => ({}));
+    const failed = { ok: false, error: TOTP_MESSAGES.sendFailed };
+    expect(await prepareFirstFactorIfNeeded({ signIn: { prepareFirstFactor }, strategy: "email_code" })).toEqual(failed);
+    expect(prepareFirstFactor).not.toHaveBeenCalled();
+    expect(await prepareFirstFactorIfNeeded({ signIn: {}, strategy: "phone_code", factor: factors[1]! })).toEqual(failed);
+  });
+
+  it("a failed send is a generic error", async () => {
+    const signIn = { prepareFirstFactor: async () => Promise.reject(new Error("fetch failed")), supportedFirstFactors: factors };
+    expect(await prepareFirstFactorIfNeeded({ signIn, strategy: "email_code" })).toEqual({
+      ok: false,
+      error: TOTP_MESSAGES.sendFailed,
+    });
+  });
+
+  it("submit returns the attempt for the caller to route, without setting a session", async () => {
+    const attempt = { status: "needs_client_trust", createdSessionId: null };
+    const attemptFirstFactor = vi.fn(async () => attempt);
+    expect(await submitFirstFactor({ signIn: { attemptFirstFactor }, code: "123456", strategy: "phone_code" })).toEqual({
+      ok: true,
+      attempt,
+    });
+    expect(attemptFirstFactor).toHaveBeenCalledWith({ strategy: "phone_code", code: "123456" });
+  });
+
+  it("submit never throws", async () => {
+    const attemptFirstFactor = async () => Promise.reject(new Error("fetch failed"));
+    expect(await submitFirstFactor({ signIn: { attemptFirstFactor }, code: "1", strategy: "email_code" })).toEqual({
+      ok: false,
+      error: TOTP_MESSAGES.invalidCodeGeneric,
     });
   });
 });

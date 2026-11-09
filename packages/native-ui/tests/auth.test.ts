@@ -23,6 +23,7 @@ vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) 
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/Input", () => ({ Input: "Input" }));
+vi.mock("../src/PasswordInput", () => ({ PasswordInput: "PasswordInput" }));
 vi.mock("../src/brand/GoogleMark", () => ({ GoogleMark: "GoogleMark" }));
 vi.mock("expo-router", () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
 vi.mock("expo-auth-session", () => ({ makeRedirectUri: vi.fn() }));
@@ -114,17 +115,88 @@ describe("AuthProviders", () => {
 });
 
 describe("authErrorMessage", () => {
-  it("shows the API message, or the fallback for anything else", () => {
-    const api = { clerkError: true, errors: [{ code: "x", message: "Short", longMessage: "Password is incorrect." }] };
-    expect(auth.authErrorMessage(api, "Sign in failed")).toBe("Password is incorrect.");
-    expect(auth.authErrorMessage({ clerkError: true, errors: [{ code: "x", message: "Short" }] }, "F")).toBe("Short");
+  const clerk = (code: string, extra: object = {}) => ({ clerkError: true, errors: [{ code, message: "Short", ...extra }] });
+  const INVALID = "Invalid email or password";
+
+  it("adds the code to a Clerk message, and gives the fallback for anything else", () => {
+    const api = clerk("x", { longMessage: "Password is incorrect." });
+    expect(auth.authErrorMessage(api, "Sign in failed")).toBe("Password is incorrect. (code: x)");
+    expect(auth.authErrorMessage(clerk("x"), "F")).toBe("Short (code: x)");
     expect(auth.authErrorMessage(new Error("TypeError: fetch failed"), "Sign in failed")).toBe("Sign in failed");
     expect(auth.authErrorMessage(undefined, "Sign in failed")).toBe("Sign in failed");
   });
 
-  it("never shows a message that names the provider", () => {
-    const api = { clerkError: true, errors: [{ code: "x", message: "Clerk: session_exists" }] };
-    expect(auth.authErrorMessage(api, "Sign in failed")).toBe("Sign in failed");
+  it("shows the invalid-credentials fallback only for the two credential codes", () => {
+    for (const code of ["form_password_incorrect", "form_identifier_not_found"]) {
+      const api = clerk(code, { longMessage: "Something specific." });
+      expect(auth.authErrorMessage(api, INVALID, { credentials: true })).toBe(INVALID);
+    }
+    const format = clerk("form_param_format_invalid", { longMessage: "Enter a valid email." });
+    expect(auth.authErrorMessage(format, INVALID, { credentials: true })).toBe(
+      "Enter a valid email. (code: form_param_format_invalid)",
+    );
+    const plain = clerk("form_password_incorrect", { longMessage: "Password is incorrect." });
+    expect(auth.authErrorMessage(plain, "F")).toBe("Password is incorrect. (code: form_password_incorrect)");
+  });
+
+  it("rephrases provider names, then appends the code", () => {
+    const api = clerk("captcha_invalid", { longMessage: "Captcha failed. Clerk could not verify you." });
+    expect(auth.authErrorMessage(api, "F", { credentials: true })).toBe(
+      "Captcha failed. the sign-in service could not verify you. (code: captcha_invalid)",
+    );
+    expect(auth.authErrorMessage(clerk("x", { message: "CONVEX and clerk" }), "F")).toBe(
+      "the sign-in service and the sign-in service (code: x)",
+    );
+  });
+
+  it("uses the fallback and still appends the code when there is no message", () => {
+    const api = { clerkError: true, errors: [{ code: "session_exists" }] };
+    expect(auth.authErrorMessage(api, "Sign in failed")).toBe("Sign in failed (code: session_exists)");
+  });
+
+  it("accepts a plain errors object", () => {
+    expect(auth.authErrorMessage({ errors: [{ code: "x", message: "Hi" }] }, "F")).toBe("Hi (code: x)");
+  });
+});
+
+describe("logAuthFailure", () => {
+  it("logs one structured error with code, message, longMessage and paramName", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = {
+      clerkError: true,
+      name: "ClerkAPIResponseError",
+      status: 422,
+      clerkTraceId: "trace_1",
+      errors: [{ code: "form_password_incorrect", message: "Short", longMessage: "Long", meta: { paramName: "password" } }],
+    };
+    auth.logAuthFailure("create", error);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("[sign-in] failure", {
+      stage: "create",
+      errorName: "ClerkAPIResponseError",
+      status: 422,
+      clerkTraceId: "trace_1",
+      code: "form_password_incorrect",
+      message: "Short",
+      longMessage: "Long",
+      meta: { paramName: "password" },
+    });
+    spy.mockRestore();
+  });
+
+  it("logs a non-Clerk error without throwing", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    auth.logAuthFailure("create", new TypeError("fetch failed"));
+    expect(spy).toHaveBeenCalledWith("[sign-in] failure", expect.objectContaining({ stage: "create", errorName: "TypeError" }));
+    spy.mockRestore();
+  });
+});
+
+describe("SignInScreen create catch (source contract)", () => {
+  it("logs the failure and uses the credentials-aware message", () => {
+    const source = code(read("SignInScreen.tsx"));
+    expect(source).toContain('logAuthFailure("create", caught)');
+    expect(source).toContain("authErrorMessage(caught, AUTH_MESSAGES.invalidCredentials, { credentials: true })");
   });
 });
 
@@ -158,7 +230,7 @@ describe("auth screens (source contract)", () => {
 
   it("shows the second-factor step when sign-in needs one, and goes back to the form", () => {
     const screen = code(read("SignInScreen.tsx"));
-    expect(screen).toMatch(/attempt\.status === "needs_second_factor"/);
+    expect(screen).toMatch(/status === "needs_second_factor"/);
     expect(screen).toMatch(/setPendingSecondFactor\(true\)/);
     expect(screen).toMatch(/useSecondFactor\(\)/);
     expect(screen).toMatch(/<SecondFactorScreen/);
@@ -167,10 +239,50 @@ describe("auth screens (source contract)", () => {
     expect(auth.AUTH_MESSAGES.secondFactorTitle).toBe("Two-step verification");
   });
 
+  it("widens the status before comparing, so a strict Clerk SignInStatus still typechecks", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/const status: string \| null = attempt\.status;/);
+    expect(screen).toMatch(/status === "needs_second_factor" \|\| status === "needs_client_trust"/);
+    expect(screen).toMatch(/startSecondFactor\(attempt, status === "needs_client_trust"\)/);
+    expect(screen).not.toMatch(/attempt\.status === "needs_client_trust"/);
+    // No source compares a raw `.status` to the value Clerk's union omits.
+    for (const file of files) {
+      expect(code(read(file)), file).not.toMatch(/\.status\s*[!=]==?\s*"needs_client_trust"/);
+    }
+  });
+
+  it("shows a strict Clerk-like union compared safely after the widen", () => {
+    type StrictStatus = "complete" | "needs_second_factor" | "needs_new_password";
+    const attempt: { status: StrictStatus | null } = { status: "needs_second_factor" };
+    // `attempt.status === "needs_client_trust"` would be a TS2367 error here.
+    const status: string | null = attempt.status;
+    expect(status === "needs_client_trust").toBe(false);
+    expect(status === "needs_second_factor" || status === "needs_client_trust").toBe(true);
+  });
+
+  it("runs needs_first_factor with email_code or phone_code through SecondFactorScreen", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/status === "needs_first_factor" && afterCreate/);
+    expect(screen).toMatch(/attempt\.supportedFirstFactors \?\? \[\]/);
+    expect(screen).toMatch(/pickFirstFactorStrategy\(list\)/);
+    expect(screen).toMatch(/prepareFirstFactorIfNeeded\(/);
+    expect(screen).toMatch(/submitFirstFactor\(\{ signIn, code: firstCode, strategy: firstStrategy \}\)/);
+    expect(screen).toMatch(/routeAttempt\(result\.attempt, false\)/);
+    expect(screen).toMatch(/routeAttempt\(attempt, true\)/);
+    expect(screen).toMatch(/secondFactorCopy\(firstStrategy, false\)/);
+    expect(screen).toMatch(/testIDPrefix=\{id\("first-factor"\)\}/);
+    expect(screen).toMatch(/id\("first-factor-switch"\)/);
+    const totp = code(read("totp.ts"));
+    expect(totp).toMatch(/prepareFirstFactor\(\{ strategy, emailAddressId: factor\.emailAddressId \}\)/);
+    expect(totp).toMatch(/prepareFirstFactor\(\{ strategy, phoneNumberId: factor\.phoneNumberId \}\)/);
+    expect(totp).toMatch(/attemptFirstFactor\(\{ strategy: args\.strategy, code: args\.code \}\)/);
+    expect(auth.AUTH_MESSAGES.emailCodeTitle).toBe("Check your email");
+    expect(auth.AUTH_MESSAGES.phoneCodeTitle).toBe("Check your phone");
+  });
+
   it("handles every incomplete status and falls back with a console.warn", () => {
     const screen = code(read("SignInScreen.tsx"));
-    expect(screen).toMatch(/attempt\.status === "needs_second_factor" \|\| attempt\.status === "needs_client_trust"/);
-    expect(screen).toMatch(/attempt\.status === "needs_new_password"/);
+    expect(screen).toMatch(/status === "needs_new_password"/);
     expect(screen).toMatch(/signIn\.resetPassword\(\{ password: newPassword \}\)/);
     expect(screen).toMatch(/pickSecondFactorStrategy\(list\)/);
     expect(screen).toMatch(/secondFactor\.prepare\(/);
@@ -178,17 +290,24 @@ describe("auth screens (source contract)", () => {
     expect(screen).toMatch(/supportedSecondFactors/);
   });
 
-  it("runs the built-in new-password and second-factor steps first and hands only unhandled statuses to onIncomplete", () => {
+  it("runs the built-in first-factor, new-password and second-factor steps first and hands only unhandled statuses to onIncomplete", () => {
     const screen = code(read("SignInScreen.tsx"));
     expect(screen).toMatch(/onIncomplete\?: \(signIn: IncompleteSignIn\) => void/);
-    const order = ["needs_new_password", "needs_second_factor", "startSecondFactor(attempt", "unhandled(attempt)"].map((text) =>
-      screen.indexOf(text, screen.indexOf("signIn.create")),
-    );
+    const route = screen.indexOf("const routeAttempt");
+    const order = [
+      "needs_new_password",
+      "needs_second_factor",
+      "startSecondFactor(attempt",
+      "needs_first_factor",
+      "startFirstFactor(attempt)",
+      "unhandled(attempt)",
+    ].map((text) => screen.indexOf(text, route));
     expect(order.every((i) => i > 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     // onIncomplete is reached only through `unhandled`, never before the built-in branches.
-    const create = screen.slice(screen.indexOf("signIn.create"));
-    expect(create.slice(0, create.indexOf("unhandled(attempt)"))).not.toMatch(/onIncomplete/);
+    const routed = screen.slice(route);
+    expect(routed.slice(0, routed.indexOf("unhandled(attempt)"))).not.toMatch(/onIncomplete/);
+    expect(screen).toMatch(/signIn\.create\(\{ identifier: email, password \}\)/);
     expect(screen).toMatch(/if \(!strategy\) return unhandled\(attempt\)/);
     expect(screen).toMatch(/if \(onIncomplete\) return onIncomplete\(attempt\)/);
     expect(screen.indexOf("warnIncomplete(attempt)", screen.indexOf("const unhandled"))).toBeGreaterThan(
@@ -207,6 +326,17 @@ describe("auth screens (source contract)", () => {
     expect(body).toMatch(/footer=\{footer\}/);
     expect(body).toMatch(/digitsOnly = true/);
     expect(body).toMatch(/digitsOnly \? text\.replace/);
+  });
+
+  it("uses PasswordInput for every password field and no bare secureTextEntry", () => {
+    const source = read("SignInScreen.tsx");
+    const screen = code(source);
+    expect(source).toMatch(/import \{ Input \} from "\.\.\/Input"/);
+    expect(source).toMatch(/import \{ PasswordInput \} from "\.\.\/PasswordInput"/);
+    expect(screen).not.toMatch(/secureTextEntry/);
+    for (const field of ["password", "new-password", "confirm-password"]) {
+      expect(screen).toMatch(new RegExp(`<PasswordInput\\s+testID=\\{id\\("${field}"\\)\\}`));
+    }
   });
 
   it("exports SignUpScreen as the sign-up mode", () => {

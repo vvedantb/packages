@@ -38,6 +38,7 @@ describe("@vvedantb/native-ui exports", () => {
       "Button",
       "Input",
       "SearchInput",
+      "PasswordInput",
       "Textarea",
       "Label",
       "Card",
@@ -173,14 +174,15 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.10.0 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.10.0");
+  it("is 0.11.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.11.0");
     const entries = [
       "./tab-bar",
       "./brand",
       "./button",
       "./primitives",
       "./search-input",
+      "./password-input",
       "./page-title",
       "./toast",
       "./theme",
@@ -354,7 +356,7 @@ describe("@vvedantb/native-ui exports", () => {
   it("keeps auth, the Expo web root and the Tailwind preset off the root entry", () => {
     expect(index).not.toMatch(/from "\.\/auth"/);
     expect(index).not.toMatch(/ExpoWebRoot|tailwind-preset/);
-    for (const name of ["AuthProviders", "SignInScreen", "SignUpScreen", "GoogleSignInButton", "OrDivider", "SecondFactorScreen", "useSecondFactor", "submitTotpSecondFactor", "submitSecondFactor", "prepareSecondFactorIfNeeded", "TOTP_MESSAGES", "ExpoWebRoot"]) {
+    for (const name of ["AuthProviders", "SignInScreen", "SignUpScreen", "GoogleSignInButton", "OrDivider", "SecondFactorScreen", "useSecondFactor", "submitTotpSecondFactor", "submitSecondFactor", "prepareSecondFactorIfNeeded", "prepareFirstFactorIfNeeded", "submitFirstFactor", "pickFirstFactorStrategy", "TOTP_MESSAGES", "ExpoWebRoot"]) {
       expect(names.has(name), name).toBe(false);
     }
   });
