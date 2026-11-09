@@ -2,6 +2,7 @@ import * as SelectPrimitive from "@rn-primitives/select";
 import * as React from "react";
 import { Modal, Platform, View } from "react-native";
 import { FullWindowOverlay } from "react-native-screens";
+import { useReduceMotion } from "../useReduceMotion";
 
 /**
  * Where `SelectContent` draws its options.
@@ -18,6 +19,7 @@ import { FullWindowOverlay } from "react-native-screens";
  */
 export function SelectHost({ children }: { children: React.ReactNode }) {
   const { onOpenChange, setTriggerPosition, setContentLayout } = SelectPrimitive.useRootContext();
+  const reduceMotion = useReduceMotion();
   if (Platform.OS === "android") {
     const close = () => {
       setTriggerPosition(null);
@@ -25,7 +27,13 @@ export function SelectHost({ children }: { children: React.ReactNode }) {
       onOpenChange(false);
     };
     return (
-      <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={close}>
+      <Modal
+        visible
+        transparent
+        animationType={reduceMotion ? "none" : "fade"}
+        statusBarTranslucent
+        onRequestClose={close}
+      >
         <View style={{ flex: 1 }} pointerEvents="box-none" testID="SelectContent-host">
           {children}
         </View>

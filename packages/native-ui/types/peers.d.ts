@@ -853,6 +853,12 @@ declare module "@rn-primitives/select" {
   export const Separator: Ref<ViewProps>;
   export const ScrollUpButton: Ref<ViewProps>;
   export const ScrollDownButton: Ref<ViewProps>;
+  /** Root open/position context, used by `SelectHost` to close on Android back. */
+  export function useRootContext(): {
+    onOpenChange: (open: boolean) => void;
+    setTriggerPosition: (position: unknown) => void;
+    setContentLayout: (layout: unknown) => void;
+  };
 }
 
 declare module "clsx" {

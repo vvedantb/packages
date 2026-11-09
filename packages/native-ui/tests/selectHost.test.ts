@@ -25,6 +25,7 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-screens", () => ({ FullWindowOverlay: "FullWindowOverlay" }));
 vi.mock("@rn-primitives/select", () => ({ useRootContext: () => ctx }));
+vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => false }));
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
@@ -38,7 +39,12 @@ describe("SelectHost", () => {
     const { SelectHost } = await import("../src/primitives/select-host");
     const modal = SelectHost({ children: "options" }) as unknown as Element;
     expect(modal.type).toBe("Modal");
-    expect(modal.props).toMatchObject({ visible: true, transparent: true, statusBarTranslucent: true });
+    expect(modal.props).toMatchObject({
+      visible: true,
+      transparent: true,
+      statusBarTranslucent: true,
+      animationType: "fade",
+    });
     const host = modal.props.children as Element;
     expect(host.type).toBe("View");
     expect(host.props.style).toEqual({ flex: 1 });
