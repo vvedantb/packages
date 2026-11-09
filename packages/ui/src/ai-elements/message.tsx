@@ -56,7 +56,8 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   /**
    * Right-click menu and hover toolbar actions, such as Reply. Without it (or
    * empty) `Message` renders the same `div` as before. With it a right click
-   * opens the menu and a hover toolbar shows in the flow above the content.
+   * opens the menu and a hover toolbar shows beside the bubble. The toolbar is
+   * absolutely positioned and takes no layout space.
    */
   actions?: MessageMenuAction[];
   /**
@@ -92,8 +93,20 @@ export const Message = ({
       data-highlighted={highlighted ? "" : undefined}
       {...props}
     >
-      {hasActions ? <MessageHoverActions actions={actions} /> : null}
-      {children}
+      {hasActions ? (
+        <div
+          className={
+            from === "user"
+              ? "relative ml-auto w-fit max-w-full"
+              : "relative w-fit max-w-full"
+          }
+        >
+          {children}
+          <MessageHoverActions actions={actions} from={from} />
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
   return hasActions ? (
@@ -140,18 +153,21 @@ export type MessageHoverActionsProps = Omit<
   "children"
 > & {
   actions: MessageMenuAction[];
+  /** Role of the message: user toolbars sit left of the bubble, others right. Default `assistant`. */
+  from?: UIMessage["role"];
 };
 /**
  * A small toolbar of icon buttons that shows on hover or focus of the
  * enclosing `Message` (the `group` class, `reveal-on-hover`; always visible on
- * touch). It is static, not an overlay: `Message` renders it in the document
- * flow above its content, at the start side (the end side for user messages),
- * so it never covers the bubble or its text. Draws the actions that have an
- * `icon`. Put it as the first child of a flex column `Message`; the `actions`
- * prop on `Message` does this.
+ * touch). It is absolutely positioned, so it takes no layout space: beside the
+ * bubble, top-aligned (left of a user bubble, right of an assistant message).
+ * On narrow screens it moves to the bubble's top edge. Draws the actions that
+ * have an `icon`. Place it inside a `relative w-fit` wrapper around the
+ * bubble; the `actions` prop on `Message` does this.
  */
 export const MessageHoverActions = ({
   actions,
+  from = "assistant",
   className,
   ...props
 }: MessageHoverActionsProps) => {
@@ -165,7 +181,10 @@ export const MessageHoverActions = ({
       role="toolbar"
       aria-label="Message actions"
       className={merge(
-        "reveal-on-hover mb-1 flex w-fit shrink-0 items-center self-start group-[.is-user]:self-end gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-sm transition-opacity",
+        "reveal-on-hover absolute top-0 z-10 flex w-fit items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-sm transition-opacity",
+        from === "user"
+          ? "right-full mr-1 max-sm:right-2 max-sm:mr-0 max-sm:-translate-y-[62%] max-sm:[&>button]:size-6"
+          : "left-full ml-1 max-sm:left-auto max-sm:right-0 max-sm:ml-0 max-sm:-translate-y-full max-sm:[&>button]:size-6",
         className,
       )}
       {...props}
@@ -175,6 +194,9 @@ export const MessageHoverActions = ({
           key={action.key}
           label={action.label}
           tooltip={action.label}
+          tooltipSide="bottom"
+          // Narrow: the toolbar sits on the bubble corner and a tooltip below it would cover the text.
+          tooltipClassName="max-sm:hidden"
           disabled={action.disabled}
           className={action.destructive ? "text-danger" : undefined}
           onClick={action.onSelect}
@@ -282,6 +304,10 @@ export const MessageActionsBar = ({
 };
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
+  /** Side of the tooltip. Default: the Radix default (`top`). */
+  tooltipSide?: "top" | "right" | "bottom" | "left";
+  /** Extra classes for the tooltip content. */
+  tooltipClassName?: string;
   label?: string;
 };
 export const MessageAction = (props: MessageActionProps) => {
@@ -290,6 +316,8 @@ export const MessageAction = (props: MessageActionProps) => {
 };
 function EagerMessageAction({
   tooltip,
+  tooltipSide,
+  tooltipClassName,
   children,
   label,
   variant = "ghost",
@@ -307,7 +335,7 @@ function EagerMessageAction({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side={tooltipSide} className={tooltipClassName}>
             <p>{tooltip}</p>
           </TooltipContent>
         </Tooltip>
@@ -323,6 +351,8 @@ function EagerMessageAction({
  */
 function LazyMessageAction({
   tooltip,
+  tooltipSide,
+  tooltipClassName,
   children,
   label,
   variant = "ghost",
@@ -360,7 +390,7 @@ function LazyMessageAction({
         {/* The focus that armed it landed before the tooltip existed. */}
         <Tooltip defaultOpen={armedBy === "focus"}>
           <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side={tooltipSide} className={tooltipClassName}>
             <p>{tooltip}</p>
           </TooltipContent>
         </Tooltip>

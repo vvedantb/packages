@@ -122,10 +122,10 @@ describe("MessageHoverActions", () => {
     const bar = el(host, '[role="toolbar"]');
     expect(bar.getAttribute("aria-label")).toBe("Message actions");
     expect(bar.classList.contains("reveal-on-hover")).toBe(true);
-    for (const name of ["self-start", "group-[.is-user]:self-end", "mb-1"]) {
-      expect(bar.classList.contains(name)).toBe(true);
+    for (const name of ["absolute", "top-0", "z-10", "left-full", "ml-1"]) {
+      expect(bar.classList.contains(name), name).toBe(true);
     }
-    for (const name of ["absolute", "top-0", "-top-3", "bottom-full"]) {
+    for (const name of ["mb-1", "self-start", "group-[.is-user]:self-end", "right-full"]) {
       expect(bar.classList.contains(name), name).toBe(false);
     }
     const buttons = [...bar.querySelectorAll("button")];
@@ -160,15 +160,47 @@ describe("MessageHoverActions", () => {
 });
 
 describe("Message actions", () => {
-  it("renders the hover toolbar in flow before the content, with no reserved band", async () => {
+  it("renders an absolute toolbar in a relative wrapper that adds no in-flow height", async () => {
     const host = await mount(<Message from="user" actions={actions()}>hi</Message>);
     const message = el(host, ".group");
     expect(message.classList.contains("pt-10")).toBe(false);
-    expect(message.classList.contains("relative")).toBe(false);
+    const wrapper = message.firstElementChild as HTMLElement;
+    expect(wrapper.className).toBe("relative ml-auto w-fit max-w-full");
     const bar = el(message, '[role="toolbar"]');
-    expect(bar.classList.contains("absolute")).toBe(false);
-    expect(message.firstElementChild).toBe(bar);
-    expect(message.lastChild!.textContent).toBe("hi");
+    expect(bar.parentElement).toBe(wrapper);
+    expect(bar.classList.contains("absolute")).toBe(true);
+    expect(wrapper.firstChild!.textContent).toBe("hi");
+    expect(wrapper.lastElementChild).toBe(bar);
+    // Only the absolute toolbar is added: every other child is the content.
+    expect([...wrapper.children].filter((c) => !c.classList.contains("absolute"))).toHaveLength(0);
+  });
+
+  it("places the toolbar left of a user bubble and right of an assistant one", async () => {
+    const user = await mount(<Message from="user" actions={actions()}>hi</Message>);
+    const ub = el(user, '[role="toolbar"]');
+    for (const name of ["right-full", "mr-1"]) expect(ub.classList.contains(name), name).toBe(true);
+    expect(ub.classList.contains("left-full")).toBe(false);
+    const assistant = await mount(<Message from="assistant" actions={actions()}>hi</Message>);
+    const ab = el(assistant, '[role="toolbar"]');
+    for (const name of ["left-full", "ml-1"]) expect(ab.classList.contains(name), name).toBe(true);
+    expect(ab.classList.contains("right-full")).toBe(false);
+    expect(el(assistant, ".group").firstElementChild!.classList.contains("ml-auto")).toBe(false);
+    expect(ab.className).toContain("max-sm:");
+  });
+
+  it("renders only the children when actions are absent", async () => {
+    const host = await mount(<Message from="user"><p id="c">hi</p></Message>);
+    expect(el(host, ".group").firstElementChild!.id).toBe("c");
+  });
+
+  it("passes tooltipSide to MessageAction and keeps the default otherwise", async () => {
+    const { MessageAction } = await import("./message");
+    const host = await mount(
+      <MessageAction tooltip="T" label="T" data-testid="a">x</MessageAction>,
+    );
+    expect(el(host, "button")).toBeTruthy();
+    const bar = await mount(<MessageHoverActions actions={actions()} />);
+    expect(bar.querySelectorAll("button").length).toBe(2);
   });
 
   it("opens the context menu on a right click, with Reply first", async () => {
