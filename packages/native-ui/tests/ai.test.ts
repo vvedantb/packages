@@ -984,7 +984,7 @@ describe("AI parts (source contract)", () => {
       expect(source, file).not.toMatch(/from "prism-react-renderer"|require\("prism-react-renderer"\)/);
     }
     expect(sources["code-block.tsx"]).toMatch(/loadPrismReactRenderer\(\)/);
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/clerk-expo", "@types/react", "react", "typescript", "vitest"]);
     expect(pkg.dependencies).toBeUndefined();
   });
 

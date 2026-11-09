@@ -52,6 +52,8 @@ export type {
   FirstFactorResult,
   FirstFactorSignIn,
   FirstFactorStrategy,
+  PrepareFirstFactorParams,
+  PrepareSecondFactorParams,
   SecondFactor,
   SecondFactorSignIn,
   SecondFactorStrategy,

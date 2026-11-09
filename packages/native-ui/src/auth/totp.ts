@@ -43,6 +43,24 @@ export type SecondFactor = {
 
 type AttemptResult = { status: string | null; createdSessionId: string | null };
 
+/**
+ * The params of `prepareSecondFactor`. A union on `strategy`, as in Clerk's
+ * `PhoneCodeSecondFactorConfig | EmailCodeSecondFactorConfig`. One object with
+ * `strategy: "phone_code" | "email_code"` does not accept Clerk's
+ * `SignInResource` under `strictFunctionTypes`.
+ */
+export type PrepareSecondFactorParams =
+  | { strategy: "phone_code"; phoneNumberId?: string }
+  | { strategy: "email_code"; emailAddressId?: string };
+
+/**
+ * The params of `prepareFirstFactor`. A union on `strategy`, as in Clerk's
+ * `EmailCodeConfig | PhoneCodeConfig`, where the id is required.
+ */
+export type PrepareFirstFactorParams =
+  | { strategy: "email_code"; emailAddressId: string }
+  | { strategy: "phone_code"; phoneNumberId: string };
+
 /** The part of the sign-in resource that TOTP needs. Tests pass a mock. */
 export type TotpSignIn = {
   attemptSecondFactor(params: { strategy: "totp"; code: string }): Promise<AttemptResult>;
@@ -51,11 +69,7 @@ export type TotpSignIn = {
 /** The part of the sign-in resource that any second factor needs. Tests pass a mock. */
 export type SecondFactorSignIn = {
   supportedSecondFactors?: SecondFactor[] | null;
-  prepareSecondFactor?(params: {
-    strategy: "phone_code" | "email_code";
-    phoneNumberId?: string;
-    emailAddressId?: string;
-  }): Promise<unknown>;
+  prepareSecondFactor?(params: PrepareSecondFactorParams): Promise<unknown>;
   attemptSecondFactor(params: { strategy: SecondFactorStrategy; code: string }): Promise<AttemptResult>;
 };
 
@@ -173,11 +187,7 @@ export type FirstFactor = {
 /** The part of the sign-in resource that a first-factor code needs. Tests pass a mock. */
 export type FirstFactorSignIn = {
   supportedFirstFactors?: FirstFactor[] | null;
-  prepareFirstFactor?(params: {
-    strategy: FirstFactorStrategy;
-    phoneNumberId?: string;
-    emailAddressId?: string;
-  }): Promise<unknown>;
+  prepareFirstFactor?(params: PrepareFirstFactorParams): Promise<unknown>;
   attemptFirstFactor(params: { strategy: FirstFactorStrategy; code: string }): Promise<AttemptResult>;
 };
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.11.2
+
+Type-only fix. Runtime behaviour is unchanged. No new peer.
+
+### Fixed
+
+- A consumer that passed Clerk's real `SignInResource` (for example `useSignIn().signIn`) to `prepareFirstFactorIfNeeded` got TS2322 under `strict` (`strictFunctionTypes`). `FirstFactorSignIn.prepareFirstFactor` took one object with `strategy: FirstFactorStrategy`, which is not assignable to Clerk's `PrepareFirstFactorParams` (`EmailCodeConfig | PhoneCodeConfig`). `SignInScreen` hit the same error in its own call.
+- The params are now unions on `strategy`, as in Clerk. `prepareFirstFactor` takes `PrepareFirstFactorParams` (the id is required, as the helper already guaranteed). `prepareSecondFactor` takes `PrepareSecondFactorParams` (id optional, as in Clerk). Both types are exported from `/auth`.
+
+### Tests
+
+- New consumer type test: `consumer/signIn.consumer.tsx`, compiled by `tsconfig.consumer.json` (`strict`, `strictFunctionTypes`) against the real `@clerk/clerk-expo` 2.20.2, not the `types/peers.d.ts` stub. It passes `SignInResource` and `useSignIn().signIn` to `prepareFirstFactorIfNeeded`, `submitFirstFactor`, `prepareSecondFactorIfNeeded` and `submitSecondFactor`, and renders `SignInScreen`. Run it with `pnpm typecheck:consumer`; `pnpm typecheck` runs it too.
+- `@clerk/clerk-expo` 2.20.2 is a devDependency. The Clerk stub moved from `types/peers.d.ts` to `types/clerk-expo.d.ts`, which only `tsconfig.typecheck.json` includes.
+
 ## 0.11.1
 
 Per-stage timeouts in the sign-in flow, so a hung Clerk call cannot leave a button spinning. Ported from Eva PR 1138. No new dependency or peer.

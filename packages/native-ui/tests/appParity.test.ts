@@ -800,12 +800,14 @@ describe("StackPageHeader", () => {
 });
 
 describe("0.5.0 package and gallery (source contract)", () => {
-  it("leaves the lockfile entry for this package to its four dev dependencies", () => {
+  it("leaves the lockfile entry for this package to its five dev dependencies", () => {
     const lock = readFileSync(join(root, "..", "..", "pnpm-lock.yaml"), "utf8");
     const block = lock.slice(lock.indexOf("\n  packages/native-ui:\n"), lock.indexOf("\n  packages/server:\n"));
     expect(block).toMatch(/^\n {2}packages\/native-ui:\n {4}devDependencies:\n/);
     expect(block).not.toMatch(/\n {4}(?:dependencies|peerDependencies|optionalDependencies):/);
+    // `@clerk/clerk-expo` is for the consumer type test (`tsconfig.consumer.json`).
     expect([...block.matchAll(/^ {6}('?[@\w/.-]+'?):$/gm)].map(([, name]) => name)).toEqual([
+      "'@clerk/clerk-expo'",
       "'@types/react'",
       "react",
       "typescript",
