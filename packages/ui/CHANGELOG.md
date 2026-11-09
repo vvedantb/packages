@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-## 0.37.0 (unreleased)
+## 0.37.1
+
+- `SiteFooter` wordmark is now 18px (`SITE_FOOTER_WORDMARK_SIZE` is `18`, was `16`).
+
+## 0.37.0
 
 - `SiteFooter` is now opinionated. Set `app` (`vibot`, `vmem`, `verve`, `velth` or `vhub`) and pass `tagline` and `columns`. The rest follows:
   - Brand: `AppWordmark` at `SITE_FOOTER_WORDMARK_SIZE` (16px). There is no size prop. The brand sits in a plain `mb-3 md:mb-4` wrapper, not the Michroma wrapper.

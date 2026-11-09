@@ -25,7 +25,7 @@ export type SiteFooterSocial = {
 };
 
 /** Text size in px of the built-in `AppWordmark` brand. Fixed: `SiteFooter` has no size prop. */
-export const SITE_FOOTER_WORDMARK_SIZE = 16;
+export const SITE_FOOTER_WORDMARK_SIZE = 18;
 
 /** Default `socials` on the `app` path: X, Instagram and GitHub. */
 export const PROJECT_V_SOCIALS: readonly SiteFooterSocial[] = [
@@ -60,7 +60,7 @@ type SiteFooterCommonProps = {
 
 /** Opinionated footer: set `app` and the Project V brand, socials, legal links, Apps column and product-of line follow. */
 export type SiteFooterAppProps = SiteFooterCommonProps & {
-  /** Product app id. Sets the wordmark (size 16), the copyright name and the product-of line. */
+  /** Product app id. Sets the wordmark (size 18), the copyright name and the product-of line. */
   app: ProductAppName;
   /** Replaces the `AppWordmark`. */
   brand?: ReactNode;

@@ -98,11 +98,11 @@ describe("SiteFooter app path", () => {
 
   const hrefs = (host: HTMLElement) => [...host.querySelectorAll("a")].map((a) => a.getAttribute("href"));
 
-  it("renders AppWordmark at size 16 without the Michroma wrapper", async () => {
+  it("renders AppWordmark at size 18 without the Michroma wrapper", async () => {
     const host = await mountApp();
-    expect(SITE_FOOTER_WORDMARK_SIZE).toBe(16);
+    expect(SITE_FOOTER_WORDMARK_SIZE).toBe(18);
     const wm = host.querySelector<HTMLElement>("[data-app='vibot']")!;
-    expect(wm.style.fontSize).toBe("16px");
+    expect(wm.style.fontSize).toBe("18px");
     expect(wm.parentElement?.className).toBe("mb-3 md:mb-4");
     expect(host.innerHTML).not.toContain("font-michroma");
   });
