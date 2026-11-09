@@ -46,6 +46,7 @@ export type { SignOutDialogProps } from "./SignOutDialog.js";
 export {
   railBadgeClass,
   railTileClass,
+  SIDEBAR_RAIL_APP_ICON_SIZE,
   railTileStateClass,
   sidebarNavIconClass,
   sidebarNavItemActionsClass,

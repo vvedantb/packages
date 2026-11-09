@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.38.0
+
+- New `SiteHeader` (root and `/client`): the marketing header, promoted from the kit's `LandingNav`. Plain markup with no motion, so apps that do not use `createLandingKit` can use it.
+  - Props: `app` (`vibot`, `vmem`, `verve`, `velth` or `vhub`), `homeLabel`, `links`, `cta`, optional `homeHref` (default `#home`), `githubUrl` and `className`.
+  - Brand: `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE` (20px, icon 28px). There is no size prop.
+  - Bar: `sticky top-0 z-50`, `h-14 sm:h-16`, `bg-background/80 backdrop-blur-md`, `border-b border-separator`, `max-w-6xl` with 20/32/40px side padding. No fixed or solid variant, and no theme toggle, search or announcements.
+  - Links: up to 4, shown from `md`. More than 4 logs "SiteHeader supports at most 4 links" outside production, and only the first 4 render.
+  - `cta`: exactly one slot. Pass a `Button` with the default variant, `size="sm"` and `className="rounded-full"`. There is no secondary slot.
+  - `githubUrl`: optional ghost `icon-sm` button from `sm`, labelled "{app} on GitHub".
+  - Below `md`: one dropdown menu with a 20px `IconMenu2` / `IconX` trigger, full width. Order: links, the CTA full width, then GitHub. The CTA shows in the bar from `md` only.
+- New `SITE_HEADER_WORDMARK_SIZE` and the types `SiteHeaderProps` and `SiteHeaderLink`.
+- Deprecated, still working: `createLandingKit().LandingNav` and `LandingNavMenu`. Their markup is unchanged. They are a parallel component, not a wrapper, because `LandingNav` takes a `brand` node and an `actions` slot where `SiteHeader` takes `app` and one `cta`. Migrate to `SiteHeader`.
+- New `SIDEBAR_RAIL_APP_ICON_SIZE` (`26`, root and `/client`): the app icon size for the home `RailTile`. Pass it as the icon `size`. The tile still renders the icon you pass.
+- App shell mobile header checked against the standard and unchanged: `SidebarChrome.MobileHeader` is 56px plus safe-area (`--app-shell-mobile-header-height`), solid `bg-surface`, title centred in `text-base font-semibold tracking-tight`, 20px `IconMenu2` trigger, actions through `mobileHeaderActions` / `MobileActions`.
+- Velth: no asset work was needed. `IconVelth`, `APP_ICONS.velth` and `AppWordmark app="velth"` already ship, so `SiteHeader app="velth"` works as is.
+
 ## 0.37.1
 
 - `SiteFooter` wordmark is now 18px (`SITE_FOOTER_WORDMARK_SIZE` is `18`, was `16`).

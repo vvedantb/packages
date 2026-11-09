@@ -153,7 +153,7 @@ export function createLandingKit({ motion }: LandingKitOptions): LandingKit {
     );
   }
 
-  /** Sticky blurred header that rises in on mount. */
+  /** @deprecated Use `SiteHeader`. Sticky blurred header that rises in on mount. */
   function LandingNav({ brand, homeLabel, links, github, actions, menu }: LandingNavProps) {
     return (
       <motion.header
