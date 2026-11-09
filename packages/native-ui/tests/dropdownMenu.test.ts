@@ -152,6 +152,13 @@ describe("DropdownMenu parts", () => {
     expect(modal.type).toBe("Modal");
     expect(modal.props).toMatchObject({ visible: true, transparent: true, animationType: "fade", statusBarTranslucent: true });
     (modal.props.onRequestClose as () => void)();
+    // A full-size host under the Modal (as `OverlayModal` has), holding the backdrop and the menu.
+    const host = modal.props.children as Element;
+    expect(host.type).toBe("View");
+    expect(host.props.style).toEqual({ flex: 1 });
+    expect(host.props.pointerEvents).toBe("box-none");
+    const hosted = (host.props.children as Element[]).map((child) => child.props.testID ?? child.props.accessibilityRole);
+    expect(hosted).toEqual(["DropdownMenu-backdrop", "menu"]);
     const backdrop = elements(modal).find((element) => element.props.testID === "DropdownMenu-backdrop")!;
     expect(backdrop.props).toMatchObject({ accessibilityRole: "button", accessibilityLabel: "Close menu" });
     (backdrop.props.onPress as () => void)();
