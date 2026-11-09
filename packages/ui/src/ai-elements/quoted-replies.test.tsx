@@ -122,6 +122,12 @@ describe("MessageHoverActions", () => {
     const bar = el(host, '[role="toolbar"]');
     expect(bar.getAttribute("aria-label")).toBe("Message actions");
     expect(bar.classList.contains("reveal-on-hover")).toBe(true);
+    for (const name of ["self-start", "group-[.is-user]:self-end", "mb-1"]) {
+      expect(bar.classList.contains(name)).toBe(true);
+    }
+    for (const name of ["absolute", "top-0", "-top-3", "bottom-full"]) {
+      expect(bar.classList.contains(name), name).toBe(false);
+    }
     const buttons = [...bar.querySelectorAll("button")];
     expect(buttons.map((button) => button.textContent)).toEqual(["Reply", "Copy"]);
     await act(async () => buttons[0]!.click());
@@ -154,11 +160,15 @@ describe("MessageHoverActions", () => {
 });
 
 describe("Message actions", () => {
-  it("is relative and holds the hover toolbar", async () => {
+  it("renders the hover toolbar in flow before the content, with no reserved band", async () => {
     const host = await mount(<Message from="user" actions={actions()}>hi</Message>);
     const message = el(host, ".group");
-    expect(message.classList.contains("relative")).toBe(true);
-    expect(message.querySelector('[role="toolbar"]')).not.toBeNull();
+    expect(message.classList.contains("pt-10")).toBe(false);
+    expect(message.classList.contains("relative")).toBe(false);
+    const bar = el(message, '[role="toolbar"]');
+    expect(bar.classList.contains("absolute")).toBe(false);
+    expect(message.firstElementChild).toBe(bar);
+    expect(message.lastChild!.textContent).toBe("hi");
   });
 
   it("opens the context menu on a right click, with Reply first", async () => {
@@ -183,7 +193,7 @@ describe("Message actions", () => {
     const message = el(host, "#x");
     expect(message.getAttribute("data-id")).toBe("m1");
     expect(message.classList.contains("custom-root")).toBe(true);
-    expect(message.classList.contains("relative")).toBe(true);
+    expect(message.classList.contains("relative")).toBe(false);
   });
 });
 

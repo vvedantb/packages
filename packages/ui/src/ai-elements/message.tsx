@@ -55,8 +55,8 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
   /**
    * Right-click menu and hover toolbar actions, such as Reply. Without it (or
-   * empty) `Message` renders the same `div` as before. With it the message is
-   * `relative`, a right click opens the menu and a hover toolbar shows.
+   * empty) `Message` renders the same `div` as before. With it a right click
+   * opens the menu and a hover toolbar shows in the flow above the content.
    */
   actions?: MessageMenuAction[];
   /**
@@ -84,8 +84,7 @@ export const Message = ({
         from === "user"
           ? (classes?.user ?? "is-user ml-auto justify-end")
           : (classes?.assistant ?? "is-assistant"),
-        hasActions && "relative",
-        highlighted !== undefined &&
+                highlighted !== undefined &&
           "rounded-xl transition-[background-color,box-shadow] duration-1000",
         highlighted && "bg-primary/10 ring-2 ring-primary/30",
         className,
@@ -93,8 +92,8 @@ export const Message = ({
       data-highlighted={highlighted ? "" : undefined}
       {...props}
     >
-      {children}
       {hasActions ? <MessageHoverActions actions={actions} /> : null}
+      {children}
     </div>
   );
   return hasActions ? (
@@ -145,8 +144,11 @@ export type MessageHoverActionsProps = Omit<
 /**
  * A small toolbar of icon buttons that shows on hover or focus of the
  * enclosing `Message` (the `group` class, `reveal-on-hover`; always visible on
- * touch). Draws the actions that have an `icon`. Put it in a `relative`
- * `Message`; the `actions` prop on `Message` does this.
+ * touch). It is static, not an overlay: `Message` renders it in the document
+ * flow above its content, at the start side (the end side for user messages),
+ * so it never covers the bubble or its text. Draws the actions that have an
+ * `icon`. Put it as the first child of a flex column `Message`; the `actions`
+ * prop on `Message` does this.
  */
 export const MessageHoverActions = ({
   actions,
@@ -163,7 +165,7 @@ export const MessageHoverActions = ({
       role="toolbar"
       aria-label="Message actions"
       className={merge(
-        "reveal-on-hover absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-sm transition-opacity",
+        "reveal-on-hover mb-1 flex w-fit shrink-0 items-center self-start group-[.is-user]:self-end gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-sm transition-opacity",
         className,
       )}
       {...props}
