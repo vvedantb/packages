@@ -174,8 +174,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.11.1 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.11.1");
+  it("is 0.11.2 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.11.2");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -209,7 +209,7 @@ describe("@vvedantb/native-ui exports", () => {
     }
     expect(pkg.exports["./package.json"]).toBe("./package.json");
     expect(pkg.exports["."].default).toBe("./src/index.ts");
-    expect(pkg.scripts.typecheck).toBe("tsc -p tsconfig.typecheck.json");
+    expect(pkg.scripts.typecheck).toBe("tsc -p tsconfig.typecheck.json && pnpm run typecheck:consumer");
     // The preset is CommonJS for `tailwind.config.js`, with its own declarations.
     expect(pkg.exports["./tailwind-preset"]).toEqual({
       types: "./src/tailwind-preset.d.cts",
@@ -350,7 +350,7 @@ describe("@vvedantb/native-ui exports", () => {
     ]);
     // No tailwindcss-animate (or Tailwind itself): apps that want it keep it in their config.
     expect(Object.keys(pkg.peerDependencies)).not.toContain("tailwindcss-animate");
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@types/react", "react", "typescript", "vitest"]);
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/clerk-expo", "@types/react", "react", "typescript", "vitest"]);
   });
 
   it("keeps auth, the Expo web root and the Tailwind preset off the root entry", () => {

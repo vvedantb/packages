@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "strictFunctionTypes": true
+  },
+  "include": ["consumer", "src", "types/peers.d.ts"]
+}
