@@ -56,12 +56,10 @@ declare module "react-native" {
   }
   export interface TextStyle extends ViewStyle {}
   export interface ImageStyle extends ViewStyle {}
-  export type StyleProp<T> =
-    | T
-    | null
-    | undefined
-    | false
-    | ReadonlyArray<StyleProp<T>>;
+  // As React Native's own: the outer array is mutable, so a readonly
+  // (`as const`) tuple style fails here as it does in an app.
+  interface RecursiveArray<T> extends Array<T | ReadonlyArray<T> | RecursiveArray<T>> {}
+  export type StyleProp<T> = T | null | undefined | false | RecursiveArray<T | null | undefined | false>;
 
   export type Role = string;
   export type AccessibilityRole = string;
@@ -540,13 +538,13 @@ declare module "expo-router" {
     withAnchor?: boolean;
     dangerouslySingular?: boolean | string;
   }
-  export interface Router {
+  // expo-router 57 exports no `Router` type, so neither does this shim.
+  export function useRouter(): {
     push(href: Href, options?: NavigationOptions): void;
     replace(href: Href, options?: NavigationOptions): void;
     back(): void;
     canGoBack(): boolean;
-  }
-  export function useRouter(): Router;
+  };
 }
 
 declare module "expo-router/html" {

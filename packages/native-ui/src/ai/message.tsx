@@ -120,10 +120,10 @@ export function Message({
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
-  const layout = [
+  const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
     style,
-  ] as const;
+  ];
   const merged = cn("w-full max-w-[95%] gap-2", className);
   const parts = (
     <>
@@ -139,7 +139,7 @@ export function Message({
           <Pressable
             accessible={false}
             className={merged}
-            style={layout as never}
+            style={layout}
             onLongPress={() => {
               onLongPress?.();
               if (hasActions) setSheetOpen(true);

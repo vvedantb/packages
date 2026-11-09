@@ -122,6 +122,7 @@ describe("@vvedantb/native-ui exports", () => {
       "tokens",
       "palette",
       "configureTheme",
+      "fontFamily",
       "DropdownMenu",
       "DropdownMenuTrigger",
       "DropdownMenuContent",

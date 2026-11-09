@@ -480,10 +480,14 @@ describe("0.12.0 entries and peers (source contract)", () => {
     for (const name of ["ChatThread", "UIMessage", "ChatJumpRail", "ATTACHMENT_PRESS_TARGET"]) expect(ai, name).toContain(name);
   });
 
-  it("types the auth hrefs as Href and the replace options from Router", () => {
+  it("types the auth hrefs as Href and the replace options from useRouter", () => {
     const google = read("src/auth/GoogleSignInButton.tsx");
     expect(google).toMatch(/afterAuthHref\?: Href;/);
-    expect(google).toMatch(/replaceOptions\?: Parameters<Router\["replace"\]>\[1\];/);
+    expect(google).toMatch(/replaceOptions\?: Parameters<ReturnType<typeof useRouter>\["replace"\]>\[1\];/);
+    // expo-router 57 exports no `Router` type, so no file may import one.
+    for (const file of ["src/auth/GoogleSignInButton.tsx", "src/auth/SignInScreen.tsx", "src/router/RouterStackPageHeader.tsx"]) {
+      expect(read(file), file).not.toMatch(/type Router\b/);
+    }
     const signIn = read("src/auth/SignInScreen.tsx");
     expect(signIn).toMatch(/signUpHref\?: Href;/);
     expect(signIn).toMatch(/signInHref\?: Href;/);

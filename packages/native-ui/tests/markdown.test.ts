@@ -51,6 +51,23 @@ describe("Markdown", () => {
     expect(styles.text).toMatchObject({ fontFamily: "InstrumentSans_400Regular", fontSize: 16, lineHeight: 24, color: "#111111" });
   });
 
+  it("reads the faces from fontFamily at call time, so configureTheme({ font }) reaches them", async () => {
+    const { markdownStyles } = await import("../src/markdown/Markdown");
+    const { configureTheme } = await import("../src/configureTheme");
+    const { fontFamily } = await import("../src/typography");
+    const original = { ...fontFamily };
+    configureTheme({ font: { regular: "Inter_400Regular", semibold: "Inter_600SemiBold" } });
+    try {
+      const styles = markdownStyles("light", body, "#111111");
+      expect(styles.text?.fontFamily).toBe("Inter_400Regular");
+      expect(styles.li?.fontFamily).toBe("Inter_400Regular");
+      expect(styles.h1?.fontFamily).toBe("Inter_600SemiBold");
+      expect(styles.strong?.fontFamily).toBe("Inter_600SemiBold");
+    } finally {
+      configureTheme({ font: original });
+    }
+  });
+
   it("underlines links in the primary colour at 30%, as the web .markdown-link", async () => {
     const { markdownStyles } = await import("../src/markdown/Markdown");
     expect(webCss).toMatch(/text-decoration-color: rgb\(var\(--primary\) \/ 0\.3\)/);

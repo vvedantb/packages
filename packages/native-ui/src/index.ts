@@ -12,7 +12,8 @@ export { palette, withAlpha } from "./palette";
 export type { Palette } from "./palette";
 export { configureTheme } from "./configureTheme";
 export type { ThemeConfig, ThemeColors, ThemePalette } from "./configureTheme";
-export { fontClass } from "./typography";
+export { fontClass, fontFamily } from "./typography";
+export type { ThemeFonts } from "./typography";
 export {
   FLOATING_INSET,
   FLOATING_TAB_BAR_HEIGHT,

@@ -71,7 +71,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/password-input` | `PasswordInput`, `PasswordInputProps` (from 0.11.0) | none |
 | `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13), `StackPageHeader`, `StackPageHeaderProps` (from 0.5.0; it brings the Tabler package for its chevron) | none |
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
-| `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `configureTheme` (with the `ThemeConfig`, `ThemeColors` and `ThemePalette` types), `fontClass`, `cn`, `Colors` and the colour constants | none |
+| `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `configureTheme` (with the `ThemeConfig`, `ThemeColors` and `ThemePalette` types), `fontClass`, `fontFamily` (with the `ThemeFonts` type), `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
 | `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `MoreFromProjectV` and `FromProjectV` (0.8.0), `ScreenContainerProps`, `SettingsEmptyState`, `PinnedBotTile`, `BotPinGrid`, `ArtifactList` (0.12.0). `ScreenContainer` takes `refreshing`, `onRefresh` and `refreshControl` (0.12.0). `StackPageHeader` takes `centre` (0.12.0) | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
@@ -126,6 +126,7 @@ module.exports = {
 | `color` | `cssVar`, or `rgbAlpha` with `injectCssVariables` | Maps a variable name to a colour value. `cssVar` gives `var(--name)`, `hslVar` gives `hsl(var(--name))` and `rgbAlpha` gives `rgb(var(--name) / <alpha-value>)`. For another prefix, pass your own, such as ``(name) => `rgb(var(--color-${name}) / <alpha-value>)` ``. |
 | `injectCssVariables` | `false` | Writes every colour variable from `tokens.ts` and `palette.ts` as `r g b` channels, and `--radius` (16px), for light (`:root`) and dark (`.dark`, or the media query with `darkMode: "media"`). The app's `global.css` then needs no token block. |
 | `radiusVariable` | `injectCssVariables` | `rounded-lg`, `-md` and `-sm` from `var(--radius)`. |
+| `font` | Instrument Sans | `{ regular, medium, semibold, bold }` family names. Sets the family of `sans` and the four `font-instrument-sans*` classes. The class names stay the same. Pass the same names to `configureTheme({ font })` (see [App fonts](#app-fonts)). |
 
 The colour keys are `background`, `foreground`, `border`, `input`, `ring`, `separator`, `surface` (`DEFAULT`, `foreground`, `secondary`, `tertiary`, `card`), `field` (`DEFAULT`, `placeholder`) and, each with `DEFAULT` and `foreground`, `primary`, `secondary`, `destructive`, `muted`, `accent`, `popover`, `card`, `danger`, `success`, `warning`, `default` and `overlay`. Each reads the variable of the same name (`surface.secondary` reads `--surface-secondary`; `muted.foreground` reads `--muted-foreground`). `borderWidth.hairline` is NativeWind's `hairlineWidth()`.
 
@@ -307,6 +308,19 @@ The keys map to the shadcn-style variables as follows. `tokens.color`: `backgrou
 
 Limits: a call after the first render does not redraw mounted components. Only the JS colours change. NativeWind classes keep the app's Tailwind theme, and `nativeUiPreset({ injectCssVariables: true })` still writes the package values. Constants copied out at import (`NEUTRAL_500`) keep the package value; `floatingFill`, `floatingHairline` and `floatingSolidFill` follow. The `tokens` and `palette` types still name the package hex values.
 
+### App fonts
+
+The default font is Instrument Sans. To use another, such as Inter, give the same family names in two places, one for each weight: `nativeUiPreset({ font })` in `tailwind.config.js` for the classes, and `configureTheme({ font })` at start for the JS styles (such as `Markdown`). Keys you leave out keep Instrument Sans. The app loads the font files; the package does not. `fontFamily` holds the current names (type `ThemeFonts`), on the root entry and `/theme`.
+
+```ts
+// tailwind.config.js
+const font = { regular: "Inter_400Regular", medium: "Inter_500Medium", semibold: "Inter_600SemiBold", bold: "Inter_700Bold" };
+presets: [nativeUiPreset({ font })],
+
+// app/_layout.tsx, outside the component
+configureTheme({ font: { regular: "Inter_400Regular", medium: "Inter_500Medium", semibold: "Inter_600SemiBold", bold: "Inter_700Bold" } });
+```
+
 `useLargerText()` steps type and tap targets up. Without it, `Button`, `Input`, `Textarea` and the `Select` trigger have the web sizes (`Button` 32 / 40 / 44 high, fields 40); with it they keep the larger 0.3.2 sizes. `accentColor` tints FABs, card icons and progress bars (checked checkboxes use the palette primary, as on the web). Surfaces use the tokens in `src/tokens.ts` for fill, radius (card 24, field 10, pill 999; rows 20) and spacing (16). `Button` is a pill (999) by default, and 16 with `shape="rounded"`.
 
 ## Components (0.3.0)
@@ -432,7 +446,7 @@ Components and props that the Verve, vibot and Velth apps need. They follow the 
 
 ```tsx
 // Typed routes: `afterAuthHref`, `signUpHref` and `signInHref` take expo-router's `Href`,
-// and `replaceOptions` takes `Parameters<Router["replace"]>[1]`.
+// and `replaceOptions` takes the options of `useRouter().replace` (expo-router 57 exports no `Router` type).
 <SignInScreen scheme="app" afterAuthHref="/(app)/bots" signUpHref="/sign-up" replaceOptions={{ withAnchor: true }} />
 
 // Router-aware back: router.canGoBack() ? router.back() : router.replace(fallbackHref).
@@ -688,7 +702,7 @@ The JS tokens (colours, radii, spacing) live in `src/tokens.ts`. It is a copy of
 
 The brand files `src/brand/svg.ts`, `familyApps.ts` and `vProAppBenefits.ts` are byte-identical copies of `packages/ui/src/brand/`. A test fails when they differ.
 
-`fontClass` lists the Instrument Sans classes. `AppWordmark` uses `font-instrument-sans-medium` (weight 500) with -0.02em letter spacing, as on the web.
+`fontClass` lists the font classes (Instrument Sans unless the app sets [App fonts](#app-fonts)). `AppWordmark` uses `font-instrument-sans-medium` (weight 500) with -0.02em letter spacing, as on the web.
 
 ## Type checking
 

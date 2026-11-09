@@ -8,13 +8,8 @@ import { sizeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
+import { fontFamily } from "../typography";
 import { useScheme } from "../useScheme";
-
-/** Instrument Sans faces, as the app loads them (see `INSTRUMENT_SANS` in tailwind-preset.cjs). */
-const FONT = {
-  regular: "InstrumentSans_400Regular",
-  semibold: "InstrumentSans_600SemiBold",
-} as const;
 
 /**
  * Sizes from the web `markdown.css` (`@vvedantb/ui/tokens/css/markdown.css`),
@@ -78,7 +73,7 @@ export function markdownStyles(
   color: string,
 ): MarkedStyles {
   const heading = (scale: number): TextStyle => ({
-    fontFamily: FONT.semibold,
+    fontFamily: fontFamily.semibold,
     fontWeight: "600",
     fontSize: Math.round(body.fontSize * scale),
     lineHeight: Math.round(body.fontSize * scale * MARKDOWN_SCALE.headingLineHeight),
@@ -89,9 +84,9 @@ export function markdownStyles(
   });
   const gap = { marginVertical: MARKDOWN_SCALE.blockGap / 2 };
   return {
-    text: { fontFamily: FONT.regular, fontSize: body.fontSize, lineHeight: body.lineHeight, color },
+    text: { fontFamily: fontFamily.regular, fontSize: body.fontSize, lineHeight: body.lineHeight, color },
     paragraph: { ...gap, paddingVertical: 0 },
-    strong: { fontFamily: FONT.semibold, fontWeight: "600" },
+    strong: { fontFamily: fontFamily.semibold, fontWeight: "600" },
     em: { fontStyle: "italic" },
     link: {
       color: palette.primary[scheme],
@@ -104,7 +99,7 @@ export function markdownStyles(
     h4: heading(MARKDOWN_SCALE.h4),
     h5: heading(MARKDOWN_SCALE.h4),
     h6: { ...heading(MARKDOWN_SCALE.h4), color: tokens.color.muted[scheme] },
-    li: { fontFamily: FONT.regular, fontSize: body.fontSize, lineHeight: body.lineHeight, color },
+    li: { fontFamily: fontFamily.regular, fontSize: body.fontSize, lineHeight: body.lineHeight, color },
     blockquote: {
       ...gap,
       paddingLeft: 13,
