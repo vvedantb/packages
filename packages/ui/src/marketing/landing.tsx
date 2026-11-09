@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { cn } from "../utils/cn";
+import { SiteFooter, type SiteFooterAppProps } from "./SiteFooter";
 import { landingClasses, landingFooterLinkClass, landingShellClass } from "./marketing-classes";
 
 export type LandingLink = { href: string; label: string };
@@ -140,19 +141,46 @@ export function LandingNavMenu({ links, github }: LandingNavMenuProps) {
   );
 }
 
-export type LandingFooterProps = {
-  /** Wordmark above the tagline. */
-  brand: ReactNode;
+type LandingFooterCommonProps = {
   tagline: ReactNode;
+  /** Section links. On the `app` path they become a "Navigation" column unless `columns` is set. */
   links: readonly LandingLink[];
-  /** After the links, before GitHub. Style with `landingFooterLinkClass` or `landingFooterButtonClass`. */
+  /** App actions, for example Sign in. Style with `landingFooterLinkClass` or `landingFooterButtonClass`. */
   actions?: ReactNode;
-  /** `label` is the link's `aria-label`. */
+};
+
+/** Project V footer: a thin wrapper over `SiteFooter` with every default (wordmark, socials, legal links, Apps column, product-of line). */
+export type LandingFooterAppProps = LandingFooterCommonProps &
+  Pick<SiteFooterAppProps, "app" | "year" | "variant" | "socials" | "legalLinks" | "includeAppsColumn" | "showProductOf"> & {
+    /** Replaces the Navigation column built from `links`. */
+    columns?: SiteFooterAppProps["columns"];
+    /** @deprecated Ignored on the `app` path: the footer renders `AppWordmark`. */
+    brand?: ReactNode;
+    /** @deprecated Ignored on the `app` path: `PROJECT_V_SOCIALS` includes GitHub. */
+    github?: LandingFooterLegacyProps["github"];
+  };
+
+/** Old compact footer. Deprecated: set `app` instead. */
+export type LandingFooterLegacyProps = LandingFooterCommonProps & {
+  app?: undefined;
+  /** @deprecated Set `app`. Wordmark above the tagline. */
+  brand: ReactNode;
+  /** @deprecated Set `app`: `PROJECT_V_SOCIALS` includes GitHub. `label` is the link's `aria-label`. */
   github: { href: string; label: string; icon: ReactNode };
 };
 
-/** Footer row: brand and tagline, then section links, app actions and a GitHub icon link. */
-export function LandingFooter({ brand, tagline, links, actions, github }: LandingFooterProps) {
+export type LandingFooterProps = LandingFooterAppProps | LandingFooterLegacyProps;
+
+/**
+ * With `app`: `SiteFooter` with `links` as a Navigation column. Without `app` (deprecated): the old compact row of
+ * brand and tagline, section links, app actions and a GitHub icon link.
+ */
+export function LandingFooter(props: LandingFooterProps) {
+  if (props.app !== undefined) {
+    const { links, columns, brand: _brand, github: _github, ...rest } = props;
+    return <SiteFooter {...rest} columns={columns ?? [{ heading: "Navigation", links }]} />;
+  }
+  const { brand, tagline, links, actions, github } = props;
   return (
     <footer className="border-t border-separator">
       <div

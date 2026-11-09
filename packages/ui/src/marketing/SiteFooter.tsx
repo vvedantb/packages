@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
-import { APP_ICONS, type AppName } from "../brand";
+import { IconBrandGithub, IconBrandInstagram, IconBrandX } from "@tabler/icons-react";
+import { APP_ICONS, AppWordmark, projectVAppsColumn, type AppName, type ProductAppName } from "../brand";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { siteFooterClasses, type SiteFooterVariant } from "./marketing-classes";
@@ -23,47 +24,100 @@ export type SiteFooterSocial = {
   label?: string;
 };
 
-export type SiteFooterProps = {
-  /** Wordmark text above the tagline. */
-  brand: ReactNode;
+/** Text size in px of the built-in `AppWordmark` brand. Fixed: `SiteFooter` has no size prop. */
+export const SITE_FOOTER_WORDMARK_SIZE = 16;
+
+/** Default `socials` on the `app` path: X, Instagram and GitHub. */
+export const PROJECT_V_SOCIALS: readonly SiteFooterSocial[] = [
+  { href: "https://x.com/projectvdotuk", icon: IconBrandX, label: "Project V on X" },
+  { href: "https://www.instagram.com/projectvdotuk/", icon: IconBrandInstagram, label: "Project V on Instagram" },
+  { href: "https://github.com/projectvdotuk", icon: IconBrandGithub, label: "Project V on GitHub" },
+];
+
+/** Default `legalLinks` on the `app` path. */
+export const PROJECT_V_LEGAL_LINKS: readonly { href: string; label: string }[] = [
+  { href: "https://projectv.uk/privacy", label: "Privacy Policy" },
+  { href: "https://projectv.uk/terms", label: "Terms of Service" },
+];
+
+export type SiteFooterColumn = { heading: string; links: readonly SiteFooterLink[] };
+
+type SiteFooterCommonProps = {
   tagline: ReactNode;
-  /** Icon buttons under the tagline. Always open in a new tab. */
-  socials: readonly SiteFooterSocial[];
   /** Link columns to the right of the brand block. */
-  columns: readonly { heading: string; links: readonly SiteFooterLink[] }[];
-  /** Name in "Copyright © {year} {name}". */
-  name: string;
+  columns: readonly SiteFooterColumn[];
   /** Default: the current year. */
   year?: number;
-  /** Bottom-right links, for example Privacy Policy and Terms of Service. Always open in a new tab. */
-  legalLinks: readonly { href: string; label: string }[];
   /**
    * `"muted"` (default) and `"muted-foreground"` pick the secondary text
    * colour class. `"touch"` uses `text-muted-foreground`, `max-sm:hit-target`
    * links and a safe-area bottom padding.
    */
   variant?: SiteFooterVariant;
+  /** Under the socials, for example a Sign-in button. Not rendered on the legacy path. */
+  actions?: ReactNode;
 };
 
+/** Opinionated footer: set `app` and the Project V brand, socials, legal links, Apps column and product-of line follow. */
+export type SiteFooterAppProps = SiteFooterCommonProps & {
+  /** Product app id. Sets the wordmark (size 16), the copyright name and the product-of line. */
+  app: ProductAppName;
+  /** Replaces the `AppWordmark`. */
+  brand?: ReactNode;
+  /** Default `PROJECT_V_SOCIALS`. `[]` hides them. */
+  socials?: readonly SiteFooterSocial[];
+  /** Default `PROJECT_V_LEGAL_LINKS`. */
+  legalLinks?: readonly { href: string; label: string }[];
+  /** Overrides the copyright name (default: `app`). */
+  name?: string;
+  /** Appends the standard Apps column unless `columns` has an "Apps" heading (default `true`). */
+  includeAppsColumn?: boolean;
+  /** Shows "{app} is a product of Project V." (default `true`). */
+  showProductOf?: boolean;
+};
+
+/** Legacy footer: you pass every part. Prefer `SiteFooterAppProps`. */
+export type SiteFooterLegacyProps = SiteFooterCommonProps & {
+  app?: undefined;
+  /**
+   * @deprecated Set `app` instead: the footer renders `AppWordmark`. Without `app` the brand sits in the Michroma wrapper.
+   */
+  brand: ReactNode;
+  /** @deprecated Set `app` for the Project V defaults (`PROJECT_V_SOCIALS`). Icon buttons under the tagline; always open in a new tab. */
+  socials: readonly SiteFooterSocial[];
+  /** @deprecated Set `app`: the copyright name is then the app id. Name in "Copyright © {year} {name}". */
+  name: string;
+  /** @deprecated Set `app` for `PROJECT_V_LEGAL_LINKS`. Bottom-right links; always open in a new tab. */
+  legalLinks: readonly { href: string; label: string }[];
+  includeAppsColumn?: undefined;
+  showProductOf?: undefined;
+};
+
+export type SiteFooterProps = SiteFooterAppProps | SiteFooterLegacyProps;
+
 /** Marketing site footer: brand, socials, link columns, then copyright and legal links under a separator. */
-export function SiteFooter({
-  brand,
-  tagline,
-  socials,
-  columns,
-  name,
-  year = new Date().getFullYear(),
-  legalLinks,
-  variant = "muted",
-}: SiteFooterProps) {
+export function SiteFooter(props: SiteFooterProps) {
+  const { tagline, year = new Date().getFullYear(), variant = "muted", actions } = props;
   const c = siteFooterClasses[variant];
+  const modern = props.app !== undefined;
+  const brandNode = modern ? (
+    <div className="mb-3 md:mb-4">{props.brand ?? <AppWordmark app={props.app} size={SITE_FOOTER_WORDMARK_SIZE} />}</div>
+  ) : (
+    <div className="text-lg font-michroma font-normal tracking-wider mb-3 md:mb-4">{props.brand}</div>
+  );
+  const socials = modern ? (props.socials ?? PROJECT_V_SOCIALS) : props.socials;
+  const legalLinks = modern ? (props.legalLinks ?? PROJECT_V_LEGAL_LINKS) : props.legalLinks;
+  const name = modern ? (props.name ?? props.app) : props.name;
+  const hasApps = props.columns.some((column) => column.heading.toLowerCase() === "apps");
+  const columns: readonly SiteFooterColumn[] = modern && (props.includeAppsColumn ?? true) && !hasApps ? [...props.columns, projectVAppsColumn()] : props.columns;
+  const showProductOf = modern && (props.showProductOf ?? true);
   return (
     <footer className={c.footer}>
       <div className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-12">
             <div className="flex-1 lg:flex-none">
-              <div className="text-lg font-michroma font-normal tracking-wider mb-3 md:mb-4">{brand}</div>
+              {brandNode}
               <p className={c.tagline}>{tagline}</p>
               <div className="flex gap-3 md:gap-4">
                 {socials.map(({ href, icon: Icon, label }) => (
@@ -74,6 +128,7 @@ export function SiteFooter({
                   </a>
                 ))}
               </div>
+              {modern && actions ? <div className="mt-3 md:mt-4">{actions}</div> : null}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-8 md:gap-12 lg:gap-16 xl:gap-20">
@@ -120,6 +175,15 @@ export function SiteFooter({
                 {` ${name}`}
               </p>
               <p className={c.rights}>All rights reserved.</p>
+              {showProductOf ? (
+                <p className={c.rights}>
+                  {props.app} is a product of{" "}
+                  <a href="https://projectv.uk" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                    Project V
+                  </a>
+                  .
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-1 text-center sm:text-right">

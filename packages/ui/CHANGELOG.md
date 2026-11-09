@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.37.0 (unreleased)
+
+- `SiteFooter` is now opinionated. Set `app` (`vibot`, `vmem`, `verve`, `velth` or `vhub`) and pass `tagline` and `columns`. The rest follows:
+  - Brand: `AppWordmark` at `SITE_FOOTER_WORDMARK_SIZE` (16px). There is no size prop. The brand sits in a plain `mb-3 md:mb-4` wrapper, not the Michroma wrapper.
+  - Copyright name: the lowercase `app` id.
+  - `socials` default to `PROJECT_V_SOCIALS`: X, Instagram, GitHub (LinkedIn is dropped). `socials={[]}` hides them.
+  - `legalLinks` default to `PROJECT_V_LEGAL_LINKS` (Privacy Policy, Terms of Service on `projectv.uk`).
+  - Product-of line "{app} is a product of Project V." under the copyright block, linking to `https://projectv.uk`. `showProductOf={false}` hides it.
+  - An Apps column (vibot, vmem, verve, velth, vhub, each with its glyph, opening in a new tab) is appended unless `includeAppsColumn={false}` or `columns` already has an "Apps" heading (case-insensitive).
+  - New `actions` slot under the socials (for example Sign in).
+  - `brand`, `socials`, `legalLinks` and `name` stay available as optional overrides on this path.
+- New exports (root and `/client`): `PROJECT_V_SOCIALS`, `PROJECT_V_LEGAL_LINKS`, `SITE_FOOTER_WORDMARK_SIZE`, `PROJECT_V_PRODUCT_APPS`, `PROJECT_V_PRODUCT_APP_IDS`, `projectVAppsColumn()`, and the types `SiteFooterAppProps`, `SiteFooterLegacyProps`, `SiteFooterColumn`, `LandingFooterAppProps`, `LandingFooterLegacyProps`.
+- Deprecated, still working: `SiteFooter` without `app`. `brand`, `socials`, `name` and `legalLinks` are required there, and the markup is unchanged (Michroma brand wrapper, no product-of line, no Apps column). `actions`, `includeAppsColumn` and `showProductOf` do nothing on this path. Migrate by replacing those four props with `app`.
+- `LandingFooter` takes `app`: it then wraps `SiteFooter`, with `links` as a "Navigation" column (or pass `columns`), plus `actions` and the same defaults. `brand` and `github` are ignored on this path. Without `app` the old compact layout renders unchanged. That form is deprecated, as are `brand` and `github`.
+- New `PageTitle` (`h1`) and `PageHeader` (title row with an optional `action` slot), plus `pageTitleClass`: `text-xl font-semibold leading-tight tracking-tight`, Instrument Sans through the sans token. Same names as native-ui.
+
 ## 0.36.0 (2026-11-03)
 
 - New `@vvedantb/ui/logos`: third-party brand logos, also exported from the root and `/client`. `ChromeIcon`, `ClaudeIcon`, `ConvexIcon`, `CursorIcon`, `DropboxIcon`, `FigmaIcon`, `GitHubIcon`, `GmailIcon`, `GoogleDriveIcon`, `LinearIcon`, `NotionIcon`, `OneDriveIcon`, `SharePointIcon`, `SlackIcon`, `VercelIcon`, and the `LogoProps` type. Moved from openwork (`brand-icons`, `ClaudeLogo`), vmem (`icons/logos`, `ClaudeLogo`) and Eva (`providerLogos.tsx`). Family app marks stay in `@vvedantb/ui/brand`.

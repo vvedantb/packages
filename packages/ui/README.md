@@ -890,7 +890,7 @@ Plain parts, no Motion:
 | `LandingLattice` | `className` (grid columns). Cells share 1px borders. |
 | `LandingFeatureCard` | `icon` (a component, rendered `size={18} stroke={1.5}`), `title`, `description`. |
 | `LandingNavMenu` | `links`, `github` (`href`, `icon`). Overflow menu below `md`. |
-| `LandingFooter` | `brand`, `tagline`, `links`, `actions` (after the links), `github` (`href`, `label`, `icon`). |
+| `LandingFooter` | New path (0.37.0): `app`, `tagline`, `links` (a "Navigation" column) or `columns`, `actions`, plus the `SiteFooter` options. A thin wrapper over `SiteFooter` with every Project V default. Deprecated path (no `app`): `brand`, `tagline`, `links`, `actions` (after the links), `github` (`href`, `label`, `icon`), in the old compact layout. `brand` and `github` are ignored when `app` is set. |
 
 Constants: `landingShellClass`, `landingPanelClass`, `landingItemVariants`, and
 for the footer's `actions` slot `landingFooterLinkClass` (a text link) and
@@ -898,17 +898,36 @@ for the footer's `actions` slot `landingFooterLinkClass` (a text link) and
 
 ### `SiteFooter`
 
-Brand, tagline and social icon buttons; link columns; then copyright and legal
-links under a separator.
+Brand, tagline and social icon buttons; link columns; then copyright, product-of line and legal
+links under a separator. Set `app` for the Project V footer (0.37.0):
+
+```tsx
+<SiteFooter
+  app="vibot"
+  tagline="AI-powered assistant designed to automate tasks, and enhance productivity effortlessly."
+  columns={[{ heading: "Navigation", links: [{ href: "#features", label: "Features" }] }]}
+/>
+```
 
 | Prop | |
 | --- | --- |
-| `brand`, `tagline` | Nodes. |
-| `socials` | `{ href, icon, label? }[]`. `icon` is a component that takes `className`. Links open in a new tab. |
-| `columns` | `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt }, app?: AppName }`. `image` is a 20px round image before the label. `app` (0.29.0) is the 14px `APP_ICONS[app]` glyph before the label, in `currentColor` and `aria-hidden`. If both are set, `app` wins. |
-| `name`, `year` | "Copyright © {year} {name}". `year` defaults to the current year. |
-| `legalLinks` | `{ href, label }[]`, open in a new tab. |
+| `app` | `vibot`, `vmem`, `verve`, `velth` or `vhub`. Brand is `AppWordmark` at `SITE_FOOTER_WORDMARK_SIZE` (16px; no size prop). Copyright name and product-of line use the lowercase id. |
+| `tagline` | Node. |
+| `columns` | Required. `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt }, app?: AppName }`. `image` is a 20px round image before the label. `app` is the 14px `APP_ICONS[app]` glyph before the label, in `currentColor` and `aria-hidden`; it wins over `image`. |
+| `includeAppsColumn` | Default `true`: appends `PROJECT_V_PRODUCT_APPS` (vibot, vmem, verve, velth, vhub) unless `columns` has an "Apps" heading (case-insensitive). `projectVAppsColumn()` returns the column for composition. |
+| `showProductOf` | Default `true`: "{app} is a product of Project V." linking to `https://projectv.uk`. |
+| `socials` | Default `PROJECT_V_SOCIALS` (X, Instagram, GitHub). `[]` hides them. `{ href, icon, label? }[]`; links open in a new tab. |
+| `legalLinks` | Default `PROJECT_V_LEGAL_LINKS` (Privacy Policy, Terms of Service). |
+| `actions` | Node under the socials, for example Sign in. |
+| `year` | Default: the current year. |
 | `variant` | `"muted"` (default, `text-muted`), `"muted-foreground"`, or `"touch"` (`text-muted-foreground`, `max-sm:hit-target` links, safe-area bottom padding). |
+| `brand`, `name` | Optional overrides on the `app` path. |
+
+**Deprecated (no `app`):** `brand`, `socials`, `name` and `legalLinks` are required, and the footer renders as before: the brand sits in the Michroma wrapper, with no product-of line and no Apps column. `actions`, `includeAppsColumn` and `showProductOf` do nothing. Set `app` instead.
+
+### `PageTitle` and `PageHeader`
+
+`PageTitle` is an `h1` with `text-xl font-semibold leading-tight tracking-tight` (`pageTitleClass`): Instrument Sans, 20px, weight 600, never lighter. `PageHeader` is a title row: `title` in a `PageTitle`, an optional `action` slot, and no safe-area padding.
 
 ### `Icon*` app icons
 

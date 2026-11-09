@@ -1,4 +1,5 @@
 // LandingFooter.tsx of app-b, app-c and app-d after adopting `SiteFooter`.
+// These stay on the deprecated legacy call shape (no `app`) so the parity fixtures match. New code: `<SiteFooter app="..." tagline columns />`.
 import { IconBrandGithub, IconBrandLinkedin, IconBrandTwitter } from "@tabler/icons-react";
 import { SiteFooter, type SiteFooterLink } from "../../../../src/index";
 
