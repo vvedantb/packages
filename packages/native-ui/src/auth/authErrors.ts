@@ -49,13 +49,61 @@ function firstError(parsed: ParsedAuthError | null) {
   };
 }
 
+/** The code of a timed-out auth stage. */
+export const AUTH_TIMEOUT_CODE = "auth_timeout";
+
+/** Default time for one Clerk call, in milliseconds. */
+export const DEFAULT_STAGE_TIMEOUT_MS = 20000;
+
+/**
+ * The error `withAuthTimeout` rejects with. It is Clerk-shaped (`errors[0].code`
+ * is `auth_timeout`), so `authErrorMessage` and `logAuthFailure` read it.
+ */
+export class AuthTimeoutError extends Error {
+  readonly code = AUTH_TIMEOUT_CODE;
+  readonly stage: string;
+  readonly errors: { code: string; message: string }[];
+  constructor(stage: string, ms: number) {
+    const message = `The ${stage} step timed out after ${Math.round(ms / 1000)} seconds. Try again.`;
+    super(message);
+    this.name = "AuthTimeoutError";
+    this.stage = stage;
+    this.errors = [{ code: AUTH_TIMEOUT_CODE, message }];
+  }
+}
+
+export function isAuthTimeoutError(error: unknown): error is AuthTimeoutError {
+  return error instanceof AuthTimeoutError;
+}
+
+/**
+ * Rejects with `AuthTimeoutError` (code `auth_timeout`, message names `stage`)
+ * when `promise` has not settled after `ms`. The timer is cleared on settle.
+ */
+export function withAuthTimeout<T>(promise: Promise<T>, stage: string, ms: number = DEFAULT_STAGE_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new AuthTimeoutError(stage, ms)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /**
  * Logs a failed auth call as one structured `console.error`. It holds the
  * Clerk code, message, longMessage and meta.paramName, plus stage, errorName,
- * status and clerkTraceId when present. Only the error object is read, so a
+ * status and clerkTraceId when present. For `AuthTimeoutError` the logged stage is the error's own stage. Only the error object is read, so a
  * password or one-time code is never logged.
  */
 export function logAuthFailure(stage: string, error: unknown): void {
+  if (isAuthTimeoutError(error)) stage = error.stage;
   const parsed = parseAuthError(error);
   const { code, message, longMessage, paramName } = firstError(parsed);
   const errorName = parsed?.errorName ?? (error instanceof Error ? error.name : undefined);

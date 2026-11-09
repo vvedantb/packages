@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.11.1
+
+Per-stage timeouts in the sign-in flow, so a hung Clerk call cannot leave a button spinning. Ported from Eva PR 1138. No new dependency or peer.
+
+### Added
+
+- `withAuthTimeout(promise, stage, ms = 20000)` on `/auth`. It rejects with `AuthTimeoutError`: `code` `auth_timeout`, a message that names the stage, and a Clerk-shaped `errors` array. `authErrorMessage` then shows friendly text plus `(code: auth_timeout)`. Also exported: `isAuthTimeoutError`, `AUTH_TIMEOUT_CODE`, `DEFAULT_STAGE_TIMEOUT_MS`.
+- `SignInScreen` prop `stageTimeoutMs` (default 20000 ms). The same option is `timeoutMs` on `prepareFirstFactorIfNeeded`, `submitFirstFactor`, `prepareSecondFactorIfNeeded`, `submitSecondFactor` and `submitTotpSecondFactor`, and `stageTimeoutMs` on `useSecondFactor`.
+- Stages covered: `create`, `prepare-first-factor`, `attempt-first-factor`, `prepare-second-factor`, `attempt-second-factor`, `reset-password` and `set-active`.
+
+### Changed
+
+- On timeout, `logAuthFailure` logs the stage of the timeout and `code: "auth_timeout"` (never a password or code). The existing `try/finally` blocks and loading resets are unchanged, so loading ends. Sign-up calls are not wrapped.
+
+### Tests
+
+- `tests/authTimeout.test.ts` (fake timers): `withAuthTimeout` for a fast call, a fast rejection and a hung call; one hung-call test per helper stage; the stage and `auth_timeout` in the message and the log.
+
 ## 0.11.0
 
 Show/hide password toggle. Additive; no new dependency or peer.

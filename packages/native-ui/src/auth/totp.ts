@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-expo";
-import { authErrorMessage } from "./authErrors";
+import {
+  authErrorMessage,
+  DEFAULT_STAGE_TIMEOUT_MS,
+  isAuthTimeoutError,
+  logAuthFailure,
+  withAuthTimeout,
+} from "./authErrors";
+
+/** Logs a timed-out stage. Other failures are not logged here. */
+const logTimeout = (stage: string, error: unknown) => {
+  if (isAuthTimeoutError(error)) logAuthFailure(stage, error);
+};
 
 /** The messages the second-factor step can show. Generic: none names a provider. */
 export const TOTP_MESSAGES = {
@@ -76,25 +87,37 @@ export async function prepareSecondFactorIfNeeded(args: {
   signIn: Pick<SecondFactorSignIn, "supportedSecondFactors" | "prepareSecondFactor">;
   strategy: SecondFactorStrategy;
   factor?: SecondFactor;
+  /** Time for the Clerk call. Default 20000 ms. */
+  timeoutMs?: number;
 }): Promise<TotpResult> {
   const { signIn, strategy } = args;
+  const ms = args.timeoutMs ?? DEFAULT_STAGE_TIMEOUT_MS;
   if (strategy !== "phone_code" && strategy !== "email_code") return { ok: true };
   if (!signIn.prepareSecondFactor) return { ok: false, error: TOTP_MESSAGES.sendFailed };
   const factor = args.factor ?? signIn.supportedSecondFactors?.find((item) => item.strategy === strategy);
   try {
     if (strategy === "phone_code") {
-      await signIn.prepareSecondFactor({
-        strategy,
-        ...(factor?.phoneNumberId ? { phoneNumberId: factor.phoneNumberId } : {}),
-      });
+      await withAuthTimeout(
+        signIn.prepareSecondFactor({
+          strategy,
+          ...(factor?.phoneNumberId ? { phoneNumberId: factor.phoneNumberId } : {}),
+        }),
+        "prepare-second-factor",
+        ms,
+      );
     } else {
-      await signIn.prepareSecondFactor({
-        strategy,
-        ...(factor?.emailAddressId ? { emailAddressId: factor.emailAddressId } : {}),
-      });
+      await withAuthTimeout(
+        signIn.prepareSecondFactor({
+          strategy,
+          ...(factor?.emailAddressId ? { emailAddressId: factor.emailAddressId } : {}),
+        }),
+        "prepare-second-factor",
+        ms,
+      );
     }
     return { ok: true };
   } catch (caught) {
+    logTimeout("prepare-second-factor", caught);
     return { ok: false, error: authErrorMessage(caught, TOTP_MESSAGES.sendFailed) };
   }
 }
@@ -111,15 +134,23 @@ export async function submitSecondFactor(args: {
   setActive: TotpSetActive;
   code: string;
   strategy: SecondFactorStrategy;
+  /** Time for each Clerk call. Default 20000 ms. */
+  timeoutMs?: number;
 }): Promise<TotpResult> {
+  const ms = args.timeoutMs ?? DEFAULT_STAGE_TIMEOUT_MS;
   try {
-    const attempt = await args.signIn.attemptSecondFactor({ strategy: args.strategy, code: args.code });
+    const attempt = await withAuthTimeout(
+      args.signIn.attemptSecondFactor({ strategy: args.strategy, code: args.code }),
+      "attempt-second-factor",
+      ms,
+    );
     if (attempt.status === "complete" && attempt.createdSessionId) {
-      await args.setActive({ session: attempt.createdSessionId });
+      await withAuthTimeout(args.setActive({ session: attempt.createdSessionId }), "set-active", ms);
       return { ok: true };
     }
     return { ok: false, error: TOTP_MESSAGES.needsAnotherStep };
   } catch (caught) {
+    logTimeout("attempt-second-factor", caught);
     const fallback = args.strategy === "totp" ? TOTP_MESSAGES.invalidCode : TOTP_MESSAGES.invalidCodeGeneric;
     return { ok: false, error: authErrorMessage(caught, fallback) };
   }
@@ -187,20 +218,32 @@ export async function prepareFirstFactorIfNeeded(args: {
   signIn: Pick<FirstFactorSignIn, "supportedFirstFactors" | "prepareFirstFactor">;
   strategy: FirstFactorStrategy;
   factor?: FirstFactor;
+  /** Time for the Clerk call. Default 20000 ms. */
+  timeoutMs?: number;
 }): Promise<TotpResult> {
   const { signIn, strategy } = args;
+  const ms = args.timeoutMs ?? DEFAULT_STAGE_TIMEOUT_MS;
   if (!signIn.prepareFirstFactor) return { ok: false, error: TOTP_MESSAGES.sendFailed };
   const factor = args.factor ?? signIn.supportedFirstFactors?.find((item) => item.strategy === strategy);
   try {
     if (strategy === "phone_code") {
       if (!factor?.phoneNumberId) return { ok: false, error: TOTP_MESSAGES.sendFailed };
-      await signIn.prepareFirstFactor({ strategy, phoneNumberId: factor.phoneNumberId });
+      await withAuthTimeout(
+        signIn.prepareFirstFactor({ strategy, phoneNumberId: factor.phoneNumberId }),
+        "prepare-first-factor",
+        ms,
+      );
     } else {
       if (!factor?.emailAddressId) return { ok: false, error: TOTP_MESSAGES.sendFailed };
-      await signIn.prepareFirstFactor({ strategy, emailAddressId: factor.emailAddressId });
+      await withAuthTimeout(
+        signIn.prepareFirstFactor({ strategy, emailAddressId: factor.emailAddressId }),
+        "prepare-first-factor",
+        ms,
+      );
     }
     return { ok: true };
   } catch (caught) {
+    logTimeout("prepare-first-factor", caught);
     return { ok: false, error: authErrorMessage(caught, TOTP_MESSAGES.sendFailed) };
   }
 }
@@ -214,11 +257,18 @@ export async function submitFirstFactor(args: {
   signIn: Pick<FirstFactorSignIn, "attemptFirstFactor">;
   code: string;
   strategy: FirstFactorStrategy;
+  /** Time for the Clerk call. Default 20000 ms. */
+  timeoutMs?: number;
 }): Promise<FirstFactorResult> {
   try {
-    const attempt = await args.signIn.attemptFirstFactor({ strategy: args.strategy, code: args.code });
+    const attempt = await withAuthTimeout(
+      args.signIn.attemptFirstFactor({ strategy: args.strategy, code: args.code }),
+      "attempt-first-factor",
+      args.timeoutMs ?? DEFAULT_STAGE_TIMEOUT_MS,
+    );
     return { ok: true, attempt };
   } catch (caught) {
+    logTimeout("attempt-first-factor", caught);
     return { ok: false, error: authErrorMessage(caught, TOTP_MESSAGES.invalidCodeGeneric) };
   }
 }
@@ -228,13 +278,22 @@ export function submitTotpSecondFactor(args: {
   signIn: TotpSignIn;
   setActive: TotpSetActive;
   code: string;
+  timeoutMs?: number;
 }): Promise<TotpResult> {
-  return submitSecondFactor({ signIn: args.signIn, setActive: args.setActive, code: args.code, strategy: "totp" });
+  return submitSecondFactor({
+    signIn: args.signIn,
+    setActive: args.setActive,
+    code: args.code,
+    strategy: "totp",
+    timeoutMs: args.timeoutMs,
+  });
 }
 
 export type UseSecondFactorOptions = {
   /** The strategy `submit` uses until `setStrategy` changes it. Default `"totp"`. */
   strategy?: SecondFactorStrategy;
+  /** Time for each Clerk call, in milliseconds. Default 20000. */
+  stageTimeoutMs?: number;
 };
 
 export type UseSecondFactorResult = {
@@ -265,6 +324,7 @@ export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecond
   const strategy = chosen ?? options.strategy ?? "totp";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const timeoutMs = options.stageTimeoutMs ?? DEFAULT_STAGE_TIMEOUT_MS;
 
   const submit = async (code: string): Promise<TotpResult> => {
     if (loading) return { ok: false, error };
@@ -274,7 +334,7 @@ export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecond
     }
     setLoading(true);
     setError("");
-    const result = await submitSecondFactor({ signIn, setActive, code, strategy });
+    const result = await submitSecondFactor({ signIn, setActive, code, strategy, timeoutMs });
     if (!result.ok) setError(result.error);
     setLoading(false);
     return result;
@@ -290,7 +350,7 @@ export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecond
     }
     setLoading(true);
     setError("");
-    const result = await prepareSecondFactorIfNeeded({ signIn, strategy: prepareStrategy, factor });
+    const result = await prepareSecondFactorIfNeeded({ signIn, strategy: prepareStrategy, factor, timeoutMs });
     if (!result.ok) setError(result.error);
     setLoading(false);
     return result;

@@ -6,7 +6,16 @@ export { AuthProviders } from "./AuthProviders";
 export type { AuthProvidersProps } from "./AuthProviders";
 export { AuthScreen, OrDivider, FieldError } from "./AuthScreen";
 export type { AuthScreenProps } from "./AuthScreen";
-export { authErrorMessage, logAuthFailure, CREDENTIAL_ERROR_CODES } from "./authErrors";
+export {
+  authErrorMessage,
+  logAuthFailure,
+  withAuthTimeout,
+  AuthTimeoutError,
+  isAuthTimeoutError,
+  AUTH_TIMEOUT_CODE,
+  DEFAULT_STAGE_TIMEOUT_MS,
+  CREDENTIAL_ERROR_CODES,
+} from "./authErrors";
 export type { AuthErrorOptions } from "./authErrors";
 export {
   GoogleSignInButton,
