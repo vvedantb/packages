@@ -568,6 +568,26 @@ describe("PromptInput replyTo", () => {
   it("takes a ReplyQuoteChip as the header as well", async () => {
     expect(order(await input({ header: reply }))).toEqual(["Reply"]);
   });
+
+  // 0.12.1 auto-grow must still work when the 0.13.0 `replyTo` slot is set.
+  it("keeps auto-grow with replyTo in both layouts", async () => {
+    const { PromptInput } = await import("../src/ai/prompt-input");
+    const size = (height: number) => ({ nativeEvent: { contentSize: { width: 300, height } } });
+    for (const layout of ["stacked", "inline"] as const) {
+      const h = hooks.mount(
+        () => PromptInput({ onSubmit: () => {}, layout, replyTo: reply } as never) as unknown as Element,
+      );
+      expect(order(h.tree)).toEqual(["Reply"]);
+      const field = () => byType(h.tree, "FieldInput")[0]!;
+      expect(field().props.numberOfLines, layout).toBeUndefined();
+      (field().props.onContentSizeChange as (e: unknown) => void)(size(72));
+      expect(flatten(field().props.style), layout).toMatchObject({ height: 72, maxHeight: 160 });
+      expect(field().props.scrollEnabled, layout).toBe(false);
+      (field().props.onContentSizeChange as (e: unknown) => void)(size(400));
+      expect(flatten(field().props.style), layout).toMatchObject({ height: 160, maxHeight: 160 });
+      expect(field().props.scrollEnabled, layout).toBe(true);
+    }
+  });
 });
 
 describe("quoted replies (source contract)", () => {
