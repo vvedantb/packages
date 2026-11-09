@@ -109,7 +109,7 @@ const HEAVY_PEERS: Record<string, string | null> = {
 };
 
 // Entries that may import heavy peers. Every other entry in `exports` must not.
-const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./date-time", "./auth", "./expo-web-root"];
+const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
 
 const basicEntries = Object.keys(pkg.exports).filter(
   (subpath) => subpath !== "./package.json" && !HEAVY_ENTRIES.includes(subpath),
@@ -263,7 +263,13 @@ describe("granular entries", () => {
         "PROJECT_V_MOBILE_APPS",
         "openProjectVApp",
         "ProjectVMobileAppId",
+        "ScreenContainerProps",
+        "SettingsEmptyState",
+        "PinnedBotTile",
+        "BotPinGrid",
+        "ArtifactList",
       ],
+      "./expo-router": ["RouterStackPageHeader", "RouterStackPageHeaderProps"],
       "./toast": ["toast", "Toaster", "ToastOptions", "ToastVariant"],
       "./theme": ["NativeUiProvider", "tokens", "palette", "cn", "configureTheme", "ThemeConfig", "ThemeColors", "ThemePalette"],
       "./floating": ["FloatingSurface", "GlassBlurProvider", "GlassBlurTarget", "FLOATING_INSET"],
@@ -320,6 +326,10 @@ describe("granular entries", () => {
         "useStreamingDisclosure",
         "ChatStatus",
         "AttachmentData",
+        "ChatThread",
+        "ChatThreadProps",
+        "UIMessage",
+        "ChatJumpRail",
       ],
       "./ai-gallery": ["AiChatGallery", "AiChatSamples"],
     };

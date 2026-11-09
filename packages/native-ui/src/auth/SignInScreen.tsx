@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Text, View } from "react-native";
 import { useSignIn, useSignUp } from "@clerk/clerk-expo";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
 import { textStyle } from "../controlStyles";
 import { Input } from "../Input";
@@ -119,9 +119,9 @@ export type SignInScreenProps = AuthNavigationOptions & {
   /** Default "Continue with Google". */
   googleLabel?: string;
   /** In `sign-in`: the "Sign up" link in the footer. No link without it. */
-  signUpHref?: string;
+  signUpHref?: Href;
   /** In `sign-up`: the "Sign in" link in the footer. No link without it. */
-  signInHref?: string;
+  signInHref?: Href;
   /** Sign-up rejects a shorter password before sending it. Default: no check. */
   minPasswordLength?: number;
   /** Default `"toast"`. `"inline"` shows errors under the fields. */
