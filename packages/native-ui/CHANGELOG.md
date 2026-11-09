@@ -1,32 +1,5 @@
 # Changelog
 
-## 0.13.1
-
-Patch release: touch-target and typing fixes found while building the new Expo gallery. No breaking change, no removed or renamed export, no new dependency.
-
-### Fixed
-
-- `DropdownMenu`: item rows had 8 points of vertical padding and relied on `minHeight` alone. `DROPDOWN_MENU.itemPaddingY` is now 12, so a row is 44 points from padding and one `text-sm` line, and the label no longer sits tight to the row edges. `minHeight` stays 44 (56 with larger text). Applies to `DropdownMenuItem` and `DropdownMenuRadioItem`.
-- `Select` options (`SelectItem` in `/primitives`): rows had `py-3` but no minimum height, so a short label gave a row under 44 points. Rows now have `min-h-[44px]`, and `min-h-[56px]` with larger text.
-- `AmbientBackground`: the solid fallback (no `expo-linear-gradient`) spread `StyleSheet.absoluteFillObject`, which React Native 0.86 no longer has, so the fallback was not positioned. It uses `StyleSheet.absoluteFill`.
-- Types for expo-router 57: `GoogleSignInButton` and `RouterStackPageHeader` imported the `Router` type, which expo-router 57 renamed `ImperativeRouter`. They now take the type from `useRouter`, which works in both. No run-time change.
-- Types for React Native 0.86: the `Message` layout style was a readonly tuple that did not fit `style`. It is a `StyleProp<ViewStyle>`. No run-time change.
-
-### Added
-
-- `PromptInput`: with a `testID`, the text field gets `<testID>-input` so UI tests (Maestro) can type into it. Without a `testID`, nothing changes.
-
-### Gallery, Maestro and CI
-
-- New Expo app `apps/native-gallery` (not published) that renders every component from every entry point, a layering stress screen and a keyboard screen, on a mocked Clerk. See its README.
-- Maestro flows in `apps/native-gallery/.maestro/` and the `native-ui-gallery-android` GitHub Actions job.
-- `AGENTS.md` and `CLAUDE.md`: every new or changed component needs a gallery entry, a Maestro flow and a hand test on an Android emulator.
-
-### Tests
-
-- New `tests/galleryRegistry.test.ts`: fails when a React component export has no gallery registry entry, when the entry points at a section that does not use the name, when the registry lists a removed name, or when an entry point is not imported in the gallery.
-- New `tests/selectTouchTarget.test.ts`. `tests/dropdownMenu.test.ts` checks the 12 point padding and the 44 / 56 point rows for both item kinds. `tests/ai.test.ts` checks the `PromptInput` field `testID`. `tests/native012.test.ts` follows the `useRouter` type.
-- `tests/highlight.test.ts` hides `prism-react-renderer` while it tests the missing-peer path, because the workspace now installs it for the gallery.
 
 ## 0.13.0
 
