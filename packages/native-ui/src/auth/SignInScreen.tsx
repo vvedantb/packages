@@ -9,7 +9,13 @@ import { PasswordInput } from "../PasswordInput";
 import { toast } from "../toastStore";
 import { useScheme } from "../useScheme";
 import { AuthScreen, FieldError, OrDivider } from "./AuthScreen";
-import { authErrorMessage, logAuthFailure } from "./authErrors";
+import {
+  authErrorMessage,
+  DEFAULT_STAGE_TIMEOUT_MS,
+  isAuthTimeoutError,
+  logAuthFailure,
+  withAuthTimeout,
+} from "./authErrors";
 import { SecondFactorScreen } from "./SecondFactorScreen";
 import {
   pickFirstFactorStrategy,
@@ -139,6 +145,12 @@ export type SignInScreenProps = AuthNavigationOptions & {
    * `console.warn`. Ignored in `sign-up`.
    */
   onIncomplete?: (signIn: IncompleteSignIn) => void;
+  /**
+   * Time for each Clerk call (create, prepare, attempt, reset password,
+   * set active), in milliseconds. A call that takes longer fails with code
+   * `auth_timeout`. Default 20000.
+   */
+  stageTimeoutMs?: number;
 };
 
 /**
@@ -167,6 +179,7 @@ export function SignInScreen({
   header,
   footer,
   onIncomplete,
+  stageTimeoutMs = DEFAULT_STAGE_TIMEOUT_MS,
 }: SignInScreenProps) {
   const signInState = useSignIn();
   const signUpState = useSignUp();
@@ -187,7 +200,7 @@ export function SignInScreen({
   const [pendingNewPassword, setPendingNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const secondFactor = useSecondFactor();
+  const secondFactor = useSecondFactor({ stageTimeoutMs });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const signUp = mode === "sign-up";
@@ -249,6 +262,7 @@ export function SignInScreen({
       signIn,
       strategy,
       factor: list.find((factor) => factor.strategy === strategy),
+      timeoutMs: stageTimeoutMs,
     });
     if (!sent.ok) setFirstError(sent.error);
     setFirstLoading(false);
@@ -268,7 +282,7 @@ export function SignInScreen({
     // Clerk's `SignInStatus` omits `needs_client_trust`: widen before comparing.
     const status: string | null = attempt.status;
     if (status === "complete" && attempt.createdSessionId && setActive) {
-      await setActive({ session: attempt.createdSessionId });
+      await withAuthTimeout(setActive({ session: attempt.createdSessionId }), "set-active", stageTimeoutMs);
       done();
     } else if (status === "needs_new_password") {
       setPendingFirstFactor(false);
@@ -288,7 +302,12 @@ export function SignInScreen({
     if (!isLoaded || !signIn || firstLoading) return;
     setFirstLoading(true);
     setFirstError("");
-    const result = await submitFirstFactor({ signIn, code: firstCode, strategy: firstStrategy });
+    const result = await submitFirstFactor({
+      signIn,
+      code: firstCode,
+      strategy: firstStrategy,
+      timeoutMs: stageTimeoutMs,
+    });
     if (!result.ok) {
       setFirstError(result.error);
       setFirstLoading(false);
@@ -297,6 +316,7 @@ export function SignInScreen({
     try {
       await routeAttempt(result.attempt, false);
     } catch (caught) {
+      if (isAuthTimeoutError(caught)) logAuthFailure("set-active", caught);
       setFirstError(authErrorMessage(caught, AUTH_MESSAGES.verifyFailed));
     } finally {
       setFirstLoading(false);
@@ -316,9 +336,13 @@ export function SignInScreen({
     setSubmitting(true);
     setError("");
     try {
-      const result = await signIn.resetPassword({ password: newPassword });
+      const result = await withAuthTimeout(
+        signIn.resetPassword({ password: newPassword }),
+        "reset-password",
+        stageTimeoutMs,
+      );
       if (result.status === "complete" && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
+        await withAuthTimeout(setActive({ session: result.createdSessionId }), "set-active", stageTimeoutMs);
         done();
       } else if (onIncomplete) {
         onIncomplete(result);
@@ -327,6 +351,7 @@ export function SignInScreen({
         fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.needsAnotherStep);
       }
     } catch (caught) {
+      if (isAuthTimeoutError(caught)) logAuthFailure("reset-password", caught);
       fail(AUTH_MESSAGES.resetPasswordFailed, authErrorMessage(caught, AUTH_MESSAGES.resetPasswordFailed));
     } finally {
       setSubmitting(false);
@@ -340,7 +365,11 @@ export function SignInScreen({
     setSubmitting(true);
     setError("");
     try {
-      const attempt = await signIn.create({ identifier: email, password });
+      const attempt = await withAuthTimeout(
+        signIn.create({ identifier: email, password }),
+        "create",
+        stageTimeoutMs,
+      );
       await routeAttempt(attempt, true);
     } catch (caught) {
       logAuthFailure("create", caught);

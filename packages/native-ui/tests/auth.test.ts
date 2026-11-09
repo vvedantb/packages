@@ -232,7 +232,7 @@ describe("auth screens (source contract)", () => {
     const screen = code(read("SignInScreen.tsx"));
     expect(screen).toMatch(/status === "needs_second_factor"/);
     expect(screen).toMatch(/setPendingSecondFactor\(true\)/);
-    expect(screen).toMatch(/useSecondFactor\(\)/);
+    expect(screen).toMatch(/useSecondFactor\((\{ stageTimeoutMs \})?\)/);
     expect(screen).toMatch(/<SecondFactorScreen/);
     expect(screen).toMatch(/if \(result\.ok\) done\(\)/);
     expect(screen).toMatch(/setPendingSecondFactor\(false\)/);
@@ -266,7 +266,7 @@ describe("auth screens (source contract)", () => {
     expect(screen).toMatch(/attempt\.supportedFirstFactors \?\? \[\]/);
     expect(screen).toMatch(/pickFirstFactorStrategy\(list\)/);
     expect(screen).toMatch(/prepareFirstFactorIfNeeded\(/);
-    expect(screen).toMatch(/submitFirstFactor\(\{ signIn, code: firstCode, strategy: firstStrategy \}\)/);
+    expect(screen).toMatch(/submitFirstFactor\(\{\s*signIn,\s*code: firstCode,\s*strategy: firstStrategy,\s*timeoutMs: stageTimeoutMs,?\s*\}\)/);
     expect(screen).toMatch(/routeAttempt\(result\.attempt, false\)/);
     expect(screen).toMatch(/routeAttempt\(attempt, true\)/);
     expect(screen).toMatch(/secondFactorCopy\(firstStrategy, false\)/);
@@ -457,5 +457,17 @@ describe("AuthScreen keyboard (source contract)", () => {
   it("stops centring while the keyboard is open", () => {
     expect(body).toMatch(/keyboardOpen \? "justify-start" : "justify-center"/);
     expect(body).not.toMatch(/"grow justify-center/);
+  });
+});
+
+describe("stage timeouts (source contract)", () => {
+  it("wires stageTimeoutMs and withAuthTimeout into SignInScreen", () => {
+    const source = code(read("SignInScreen.tsx"));
+    expect(source).toContain("stageTimeoutMs = DEFAULT_STAGE_TIMEOUT_MS");
+    expect(source).toContain("useSecondFactor({ stageTimeoutMs })");
+    for (const stage of ['"create"', '"reset-password"', '"set-active"']) {
+      expect(source).toContain(stage);
+    }
+    expect(source).toContain("withAuthTimeout(");
   });
 });
