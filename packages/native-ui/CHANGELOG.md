@@ -14,7 +14,7 @@ Show/hide password toggle. Additive; no new dependency or peer.
 
 ### Fixed
 
-- `PasswordInput` now matches `Input` in size and type. The wrapper `View` is `relative w-full`. The field gets the same classes and styles as `Input` (`min-h-10 border px-3.5 py-2 text-base font-instrument-sans`, the field and text styles, and the larger-text variants), plus an explicit `fontSize` equal to `text-base` (`text-xl` with larger text), so `secureTextEntry` cannot shrink the glyphs on Android. It sets no `lineHeight`, because a forced `lineHeight` made the field taller than `Input`. The only differences are the extra right padding and the eye button. The field is still not remounted on toggle.
+- `PasswordInput` now matches `Input` in size and type. The wrapper `View` is `relative w-full`. The field shares the same classes and field styles as `Input` (`min-h-10 border px-3.5 py-2 text-base font-instrument-sans`, the field and text styles, and the larger-text variants). It sets no style `fontSize` or `lineHeight`, so NativeWind's `text-base` (`text-xl` with larger text) applies the same as in `Input`. The only differences are the extra right padding and the eye button. The field is still not remounted on toggle.
 
 ### Tests
 

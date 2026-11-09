@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { IconEye, IconEyeOff } from "@tabler/icons-react-native";
 import { Input } from "./Input";
 import { cn } from "./cn";
-import { fieldStyle, fieldTextStyle, sizeStyle, touchSlop, typeStyle } from "./controlStyles";
+import { fieldStyle, fieldTextStyle, touchSlop, typeStyle } from "./controlStyles";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -51,6 +51,8 @@ const PasswordInput = React.forwardRef<
         testID={testID}
         // The same size and font classes as `Input`, so the field has the same
         // height and type. `Input` adds them too; `cn` merges the repeat.
+        // The type comes from these classes only (no style `fontSize`), so it
+        // cannot diverge from NativeWind's `text-base` / `text-xl`.
         className={cn(
           "min-h-10 border px-3.5 py-2 text-base font-instrument-sans",
           largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium",
@@ -58,15 +60,12 @@ const PasswordInput = React.forwardRef<
         )}
         // After the spread, so a caller cannot fight the toggle.
         secureTextEntry={!visible}
-        // The `Input` styles, then an explicit font size equal to its
-        // `text-base` (`text-xl` with larger text), so `secureTextEntry`
-        // cannot shrink the glyphs on Android. No line height: forcing one
-        // makes the field taller than `Input`. Then room for the toggle, so
-        // text does not run under it.
+        // The `Input` styles. `fontSize` and `lineHeight` are not set: the field
+        // inherits `Input`'s type through the same className. Then room for the
+        // toggle, so text does not run under it.
         style={[
           fieldStyle(scheme),
           fieldTextStyle(scheme),
-          { fontSize: sizeStyle(largerText ? "text-xl" : "text-base").fontSize },
           largerText ? typeStyle("medium") : null,
           { paddingRight: metrics.paddingRight },
           style,

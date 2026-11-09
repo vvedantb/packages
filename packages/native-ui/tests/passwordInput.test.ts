@@ -181,19 +181,29 @@ describe("PasswordInput (behaviour)", () => {
     for (const token of ["min-h-16", "px-4", "py-4", "text-xl", "font-instrument-sans-medium"]) {
       expect(classes).toContain(token);
     }
-    expect(flatten(input!.props.style)).toMatchObject({ ...typeStyle("medium"), fontSize: 20 });
-    expect(flatten(input!.props.style)).not.toHaveProperty("lineHeight");
+    const style = flatten(input!.props.style);
+    expect(style).toMatchObject(typeStyle("medium"));
+    expect(style).not.toHaveProperty("fontSize");
+    expect(style).not.toHaveProperty("lineHeight");
   });
 
-  it("uses the Input field colours and radius, a text-base font size, and the toggle padding", async () => {
+  it("uses the Input field colours and radius and the toggle padding, with no style font size", async () => {
     const { input } = await render();
     expect(flatten(input!.props.style)).toMatchObject({
       ...fieldStyle("light"),
       ...fieldTextStyle("light"),
-      fontSize: 16,
       paddingRight: 44,
     });
+    expect(flatten(input!.props.style)).not.toHaveProperty("fontSize");
     expect(flatten(input!.props.style)).not.toHaveProperty("lineHeight");
+  });
+
+  it("inherits type from the className, as Input does: no sizeStyle or fontSize in either style array", () => {
+    const code = (text: string) => text.replace(/\/\/.*$/gm, "");
+    expect(code(source)).not.toMatch(/sizeStyle|fontSize\s*:/);
+    const input = code(read("src/Input.tsx"));
+    expect(input).not.toMatch(/sizeStyle/);
+    expect(input.match(/style=\{\[[\s\S]*?\]\}/)?.[0]).not.toMatch(/fontSize/);
   });
 
   it("wraps the field in a relative, full-width View", async () => {
