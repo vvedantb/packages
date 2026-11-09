@@ -1,8 +1,14 @@
 "use client";
 import type { UIMessage } from "ai";
-import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
+import type { ComponentProps, HTMLAttributes, ReactElement, ReactNode } from "react";
 import { Button } from "../ui/button";
 import { ButtonGroup, ButtonGroupText } from "../ui/button-group";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -30,23 +36,233 @@ export interface MessageConfig {
     branchIcon?: string;
   };
 }
+/**
+ * One action of a message: a row in the right-click menu and, with an `icon`,
+ * a button in the hover toolbar. Start with Reply.
+ */
+export type MessageMenuAction = {
+  key: string;
+  label: string;
+  /** Shows the action in the hover toolbar (an icon button). Without it: menu only. */
+  icon?: ReactNode;
+  destructive?: boolean;
+  disabled?: boolean;
+  onSelect: () => void;
+  /** Force the hover toolbar on (`true`) or off (`false`). Default: on when there is an `icon`. */
+  hover?: boolean;
+};
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
+  /**
+   * Right-click menu and hover toolbar actions, such as Reply. Without it (or
+   * empty) `Message` renders the same `div` as before. With it a right click
+   * opens the menu and a hover toolbar shows beside the bubble. The toolbar is
+   * absolutely positioned and takes no layout space.
+   */
+  actions?: MessageMenuAction[];
+  /**
+   * The target of a quote click: a soft primary wash and ring. Set it back to
+   * `false` about 1.5 seconds later and it fades out (`duration-1000`). Sets
+   * `data-highlighted`.
+   */
+  highlighted?: boolean;
 };
-export const Message = ({ className, from, ...props }: MessageProps) => {
+export const Message = ({
+  className,
+  from,
+  actions,
+  highlighted,
+  children,
+  ...props
+}: MessageProps) => {
   const classes = useUiConfig("Message")?.classes;
   const merge = useCn();
-  return (
+  const hasActions = actions !== undefined && actions.length > 0;
+  const root = (
     <div
       className={merge(
         classes?.root ?? "group flex w-full max-w-[95%] flex-col gap-2",
         from === "user"
           ? (classes?.user ?? "is-user ml-auto justify-end")
           : (classes?.assistant ?? "is-assistant"),
+                highlighted !== undefined &&
+          "rounded-xl transition-[background-color,box-shadow] duration-1000",
+        highlighted && "bg-primary/10 ring-2 ring-primary/30",
+        className,
+      )}
+      data-highlighted={highlighted ? "" : undefined}
+      {...props}
+    >
+      {hasActions ? (
+        <div
+          className={
+            from === "user"
+              ? "relative ml-auto w-fit max-w-full"
+              : "relative w-fit max-w-full"
+          }
+        >
+          {children}
+          <MessageHoverActions actions={actions} from={from} />
+        </div>
+      ) : (
+        children
+      )}
+    </div>
+  );
+  return hasActions ? (
+    <MessageContextMenu actions={actions}>{root}</MessageContextMenu>
+  ) : (
+    root
+  );
+};
+export type MessageContextMenuProps = {
+  actions: MessageMenuAction[];
+  /** One element, which becomes the right-click target (Radix `asChild`). */
+  children: ReactElement;
+};
+/**
+ * The right-click menu of a message: `actions` as `ContextMenuItem`s,
+ * destructive ones in the danger colour. With no actions it returns `children`.
+ */
+export const MessageContextMenu = ({
+  actions,
+  children,
+}: MessageContextMenuProps) => {
+  if (actions.length === 0) return children;
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent aria-label="Message actions">
+        {actions.map((action) => (
+          <ContextMenuItem
+            key={action.key}
+            disabled={action.disabled}
+            startContent={action.icon}
+            className={action.destructive ? "text-danger" : undefined}
+            onSelect={action.onSelect}
+          >
+            {action.label}
+          </ContextMenuItem>
+        ))}
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
+export type MessageHoverActionsProps = Omit<
+  ComponentProps<"div">,
+  "children"
+> & {
+  actions: MessageMenuAction[];
+  /** Role of the message: user toolbars sit left of the bubble, others right. Default `assistant`. */
+  from?: UIMessage["role"];
+};
+/**
+ * A small toolbar of icon buttons that shows on hover or focus of the
+ * enclosing `Message` (the `group` class, `reveal-on-hover`; always visible on
+ * touch). It is absolutely positioned, so it takes no layout space: beside the
+ * bubble, top-aligned (left of a user bubble, right of an assistant message).
+ * On narrow screens it moves to the bubble's top edge. Draws the actions that
+ * have an `icon`. Place it inside a `relative w-fit` wrapper around the
+ * bubble; the `actions` prop on `Message` does this.
+ */
+export const MessageHoverActions = ({
+  actions,
+  from = "assistant",
+  className,
+  ...props
+}: MessageHoverActionsProps) => {
+  const merge = useCn();
+  const shown = actions.filter((action) =>
+    action.hover === undefined ? action.icon !== undefined : action.hover,
+  );
+  if (shown.length === 0) return null;
+  return (
+    <div
+      role="toolbar"
+      aria-label="Message actions"
+      className={merge(
+        "reveal-on-hover absolute top-0 z-10 flex w-fit items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shadow-sm transition-opacity",
+        from === "user"
+          ? "right-full mr-1 max-sm:right-2 max-sm:mr-0 max-sm:-translate-y-[62%] max-sm:[&>button]:size-6"
+          : "left-full ml-1 max-sm:left-auto max-sm:right-0 max-sm:ml-0 max-sm:-translate-y-full max-sm:[&>button]:size-6",
         className,
       )}
       {...props}
-    />
+    >
+      {shown.map((action) => (
+        <MessageAction
+          key={action.key}
+          label={action.label}
+          tooltip={action.label}
+          tooltipSide="bottom"
+          // Narrow: the toolbar sits on the bubble corner and a tooltip below it would cover the text.
+          tooltipClassName="max-sm:hidden"
+          disabled={action.disabled}
+          className={action.destructive ? "text-danger" : undefined}
+          onClick={action.onSelect}
+        >
+          {action.icon}
+        </MessageAction>
+      ))}
+    </div>
+  );
+};
+export type MessageQuoteProps = Omit<ComponentProps<"div">, "onClick"> & {
+  /** Who wrote the quoted message. */
+  author: string;
+  /** The quoted text, cut to two lines. */
+  text: string;
+  /** Makes the quote a button, so the app can scroll to and highlight the original. */
+  onPress?: () => void;
+};
+/**
+ * A compact quote inside a message bubble, above its text: a left border, the
+ * author and two lines of the text. It reads on the primary user bubble, the
+ * border and text take the bubble colour. With `onPress` it is a button.
+ */
+export const MessageQuote = ({
+  author,
+  text,
+  onPress,
+  className,
+  ...props
+}: MessageQuoteProps) => {
+  const merge = useCn();
+  const body = (
+    <>
+      <span className="block truncate text-xs font-semibold opacity-70">
+        {author}
+      </span>
+      <span className="line-clamp-2 block text-sm opacity-90">{text}</span>
+    </>
+  );
+  const base = "block min-w-0 border-l-2 border-current/40 pl-2.5 text-left";
+  if (onPress === undefined) {
+    return (
+      <div
+        role="group"
+        aria-label={`Quoted message from ${author}`}
+        className={merge(base, className)}
+        {...props}
+      >
+        {body}
+      </div>
+    );
+  }
+  return (
+    <div
+      className={merge(base, className)}
+      {...props}
+    >
+      <button
+        type="button"
+        aria-label={`Go to quoted message from ${author}`}
+        onClick={onPress}
+        className="block w-full min-w-0 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        {body}
+      </button>
+    </div>
   );
 };
 export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
@@ -88,6 +304,10 @@ export const MessageActionsBar = ({
 };
 export type MessageActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
+  /** Side of the tooltip. Default: the Radix default (`top`). */
+  tooltipSide?: "top" | "right" | "bottom" | "left";
+  /** Extra classes for the tooltip content. */
+  tooltipClassName?: string;
   label?: string;
 };
 export const MessageAction = (props: MessageActionProps) => {
@@ -96,6 +316,8 @@ export const MessageAction = (props: MessageActionProps) => {
 };
 function EagerMessageAction({
   tooltip,
+  tooltipSide,
+  tooltipClassName,
   children,
   label,
   variant = "ghost",
@@ -113,7 +335,7 @@ function EagerMessageAction({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side={tooltipSide} className={tooltipClassName}>
             <p>{tooltip}</p>
           </TooltipContent>
         </Tooltip>
@@ -129,6 +351,8 @@ function EagerMessageAction({
  */
 function LazyMessageAction({
   tooltip,
+  tooltipSide,
+  tooltipClassName,
   children,
   label,
   variant = "ghost",
@@ -166,7 +390,7 @@ function LazyMessageAction({
         {/* The focus that armed it landed before the tooltip existed. */}
         <Tooltip defaultOpen={armedBy === "focus"}>
           <TooltipTrigger asChild>{button}</TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side={tooltipSide} className={tooltipClassName}>
             <p>{tooltip}</p>
           </TooltipContent>
         </Tooltip>

@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/radix-select";
+import { Button } from "../ui/button";
 import { CrossfadeIconSlot } from "../ui/crossfade-icon";
 import { SendQueueIcon } from "../ui/send-queue-icon";
 import { Spinner } from "../ui/spinner";
@@ -809,6 +810,67 @@ export const PromptInputHeader = ({
       className={merge("order-first flex-wrap gap-1", className)}
       {...props}
     />
+  );
+};
+export type ReplyQuoteChipProps = Omit<ComponentProps<"div">, "children"> & {
+  /** Who wrote the message being replied to. */
+  author: string;
+  /** Its text, cut to two lines. */
+  text: string;
+  /** Called by the X button. Clear the reply in the app. */
+  onDismiss?: () => void;
+  /** Default "Dismiss reply quote". */
+  dismissLabel?: string;
+};
+/**
+ * The chip above the composer while a reply is pending: an accent bar, the
+ * author, two lines of the message and an X. Put it in `PromptInputHeader`:
+ *
+ * ```tsx
+ * <PromptInputHeader>
+ *   {reply && <ReplyQuoteChip author={reply.author} text={reply.text} onDismiss={() => setReply(null)} />}
+ * </PromptInputHeader>
+ * ```
+ */
+export const ReplyQuoteChip = ({
+  author,
+  text,
+  onDismiss,
+  dismissLabel = "Dismiss reply quote",
+  className,
+  ...props
+}: ReplyQuoteChipProps) => {
+  const merge = useCn();
+  return (
+    <div
+      role="group"
+      aria-label={`Replying to ${author}`}
+      className={merge(
+        "flex w-full min-w-0 items-start gap-2 rounded-field border border-border bg-surface-secondary/60 py-1.5 pr-1 pl-3 text-sm",
+        className,
+      )}
+      {...props}
+    >
+      <span
+        aria-hidden="true"
+        className="w-0.5 shrink-0 self-stretch rounded-full bg-primary"
+      />
+      <div className="min-w-0 flex-1">
+        <span className="block truncate text-xs font-semibold text-muted-foreground">
+          {author}
+        </span>
+        <span className="line-clamp-2 block text-foreground">{text}</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={dismissLabel}
+        onClick={onDismiss}
+      >
+        <IconX size={14} />
+      </Button>
+    </div>
   );
 };
 export type PromptInputFooterProps = Omit<

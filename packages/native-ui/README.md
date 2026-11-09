@@ -514,12 +514,16 @@ import {
 | Part | Notes |
 | --- | --- |
 | `Conversation`, `ConversationContent`, `ConversationEmptyState`, `ConversationScrollButton`, `useConversation` | A `ScrollView` that sticks to the bottom: while the reader is within 70 of the end, new and growing messages stay in view. Once they drag up it stops following, and the scroll button shows: a round outline arrow (40, slop to 48), 16 above the bottom, with an opaque fill and no shadow. Pressing it scrolls down (a jump with Reduce Motion). For very long threads, drive a `FlatList` with `useConversation`. |
-| `Message`, `MessageContent`, `MessageActionsBar`, `MessageAction` | A user message is the web primary bubble (radius 16, bottom-right 14, `px-4 py-3`) at the end of the row; an assistant message has no fill. `MessageAction` is a ghost icon button at the web `icon-sm` size (32, slop to 44). `kind` gives the icon and label: "Copy", "Retry", "Good response", "Bad response". `selected` marks chosen feedback. |
+| `Message`, `MessageContent`, `MessageActionsBar`, `MessageAction` | (0.13.0: `Message` `onLongPress`, `actions`, `highlighted`; `MessageContent` `quote`; the `reply` kind.) A user message is the web primary bubble (radius 16, bottom-right 14, `px-4 py-3`) at the end of the row; an assistant message has no fill. `MessageAction` is a ghost icon button at the web `icon-sm` size (32, slop to 44). `kind` gives the icon and label: "Copy", "Retry", "Good response", "Bad response". `selected` marks chosen feedback. |
 | `Reasoning`, `ReasoningTrigger`, `ReasoningContent`, `useReasoning` | Opens when streaming starts, times the stream and closes once, a second after it stops. The trigger shows a brain, the shimmering "Thinking…", then "Thought for 12s", and a chevron. The content is muted monospace text on the web `bg-surface-secondary/40` panel. Unlike the web, a reader can close it while it streams. |
 | `AgentTrace`, `AgentTraceLine`, `AgentTraceIcon`, `AgentTraceTitle`, `AgentTraceDescription`, `AgentTraceCollapsible*` | One step per line, with an optional fold behind a rail. `AgentTraceTitle shimmer` pulses a running step. Spread `useStreamingDisclosure(isStreaming)` on `AgentTraceCollapsible` to open it while a step streams. |
 | `ActivityStep` | One tool step as a trace line: icon, label, a spinner while `running`, a check when `complete`, a warning on `error`, and a description such as `` `Worked for ${formatElapsed(12)}` ``. |
 | `ChainOfThought` and its parts | Simplified: header, steps with a rail, search-result chips. |
 | `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls (auto-grow in both layouts from 0.12.1; send resets the height). Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
+| `MessageActionSheet`, `ReplyQuoteChip`, `MessageQuote` (0.13.0) | Quoted replies. Long-press a `Message` with `actions` to open the sheet; Reply first, then Copy. Pass `<ReplyQuoteChip author text onDismiss />` as `PromptInput` `replyTo`; send the reply with a `MessageQuote` in `MessageContent` `quote`. See [Quoted replies](#quoted-replies-0130). |
+| `ToolApprovalCard`, `ToolDraftCard` (0.13.0) | A pending tool call: name, cut args summary, Deny and Approve (`ToolDraftCard` adds Edit). `onDecide("approve" \| "deny" \| "edit")`; `pending` or `disabled` turns the buttons off. |
+| `SubagentRunCard`, `SubagentResultCard` (0.13.0) | A subagent run (title, status pill, elapsed, Cancel while `running`) and its result (summary, detail in a fold). |
+| `MessageBotLabel`, `Message` `bot` (0.13.0) | Which bot sent an assistant message, for group chats: `bot={{ name, avatar }}`, or render `MessageBotLabel` above `MessageContent`. |
 | `PromptInput layout="inline"` | One row, as the web `Composer layout="inline"` (Eva's chat pill): `leading` (such as a + button), the field (one line to start, then it grows from 0.12.1), `toolbar`, then send, in a 20-radius field with `p-1.5`. 44 high on one line. |
 | `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
 | `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
@@ -541,6 +545,44 @@ import {
 Every control has a role, an accessible name and a 44 pt target. Folds report `expanded`, feedback actions `selected`, and the send button `disabled`. Type and icons step up with larger text. Colours come from `palette` and `tokens` as styles, in light and dark.
 
 `@vvedantb/native-ui/ai-gallery` exports `AiChatGallery`, a full chat screen with a sample thread: a user message, a finished assistant message with folded reasoning and trace, code, sources and actions, and a second answer that streams with its reasoning open until you press Stop. It also has suggestions and the composer with sample attachments. Put it in a dev-only route with a `SafeAreaProvider` above it. `ParityGallery` shows the same thread (`AiChatSamples`) in its "AI chat" section.
+
+
+### Quoted replies (0.13.0)
+
+Building blocks only: the app owns the reply state and the scroll. No new dependency. `expo-haptics` (optional peer) gives a selection haptic when the sheet opens.
+
+```tsx
+import {
+  Message, MessageContent, MessageQuote, PromptInput, ReplyQuoteChip, MESSAGE_ACTIONS,
+} from "@vvedantb/native-ui/ai";
+
+<Message
+  from="user"
+  highlighted={highlightedId === item.id}
+  actions={[
+    { key: "reply", label: "Reply", icon: MESSAGE_ACTIONS.reply.icon, onPress: () => setReplyTo(item) },
+    { key: "copy", label: "Copy", icon: MESSAGE_ACTIONS.copy.icon, onPress: () => copy(item.text) },
+    { key: "delete", label: "Delete", destructive: true, onPress: () => remove(item) },
+  ]}
+>
+  <MessageContent
+    quote={item.quoted ? <MessageQuote author={item.quoted.author} text={item.quoted.text} onPress={() => jumpTo(item.quoted.id)} /> : undefined}
+  >
+    {item.text}
+  </MessageContent>
+</Message>
+
+<PromptInput
+  onSubmit={send}
+  replyTo={replyTo ? <ReplyQuoteChip author={replyTo.author} text={replyTo.text} onDismiss={() => setReplyTo(null)} /> : undefined}
+/>
+```
+
+- `Message`: `onLongPress`, `actions` (`{ key, label, icon?, destructive?, onPress }[]`), `actionSheetTitle`, `highlighted`. With neither `onLongPress` nor `actions` it is the same `View` as before. With either it is a `Pressable` with the same layout and view props, and it stays a non-accessible container so inner buttons keep focus: also offer Reply in a `MessageActionsBar` for screen reader users. `highlighted` draws a primary wash that fades over 1.4 seconds (`MESSAGE_HIGHLIGHT_MS`) and a ring while true; with Reduce Motion it holds still. Set it back to `false` after the scroll.
+- `MessageActionSheet` (`open`, `onClose`, `actions`, `title`, `cancelLabel`, `testID`): an RN `Modal` bottom sheet, no `@gorhom/bottom-sheet`. Closes on the backdrop, Cancel, Android back and after an action. Destructive rows use the danger colour. Rows are 48 high (56 with larger text).
+- `ReplyQuoteChip` (`author`, `text`, `onDismiss`, `dismissLabel`, `accessibilityLabel`, `testID`): author and up to two lines of text, with an X (44 point target, "Dismiss reply quote"). Labelled "Replying to {author}". `PromptInput` `replyTo` draws it above `header`; passing it as `header` works too.
+- `MessageQuote` (`author`, `text`, `onPress`, `accessibilityLabel`, `testID`): a left border, the author and up to two lines. With `onPress` it is a button.
+- Bot label in a group chat (0.13.0): `<Message from="assistant" bot={{ name: "Planner", avatar: <Avatar size="xs" /> }}>`. Or leave `Message` alone and render `<MessageBotLabel name="Planner" />` above `MessageContent` in `ChatThread` `renderMessage`. `ChatThread` needs no change.
 
 ## DropdownMenu (Unreleased)
 

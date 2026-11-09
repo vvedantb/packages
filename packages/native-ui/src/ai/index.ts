@@ -35,7 +35,9 @@ export {
   MessageActionsBar,
   MessageAction,
   MessageMeta,
+  MessageBotLabel,
   MESSAGE_ACTIONS,
+  MESSAGE_HIGHLIGHT_MS,
   userBubbleStyle,
   tintBubbleStyle,
 } from "./message";
@@ -46,9 +48,17 @@ export type {
   MessageBubble,
   MessageActionsBarProps,
   MessageMetaProps,
+  MessageBot,
+  MessageBotLabelProps,
   MessageActionKind,
   MessageActionProps,
 } from "./message";
+export { MessageActionSheet } from "./message-action-sheet";
+export type { MessageActionSheetProps, MessageSheetAction } from "./message-action-sheet";
+export { ReplyQuoteChip } from "./reply-quote-chip";
+export type { ReplyQuoteChipProps } from "./reply-quote-chip";
+export { MessageQuote, QUOTE_MAX_LINES } from "./message-quote";
+export type { MessageQuoteProps } from "./message-quote";
 export {
   Reasoning,
   ReasoningTrigger,
@@ -136,3 +146,7 @@ export { ChoiceQuestion, choiceAnswers } from "./choice-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
 export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";
+export { ToolApprovalCard, ToolDraftCard, summarizeArgs, ARGS_MAX_CHARS } from "./tool-approval-card";
+export type { ToolApprovalCardProps, ToolDraftCardProps, ToolDecision } from "./tool-approval-card";
+export { SubagentRunCard, SubagentResultCard, subagentStatusColors } from "./subagent-cards";
+export type { SubagentRunCardProps, SubagentResultCardProps, SubagentStatus } from "./subagent-cards";

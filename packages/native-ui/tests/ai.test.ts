@@ -140,6 +140,7 @@ vi.mock("react-native", () => ({
   ScrollView: "ScrollView",
   KeyboardAvoidingView: "KeyboardAvoidingView",
   Image: "Image",
+  Modal: "Modal",
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
@@ -155,6 +156,7 @@ vi.mock("@tabler/icons-react-native", () =>
   Object.fromEntries(
     [
       "IconAlertTriangle",
+      "IconArrowBackUp",
       "IconArrowDown",
       "IconArrowUp",
       "IconBook",
@@ -529,10 +531,11 @@ describe("Message", () => {
     expect((body.props.children as Element).type).toBe(ResponseText);
   });
 
-  it("names the four actions and paints them at the web icon-sm size with a 44 target", async () => {
+  it("names the five actions and paints them at the web icon-sm size with a 44 target", async () => {
     const { MessageAction, MESSAGE_ACTIONS } = await import("../src/ai/message");
     const { ChatIconButton } = await import("../src/ai/icon-button");
     expect(Object.values(MESSAGE_ACTIONS).map((action) => action.label)).toEqual([
+      "Reply",
       "Copy",
       "Retry",
       "Good response",
@@ -1024,7 +1027,8 @@ describe("AI parts (source contract)", () => {
       for (const tag of source.match(/<Pressable\b[\s\S]*?>/g) ?? []) {
         count++;
         expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessible=\{false\}/);
-        expect(tag, file).toMatch(/hitSlop=\{/);
+        // A hidden container (the long-pressable `Message`) is not a target.
+        if (!/accessible=\{false\}/.test(tag)) expect(tag, file).toMatch(/hitSlop=\{/);
       }
     }
     expect(count).toBeGreaterThanOrEqual(6);
@@ -1070,7 +1074,7 @@ describe("AI parts (source contract)", () => {
     // Every file in src/ai is reached from the barrel.
     const barrel = read("ai/index.ts");
     for (const file of aiFiles) {
-      if (file === "index.ts" || file === "icon-button.tsx") continue;
+      if (file === "index.ts" || file === "icon-button.tsx" || file === "card-button.tsx") continue;
       expect(barrel, file).toContain(`from "./${file.replace(/\.tsx?$/, "")}"`);
     }
   });

@@ -728,6 +728,7 @@ declare module "@tabler/icons-react-native" {
   }
   type Icon = React.ComponentType<IconProps>;
   export const IconAlertTriangle: Icon;
+  export const IconArrowBackUp: Icon;
   export const IconArrowDown: Icon;
   export const IconArrowLeft: Icon;
   export const IconArrowRight: Icon;
@@ -766,6 +767,8 @@ declare module "@tabler/icons-react-native" {
   export const IconVideo: Icon;
   export const IconWorld: Icon;
   export const IconX: Icon;
+  export const IconTool: Icon;
+  export const IconRobot: Icon;
 }
 
 declare module "@rn-primitives/slot" {

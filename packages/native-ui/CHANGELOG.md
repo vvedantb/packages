@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.13.0
+
+Additive release: quoted-reply building blocks for chat, plus tool/subagent cards and an optional bot label. No breaking change, no removed or renamed export. Existing `Message`, `ChatThread` and `PromptInput` calls are unchanged. No new dependency. `expo-haptics` stays an optional peer. Includes the 0.12.1 dropdown/composer fixes.
+
+### Added
+
+- `/ai` `MessageActionSheet`: a bottom sheet in an RN `Modal` (no `@gorhom/bottom-sheet`) with rows `{ key, label, icon?, destructive?, onPress }`, a Cancel row, safe-area padding and a selection haptic on open through `selectionHaptic()`. Closes on the backdrop, Cancel, Android back and after an action. Type `MessageSheetAction`.
+- `/ai` `Message`: optional `onLongPress`, `actions` (opens the sheet), `actionSheetTitle` and `highlighted` (primary wash that fades over 1.4 seconds, plus a ring while true; still with Reduce Motion). Without them `Message` renders the same `View`. Also exported: `MESSAGE_HIGHLIGHT_MS`.
+- `/ai` `MessageContent`: optional `quote` slot above the content.
+- `/ai` `ReplyQuoteChip`: author, up to two lines of text, an X with a 44 point target. Labels "Replying to {author}" and "Dismiss reply quote".
+- `/ai` `MessageQuote`: left border, author and up to two lines, a button with `onPress`. Takes its colour from the bubble.
+- `/ai` `PromptInput`: optional `replyTo`, drawn above `header` in both layouts. `header`, `toolbar` and `leading` are unchanged. Works with the 0.12.1 auto-grow field.
+- `/ai` `MESSAGE_ACTIONS.reply` (`IconArrowBackUp`, "Reply"). `MessageActionKind` gains `"reply"`; the other kinds are unchanged.
+
+- `/ai` `ToolApprovalCard` and `ToolDraftCard`: a pending tool call with the tool name, a cut summary of the arguments (`summarizeArgs`, `ARGS_MAX_CHARS`) and Deny and Approve buttons. `ToolDraftCard` adds Edit. `onDecide('approve' | 'deny' | 'edit')`; `pending` and `disabled` turn the buttons off. testIDs `tool-approval-card` (or `tool-draft-card`) with `-name`, `-args`, `-approve`, `-deny`, `-edit`. 44 point targets, larger text. Types `ToolDecision`, `ToolApprovalCardProps`, `ToolDraftCardProps`.
+- `/ai` `SubagentRunCard`: title, status pill (`running`, `done`, `failed`, `cancelled`), elapsed time and Cancel (`onCancel`, only while running). `SubagentResultCard`: summary with the detail behind the `Collapsible` fold. testIDs `subagent-run-card` (`-status`, `-elapsed`, `-cancel`) and `subagent-result-card` (`-trigger`, `-detail`). Also exported: `subagentStatusColors`, `SubagentStatus`.
+- `/ai` `Message`: optional `bot?: { name: string; avatar?: ReactNode }` draws a `MessageBotLabel` above the content of an assistant message (group chats). `MessageBotLabel` is also exported to compose in `renderMessage`. No change without `bot`.
+
+### Changed
+
+- The `/ai` and `/ai-gallery` entries now reach `expo-haptics` through the existing optional-peer loader in `haptics.ts` (lazy `require`, no static import).
+
+### Tests
+
+- New `tests/quotedReplies.test.ts`. `tests/ai.test.ts`, `tests/subpaths.test.ts` and `tests/exports.test.ts` updated for the new names, the `reply` preset and the haptics loader.
+- New `tests/toolCards.test.ts` for the cards and the bot label.
+- New consumer type test `consumer/quotedReplies.consumer.tsx`, extended for the cards and `bot`.
+
 ## 0.12.1
 
 Patch release. No breaking change, no removed export, no new dependency.

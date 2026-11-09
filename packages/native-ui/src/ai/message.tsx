@@ -1,6 +1,8 @@
-import { createContext, useContext, type ComponentType, type ReactNode } from "react";
-import { Text, View, type ViewProps } from "react-native";
+import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { Pressable, StyleSheet, Text, View, type ViewProps } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import {
+  IconArrowBackUp,
   IconCopy,
   IconRefresh,
   IconThumbDown,
@@ -8,13 +10,15 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
-import { sizeStyle } from "../controlStyles";
+import { sizeStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
+import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 import { ChatIconButton } from "./icon-button";
+import { MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -24,25 +28,140 @@ const MessageContext = createContext<MessageRole>("assistant");
 export type MessageProps = ViewProps & {
   from: MessageRole;
   className?: string;
+  /**
+   * Called on a long press of the message. Without it (and without `actions`)
+   * the message is a plain `View`, as before.
+   */
+  onLongPress?: () => void;
+  /**
+   * Actions for a `MessageActionSheet` that opens on a long press, such as
+   * Reply and Copy. `onLongPress` also runs, before the sheet opens.
+   */
+  actions?: MessageSheetAction[];
+  /** Title of the action sheet. Default "Message actions". */
+  actionSheetTitle?: string;
+  /**
+   * True while the message is the target of a quote tap: a primary wash that
+   * fades over about 1.4 seconds, and a ring while it stays true. Set it back
+   * to `false` after the scroll, about 1.5 seconds later.
+   */
+  highlighted?: boolean;
+  /**
+   * For group chats: which bot sent this message. Draws a `MessageBotLabel`
+   * (avatar and name) above the content. Only when set; assistant messages only.
+   */
+  bot?: MessageBot;
 };
+
+/** The bot behind an incoming message in a group chat. */
+export type MessageBot = { name: string; avatar?: ReactNode };
+
+/** How long the highlight wash takes to fade, in milliseconds. */
+export const MESSAGE_HIGHLIGHT_MS = 1400;
+
+/** Peak opacity of the highlight wash (the primary colour). */
+const HIGHLIGHT_WASH = 0.18;
+
+function MessageHighlight() {
+  const scheme = useScheme();
+  const reduceMotion = useReduceMotion();
+  const wash = useSharedValue(reduceMotion ? 0.5 : 1);
+  useEffect(() => {
+    if (reduceMotion) {
+      wash.value = 0.5;
+      return;
+    }
+    wash.value = 1;
+    wash.value = withTiming(0, { duration: MESSAGE_HIGHLIGHT_MS });
+  }, [wash, reduceMotion]);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: wash.value }));
+  return (
+    <Animated.View
+      testID="message-highlight"
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        {
+          borderRadius: tokens.radius.lg,
+          borderWidth: 1.5,
+          borderColor: withAlpha(palette.primary[scheme], 0.5),
+          backgroundColor: withAlpha(palette.primary[scheme], HIGHLIGHT_WASH),
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+}
 
 /**
  * One message: the web `w-full max-w-[95%] flex-col gap-2`. A user message
  * sits at the end of the row with its parts at the end; an assistant message
  * at the start, its parts full width.
+ *
+ * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
+ * `className`, `style` and view props) and a long press opens the
+ * `MessageActionSheet`. It stays a non-accessible container so its buttons and
+ * links keep their own focus: also offer the actions in a `MessageActionsBar`
+ * for screen reader users. `highlighted` draws the quote-jump highlight.
  */
-export function Message({ from, className, style, ...props }: MessageProps) {
+export function Message({
+  from,
+  className,
+  style,
+  onLongPress,
+  actions,
+  actionSheetTitle,
+  highlighted = false,
+  bot,
+  children,
+  ...props
+}: MessageProps) {
   const user = from === "user";
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const hasActions = actions != null && actions.length > 0;
+  const longPressable = onLongPress != null || hasActions;
+  const layout = [
+    { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
+    style,
+  ] as const;
+  const merged = cn("w-full max-w-[95%] gap-2", className);
+  const parts = (
+    <>
+      {bot && !user ? <MessageBotLabel name={bot.name} avatar={bot.avatar} /> : null}
+      {children}
+      {highlighted ? <MessageHighlight /> : null}
+    </>
+  );
   return (
     <MessageContext.Provider value={from}>
-      <View
-        className={cn("w-full max-w-[95%] gap-2", className)}
-        style={[
-          { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
-          style,
-        ]}
-        {...props}
-      />
+      {longPressable ? (
+        <>
+          <Pressable
+            accessible={false}
+            className={merged}
+            style={layout as never}
+            onLongPress={() => {
+              onLongPress?.();
+              if (hasActions) setSheetOpen(true);
+            }}
+            {...props}
+          >
+            {parts}
+          </Pressable>
+          {hasActions ? (
+            <MessageActionSheet
+              open={sheetOpen}
+              onClose={() => setSheetOpen(false)}
+              actions={actions}
+              title={actionSheetTitle}
+            />
+          ) : null}
+        </>
+      ) : (
+        <View className={merged} style={layout} {...props}>
+          {parts}
+        </View>
+      )}
     </MessageContext.Provider>
   );
 }
@@ -75,9 +194,47 @@ export function tintBubbleStyle(scheme: "light" | "dark") {
   };
 }
 
+export type MessageBotLabelProps = {
+  name: string;
+  /** An avatar node, such as `<Avatar size="xs" />`. Drawn before the name. */
+  avatar?: ReactNode;
+  className?: string;
+  testID?: string;
+};
+
+/**
+ * Which bot sent a message, for group chats: an optional avatar and the name
+ * in the caption size. `Message` draws it for its `bot` prop. To compose it
+ * yourself, render it above `MessageContent` (for example in `renderMessage`).
+ */
+export function MessageBotLabel({ name, avatar, className, testID = "message-bot-label" }: MessageBotLabelProps) {
+  const scheme = useScheme();
+  const largerText = useLargerText();
+  const size = chatTextSize("caption", largerText);
+  return (
+    <View
+      testID={testID}
+      accessible
+      accessibilityLabel={`From ${name}`}
+      className={cn("flex-row items-center gap-1.5", className)}
+    >
+      {avatar}
+      <Text
+        numberOfLines={1}
+        className={cn(size, "font-instrument-sans-semibold")}
+        style={[sizeStyle(size), typeStyle("semibold"), { color: tokens.color.muted[scheme] }]}
+      >
+        {name}
+      </Text>
+    </View>
+  );
+}
+
 export type MessageContentProps = ViewProps & {
   /** User messages only. Default `"primary"`. */
   bubble?: MessageBubble;
+  /** A `MessageQuote` drawn above the content, inside the bubble. */
+  quote?: ReactNode;
   className?: string;
 };
 
@@ -88,13 +245,14 @@ export type MessageContentProps = ViewProps & {
  * no fill and the foreground colour. A string child is drawn as
  * `ResponseText`, and `ResponseText` inside takes the colour.
  */
-export function MessageContent({ children, bubble = "primary", className, style, ...props }: MessageContentProps) {
+export function MessageContent({ children, bubble = "primary", quote, className, style, ...props }: MessageContentProps) {
   const from = useContext(MessageContext);
   const scheme = useScheme();
   const user = from === "user";
   const tint = user && bubble === "tint";
   const color = user && !tint ? palette.primaryForeground[scheme] : tokens.color.foreground[scheme];
   const bubbleStyle = !user ? null : tint ? tintBubbleStyle(scheme) : userBubbleStyle(scheme);
+  const body = typeof children === "string" ? <ResponseText>{children}</ResponseText> : children;
   return (
     <ChatTextColorContext.Provider value={color}>
       <View
@@ -102,7 +260,14 @@ export function MessageContent({ children, bubble = "primary", className, style,
         style={[bubbleStyle, style]}
         {...props}
       >
-        {typeof children === "string" ? <ResponseText>{children}</ResponseText> : children}
+        {quote ? (
+          <>
+            {quote}
+            {body}
+          </>
+        ) : (
+          body
+        )}
       </View>
     </ChatTextColorContext.Provider>
   );
@@ -138,6 +303,7 @@ export function MessageActionsBar({ className, ...props }: MessageActionsBarProp
 
 /** The usual actions, with their icons and accessibility labels. */
 export const MESSAGE_ACTIONS = {
+  reply: { icon: IconArrowBackUp, label: "Reply" },
   copy: { icon: IconCopy, label: "Copy" },
   retry: { icon: IconRefresh, label: "Retry" },
   like: { icon: IconThumbUp, label: "Good response" },

@@ -1633,6 +1633,33 @@ const config = {
 
   Outside a `StickToBottom` (for example a page outline) use `JumpRail` with `items` (`{ id, title, preview?, level? }`), a `scrollRef` or `getScrollElement`, and `targetAttribute="data-toc-id"` or `resolveTarget`. `onReveal` runs when a target is not in the DOM; `onBeforeScroll` runs just before it. `onSelect(id)` runs after a click or Enter/Space pick, once the scroll has started or `onReveal` has run, so an app can move focus to the target for keyboard users; `ChatJumpRail` accepts it too. `observeKey` re-observes when the rendered window changes. The geometry helpers (`resolveJumpRailTopPercent`, `resolveJumpRailIndexFromPointer`, `resolveJumpRailHeightStyle`, `resolveJumpRailTickWidthClass`, `resolveJumpRailTickLevelStyle`) are exported.
 - `Message`: `classes.root`, `classes.user`, `classes.assistant` (the role classes of `Message`), `classes.content` (all `MessageContent` classes), `classes.branchSelector`, `classes.branchIcon` (a class in place of the arrows' `size={14}`), and `lazyActionTooltips`: a `MessageAction` mounts its tooltip on first hover or focus (focus opens it), not with the button.
+- Quoted replies (0.39.0): `Message` takes `actions` (right-click menu plus hover toolbar) and `highlighted`; `MessageQuote` goes in `MessageContent` above the text; `ReplyQuoteChip` goes in `PromptInputHeader`.
+
+  ```tsx
+  <Message
+    from="user"
+    id={`msg-${m.id}`}
+    highlighted={highlightId === m.id}
+    actions={[
+      { key: "reply", label: "Reply", icon: <IconArrowBackUp size={14} />, onSelect: () => setReply(m) },
+      { key: "copy", label: "Copy", icon: <IconCopy size={14} />, onSelect: () => copy(m.text) },
+    ]}
+  >
+    <MessageContent>
+      {m.quoted && <MessageQuote author={m.quoted.author} text={m.quoted.text} onPress={() => jumpTo(m.quoted.id)} />}
+      {m.text}
+    </MessageContent>
+  </Message>
+
+  <PromptInput onSubmit={send}>
+    <PromptInputHeader>
+      {reply && <ReplyQuoteChip author={reply.author} text={reply.text} onDismiss={() => setReply(null)} />}
+    </PromptInputHeader>
+    {/* textarea, footer */}
+  </PromptInput>
+  ```
+
+  The app owns the reply state and the scroll. `MessageHoverActions` needs a `relative` `Message` (the `actions` prop sets it).
 - `PromptInput`: `classes.group` (the input group, default `overflow-hidden`), `classes.groupIdle` / `classes.groupDragOver` (added while no drag / an accepted drag is over the form), `classes.groupDefault` (added when no `containerClassName` is given), `classes.textarea`, `classes.footer`, `classes.submit`, `classes.tabItem`; `submitIcons.<send|submitted|streaming|error>`, `submitCrossfade` (cross-fade the submit icon on status change) and `menuTriggerAsChild` (default `true`: `PromptInputActionMenuTrigger` is the Radix trigger; `false` nests a button inside it). New `PromptInput` props: `dataDrop` (`{ type, onDrop }`: a non-file drag of that MIME type counts as a drag over the form and `onDrop` gets its string payload) and `inputGroupClassName` (same as `containerClassName`). The attachments context adds `replace(id, file)`; `accept` now matches extension patterns such as `.html` by file name; `useOptionalPromptInputController` is exported.
 - `PromptInputSubmit`: new prop `queued` (0.30.0). Set it when a send would join a queue (the agent is still working). The send icon becomes `SendQueueIcon`, an up arrow that morphs into a stack of bars while `queued` is `true`. Leave it unset to keep `submitIcons.send`. `SendQueueIcon` (`queued`, `className` default `size-4`) is exported for other send buttons. It uses `m`, so `queued` needs the app's `LazyMotion`.
 - `PromptInputSettings` (new): an overflow menu with a "Model" submenu (one radio list, or a submenu per provider). Entry: `providerLabel(provider)` (default the id), `providerIcon(provider)` (default none), `classes.trigger`.
