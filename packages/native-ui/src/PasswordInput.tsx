@@ -2,7 +2,8 @@ import * as React from "react";
 import { Pressable, View } from "react-native";
 import { IconEye, IconEyeOff } from "@tabler/icons-react-native";
 import { Input } from "./Input";
-import { touchSlop } from "./controlStyles";
+import { cn } from "./cn";
+import { fieldStyle, fieldTextStyle, sizeStyle, touchSlop, typeStyle } from "./controlStyles";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -35,7 +36,7 @@ function passwordToggleSize(largerText: boolean) {
 const PasswordInput = React.forwardRef<
   React.ElementRef<typeof Input>,
   PasswordInputProps
->(({ wrapperClassName, style, testID, ...props }, ref) => {
+>(({ wrapperClassName, className, style, testID, ...props }, ref) => {
   const largerText = useLargerText();
   const scheme = useScheme();
   const [visible, setVisible] = React.useState(false);
@@ -43,15 +44,33 @@ const PasswordInput = React.forwardRef<
   const muted = tokens.color.muted[scheme];
   const Icon = visible ? IconEyeOff : IconEye;
   return (
-    <View className={wrapperClassName}>
+    <View className={cn("relative w-full", wrapperClassName)}>
       <Input
         {...props}
         ref={ref}
         testID={testID}
+        // The same size and font classes as `Input`, so the field has the same
+        // height and type. `Input` adds them too; `cn` merges the repeat.
+        className={cn(
+          "min-h-10 border px-3.5 py-2 text-base font-instrument-sans",
+          largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium",
+          className,
+        )}
         // After the spread, so a caller cannot fight the toggle.
         secureTextEntry={!visible}
-        // Room for the toggle, so text does not run under it.
-        style={[{ paddingRight: metrics.paddingRight }, style]}
+        // The `Input` styles, then an explicit font size equal to its
+        // `text-base` (`text-xl` with larger text), so `secureTextEntry`
+        // cannot shrink the glyphs on Android. No line height: forcing one
+        // makes the field taller than `Input`. Then room for the toggle, so
+        // text does not run under it.
+        style={[
+          fieldStyle(scheme),
+          fieldTextStyle(scheme),
+          { fontSize: sizeStyle(largerText ? "text-xl" : "text-base").fontSize },
+          largerText ? typeStyle("medium") : null,
+          { paddingRight: metrics.paddingRight },
+          style,
+        ]}
       />
       {props.editable !== false ? (
         <View

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MIN_TOUCH_TARGET, touchSlop } from "../src/controlStyles";
+import { MIN_TOUCH_TARGET, fieldStyle, fieldTextStyle, touchSlop, typeStyle } from "../src/controlStyles";
 import { tokens } from "../src/tokens";
 
 // `PasswordInput` (0.11.0). The behaviour checks call the component's render
@@ -63,6 +63,7 @@ async function render(props: Props = {}, ref: unknown = null) {
   const all = elements(tree);
   return {
     input: all.find((element) => element.type === Input),
+    wrapper: all.find((element) => element.type === "View"),
     toggle: all.find((element) => element.type === "Pressable"),
     icon: all.find((element) => element.type === "IconEye" || element.type === "IconEyeOff"),
   };
@@ -161,6 +162,43 @@ describe("PasswordInput (behaviour)", () => {
     expect(flatten(input!.props.style)).toMatchObject({ paddingRight: 44, color: "red" });
     larger.value = true;
     expect(flatten((await render()).input!.props.style).paddingRight).toBe(56);
+  });
+
+  it("gives the field the same size and font classes as Input", async () => {
+    const { input } = await render({ className: "mt-2" });
+    const classes = String(input!.props.className).split(/\s+/);
+    for (const token of ["min-h-10", "border", "px-3.5", "py-2", "text-base", "font-instrument-sans", "mt-2"]) {
+      expect(classes).toContain(token);
+    }
+    expect(classes).not.toContain("text-xl");
+    expect(read("src/Input.tsx")).toContain("min-h-10 border px-3.5 py-2 text-base font-instrument-sans");
+  });
+
+  it("adds the larger-text classes and type style with larger text", async () => {
+    larger.value = true;
+    const { input } = await render();
+    const classes = String(input!.props.className).split(/\s+/);
+    for (const token of ["min-h-16", "px-4", "py-4", "text-xl", "font-instrument-sans-medium"]) {
+      expect(classes).toContain(token);
+    }
+    expect(flatten(input!.props.style)).toMatchObject({ ...typeStyle("medium"), fontSize: 20 });
+    expect(flatten(input!.props.style)).not.toHaveProperty("lineHeight");
+  });
+
+  it("uses the Input field colours and radius, a text-base font size, and the toggle padding", async () => {
+    const { input } = await render();
+    expect(flatten(input!.props.style)).toMatchObject({
+      ...fieldStyle("light"),
+      ...fieldTextStyle("light"),
+      fontSize: 16,
+      paddingRight: 44,
+    });
+    expect(flatten(input!.props.style)).not.toHaveProperty("lineHeight");
+  });
+
+  it("wraps the field in a relative, full-width View", async () => {
+    const { wrapper } = await render({ wrapperClassName: "mb-2" });
+    expect(String(wrapper!.props.className).split(/\s+/)).toEqual(expect.arrayContaining(["relative", "w-full", "mb-2"]));
   });
 
   it("hides the toggle when the field is not editable", async () => {

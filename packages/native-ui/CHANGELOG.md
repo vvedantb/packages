@@ -12,6 +12,14 @@ Show/hide password toggle. Additive; no new dependency or peer.
 
 - Sign-in error behaviour, ported from Eva PR #1134. `/auth` exports `logAuthFailure(stage, error)`, `CREDENTIAL_ERROR_CODES` and the type `AuthErrorOptions`. `logAuthFailure` writes one `console.error("[sign-in] failure", { ... })` with `code`, `message`, `longMessage` and `meta.paramName`, plus `stage`, `errorName`, `status` and `clerkTraceId` when present. It reads only the error object, so it never logs a password or a one-time code. `SignInScreen` calls it with stage `"create"` when `signIn.create` fails.
 
+### Fixed
+
+- `PasswordInput` now matches `Input` in size and type. The wrapper `View` is `relative w-full`. The field gets the same classes and styles as `Input` (`min-h-10 border px-3.5 py-2 text-base font-instrument-sans`, the field and text styles, and the larger-text variants), plus an explicit `fontSize` and `lineHeight` equal to `text-base` (`text-xl` with larger text), so `secureTextEntry` cannot shrink the glyphs on Android. The only differences are the extra right padding and the eye button. The field is still not remounted on toggle.
+
+### Tests
+
+- `tests/hermesCompat.test.ts` fails if `src` uses a method that Hermes lacks: `toSorted`, `toReversed`, `toSpliced`, array `.with(`, `findLast`, `findLastIndex`, `Object.groupBy` or `Map.groupBy`.
+
 ### Changed
 
 - `authErrorMessage(error, fallback, options?: { credentials?: boolean })`: for a Clerk error it now shows the first `longMessage` or `message`, with `clerk` and `convex` (any case) written as "the sign-in service", then `(code: <code>)`, such as `Captcha failed. the sign-in service could not verify you. (code: captcha_invalid)`. With no message text it shows `fallback` plus the code. It also reads a plain `{ errors: [...] }` object, without `zod`. Before, a message that named the provider was dropped for `fallback`. Non-Clerk errors still give `fallback`. The same change applies to the Google, sign-up, reset, verify and TOTP callers, which show the coded text for Clerk errors.
