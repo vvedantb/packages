@@ -48,3 +48,31 @@ export const newShapes = (
 );
 
 export const kind: MessageActionKind = "reply";
+
+// Tool and subagent cards and the bot label (0.13.0).
+import {
+  MessageBotLabel,
+  SubagentResultCard,
+  SubagentRunCard,
+  ToolApprovalCard,
+  ToolDraftCard,
+  type ToolDecision,
+} from "../src/ai";
+
+const decide = (decision: ToolDecision) => {
+  const _: "approve" | "deny" | "edit" = decision;
+  void _;
+};
+
+export const cards = (
+  <>
+    <ToolApprovalCard toolName="send_email" args={{ to: "team" }} onDecide={decide} pending />
+    <ToolDraftCard toolName="create_doc" args="Title: Plan" onDecide={decide} disabled />
+    <SubagentRunCard title="Research" status="running" elapsedSeconds={12} onCancel={() => {}} />
+    <SubagentResultCard title="Research" summary="Three sources" detail="Full text" />
+    <Message from="assistant" bot={{ name: "Planner" }}>
+      <MessageContent>Hello</MessageContent>
+    </Message>
+    <MessageBotLabel name="Planner" />
+  </>
+);

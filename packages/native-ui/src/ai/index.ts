@@ -35,6 +35,7 @@ export {
   MessageActionsBar,
   MessageAction,
   MessageMeta,
+  MessageBotLabel,
   MESSAGE_ACTIONS,
   MESSAGE_HIGHLIGHT_MS,
   userBubbleStyle,
@@ -47,6 +48,8 @@ export type {
   MessageBubble,
   MessageActionsBarProps,
   MessageMetaProps,
+  MessageBot,
+  MessageBotLabelProps,
   MessageActionKind,
   MessageActionProps,
 } from "./message";
@@ -143,3 +146,7 @@ export { ChoiceQuestion, choiceAnswers } from "./choice-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
 export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";
+export { ToolApprovalCard, ToolDraftCard, summarizeArgs, ARGS_MAX_CHARS } from "./tool-approval-card";
+export type { ToolApprovalCardProps, ToolDraftCardProps, ToolDecision } from "./tool-approval-card";
+export { SubagentRunCard, SubagentResultCard, subagentStatusColors } from "./subagent-cards";
+export type { SubagentRunCardProps, SubagentResultCardProps, SubagentStatus } from "./subagent-cards";

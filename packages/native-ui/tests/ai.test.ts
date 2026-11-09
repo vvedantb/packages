@@ -1051,7 +1051,7 @@ describe("AI parts (source contract)", () => {
     // Every file in src/ai is reached from the barrel.
     const barrel = read("ai/index.ts");
     for (const file of aiFiles) {
-      if (file === "index.ts" || file === "icon-button.tsx") continue;
+      if (file === "index.ts" || file === "icon-button.tsx" || file === "card-button.tsx") continue;
       expect(barrel, file).toContain(`from "./${file.replace(/\.tsx?$/, "")}"`);
     }
   });

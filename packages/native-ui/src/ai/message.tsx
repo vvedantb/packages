@@ -10,7 +10,7 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
-import { sizeStyle } from "../controlStyles";
+import { sizeStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -46,7 +46,15 @@ export type MessageProps = ViewProps & {
    * to `false` after the scroll, about 1.5 seconds later.
    */
   highlighted?: boolean;
+  /**
+   * For group chats: which bot sent this message. Draws a `MessageBotLabel`
+   * (avatar and name) above the content. Only when set; assistant messages only.
+   */
+  bot?: MessageBot;
 };
+
+/** The bot behind an incoming message in a group chat. */
+export type MessageBot = { name: string; avatar?: ReactNode };
 
 /** How long the highlight wash takes to fade, in milliseconds. */
 export const MESSAGE_HIGHLIGHT_MS = 1400;
@@ -104,6 +112,7 @@ export function Message({
   actions,
   actionSheetTitle,
   highlighted = false,
+  bot,
   children,
   ...props
 }: MessageProps) {
@@ -118,6 +127,7 @@ export function Message({
   const merged = cn("w-full max-w-[95%] gap-2", className);
   const parts = (
     <>
+      {bot && !user ? <MessageBotLabel name={bot.name} avatar={bot.avatar} /> : null}
       {children}
       {highlighted ? <MessageHighlight /> : null}
     </>
@@ -182,6 +192,42 @@ export function tintBubbleStyle(scheme: "light" | "dark") {
     backgroundColor: withAlpha(palette.primary[scheme], 0.1),
     borderRadius: tokens.radius.lg,
   };
+}
+
+export type MessageBotLabelProps = {
+  name: string;
+  /** An avatar node, such as `<Avatar size="xs" />`. Drawn before the name. */
+  avatar?: ReactNode;
+  className?: string;
+  testID?: string;
+};
+
+/**
+ * Which bot sent a message, for group chats: an optional avatar and the name
+ * in the caption size. `Message` draws it for its `bot` prop. To compose it
+ * yourself, render it above `MessageContent` (for example in `renderMessage`).
+ */
+export function MessageBotLabel({ name, avatar, className, testID = "message-bot-label" }: MessageBotLabelProps) {
+  const scheme = useScheme();
+  const largerText = useLargerText();
+  const size = chatTextSize("caption", largerText);
+  return (
+    <View
+      testID={testID}
+      accessible
+      accessibilityLabel={`From ${name}`}
+      className={cn("flex-row items-center gap-1.5", className)}
+    >
+      {avatar}
+      <Text
+        numberOfLines={1}
+        className={cn(size, "font-instrument-sans-semibold")}
+        style={[sizeStyle(size), typeStyle("semibold"), { color: tokens.color.muted[scheme] }]}
+      >
+        {name}
+      </Text>
+    </View>
+  );
 }
 
 export type MessageContentProps = ViewProps & {

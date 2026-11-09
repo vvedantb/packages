@@ -520,6 +520,9 @@ import {
 | `ChainOfThought` and its parts | Simplified: header, steps with a rail, search-result chips. |
 | `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls. Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
 | `MessageActionSheet`, `ReplyQuoteChip`, `MessageQuote` (0.13.0) | Quoted replies. Long-press a `Message` with `actions` to open the sheet; Reply first, then Copy. Pass `<ReplyQuoteChip author text onDismiss />` as `PromptInput` `replyTo`; send the reply with a `MessageQuote` in `MessageContent` `quote`. See [Quoted replies](#quoted-replies-0130). |
+| `ToolApprovalCard`, `ToolDraftCard` (0.13.0) | A pending tool call: name, cut args summary, Deny and Approve (`ToolDraftCard` adds Edit). `onDecide("approve" \| "deny" \| "edit")`; `pending` or `disabled` turns the buttons off. |
+| `SubagentRunCard`, `SubagentResultCard` (0.13.0) | A subagent run (title, status pill, elapsed, Cancel while `running`) and its result (summary, detail in a fold). |
+| `MessageBotLabel`, `Message` `bot` (0.13.0) | Which bot sent an assistant message, for group chats: `bot={{ name, avatar }}`, or render `MessageBotLabel` above `MessageContent`. |
 | `PromptInput layout="inline"` | One row, as the web `Composer layout="inline"` (Eva's chat pill): `leading` (such as a + button), the field (one line to start, then it grows), `toolbar`, then send, in a 20-radius field with `p-1.5`. 44 high on one line. |
 | `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
 | `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
@@ -578,6 +581,7 @@ import {
 - `MessageActionSheet` (`open`, `onClose`, `actions`, `title`, `cancelLabel`, `testID`): an RN `Modal` bottom sheet, no `@gorhom/bottom-sheet`. Closes on the backdrop, Cancel, Android back and after an action. Destructive rows use the danger colour. Rows are 48 high (56 with larger text).
 - `ReplyQuoteChip` (`author`, `text`, `onDismiss`, `dismissLabel`, `accessibilityLabel`, `testID`): author and up to two lines of text, with an X (44 point target, "Dismiss reply quote"). Labelled "Replying to {author}". `PromptInput` `replyTo` draws it above `header`; passing it as `header` works too.
 - `MessageQuote` (`author`, `text`, `onPress`, `accessibilityLabel`, `testID`): a left border, the author and up to two lines. With `onPress` it is a button.
+- Bot label in a group chat (0.13.0): `<Message from="assistant" bot={{ name: "Planner", avatar: <Avatar size="xs" /> }}>`. Or leave `Message` alone and render `<MessageBotLabel name="Planner" />` above `MessageContent` in `ChatThread` `renderMessage`. `ChatThread` needs no change.
 
 ## DropdownMenu (Unreleased)
 

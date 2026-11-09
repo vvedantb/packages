@@ -14,6 +14,10 @@ Additive release: quoted-reply building blocks for chat. No breaking change, no 
 - `/ai` `PromptInput`: optional `replyTo`, drawn above `header` in both layouts. `header`, `toolbar` and `leading` are unchanged.
 - `/ai` `MESSAGE_ACTIONS.reply` (`IconArrowBackUp`, "Reply"). `MessageActionKind` gains `"reply"`; the other kinds are unchanged.
 
+- `/ai` `ToolApprovalCard` and `ToolDraftCard`: a pending tool call with the tool name, a cut summary of the arguments (`summarizeArgs`, `ARGS_MAX_CHARS`) and Deny and Approve buttons. `ToolDraftCard` adds Edit. `onDecide('approve' | 'deny' | 'edit')`; `pending` and `disabled` turn the buttons off. testIDs `tool-approval-card` (or `tool-draft-card`) with `-name`, `-args`, `-approve`, `-deny`, `-edit`. 44 point targets, larger text. Types `ToolDecision`, `ToolApprovalCardProps`, `ToolDraftCardProps`.
+- `/ai` `SubagentRunCard`: title, status pill (`running`, `done`, `failed`, `cancelled`), elapsed time and Cancel (`onCancel`, only while running). `SubagentResultCard`: summary with the detail behind the `Collapsible` fold. testIDs `subagent-run-card` (`-status`, `-elapsed`, `-cancel`) and `subagent-result-card` (`-trigger`, `-detail`). Also exported: `subagentStatusColors`, `SubagentStatus`.
+- `/ai` `Message`: optional `bot?: { name: string; avatar?: ReactNode }` draws a `MessageBotLabel` above the content of an assistant message (group chats). `MessageBotLabel` is also exported to compose in `renderMessage`. No change without `bot`.
+
 ### Changed
 
 - The `/ai` and `/ai-gallery` entries now reach `expo-haptics` through the existing optional-peer loader in `haptics.ts` (lazy `require`, no static import).
@@ -21,7 +25,8 @@ Additive release: quoted-reply building blocks for chat. No breaking change, no 
 ### Tests
 
 - New `tests/quotedReplies.test.ts`. `tests/ai.test.ts`, `tests/subpaths.test.ts` and `tests/exports.test.ts` updated for the new names, the `reply` preset and the haptics loader.
-- New consumer type test `consumer/quotedReplies.consumer.tsx`.
+- New `tests/toolCards.test.ts` for the cards and the bot label.
+- New consumer type test `consumer/quotedReplies.consumer.tsx`, extended for the cards and `bot`.
 
 ## 0.12.0
 

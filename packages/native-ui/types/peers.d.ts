@@ -765,6 +765,8 @@ declare module "@tabler/icons-react-native" {
   export const IconVideo: Icon;
   export const IconWorld: Icon;
   export const IconX: Icon;
+  export const IconTool: Icon;
+  export const IconRobot: Icon;
 }
 
 declare module "@rn-primitives/slot" {
