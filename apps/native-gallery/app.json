@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Native UI Gallery",
+    "slug": "native-gallery",
+    "version": "1.0.0",
+    "scheme": "nativegallery",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "tsconfigPaths": false
+    },
+    "android": {
+      "package": "dev.vvedantb.nativegallery"
+    },
+    "ios": {
+      "bundleIdentifier": "dev.vvedantb.nativegallery"
+    }
+  }
+}

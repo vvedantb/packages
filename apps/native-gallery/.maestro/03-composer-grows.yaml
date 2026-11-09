@@ -1,0 +1,48 @@
+# The PromptInput composer grows as lines are typed, in both layouts.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-keyboard
+- tapOn:
+    id: link-keyboard
+- assertVisible:
+    id: composer-input
+- copyTextFrom:
+    id: composer-height
+- evalScript: ${output.before = Number(maestro.copiedText.match(/\d+/)[0])}
+- tapOn:
+    id: composer-input
+- inputText: "line one"
+- pressKey: Enter
+- inputText: "line two"
+- pressKey: Enter
+- inputText: "line three"
+- pressKey: Enter
+- inputText: "line four"
+- copyTextFrom:
+    id: composer-height
+- evalScript: ${output.after = Number(maestro.copiedText.match(/\d+/)[0])}
+- assertTrue: ${output.after > output.before}
+- takeScreenshot: screenshots/keyboard-composer-inline-grown
+# Stacked layout.
+- hideKeyboard
+- tapOn:
+    id: kb-layout-stacked
+- copyTextFrom:
+    id: composer-height
+- evalScript: ${output.before = Number(maestro.copiedText.match(/\d+/)[0])}
+- tapOn:
+    id: composer-input
+- inputText: "one"
+- pressKey: Enter
+- inputText: "two"
+- pressKey: Enter
+- inputText: "three"
+- copyTextFrom:
+    id: composer-height
+- evalScript: ${output.after = Number(maestro.copiedText.match(/\d+/)[0])}
+- assertTrue: ${output.after > output.before}
+- takeScreenshot: screenshots/keyboard-composer-stacked-grown

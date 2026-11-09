@@ -8,3 +8,8 @@ dist/
 .env.*
 
 packages/*/preview-harness/
+
+# Expo gallery: generated native projects and Metro cache
+apps/native-gallery/android/
+apps/native-gallery/ios/
+apps/native-gallery/.expo/

@@ -1,0 +1,28 @@
+# Open and close a sheet and the bottom sheet over the tab bar.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- tapOn:
+    id: sheet-open
+- assertVisible:
+    id: sheet-body
+- takeScreenshot: screenshots/layering-sheet-open
+- tapOn:
+    id: sheet-close
+- assertNotVisible:
+    id: sheet-body
+- tapOn:
+    id: bottom-sheet-open
+- assertVisible:
+    id: bottom-sheet-body
+- takeScreenshot: screenshots/layering-bottom-sheet-open
+- tapOn:
+    id: bottom-sheet-close
+- assertNotVisible:
+    id: bottom-sheet-body
