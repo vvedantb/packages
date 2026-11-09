@@ -2,6 +2,7 @@
 // labels and settings chrome.
 export { SafeAreaContainer } from "../SafeAreaContainer";
 export { ScreenContainer } from "../ScreenContainer";
+export type { ScreenContainerProps } from "../ScreenContainer";
 export { PageTitle, PageHeader } from "../PageTitle";
 export type { PageTitleProps, PageHeaderProps } from "../PageTitle";
 export { StackPageHeader } from "../StackPageHeader";
@@ -12,6 +13,12 @@ export { SettingsSection } from "../settings/SettingsSection";
 export { SettingsField } from "../settings/SettingsField";
 export { SettingsToggleRow } from "../settings/SettingsToggleRow";
 export { SettingsStack } from "../settings/SettingsStack";
+export { SettingsEmptyState } from "../settings/SettingsEmptyState";
+export type { SettingsEmptyStateProps } from "../settings/SettingsEmptyState";
+export { PinnedBotTile, BotPinGrid } from "../PinnedBotTile";
+export type { PinnedBotTileProps, BotPinGridProps } from "../PinnedBotTile";
+export { ArtifactList } from "../ArtifactList";
+export type { ArtifactListProps, ArtifactRow } from "../ArtifactList";
 export { MoreFromProjectV, FromProjectV } from "../settings/MoreFromProjectV";
 export type { MoreFromProjectVProps, FromProjectVProps } from "../settings/MoreFromProjectV";
 export {

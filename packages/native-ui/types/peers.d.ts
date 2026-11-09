@@ -218,7 +218,16 @@ declare module "react-native" {
     onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle?: number;
     onContentSizeChange?: (width: number, height: number) => void;
+    refreshControl?: React.ReactElement<RefreshControlProps>;
   }
+  export interface RefreshControlProps extends ViewProps {
+    refreshing: boolean;
+    onRefresh?: () => void;
+    tintColor?: string;
+    colors?: string[];
+    progressBackgroundColor?: string;
+  }
+  export class RefreshControl extends React.Component<RefreshControlProps> {}
   export class ScrollView extends React.Component<ScrollViewProps> {
     scrollToEnd(options?: { animated?: boolean }): void;
   }
@@ -522,11 +531,18 @@ declare module "expo-router" {
     tabBar?: (props: BottomTabBarProps) => React.ReactNode;
     children?: React.ReactNode;
   }>;
-  // `src/auth` navigates after sign-in.
+  // `src/auth` navigates after sign-in. The real package types `Href` per
+  // route with `typedRoutes`; this shim keeps plain strings and object hrefs.
+  export type Href = string | { pathname: string; params?: Record<string, unknown> };
+  export interface NavigationOptions {
+    withAnchor?: boolean;
+    dangerouslySingular?: boolean | string;
+  }
   export interface Router {
-    push(href: string, options?: object): void;
-    replace(href: string, options?: object): void;
+    push(href: Href, options?: NavigationOptions): void;
+    replace(href: Href, options?: NavigationOptions): void;
     back(): void;
+    canGoBack(): boolean;
   }
   export function useRouter(): Router;
 }

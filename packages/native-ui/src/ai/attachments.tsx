@@ -88,8 +88,18 @@ export type AttachmentProps = {
   data: AttachmentData;
   /** Shows a remove button, labelled "Remove" and the attachment name. */
   onRemove?: () => void;
+  /**
+   * Makes the chip a button, such as to open the file. The remove button stays a
+   * separate target and does not call this. Without it the chip is not pressable.
+   */
+  onPress?: () => void;
+  /** Names the chip button, with `onPress`. Default the attachment name (`getAttachmentLabel`). */
+  accessibilityLabel?: string;
   testID?: string;
 };
+
+/** The hit target of a pressable chip, in points, on each axis. */
+export const ATTACHMENT_PRESS_TARGET = 48;
 
 /** A remove cross of 20 in a 32 row: the slop brings it to 44. */
 const REMOVE_SIZE = 20;
@@ -97,9 +107,12 @@ const REMOVE_SIZE = 20;
 /**
  * One attachment as a chip: a 20 thumbnail for an image with a `url`, else
  * its media icon, then the name and an optional remove button. Flat, on the
- * web `flatPanelSubtle` fill (`bg-surface-secondary`). No hover card.
+ * web `flatPanelSubtle` fill (`bg-surface-secondary`). No hover card. With
+ * `onPress` the thumbnail or icon and the name are one button with a 48 point
+ * hit target (the chip stays 32, or 44 with larger text, and `hitSlop` does the
+ * rest); the remove button is a separate target that never calls `onPress`.
  */
-export function Attachment({ data, onRemove, testID }: AttachmentProps) {
+export function Attachment({ data, onRemove, onPress, accessibilityLabel, testID }: AttachmentProps) {
   const variant = useContext(AttachmentsContext);
   const scheme = useScheme();
   const largerText = useLargerText();
@@ -108,16 +121,8 @@ export function Attachment({ data, onRemove, testID }: AttachmentProps) {
   const Icon = MEDIA_ICONS[category];
   const iconSize = largerText ? 20 : 16;
   const muted = tokens.color.muted[scheme];
-  return (
-    <View
-      testID={testID}
-      className={cn(
-        "min-w-0 flex-row items-center gap-1.5 px-2",
-        largerText ? "min-h-11" : "min-h-8",
-        variant === "list" ? "w-full" : "max-w-full",
-      )}
-      style={{ borderRadius: tokens.radius.sm, backgroundColor: tokens.color.surfaceSecondary[scheme] }}
-    >
+  const content = (
+    <>
       {category === "image" && data.url ? (
         <Image
           source={{ uri: data.url }}
@@ -136,6 +141,36 @@ export function Attachment({ data, onRemove, testID }: AttachmentProps) {
       >
         {label}
       </ResponseText>
+    </>
+  );
+  const chipHeight = largerText ? 44 : 32;
+  const slop = Math.max(0, Math.ceil((ATTACHMENT_PRESS_TARGET - chipHeight) / 2));
+  return (
+    <View
+      testID={testID}
+      className={cn(
+        "min-w-0 flex-row items-center gap-1.5 px-2",
+        largerText ? "min-h-11" : "min-h-8",
+        variant === "list" ? "w-full" : "max-w-full",
+      )}
+      style={{ borderRadius: tokens.radius.sm, backgroundColor: tokens.color.surfaceSecondary[scheme] }}
+    >
+      {onPress ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={accessibilityLabel ?? label}
+          hitSlop={{ top: slop, bottom: slop, left: 0, right: 0 }}
+          onPress={onPress}
+          className={cn(
+            "min-w-0 flex-row items-center gap-1.5 self-stretch active:opacity-70",
+            variant === "list" ? "flex-1" : "shrink",
+          )}
+        >
+          {content}
+        </Pressable>
+      ) : (
+        content
+      )}
       {onRemove ? (
         <Pressable
           accessibilityRole="button"

@@ -174,8 +174,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.11.2 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.11.2");
+  it("is 0.12.0 with granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toBe("0.12.0");
     const entries = [
       "./tab-bar",
       "./brand",
@@ -200,6 +200,7 @@ describe("@vvedantb/native-ui exports", () => {
       "./push",
       "./auth",
       "./markdown",
+      "./expo-router",
       "./expo-web-root",
     ];
     expect(Object.keys(pkg.exports).sort()).toEqual([".", ...entries, "./tailwind-preset", "./package.json"].sort());

@@ -11,7 +11,15 @@ import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
 export type StackPageHeaderProps = {
+  /** The accessible name of the header, and the centre text when `centre` is not set. */
   title: string;
+  /**
+   * Custom content for the centre, such as a 20 px avatar beside a name. It
+   * replaces the `PageTitle`. `title` stays the accessible name. Wrap long
+   * text in a `PageTitle` (or `Text` with `numberOfLines`) so it can truncate:
+   * the centre shrinks (`min-w-0`) and clips what does not fit.
+   */
+  centre?: ReactNode;
   /** Muted line under the title, up to two lines. */
   description?: string;
   /** Shows a back `HeaderIconButton` at the start that calls this. No button without it. */
@@ -36,11 +44,14 @@ export type StackPageHeaderProps = {
  * a centred `PageTitle` (Instrument Sans 600 at 20 / 25) with an optional
  * muted description. The two sides are the same width, the wider of the back
  * button and `headerRight`, so the title stays centred on the screen and a
- * long one is cut off before it reaches them. The row is at least 56 high
+ * long one is cut off before it reaches them. `centre` (0.12.0) replaces the
+ * `PageTitle` with custom content; `title` then names the header for
+ * VoiceOver and TalkBack. The row is at least 56 high
  * below the top inset, as `PageHeader`, with the `px-4` screen padding.
  */
 export function StackPageHeader({
   title,
+  centre,
   description,
   onBack,
   backLabel = "Back",
@@ -74,7 +85,18 @@ export function StackPageHeader({
         ) : null}
       </View>
       <View className="min-w-0 shrink items-center py-2">
-        <PageTitle className="text-center">{title}</PageTitle>
+        {centre != null ? (
+          <View
+            accessible
+            accessibilityRole="header"
+            accessibilityLabel={title}
+            className="min-w-0 max-w-full shrink flex-row items-center justify-center"
+          >
+            {centre}
+          </View>
+        ) : (
+          <PageTitle className="text-center">{title}</PageTitle>
+        )}
         {description ? (
           <Text
             numberOfLines={2}

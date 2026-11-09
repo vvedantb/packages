@@ -72,16 +72,17 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/toast` | `toast`, `Toaster`, `ToastOptions`, `ToastVariant` | none (from 0.3.12) |
 | `@vvedantb/native-ui/theme` | `NativeUiProvider`, `useNativeUi`, `useLargerText`, `useAccentColor`, `DEFAULT_ACCENT`, `tokens`, `palette`, `withAlpha`, `configureTheme` (with the `ThemeConfig`, `ThemeColors` and `ThemePalette` types), `fontClass`, `cn`, `Colors` and the colour constants | none |
 | `@vvedantb/native-ui/floating` | `FloatingSurface`, `GlassSheetBackground`, `LiquidGlass`, `GlassBlurProvider`, `GlassBlurTarget`, `FloatingFAB`, `useReduceTransparency`, the floating metrics and styles | `expo-blur` (loader) |
-| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `MoreFromProjectV` and `FromProjectV` (0.8.0) | `expo-blur` (loader) |
+| `@vvedantb/native-ui/layout` | `ScreenContainer`, `SafeAreaContainer`, `PageTitle`, `PageHeader`, `StackPageHeader` (0.5.0) and their props types, `SectionLabel` (0.5.0), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `MoreFromProjectV` and `FromProjectV` (0.8.0), `ScreenContainerProps`, `SettingsEmptyState`, `PinnedBotTile`, `BotPinGrid`, `ArtifactList` (0.12.0). `ScreenContainer` takes `refreshing`, `onRefresh` and `refreshControl` (0.12.0). `StackPageHeader` takes `centre` (0.12.0) | `expo-blur` (loader) |
 | `@vvedantb/native-ui/marketing` | `UpgradeToProCard`, `PricingModal` and the pricing types | none |
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/push` | `useExpoPushRegistration`, `getExpoPushToken`, `showPushesInForeground`, the three loaders and the types (0.9.0). Pass `register` from your backend (for `@vvedantb/server`: `useMutation(api.push.register)`) and route taps in `onNotificationTap` | `expo-notifications`, `expo-constants`, `expo-device` (loaders) |
 | `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
-| `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry. | none |
+| `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry.. From 0.12.0: `ChatThread`, `UIMessage`, `ChatJumpRail` and the `Attachment` props `onPress` and `accessibilityLabel` | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
 | `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage`, `SecondFactorScreen`, `useSecondFactor`, `submitTotpSecondFactor`, `submitSecondFactor`, `prepareSecondFactorIfNeeded`, `prepareFirstFactorIfNeeded`, `submitFirstFactor`, `pickFirstFactorStrategy`, `TOTP_MESSAGES` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
+| `@vvedantb/native-ui/expo-router` | From 0.12.0: `RouterStackPageHeader`, `RouterStackPageHeaderProps`, `goBackOrReplace`. Not on the root, `/layout` or `/page-title` entries. | `expo-router` (import) |
 | `@vvedantb/native-ui/expo-web-root` | From 0.7.0: `ExpoWebRoot`, `ExpoWebRootProps`, `ExpoWebRootViewport`, `EXPO_WEB_VIEWPORT`, `expoWebBackgroundCss`. Not on the root entry. | `expo-router` (import of `expo-router/html`) |
 | `@vvedantb/native-ui/tailwind-preset` | From 0.7.0, CommonJS for `tailwind.config.js`: `nativeUiPreset`, `nativeUiContent`, `cssVar`, `hslVar`, `rgbAlpha`, `cssVariables`, `schemeColors` and a default preset. See [Expo / NativeWind](#expo--nativewind). | `nativewind` (`require`, when installed) |
 
@@ -425,6 +426,41 @@ Components and props that the Verve, vibot and Velth apps need. They follow the 
   <StackPageHeader title="Details" onBack={router.back} headerRight={<ThemeToggle />} />
 </AmbientBackground>
 ```
+
+### 0.12.0 additions
+
+```tsx
+// Typed routes: `afterAuthHref`, `signUpHref` and `signInHref` take expo-router's `Href`,
+// and `replaceOptions` takes `Parameters<Router["replace"]>[1]`.
+<SignInScreen scheme="app" afterAuthHref="/(app)/bots" signUpHref="/sign-up" replaceOptions={{ withAnchor: true }} />
+
+// Router-aware back: router.canGoBack() ? router.back() : router.replace(fallbackHref).
+import { RouterStackPageHeader } from "@vvedantb/native-ui/expo-router";
+<RouterStackPageHeader title="Bot" fallbackHref="/bots" backTestID="screen-back" centre={<BotTitle />} />
+
+// An attachment chip that opens its file. The remove button stays separate.
+<Attachment data={file} onPress={() => open(file.url)} onRemove={() => remove(file.id)} />
+
+// The chat column as one piece.
+<ChatThread
+  messages={messages}
+  working={status === "streaming"}
+  renderMessage={(message, isStreaming) => <MessageItem message={message} streaming={isStreaming} />}
+  thinking={<Shimmer>Thinking</Shimmer>}
+  footer={<PromptInput onSubmit={send} status={status} />}
+  contentContainerClassName="px-4 py-4"
+/>
+
+// A two-across grid of pinned bots.
+<BotPinGrid>
+  <PinnedBotTile title="Research" leading={<Avatar />} unread onPress={open} onLongPress={showActions} />
+</BotPinGrid>
+
+// Pull to refresh. `refreshing` is controlled. No control without `onRefresh` or `refreshControl`.
+<ScreenContainer refreshing={refreshing} onRefresh={reload}>{children}</ScreenContainer>
+```
+
+`StackPageHeader` `centre` replaces the centre `PageTitle` (for example a 20 px avatar beside a name). `title` stays the accessible name and the fallback; `description` still shows under it. The two sides keep the same width and the centre shrinks and truncates. `RouterStackPageHeader` takes the `StackPageHeader` props without `onBack`, plus `fallbackHref` (default `"/"`). `ChatThread` shows `thinking` right after the last user message while `working` and marks the last assistant message as streaming. A `PromptInput` footer keeps its own keyboard lift; the outer `KeyboardAvoidingView` moves it clear first, so the lift is not doubled. `SettingsEmptyState` is a compact empty note for the inside of a `SettingsSection`; `ArtifactList` lists artifacts as pressable rows; `ChatJumpRail` is a horizontal rail of chips that jump between messages.
 
 `Text` from `@vvedantb/native-ui/primitives` is the variant text (`h1`–`h4`, `p`, `lead`, `large`, `small`, `muted`, `code`, `blockquote`). It is not on the root entry. Unlike the components, it takes its colour from NativeWind classes (`text-foreground`, `text-muted-foreground`); where the app defines `foreground` with a nested `dark` key, give it `style={{ color: tokens.color.foreground[scheme] }}` in dark mode.
 

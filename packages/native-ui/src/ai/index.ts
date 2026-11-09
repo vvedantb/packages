@@ -115,6 +115,7 @@ export {
   Attachment,
   getMediaCategory,
   getAttachmentLabel,
+  ATTACHMENT_PRESS_TARGET,
 } from "./attachments";
 export type {
   AttachmentData,
@@ -123,6 +124,10 @@ export type {
   AttachmentsProps,
   AttachmentProps,
 } from "./attachments";
+export { ChatThread } from "./chat-thread";
+export type { ChatThreadProps, UIMessage } from "./chat-thread";
+export { ChatJumpRail } from "./chat-jump-rail";
+export type { ChatJumpRailProps, ChatJumpRailItem } from "./chat-jump-rail";
 export { CodeBlock, CodeBlockCopyButton } from "./code-block";
 export type { CodeBlockProps, CodeBlockCopyButtonProps } from "./code-block";
 export { ResponseText, ChatTextColorContext } from "./response-text";

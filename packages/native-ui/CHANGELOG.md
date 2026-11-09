@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.12.0
+
+Additive release from the vibot and V Store gap briefs. No breaking change, no removed export. Existing props and `testID`s are unchanged. No new dependency. `expo-router` stays an optional peer.
+
+### Added
+
+- `/auth`: typed routes. `afterAuthHref`, `signUpHref` and `signInHref` are now `Href` from `expo-router` (plain strings such as `"/"` still compile). `replaceOptions` is `Parameters<Router["replace"]>[1]`. This fixes TS2345 under `typedRoutes: true` at `router.replace(afterAuthHref, replaceOptions)` in `GoogleSignInButton` and `SignInScreen`, and at `router.push(linkHref)` in `SignInScreen`.
+- `/ai` `Attachment`: `onPress` and `accessibilityLabel` (default the file name). With `onPress` the icon and name are one button with a 48 point hit target. The remove button stays a separate target and does not call `onPress`. Also exported: `ATTACHMENT_PRESS_TARGET`.
+- `/page-title` and `/layout` `StackPageHeader`: `centre?: ReactNode` replaces the centre `PageTitle`. `title` stays the accessible name and the fallback; `description` still shows under it. The sides keep equal width and the centre can shrink and truncate.
+- New entry `@vvedantb/native-ui/expo-router`: `RouterStackPageHeader` (the `StackPageHeader` props without `onBack`, plus `fallbackHref`, default `"/"`) and `goBackOrReplace`. Back runs `router.canGoBack() ? router.back() : router.replace(fallbackHref)`. The root, `/layout` and `/page-title` entries do not import `expo-router`.
+- `/ai` `ChatThread` and the minimal `UIMessage` type (`id` and `role`; no `ai` dependency): `Conversation`, `ConversationContent`, the messages, `ConversationScrollButton` and a `footer` last, in a `KeyboardAvoidingView` (`padding`). A `thinking` row follows the last user message while `working`. The last assistant message gets `isStreaming: true` while `working`. Also takes `emptyState`, `contentContainerClassName` and `keyboardVerticalOffset`.
+- `/layout` and root `PinnedBotTile` and `BotPinGrid`: a tile with the avatar above the name, an unread dot, a generating spinner and `onLongPress`; a grid that lays tiles two across and wraps.
+- `/layout` and root `ScreenContainer`: `refreshing`, `onRefresh` and `refreshControl` (takes precedence). The built control is tinted with `useAccentColor()` (`tintColor` and `colors`). `refreshing` is controlled: no timer, no minimum duration. No control unless `onRefresh` or `refreshControl` is set. `ScreenContainerProps` is exported.
+- `/layout` and root `SettingsEmptyState` (`title`, `description`, `action`, optional `icon`), `ArtifactList` (`rows`, `onOpen`, `empty`).
+- `/ai` `ChatJumpRail` (`items`, `onJump`).
+
+### Not added
+
+- Message actions (speak, branch, export): no native-ui primitive yet.
+
+### Tests
+
+- New `tests/native012.test.ts` covers every new piece. `tests/exports.test.ts` and `tests/subpaths.test.ts` cover the new entry and names; `./expo-router` is a heavy entry in the subpath graph test.
+- New consumer type test `consumer/authHref.consumer.tsx` (typedRoutes-style `Href` union, object hrefs, plain strings and `replaceOptions`), compiled by `tsconfig.consumer.json`.
+- `types/peers.d.ts`: `Href`, `NavigationOptions`, `Router.canGoBack` and `RefreshControl` stubs.
+
 ## 0.11.2
 
 Type-only fix. Runtime behaviour is unchanged. No new peer.
