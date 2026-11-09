@@ -468,6 +468,21 @@ describe("granular entries", () => {
       "GoogleSignInButtonProps",
       "useGoogleSignIn",
       "authErrorMessage",
+      "SecondFactorScreen",
+      "SecondFactorScreenProps",
+      "useSecondFactor",
+      "submitTotpSecondFactor",
+      "submitSecondFactor",
+      "prepareSecondFactorIfNeeded",
+      "pickSecondFactorStrategy",
+      "supportedSecondFactorStrategies",
+      "SECOND_FACTOR_PREFERENCE",
+      "SecondFactorStrategy",
+      "IncompleteSignIn",
+      "UseSecondFactorOptions",
+      "TOTP_MESSAGES",
+      "TotpResult",
+      "UseSecondFactorResult",
     ]) {
       expect(auth.has(name), `./auth ${name}`).toBe(true);
     }

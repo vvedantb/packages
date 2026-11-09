@@ -11,8 +11,8 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
-// `src/ThemeToggle.tsx` logs a failed `setColorScheme`.
-declare const console: { error(...data: unknown[]): void };
+// `src/ThemeToggle.tsx` logs a failed `setColorScheme`; `src/auth/SignInScreen.tsx` warns on an unhandled sign-in status.
+declare const console: { error(...data: unknown[]): void; warn(...data: unknown[]): void };
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`, `src/highlight.ts`). React Native's own typing returns
 // `any`; `src/highlight.ts` assigns without a cast, so its peer has an overload.
@@ -273,6 +273,17 @@ declare module "react-native" {
     enabled?: boolean;
   }
   export class KeyboardAvoidingView extends React.Component<KeyboardAvoidingViewProps> {}
+
+  export interface KeyboardEvent {
+    endCoordinates: { height: number; screenY: number; width: number; screenX: number };
+  }
+  export const Keyboard: {
+    addListener(
+      event: "keyboardWillShow" | "keyboardDidShow" | "keyboardWillHide" | "keyboardDidHide",
+      listener: (event: KeyboardEvent) => void,
+    ): { remove(): void };
+    dismiss(): void;
+  };
 
   export const StyleSheet: {
     create<T extends Record<string, ViewStyle | TextStyle | ImageStyle>>(styles: T): T;
@@ -561,12 +572,34 @@ declare module "@clerk/clerk-expo" {
   interface Attempt {
     status: string | null;
     createdSessionId: string | null;
+    supportedFirstFactors?: Array<{ strategy: string; [key: string]: unknown }> | null;
+    supportedSecondFactors?: SecondFactorInfo[] | null;
+  }
+  export interface SecondFactorInfo {
+    strategy: string;
+    emailAddressId?: string;
+    phoneNumberId?: string;
+    safeIdentifier?: string;
+    [key: string]: unknown;
   }
   export function useSignIn():
     | { isLoaded: false; signIn: undefined; setActive: undefined }
     | {
         isLoaded: true;
-        signIn: { create(params: { identifier: string; password?: string }): Promise<Attempt> };
+        signIn: {
+          create(params: { identifier: string; password?: string }): Promise<Attempt>;
+          supportedSecondFactors: SecondFactorInfo[] | null;
+          prepareSecondFactor(params: {
+            strategy: "phone_code" | "email_code";
+            phoneNumberId?: string;
+            emailAddressId?: string;
+          }): Promise<Attempt>;
+          attemptSecondFactor(params: {
+            strategy: "totp" | "backup_code" | "phone_code" | "email_code";
+            code: string;
+          }): Promise<Attempt>;
+          resetPassword(params: { password: string; signOutOfOtherSessions?: boolean }): Promise<Attempt>;
+        };
         setActive: SetActive;
       };
   export function useSignUp():

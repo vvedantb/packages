@@ -9,6 +9,14 @@ import { toast } from "../toastStore";
 import { useScheme } from "../useScheme";
 import { AuthScreen, FieldError, OrDivider } from "./AuthScreen";
 import { authErrorMessage } from "./authErrors";
+import { SecondFactorScreen } from "./SecondFactorScreen";
+import {
+  pickSecondFactorStrategy,
+  supportedSecondFactorStrategies,
+  useSecondFactor,
+  type SecondFactor,
+  type SecondFactorStrategy,
+} from "./totp";
 import { GoogleSignInButton, type AuthNavigationOptions } from "./GoogleSignInButton";
 
 export type SignInMode = "sign-in" | "sign-up";
@@ -22,7 +30,65 @@ export const AUTH_MESSAGES = {
   verifyFailed: "Invalid code",
   missingCode: "Enter the code from the email",
   needsAnotherStep: "This account needs another step to sign in. Finish it on the web.",
+  secondFactorTitle: "Two-step verification",
+  secondFactorDescription: "Enter the code from your authenticator app.",
+  emailCodeTitle: "Check your email",
+  emailCodeDescription: "Enter the code we sent to your email.",
+  phoneCodeTitle: "Check your phone",
+  phoneCodeDescription: "Enter the code we sent by text message.",
+  backupCodeTitle: "Enter a backup code",
+  backupCodeDescription: "Use one of the backup codes you saved when you set up two-step verification.",
+  clientTrustTitle: "Verify it's you",
+  clientTrustEmailDescription: "This device is new. Enter the code we sent to your email.",
+  clientTrustPhoneDescription: "This device is new. Enter the code we sent by text message.",
+  useBackupCode: "Use a backup code",
+  useAuthenticator: "Use authenticator app",
+  useEmailCode: "Email me a code",
+  usePhoneCode: "Text me a code",
+  newPasswordTitle: "Set a new password",
+  newPasswordDescription: "Your password must change before you can sign in.",
+  newPasswordLabel: "New password",
+  confirmPasswordLabel: "Confirm new password",
+  passwordMismatch: "The passwords do not match",
+  passwordTooShort: "Use a longer password",
+  resetPasswordFailed: "Could not set the new password",
+  setPassword: "Set password",
 } as const;
+
+/**
+ * A sign-in that is not complete, as `signIn.create` returns it. Passed to
+ * `onIncomplete` so the app can run the step itself.
+ */
+export type IncompleteSignIn = {
+  status: string | null;
+  createdSessionId: string | null;
+  supportedFirstFactors?: Array<{ strategy: string; [key: string]: unknown }> | null;
+  supportedSecondFactors?: SecondFactor[] | null;
+};
+
+const METHOD_LABEL: Record<SecondFactorStrategy, string> = {
+  totp: AUTH_MESSAGES.useAuthenticator,
+  email_code: AUTH_MESSAGES.useEmailCode,
+  phone_code: AUTH_MESSAGES.usePhoneCode,
+  backup_code: AUTH_MESSAGES.useBackupCode,
+};
+
+function secondFactorCopy(strategy: SecondFactorStrategy, clientTrust: boolean) {
+  if (strategy === "email_code") {
+    return clientTrust
+      ? { title: AUTH_MESSAGES.clientTrustTitle, description: AUTH_MESSAGES.clientTrustEmailDescription }
+      : { title: AUTH_MESSAGES.emailCodeTitle, description: AUTH_MESSAGES.emailCodeDescription };
+  }
+  if (strategy === "phone_code") {
+    return clientTrust
+      ? { title: AUTH_MESSAGES.clientTrustTitle, description: AUTH_MESSAGES.clientTrustPhoneDescription }
+      : { title: AUTH_MESSAGES.phoneCodeTitle, description: AUTH_MESSAGES.phoneCodeDescription };
+  }
+  if (strategy === "backup_code") {
+    return { title: AUTH_MESSAGES.backupCodeTitle, description: AUTH_MESSAGES.backupCodeDescription };
+  }
+  return { title: AUTH_MESSAGES.secondFactorTitle, description: AUTH_MESSAGES.secondFactorDescription };
+}
 
 export type SignInScreenProps = AuthNavigationOptions & {
   /** Default `"sign-in"`. `"sign-up"` creates the account and checks an emailed code. */
@@ -53,6 +119,17 @@ export type SignInScreenProps = AuthNavigationOptions & {
   header?: ReactNode;
   /** Below the footer link row, such as an app credit. */
   footer?: ReactNode;
+  /**
+   * Called with the sign-in when the built-in UI cannot finish it:
+   * `needs_identifier`, `needs_first_factor`, any unknown status, and
+   * `needs_second_factor` or `needs_client_trust` when no supported strategy
+   * (totp, backup code, phone code, email code) exists. The built-in screen
+   * always runs `needs_second_factor`, `needs_client_trust` and
+   * `needs_new_password` itself. When called, the web-fallback message is not
+   * shown. Without it, the screen shows the web fallback and logs
+   * `console.warn`. Ignored in `sign-up`.
+   */
+  onIncomplete?: (signIn: IncompleteSignIn) => void;
 };
 
 /**
@@ -80,6 +157,7 @@ export function SignInScreen({
   testIDPrefix,
   header,
   footer,
+  onIncomplete,
 }: SignInScreenProps) {
   const signInState = useSignIn();
   const signUpState = useSignUp();
@@ -89,6 +167,13 @@ export function SignInScreen({
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
+  const [pendingSecondFactor, setPendingSecondFactor] = useState(false);
+  const [factors, setFactors] = useState<SecondFactor[]>([]);
+  const [clientTrust, setClientTrust] = useState(false);
+  const [pendingNewPassword, setPendingNewPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const secondFactor = useSecondFactor();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const signUp = mode === "sign-up";
@@ -104,6 +189,71 @@ export function SignInScreen({
     else router.replace(afterAuthHref, replaceOptions);
   };
 
+  const warnIncomplete = (attempt: IncompleteSignIn) => {
+    console.warn(
+      `[native-ui] Sign-in not complete: status=${attempt.status}, ` +
+        `secondFactors=${JSON.stringify((attempt.supportedSecondFactors ?? []).map((f) => f.strategy))}, ` +
+        `firstFactors=${JSON.stringify((attempt.supportedFirstFactors ?? []).map((f) => f.strategy))}. ` +
+        "Pass onIncomplete to handle it in the app.",
+    );
+  };
+
+  // A status the built-in UI cannot finish: the app's `onIncomplete`, or the web fallback.
+  const unhandled = (attempt: IncompleteSignIn) => {
+    if (onIncomplete) return onIncomplete(attempt);
+    warnIncomplete(attempt);
+    fail(AUTH_MESSAGES.signInFailed, AUTH_MESSAGES.needsAnotherStep);
+  };
+
+  const chooseStrategy = async (strategy: SecondFactorStrategy, list: SecondFactor[]) => {
+    secondFactor.clearError();
+    secondFactor.setStrategy(strategy);
+    setPendingSecondFactor(true);
+    await secondFactor.prepare(
+      strategy,
+      list.find((factor) => factor.strategy === strategy),
+    );
+  };
+
+  const startSecondFactor = async (attempt: IncompleteSignIn, trust: boolean) => {
+    const list = attempt.supportedSecondFactors ?? [];
+    const strategy = pickSecondFactorStrategy(list);
+    if (!strategy) return unhandled(attempt);
+    setFactors(list);
+    setClientTrust(trust);
+    await chooseStrategy(strategy, list);
+  };
+
+  const onNewPassword = async () => {
+    const { isLoaded, signIn, setActive } = signInState;
+    if (!isLoaded || !signIn || !setActive || submitting) return;
+    if (!newPassword) return fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.missingFields);
+    if (minPasswordLength && newPassword.length < minPasswordLength) {
+      return fail(AUTH_MESSAGES.resetPasswordFailed, `Use at least ${minPasswordLength} characters for the password`);
+    }
+    if (newPassword !== confirmPassword) {
+      return fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.passwordMismatch);
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const result = await signIn.resetPassword({ password: newPassword });
+      if (result.status === "complete" && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        done();
+      } else if (onIncomplete) {
+        onIncomplete(result);
+      } else {
+        warnIncomplete(result);
+        fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.needsAnotherStep);
+      }
+    } catch (caught) {
+      fail(AUTH_MESSAGES.resetPasswordFailed, authErrorMessage(caught, AUTH_MESSAGES.resetPasswordFailed));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const onSignIn = async () => {
     const { isLoaded, signIn, setActive } = signInState;
     if (!isLoaded || !signIn || !setActive || submitting) return;
@@ -115,14 +265,34 @@ export function SignInScreen({
       if (attempt.status === "complete" && attempt.createdSessionId) {
         await setActive({ session: attempt.createdSessionId });
         done();
+      } else if (attempt.status === "needs_new_password") {
+        setPendingNewPassword(true);
+      } else if (attempt.status === "needs_second_factor" || attempt.status === "needs_client_trust") {
+        await startSecondFactor(attempt, attempt.status === "needs_client_trust");
       } else {
-        fail(AUTH_MESSAGES.signInFailed, AUTH_MESSAGES.needsAnotherStep);
+        unhandled(attempt);
       }
     } catch (caught) {
       fail(AUTH_MESSAGES.signInFailed, authErrorMessage(caught, AUTH_MESSAGES.invalidCredentials));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const onSecondFactor = async (secondFactorCode: string) => {
+    const result = await secondFactor.submit(secondFactorCode);
+    if (result.ok) done();
+  };
+
+  const onSecondFactorBack = () => {
+    // The pending attempt stays; the next `signIn.create` replaces it.
+    setPendingSecondFactor(false);
+    setPendingNewPassword(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    setPassword("");
+    setError("");
+    secondFactor.clearError();
   };
 
   const onSignUp = async () => {
@@ -189,6 +359,97 @@ export function SignInScreen({
     </>
   );
   const hasFooter = Boolean((linkHref && !pendingVerification) || footer);
+
+  if (pendingNewPassword) {
+    return (
+      <AuthScreen
+        testID={id("new-password-screen")}
+        title={AUTH_MESSAGES.newPasswordTitle}
+        subtitle={AUTH_MESSAGES.newPasswordDescription}
+        header={header}
+      >
+        <Input
+          testID={id("new-password")}
+          accessibilityLabel={AUTH_MESSAGES.newPasswordLabel}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          secureTextEntry
+          autoFocus
+          returnKeyType="next"
+          value={newPassword}
+          placeholder={AUTH_MESSAGES.newPasswordLabel}
+          onChangeText={setNewPassword}
+        />
+        <Input
+          testID={id("confirm-password")}
+          accessibilityLabel={AUTH_MESSAGES.confirmPasswordLabel}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          textContentType="newPassword"
+          secureTextEntry
+          returnKeyType="go"
+          value={confirmPassword}
+          placeholder={AUTH_MESSAGES.confirmPasswordLabel}
+          onChangeText={setConfirmPassword}
+          onSubmitEditing={() => void onNewPassword()}
+        />
+        <FieldError testID={id("error")} message={error} />
+        <Button testID={id("new-password-submit")} loading={submitting} onPress={() => void onNewPassword()}>
+          {AUTH_MESSAGES.setPassword}
+        </Button>
+        <Button testID={id("new-password-back")} variant="ghost" onPress={onSecondFactorBack}>
+          Use a different account
+        </Button>
+      </AuthScreen>
+    );
+  }
+
+  if (pendingSecondFactor) {
+    const active = secondFactor.strategy;
+    const available = supportedSecondFactorStrategies(factors);
+    const others = available.filter((strategy) => strategy !== active);
+    // From a backup code, go back to the default non-backup method. Otherwise offer a backup code.
+    const switchTo =
+      active === "backup_code"
+        ? pickSecondFactorStrategy(factors.filter((factor) => factor.strategy !== "backup_code"))
+        : others.includes("backup_code")
+          ? "backup_code"
+          : null;
+    const copy = secondFactorCopy(active, clientTrust);
+    const backup = active === "backup_code";
+    return (
+      <SecondFactorScreen
+        key={active}
+        title={copy.title}
+        description={copy.description}
+        codeLength={backup ? 8 : 6}
+        digitsOnly={!backup}
+        placeholder="Backup code"
+        footer={
+          switchTo ? (
+            <Button
+              testID={id("second-factor-switch")}
+              variant="link"
+              size="sm"
+              fullWidth={false}
+              disabled={secondFactor.loading}
+              onPress={() => void chooseStrategy(switchTo, factors)}
+            >
+              {METHOD_LABEL[switchTo]}
+            </Button>
+          ) : undefined
+        }
+        onSubmit={onSecondFactor}
+        error={secondFactor.error}
+        loading={secondFactor.loading}
+        onBack={onSecondFactorBack}
+        backLabel="Use a different account"
+        header={header}
+        testIDPrefix={id("second-factor")}
+      />
+    );
+  }
 
   if (pendingVerification) {
     return (

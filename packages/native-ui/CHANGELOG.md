@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.10.0
+
+Second-factor (TOTP) step for sign-in. Additive; no new dependency or peer.
+
+### Added
+
+- `SecondFactorScreen` (`/auth`): a Clerk-free one-time code step, ported from Eva with the same props. `title`, `description`, `codeLength` (default 6), `onSubmit(code)`, `error`, `loading`, `onBack`, `backLabel` (default "Back"), `header` and `testIDPrefix` (default `"second-factor"`). Digits only, Verify off until the code is full, an inline error and an optional ghost Back button. The title goes through `AuthScreen`. Type `SecondFactorScreenProps`.
+- `submitTotpSecondFactor({ signIn, setActive, code })` and `TOTP_MESSAGES` (`invalidCode`, `needsAnotherStep`, `notReady`): call `attemptSecondFactor({ strategy: "totp", code })`, then `setActive({ session })`. Never throws: the result is `{ ok: true }` or `{ ok: false, error }`. An API error shows its own text unless it names the provider (`authErrorMessage`); anything else gives `invalidCode`. No `zod`. Types `TotpResult`, `TotpSignIn` and `TotpSetActive`.
+- `useSecondFactor()`: wraps the helper with `useSignIn`. Returns `{ submit(code), loading, error, clearError }` (type `UseSecondFactorResult`).
+
+### Changed
+
+- `SignInScreen`: when `signIn.create` returns `needs_second_factor`, it shows `SecondFactorScreen` ("Two-step verification", "Enter the code from your authenticator app.") instead of the "needs another step" failure. A valid code starts the session and runs the same `onSuccess` or `router.replace`. Back returns to the email and password form. New `AUTH_MESSAGES` keys `secondFactorTitle` and `secondFactorDescription`. Test IDs use the mode prefix, such as `sign-in-second-factor-code`.
+- `SignInScreen` covers every incomplete status (additive):
+  - `needs_second_factor` and `needs_client_trust` read `supportedSecondFactors` and pick `totp`, then `email_code`, `phone_code`, `backup_code`. `email_code` and `phone_code` call `prepareSecondFactor` first (with the factor's `emailAddressId` or `phoneNumberId`); all four then call `attemptSecondFactor({ strategy, code })`. Each strategy has its own generic title and description in `AUTH_MESSAGES`; client trust uses "Verify it's you". A footer link switches to a backup code, and back from it.
+  - `needs_new_password` shows a new-password step (with confirm) that calls `signIn.resetPassword({ password })`, then `setActive`.
+  - `onIncomplete?(signIn: IncompleteSignIn)` (new prop; type `IncompleteSignIn`): called only for statuses the built-in UI cannot finish: `needs_identifier`, `needs_first_factor`, any unknown status, and `needs_second_factor` or `needs_client_trust` when no supported strategy (totp, backup code, phone code, email code) exists. The built-in UI always runs `needs_second_factor`, `needs_client_trust` and `needs_new_password`, with or without `onIncomplete`. When `onIncomplete` is passed, the web-fallback message is not shown. Without it, the fallback shows for those statuses. The fallback logs `console.warn` with the status and strategy ids (never shown to the user). Ignored in `sign-up`.
+- Helpers (`/auth`): `submitSecondFactor({ signIn, setActive, code, strategy })`, `prepareSecondFactorIfNeeded({ signIn, strategy, factor? })`, `pickSecondFactorStrategy`, `supportedSecondFactorStrategies`, `SECOND_FACTOR_PREFERENCE`, and types `SecondFactorStrategy`, `SecondFactor`, `SecondFactorSignIn`, `UseSecondFactorOptions`. `submitTotpSecondFactor` is unchanged in behaviour. `useSecondFactor({ strategy? })` (default `"totp"`) also returns `prepare`, `strategy` and `setStrategy`; the no-argument call and `{ submit, loading, error, clearError }` work as before. New `TOTP_MESSAGES` keys `invalidCodeGeneric` and `sendFailed`.
+- `SecondFactorScreen`: new optional `footer`, `digitsOnly` (default `true`) and `placeholder`. Defaults keep today's digits-only number pad.
+- Fix: `AuthScreen` keyboard. It used `behavior="height"` on Android, which does nothing on edge-to-edge windows, so the keyboard covered the password field and the submit button. It now uses `behavior="padding"` on both platforms (as `OverlayModal` and `PromptInput`), follows `Keyboard` show and hide events, drops `justify-center` while the keyboard is open, and adds the keyboard height plus 24 as bottom space on the scroll content. `keyboardDismissMode="on-drag"`. `SignInScreen` and `SecondFactorScreen` get this through `AuthScreen`. Not checked on a device or emulator in this environment.
+- Tests: new `tests/totp.test.ts` cases for strategy choice, prepare and submit; `tests/auth.test.ts` covers the status branches, `onIncomplete` order, the switch and the keyboard source; `tests/auth.test.ts`, `tests/exports.test.ts`, `tests/subpaths.test.ts` and `tests/buttonShape.test.ts` cover the new names and sources.
+
 ## 0.9.0
 
 Expo push registration hook. Additive; three new optional peers.
