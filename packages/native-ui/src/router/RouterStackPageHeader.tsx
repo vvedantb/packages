@@ -1,4 +1,7 @@
-import { useRouter, type Href, type Router } from "expo-router";
+import { useRouter, type Href } from "expo-router";
+
+/** `Router` was renamed `ImperativeRouter` in expo-router 57, so take the type from `useRouter`. */
+type Router = ReturnType<typeof useRouter>;
 import { StackPageHeader, type StackPageHeaderProps } from "../StackPageHeader";
 
 export type RouterStackPageHeaderProps = Omit<StackPageHeaderProps, "onBack"> & {

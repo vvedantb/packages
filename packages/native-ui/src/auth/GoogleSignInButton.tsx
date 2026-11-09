@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { useSSO } from "@clerk/clerk-expo";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { useRouter, type Href, type Router } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { GoogleMark } from "../brand/GoogleMark";
 import { Button, type ButtonProps } from "../Button";
 import { toast } from "../toastStore";
@@ -18,7 +18,7 @@ export type AuthNavigationOptions = {
   /** Where to go after a session starts. Default `"/"`. */
   afterAuthHref?: Href;
   /** Passed to `router.replace`, such as `{ withAnchor: true }`. */
-  replaceOptions?: Parameters<Router["replace"]>[1];
+  replaceOptions?: Parameters<ReturnType<typeof useRouter>["replace"]>[1];
   /** Called after a session starts, in place of `router.replace`. */
   onSuccess?: () => void;
 };

@@ -726,6 +726,13 @@ describe("PromptInput", () => {
     return { h, onSubmit, field, submit };
   }
 
+  it("names the field `<testID>-input` for UI tests, in both layouts, and sets no id without a testID", async () => {
+    for (const layout of ["stacked", "inline"]) {
+      expect((await composer({ testID: "composer", layout })).field().props.testID).toBe("composer-input");
+      expect((await composer({ layout })).field().props.testID).toBeUndefined();
+    }
+  });
+
   it("sends the trimmed text and clears the field", async () => {
     const { onSubmit, field, submit } = await composer();
     expect(field().props).toMatchObject({

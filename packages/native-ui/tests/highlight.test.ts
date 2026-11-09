@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import Module from "node:module";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -88,10 +89,22 @@ describe("codeTokenColor", () => {
 
 describe("CodeBlock highlighting", () => {
   it("returns null from the loader and draws plain code without prism-react-renderer", async () => {
-    const { loadPrismReactRenderer } = await import("../src/highlight");
-    expect(loadPrismReactRenderer()).toBeNull();
-    const child = await codeChild({ code: "const a = 1;", language: "ts" });
-    expect(renderHighlighted(child)).toBe("const a = 1;");
+    // The workspace now installs the peer for the gallery app, and pnpm puts its store on
+    // NODE_PATH, so hide it here to test the missing-peer path whatever is installed.
+    const nodeModule = createRequire(import.meta.url)("node:module") as { _load: (request: string, ...rest: unknown[]) => unknown };
+    const load = nodeModule._load;
+    nodeModule._load = (request, ...rest) => {
+      if (request === "prism-react-renderer") throw Object.assign(new Error("Cannot find module"), { code: "MODULE_NOT_FOUND" });
+      return load.call(nodeModule, request, ...rest);
+    };
+    try {
+      const { loadPrismReactRenderer } = await import("../src/highlight");
+      expect(loadPrismReactRenderer()).toBeNull();
+      const child = await codeChild({ code: "const a = 1;", language: "ts" });
+      expect(renderHighlighted(child)).toBe("const a = 1;");
+    } finally {
+      nodeModule._load = load;
+    }
   });
 
   it("keeps plain code with no language or highlight off", async () => {

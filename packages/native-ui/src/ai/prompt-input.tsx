@@ -192,6 +192,7 @@ export function PromptInput({
             <View className="flex-row items-end gap-1 p-1.5">
               {leading ? <View className="shrink-0 flex-row items-center gap-1">{leading}</View> : null}
               <FieldInput
+                testID={testID ? `${testID}-input` : undefined}
                 multiline
                 value={text}
                 onChangeText={setText}
@@ -227,6 +228,7 @@ export function PromptInput({
             {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
             {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
             <FieldInput
+              testID={testID ? `${testID}-input` : undefined}
               multiline
               value={text}
               onChangeText={setText}

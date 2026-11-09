@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type ViewProps } from "react-native";
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewProps, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import {
   IconArrowBackUp,
@@ -120,10 +120,10 @@ export function Message({
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
-  const layout = [
+  const layout: StyleProp<ViewStyle> = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
     style,
-  ] as const;
+  ];
   const merged = cn("w-full max-w-[95%] gap-2", className);
   const parts = (
     <>

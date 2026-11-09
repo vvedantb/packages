@@ -13,6 +13,7 @@ import { cn } from "../cn";
 import { textStyle, typeStyle } from "../controlStyles";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
+import { useLargerText } from "../theme";
 
 type Option = SelectPrimitive.Option;
 
@@ -166,12 +167,15 @@ const SelectItem = React.forwardRef<
   SelectItemProps
 >(({ className, disabled, ...props }, ref) => {
   const scheme = useScheme();
+  const largerText = useLargerText();
   return (
     <SelectPrimitive.Item
       ref={ref}
       disabled={disabled}
       className={cn(
-        "relative flex-row items-center gap-2 rounded-sm py-3 pl-2 pr-8 active:opacity-70",
+        // 44 high (56 with larger text) so a row is a full touch target.
+        "relative min-h-[44px] flex-row items-center gap-2 rounded-sm py-3 pl-2 pr-8 active:opacity-70",
+        largerText && "min-h-[56px]",
         disabled && "opacity-50",
         className,
       )}

@@ -33,7 +33,7 @@ export function AmbientBackground({
         <View
           pointerEvents="none"
           style={{
-            ...StyleSheet.absoluteFillObject,
+            ...StyleSheet.absoluteFill,
             backgroundColor: tokens.color.background[scheme],
           }}
         />

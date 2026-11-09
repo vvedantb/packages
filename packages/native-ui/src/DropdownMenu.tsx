@@ -27,7 +27,7 @@ import { useControllableState } from "./primitives/use-controllable-state";
 /**
  * Sizes from the web menu classes (`_menu-classes.ts`): content `min-w-[12rem]
  * p-1.5 rounded-lg`, `sideOffset` 4 and `collisionPadding` 8; items `px-2.5
- * py-2 rounded-menu-item` (8) with a 16 icon `gap-2`; radio items `pl-8` with
+ * py-3 rounded-menu-item` (8) with a 16 icon `gap-2`; radio items `pl-8` with
  * the check at `left-2.5`; the label `px-2.5 py-1.5`; the separator `-mx-1.5
  * my-1 h-px`. Items are at least 44 high (the web `max-sm:min-h-10` is 40).
  */
@@ -39,7 +39,7 @@ export const DROPDOWN_MENU = {
   edge: 8,
   itemRadius: 8,
   itemPaddingX: 10,
-  itemPaddingY: 8,
+  itemPaddingY: 12,
   itemGap: 8,
   indicatorInset: 32,
   indicatorLeft: 10,
