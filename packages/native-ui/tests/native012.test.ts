@@ -454,7 +454,7 @@ describe("0.12.0 entries and peers (source contract)", () => {
   const pkg = JSON.parse(read("package.json"));
 
   it("adds ./expo-router with RouterStackPageHeader, and keeps expo-router an optional peer", () => {
-    expect(pkg.version).toBe("0.12.0");
+    expect(pkg.version).toBe("0.12.1");
     expect(pkg.exports["./expo-router"]).toEqual({
       types: "./src/entries/expo-router.ts",
       default: "./src/entries/expo-router.ts",

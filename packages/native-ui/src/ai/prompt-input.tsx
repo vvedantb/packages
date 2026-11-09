@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { KeyboardAvoidingView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconArrowUp, IconPlayerStopFilled } from "@tabler/icons-react-native";
@@ -151,11 +151,18 @@ export function PromptInput({
   const message = text.trim();
   const canSubmit = message.length > 0 && !disabled && !isGenerating(status);
   const bottom = safeBottom ? insets.bottom : 0;
+  // The field grows with its content up to `maxHeight`, then scrolls. A fixed
+  // `numberOfLines` would lock the line count on Android, so neither layout sets it.
+  const [contentHeight, setContentHeight] = useState(0);
+  const maxHeight = largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular;
+  const growStyle = contentHeight > 0 ? { height: Math.min(contentHeight, maxHeight) } : null;
+  const scrollEnabled = contentHeight > maxHeight;
 
   const submit = () => {
     if (!canSubmit) return;
     onSubmit(message);
     setText("");
+    setContentHeight(0);
   };
 
   return (
@@ -184,8 +191,8 @@ export function PromptInput({
                 accessibilityLabel={accessibilityLabel}
                 editable={!disabled}
                 textAlignVertical="center"
-                // One line to start (a multiline field is two rows on react-native-web); it grows from there.
-                numberOfLines={1}
+                scrollEnabled={scrollEnabled}
+                onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
                 className={cn(
                   "min-h-8 flex-1 border-0 px-2 py-1 text-base font-instrument-sans",
                   largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
@@ -195,7 +202,8 @@ export function PromptInput({
                   largerText ? typeStyle("medium") : null,
                   {
                     backgroundColor: "transparent",
-                    maxHeight: largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular,
+                    maxHeight,
+                    ...growStyle,
                   },
                 ]}
               />
@@ -217,6 +225,8 @@ export function PromptInput({
               accessibilityLabel={accessibilityLabel}
               editable={!disabled}
               textAlignVertical="top"
+              scrollEnabled={scrollEnabled}
+              onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
               className={cn(
                 "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
                 largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
@@ -226,7 +236,8 @@ export function PromptInput({
                 largerText ? typeStyle("medium") : null,
                 {
                   backgroundColor: "transparent",
-                  maxHeight: largerText ? MAX_FIELD_HEIGHT.larger : MAX_FIELD_HEIGHT.regular,
+                  maxHeight,
+                  ...growStyle,
                 },
               ]}
             />

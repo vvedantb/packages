@@ -2,6 +2,7 @@ import { Platform, StyleSheet, View, type ViewProps } from "react-native";
 import { useColorScheme } from "nativewind";
 import { glassMode, loadBlur } from "./blur";
 import { cn } from "./cn";
+import { hasDefiniteHeight } from "./definiteSize";
 import {
   floatingFill,
   floatingHairline,
@@ -65,7 +66,7 @@ export function FloatingSurface({
             backgroundColor: mode === "blur" ? "transparent" : fill,
           },
           Platform.OS === "ios" ? styles.continuous : null,
-          style != null ? styles.fill : null,
+          hasDefiniteHeight(style) ? styles.fill : null,
         ]}
       >
         {mode === "blur" && BlurView ? (
