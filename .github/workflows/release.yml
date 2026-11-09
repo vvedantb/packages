@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Check status, build, test and pack dry-run. Nothing is published.
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+env:
+  NPM_CONFIG_PROVENANCE: "true"
+
+jobs:
+  release:
+    name: Version PR and publish
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@^11.5.1
+      - name: Remove empty npm auth tokens
+        # setup-node writes an empty `_authToken=` line when registry-url is
+        # set. An empty token breaks the OIDC exchange. This is not a token
+        # fallback: publishing uses OIDC trusted publishing only.
+        run: |
+          for f in "$HOME/.npmrc" "${NPM_CONFIG_USERCONFIG:-}" "$RUNNER_TEMP/.npmrc" "$GITHUB_WORKSPACE/.npmrc"; do
+            if [ -n "$f" ] && [ -f "$f" ]; then
+              sed -i '/_authToken=/d' "$f" || true
+            fi
+          done
+      - run: pnpm install --frozen-lockfile
+      - name: Version PR or publish
+        uses: changesets/action@v2
+        with:
+          version-script: pnpm version-packages
+          publish-script: pnpm ci:publish
+          pr-title: Version Packages
+          commit-message: Version Packages
+          create-github-releases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dry-run:
+    name: Dry-run pack check
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Upgrade npm
+        run: npm install -g npm@^11.5.1
+      - run: pnpm install --frozen-lockfile
+      - name: Changeset status (informational)
+        # A non-zero exit here must not fail the job. Branches that change
+        # package.json metadata without a version bump exit 1 by design.
+        run: |
+          status=0
+          pnpm changeset status 2>&1 | tee "$RUNNER_TEMP/changeset-status.txt" || status=$?
+          {
+            echo '## Changeset status'
+            echo "Exit code: $status (informational only)"
+            echo '```'
+            cat "$RUNNER_TEMP/changeset-status.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+      - name: Build, typecheck and test
+        run: pnpm build && pnpm typecheck && pnpm test
+      - name: Pack dry-run and exports check
+        # Runs the build again, then `pnpm pack --dry-run` and an exports check
+        # for each publishable package. Exits 0 when versions are on npm already.
+        run: DRY_RUN_SUMMARY="$RUNNER_TEMP/publish-dry-run-summary.txt" pnpm release:dry-run
+      - name: Summarise packages
+        if: always()
+        run: |
+          {
+            echo '## Dry-run pack and exports check'
+            echo '```'
+            cat "$RUNNER_TEMP/publish-dry-run-summary.txt" 2>/dev/null || echo 'No summary written.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
