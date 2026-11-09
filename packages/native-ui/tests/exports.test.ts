@@ -354,7 +354,7 @@ describe("@vvedantb/native-ui exports", () => {
   it("keeps auth, the Expo web root and the Tailwind preset off the root entry", () => {
     expect(index).not.toMatch(/from "\.\/auth"/);
     expect(index).not.toMatch(/ExpoWebRoot|tailwind-preset/);
-    for (const name of ["AuthProviders", "SignInScreen", "SignUpScreen", "GoogleSignInButton", "OrDivider", "SecondFactorScreen", "useSecondFactor", "submitTotpSecondFactor", "TOTP_MESSAGES", "ExpoWebRoot"]) {
+    for (const name of ["AuthProviders", "SignInScreen", "SignUpScreen", "GoogleSignInButton", "OrDivider", "SecondFactorScreen", "useSecondFactor", "submitTotpSecondFactor", "submitSecondFactor", "prepareSecondFactorIfNeeded", "TOTP_MESSAGES", "ExpoWebRoot"]) {
       expect(names.has(name), name).toBe(false);
     }
   });

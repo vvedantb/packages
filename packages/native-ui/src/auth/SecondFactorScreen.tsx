@@ -24,6 +24,12 @@ export type SecondFactorScreenProps = {
   header?: ReactNode;
   /** Prefix for every `testID`. Default "second-factor". */
   testIDPrefix?: string;
+  /** Below the buttons, such as a "Use a backup code" switch. Passed to `AuthScreen`. */
+  footer?: ReactNode;
+  /** Default `true`: digits only, number pad. `false` takes any characters (backup codes). */
+  digitsOnly?: boolean;
+  /** Placeholder when `digitsOnly` is `false`. Default "Code". */
+  placeholder?: string;
 };
 
 /** A one-time code step: digits only, a Verify button, an inline error and a back link. */
@@ -38,6 +44,9 @@ export function SecondFactorScreen({
   backLabel = "Back",
   header,
   testIDPrefix = "second-factor",
+  footer,
+  digitsOnly = true,
+  placeholder,
 }: SecondFactorScreenProps) {
   const [code, setCode] = useState("");
   const ready = code.length === codeLength && !loading;
@@ -47,19 +56,21 @@ export function SecondFactorScreen({
   };
 
   return (
-    <AuthScreen testID={`${testIDPrefix}-screen`} title={title} subtitle={description} header={header}>
+    <AuthScreen testID={`${testIDPrefix}-screen`} title={title} subtitle={description} header={header} footer={footer}>
       <Input
         testID={`${testIDPrefix}-code`}
         accessibilityLabel="Verification code"
         value={code}
-        placeholder={"0".repeat(codeLength)}
-        keyboardType="number-pad"
+        placeholder={digitsOnly ? "0".repeat(codeLength) : (placeholder ?? "Code")}
+        keyboardType={digitsOnly ? "number-pad" : "default"}
+        autoCapitalize="none"
+        autoCorrect={false}
         autoComplete="one-time-code"
         textContentType="oneTimeCode"
         maxLength={codeLength}
         autoFocus
         returnKeyType="go"
-        onChangeText={(text) => setCode(text.replace(/\D/g, ""))}
+        onChangeText={(text) => setCode(digitsOnly ? text.replace(/\D/g, "") : text.trim())}
         onSubmitEditing={submit}
       />
       <FieldError testID={`${testIDPrefix}-error`} message={error} />

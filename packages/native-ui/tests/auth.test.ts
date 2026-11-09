@@ -13,6 +13,7 @@ const completeAuthSession = vi.hoisted(() => vi.fn());
 vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
   StyleSheet: { hairlineWidth: 1 },
+  Keyboard: { addListener: () => ({ remove() {} }) },
   KeyboardAvoidingView: "KeyboardAvoidingView",
   ScrollView: "ScrollView",
   Text: "Text",
@@ -166,6 +167,48 @@ describe("auth screens (source contract)", () => {
     expect(auth.AUTH_MESSAGES.secondFactorTitle).toBe("Two-step verification");
   });
 
+  it("handles every incomplete status and falls back with a console.warn", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/attempt\.status === "needs_second_factor" \|\| attempt\.status === "needs_client_trust"/);
+    expect(screen).toMatch(/attempt\.status === "needs_new_password"/);
+    expect(screen).toMatch(/signIn\.resetPassword\(\{ password: newPassword \}\)/);
+    expect(screen).toMatch(/pickSecondFactorStrategy\(list\)/);
+    expect(screen).toMatch(/secondFactor\.prepare\(/);
+    expect(screen).toMatch(/console\.warn\(/);
+    expect(screen).toMatch(/supportedSecondFactors/);
+  });
+
+  it("runs the built-in new-password and second-factor steps first and hands only unhandled statuses to onIncomplete", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/onIncomplete\?: \(signIn: IncompleteSignIn\) => void/);
+    const order = ["needs_new_password", "needs_second_factor", "startSecondFactor(attempt", "unhandled(attempt)"].map((text) =>
+      screen.indexOf(text, screen.indexOf("signIn.create")),
+    );
+    expect(order.every((i) => i > 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // onIncomplete is reached only through `unhandled`, never before the built-in branches.
+    const create = screen.slice(screen.indexOf("signIn.create"));
+    expect(create.slice(0, create.indexOf("unhandled(attempt)"))).not.toMatch(/onIncomplete/);
+    expect(screen).toMatch(/if \(!strategy\) return unhandled\(attempt\)/);
+    expect(screen).toMatch(/if \(onIncomplete\) return onIncomplete\(attempt\)/);
+    expect(screen.indexOf("warnIncomplete(attempt)", screen.indexOf("const unhandled"))).toBeGreaterThan(
+      screen.indexOf("if (onIncomplete) return onIncomplete(attempt)"),
+    );
+  });
+
+  it("offers a backup-code switch through the SecondFactorScreen footer", () => {
+    const screen = code(read("SignInScreen.tsx"));
+    expect(screen).toMatch(/footer=\{/);
+    expect(screen).toMatch(/digitsOnly=\{!backup\}/);
+    expect(screen).toMatch(/key=\{active\}/);
+    expect(auth.AUTH_MESSAGES.useBackupCode).toBe("Use a backup code");
+    expect(auth.AUTH_MESSAGES.useAuthenticator).toBe("Use authenticator app");
+    const body = code(read("SecondFactorScreen.tsx"));
+    expect(body).toMatch(/footer=\{footer\}/);
+    expect(body).toMatch(/digitsOnly = true/);
+    expect(body).toMatch(/digitsOnly \? text\.replace/);
+  });
+
   it("exports SignUpScreen as the sign-up mode", () => {
     expect(code(read("SignInScreen.tsx"))).toMatch(/<SignInScreen \{\.\.\.props\} mode="sign-up" \/>/);
   });
@@ -240,9 +283,9 @@ describe("SecondFactorScreen (source contract)", () => {
   });
 
   it("takes digits only, up to codeLength, and waits for the full code", () => {
-    expect(body).toMatch(/text\.replace\(\/\\D\/g, ""\)/);
+    expect(body).toMatch(/digitsOnly \? text\.replace\(\/\\D\/g, ""\)/);
     expect(body).toMatch(/maxLength=\{codeLength\}/);
-    expect(body).toMatch(/keyboardType="number-pad"/);
+    expect(body).toMatch(/keyboardType=\{digitsOnly \? "number-pad" : "default"\}/);
     expect(body).toMatch(/textContentType="oneTimeCode"/);
     expect(body).toMatch(/const ready = code\.length === codeLength && !loading/);
     expect(body).toMatch(/disabled=\{!ready\}/);
@@ -261,5 +304,28 @@ describe("SecondFactorScreen (source contract)", () => {
     expect(typeof auth.useSecondFactor).toBe("function");
     expect(typeof auth.submitTotpSecondFactor).toBe("function");
     expect(auth.TOTP_MESSAGES.invalidCode).toMatch(/Incorrect code/);
+  });
+});
+
+describe("AuthScreen keyboard (source contract)", () => {
+  const body = code(read("AuthScreen.tsx"));
+
+  it("pads on both platforms: no Android-only height, no undefined behavior", () => {
+    expect(body).toMatch(/behavior="padding"/);
+    expect(body).not.toMatch(/"height"|Platform/);
+  });
+
+  it("keeps taps working and pads the scroll content by the keyboard height", () => {
+    expect(body).toMatch(/keyboardShouldPersistTaps="handled"/);
+    expect(body).toMatch(/paddingBottom: keyboardHeight \+ KEYBOARD_EXTRA/);
+    for (const event of ["keyboardWillShow", "keyboardDidShow", "keyboardWillHide", "keyboardDidHide"]) {
+      expect(body).toContain(`"${event}"`);
+    }
+    expect(body).toMatch(/endCoordinates\.height/);
+  });
+
+  it("stops centring while the keyboard is open", () => {
+    expect(body).toMatch(/keyboardOpen \? "justify-start" : "justify-center"/);
+    expect(body).not.toMatch(/"grow justify-center/);
   });
 });
