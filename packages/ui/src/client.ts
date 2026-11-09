@@ -54,6 +54,7 @@ export * from "./ui/avatar";
 export * from "./ui/badge";
 export * from "./ui/border-beam";
 export * from "./ui/breadcrumb";
+export * from "./ui/page-title";
 export * from "./ui/button";
 export * from "./ui/button-group";
 export * from "./ui/card";
@@ -285,6 +286,8 @@ export {
 } from "./marketing/landing";
 export type {
   LandingFeature,
+  LandingFooterAppProps,
+  LandingFooterLegacyProps,
   LandingFooterProps,
   LandingLatticeProps,
   LandingLink,
@@ -311,8 +314,15 @@ export {
   landingShellClass,
 } from "./marketing/marketing-classes";
 export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";
-export { SiteFooter } from "./marketing/SiteFooter";
-export type { SiteFooterLink, SiteFooterProps, SiteFooterSocial } from "./marketing/SiteFooter";
+export { PROJECT_V_LEGAL_LINKS, PROJECT_V_SOCIALS, SITE_FOOTER_WORDMARK_SIZE, SiteFooter } from "./marketing/SiteFooter";
+export type {
+  SiteFooterAppProps,
+  SiteFooterColumn,
+  SiteFooterLegacyProps,
+  SiteFooterLink,
+  SiteFooterProps,
+  SiteFooterSocial,
+} from "./marketing/SiteFooter";
 export { PricingModal, V_PRO_APP_BENEFITS } from "./marketing/PricingModal";
 export type {
   PricingModalLegacyProps,

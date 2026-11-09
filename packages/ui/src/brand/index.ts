@@ -28,3 +28,4 @@ export { FAMILY_APPS, familyApp } from "./familyApps";
 export type { FamilyApp, FamilyAppName } from "./familyApps";
 export { V_PRO_APP_BENEFITS } from "./vProAppBenefits";
 export type { PricingPlanAppBenefit } from "./vProAppBenefits";
+export { PROJECT_V_PRODUCT_APPS, PROJECT_V_PRODUCT_APP_IDS, projectVAppsColumn } from "./productApps";
