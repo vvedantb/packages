@@ -6,7 +6,8 @@ export { AuthProviders } from "./AuthProviders";
 export type { AuthProvidersProps } from "./AuthProviders";
 export { AuthScreen, OrDivider, FieldError } from "./AuthScreen";
 export type { AuthScreenProps } from "./AuthScreen";
-export { authErrorMessage } from "./authErrors";
+export { authErrorMessage, logAuthFailure, CREDENTIAL_ERROR_CODES } from "./authErrors";
+export type { AuthErrorOptions } from "./authErrors";
 export {
   GoogleSignInButton,
   useGoogleSignIn,
@@ -26,6 +27,11 @@ export {
   submitTotpSecondFactor,
   submitSecondFactor,
   prepareSecondFactorIfNeeded,
+  prepareFirstFactorIfNeeded,
+  submitFirstFactor,
+  pickFirstFactorStrategy,
+  supportedFirstFactorStrategies,
+  FIRST_FACTOR_PREFERENCE,
   pickSecondFactorStrategy,
   supportedSecondFactorStrategies,
   SECOND_FACTOR_PREFERENCE,
@@ -33,6 +39,10 @@ export {
   TOTP_MESSAGES,
 } from "./totp";
 export type {
+  FirstFactor,
+  FirstFactorResult,
+  FirstFactorSignIn,
+  FirstFactorStrategy,
   SecondFactor,
   SecondFactorSignIn,
   SecondFactorStrategy,

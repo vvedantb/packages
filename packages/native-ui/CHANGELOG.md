@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.11.0
+
+Show/hide password toggle. Additive; no new dependency or peer.
+
+### Added
+
+- `PasswordInput` (root, `/primitives` and the new `/password-input` entry): `Input` with an eye button at the end. The password is hidden at first. The button is `IconEye` ("Show password") while hidden and `IconEyeOff` ("Hide password") while shown, with test ID `${testID}-toggle` (`password-input-toggle` without a `testID`). It is painted at 24 and reaches 44 with its hit slop. The field stays mounted on toggle, so focus and the cursor stay. It manages `secureTextEntry` itself, so that prop is not accepted. Other `Input` props and `ref` pass through; the toggle is hidden when `editable={false}`. Types `PasswordInputProps`.
+
+- `needs_first_factor` with `email_code` or `phone_code`: `SignInScreen` runs it (see Changed). New `/auth` helpers `prepareFirstFactorIfNeeded({ signIn, strategy, factor? })`, `submitFirstFactor({ signIn, code, strategy })`, `pickFirstFactorStrategy(factors)`, `supportedFirstFactorStrategies(factors)` and `FIRST_FACTOR_PREFERENCE`. Types `FirstFactor`, `FirstFactorResult`, `FirstFactorSignIn` and `FirstFactorStrategy`. `prepareFirstFactorIfNeeded` needs the matching `emailAddressId` or `phoneNumberId`; without it, it makes no call and returns an error. `submitFirstFactor` returns the attempt for the caller to route; it does not start the session.
+
+- Sign-in error behaviour, ported from Eva PR #1134. `/auth` exports `logAuthFailure(stage, error)`, `CREDENTIAL_ERROR_CODES` and the type `AuthErrorOptions`. `logAuthFailure` writes one `console.error("[sign-in] failure", { ... })` with `code`, `message`, `longMessage` and `meta.paramName`, plus `stage`, `errorName`, `status` and `clerkTraceId` when present. It reads only the error object, so it never logs a password or a one-time code. `SignInScreen` calls it with stage `"create"` when `signIn.create` fails.
+
+### Changed
+
+- `authErrorMessage(error, fallback, options?: { credentials?: boolean })`: for a Clerk error it now shows the first `longMessage` or `message`, with `clerk` and `convex` (any case) written as "the sign-in service", then `(code: <code>)`, such as `Captcha failed. the sign-in service could not verify you. (code: captcha_invalid)`. With no message text it shows `fallback` plus the code. It also reads a plain `{ errors: [...] }` object, without `zod`. Before, a message that named the provider was dropped for `fallback`. Non-Clerk errors still give `fallback`. The same change applies to the Google, sign-up, reset, verify and TOTP callers, which show the coded text for Clerk errors.
+- `SignInScreen`: the email and password `signIn.create` catch passes `{ credentials: true }` with `AUTH_MESSAGES.invalidCredentials` ("Invalid email or password"). Only `form_password_incorrect` and `form_identifier_not_found` give that text. `form_param_format_invalid` is not a credential code: it shows its own message with its code. Any other Clerk error shows its message with its code. Before, every error showed "Invalid email or password".
+- Types: `SignInScreen` assigns `attempt.status` to `string | null` before it compares it, so `needs_client_trust` no longer fails `tsc` for apps that typecheck the sources against `@clerk/types` and `@clerk/shared` 3.47.x, where `SignInStatus` omits that value. No behaviour change. This replaces the temporary types-only pnpm patch in Eva.
+- `SignInScreen`: when `signIn.create` returns `needs_first_factor`, it reads `supportedFirstFactors` and prefers `email_code`, then `phone_code` (not password, totp or backup code). It calls `prepareFirstFactor` with the matching `emailAddressId` or `phoneNumberId`, then shows `SecondFactorScreen` with the existing email or phone copy. A valid code calls `attemptFirstFactor({ strategy, code })` and routes the result: `complete` starts the session, `needs_new_password` shows the new-password step, `needs_second_factor` and `needs_client_trust` run the existing second-factor step, and anything else goes to `onIncomplete` or the web fallback. A footer link switches between email and phone code. Back returns to the email and password form. Test IDs use `${prefix}-first-factor-*`. Without a supported first factor, `needs_first_factor` still goes to `onIncomplete` or the web fallback. Restores the Eva behaviour lost in the 0.10.0 swap. The `onIncomplete` documentation is updated.
+- `types/peers.d.ts`: `useSignIn().signIn` has `supportedFirstFactors`, `prepareFirstFactor` and `attemptFirstFactor`.
+- `SignInScreen`: the password, new-password and confirm-password fields now use `PasswordInput`, so each has a show/hide button. Test IDs, labels, placeholders and autofill hints are unchanged.
+
 ## 0.10.0
 
 Second-factor (TOTP) step for sign-in. Additive; no new dependency or peer.

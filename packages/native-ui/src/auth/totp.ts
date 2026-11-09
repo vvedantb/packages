@@ -125,6 +125,104 @@ export async function submitSecondFactor(args: {
   }
 }
 
+/** The first-factor code strategies the built-in step handles. */
+export type FirstFactorStrategy = "email_code" | "phone_code";
+
+/** Default order: `email_code`, then `phone_code`. */
+export const FIRST_FACTOR_PREFERENCE: readonly FirstFactorStrategy[] = ["email_code", "phone_code"];
+
+/** One entry of `signIn.supportedFirstFactors`. */
+export type FirstFactor = {
+  strategy: string;
+  emailAddressId?: string;
+  phoneNumberId?: string;
+  safeIdentifier?: string;
+};
+
+/** The part of the sign-in resource that a first-factor code needs. Tests pass a mock. */
+export type FirstFactorSignIn = {
+  supportedFirstFactors?: FirstFactor[] | null;
+  prepareFirstFactor?(params: {
+    strategy: FirstFactorStrategy;
+    phoneNumberId?: string;
+    emailAddressId?: string;
+  }): Promise<unknown>;
+  attemptFirstFactor(params: { strategy: FirstFactorStrategy; code: string }): Promise<AttemptResult>;
+};
+
+/** A first-factor result: the attempt, for the caller to route, or an error. */
+export type FirstFactorResult = { ok: true; attempt: AttemptResult } | { ok: false; error: string };
+
+/**
+ * The first-factor strategies in `factors` that the built-in step handles, in
+ * preference order. A factor counts only when it has the id that
+ * `prepareFirstFactor` needs (`emailAddressId` or `phoneNumberId`).
+ */
+export function supportedFirstFactorStrategies(
+  factors: readonly FirstFactor[] | null | undefined,
+): FirstFactorStrategy[] {
+  const list = factors ?? [];
+  return FIRST_FACTOR_PREFERENCE.filter((strategy) =>
+    list.some(
+      (factor) =>
+        factor.strategy === strategy &&
+        Boolean(strategy === "email_code" ? factor.emailAddressId : factor.phoneNumberId),
+    ),
+  );
+}
+
+/** The default first-factor strategy: `email_code`, then `phone_code`. `null` when none is supported. */
+export function pickFirstFactorStrategy(
+  factors: readonly FirstFactor[] | null | undefined,
+): FirstFactorStrategy | null {
+  return supportedFirstFactorStrategies(factors)[0] ?? null;
+}
+
+/**
+ * Sends the first-factor code with the `emailAddressId` or `phoneNumberId` of
+ * the matching factor. Without that id it returns an error and makes no call.
+ * Never throws.
+ */
+export async function prepareFirstFactorIfNeeded(args: {
+  signIn: Pick<FirstFactorSignIn, "supportedFirstFactors" | "prepareFirstFactor">;
+  strategy: FirstFactorStrategy;
+  factor?: FirstFactor;
+}): Promise<TotpResult> {
+  const { signIn, strategy } = args;
+  if (!signIn.prepareFirstFactor) return { ok: false, error: TOTP_MESSAGES.sendFailed };
+  const factor = args.factor ?? signIn.supportedFirstFactors?.find((item) => item.strategy === strategy);
+  try {
+    if (strategy === "phone_code") {
+      if (!factor?.phoneNumberId) return { ok: false, error: TOTP_MESSAGES.sendFailed };
+      await signIn.prepareFirstFactor({ strategy, phoneNumberId: factor.phoneNumberId });
+    } else {
+      if (!factor?.emailAddressId) return { ok: false, error: TOTP_MESSAGES.sendFailed };
+      await signIn.prepareFirstFactor({ strategy, emailAddressId: factor.emailAddressId });
+    }
+    return { ok: true };
+  } catch (caught) {
+    return { ok: false, error: authErrorMessage(caught, TOTP_MESSAGES.sendFailed) };
+  }
+}
+
+/**
+ * Checks a first-factor code. It does not start the session: the attempt may
+ * need a second factor or a new password, so the caller routes it. Never
+ * throws: a failure is `{ ok: false, error }`.
+ */
+export async function submitFirstFactor(args: {
+  signIn: Pick<FirstFactorSignIn, "attemptFirstFactor">;
+  code: string;
+  strategy: FirstFactorStrategy;
+}): Promise<FirstFactorResult> {
+  try {
+    const attempt = await args.signIn.attemptFirstFactor({ strategy: args.strategy, code: args.code });
+    return { ok: true, attempt };
+  } catch (caught) {
+    return { ok: false, error: authErrorMessage(caught, TOTP_MESSAGES.invalidCodeGeneric) };
+  }
+}
+
 /** Checks a TOTP code and starts the session. TOTP needs no `prepareSecondFactor`. Same as `submitSecondFactor` with `strategy: "totp"`. */
 export function submitTotpSecondFactor(args: {
   signIn: TotpSignIn;

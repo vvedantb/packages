@@ -5,15 +5,22 @@ import { useRouter } from "expo-router";
 import { Button } from "../Button";
 import { textStyle } from "../controlStyles";
 import { Input } from "../Input";
+import { PasswordInput } from "../PasswordInput";
 import { toast } from "../toastStore";
 import { useScheme } from "../useScheme";
 import { AuthScreen, FieldError, OrDivider } from "./AuthScreen";
-import { authErrorMessage } from "./authErrors";
+import { authErrorMessage, logAuthFailure } from "./authErrors";
 import { SecondFactorScreen } from "./SecondFactorScreen";
 import {
+  pickFirstFactorStrategy,
   pickSecondFactorStrategy,
+  prepareFirstFactorIfNeeded,
+  submitFirstFactor,
+  supportedFirstFactorStrategies,
   supportedSecondFactorStrategies,
   useSecondFactor,
+  type FirstFactor,
+  type FirstFactorStrategy,
   type SecondFactor,
   type SecondFactorStrategy,
 } from "./totp";
@@ -121,11 +128,13 @@ export type SignInScreenProps = AuthNavigationOptions & {
   footer?: ReactNode;
   /**
    * Called with the sign-in when the built-in UI cannot finish it:
-   * `needs_identifier`, `needs_first_factor`, any unknown status, and
+   * `needs_identifier`, any unknown status, `needs_first_factor` when no
+   * `email_code` or `phone_code` first factor exists (with its id), and
    * `needs_second_factor` or `needs_client_trust` when no supported strategy
    * (totp, backup code, phone code, email code) exists. The built-in screen
-   * always runs `needs_second_factor`, `needs_client_trust` and
-   * `needs_new_password` itself. When called, the web-fallback message is not
+   * runs `needs_first_factor` with an email or phone code, and always runs
+   * `needs_second_factor`, `needs_client_trust` and `needs_new_password`
+   * itself. When called, the web-fallback message is not
    * shown. Without it, the screen shows the web fallback and logs
    * `console.warn`. Ignored in `sign-up`.
    */
@@ -168,6 +177,11 @@ export function SignInScreen({
   const [code, setCode] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [pendingSecondFactor, setPendingSecondFactor] = useState(false);
+  const [pendingFirstFactor, setPendingFirstFactor] = useState(false);
+  const [firstFactors, setFirstFactors] = useState<FirstFactor[]>([]);
+  const [firstStrategy, setFirstStrategy] = useState<FirstFactorStrategy>("email_code");
+  const [firstLoading, setFirstLoading] = useState(false);
+  const [firstError, setFirstError] = useState("");
   const [factors, setFactors] = useState<SecondFactor[]>([]);
   const [clientTrust, setClientTrust] = useState(false);
   const [pendingNewPassword, setPendingNewPassword] = useState(false);
@@ -224,6 +238,71 @@ export function SignInScreen({
     await chooseStrategy(strategy, list);
   };
 
+  const chooseFirstStrategy = async (strategy: FirstFactorStrategy, list: FirstFactor[]) => {
+    const { signIn } = signInState;
+    if (!signIn) return;
+    setFirstError("");
+    setFirstStrategy(strategy);
+    setPendingFirstFactor(true);
+    setFirstLoading(true);
+    const sent = await prepareFirstFactorIfNeeded({
+      signIn,
+      strategy,
+      factor: list.find((factor) => factor.strategy === strategy),
+    });
+    if (!sent.ok) setFirstError(sent.error);
+    setFirstLoading(false);
+  };
+
+  const startFirstFactor = async (attempt: IncompleteSignIn) => {
+    const list = attempt.supportedFirstFactors ?? [];
+    const strategy = pickFirstFactorStrategy(list);
+    if (!strategy) return unhandled(attempt);
+    setFirstFactors(list);
+    await chooseFirstStrategy(strategy, list);
+  };
+
+  // Routes a sign-in attempt. `needs_first_factor` is built in only after `signIn.create`.
+  const routeAttempt = async (attempt: IncompleteSignIn, afterCreate: boolean) => {
+    const { setActive } = signInState;
+    // Clerk's `SignInStatus` omits `needs_client_trust`: widen before comparing.
+    const status: string | null = attempt.status;
+    if (status === "complete" && attempt.createdSessionId && setActive) {
+      await setActive({ session: attempt.createdSessionId });
+      done();
+    } else if (status === "needs_new_password") {
+      setPendingFirstFactor(false);
+      setPendingNewPassword(true);
+    } else if (status === "needs_second_factor" || status === "needs_client_trust") {
+      setPendingFirstFactor(false);
+      await startSecondFactor(attempt, status === "needs_client_trust");
+    } else if (status === "needs_first_factor" && afterCreate) {
+      await startFirstFactor(attempt);
+    } else {
+      unhandled(attempt);
+    }
+  };
+
+  const onFirstFactor = async (firstCode: string) => {
+    const { isLoaded, signIn } = signInState;
+    if (!isLoaded || !signIn || firstLoading) return;
+    setFirstLoading(true);
+    setFirstError("");
+    const result = await submitFirstFactor({ signIn, code: firstCode, strategy: firstStrategy });
+    if (!result.ok) {
+      setFirstError(result.error);
+      setFirstLoading(false);
+      return;
+    }
+    try {
+      await routeAttempt(result.attempt, false);
+    } catch (caught) {
+      setFirstError(authErrorMessage(caught, AUTH_MESSAGES.verifyFailed));
+    } finally {
+      setFirstLoading(false);
+    }
+  };
+
   const onNewPassword = async () => {
     const { isLoaded, signIn, setActive } = signInState;
     if (!isLoaded || !signIn || !setActive || submitting) return;
@@ -262,18 +341,13 @@ export function SignInScreen({
     setError("");
     try {
       const attempt = await signIn.create({ identifier: email, password });
-      if (attempt.status === "complete" && attempt.createdSessionId) {
-        await setActive({ session: attempt.createdSessionId });
-        done();
-      } else if (attempt.status === "needs_new_password") {
-        setPendingNewPassword(true);
-      } else if (attempt.status === "needs_second_factor" || attempt.status === "needs_client_trust") {
-        await startSecondFactor(attempt, attempt.status === "needs_client_trust");
-      } else {
-        unhandled(attempt);
-      }
+      await routeAttempt(attempt, true);
     } catch (caught) {
-      fail(AUTH_MESSAGES.signInFailed, authErrorMessage(caught, AUTH_MESSAGES.invalidCredentials));
+      logAuthFailure("create", caught);
+      fail(
+        AUTH_MESSAGES.signInFailed,
+        authErrorMessage(caught, AUTH_MESSAGES.invalidCredentials, { credentials: true }),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -287,6 +361,8 @@ export function SignInScreen({
   const onSecondFactorBack = () => {
     // The pending attempt stays; the next `signIn.create` replaces it.
     setPendingSecondFactor(false);
+    setPendingFirstFactor(false);
+    setFirstError("");
     setPendingNewPassword(false);
     setNewPassword("");
     setConfirmPassword("");
@@ -368,26 +444,24 @@ export function SignInScreen({
         subtitle={AUTH_MESSAGES.newPasswordDescription}
         header={header}
       >
-        <Input
+        <PasswordInput
           testID={id("new-password")}
           accessibilityLabel={AUTH_MESSAGES.newPasswordLabel}
           autoCapitalize="none"
           autoComplete="new-password"
           textContentType="newPassword"
-          secureTextEntry
           autoFocus
           returnKeyType="next"
           value={newPassword}
           placeholder={AUTH_MESSAGES.newPasswordLabel}
           onChangeText={setNewPassword}
         />
-        <Input
+        <PasswordInput
           testID={id("confirm-password")}
           accessibilityLabel={AUTH_MESSAGES.confirmPasswordLabel}
           autoCapitalize="none"
           autoComplete="new-password"
           textContentType="newPassword"
-          secureTextEntry
           returnKeyType="go"
           value={confirmPassword}
           placeholder={AUTH_MESSAGES.confirmPasswordLabel}
@@ -402,6 +476,40 @@ export function SignInScreen({
           Use a different account
         </Button>
       </AuthScreen>
+    );
+  }
+
+  if (pendingFirstFactor && !pendingSecondFactor && !pendingNewPassword) {
+    const others = supportedFirstFactorStrategies(firstFactors).filter((strategy) => strategy !== firstStrategy);
+    const switchTo = others[0] ?? null;
+    const copy = secondFactorCopy(firstStrategy, false);
+    return (
+      <SecondFactorScreen
+        key={`first-${firstStrategy}`}
+        title={copy.title}
+        description={copy.description}
+        footer={
+          switchTo ? (
+            <Button
+              testID={id("first-factor-switch")}
+              variant="link"
+              size="sm"
+              fullWidth={false}
+              disabled={firstLoading}
+              onPress={() => void chooseFirstStrategy(switchTo, firstFactors)}
+            >
+              {METHOD_LABEL[switchTo]}
+            </Button>
+          ) : undefined
+        }
+        onSubmit={onFirstFactor}
+        error={firstError}
+        loading={firstLoading}
+        onBack={onSecondFactorBack}
+        backLabel="Use a different account"
+        header={header}
+        testIDPrefix={id("first-factor")}
+      />
     );
   }
 
@@ -528,13 +636,12 @@ export function SignInScreen({
         placeholder="Email"
         onChangeText={setEmail}
       />
-      <Input
+      <PasswordInput
         testID={id("password")}
         accessibilityLabel="Password"
         autoCapitalize="none"
         autoComplete={signUp ? "new-password" : "password"}
         textContentType={signUp ? "newPassword" : "password"}
-        secureTextEntry
         returnKeyType="go"
         value={password}
         placeholder="Password"

@@ -124,7 +124,7 @@ function heavyRefs(subpath: string): string[] {
 
 describe("granular entries", () => {
   it("cover the V Store entries", () => {
-    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives", "./search-input", "./page-title", "./toast"]) {
+    for (const subpath of ["./tab-bar", "./brand", "./button", "./primitives", "./search-input", "./password-input", "./page-title", "./toast"]) {
       expect(basicEntries, subpath).toContain(subpath);
     }
   });
@@ -139,7 +139,7 @@ describe("granular entries", () => {
   });
 
   it("keeps expo-router, gorhom, datetimepicker and dayjs off the brand, button, primitives, search-input, page-title, layout and toast graphs entirely", () => {
-    for (const subpath of ["./brand", "./button", "./primitives", "./search-input", "./page-title", "./layout", "./toast"]) {
+    for (const subpath of ["./brand", "./button", "./primitives", "./search-input", "./password-input", "./page-title", "./layout", "./toast"]) {
       const names = packageRefs(entryFile(subpath)).map((ref) => packageName(ref.specifier));
       for (const peer of ["expo-router", "@gorhom/bottom-sheet", "@react-native-community/datetimepicker", "dayjs"]) {
         expect(names, `${subpath} ${peer}`).not.toContain(peer);
@@ -162,6 +162,7 @@ describe("granular entries", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
+    expect(heavyRefs("./password-input")).toEqual([]);
     expect(heavyRefs("./page-title")).toEqual([]);
     // From 0.3.12 the toast surface is flat, so the entry no longer reaches the expo-blur loader.
     expect(heavyRefs("./toast")).toEqual([]);
@@ -240,8 +241,9 @@ describe("granular entries", () => {
         "V_PRO_APP_BENEFITS",
       ],
       "./button": ["Button", "ButtonProps", "ButtonShape", "ButtonSize", "ButtonVariant"],
-      "./primitives": ["Button", "ButtonShape", "Input", "SearchInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast", "DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuLabel", "DropdownMenuItem", "DropdownMenuRadioItem", "DropdownMenuSeparator", "DropdownMenuItemProps", "BulkActionBar", "BulkActionBarProps", "BulkBarAction"],
+      "./primitives": ["Button", "ButtonShape", "Input", "SearchInput", "PasswordInput", "Textarea", "Label", "Select", "Switch", "Checkbox", "Dialog", "AlertDialog", "Sheet", "Toaster", "toast", "DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuLabel", "DropdownMenuItem", "DropdownMenuRadioItem", "DropdownMenuSeparator", "DropdownMenuItemProps", "BulkActionBar", "BulkActionBarProps", "BulkBarAction"],
       "./search-input": ["SearchInput", "SearchInputProps"],
+      "./password-input": ["PasswordInput", "PasswordInputProps"],
       "./page-title": ["PageTitle", "PageHeader", "PageTitleProps", "PageHeaderProps", "StackPageHeader", "StackPageHeaderProps"],
       "./layout": [
         "ScreenContainer",
@@ -406,6 +408,7 @@ describe("granular entries", () => {
   it("keeps the search-input, page-title and toast entries to their own names", () => {
     const names = (subpath: string) => [...exportedNames(join(root, entryFile(subpath)))].sort();
     expect(names("./search-input")).toEqual(["SearchInput", "SearchInputProps"]);
+    expect(names("./password-input")).toEqual(["PasswordInput", "PasswordInputProps"]);
     expect(names("./page-title")).toEqual([
       "PageHeader",
       "PageHeaderProps",
@@ -474,6 +477,12 @@ describe("granular entries", () => {
       "submitTotpSecondFactor",
       "submitSecondFactor",
       "prepareSecondFactorIfNeeded",
+      "prepareFirstFactorIfNeeded",
+      "submitFirstFactor",
+      "pickFirstFactorStrategy",
+      "supportedFirstFactorStrategies",
+      "FIRST_FACTOR_PREFERENCE",
+      "FirstFactorStrategy",
       "pickSecondFactorStrategy",
       "supportedSecondFactorStrategies",
       "SECOND_FACTOR_PREFERENCE",
