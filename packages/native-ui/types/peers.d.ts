@@ -726,6 +726,7 @@ declare module "@tabler/icons-react-native" {
   }
   type Icon = React.ComponentType<IconProps>;
   export const IconAlertTriangle: Icon;
+  export const IconArrowBackUp: Icon;
   export const IconArrowDown: Icon;
   export const IconArrowLeft: Icon;
   export const IconArrowRight: Icon;

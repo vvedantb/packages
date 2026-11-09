@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.13.0
+
+Additive release: quoted-reply building blocks for chat. No breaking change, no removed or renamed export. Existing `Message`, `ChatThread` and `PromptInput` calls are unchanged. No new dependency. `expo-haptics` stays an optional peer.
+
+### Added
+
+- `/ai` `MessageActionSheet`: a bottom sheet in an RN `Modal` (no `@gorhom/bottom-sheet`) with rows `{ key, label, icon?, destructive?, onPress }`, a Cancel row, safe-area padding and a selection haptic on open through `selectionHaptic()`. Closes on the backdrop, Cancel, Android back and after an action. Type `MessageSheetAction`.
+- `/ai` `Message`: optional `onLongPress`, `actions` (opens the sheet), `actionSheetTitle` and `highlighted` (primary wash that fades over 1.4 seconds, plus a ring while true; still with Reduce Motion). Without them `Message` renders the same `View`. Also exported: `MESSAGE_HIGHLIGHT_MS`.
+- `/ai` `MessageContent`: optional `quote` slot above the content.
+- `/ai` `ReplyQuoteChip`: author, up to two lines of text, an X with a 44 point target. Labels "Replying to {author}" and "Dismiss reply quote".
+- `/ai` `MessageQuote`: left border, author and up to two lines, a button with `onPress`. Takes its colour from the bubble.
+- `/ai` `PromptInput`: optional `replyTo`, drawn above `header` in both layouts. `header`, `toolbar` and `leading` are unchanged.
+- `/ai` `MESSAGE_ACTIONS.reply` (`IconArrowBackUp`, "Reply"). `MessageActionKind` gains `"reply"`; the other kinds are unchanged.
+
+### Changed
+
+- The `/ai` and `/ai-gallery` entries now reach `expo-haptics` through the existing optional-peer loader in `haptics.ts` (lazy `require`, no static import).
+
+### Tests
+
+- New `tests/quotedReplies.test.ts`. `tests/ai.test.ts`, `tests/subpaths.test.ts` and `tests/exports.test.ts` updated for the new names, the `reply` preset and the haptics loader.
+- New consumer type test `consumer/quotedReplies.consumer.tsx`.
+
 ## 0.12.0
 
 Additive release from the vibot and V Store gap briefs. No breaking change, no removed export. Existing props and `testID`s are unchanged. No new dependency. `expo-router` stays an optional peer.

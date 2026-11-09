@@ -156,9 +156,13 @@ describe("granular entries", () => {
     ]);
   });
 
-  it("brand, button, search-input, page-title, toast, ai and ai-gallery reach no heavy peer, not even a loader", () => {
-    expect(heavyRefs("./ai")).toEqual([]);
-    expect(heavyRefs("./ai-gallery")).toEqual([]);
+  it("ai reaches expo-haptics only through the optional-peer loader (MessageActionSheet haptic, 0.13.0)", () => {
+    const loader = ["haptics.ts: lazy expo-haptics", "haptics.ts: type expo-haptics"];
+    expect(heavyRefs("./ai")).toEqual(loader);
+    expect(heavyRefs("./ai-gallery")).toEqual(loader);
+  });
+
+  it("brand, button, search-input, page-title, and toast reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
@@ -285,6 +289,9 @@ describe("granular entries", () => {
         "MessageContent",
         "MessageActionsBar",
         "MessageAction",
+        "MessageActionSheet",
+        "ReplyQuoteChip",
+        "MessageQuote",
         "Reasoning",
         "ReasoningTrigger",
         "ReasoningContent",

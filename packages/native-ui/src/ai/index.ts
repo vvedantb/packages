@@ -36,6 +36,7 @@ export {
   MessageAction,
   MessageMeta,
   MESSAGE_ACTIONS,
+  MESSAGE_HIGHLIGHT_MS,
   userBubbleStyle,
   tintBubbleStyle,
 } from "./message";
@@ -49,6 +50,12 @@ export type {
   MessageActionKind,
   MessageActionProps,
 } from "./message";
+export { MessageActionSheet } from "./message-action-sheet";
+export type { MessageActionSheetProps, MessageSheetAction } from "./message-action-sheet";
+export { ReplyQuoteChip } from "./reply-quote-chip";
+export type { ReplyQuoteChipProps } from "./reply-quote-chip";
+export { MessageQuote, QUOTE_MAX_LINES } from "./message-quote";
+export type { MessageQuoteProps } from "./message-quote";
 export {
   Reasoning,
   ReasoningTrigger,

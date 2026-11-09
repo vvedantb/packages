@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.39.0
+
+Additive: quoted-reply building blocks for chat. No removed or renamed export, and `Message`, `MessageContent` and `PromptInput` render the same DOM without the new props. No new dependency.
+
+- `Message`: optional `actions` (`MessageMenuAction[]`: `key`, `label`, `icon?`, `destructive?`, `disabled?`, `hover?`, `onSelect`). With actions the message is `relative`, a right click opens a context menu (the `ContextMenu` primitive) and a hover toolbar shows the actions that have an `icon` (`reveal-on-hover`, always visible on touch). Start with Reply.
+- `Message`: optional `highlighted`. While `true`: `bg-primary/10 ring-2 ring-primary/30` and `data-highlighted`. Set it back to `false` about 1.5 seconds later and it fades (`duration-1000`). Without the prop nothing changes.
+- New `MessageContextMenu` (`actions`, one `children` element) and `MessageHoverActions` (`actions`), for use without the `Message` `actions` prop.
+- New `MessageQuote` (`author`, `text`, `onPress`): left border, author, two lines of text. A button with `onPress`. Takes the bubble colour, so it reads on the primary user bubble.
+- New `ReplyQuoteChip` (`author`, `text`, `onDismiss`, `dismissLabel`): for `PromptInputHeader`. "Replying to {author}" and "Dismiss reply quote" labels. There is no `replyTo` prop on `PromptInput`.
+- New types `MessageMenuAction`, `MessageContextMenuProps`, `MessageHoverActionsProps`, `MessageQuoteProps`, `ReplyQuoteChipProps`.
+
 ## 0.38.0
 
 - New `SiteHeader` (root and `/client`): the marketing header, promoted from the kit's `LandingNav`. Plain markup with no motion, so apps that do not use `createLandingKit` can use it.

@@ -89,6 +89,12 @@ export type PromptInputProps = {
   placeholder?: string;
   /** Names the field for VoiceOver and TalkBack. Default "Message". */
   accessibilityLabel?: string;
+  /**
+   * A pending reply above the field and above `header`: a `ReplyQuoteChip`.
+   * Clear it in the app with the chip's `onDismiss`. A `ReplyQuoteChip` as
+   * `header` works as well, beside any attachments.
+   */
+  replyTo?: ReactNode;
   /** Above the field, such as `Attachments`. */
   header?: ReactNode;
   /** Before the send button, such as `PromptInputButton`s. */
@@ -134,6 +140,7 @@ export function PromptInput({
   onStop,
   placeholder = "What would you like to know?",
   accessibilityLabel = "Message",
+  replyTo,
   header,
   toolbar,
   layout = "stacked",
@@ -173,6 +180,7 @@ export function PromptInput({
         {layout === "inline" ? (
           // Web `Composer` inline: `rounded-[1.25rem]` and a `p-1.5` row, items at the bottom as the field grows.
           <View className="border" style={[fieldStyle(scheme), { borderRadius: INLINE_RADIUS }]}>
+            {replyTo ? <View className="px-1.5 pt-1.5">{replyTo}</View> : null}
             {header ? <View className="flex-row flex-wrap gap-1 px-1.5 pt-1.5">{header}</View> : null}
             <View className="flex-row items-end gap-1 p-1.5">
               {leading ? <View className="shrink-0 flex-row items-center gap-1">{leading}</View> : null}
@@ -207,6 +215,7 @@ export function PromptInput({
           </View>
         ) : (
           <View className="border" style={fieldStyle(scheme)}>
+            {replyTo ? <View className="px-2 pt-2">{replyTo}</View> : null}
             {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
             {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
             <FieldInput
