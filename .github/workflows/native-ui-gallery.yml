@@ -1,0 +1,141 @@
+name: native-ui-gallery
+
+# Builds the Expo gallery (apps/native-gallery) as a release APK, boots one Android
+# emulator and runs the Maestro flows in apps/native-gallery/.maestro. The job is
+# named native-ui-gallery-android so it can be a required check.
+#
+# The paths filter means a PR that touches none of these paths gets no status from
+# this workflow. If the check becomes required, a PR outside these paths would wait
+# for a status that never arrives: use a ruleset that only requires it when the
+# workflow runs, or drop the filter.
+on:
+  pull_request:
+    paths:
+      - "packages/native-ui/**"
+      - "apps/native-gallery/**"
+      - ".github/workflows/native-ui-gallery.yml"
+
+concurrency:
+  group: native-ui-gallery-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MAESTRO_VERSION: "2.12.1"
+  API_LEVEL: "34"
+
+jobs:
+  native-ui-gallery-android:
+    name: native-ui-gallery-android
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck, test and build native-ui
+        run: |
+          pnpm --filter @vvedantb/native-ui typecheck
+          pnpm --filter @vvedantb/native-ui test
+          pnpm --filter @vvedantb/native-ui build
+
+      - name: Typecheck the gallery
+        run: pnpm --filter native-gallery typecheck
+
+      - name: Cache the Expo and Metro caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.expo
+            apps/native-gallery/node_modules/.cache
+          key: expo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/native-gallery/package.json') }}
+          restore-keys: expo-${{ runner.os }}-
+
+      # Prebuild writes apps/native-gallery/android, then Gradle builds an x86_64
+      # release APK with the JS bundle inside, so the emulator needs no Metro server.
+      - name: Build the gallery APK
+        run: pnpm --filter native-gallery build:android
+
+      - name: Check the APK exists
+        run: test -f apps/native-gallery/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Install Maestro
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip"
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$HOME"
+          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache the AVD
+        id: avd-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.API_LEVEL }}-x86_64-google_apis
+
+      - name: Create the AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "AVD snapshot created"
+
+      - name: Run the Maestro flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.API_LEVEL }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: apps/native-gallery
+          script: |
+            adb install -r android/app/build/outputs/apk/release/app-release.apk
+            adb logcat -c
+            maestro test --format junit --output maestro-report.xml --debug-output maestro-debug .maestro || (adb logcat -d -t 2000 > logcat.txt; exit 1)
+
+      - name: Upload screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-ui-gallery-android
+          path: |
+            apps/native-gallery/screenshots
+            apps/native-gallery/maestro-report.xml
+            apps/native-gallery/maestro-debug
+            apps/native-gallery/logcat.txt
+          if-no-files-found: warn
+          retention-days: 14
