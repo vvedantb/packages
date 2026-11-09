@@ -162,6 +162,35 @@ describe("SidebarRail", () => {
 });
 
 describe("RailTile", () => {
+  it("bakes a 26px app icon inside an asChild link", async () => {
+    await mount(
+      <RailTile asChild app="vmem" label="Home" badge={<span data-testid="badge" />}>
+        <a href="/" />
+      </RailTile>,
+    );
+    const link = q("a");
+    expect(link.className).toBe(cn(railTileClass, "group", railTileStateClass(false)));
+    const svg = link.querySelector("svg");
+    expect(svg?.getAttribute("data-app")).toBe("vmem");
+    expect(svg?.getAttribute("width")).toBe("26");
+    expect(svg?.getAttribute("height")).toBe("26");
+    expect(link.querySelector("[data-testid=badge]")).not.toBeNull();
+  });
+
+  it("ignores children and forces 26px for a button tile with app", async () => {
+    await mount(
+      <RailTile app="velth" label="Home">
+        <svg data-testid="wrong" width="22" height="22" />
+      </RailTile>,
+    );
+    const button = q("button");
+    expect(button.querySelector("[data-testid=wrong]")).toBeNull();
+    const svg = button.querySelector("svg");
+    expect(svg?.getAttribute("data-app")).toBe("velth");
+    expect(svg?.getAttribute("width")).toBe("26");
+    expect(svg?.getAttribute("height")).toBe("26");
+  });
+
   it("renders its child with tile classes, aria-current and the badge inside", async () => {
     await mount(
       <RailTile asChild label="Inbox" active badge={<span data-testid="badge">3</span>}>

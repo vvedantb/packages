@@ -257,6 +257,7 @@ export type { SignOutDialogProps } from "../shell/src/SignOutDialog";
 export {
   railBadgeClass,
   railTileClass,
+  SIDEBAR_RAIL_APP_ICON_SIZE,
   railTileStateClass,
   sidebarNavIconClass,
   sidebarNavItemActionsClass,
@@ -313,6 +314,8 @@ export {
   landingPanelClass,
   landingShellClass,
 } from "./marketing/marketing-classes";
+export { SITE_HEADER_WORDMARK_SIZE, SiteHeader } from "./marketing/SiteHeader";
+export type { SiteHeaderLink, SiteHeaderProps } from "./marketing/SiteHeader";
 export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";
 export { PROJECT_V_LEGAL_LINKS, PROJECT_V_SOCIALS, SITE_FOOTER_WORDMARK_SIZE, SiteFooter } from "./marketing/SiteFooter";
 export type {

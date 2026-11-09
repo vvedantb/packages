@@ -324,7 +324,7 @@ import {
       rail={
         <SidebarRail
           showDivider={hasPanel && !(isDesktop && collapsed)}
-          top={<RailTile asChild label="Home" active={isHome}><Link to="/"><IconHome size={22} /></Link></RailTile>}
+          top={<RailTile asChild app="vmem" label="Home" active={isHome}><Link to="/" /></RailTile>}
           bodyClassName="scrollbar-thin"
           footerClassName="border-t border-separator"
           footer={<SidebarAccountMenu name={name} email={email} imageUrl={avatarUrl}><DropdownMenuItem>Settings</DropdownMenuItem></SidebarAccountMenu>}
@@ -344,7 +344,8 @@ import {
 - `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
 - `AppSidebar`: legacy (still supported) `rail`, `panel` and `mobile*` props; compose `Sidebar.*` instead. `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app. The mobile header is a three-column grid, so the title and trailing actions stay on one row and a long title truncates (0.5.4).
 - `SidebarRail`: legacy (still supported) `top`, `footer`, `bodyAsChild`, `tabs` and `*ClassName` props; compose `Sidebar.Rail` parts instead. `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
-- `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `className`. Without `asChild` it is a native `<button type="button">` (0.5.3), so icons keep their authored size; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
+- `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `app`, `className`. Without `asChild` it is a native `<button type="button">` (0.5.3), so icons keep their authored size; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
+- Rail app icon: the home `RailTile` icon is 26px across the apps, enforced by the tile. Pass `app="vmem"` (any `ProductAppName`) and the tile renders `APP_ICONS[app]` at `SIDEBAR_RAIL_APP_ICON_SIZE` (`26`). With `asChild` it goes inside the child (`<Link to="/" />`); without it, `children` are ignored. Tiles without `app` are unchanged: the tile renders the icon you pass, at its size. `Sidebar.MobileHeader` is the standard mobile bar: 56px plus safe-area, solid `bg-surface`, centred `text-base font-semibold tracking-tight` title, 20px menu icon.
 - `RailDivider`, `SidebarIconTooltip` (`label`, `enabled`, `side` `"right"`, `sideOffset` 8).
 - `SidebarPanel`: legacy (still supported) `headerTrailing`, `onClose`, `closeLabel` and `closeButtonClassName`; compose `Sidebar.Panel` parts instead. `title`, `headerTrailing`, `onClose` (adds the close button; pass it on the mobile drawer only), `closeLabel`, `closeButtonClassName`, `collapsed` (`md:hidden`), `className`, `children`.
 - `SidebarAccountMenu`: legacy (still supported) `badge`, `triggerProps`, `contentProps` and `stackedLabel`; compose `Sidebar.Account*` parts instead. `name`, `email` (two-line label when set), `stackedLabel` (two-line layout even without `email`, default `false`), `imageUrl` (initials without it), `align` (`"center"`), `side` (`"right"`), `sideOffset` (8), `collisionPadding`, `contentClassName`, `children` (menu items). 0.5.2 adds `badge` (unread dot beside the trigger, in a `relative` wrapper around the menu, so the trigger's dimming and press scale skip it: `true` shows it, `false` fades it out, omitted renders no wrapper and no dot), `triggerProps` (spread onto the trigger `Button` after the defaults; `className` merges last) and `contentProps` (spread onto `DropdownMenuContent`, for example `fitViewport` or `aria-label`; no `className`, use `contentClassName`). `SidebarAccountMenuPlaceholder` is the tile-sized loading box.
@@ -477,7 +478,7 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 | `ResizeHandle` | `SidebarResizeHandle` in a resizable `AppShell`, shown on desktop while the panel shows. Place it inside `Aside`. |
 | `Rail` | Rail column. `showDivider`. |
 | `RailHeader` / `RailBody` / `RailFooter` | Top block, scroll body (`asChild`, `tabs` for a Radix tabs list) and bottom block. `Footer` is an alias of `RailFooter`. |
-| `RailItem` | Rail tile with tooltip (`RailTile`): `label`, `active`, `tooltip`, `showTooltip`, `badge`, `asChild`, `tabValue`. |
+| `RailItem` | Rail tile with tooltip (`RailTile`): `label`, `active`, `tooltip`, `showTooltip`, `badge`, `asChild`, `app`, `tabValue`. |
 | `RailSeparator` | Short rule between rail items (`RailDivider`). |
 | `Tooltip` | Right-side icon tooltip (`SidebarIconTooltip`). |
 | `Panel` | Panel column. `collapsed` (`md:hidden`) and `panelHidden` (renders nothing) default to the Root values. |
@@ -895,6 +896,34 @@ Plain parts, no Motion:
 Constants: `landingShellClass`, `landingPanelClass`, `landingItemVariants`, and
 for the footer's `actions` slot `landingFooterLinkClass` (a text link) and
 `landingFooterButtonClass` (a `Button variant="link"`).
+
+### `SiteHeader`
+
+Marketing header (0.38.0): `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE` (20px, icon 28px; no size prop), up to four
+links from `md`, one CTA and an optional GitHub button. Below `md` the links, the CTA and GitHub sit in one full-width
+dropdown menu, in that order. It is plain markup with no motion and needs no `createLandingKit`.
+
+```tsx
+<SiteHeader
+  app="vmem"
+  homeLabel="vmem home"
+  links={[{ label: "Features", href: "#features" }, { label: "Pricing", href: "#pricing" }]}
+  cta={<Button size="sm" className="rounded-full">Sign in</Button>}
+  githubUrl="https://github.com/vvedantb"
+/>
+```
+
+| Prop | |
+| --- | --- |
+| `app` | `vibot`, `vmem`, `verve`, `velth` or `vhub`. |
+| `homeLabel` | `aria-label` of the home wordmark link. |
+| `homeHref` | Default `#home`. |
+| `links` | `{ label, href }[]`, at most 4. More logs a development warning and only the first 4 render. |
+| `cta` | One node. Use `Button` (default variant) with `size="sm"` and `className="rounded-full"`. Shows in the bar from `md` and full width in the menu below. No second slot. |
+| `githubUrl` | Optional. Ghost icon button from `sm`, labelled "{app} on GitHub", and the last menu item. |
+
+The bar is `sticky top-0 z-50`, `h-14 sm:h-16`, `bg-background/80 backdrop-blur-md` with a `border-separator` bottom border.
+`createLandingKit().LandingNav` and `LandingNavMenu` are deprecated in favour of `SiteHeader`.
 
 ### `SiteFooter`
 
