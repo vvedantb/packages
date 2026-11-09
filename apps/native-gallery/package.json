@@ -7,7 +7,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "prebuild:android": "expo prebuild --platform android --no-install",
-    "build:android": "expo prebuild --platform android --no-install && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64",
+    "build:android": "expo prebuild --platform android --no-install && cd android && NODE_PATH=\"$(cd ../../.. && pwd)/node_modules/.pnpm/node_modules\" ./gradlew assembleRelease -PreactNativeArchitectures=x86_64",
     "export:android": "expo export --platform android",
     "typecheck": "tsc --noEmit",
     "maestro": "maestro test --format junit --output maestro-report.xml .maestro"
