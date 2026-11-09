@@ -2,7 +2,7 @@
 
 ## 0.13.0
 
-Additive release: quoted-reply building blocks for chat. No breaking change, no removed or renamed export. Existing `Message`, `ChatThread` and `PromptInput` calls are unchanged. No new dependency. `expo-haptics` stays an optional peer.
+Additive release: quoted-reply building blocks for chat, plus tool/subagent cards and an optional bot label. No breaking change, no removed or renamed export. Existing `Message`, `ChatThread` and `PromptInput` calls are unchanged. No new dependency. `expo-haptics` stays an optional peer. Includes the 0.12.1 dropdown/composer fixes.
 
 ### Added
 
@@ -11,7 +11,7 @@ Additive release: quoted-reply building blocks for chat. No breaking change, no 
 - `/ai` `MessageContent`: optional `quote` slot above the content.
 - `/ai` `ReplyQuoteChip`: author, up to two lines of text, an X with a 44 point target. Labels "Replying to {author}" and "Dismiss reply quote".
 - `/ai` `MessageQuote`: left border, author and up to two lines, a button with `onPress`. Takes its colour from the bubble.
-- `/ai` `PromptInput`: optional `replyTo`, drawn above `header` in both layouts. `header`, `toolbar` and `leading` are unchanged.
+- `/ai` `PromptInput`: optional `replyTo`, drawn above `header` in both layouts. `header`, `toolbar` and `leading` are unchanged. Works with the 0.12.1 auto-grow field.
 - `/ai` `MESSAGE_ACTIONS.reply` (`IconArrowBackUp`, "Reply"). `MessageActionKind` gains `"reply"`; the other kinds are unchanged.
 
 - `/ai` `ToolApprovalCard` and `ToolDraftCard`: a pending tool call with the tool name, a cut summary of the arguments (`summarizeArgs`, `ARGS_MAX_CHARS`) and Deny and Approve buttons. `ToolDraftCard` adds Edit. `onDecide('approve' | 'deny' | 'edit')`; `pending` and `disabled` turn the buttons off. testIDs `tool-approval-card` (or `tool-draft-card`) with `-name`, `-args`, `-approve`, `-deny`, `-edit`. 44 point targets, larger text. Types `ToolDecision`, `ToolApprovalCardProps`, `ToolDraftCardProps`.
@@ -27,6 +27,28 @@ Additive release: quoted-reply building blocks for chat. No breaking change, no 
 - New `tests/quotedReplies.test.ts`. `tests/ai.test.ts`, `tests/subpaths.test.ts` and `tests/exports.test.ts` updated for the new names, the `reply` preset and the haptics loader.
 - New `tests/toolCards.test.ts` for the cards and the bot label.
 - New consumer type test `consumer/quotedReplies.consumer.tsx`, extended for the cards and `bot`.
+
+## 0.12.1
+
+Patch release. No breaking change, no removed export, no new dependency.
+
+### Fixed
+
+- `DropdownMenuContent`: the backdrop and the menu are now inside a full-size `View` (`flex: 1`, `pointerEvents="box-none"`) in the `Modal`, as in `OverlayModal`. Before, they were bare `Modal` children with no host, and the menu could stack and hit-test under tab bars and glass layers.
+- `PromptInput`: the field now grows with its content in both layouts. `layout="inline"` no longer sets `numberOfLines={1}`, which locked the line count on Android. Both fields track `onContentSizeChange`, set `height` up to the cap (160, or 240 with larger text) and enable scrolling only past the cap. Send resets the height.
+- `FloatingSurface`: the inner clip `View` gets `flex: 1` only when `style` sets a definite `height`, `flex` or `flexGrow`. Before, any `style` added it. `DropdownMenuContent` passes only `maxHeight`, so on Android the clip collapsed to height 0 and the menu items did not show or take taps. A `maxHeight`-only style now lets the content size the surface.
+
+### Audited, no change
+
+- `OverlayModal` (`Dialog`, `AlertDialog`, `Sheet`) and `PricingModal` already have a full-size host. `Select` uses a portal, not a `Modal`.
+
+### Not added
+
+- A `PortalHost` re-export for `Select`. `@rn-primitives/portal` is not a dependency of this package, so a re-export would break apps that do not install it. The README now says how to mount a host.
+
+### Tests
+
+- `tests/dropdownMenu.test.ts` checks the host. `tests/ai.test.ts` checks the grow, cap, scroll and reset for both layouts. `tests/definiteSize.test.ts` checks that `maxHeight`-only styles do not add `flex: 1` and that `height` or `flex` do. Version assertions are 0.12.1.
 
 ## 0.12.0
 

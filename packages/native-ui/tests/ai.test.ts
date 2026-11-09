@@ -745,6 +745,29 @@ describe("PromptInput", () => {
     expect(field().props.value).toBe("");
   });
 
+  it("grows with its content in both layouts, caps at the max height, scrolls past it and resets on send", async () => {
+    const size = (height: number) => ({ nativeEvent: { contentSize: { width: 300, height } } });
+    for (const layout of ["inline", "stacked"]) {
+      const { onSubmit, field, submit } = await composer({ layout });
+      expect(field().props.numberOfLines, layout).toBeUndefined();
+      expect(field().props.scrollEnabled, layout).toBe(false);
+      expect(typeof field().props.onContentSizeChange, layout).toBe("function");
+      // No measured height yet: only the cap.
+      expect(flatten(field().props.style).height, layout).toBeUndefined();
+      (field().props.onContentSizeChange as (e: unknown) => void)(size(72));
+      expect(flatten(field().props.style), layout).toMatchObject({ height: 72, maxHeight: 160 });
+      expect(field().props.scrollEnabled, layout).toBe(false);
+      (field().props.onContentSizeChange as (e: unknown) => void)(size(400));
+      expect(flatten(field().props.style), layout).toMatchObject({ height: 160, maxHeight: 160 });
+      expect(field().props.scrollEnabled, layout).toBe(true);
+      (field().props.onChangeText as (text: string) => void)("Hello");
+      (submit().props.onSubmit as () => void)();
+      expect(onSubmit, layout).toHaveBeenCalledExactlyOnceWith("Hello");
+      expect(flatten(field().props.style).height, layout).toBeUndefined();
+      expect(field().props.scrollEnabled, layout).toBe(false);
+    }
+  });
+
   it("does not send blank text, or while disabled or answering", async () => {
     for (const props of [{}, { disabled: true }, { status: "streaming" }, { status: "submitted" }]) {
       const { onSubmit, field, submit } = await composer(props);

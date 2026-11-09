@@ -21,6 +21,7 @@ Peers the app must already have (Expo SDK 57 / RN 0.76+):
 
 Optional, only if you import those components:
 
+- `@rn-primitives/portal` — `Select`. Mount one `<PortalHost />` from this package at the app root (for example in the root layout), outside any `Modal`. The package does not re-export it, so install it with `@rn-primitives/select`.
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
 - `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
@@ -518,12 +519,12 @@ import {
 | `AgentTrace`, `AgentTraceLine`, `AgentTraceIcon`, `AgentTraceTitle`, `AgentTraceDescription`, `AgentTraceCollapsible*` | One step per line, with an optional fold behind a rail. `AgentTraceTitle shimmer` pulses a running step. Spread `useStreamingDisclosure(isStreaming)` on `AgentTraceCollapsible` to open it while a step streams. |
 | `ActivityStep` | One tool step as a trace line: icon, label, a spinner while `running`, a check when `complete`, a warning on `error`, and a description such as `` `Worked for ${formatElapsed(12)}` ``. |
 | `ChainOfThought` and its parts | Simplified: header, steps with a rail, search-result chips. |
-| `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls. Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
+| `PromptInput`, `PromptInputButton`, `PromptInputSubmit` | The web field surface with a `header` slot (attachments), a field, a `toolbar` slot and the send button. The field grows from one line to 160 high (about 6 lines), then scrolls (auto-grow in both layouts from 0.12.1; send resets the height). Send is primary with text and disabled without. While `status` is `submitted` or `streaming` it is a "Stop" square that calls `onStop`. It sits in a `KeyboardAvoidingView` (padding, on iOS and Android) and pads the safe-area insets: put it last in a full-height column. Under a navigation header, pass the header height as `keyboardVerticalOffset`; above a tab bar, pass `safeBottom={false}`. |
 | `MessageActionSheet`, `ReplyQuoteChip`, `MessageQuote` (0.13.0) | Quoted replies. Long-press a `Message` with `actions` to open the sheet; Reply first, then Copy. Pass `<ReplyQuoteChip author text onDismiss />` as `PromptInput` `replyTo`; send the reply with a `MessageQuote` in `MessageContent` `quote`. See [Quoted replies](#quoted-replies-0130). |
 | `ToolApprovalCard`, `ToolDraftCard` (0.13.0) | A pending tool call: name, cut args summary, Deny and Approve (`ToolDraftCard` adds Edit). `onDecide("approve" \| "deny" \| "edit")`; `pending` or `disabled` turns the buttons off. |
 | `SubagentRunCard`, `SubagentResultCard` (0.13.0) | A subagent run (title, status pill, elapsed, Cancel while `running`) and its result (summary, detail in a fold). |
 | `MessageBotLabel`, `Message` `bot` (0.13.0) | Which bot sent an assistant message, for group chats: `bot={{ name, avatar }}`, or render `MessageBotLabel` above `MessageContent`. |
-| `PromptInput layout="inline"` | One row, as the web `Composer layout="inline"` (Eva's chat pill): `leading` (such as a + button), the field (one line to start, then it grows), `toolbar`, then send, in a 20-radius field with `p-1.5`. 44 high on one line. |
+| `PromptInput layout="inline"` | One row, as the web `Composer layout="inline"` (Eva's chat pill): `leading` (such as a + button), the field (one line to start, then it grows from 0.12.1), `toolbar`, then send, in a 20-radius field with `p-1.5`. 44 high on one line. |
 | `Suggestions`, `Suggestion` | A horizontal row of round chips (or `orientation="vertical"`). `onPress` gets the suggestion text. |
 | `Sources`, `SourcesTrigger`, `SourcesContent`, `Source` | A fold of link rows. A row opens its address with `Linking.openURL`, or hands it to `onPress`. |
 | `FileChip`, `Attachments`, `Attachment` | A monospace file chip (a button with `onOpenFile`), and attachment chips with a media icon or image thumbnail and a labelled remove button. No hover cards and no grid previews. |
@@ -585,7 +586,7 @@ import {
 
 ## DropdownMenu (Unreleased)
 
-A small menu anchored to its trigger, the native counterpart of the web `DropdownMenu`. On `/primitives` and the root.
+A small menu anchored to its trigger, the native counterpart of the web `DropdownMenu`. On `/primitives` and the root. From 0.12.1 the backdrop and menu sit in a full-size `View` inside the `Modal`, so the menu stays above tab bars and glass layers.
 
 ```tsx
 <DropdownMenu>

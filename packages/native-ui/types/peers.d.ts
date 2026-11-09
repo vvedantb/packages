@@ -189,6 +189,7 @@ declare module "react-native" {
     textContentType?: string;
     maxLength?: number;
     scrollEnabled?: boolean;
+    onContentSizeChange?: (event: NativeSyntheticEvent<{ contentSize: { width: number; height: number } }>) => void;
   }
   export class TextInput extends React.Component<TextInputProps> {
     focus(): void;
@@ -296,6 +297,7 @@ declare module "react-native" {
 
   export const StyleSheet: {
     create<T extends Record<string, ViewStyle | TextStyle | ImageStyle>>(styles: T): T;
+    flatten<T extends ViewStyle | TextStyle | ImageStyle>(style: StyleProp<T>): T;
     hairlineWidth: number;
     absoluteFill: ViewStyle;
     absoluteFillObject: ViewStyle;

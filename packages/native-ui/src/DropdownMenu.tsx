@@ -217,36 +217,41 @@ export function DropdownMenuContent({
       statusBarTranslucent
       onRequestClose={close}
     >
-      <Pressable
-        testID="DropdownMenu-backdrop"
-        accessibilityRole="button"
-        accessibilityLabel="Close menu"
-        onPress={close}
-        style={StyleSheet.absoluteFill}
-      />
-      <View
-        accessibilityRole="menu"
-        accessibilityViewIsModal
-        onAccessibilityEscape={close}
-        style={{
-          position: "absolute",
-          ...position,
-          minWidth: DROPDOWN_MENU.minWidth,
-          maxWidth: window.width - insets.left - insets.right - 2 * DROPDOWN_MENU.edge,
-        }}
-      >
-        <FloatingSurface blur={false} radius={DROPDOWN_MENU.radius} style={{ maxHeight: position.maxHeight }}>
-          <ScrollView
-            bounces={false}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={(_width, height) => setContentHeight(height)}
-            contentContainerStyle={{ padding: DROPDOWN_MENU.padding }}
-          >
-            <View className={cn(className)} style={style} {...props}>
-              {children}
-            </View>
-          </ScrollView>
-        </FloatingSurface>
+      {/* A full-size host, as `OverlayModal` has: without it the backdrop and the
+          menu are bare Modal children with no box to size or hit-test against,
+          and the menu can stack under tab bars and glass layers. */}
+      <View style={{ flex: 1 }} pointerEvents="box-none">
+        <Pressable
+          testID="DropdownMenu-backdrop"
+          accessibilityRole="button"
+          accessibilityLabel="Close menu"
+          onPress={close}
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          accessibilityRole="menu"
+          accessibilityViewIsModal
+          onAccessibilityEscape={close}
+          style={{
+            position: "absolute",
+            ...position,
+            minWidth: DROPDOWN_MENU.minWidth,
+            maxWidth: window.width - insets.left - insets.right - 2 * DROPDOWN_MENU.edge,
+          }}
+        >
+          <FloatingSurface blur={false} radius={DROPDOWN_MENU.radius} style={{ maxHeight: position.maxHeight }}>
+            <ScrollView
+              bounces={false}
+              showsVerticalScrollIndicator={false}
+              onContentSizeChange={(_width, height) => setContentHeight(height)}
+              contentContainerStyle={{ padding: DROPDOWN_MENU.padding }}
+            >
+              <View className={cn(className)} style={style} {...props}>
+                {children}
+              </View>
+            </ScrollView>
+          </FloatingSurface>
+        </View>
       </View>
     </Modal>
   );
