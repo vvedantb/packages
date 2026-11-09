@@ -14,7 +14,7 @@
   - Below `md`: one dropdown menu with a 20px `IconMenu2` / `IconX` trigger, full width. Order: links, the CTA full width, then GitHub. The CTA shows in the bar from `md` only.
 - New `SITE_HEADER_WORDMARK_SIZE` and the types `SiteHeaderProps` and `SiteHeaderLink`.
 - Deprecated, still working: `createLandingKit().LandingNav` and `LandingNavMenu`. Their markup is unchanged. They are a parallel component, not a wrapper, because `LandingNav` takes a `brand` node and an `actions` slot where `SiteHeader` takes `app` and one `cta`. Migrate to `SiteHeader`.
-- New `SIDEBAR_RAIL_APP_ICON_SIZE` (`26`, root and `/client`): the app icon size for the home `RailTile`. Pass it as the icon `size`. The tile still renders the icon you pass.
+- New `SIDEBAR_RAIL_APP_ICON_SIZE` (`26`, root and `/client`) and a `RailTile` / `Sidebar.RailItem` `app` prop (`ProductAppName`). `RailTile` enforces the size: with `app`, the tile renders `APP_ICONS[app]` at 26px itself (inside the child with `asChild`; `children` are ignored without it). Apps should pass `app` on the home tile, for example `<RailTile asChild app="vmem" label="Home"><Link to="/" /></RailTile>`, instead of sizing `Icon*` themselves. Tiles without `app` are unchanged: the caller still controls the icon and its size.
 - App shell mobile header checked against the standard and unchanged: `SidebarChrome.MobileHeader` is 56px plus safe-area (`--app-shell-mobile-header-height`), solid `bg-surface`, title centred in `text-base font-semibold tracking-tight`, 20px `IconMenu2` trigger, actions through `mobileHeaderActions` / `MobileActions`.
 - Velth: no asset work was needed. `IconVelth`, `APP_ICONS.velth` and `AppWordmark app="velth"` already ship, so `SiteHeader app="velth"` works as is.
 

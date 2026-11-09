@@ -3,7 +3,9 @@ import { Slot, Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpandFilled } from "@tabler/icons-react";
 import { cn } from "../../src/utils/cn";
-import { railTileClass, railTileStateClass } from "./app-shell-classes";
+import { APP_ICONS } from "../../src/brand/AppIcons";
+import type { ProductAppName } from "../../src/brand/AppWordmark";
+import { SIDEBAR_RAIL_APP_ICON_SIZE, railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
 
 export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
@@ -111,7 +113,7 @@ export function RailFooter({ className, ...props }: SidebarRailFooterProps) {
   return <div {...props} className={cn("flex w-full flex-col items-center gap-1.5 py-3", className)} />;
 }
 
-export type SidebarRailItemProps = Omit<ComponentPropsWithoutRef<"button">, "children"> & {
+type SidebarRailItemBaseProps = Omit<ComponentPropsWithoutRef<"button">, "children"> & {
   /** `aria-label`, and the tooltip unless `tooltip` is set. */
   label: string;
   /** Active state. With `asChild`, also sets `aria-current="page"`. */
@@ -129,8 +131,26 @@ export type SidebarRailItemProps = Omit<ComponentPropsWithoutRef<"button">, "chi
    * The label is sr-only text instead of `aria-label`; `asChild` is ignored.
    */
   tabValue?: string;
-  children: ReactNode;
 };
+
+export type SidebarRailItemProps = SidebarRailItemBaseProps &
+  (
+    | {
+        /**
+         * Product app id for the home tile. The tile renders `APP_ICONS[app]` at
+         * `SIDEBAR_RAIL_APP_ICON_SIZE` (26px), so apps cannot drift. With `asChild` the
+         * icon goes inside the child element (for example `<Link to="/" />`). Without
+         * `asChild`, `children` are ignored.
+         */
+        app: ProductAppName;
+        children?: ReactNode;
+      }
+    | {
+        app?: undefined;
+        /** The tile icon. The caller controls its size. */
+        children: ReactNode;
+      }
+  );
 
 /** Rail tile with a right-side tooltip. Renders a native `<button>`, its child with `asChild`, or a tabs trigger with `tabValue`. */
 export function RailItem({
@@ -142,9 +162,13 @@ export function RailItem({
   asChild = false,
   tabValue,
   className,
+  app,
   children,
   ...props
 }: SidebarRailItemProps) {
+  const AppIcon = app ? APP_ICONS[app] : null;
+  const appIcon = AppIcon ? <AppIcon size={SIDEBAR_RAIL_APP_ICON_SIZE} /> : null;
+  const content = appIcon ?? children;
   return (
     <SidebarIconTooltip label={tooltip ?? label} enabled={showTooltip}>
       {tabValue !== undefined ? (
@@ -153,7 +177,7 @@ export function RailItem({
           value={tabValue}
           className={cn(railTileClass, "group relative", railTileStateClass(active), className)}
         >
-          {children}
+          {content}
           <span className="sr-only">{label}</span>
           {badge}
         </TabsPrimitive.Trigger>
@@ -164,6 +188,7 @@ export function RailItem({
           aria-current={active ? "page" : undefined}
           className={cn(railTileClass, "group", railTileStateClass(active), className)}
         >
+          {appIcon}
           <Slottable>{children}</Slottable>
           {badge}
         </Slot>
@@ -174,7 +199,7 @@ export function RailItem({
           aria-label={label}
           className={cn(railTileClass, "group", railTileStateClass(active), className)}
         >
-          {children}
+          {content}
           {badge}
         </button>
       )}

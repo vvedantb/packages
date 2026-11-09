@@ -5,7 +5,7 @@ import { cn } from "../../src/utils/cn";
 // accent colour names match that markup and are allow-listed for check:tokens
 // on the marked lines only.
 
-/** App icon size in px for the home `RailTile`. Fixed across the apps. Pass `<IconX size={SIDEBAR_RAIL_APP_ICON_SIZE} />` as the tile child. */
+/** App icon size in px for the home `RailTile`. Fixed across the apps. `RailTile` applies it when you pass `app`. */
 export const SIDEBAR_RAIL_APP_ICON_SIZE = 26;
 
 /** Rail tile: size-11, rounded-lg, press scale. */
