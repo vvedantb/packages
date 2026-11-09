@@ -911,7 +911,7 @@ links under a separator. Set `app` for the Project V footer (0.37.0):
 
 | Prop | |
 | --- | --- |
-| `app` | `vibot`, `vmem`, `verve`, `velth` or `vhub`. Brand is `AppWordmark` at `SITE_FOOTER_WORDMARK_SIZE` (16px; no size prop). Copyright name and product-of line use the lowercase id. |
+| `app` | `vibot`, `vmem`, `verve`, `velth` or `vhub`. Brand is `AppWordmark` at `SITE_FOOTER_WORDMARK_SIZE` (18px; no size prop). Copyright name and product-of line use the lowercase id. |
 | `tagline` | Node. |
 | `columns` | Required. `{ heading, links }[]`. A link is `{ href, label, external?, image?: { src, alt }, app?: AppName }`. `image` is a 20px round image before the label. `app` is the 14px `APP_ICONS[app]` glyph before the label, in `currentColor` and `aria-hidden`; it wins over `image`. |
 | `includeAppsColumn` | Default `true`: appends `PROJECT_V_PRODUCT_APPS` (vibot, vmem, verve, velth, vhub) unless `columns` has an "Apps" heading (case-insensitive). `projectVAppsColumn()` returns the column for composition. |
