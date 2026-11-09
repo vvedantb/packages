@@ -175,7 +175,14 @@ export function LayeringSection() {
             </BottomSheetContainer>
           </View>
         </GlassBlurTarget>
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }} testID="layering-tab-bar">
+        {/* A real height (not just the absolute bar inside): a 0 height wrapper is not
+            visible to UI tests. `collapsable={false}` keeps the native view. */}
+        <View
+          collapsable={false}
+          pointerEvents="box-none"
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: tabBarReserve(false, insets.bottom) }}
+          testID="layering-tab-bar"
+        >
           <FloatingTabBar {...TAB_BAR_PROPS} />
         </View>
       </GlassBlurProvider>

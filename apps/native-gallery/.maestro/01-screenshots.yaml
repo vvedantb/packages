@@ -14,6 +14,7 @@ appId: dev.vvedantb.nativegallery
     id: link-layering
 - assertVisible:
     id: layering-tab-bar
+- assertVisible: "Home"
 - takeScreenshot: screenshots/layering
 - pressKey: back
 

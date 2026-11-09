@@ -1,4 +1,7 @@
 # The PromptInput composer grows as lines are typed, in both layouts.
+# The height readout (`composer-height`) is pinned at the top of the screen, so
+# the keyboard never covers it. The wrapper height includes the keyboard
+# padding, so each layout is measured with the keyboard already open.
 appId: dev.vvedantb.nativegallery
 ---
 - launchApp:
@@ -9,12 +12,14 @@ appId: dev.vvedantb.nativegallery
 - tapOn:
     id: link-keyboard
 - assertVisible:
+    id: composer-height
+- tapOn:
     id: composer-input
+- assertVisible:
+    id: composer-height
 - copyTextFrom:
     id: composer-height
 - evalScript: ${output.before = Number(maestro.copiedText.match(/\d+/)[0])}
-- tapOn:
-    id: composer-input
 - inputText: "line one"
 - pressKey: Enter
 - inputText: "line two"
@@ -22,6 +27,8 @@ appId: dev.vvedantb.nativegallery
 - inputText: "line three"
 - pressKey: Enter
 - inputText: "line four"
+- assertVisible:
+    id: composer-height
 - copyTextFrom:
     id: composer-height
 - evalScript: ${output.after = Number(maestro.copiedText.match(/\d+/)[0])}
@@ -31,16 +38,22 @@ appId: dev.vvedantb.nativegallery
 - hideKeyboard
 - tapOn:
     id: kb-layout-stacked
+- tapOn:
+    id: composer-input
+- assertVisible:
+    id: composer-height
 - copyTextFrom:
     id: composer-height
 - evalScript: ${output.before = Number(maestro.copiedText.match(/\d+/)[0])}
-- tapOn:
-    id: composer-input
 - inputText: "one"
 - pressKey: Enter
 - inputText: "two"
 - pressKey: Enter
 - inputText: "three"
+- pressKey: Enter
+- inputText: "four"
+- assertVisible:
+    id: composer-height
 - copyTextFrom:
     id: composer-height
 - evalScript: ${output.after = Number(maestro.copiedText.match(/\d+/)[0])}

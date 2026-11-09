@@ -10,6 +10,7 @@ appId: dev.vvedantb.nativegallery
     id: link-layering
 - assertVisible:
     id: layering-tab-bar
+- assertVisible: "Home"
 - tapOn:
     id: dd-trigger
 - assertVisible:

@@ -5,8 +5,8 @@ import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react-n
 import * as React from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
-import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import { NativeOnlyAnimatedView } from "./native-only-animated-view";
+import { SelectHost } from "./select-host";
 import { TextClassContext } from "./text";
 import { LiquidGlass } from "../LiquidGlass";
 import { cn } from "../cn";
@@ -19,8 +19,6 @@ type Option = SelectPrimitive.Option;
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
-const FullWindowOverlay =
-  Platform.OS === "ios" ? RNFullWindowOverlay : React.Fragment;
 
 type SelectValueProps = React.ComponentPropsWithoutRef<
   typeof SelectPrimitive.Value
@@ -88,7 +86,7 @@ const SelectContent = React.forwardRef<
 >(({ className, children, position = "popper", portalHost, ...props }, ref) => {
   return (
     <SelectPrimitive.Portal hostName={portalHost}>
-      <FullWindowOverlay>
+      <SelectHost>
         <SelectPrimitive.Overlay
           style={Platform.select({ native: StyleSheet.absoluteFill })}
         >
@@ -127,7 +125,7 @@ const SelectContent = React.forwardRef<
             </NativeOnlyAnimatedView>
           </TextClassContext.Provider>
         </SelectPrimitive.Overlay>
-      </FullWindowOverlay>
+      </SelectHost>
     </SelectPrimitive.Portal>
   );
 });

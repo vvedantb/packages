@@ -64,7 +64,10 @@ export function BottomSheetContainer({
       enableHandlePanningGesture={true}
       keyboardBehavior="interactive"
     >
-      <BottomSheetView className="p-5 pb-12">
+      {/* Padding via style, not NativeWind className: gorhom's BottomSheetView
+          does not always pick up className, and a zero-padded sheet can measure
+          too small to present. */}
+      <BottomSheetView style={{ padding: 20, paddingBottom: 48 }}>
         <View className="mb-4 flex-row items-center justify-between gap-3">
           <Text
             accessibilityRole="header"
