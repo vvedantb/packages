@@ -57,6 +57,13 @@ export type DialogContentProps = ViewProps & {
    * at every size.
    */
   viewportAware?: boolean;
+  /**
+   * Called once the dialog is on screen. Focus its field here (`ref.focus()`)
+   * rather than with `autoFocus`: in a `Modal`, Android may not raise the
+   * keyboard for a field focused at mount, and the web focus trap moves focus
+   * to the first control (the backdrop) after it.
+   */
+  onShow?: () => void;
 };
 
 /** Web `rounded-t-2xl` (16) on the compact sheet. */
@@ -64,8 +71,9 @@ const SHEET_RADIUS = tokens.radius.lg;
 
 /** The centred panel: at most 480 wide. */
 const PANEL = { width: "100%", maxWidth: 480, alignSelf: "center" } as const;
-/** The compact sheet: its bottom corners sit below the screen edge. */
-const SHEET = { marginBottom: -SHEET_RADIUS };
+/** The compact sheet: its bottom corners sit below the screen edge, and it shrinks to the room, as `SheetContent`. */
+const SHEET = { marginBottom: -SHEET_RADIUS, flexShrink: 1 };
+const SHRINK = { flexShrink: 1 };
 
 const CENTRED: DialogLayout = { compact: false, stacked: false };
 const COMPACT: DialogLayout = { compact: true, stacked: false };
@@ -80,7 +88,8 @@ const STACKED: DialogLayout = { compact: true, stacked: true };
  * it is the web phone bottom sheet: full width, top corners 16, a handle,
  * `pt-3 px-6`, the bottom safe-area inset (at least 24) below, and it slides
  * up unless Reduce Motion is on. Its bottom corners sit below the screen edge,
- * as `SheetContent`'s do. `DialogFooter` stacks its buttons there.
+ * as `SheetContent`'s do. `DialogFooter` stacks its buttons there. Taller than
+ * the room, it shrinks to fit, so a `DialogBody` inside scrolls.
  */
 export function DialogContent({
   children,
@@ -88,6 +97,7 @@ export function DialogContent({
   hideCloseButton = false,
   dismissible = true,
   viewportAware = true,
+  onShow,
   style,
   ...props
 }: DialogContentProps) {
@@ -103,18 +113,19 @@ export function DialogContent({
         part="DialogContent"
         placement={compact ? "bottom" : "center"}
         dismissible={dismissible}
+        onShow={onShow}
       >
         <NativeOnlyAnimatedView
           entering={compact ? SlideInDown.duration(240) : undefined}
           style={compact ? SHEET : PANEL}
         >
-          <FloatingSurface blur={false} radius={compact ? SHEET_RADIUS : tokens.radius.card}>
+          <FloatingSurface blur={false} radius={compact ? SHEET_RADIUS : tokens.radius.card} style={compact ? SHRINK : undefined}>
             <View
               accessibilityViewIsModal
               className={cn(compact ? "gap-4 px-6 pt-3" : "gap-4 p-6", className)}
               {...props}
               style={[
-                compact ? { paddingBottom: Math.max(24, insets.bottom) + SHEET_RADIUS } : null,
+                compact ? { paddingBottom: Math.max(24, insets.bottom) + SHEET_RADIUS, flexShrink: 1 } : null,
                 style,
               ]}
             >

@@ -8,12 +8,16 @@ import {
   type RefObject,
 } from "react";
 import {
+  FlatList,
   Platform,
   Pressable,
   ScrollView,
   Text,
   View,
+  type FlatListProps,
+  type LayoutChangeEvent,
   type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type ScrollViewProps,
   type ViewProps,
 } from "react-native";
@@ -38,10 +42,13 @@ export function isScrolledToBottom({ contentOffset, contentSize, layoutMeasureme
   return contentSize.height - layoutMeasurement.height - contentOffset.y <= AT_BOTTOM_THRESHOLD;
 }
 
+/** What the thread scrolls with: the `ScrollView` of `ConversationContent` or the `FlatList` of `ConversationList`. */
+export type ConversationScroller = { scrollToEnd: (options?: { animated?: boolean }) => void };
+
 type ConversationContextValue = {
   isAtBottom: boolean;
   scrollToBottom: () => void;
-  scrollRef: RefObject<ScrollView | null>;
+  scrollRef: RefObject<ConversationScroller | null>;
   onScroll: (event: NativeScrollEvent) => void;
   onUserScroll: () => void;
   followContent: () => void;
@@ -65,7 +72,7 @@ export type ConversationProps = ViewProps & { className?: string };
  */
 export function Conversation({ className, ...props }: ConversationProps) {
   const reduceMotion = useReduceMotion();
-  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollRef = useRef<ConversationScroller | null>(null);
   const atBottom = useRef(true);
   // Set while our own animated scroll heads down, so its first frames (not
   // yet at the bottom) do not count as the reader leaving.
@@ -107,48 +114,128 @@ export function Conversation({ className, ...props }: ConversationProps) {
   );
 }
 
-export type ConversationContentProps = ScrollViewProps & { className?: string };
+/** The scroll handlers a thread's scroller passes on, as `ScrollView` and `FlatList` both take them. */
+type ConversationScrollHandlers = {
+  onScroll?: ((event: NativeSyntheticEvent<NativeScrollEvent>) => void) | null;
+  onScrollBeginDrag?: ((event: NativeSyntheticEvent<NativeScrollEvent>) => void) | null;
+  onContentSizeChange?: ((width: number, height: number) => void) | null;
+  onLayout?: ((event: LayoutChangeEvent) => void) | null;
+};
+
+/** Taps reach rows while the keyboard is up; a drag lowers it (interactively on iOS); scroll events at 60 Hz. */
+const SCROLL_DEFAULTS: Pick<ScrollViewProps, "keyboardShouldPersistTaps" | "keyboardDismissMode" | "scrollEventThrottle"> = {
+  keyboardShouldPersistTaps: "handled",
+  keyboardDismissMode: Platform.OS === "ios" ? "interactive" : "on-drag",
+  scrollEventThrottle: 16,
+};
 
 /**
- * The scrolling message column: the web `flex flex-col gap-4 px-3 py-3`. A
- * `ScrollView`; for very long threads an app can drive its own `FlatList`
- * with `useConversation`.
+ * The wiring `ConversationContent` and `ConversationList` share: the ref the
+ * scroll button and the follow use, taps that reach rows while the keyboard is
+ * up, and the handlers that track the bottom and follow new content. The
+ * defaults come first so `props` can override them; the handlers come last
+ * and call the app's own after the thread's.
  */
-export function ConversationContent({
-  className,
-  contentContainerClassName,
+function useConversationScroll<P extends ConversationScrollHandlers>({
   onScroll,
   onScrollBeginDrag,
   onContentSizeChange,
   onLayout,
   ...props
-}: ConversationContentProps) {
+}: P) {
   const conversation = useConversation();
+  return {
+    ref: (scroller: ConversationScroller | null) => {
+      conversation.scrollRef.current = scroller;
+    },
+    ...SCROLL_DEFAULTS,
+    ...props,
+    onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      conversation.onScroll(event.nativeEvent);
+      onScroll?.(event);
+    },
+    onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      conversation.onUserScroll();
+      onScrollBeginDrag?.(event);
+    },
+    // The app's handler first, so a scroller that measures itself (`ConversationList`) has the new size to follow.
+    onContentSizeChange: (width: number, height: number) => {
+      onContentSizeChange?.(width, height);
+      conversation.followContent();
+    },
+    // The keyboard or composer resizing the view keeps the end in view too.
+    onLayout: (event: LayoutChangeEvent) => {
+      onLayout?.(event);
+      conversation.followContent();
+    },
+  };
+}
+
+export type ConversationContentProps = ScrollViewProps & { className?: string };
+
+/**
+ * The scrolling message column: the web `flex flex-col gap-4 px-3 py-3`. A
+ * `ScrollView`, which draws every message; a thread that can grow long
+ * should use `ConversationList`.
+ */
+export function ConversationContent({ className, contentContainerClassName, ...props }: ConversationContentProps) {
   return (
     <ScrollView
-      ref={conversation.scrollRef}
       className={cn("flex-1", className)}
       contentContainerClassName={cn("gap-4 px-3 py-3", contentContainerClassName)}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-      scrollEventThrottle={16}
-      {...props}
-      onScroll={(event) => {
-        conversation.onScroll(event.nativeEvent);
-        onScroll?.(event);
-      }}
-      onScrollBeginDrag={(event) => {
-        conversation.onUserScroll();
-        onScrollBeginDrag?.(event);
-      }}
-      onContentSizeChange={(width, height) => {
-        conversation.followContent();
-        onContentSizeChange?.(width, height);
-      }}
-      // The keyboard or composer resizing the view keeps the end in view too.
-      onLayout={(event) => {
-        conversation.followContent();
-        onLayout?.(event);
+      {...useConversationScroll(props)}
+    />
+  );
+}
+
+export type ConversationListProps<T> = FlatListProps<T> & {
+  className?: string;
+  contentContainerClassName?: string;
+};
+
+/**
+ * `ConversationContent` as a virtualised `FlatList`, for a thread that can
+ * grow long: only the messages near the view are drawn. The same sticking to
+ * the bottom, scroll button and keyboard behaviour. The column has the
+ * `px-3 py-3` padding but no gap, as a `FlatList` gap would also space its
+ * hidden-row placeholders: give `ItemSeparatorComponent` for the space
+ * between messages, and a stable `keyExtractor`.
+ *
+ * It scrolls to the end it has measured, not with `FlatList.scrollToEnd`,
+ * which places the end from estimated row heights (zero before the rows are
+ * measured, so a thread opened at its end would stay at the top).
+ */
+export function ConversationList<T>({
+  className,
+  contentContainerClassName,
+  onContentSizeChange,
+  onLayout,
+  ...props
+}: ConversationListProps<T>) {
+  const conversation = useConversation();
+  // Sizes from the list's own events, for the scroll offset; no render reads them.
+  const size = useRef({ content: 0, view: 0 });
+  const wired = useConversationScroll({
+    ...props,
+    onContentSizeChange: (width: number, height: number) => {
+      size.current.content = height;
+      onContentSizeChange?.(width, height);
+    },
+    onLayout: (event: LayoutChangeEvent) => {
+      size.current.view = event.nativeEvent.layout.height;
+      onLayout?.(event);
+    },
+  });
+  return (
+    <FlatList
+      className={cn("flex-1", className)}
+      contentContainerClassName={cn("px-3 py-3", contentContainerClassName)}
+      {...wired}
+      ref={(list: FlatList<T> | null) => {
+        conversation.scrollRef.current = list && {
+          scrollToEnd: (options) =>
+            list.scrollToOffset({ offset: Math.max(0, size.current.content - size.current.view), animated: options?.animated }),
+        };
       }}
     />
   );

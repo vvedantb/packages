@@ -85,7 +85,7 @@ describe("ChoiceQuestion", () => {
     expect(source).toMatch(/buttonWeight = "medium"/);
     expect(source).toMatch(/buttonWeight === "medium" \? \(\s*text/);
     // Web `Card` with no border width, `py-2 px-2.5`.
-    expect(source).toMatch(/paddingVertical: 8,\s*paddingHorizontal: 10,/);
+    expect(source).toMatch(/const CARD_PADDING = \{ top: 8, bottom: 8, left: 10, right: 10 \};[\s\S]*paddingVertical: CARD_PADDING\.top,\s*paddingHorizontal: CARD_PADDING\.left,/);
     expect(source).not.toMatch(/borderWidth: 2/);
   });
 });

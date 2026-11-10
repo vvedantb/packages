@@ -17,6 +17,7 @@ export type { CollapsibleProps, CollapsibleTriggerProps } from "./collapsible";
 export {
   Conversation,
   ConversationContent,
+  ConversationList,
   ConversationEmptyState,
   ConversationScrollButton,
   useConversation,
@@ -26,6 +27,8 @@ export {
 export type {
   ConversationProps,
   ConversationContentProps,
+  ConversationListProps,
+  ConversationScroller,
   ConversationEmptyStateProps,
   ConversationScrollButtonProps,
 } from "./conversation";

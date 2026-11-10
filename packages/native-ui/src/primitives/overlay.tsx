@@ -109,11 +109,14 @@ export function OverlayModal({
   part,
   placement,
   dismissible,
+  onShow,
   children,
 }: {
   part: string;
   placement: "center" | "bottom";
   dismissible: boolean;
+  /** Once the overlay is on screen: where to focus a field (see `DialogContent`'s `onShow`). */
+  onShow?: () => void;
   children: ReactNode;
 }) {
   const { open, setOpen } = useOverlay(part);
@@ -129,6 +132,7 @@ export function OverlayModal({
       animationType={reduceMotion ? "none" : "fade"}
       statusBarTranslucent
       onRequestClose={close}
+      onShow={onShow}
     >
       {/* Android too: a modal window with `statusBarTranslucent` may not
           resize for the keyboard, which then covers the fields. The padding

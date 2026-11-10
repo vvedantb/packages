@@ -43,34 +43,39 @@ export type SheetContentProps = ViewProps & {
   dismissible?: boolean;
   /** Grab handle above the content. Default `true`. */
   showHandle?: boolean;
+  /** Called once the sheet is on screen: focus its field here, as `DialogContent`'s `onShow`. */
+  onShow?: () => void;
 };
 
 /**
  * Panel pinned to the bottom edge: opaque surface, top corners at the card
  * radius, safe-area bottom padding, slides in. Its bottom corners sit below the
- * screen edge, so only the top corners show.
+ * screen edge, so only the top corners show. Taller than the room (a short
+ * window, or the keyboard up), it shrinks to fit under the top inset, so a
+ * `SheetBody` or other scroll view inside scrolls and the title stays on screen.
  */
 export function SheetContent({
   children,
   className,
   dismissible = true,
   showHandle = true,
+  onShow,
   style,
   ...props
 }: SheetContentProps) {
   const insets = useSafeAreaInsets();
   return (
-    <OverlayModal part="SheetContent" placement="bottom" dismissible={dismissible}>
+    <OverlayModal part="SheetContent" placement="bottom" dismissible={dismissible} onShow={onShow}>
       <NativeOnlyAnimatedView
         entering={SlideInDown.duration(240)}
-        style={{ marginBottom: -SHEET_RADIUS }}
+        style={{ marginBottom: -SHEET_RADIUS, flexShrink: 1 }}
       >
-        <FloatingSurface blur={false} radius={SHEET_RADIUS}>
+        <FloatingSurface blur={false} radius={SHEET_RADIUS} style={{ flexShrink: 1 }}>
           <View
             accessibilityViewIsModal
             className={cn("gap-4 px-5 pt-3", className)}
             {...props}
-            style={[{ paddingBottom: insets.bottom + 20 + SHEET_RADIUS }, style]}
+            style={[{ paddingBottom: insets.bottom + 20 + SHEET_RADIUS, flexShrink: 1 }, style]}
           >
             {showHandle ? <SheetHandle /> : null}
             {children}

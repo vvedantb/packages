@@ -127,6 +127,9 @@ export function GlassSheetBackground({
 const styles = StyleSheet.create({
   clip: {
     overflow: "hidden",
+    // A surface held shorter than its content (a sheet in a short window)
+    // shrinks the clip with it, so a scroll view inside can scroll.
+    flexShrink: 1,
   },
   fill: {
     flex: 1,

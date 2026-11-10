@@ -31,6 +31,12 @@ export type ChatIconButtonProps = Omit<ButtonProps, "children" | "size" | "icon"
   iconColor?: string;
   /** Default `sm`. Larger text paints each 44 with a 20 icon. */
   size?: ChatIconButtonSize;
+  /**
+   * `"square"` (default) slops to 44 on every side. `"vertical"` slops only
+   * the height to 44, for a dense row (the message actions sit 2 to 4 apart),
+   * where sideways slop would overlap the next button and steal its taps.
+   */
+  slop?: "square" | "vertical";
 };
 
 /**
@@ -46,6 +52,7 @@ export function ChatIconButton({
   iconColor,
   variant = "ghost",
   size = "sm",
+  slop = "square",
   className,
   ...props
 }: ChatIconButtonProps) {
@@ -60,7 +67,7 @@ export function ChatIconButton({
       variant={variant}
       size="icon"
       accessibilityLabel={label}
-      hitSlop={touchSlop(metrics.side)}
+      hitSlop={slop === "vertical" ? touchSlop(MIN_TOUCH_TARGET, metrics.side) : touchSlop(metrics.side)}
       className={cn(metrics.className, className)}
       {...props}
     >

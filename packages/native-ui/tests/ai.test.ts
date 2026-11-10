@@ -138,6 +138,7 @@ vi.mock("react-native", () => ({
   Text: "Text",
   Pressable: "Pressable",
   ScrollView: "ScrollView",
+  FlatList: "FlatList",
   KeyboardAvoidingView: "KeyboardAvoidingView",
   Image: "Image",
   Modal: "Modal",
@@ -533,7 +534,7 @@ describe("Message", () => {
     expect((body.props.children as Element).type).toBe(ResponseText);
   });
 
-  it("names the five actions and paints them at the web icon-sm size with a 44 target", async () => {
+  it("names the five actions and paints them at the web icon-sm size, 44 high with no sideways slop", async () => {
     const { MessageAction, MESSAGE_ACTIONS } = await import("../src/ai/message");
     const { ChatIconButton } = await import("../src/ai/icon-button");
     expect(Object.values(MESSAGE_ACTIONS).map((action) => action.label)).toEqual([
@@ -554,12 +555,16 @@ describe("Message", () => {
       size: "icon",
       accessibilityLabel: "Good response",
       className: "h-8 w-8",
-      hitSlop: touchSlop(32),
+      // The actions sit 2 to 4 apart: slop to the side would overlap the next one.
+      hitSlop: { top: 6, bottom: 6, left: 0, right: 0 },
     });
     // Round from the `Button` pill default (0.6.0), not a radius of its own.
     expect(button.props).not.toHaveProperty("style");
     expect(button.props).not.toHaveProperty("shape");
     expect(32 + 2 * touchSlop(32).top).toBe(44);
+    // Other chat icon buttons keep the square slop.
+    const send = ChatIconButton({ icon: () => null, label: "Send" }) as unknown as Element;
+    expect(send.props.hitSlop).toEqual(touchSlop(32));
     expect((button.props.children as Element).props).toEqual({ size: 16, color: buttonColors("ghost", "light")!.color });
     (button.props.onPress as () => void)();
     expect(onPress).toHaveBeenCalledOnce();
@@ -715,6 +720,51 @@ describe("Conversation", () => {
     const scrolled = { nativeEvent: event(100) };
     (scroll.props.onScroll as (event: unknown) => void)(scrolled);
     expect(onScroll).toHaveBeenCalledWith(scrolled);
+  });
+
+  it("draws a long thread as a FlatList that follows to its measured end", async () => {
+    const { Conversation, ConversationList, ConversationScrollButton } = await import("../src/ai/conversation");
+    const onLayout = vi.fn();
+    const renderItem = () => null;
+    const h = hooks.mount(() => {
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return {
+        frame,
+        list: ConversationList({ data: ["a", "b"], renderItem, onLayout }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const list = () => h.tree.list;
+    expect(list().type).toBe("FlatList");
+    expect(list().props).toMatchObject({
+      data: ["a", "b"],
+      renderItem,
+      className: "flex-1",
+      // No gap: a FlatList gap would also space its placeholders for hidden rows.
+      contentContainerClassName: "px-3 py-3",
+      keyboardShouldPersistTaps: "handled",
+      scrollEventThrottle: 16,
+    });
+    // The list behind the ref is what the follow and the scroll button move.
+    const scrollToOffset = vi.fn();
+    (list().props.ref as (list: unknown) => void)({ scrollToOffset });
+    const layout = (height: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height } } });
+    (list().props.onLayout as (event: unknown) => void)(layout(800));
+    expect(onLayout).toHaveBeenCalledOnce();
+    // To the measured end (content less the view), not FlatList's estimate from row heights.
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    // Scrolled up, it stops following and the button shows; the button scrolls down animated.
+    (list().props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (list().props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    expect(h.tree.button).not.toBeNull();
+    scrollToOffset.mockClear();
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 6000);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    const button = (h.tree.button as Element).props.children as Element;
+    (button.props.onPress as () => void)();
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 5200, animated: true });
   });
 });
 
