@@ -30,7 +30,7 @@ jobs:
   native-ui-gallery-android:
     name: native-ui-gallery-android
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -125,15 +125,19 @@ jobs:
           script: |
             adb install -r android/app/build/outputs/apk/release/app-release.apk
             adb logcat -c
-            maestro test --format junit --output maestro-report.xml --debug-output maestro-debug .maestro || (adb logcat -d -t 2000 > logcat.txt; exit 1)
+            status=0
+            maestro test --format junit --output maestro-report.xml --debug-output maestro-debug .maestro || status=$?
+            adb logcat -d -t 2000 > logcat.txt || true
+            exit $status
 
       - name: Collect Maestro debug output
         if: always()
         run: |
-          mkdir -p apps/native-gallery/maestro-debug
-          # Maestro may write under --debug-output or ~/.maestro/tests depending on version.
+          # `--debug-output` fills maestro-debug. Older runs also write to
+          # ~/.maestro/tests, so copy that too into a separate folder.
+          mkdir -p apps/native-gallery/maestro-debug/home-tests
           if [ -d "$HOME/.maestro/tests" ]; then
-            cp -R "$HOME/.maestro/tests/." apps/native-gallery/maestro-debug/ || true
+            cp -R "$HOME/.maestro/tests/." apps/native-gallery/maestro-debug/home-tests/ || true
           fi
           ls -la apps/native-gallery/maestro-debug || true
 

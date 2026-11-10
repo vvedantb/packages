@@ -170,8 +170,10 @@ export function LayeringSection() {
             />
           </View>
         </GlassBlurTarget>
-        {/* BottomSheet outside GlassBlurTarget: blur surfaces must not sit inside
-            their own target. Absolute overlay so the controlled sheet covers the bar. */}
+        {/* The sheet is a sibling of GlassBlurTarget, not a child: a blur surface
+            must not sit inside its own target. The full-size box-none layer lets
+            the controlled sheet cover the tab bar and pass touches through when
+            it is closed. */}
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
           <BottomSheetContainer visible={bottomSheet} onClose={() => setBottomSheet(false)} title="Bottom sheet" closeTestID="bottom-sheet-close">
             <Text testID="bottom-sheet-body" style={{ color: tokens.color.foreground[scheme] }}>

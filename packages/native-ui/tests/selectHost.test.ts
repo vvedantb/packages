@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // React Native and the primitive are stubbed; the checks read the element tree.
 
 const state = vi.hoisted(() => ({ os: "android" }));
+const motion = vi.hoisted(() => ({ reduce: false }));
 const ctx = vi.hoisted(() => ({
   open: true,
   onOpenChange: vi.fn(),
@@ -26,13 +27,14 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-screens", () => ({ FullWindowOverlay: "FullWindowOverlay" }));
 vi.mock("@rn-primitives/select", () => ({ useRootContext: () => ctx }));
-vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => false }));
+vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => motion.reduce }));
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
 afterEach(() => {
   state.os = "android";
   ctx.open = true;
+  motion.reduce = false;
   vi.clearAllMocks();
 });
 
@@ -52,6 +54,13 @@ describe("SelectHost", () => {
     expect(host.props.style).toEqual({ flex: 1 });
     expect(host.props.pointerEvents).toBe("box-none");
     expect(host.props.children).toBe("options");
+  });
+
+  it("on Android turns the Modal animation off with reduce motion", async () => {
+    const { SelectHost } = await import("../src/primitives/select-host");
+    motion.reduce = true;
+    const modal = SelectHost({ children: "options" }) as unknown as Element;
+    expect(modal.props.animationType).toBe("none");
   });
 
   it("on Android mounts no Modal while closed", async () => {

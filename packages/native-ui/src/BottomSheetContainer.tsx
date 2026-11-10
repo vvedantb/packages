@@ -2,24 +2,32 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import type { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
+import { IconX } from "@tabler/icons-react-native";
+import { useColorScheme } from "nativewind";
+import React, { useCallback } from "react";
 import {
   Platform,
-  View,
   Text,
   TouchableOpacity,
+  View,
   type ViewProps,
 } from "react-native";
-import React, { useRef, useCallback, useMemo, JSX } from "react";
-import { useColorScheme } from "nativewind";
 import { Colors } from "./colors";
 import { textStyle, typeStyle } from "./controlStyles";
-import { IconX } from "@tabler/icons-react-native";
-import { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
-import { GlassSheetBackground } from "./LiquidGlass";
 import { floatingSolidFill } from "./floating";
+import { GlassSheetBackground } from "./LiquidGlass";
 import { useLargerText } from "./theme";
 
-/** Opaque sheet chrome on Android — glass blur needs a measured target and can fail after Modal dismiss. */
+// One snap point, set explicitly. With dynamic sizing the sheet can measure to
+// height 0 on Android and never appear.
+const SNAP_POINTS = ["40%"];
+const SHEET_RADIUS = 20;
+
+/**
+ * Opaque sheet chrome for Android. The glass background needs a measured blur
+ * target, which is not reliable once an RN `Modal` has been dismissed.
+ */
 function SolidSheetBackground({
   style,
   pointerEvents,
@@ -28,24 +36,41 @@ function SolidSheetBackground({
   pointerEvents?: ViewProps["pointerEvents"];
 }) {
   const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
   return (
     <View
       pointerEvents={pointerEvents}
       style={[
         style,
         {
-          backgroundColor: isDark
-            ? floatingSolidFill.dark
-            : floatingSolidFill.light,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          backgroundColor: floatingSolidFill[colorScheme === "dark" ? "dark" : "light"],
+          borderTopLeftRadius: SHEET_RADIUS,
+          borderTopRightRadius: SHEET_RADIUS,
         },
       ]}
     />
   );
 }
 
+function SheetBackdrop(props: BottomSheetDefaultBackdropProps) {
+  return (
+    <BottomSheetBackdrop
+      {...props}
+      appearsOnIndex={0}
+      disappearsOnIndex={-1}
+      opacity={0.5}
+    />
+  );
+}
+
+/**
+ * A controlled bottom sheet over the screen, built on gorhom's default-export
+ * `BottomSheet` (the named `BottomSheet` export is undefined).
+ *
+ * It renders nothing while `visible` is false. A closed gorhom sheet still lays
+ * out an absolute-fill host that can cover the triggers beneath it, and
+ * `BottomSheetModal.present()` did nothing after an RN `Modal` had been
+ * dismissed on Android.
+ */
 export function BottomSheetContainer({
   visible,
   onClose,
@@ -59,63 +84,44 @@ export function BottomSheetContainer({
   children: React.ReactNode;
   closeTestID?: string;
 }) {
-  const sheetRef = useRef<React.ElementRef<typeof BottomSheet>>(null);
   const largerText = useLargerText();
   const { colorScheme } = useColorScheme();
-  // Explicit snap so the sheet cannot measure to height 0 on Android.
-  const snapPoints = useMemo(() => ["40%"], []);
-
+  const isDark = colorScheme === "dark";
   const renderBackdrop = useCallback(
-    (props: JSX.IntrinsicAttributes & BottomSheetDefaultBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-      />
-    ),
+    (props: BottomSheetDefaultBackdropProps) => <SheetBackdrop {...props} />,
     [],
   );
 
-  // Unmount when closed: a closed gorhom BottomSheet still lays out an
-  // absolute-fill host that can cover triggers underneath (and BottomSheetModal
-  // present() was a no-op after RN Modal dismiss on Android).
   if (!visible) {
     return null;
   }
 
   return (
     <BottomSheet
-      ref={sheetRef}
       index={0}
-      snapPoints={snapPoints}
+      snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
-      backdropComponent={renderBackdrop}
+      enablePanDownToClose
+      enableContentPanningGesture={false}
+      enableHandlePanningGesture
+      keyboardBehavior="interactive"
       onClose={onClose}
+      backdropComponent={renderBackdrop}
       backgroundComponent={
         Platform.OS === "android" ? SolidSheetBackground : GlassSheetBackground
       }
       handleIndicatorStyle={{
-        backgroundColor:
-          colorScheme === "dark" ? Colors.white : Colors.neutral[800],
+        backgroundColor: isDark ? Colors.white : Colors.neutral[800],
       }}
-      enableContentPanningGesture={false}
-      enableHandlePanningGesture={true}
-      enablePanDownToClose
-      keyboardBehavior="interactive"
     >
-      {/* Padding via style, not NativeWind className: gorhom's BottomSheetView
-          does not always pick up className, and a zero-padded sheet can measure
-          too small to present. */}
+      {/* Padding is a style, not a NativeWind class: `BottomSheetView` does not
+          always apply `className`, and an unpadded sheet can measure too small. */}
       <BottomSheetView style={{ padding: 20, paddingBottom: 48 }}>
         <View className="mb-4 flex-row items-center justify-between gap-3">
           <Text
             accessibilityRole="header"
             className={`${largerText ? "text-2xl" : "text-xl"} flex-1 font-instrument-sans-semibold`}
-            style={[
-              textStyle("foreground", colorScheme === "dark" ? "dark" : "light"),
-              typeStyle("semibold"),
-            ]}
+            style={[textStyle("foreground", isDark ? "dark" : "light"), typeStyle("semibold")]}
           >
             {title}
           </Text>
@@ -128,10 +134,7 @@ export function BottomSheetContainer({
             hitSlop={8}
             activeOpacity={0.7}
           >
-            <IconX
-              size={largerText ? 32 : 28}
-              color={colorScheme === "dark" ? "white" : "black"}
-            />
+            <IconX size={largerText ? 32 : 28} color={isDark ? "white" : "black"} />
           </TouchableOpacity>
         </View>
         {children}
