@@ -321,18 +321,21 @@ export type TabsSize = "default" | "sm";
  * high, `px-3 py-1`, `text-sm`), `soft` the web soft trigger (`px-4 py-2
  * text-sm`) and `sm` the web `sm` list (`px-2.5 py-1 text-xs`). With larger
  * text they are the 0.3.4 sizes. `minHeight` is a minimum, so a large Dynamic
- * Type size grows the trigger instead of clipping its label.
+ * Type size grows the trigger instead of clipping its label. `letterSpacing`
+ * is the web type-scale tracking of the label (`tokens/src/css/type-scale.css`),
+ * in points: `text-xs` is 0.005em (0.06 at 12), `text-sm` is 0em. Larger text
+ * keeps 0, as in 0.3.4.
  */
 export function tabTriggerSize(variant: TabsVariant, size: TabsSize, largerText: boolean) {
   if (largerText) {
     return size === "sm"
-      ? { minHeight: 48, className: "px-4 py-2", textClassName: "text-lg" }
-      : { minHeight: 56, className: "px-4 py-3", textClassName: "text-xl" };
+      ? { minHeight: 48, className: "px-4 py-2", textClassName: "text-lg", letterSpacing: 0 }
+      : { minHeight: 56, className: "px-4 py-3", textClassName: "text-xl", letterSpacing: 0 };
   }
-  if (size === "sm") return { minHeight: 30, className: "px-2.5 py-1", textClassName: "text-xs" };
+  if (size === "sm") return { minHeight: 30, className: "px-2.5 py-1", textClassName: "text-xs", letterSpacing: 0.06 };
   return variant === "soft"
-    ? { minHeight: 36, className: "px-4 py-2", textClassName: "text-sm" }
-    : { minHeight: 30, className: "px-3 py-1", textClassName: "text-sm" };
+    ? { minHeight: 36, className: "px-4 py-2", textClassName: "text-sm", letterSpacing: 0 }
+    : { minHeight: 30, className: "px-3 py-1", textClassName: "text-sm", letterSpacing: 0 };
 }
 
 /** The segmented track, web `--tabs-bar-bg` (`--default`). */
@@ -375,16 +378,26 @@ export function checkboxColors(checked: boolean, scheme: Scheme) {
       };
 }
 
+export type SwitchSize = "sm" | "md";
+
 /**
- * Track and thumb size classes, and the track size in points for the hit slop.
- * Without larger text it is the web `Switch`: a `h-5 w-9` track (20 × 36,
- * with a 1 border) and a `size-4` thumb that moves `translate-x-4`. With larger
- * text it is the 0.3.4 size. `justify-center` on the track centres the thumb.
+ * Track and thumb size classes, the thumb offset off and on, and the track
+ * size in points for the hit slop. `justify-center` on the track centres the
+ * thumb. Without larger text:
+ * - `sm` is the web `Switch`: a `h-5 w-9` track (20 × 36, with a 1 border)
+ *   and a `size-4` thumb that moves `translate-x-4`.
+ * - `md` is the larger app switch some web apps set through `UiConfig.Switch`:
+ *   a `h-6 w-10` track (24 × 40, with a 1 border) and a `size-5` thumb that
+ *   sits at `translate-x-0.5` and moves to `translate-x-[18px]`.
+ * With larger text both are the 0.3.4 size.
  */
-export function switchSize(largerText: boolean) {
-  return largerText
-    ? { track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6", width: 56, height: 32 }
-    : { track: "h-5 w-9", thumb: "h-4 w-4", on: "translate-x-4", width: 36, height: 20 };
+export function switchSize(largerText: boolean, size: SwitchSize = "sm") {
+  if (largerText) {
+    return { track: "h-8 w-14", thumb: "h-7 w-7", off: "translate-x-0", on: "translate-x-6", width: 56, height: 32 };
+  }
+  return size === "md"
+    ? { track: "h-6 w-10", thumb: "h-5 w-5", off: "translate-x-0.5", on: "translate-x-[18px]", width: 40, height: 24 }
+    : { track: "h-5 w-9", thumb: "h-4 w-4", off: "translate-x-0", on: "translate-x-4", width: 36, height: 20 };
 }
 
 /**

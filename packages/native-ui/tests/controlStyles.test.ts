@@ -851,21 +851,36 @@ describe("switchSize", () => {
     expect(switchSize(false)).toEqual({
       track: "h-5 w-9",
       thumb: "h-4 w-4",
+      off: "translate-x-0",
       on: "translate-x-4",
       width: 36,
       height: 20,
     });
+    expect(switchSize(false, "sm")).toEqual(switchSize(false));
   });
 
-  it("keeps the 0.3.4 size with larger text", () => {
-    expect(switchSize(true)).toMatchObject({ track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6" });
+  it("is a 40 x 24 track with a 20 thumb at md, 2 in from the left and 18 across when on", () => {
+    expect(switchSize(false, "md")).toEqual({
+      track: "h-6 w-10",
+      thumb: "h-5 w-5",
+      off: "translate-x-0.5",
+      on: "translate-x-[18px]",
+      width: 40,
+      height: 24,
+    });
+  });
+
+  it("keeps the 0.3.4 size with larger text at every size", () => {
+    for (const size of ["sm", "md"] as const) {
+      expect(switchSize(true, size)).toMatchObject({ track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6" });
+    }
   });
 
   it("is what Switch draws, centring the thumb", () => {
     const source = read("Switch.tsx");
-    expect(source).toMatch(/const size = switchSize\(useLargerText\(\)\);/);
+    expect(source).toMatch(/const size = switchSize\(useLargerText\(\), sizeName\);/);
     expect(source).toMatch(/className=\{cn\(size\.track, "justify-center"\)\}/);
-    expect(source).toMatch(/thumbClassName=\{cn\(size\.thumb, resolvedValue \? size\.on : "translate-x-0"\)\}/);
+    expect(source).toMatch(/thumbClassName=\{cn\(size\.thumb, resolvedValue \? size\.on : size\.off\)\}/);
     expect(source).not.toMatch(/"h-8 w-14"/);
   });
 });
@@ -884,6 +899,7 @@ describe("tabTriggerSize", () => {
         minHeight: 30,
         className: "px-3 py-1",
         textClassName: "text-sm",
+        letterSpacing: 0,
       });
     }
   });
@@ -899,9 +915,20 @@ describe("tabTriggerSize", () => {
 
   it("keeps the larger-text sizes", () => {
     for (const variant of variants) {
-      expect(tabTriggerSize(variant, "default", true)).toEqual({ minHeight: 56, className: "px-4 py-3", textClassName: "text-xl" });
-      expect(tabTriggerSize(variant, "sm", true)).toEqual({ minHeight: 48, className: "px-4 py-2", textClassName: "text-lg" });
+      expect(tabTriggerSize(variant, "default", true)).toEqual({ minHeight: 56, className: "px-4 py-3", textClassName: "text-xl", letterSpacing: 0 });
+      expect(tabTriggerSize(variant, "sm", true)).toEqual({ minHeight: 48, className: "px-4 py-2", textClassName: "text-lg", letterSpacing: 0 });
     }
+  });
+
+  it("tracks the label as the web type scale: text-xs 0.005em, text-sm 0em", () => {
+    const scale = readFileSync(join(root, "..", "ui", "tokens/src/css/type-scale.css"), "utf8");
+    expect(scale).toMatch(/--text-xs--letter-spacing: 0\.005em;/);
+    expect(scale).toMatch(/--text-sm--letter-spacing: 0em;/);
+    for (const variant of variants) {
+      expect(tabTriggerSize(variant, "sm", false).letterSpacing).toBeCloseTo(12 * 0.005);
+      expect(tabTriggerSize(variant, "default", false).letterSpacing).toBe(0);
+    }
+    expect(code(read("Tabs.tsx"))).toMatch(/letterSpacing: trigger\.letterSpacing/);
   });
 
   it("lays tabs out like the web lists: content-sized at the start, no flex-1 or w-full", () => {
