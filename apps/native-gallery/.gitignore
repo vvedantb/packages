@@ -2,3 +2,4 @@ screenshots/
 maestro-report.xml
 maestro-debug/
 logcat.txt
+e2e-log.jsonl

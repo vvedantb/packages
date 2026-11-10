@@ -10,7 +10,11 @@
     "build:android": "expo prebuild --platform android --no-install && cd android && NODE_PATH=\"$(cd ../../.. && pwd)/node_modules/.pnpm/node_modules\" ./gradlew assembleRelease -PreactNativeArchitectures=x86_64",
     "export:android": "expo export --platform android",
     "typecheck": "tsc --noEmit",
-    "maestro": "maestro test --format junit --output maestro-report.xml .maestro"
+    "maestro": "maestro test --format junit --output maestro-report.xml .maestro",
+    "build:android:agent": "EXPO_PUBLIC_NATIVE_UI_AGENT=1 expo prebuild --platform android --no-install && cd android && NODE_PATH=\"$(cd ../../.. && pwd)/node_modules/.pnpm/node_modules\" EXPO_PUBLIC_NATIVE_UI_AGENT=1 ./gradlew assembleRelease -PreactNativeArchitectures=x86_64",
+    "e2e:android": "node e2e/run.mjs",
+    "test": "node --test tests/clock.test.mjs",
+    "test:strip": "node --test --test-timeout=1200000 tests/strip.test.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

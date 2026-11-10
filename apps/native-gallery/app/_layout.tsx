@@ -12,22 +12,24 @@ import { GalleryProvider } from "../src/GalleryContext";
 import { useEffect } from "react";
 
 // Agent builds only (EXPO_PUBLIC_NATIVE_UI_AGENT=1): a test clock, a deep-link bridge
-// and reduced motion. Metro inlines the flag, so the default bundle has none of this.
-const agent =
-  process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1"
-    ? (require("../src/agent/install") as typeof import("../src/agent/install"))
-    : null;
+// and reduced motion. Metro inlines the flag and folds each branch away, so the default
+// bundle has none of this. Keep every use of the agent modules inside such a branch:
+// a call through a null constant would leave its property name in the bundle.
 const AgentMotion =
   process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1"
     ? (require("../src/agent/AgentMotion") as typeof import("../src/agent/AgentMotion")).AgentMotion
     : null;
-agent?.installAgent();
+if (process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1") {
+  (require("../src/agent/install") as typeof import("../src/agent/install")).installAgent();
+}
 
 function Shell() {
   const scheme = useScheme();
   const pathname = usePathname();
   useEffect(() => {
-    agent?.setAgentRoute(pathname);
+    if (process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1") {
+      (require("../src/agent/install") as typeof import("../src/agent/install")).setAgentRoute(pathname);
+    }
   }, [pathname]);
   return (
     <>
