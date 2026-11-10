@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ os: "android" }));
 const ctx = vi.hoisted(() => ({
+  open: true,
   onOpenChange: vi.fn(),
   setTriggerPosition: vi.fn(),
   setContentLayout: vi.fn(),
@@ -31,6 +32,7 @@ type Element = { type: unknown; props: Record<string, unknown> & { children?: un
 
 afterEach(() => {
   state.os = "android";
+  ctx.open = true;
   vi.clearAllMocks();
 });
 
@@ -50,6 +52,12 @@ describe("SelectHost", () => {
     expect(host.props.style).toEqual({ flex: 1 });
     expect(host.props.pointerEvents).toBe("box-none");
     expect(host.props.children).toBe("options");
+  });
+
+  it("on Android mounts no Modal while closed", async () => {
+    const { SelectHost } = await import("../src/primitives/select-host");
+    ctx.open = false;
+    expect(SelectHost({ children: "options" })).toBeNull();
   });
 
   it("closes the Select on Android back", async () => {
@@ -76,5 +84,7 @@ describe("SelectHost", () => {
     const source = readFileSync(join(root, "src/primitives/select.tsx"), "utf8");
     expect(source).toContain("<SelectHost>");
     expect(source).not.toContain("FullWindowOverlay");
+    // Android renders the host directly: no Portal around the Modal.
+    expect(source).toMatch(/Platform\.OS === "android"\) \{\s*return <SelectHost>/);
   });
 });

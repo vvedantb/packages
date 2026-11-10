@@ -855,6 +855,7 @@ declare module "@rn-primitives/select" {
   export const ScrollDownButton: Ref<ViewProps>;
   /** Root open/position context, used by `SelectHost` to close on Android back. */
   export function useRootContext(): {
+    open: boolean;
     onOpenChange: (open: boolean) => void;
     setTriggerPosition: (position: unknown) => void;
     setContentLayout: (layout: unknown) => void;

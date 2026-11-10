@@ -84,48 +84,60 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   SelectContentProps
 >(({ className, children, position = "popper", portalHost, ...props }, ref) => {
+  const body = (
+      <SelectPrimitive.Overlay
+        style={Platform.select({ native: StyleSheet.absoluteFill })}
+      >
+        <TextClassContext.Provider value="text-popover-foreground">
+          <NativeOnlyAnimatedView
+            entering={FadeIn}
+            exiting={FadeOut}
+            className="z-50"
+            // Content is absolutely positioned, so a bare wrapper has zero
+            // height and UI tests drop its children as invisible. Fill the
+            // overlay and let touches fall through to it.
+            style={Platform.select({ native: StyleSheet.absoluteFill })}
+            pointerEvents={Platform.select({ native: "box-none" })}
+          >
+            <SelectPrimitive.Content
+              ref={ref}
+              position={position}
+              className={cn(
+                "z-50 min-w-[8rem] rounded-lg",
+                Platform.select({
+                  native: "p-1",
+                  web: "max-h-52 overflow-hidden",
+                }),
+                className,
+              )}
+              {...props}
+            >
+              <LiquidGlass
+                pointerEvents="none"
+                elevated={false}
+                className="absolute inset-0 rounded-lg"
+              />
+              <SelectScrollUpButton />
+              <SelectPrimitive.Viewport
+                className={cn("p-1", position === "popper" && "w-full")}
+              >
+                {children}
+              </SelectPrimitive.Viewport>
+              <SelectScrollDownButton />
+            </SelectPrimitive.Content>
+          </NativeOnlyAnimatedView>
+        </TextClassContext.Provider>
+      </SelectPrimitive.Overlay>
+  );
+  // Android: no Portal. A Modal inside a portal mounts an empty window, so
+  // `SelectHost` renders the Modal directly (as `DropdownMenuContent` does) and
+  // gates it on `open` itself. iOS and web keep the Portal.
+  if (Platform.OS === "android") {
+    return <SelectHost>{body}</SelectHost>;
+  }
   return (
     <SelectPrimitive.Portal hostName={portalHost}>
-      <SelectHost>
-        <SelectPrimitive.Overlay
-          style={Platform.select({ native: StyleSheet.absoluteFill })}
-        >
-          <TextClassContext.Provider value="text-popover-foreground">
-            <NativeOnlyAnimatedView
-              entering={FadeIn}
-              exiting={FadeOut}
-              className="z-50"
-            >
-              <SelectPrimitive.Content
-                ref={ref}
-                position={position}
-                className={cn(
-                  "z-50 min-w-[8rem] rounded-lg",
-                  Platform.select({
-                    native: "p-1",
-                    web: "max-h-52 overflow-hidden",
-                  }),
-                  className,
-                )}
-                {...props}
-              >
-                <LiquidGlass
-                  pointerEvents="none"
-                  elevated={false}
-                  className="absolute inset-0 rounded-lg"
-                />
-                <SelectScrollUpButton />
-                <SelectPrimitive.Viewport
-                  className={cn("p-1", position === "popper" && "w-full")}
-                >
-                  {children}
-                </SelectPrimitive.Viewport>
-                <SelectScrollDownButton />
-              </SelectPrimitive.Content>
-            </NativeOnlyAnimatedView>
-          </TextClassContext.Provider>
-        </SelectPrimitive.Overlay>
-      </SelectHost>
+      <SelectHost>{body}</SelectHost>
     </SelectPrimitive.Portal>
   );
 });
