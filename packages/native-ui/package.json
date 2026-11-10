@@ -5,11 +5,12 @@
   "description": "Shared React Native / Expo UI primitives. Floating surfaces, forms, overlays, toasts, settings chrome, tab bar, AI chat parts, the family app marks, a NativeWind preset, the Expo web root and Clerk + Convex auth screens.",
   "type": "module",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vvedantb/ui.git",
+    "url": "git+https://github.com/vvedantb/packages.git",
     "directory": "packages/native-ui"
   },
   "exports": {
