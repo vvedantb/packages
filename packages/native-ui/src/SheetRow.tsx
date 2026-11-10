@@ -20,6 +20,8 @@ export type SheetRowProps = {
   active?: boolean;
   /** A destructive action: title and icon in `palette.danger`. */
   danger?: boolean;
+  /** The web `text-warning` item (such as Archive): title and icon in `palette.warning`. */
+  warning?: boolean;
   disabled?: boolean;
   onPress?: () => void;
   testID?: string;
@@ -30,7 +32,7 @@ export type SheetRowProps = {
  * icon (or another `leading` mark), title and optional detail, at least 56 high (64 with larger text) with
  * the `ListRow` padding (`px-4 py-3`). While pressed it takes the web menu
  * item highlight (`bg-default`). `danger` draws the title and icon in the
- * danger colour; `active` adds a check; `disabled` dims it to 50%, as the web
+ * danger colour, `warning` in the warning colour; `active` adds a check; `disabled` dims it to 50%, as the web
  * item, and ignores presses.
  */
 export function SheetRow({
@@ -40,13 +42,18 @@ export function SheetRow({
   detail,
   active = false,
   danger = false,
+  warning = false,
   disabled = false,
   onPress,
   testID,
 }: SheetRowProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
-  const color = danger ? palette.danger[scheme] : tokens.color.foreground[scheme];
+  const color = danger
+    ? palette.danger[scheme]
+    : warning
+      ? palette.warning[scheme]
+      : tokens.color.foreground[scheme];
   const titleSize = largerText ? "text-xl" : "text-base";
   const detailSize = largerText ? "text-lg" : "text-sm";
   const iconSize = largerText ? 26 : 22;

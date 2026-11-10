@@ -346,13 +346,19 @@ export type DropdownMenuItemProps = MenuItemBaseProps & {
   icon?: MenuIcon;
   /** The web `text-destructive` item: label and icon in the danger colour. */
   destructive?: boolean;
+  /** The web `text-warning` item (such as Archive): label and icon in the warning colour. */
+  warning?: boolean;
 };
 
 /** One action row (`menuitem`): an optional icon and the label. */
-export function DropdownMenuItem({ icon: Icon, destructive, ...props }: DropdownMenuItemProps) {
+export function DropdownMenuItem({ icon: Icon, destructive, warning, ...props }: DropdownMenuItemProps) {
   const scheme = useScheme();
   const metrics = itemMetrics(useLargerText());
-  const color = destructive ? palette.danger[scheme] : palette.overlayForeground[scheme];
+  const color = destructive
+    ? palette.danger[scheme]
+    : warning
+      ? palette.warning[scheme]
+      : palette.overlayForeground[scheme];
   return (
     <MenuRow
       part="DropdownMenuItem"

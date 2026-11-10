@@ -212,6 +212,15 @@ describe("DropdownMenu parts", () => {
     expect(value.setOpen).not.toHaveBeenCalled();
   });
 
+  it("a warning item (the web Archive) is in the warning colour, label and icon", async () => {
+    const { DropdownMenuItem } = await import("../src/DropdownMenu");
+    context(true);
+    const tree = render(DropdownMenuItem({ children: "Archive", warning: true, icon: "IconArchive" as never })) as Element;
+    const label = elements(tree).find((element) => element.type === "Text")!;
+    expect(label.props.style).toEqual([{ fontSize: 14, lineHeight: 20 }, { color: palette.warning.light }]);
+    expect(elements(tree).find((element) => element.type === "IconArchive")?.props.color).toBe(palette.warning.light);
+  });
+
   it("a radio item reports checked and shows the check at left 10, the label inset 32", async () => {
     const { DropdownMenuRadioItem } = await import("../src/DropdownMenu");
     context(true);

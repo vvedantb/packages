@@ -584,6 +584,13 @@ describe("SheetRow", () => {
     expect(ofType(plain, TestIcon)[0]!.props.color).toBe(tokens.color.foreground.light);
   });
 
+  it("draws warning rows (the web Archive) in the warning colour, title and icon", async () => {
+    const tree = await sheetRow({ warning: true, icon: TestIcon });
+    expect(ofType(tree, TestIcon)[0]!.props.color).toBe(palette.warning.light);
+    const title = ofType(tree, "Text").find((text) => text.props.children === "Delete")!;
+    expect(flatten(title.props.style).color).toBe(palette.warning.light);
+  });
+
   it("checks the active row and dims a disabled one", async () => {
     const active = await sheetRow({ active: true });
     expect(ofType(active, "IconCheck")).toHaveLength(1);
