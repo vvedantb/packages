@@ -125,3 +125,6 @@ export const pricingMultiClasses = {
     switchIdle: "text-muted-foreground",
   },
 } as const;
+
+/** Social proof row under the `ProductHero` actions. */
+export const productHeroSocialProofClass = "mt-6 flex items-center gap-2 text-sm text-muted"; // check-tokens-allow: text-muted

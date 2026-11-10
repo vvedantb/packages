@@ -4,7 +4,10 @@ import { ProductHero, type ProductHeroProps } from "../../src/client";
 
 type AppId = "vibot" | "verve" | "velth" | "vmem" | "vhub";
 
-type ExampleConfig = Pick<ProductHeroProps, "title" | "tagline" | "primaryCta" | "secondaryCta" | "signIn" | "visualLabel">;
+type ExampleConfig = Pick<ProductHeroProps, "title" | "tagline" | "primaryCta" | "secondaryCta" | "signIn" | "visualLabel" | "userCount">;
+
+// TODO: replace with the public V Store APK link
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/#v-store";
 
 // The live headlines and taglines from docs/audits/v-apps-hero-audit.md. App names live only in this example.
 const EXAMPLES: Record<AppId, ExampleConfig> = {
@@ -15,18 +18,20 @@ const EXAMPLES: Record<AppId, ExampleConfig> = {
     secondaryCta: { label: "See what it does", href: "#see-what-it-does" },
     signIn: { href: "#sign-in" },
     visualLabel: "Rings orbiting a glowing core",
+    userCount: 1284, // In an app: from a Convex action wrapping `clerk.users.getCount()`. `undefined` while loading.
   },
   verve: {
     title: "Minimal by design, powerful by action",
     tagline: "verve replaces the five apps you switch between. Write with AI that knows your notes, track what you have to do, and keep the dates and habits that matter in view.",
     primaryCta: { label: "Get started", href: "#get-started" },
     signIn: { href: "#sign-in" },
+    userCount: 1284,
   },
   velth: {
     title: "Your health, your control",
     tagline: "Log a blood pressure reading in ten seconds. Scan the meter instead of typing. Never miss a dose. Walk into your next appointment with the whole picture, not a vague memory.",
-    primaryCta: { label: "Get it on Google Play", href: "#google-play" },
-    secondaryCta: { label: "Try the demo", href: "#try-the-demo" },
+    primaryCta: { label: "Try the demo", href: "#demo" },
+    secondaryCta: { label: "Download on V Store", href: V_STORE_DOWNLOAD_URL },
     // The live site has no Sign in, so none here: this case covers the zero path.
   },
   vmem: {
@@ -82,6 +87,7 @@ export function Fixture() {
         signIn={config.signIn && { ...config.signIn, onClick: () => setClicked("sign-in") }}
         visual={<OrbitVisual />}
         visualLabel={config.visualLabel}
+        userCount={config.userCount}
       />
       <p className="mx-auto max-w-6xl px-5 text-xs text-muted-foreground" data-testid="hero-status">
         Last click: {clicked}

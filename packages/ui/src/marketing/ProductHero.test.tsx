@@ -33,6 +33,7 @@ const getByRole = (root: HTMLElement, role: string, opts?: RoleOpts) => {
 };
 const queryByRole = (root: HTMLElement, role: string, opts?: RoleOpts) => queryAllByRole(root, role, opts)[0] ?? null;
 const getByTestId = (root: HTMLElement, id: string) => root.querySelector<HTMLElement>(`[data-testid='${id}']`)!;
+const queryTestId = (root: HTMLElement, id: string) => root.querySelector<HTMLElement>(`[data-testid='${id}']`);
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -142,10 +143,95 @@ describe("ProductHero", () => {
       expect(a.parentElement?.textContent).toBe("a product of Project V");
     });
 
+    it("always links to PROJECT_V_HOME_URL, whatever extra props are passed", async () => {
+      const host = await mount({
+        productOfHref: "https://vedantb.com",
+        productOfUrl: "https://vedantb.com",
+        href: "https://vedantb.com",
+      } as unknown as Partial<ProductHeroProps>);
+      const a = getByRole(host, "link", { name: "Project V" });
+      expect(a.getAttribute("href")).toBe("https://projectv.uk");
+      expect(a.getAttribute("href")).toBe(PROJECT_V_HOME_URL);
+      expect(host.querySelectorAll("a[href*='vedantb.com']")).toHaveLength(0);
+    });
+
+    it("has no prop that takes a product-of URL", () => {
+      // Type-level: showProductOf is a boolean and no URL prop exists.
+      const keys: (keyof ProductHeroProps)[] = ["showProductOf"];
+      const props: ProductHeroProps = { ...base, showProductOf: true };
+      expect(typeof props[keys[0]!]).toBe("boolean");
+      // @ts-expect-error productOfHref is not a prop
+      const bad: ProductHeroProps = { ...base, productOfHref: "https://vedantb.com" };
+      expect(bad).toBeDefined();
+    });
+
     it("is hidden with showProductOf false", async () => {
       const host = await mount({ showProductOf: false });
       expect(host.textContent).not.toContain("a product of");
       expect(queryByRole(host, "link", { name: "Project V" })).toBeNull();
+    });
+  });
+
+  describe("userCount", () => {
+    const stubMotion = (reduced: boolean) => {
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: query === "(prefers-reduced-motion: reduce)" ? reduced : false,
+        media: query,
+        onchange: null,
+        addEventListener() {},
+        removeEventListener() {},
+        addListener() {},
+        removeListener() {},
+        dispatchEvent: () => false,
+      }));
+    };
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("is hidden when userCount is undefined", async () => {
+      const host = await mount();
+      expect(queryTestId(host, "user-count")).toBeNull();
+      expect(host.textContent).not.toContain("people already here");
+    });
+
+    it("is hidden when userCount is 0 or null", async () => {
+      for (const userCount of [0, null, -1]) {
+        document.body.innerHTML = "";
+        const host = await mount({ userCount });
+        expect(queryTestId(host, "user-count")).toBeNull();
+        expect(host.textContent).not.toContain("0+");
+      }
+    });
+
+    it("shows the formatted count", async () => {
+      stubMotion(false);
+      const host = await mount({ userCount: 1284 });
+      const text = getByTestId(host, "user-count").textContent ?? "";
+      expect(text).toContain("Free to use");
+      expect(text).toContain("1,284+");
+      expect(text).toContain("people already here");
+    });
+
+    it("places the row after the actions", async () => {
+      stubMotion(false);
+      const host = await mount({ userCount: 1284 });
+      const cta = getByRole(host, "link", { name: "Get started" });
+      expect(cta.compareDocumentPosition(getByTestId(host, "user-count")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("pulses the dot when motion is allowed", async () => {
+      stubMotion(false);
+      const host = await mount({ userCount: 1284 });
+      const dot = getByTestId(host, "user-count-dot");
+      expect(dot.className).toContain("animate-pulse");
+      expect(dot.className).toContain("bg-success");
+    });
+
+    it("renders a static dot under prefers-reduced-motion", async () => {
+      stubMotion(true);
+      const host = await mount({ userCount: 1284 });
+      const dot = getByTestId(host, "user-count-dot");
+      expect(dot.className).not.toContain("animate-pulse");
+      expect(dot.className).toContain("bg-success");
     });
   });
 

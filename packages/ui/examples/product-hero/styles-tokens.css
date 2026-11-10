@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../../tokens/src/tokens.css";
+@import "../../fonts/instrument-sans.css";
 @source "../../src/**/*.{ts,tsx}";
 @source "../../app/src/**/*.{ts,tsx}";
 @source "./*.tsx";

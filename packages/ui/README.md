@@ -959,7 +959,7 @@ links under a separator. Set `app` for the Project V footer (0.37.0):
 One hero for every product landing page: copy first, then a concept visual on mobile, side by side from `lg`.
 It sits in `landingShellClass` width. The title is the only `h1` and uses the `PageTitle` contract
 (`pageTitleClass`: Instrument Sans, weight 600, `leading-tight`, `tracking-tight`) at `text-4xl sm:text-5xl lg:text-6xl`.
-Actions are pill `Button`s. `ProductHero` does not animate itself; it adds no motion that needs a reduced-motion path.
+Actions are pill `Button`s. The only motion `ProductHero` adds is the `userCount` dot pulse, which stops under `prefers-reduced-motion: reduce`.
 
 ```tsx
 <ProductHero
@@ -970,8 +970,28 @@ Actions are pill `Button`s. `ProductHero` does not animate itself; it adds no mo
   signIn={{ href: "/sign-in" }}
   visual={<OrbitRings />}
   visualLabel="Rings orbiting a bot"
+  userCount={userCount} // undefined while loading
 />
 ```
+
+Velth has no Sign in, so it sets no `signIn`:
+
+```tsx
+// TODO: replace with the public V Store APK link
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/#v-store";
+
+<ProductHero
+  title="Your health, your control"
+  tagline="..."
+  primaryCta={{ label: "Try the demo", href: "#demo" }}
+  secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL }}
+  visual={<OrbitRings />}
+/>
+```
+
+#### Feeding `userCount`
+
+The package does no fetching. The app calls a Convex action that wraps the Clerk backend SDK `clerk.users.getCount()` (it needs `CLERK_SECRET_KEY` on the server), once on mount or cached server-side. Pass `undefined` while loading and the positive number when it resolves. The row stays hidden for `undefined`, `null` and values of 0 or less, so a loading `0` never flashes "0+ people".
 
 | Prop | |
 | --- | --- |
@@ -981,7 +1001,8 @@ Actions are pill `Button`s. `ProductHero` does not animate itself; it adds no mo
 | `signIn` | `{ href?, onClick? }`. Renders exactly one "Sign in" control (`secondary` variant). Omit it for none. Do not also put a Sign in in the page nav. |
 | `visual` | Node. An animated concept visual in the style of https://projectv.uk (ring, orbit, particles). **Not** an app replica or screenshot. If it animates, it must respect `prefers-reduced-motion`. |
 | `visualLabel` | Gives the visual region `role="img"` and this name. Without it the region is `aria-hidden`. |
-| `showProductOf` | Default `true`: "a product of Project V" linking to `PROJECT_V_HOME_URL` (`https://projectv.uk`, new tab). The text names no app, unlike `SiteFooter`. |
+| `userCount` | Optional number. Shows "Free to use · {n}+ people already here" under the actions, with a green dot that pulses unless `prefers-reduced-motion: reduce`. `n` is formatted (`1284` is "1,284"). Hidden when `undefined`, `null` or 0 or less. See [Feeding `userCount`](#feeding-usercount). |
+| `showProductOf` | Default `true`: "a product of Project V" linking to `PROJECT_V_HOME_URL` (`https://projectv.uk`, new tab). The link target is fixed: no prop changes it. `false` hides the whole line. The text names no app, unlike `SiteFooter`. |
 | `className` | Added to the section. |
 
 `SiteFooter` uses the same `PROJECT_V_HOME_URL`. A runnable playground is in `examples/product-hero/`.
