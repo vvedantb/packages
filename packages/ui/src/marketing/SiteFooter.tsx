@@ -3,6 +3,7 @@ import { IconBrandGithub, IconBrandInstagram, IconBrandX } from "@tabler/icons-r
 import { APP_ICONS, AppWordmark, projectVAppsColumn, type AppName, type ProductAppName } from "../brand";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
+import { PROJECT_V_HOME_URL } from "./projectV";
 import { siteFooterClasses, type SiteFooterVariant } from "./marketing-classes";
 
 export type SiteFooterLink = {
@@ -178,7 +179,7 @@ export function SiteFooter(props: SiteFooterProps) {
               {showProductOf ? (
                 <p className={c.rights}>
                   {props.app} is a product of{" "}
-                  <a href="https://projectv.uk" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                  <a href={PROJECT_V_HOME_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                     Project V
                   </a>
                   .
