@@ -9,12 +9,29 @@ import { useScheme } from "../src/useScheme";
 import { Toaster } from "@vvedantb/native-ui/toast";
 import { tokens } from "@vvedantb/native-ui/theme";
 import { GalleryProvider } from "../src/GalleryContext";
+import { useEffect } from "react";
+
+// Agent builds only (EXPO_PUBLIC_NATIVE_UI_AGENT=1): a test clock, a deep-link bridge
+// and reduced motion. Metro inlines the flag, so the default bundle has none of this.
+const agent =
+  process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1"
+    ? (require("../src/agent/install") as typeof import("../src/agent/install"))
+    : null;
+const AgentMotion =
+  process.env.EXPO_PUBLIC_NATIVE_UI_AGENT === "1"
+    ? (require("../src/agent/AgentMotion") as typeof import("../src/agent/AgentMotion")).AgentMotion
+    : null;
+agent?.installAgent();
 
 function Shell() {
   const scheme = useScheme();
   const pathname = usePathname();
+  useEffect(() => {
+    agent?.setAgentRoute(pathname);
+  }, [pathname]);
   return (
     <>
+      {AgentMotion ? <AgentMotion /> : null}
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
