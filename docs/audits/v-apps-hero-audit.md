@@ -81,11 +81,10 @@ All five product heroes centre the text in a single column. None has a side-by-s
 Velth has no Sign in, so `signIn` is omitted.
 
 ```tsx
-// TODO: replace with the public V Store APK link
-const V_STORE_DOWNLOAD_URL = "https://projectv.uk/#v-store";
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/download/v-store";
 
 primaryCta={{ label: "Try the demo", href: "#demo" }}
-secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL }}
+secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL, rel: "nofollow" }}
 ```
 
 Apps that show social proof (vibot today) pass `userCount`, fed from a Convex action that wraps `clerk.users.getCount()`. They pass `undefined` while loading.

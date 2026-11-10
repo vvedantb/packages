@@ -977,14 +977,13 @@ Actions are pill `Button`s. The only motion `ProductHero` adds is the `userCount
 Velth has no Sign in, so it sets no `signIn`:
 
 ```tsx
-// TODO: replace with the public V Store APK link
-const V_STORE_DOWNLOAD_URL = "https://projectv.uk/#v-store";
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/download/v-store";
 
 <ProductHero
   title="Your health, your control"
   tagline="..."
   primaryCta={{ label: "Try the demo", href: "#demo" }}
-  secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL }}
+  secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL, rel: "nofollow" }}
   visual={<OrbitRings />}
 />
 ```
@@ -996,7 +995,7 @@ The package does no fetching. The app calls a Convex action that wraps the Clerk
 | Prop | |
 | --- | --- |
 | `title`, `tagline` | Nodes. |
-| `primaryCta` | `{ label, href?, onClick?, variant? }`. With `href` it renders an `a`, otherwise a `button`. Variant default `"default"`. |
+| `primaryCta` | `{ label, href?, rel?, target?, onClick?, variant? }`. With `href` it renders a plain `a` (no framework link), and `rel` and `target` pass through to it. Otherwise it renders a `button`. Variant default `"default"`. |
 | `secondaryCta` | Same shape. Optional. Variant default `"outline"`. |
 | `signIn` | `{ href?, onClick? }`. Renders exactly one "Sign in" control (`secondary` variant). Omit it for none. Do not also put a Sign in in the page nav. |
 | `visual` | Node. An animated concept visual in the style of https://projectv.uk (ring, orbit, particles). **Not** an app replica or screenshot. If it animates, it must respect `prefers-reduced-motion`. |

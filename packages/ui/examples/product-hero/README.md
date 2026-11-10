@@ -8,7 +8,7 @@ Each example renders:
 
 - One `h1`, the tagline and the "a product of Project V" link to `https://projectv.uk`.
 - Pill actions with unique labels, so `getByRole("link", { name })` works.
-- Exactly one "Sign in" control, except `velth`, which has none (the live site has none). `velth` uses "Try the demo" (`#demo`) and "Download on V Store". The V Store link is a placeholder constant in `Fixture.tsx`.
+- Exactly one "Sign in" control, except `velth`, which has none (the live site has none). `velth` uses "Try the demo" (`#demo`) and "Download on V Store". The V Store link is the `V_STORE_DOWNLOAD_URL` constant in `Fixture.tsx` (`https://projectv.uk/download/v-store`), with `rel: "nofollow"`.
 - The social proof row ("Free to use · 1,284+ people already here") for `vibot` and `verve`. It is a fixed number here; the package does no fetching.
 - A "Last click" line (`data-testid="hero-status"`) that shows which action was clicked: `primary`, `secondary` or `sign-in`.
 

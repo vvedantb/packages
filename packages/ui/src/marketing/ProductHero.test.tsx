@@ -84,6 +84,16 @@ describe("ProductHero", () => {
     expect(getByRole(host, "link", { name: "Get started" }).getAttribute("href")).toBe("#start");
   });
 
+  it("renders a CTA with href, rel and target as a plain anchor", async () => {
+    const host = await mount({ secondaryCta: { label: "Download", href: "https://example.com/get", rel: "nofollow", target: "_blank" } });
+    const link = getByRole(host, "link", { name: "Download" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe("https://example.com/get");
+    expect(link.getAttribute("rel")).toBe("nofollow");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.hasAttribute("data-prefetch")).toBe(false);
+  });
+
   it("renders a primary button and calls onClick when there is no href", async () => {
     const onClick = vi.fn();
     const host = await mount({ primaryCta: { label: "Start now", onClick } });

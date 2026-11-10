@@ -10,6 +10,10 @@ export type ProductHeroAction = {
   label: string;
   /** Renders an `a`. Without it the action renders a `button`. */
   href?: string;
+  /** Passed to the `a`. Only used with `href`. */
+  rel?: string;
+  /** Passed to the `a`. Only used with `href`. */
+  target?: string;
   onClick?: MouseEventHandler;
   /** Default: `"default"` for the primary action and `"outline"` for the secondary action. */
   variant?: ComponentProps<typeof Button>["variant"];
@@ -73,7 +77,7 @@ function ActionControl({ action, variant, size = "lg" }: { action: ProductHeroAc
   if (action.href !== undefined) {
     return (
       <Button asChild variant={v} size={size}>
-        <a href={action.href} onClick={action.onClick}>
+        <a href={action.href} rel={action.rel} target={action.target} onClick={action.onClick}>
           {action.label}
         </a>
       </Button>

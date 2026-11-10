@@ -6,8 +6,7 @@ type AppId = "vibot" | "verve" | "velth" | "vmem" | "vhub";
 
 type ExampleConfig = Pick<ProductHeroProps, "title" | "tagline" | "primaryCta" | "secondaryCta" | "signIn" | "visualLabel" | "userCount">;
 
-// TODO: replace with the public V Store APK link
-const V_STORE_DOWNLOAD_URL = "https://projectv.uk/#v-store";
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/download/v-store";
 
 // The live headlines and taglines from docs/audits/v-apps-hero-audit.md. App names live only in this example.
 const EXAMPLES: Record<AppId, ExampleConfig> = {
@@ -31,7 +30,7 @@ const EXAMPLES: Record<AppId, ExampleConfig> = {
     title: "Your health, your control",
     tagline: "Log a blood pressure reading in ten seconds. Scan the meter instead of typing. Never miss a dose. Walk into your next appointment with the whole picture, not a vague memory.",
     primaryCta: { label: "Try the demo", href: "#demo" },
-    secondaryCta: { label: "Download on V Store", href: V_STORE_DOWNLOAD_URL },
+    secondaryCta: { label: "Download on V Store", href: V_STORE_DOWNLOAD_URL, rel: "nofollow" },
     // The live site has no Sign in, so none here: this case covers the zero path.
   },
   vmem: {
