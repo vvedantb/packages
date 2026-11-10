@@ -14,7 +14,6 @@ const EXAMPLES: Record<AppId, ExampleConfig> = {
     title: "Make a bot. Keep the chat going.",
     tagline: "Each bot has its own ongoing chat and its own memory. vibot is your default bot. It sends each message to the bot that should answer.",
     primaryCta: { label: "Try vibot free", href: "#try-vibot-free" },
-    secondaryCta: { label: "See what it does", href: "#see-what-it-does" },
     signIn: { href: "#sign-in" },
     visualLabel: "Rings orbiting a glowing core",
     userCount: 1284, // In an app: from a Convex action wrapping `clerk.users.getCount()`. `undefined` while loading.

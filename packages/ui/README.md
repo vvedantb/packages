@@ -966,7 +966,6 @@ Actions are pill `Button`s. The only motion `ProductHero` adds is the `userCount
   title="Make a bot. Keep the chat going."
   tagline="Each bot has its own ongoing chat and its own memory. vibot is your default bot. It sends each message to the bot that should answer."
   primaryCta={{ label: "Try vibot free", href: "/sign-up" }}
-  secondaryCta={{ label: "See what it does", href: "#features" }}
   signIn={{ href: "/sign-in" }}
   visual={<OrbitRings />}
   visualLabel="Rings orbiting a bot"
