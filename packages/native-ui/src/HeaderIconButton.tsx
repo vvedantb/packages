@@ -6,13 +6,14 @@ import { useScheme } from "./useScheme";
 
 /**
  * Fill and border of `HeaderIconButton`: the surface with a white hairline
- * (40% in light, 10% in dark). Styles, not `bg-surface`, which an app theme
- * that nests `dark` under `surface` keeps white in dark mode.
+ * (40%) in light and, in dark, the glass `tokens.color.hairline` of the
+ * floating tab bar, so `configureTheme` sets both. Styles, not `bg-surface`,
+ * which an app theme that nests `dark` under `surface` keeps white in dark mode.
  */
 export function headerIconButtonColors(scheme: "light" | "dark") {
   return {
     backgroundColor: tokens.color.surface[scheme],
-    borderColor: withAlpha(tokens.color.white, scheme === "dark" ? 0.1 : 0.4),
+    borderColor: scheme === "dark" ? tokens.color.hairline.dark : withAlpha(tokens.color.white, 0.4),
   };
 }
 

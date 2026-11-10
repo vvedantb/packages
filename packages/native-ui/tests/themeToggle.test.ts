@@ -113,7 +113,7 @@ describe("ThemeToggle", () => {
     });
     expect(headerIconButtonColors("dark")).toEqual({
       backgroundColor: tokens.color.surface.dark,
-      borderColor: "rgba(255, 255, 255, 0.1)",
+      borderColor: tokens.color.hairline.dark,
     });
     expect((await toggle()).button.props.style).toEqual(headerIconButtonColors("light"));
     scheme.colorScheme = "dark";
