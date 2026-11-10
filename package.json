@@ -15,7 +15,7 @@
     "release:dry-run": "pnpm build && node scripts/release-dry-run.mjs",
     "ci:publish": "pnpm build && pnpm typecheck && pnpm test && changeset publish",
     "agent": "node scripts/agent.mjs",
-    "test:scripts": "node --test \"scripts/agent/*.test.mjs\""
+    "test:scripts": "node --test \"scripts/agent/*.test.mjs\" apps/native-gallery/tests/clock.test.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
