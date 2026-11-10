@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { MIN_TOUCH_TARGET, tabTriggerSize, touchSlop } from "../src/controlStyles";
 
@@ -9,15 +6,8 @@ import { MIN_TOUCH_TARGET, tabTriggerSize, touchSlop } from "../src/controlStyle
 // `.t-tab` 30, and the hit slop follows the height, so a short trigger still
 // reaches 44.
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const tabs = readFileSync(join(root, "src/Tabs.tsx"), "utf8");
-const trigger = tabs.slice(tabs.indexOf("export function TabsTrigger("), tabs.indexOf("export type TabsContentProps"));
-
 describe("TabsTrigger minHeight", () => {
-  it("defaults to the trigger size and feeds the style and the hit slop", () => {
-    expect(trigger).toMatch(/const height = minHeight \?\? trigger\.minHeight;/);
-    expect(trigger).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, height\)\}/);
-    expect(trigger).toMatch(/style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: height \}\}/);
+  it("defaults to the web trigger size", () => {
     expect(tabTriggerSize("segmented", "sm", false).minHeight).toBe(30);
   });
 

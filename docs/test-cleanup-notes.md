@@ -46,6 +46,13 @@ by `test(` calls. The 3 skipped server cases are unchanged.
 - `client-graph.test.mjs` and the "imports nothing but react" case in
   `helpers-esm.test.mjs`. Both matched import lines in source.
 
+- Tests added by the native-ui 0.14.0 parity release that read source, CSS or
+  web markup: `chatParity.test.ts` and `settingsParity.test.ts` (deleted whole),
+  and the source cases in `choiceQuestion`, `configureTheme`, `controlStyles`,
+  `markdown`, `native012`, `quotedReplies`, `turnFold` and `tabsTriggerHeight`.
+  `chatParity` read source through a `read()` helper, which `lint:tests` does
+  not catch. Review new tests for this pattern.
+
 Mixed files keep their behavioural cases. Unused imports and helpers were removed.
 
 ## Kept on purpose
