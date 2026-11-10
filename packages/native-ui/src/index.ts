@@ -103,6 +103,8 @@ export { ListRow } from "./ListRow";
 export { DividedList } from "./DividedList";
 export type { DividedListProps } from "./DividedList";
 export type { ListRowProps } from "./ListRow";
+export { SurfaceRow, SURFACE_ROW } from "./SurfaceRow";
+export type { SurfaceRowProps } from "./SurfaceRow";
 export { HeaderIconButton } from "./HeaderIconButton";
 export { ThemeToggle } from "./ThemeToggle";
 export type { ThemeToggleProps } from "./ThemeToggle";
