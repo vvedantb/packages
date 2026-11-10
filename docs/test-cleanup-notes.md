@@ -52,6 +52,11 @@ by `test(` calls. The 3 skipped server cases are unchanged.
   `markdown`, `native012`, `quotedReplies`, `turnFold` and `tabsTriggerHeight`.
   `chatParity` read source through a `read()` helper, which `lint:tests` does
   not catch. Review new tests for this pattern.
+  `chatParity.test.ts` and `settingsParity.test.ts` are replaced by behavioural
+  tests of the same names. They import the native exports and call or render
+  the components with stubs, and hold the web values as numbers (14 / 20,
+  22.75, 11 / 16, blockGap 16 and others). They are not accepted gaps. They
+  read no source, CSS or web markup.
 
 Mixed files keep their behavioural cases. Unused imports and helpers were removed.
 
