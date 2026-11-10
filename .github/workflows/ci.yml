@@ -31,6 +31,11 @@ jobs:
         run: pnpm build
       - name: Typecheck
         run: pnpm typecheck
+      # Hermes ES2023 ban, client import graph, native-ui exports and app names.
+      # The client graph check bundles `@vvedantb/ui` against built `@vvedantb/server`,
+      # so it runs after Build.
+      - name: Guards
+        run: pnpm check:guards
       # Runs the no-source-text check, then the package tests.
       - name: Test
         run: pnpm test

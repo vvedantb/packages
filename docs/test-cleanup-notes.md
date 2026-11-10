@@ -58,42 +58,63 @@ Mixed files keep their behavioural cases. Unused imports and helpers were remove
   `brand-assets`). They check outputs or data, not source text.
 - Tailwind compile tests. They run the compiler and assert on its output.
 
-## For review: guards with no replacement
+## Guards: replaced and accepted gaps
 
-These guarded something real. Nothing replaces them. Each needs a decision:
-a behavioural test, a lint rule, or acceptance of the gap.
+Items 1 to 5 guarded something real. Each now has a check that runs code
+instead of reading source text in a test. Items 6 and 7 stay as accepted gaps.
 
-1. Native and web token parity (`tokens.test.ts`, `tabBar.test.ts`,
-   `controlStyles.test.ts`). Native `palette` and `tokens` values were compared
-   with `tokens.css` and web component classes. Drift between native and web
-   is now unguarded. A generated tokens file that both sides import would
-   remove the need for the check.
-2. Hermes compatibility (`hermesCompat.test.ts`). It banned ES2023 array
-   methods (`toSorted`, `findLast`, `Object.groupBy`) in native `src`. An oxlint
-   `no-restricted-syntax` rule in `packages/native-ui` would cover this.
-3. Client import graph (`client-graph.test.mjs`). It checked that the client
-   graph of `@vvedantb/ui` imports no server, Convex, Clerk or `node:` module.
-   The other `*-esm.test.mjs` files still load real entry points. A bundler
-   check on the client entry would be the behavioural replacement.
-4. Package exports and subpaths (`subpaths.test.ts`, `exports.test.ts`). They
-   matched `package.json` exports to files in `src`. `pnpm build` in `ui`
-   runs `check-exports.mjs`. `native-ui` has no equivalent. `pnpm typecheck:consumer`
-   covers part of it.
-5. Brand-name leakage (`noAppNames`). Shared packages must not name an app.
-   An oxlint rule or a repository grep step in CI would cover this.
-6. Web font and token CSS structure (`tokens/test/fonts`, `tokens/test/package`).
-   They checked the woff2 files, licence text and CSS layer structure. The
-   `build` script still runs `check-exports.mjs` and `check-component-tokens.mjs`.
-7. Calendar selected-day colours (`tailwind.test.mjs`). It compiled classes from
-   `calendar.tsx` and checked that today and outside rules lose to the selected
-   rule. A rendered `Calendar` test in a browser-like environment would replace it.
+| # | Old guard | Status | Replacement |
+| --- | --- | --- | --- |
+| 1 | Native and web token parity (`tokens.test.ts`, `tabBar.test.ts`, `controlStyles.test.ts`) | **Replaced** | `packages/native-ui/tests/tokenParity.test.ts` (vitest, runs in `pnpm test`) |
+| 2 | Hermes compatibility (`hermesCompat.test.ts`) | **Replaced** | `packages/native-ui/scripts/check-hermes-compat.mjs` (`pnpm check:guards`) |
+| 3 | Client import graph (`client-graph.test.mjs`) | **Replaced** | `packages/ui/scripts/check-client-graph.mjs` (`pnpm check:guards`) |
+| 4 | Package exports and subpaths (`subpaths.test.ts`, `exports.test.ts`) | **Replaced** | `packages/native-ui/scripts/check-exports.mjs` (native-ui `build` and `pnpm check:guards`). `ui` keeps `tokens/scripts/check-exports.mjs`. |
+| 5 | Brand-name leakage (`noAppNames`) | **Replaced** | `scripts/check-no-app-names.mjs` (`pnpm check:guards`) |
+| 6 | Web font and token CSS structure (`tokens/test/fonts`, `tokens/test/package`) | **Accepted gap** | None. `build` still runs `check-exports.mjs` and `check-component-tokens.mjs`. |
+| 7 | Calendar selected-day colours (`tailwind.test.mjs`) | **Accepted gap** | None. A rendered `Calendar` test would replace it if the risk grows. |
+
+What each replacement does:
+
+1. **Token parity.** Imports the `tokens` copy in `native-ui` and the copy in
+   `ui/tokens/src/native.ts` and compares them with `toEqual`. It also checks
+   that the `palette` neutrals match the tokens, and that the native page title
+   (`PAGE_TITLE_CLASS`, `pageTitleStyle()`) matches the web `pageTitleClass`:
+   Instrument Sans, weight 600, 20 px (line height 25, letter spacing -0.5). It
+   reads no file text.
+   Limits: the web semantic colours (primary, danger and others) exist only in
+   `tokens.css`, so `palette` is not compared with the web. The test imports
+   `ui/tokens/src/native.ts`, the module that `@vvedantb/ui` re-exports as
+   `tokens`, by relative path and not through the heavy root entry. The web
+   page title has no numeric export, so 20 px, 600 and the 25 and -0.5 values
+   are fixed in the test and derived from the Tailwind defaults.
+2. **Hermes.** Strips comments from `native-ui/src` and bans `toSorted`,
+   `toReversed`, `toSpliced`, array `.with(`, `findLast`, `findLastIndex`,
+   `Object.groupBy` and `Map.groupBy`. It is a script, not a test, so the
+   no-source-text lint does not apply. It checks its own patterns before the scan.
+3. **Client graph.** Bundles `src/client.ts` with esbuild (browser platform,
+   metafile) and fails if the resolved graph reaches `@vvedantb/server`, Convex,
+   `@clerk/*` or a Node built-in. A positive control bundles `src/index.ts` and
+   fails unless that graph reaches all of them. esbuild is a new `ui`
+   devDependency (pinned to 0.28.2, already in the lockfile through Vite). The
+   check needs the built `@vvedantb/server`, so it runs after `pnpm build`.
+4. **Exports.** Fails when a `native-ui` `package.json` export target is not a
+   file. Wildcard targets are skipped, as in the `ui` script.
+5. **App names.** Same pattern as the old tests, with `vibot_pro` removed before
+   the match. `ui`: `.ts`, `.tsx`, `.svg` and `.css` under `src`, `shell/src`
+   and `app/src`, skipping tests and `src/brand/`. `server`: everything under
+   `src` and `docs`, plus `README.md`, `CHANGELOG.md` and `package.json`.
 
 ## CI and lint
 
 - Workflow: `.github/workflows/ci.yml`. Job name: `Typecheck and test`. It runs
   on pull requests and pushes to `main`. Steps: `pnpm install --frozen-lockfile`,
-  `pnpm build`, `pnpm typecheck`, `pnpm test`. The build step is needed because
-  some tests load built output.
+  `pnpm build`, `pnpm typecheck`, `pnpm check:guards`, `pnpm test`. The build
+  step is needed because some tests and the client graph check load built output.
+- Guards: `pnpm check:guards` is its own CI step, named `Guards`. It runs
+  `check:hermes` and `check:exports` in `native-ui`, `check:client-graph` in `ui`,
+  and `scripts/check-no-app-names.mjs`. `ci:publish` runs it too. Native-ui
+  `build` also runs `check-exports.mjs`, so `pnpm build` fails on a missing target.
+  The token parity test is a vitest file in `native-ui`, so the `Test` step runs it.
 - Lint: `scripts/check-no-source-text-in-tests.mjs`. `pnpm test` runs it first
   (also as `pnpm lint:tests`). It flags `readFileSync`, `readFile`,
   `readdirSync`, `readdir` and `createReadStream` in test files when the
