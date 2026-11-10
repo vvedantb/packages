@@ -328,12 +328,12 @@ describe("Dialog layout (source contract)", () => {
     expect(dialog).toMatch(/const SHEET_RADIUS = tokens\.radius\.lg;/);
     expect(tokens.radius.lg).toBe(16);
     expect(content).toMatch(/radius=\{compact \? SHEET_RADIUS : tokens\.radius\.card\}/);
-    expect(dialog).toMatch(/const SHEET = \{ marginBottom: -SHEET_RADIUS \};/);
+    expect(dialog).toMatch(/const SHEET = \{ marginBottom: -SHEET_RADIUS, flexShrink: 1 \};/);
     expect(content).toMatch(/style=\{compact \? SHEET : PANEL\}/);
     // The web `pt-3`, `p-6` sides and `pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
     expect(content).toMatch(/className=\{cn\(compact \? "gap-4 px-6 pt-3" : "gap-4 p-6", className\)\}/);
     expect(content).toMatch(
-      /compact \? \{ paddingBottom: Math\.max\(24, insets\.bottom\) \+ SHEET_RADIUS \} : null,\s+style,/,
+      /compact \? \{ paddingBottom: Math\.max\(24, insets\.bottom\) \+ SHEET_RADIUS, flexShrink: 1 \} : null,\s+style,/,
     );
     expect(content).toMatch(/\{compact \? <DialogHandle \/> : null\}\s+\{children\}/);
     expect(content).toMatch(/hideCloseButton \? null : <DialogCloseButton \/>/);

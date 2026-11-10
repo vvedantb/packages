@@ -248,6 +248,9 @@ function TopicBadge({ children }: { children: string }) {
   );
 }
 
+/** The option card's `py-2 px-2.5`, which is also the slop of its press target. */
+const CARD_PADDING = { top: 8, bottom: 8, left: 10, right: 10 };
+
 /**
  * One option row (web `Card` with `bg-secondary`, `py-2 px-2.5`, radius 16): a round 24 mark
  * (30 with larger text; letter, or a pencil for "Other"; a check on the primary fill when picked),
@@ -290,8 +293,8 @@ function ChoiceRow({
         borderRadius: tokens.radius.lg,
         backgroundColor: selected ? tokens.color.background[scheme] : palette.default[scheme],
         opacity: disabled ? 0.5 : 1,
-        paddingVertical: 8,
-        paddingHorizontal: 10,
+        paddingVertical: CARD_PADDING.top,
+        paddingHorizontal: CARD_PADDING.left,
       }}
     >
       {selected ? (
@@ -316,7 +319,8 @@ function ChoiceRow({
         accessibilityState={{ selected, disabled }}
         disabled={disabled}
         onPress={onPress}
-        hitSlop={4}
+        // The card's own padding: a tap anywhere on the card picks it, and stops at its edge.
+        hitSlop={CARD_PADDING}
         className="flex-row"
         style={{ gap: 12, alignItems: description ? "flex-start" : "center" }}
       >

@@ -230,6 +230,25 @@ declare module "react-native" {
   export class ScrollView extends React.Component<ScrollViewProps> {
     scrollToEnd(options?: { animated?: boolean }): void;
   }
+  export interface ListRenderItemInfo<T> {
+    item: T;
+    index: number;
+  }
+  export interface FlatListProps<T> extends ScrollViewProps {
+    data: ReadonlyArray<T> | null | undefined;
+    renderItem: (info: ListRenderItemInfo<T>) => React.ReactElement | null;
+    keyExtractor?: (item: T, index: number) => string;
+    ItemSeparatorComponent?: React.ComponentType | null;
+    ListEmptyComponent?: React.ComponentType | React.ReactElement | null;
+    ListFooterComponent?: React.ComponentType | React.ReactElement | null;
+    ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
+    initialNumToRender?: number;
+    windowSize?: number;
+  }
+  export class FlatList<T> extends React.Component<FlatListProps<T>> {
+    scrollToEnd(options?: { animated?: boolean }): void;
+    scrollToOffset(params: { offset: number; animated?: boolean }): void;
+  }
 
   export interface ModalProps {
     children?: React.ReactNode;

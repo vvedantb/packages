@@ -344,7 +344,9 @@ export type MessageActionProps = {
 
 /**
  * A ghost icon button under a message: the web `icon-sm` (32, 16 icon), or
- * `icon-xs` with `size="xs"`, with the slop to 44. Copying is up to the app (`onPress`): React Native's own
+ * `icon-xs` with `size="xs"`, with the slop to 44 high. It has no sideways
+ * slop: the actions sit 2 to 4 apart, and slop there would overlap the next
+ * one, so a tap on Copy could fork or rate instead. Copying is up to the app (`onPress`): React Native's own
  * `Clipboard` is deprecated, and native-ui adds no clipboard package.
  */
 export function MessageAction({
@@ -369,6 +371,7 @@ export function MessageAction({
       onPress={onPress}
       disabled={disabled}
       size={size}
+      slop="vertical"
       testID={testID}
     />
   );

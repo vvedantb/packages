@@ -17,16 +17,25 @@ async function render(children: unknown[], inset?: number) {
   return fragments.flatMap((fragment) => (fragment.props.children as unknown[]).filter(Boolean) as Element[]);
 }
 
+/** Calls a `ListDivider` element, as React would. */
+async function divider(element: Element | undefined) {
+  const { ListDivider } = await import("../src/DividedList");
+  expect(element?.type).toBe(ListDivider);
+  return ListDivider(element?.props as never) as unknown as Element;
+}
+
 describe("DividedList", () => {
   it("puts a 1-high border-colour divider between rows, none before the first or after the last", async () => {
     const parts = await render([createElement("Row", { key: "a" }), createElement("Row", { key: "b" }), createElement("Row", { key: "c" })]);
-    expect(parts.map((part) => part.type)).toEqual(["Row", "View", "Row", "View", "Row"]);
-    expect(parts[1]?.props.style).toEqual({ height: 1, marginLeft: 0, backgroundColor: tokens.color.border.light });
+    expect(parts.map((part) => (typeof part.type === "string" ? part.type : "divider"))).toEqual(["Row", "divider", "Row", "divider", "Row"]);
+    const line = await divider(parts[1]);
+    expect(line.type).toBe("View");
+    expect(line.props.style).toEqual({ height: 1, marginLeft: 0, backgroundColor: tokens.color.border.light });
   });
 
   it("skips null rows and insets dividers", async () => {
     const parts = await render([createElement("Row", { key: "a" }), null, createElement("Row", { key: "b" })], 56);
-    expect(parts.map((part) => part.type)).toEqual(["Row", "View", "Row"]);
-    expect(parts[1]?.props.style?.marginLeft).toBe(56);
+    expect(parts.map((part) => (typeof part.type === "string" ? part.type : "divider"))).toEqual(["Row", "divider", "Row"]);
+    expect((await divider(parts[1])).props.style?.marginLeft).toBe(56);
   });
 });

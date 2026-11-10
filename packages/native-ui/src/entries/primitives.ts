@@ -63,7 +63,7 @@ export type {
   TabsContentProps,
 } from "../Tabs";
 export { ListRow } from "../ListRow";
-export { DividedList } from "../DividedList";
+export { DividedList, ListDivider } from "../DividedList";
 export type { DividedListProps } from "../DividedList";
 export type { ListRowProps } from "../ListRow";
 export { SurfaceRow, SURFACE_ROW } from "../SurfaceRow";
