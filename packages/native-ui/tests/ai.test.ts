@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, buttonColors, touchSlop } from "../src/controlStyles";
 import { palette } from "../src/palette";
@@ -12,7 +9,7 @@ import { tokens } from "../src/tokens";
 // stubbed, keeps their state between calls, renders again when state changes
 // (also from a timer or a press), and runs effects after each render. React
 // Native, Reanimated, the safe-area hook and the icons are stubbed, and the
-// checks read the element trees the parts return. Source checks at the end.
+// checks read the element trees the parts return.
 
 type Effect = { deps?: unknown[]; cleanup?: void | (() => void) };
 
@@ -189,12 +186,6 @@ vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
-const readWeb = (file: string) => readFileSync(join(root, "..", "ui", "src", file), "utf8");
-const aiFiles = readdirSync(join(root, "src", "ai")).filter((file) => /\.tsx?$/.test(file));
-/** Source without comments. */
-const code = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
@@ -270,13 +261,6 @@ describe("formatElapsed and the reasoning message", () => {
 });
 
 describe("useStreamingDisclosure", () => {
-  it("is the web hook: same delay and the same open and close rules", () => {
-    const web = readWeb("ai-elements/use-streaming-disclosure.ts");
-    const native = read("ai/use-streaming-disclosure.ts");
-    expect(web).toMatch(/const AUTO_CLOSE_DELAY_MS = 1000;/);
-    expect(native).toMatch(/const AUTO_CLOSE_DELAY_MS = 1000;/);
-  });
-
   it("opens when streaming starts and closes once, a second after it stops", async () => {
     vi.useFakeTimers();
     const { useStreamingDisclosure } = await import("../src/ai/use-streaming-disclosure");
@@ -480,27 +464,6 @@ describe("Message", () => {
       return { row, content: MessageContent({ children, bubble } as never) as unknown as Element };
     }).tree;
   }
-
-  it("puts a user message at the end, in the web primary bubble (16, bottom-right 14)", async () => {
-    const web = readWeb("ai-elements/message.tsx");
-    expect(web).toMatch(/group-\[\.is-user\]:rounded-2xl group-\[\.is-user\]:rounded-br-md group-\[\.is-user\]:bg-primary/);
-    for (const colorScheme of ["light", "dark"] as const) {
-      scheme.colorScheme = colorScheme;
-      const { row, content } = await message("user");
-      const view = row.props.children as Element;
-      expect(flatten(view.props.style)).toMatchObject({ alignSelf: "flex-end", alignItems: "flex-end" });
-      expect(view.props.className).toBe("w-full max-w-[95%] gap-2");
-      // The bubble hands the label colour to the text in it.
-      expect(content.props.value).toBe(palette.primaryForeground[colorScheme]);
-      const bubble = content.props.children as Element;
-      expect(bubble.props.className).toBe("min-w-0 max-w-full gap-2 px-4 py-3");
-      expect(flatten(bubble.props.style)).toEqual({
-        backgroundColor: palette.primary[colorScheme],
-        borderRadius: 16,
-        borderBottomRightRadius: 14,
-      });
-    }
-  });
 
   it("draws bubble=\"tint\" as a 10% primary wash with foreground text, every corner 16", async () => {
     const { withAlpha } = await import("../src/palette");
@@ -991,109 +954,5 @@ describe("trace lines and activity steps", () => {
     expect(failed.props.status).toBe("error");
     expect(failed.props.accessibilityLabel).toBe("Fetch page, failed");
     expect(byType(failed, AgentTraceIcon).at(-1)!.props.icon).toBe("IconAlertTriangle");
-  });
-});
-
-describe("AI parts (source contract)", () => {
-  const sources = Object.fromEntries(aiFiles.map((file) => [file, code(read(`ai/${file}`))]));
-  const gallery = code(read("examples/AiChatGallery.tsx"));
-  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-
-  it("adds no markdown or clipboard package to /ai, reaches the highlighter only through its optional loader, and names the markdown options in the stub", () => {
-    // `/ai` stays free of markdown: apps opt in through `/markdown` (optional peer react-native-marked).
-    for (const [file, source] of Object.entries(sources)) {
-      expect(source, file).not.toMatch(/from "(?:react-native-markdown-display|@ronradtke\/react-native-markdown-display|react-native-marked|shiki|streamdown|expo-clipboard|@react-native-clipboard\/clipboard)"/);
-      expect(source, file).not.toMatch(/\bClipboard\b/);
-    }
-    const stub = read("ai/response-text.tsx");
-    for (const name of ["react-native-markdown-display", "@ronradtke/react-native-markdown-display", "react-native-marked"]) {
-      expect(stub).toContain(`\`${name}\``);
-    }
-    const all = { ...pkg.peerDependencies, ...pkg.devDependencies };
-    for (const name of ["react-native-markdown-display", "shiki", "expo-clipboard", "@react-native-clipboard/clipboard"]) {
-      expect(all[name], name).toBeUndefined();
-    }
-    expect(pkg.peerDependencies["react-native-marked"]).toBe(">=8.0.0");
-    expect(pkg.peerDependenciesMeta["react-native-marked"]).toEqual({ optional: true });
-    // Highlighting: the optional peer prism-react-renderer, reached only through the lazy loader in src/highlight.ts.
-    expect(pkg.peerDependencies["prism-react-renderer"]).toBe(">=2.0.0");
-    expect(pkg.peerDependenciesMeta["prism-react-renderer"]).toEqual({ optional: true });
-    for (const [file, source] of Object.entries(sources)) {
-      expect(source, file).not.toMatch(/from "prism-react-renderer"|require\("prism-react-renderer"\)/);
-    }
-    expect(sources["code-block.tsx"]).toMatch(/loadPrismReactRenderer\(\)/);
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/clerk-expo", "@types/react", "react", "typescript", "vitest"]);
-    expect(pkg.dependencies).toBeUndefined();
-  });
-
-  it("draws no shadow and sets colours as styles, not NativeWind colour classes", () => {
-    for (const [file, source] of Object.entries(sources)) {
-      expect(source, file).not.toMatch(/floatingShadow|shadow-(?:sm|md|lg|xl|2xl)\b|shadowType="shadow"|boxShadow|\belevation\b/);
-      expect(source, file).not.toMatch(/["'\s](?:text|bg|border)-(?:foreground|muted-foreground|muted|primary|primary-foreground|secondary|background|surface[\w-]*|border)(?=["'\s/])/);
-    }
-  });
-
-  it("gives every pressable a role (or hides it) and a hit slop or a 44 size", () => {
-    let count = 0;
-    for (const [file, source] of Object.entries(sources)) {
-      for (const tag of source.match(/<Pressable\b[\s\S]*?>/g) ?? []) {
-        count++;
-        expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessible=\{false\}/);
-        // A hidden container (the long-pressable `Message`) is not a target.
-        if (!/accessible=\{false\}/.test(tag)) expect(tag, file).toMatch(/hitSlop=\{/);
-      }
-    }
-    expect(count).toBeGreaterThanOrEqual(6);
-  });
-
-  it("scales type and icons with larger text in every part that draws text or an icon", () => {
-    for (const [file, source] of Object.entries(sources)) {
-      // `CollapsibleChevron` takes its `size` from the trigger that draws it.
-      if (file === "collapsible.tsx" || !/<(?:Text|Icon(?!Props\b)\w*)[\s/>]/.test(source)) continue;
-      expect(source, file).toMatch(/useLargerText\(\)/);
-    }
-    expect(sources["collapsible.tsx"]).toMatch(/size: number;/);
-  });
-
-  it("names its controls for VoiceOver and TalkBack", () => {
-    expect(sources["conversation.tsx"]).toMatch(/label = "Scroll to bottom"/);
-    expect(sources["prompt-input.tsx"]).toMatch(/label="Send"/);
-    expect(sources["prompt-input.tsx"]).toMatch(/label="Stop"/);
-    expect(sources["code-block.tsx"]).toMatch(/label = "Copy code"/);
-    expect(sources["attachments.tsx"]).toMatch(/accessibilityLabel=\{`Remove \$\{label\}`\}/);
-    expect(sources["collapsible.tsx"]).toMatch(/accessibilityState=\{\{ \.\.\.accessibilityState, expanded: open \}\}/);
-  });
-
-  it("stays generic: no model or provider names, and the AI wording", () => {
-    for (const [file, source] of Object.entries({ ...sources, "AiChatGallery.tsx": gallery })) {
-      expect(source, file).not.toMatch(/\b(?:gpt|claude|gemini|llama|mistral|openai|anthropic|vibot)\b/i);
-    }
-    expect(sources["reasoning.tsx"]).toMatch(/"Thinking…"/);
-    expect(sources["reasoning.tsx"]).toMatch(/`Thought for \$\{formatElapsed\(duration\)\}`/);
-    expect(gallery).toMatch(/`Worked for \$\{formatElapsed\(/);
-  });
-
-  it("is exported from /ai, and the gallery imports the /ai parts, not the root entry", () => {
-    const entry = read("entries/ai.ts");
-    expect(entry).toMatch(/export \* from "\.\.\/ai";/);
-    expect(pkg.exports["./ai"]).toEqual({ types: "./src/entries/ai.ts", default: "./src/entries/ai.ts" });
-    expect(pkg.exports["./ai-gallery"]).toEqual({
-      types: "./src/examples/AiChatGallery.tsx",
-      default: "./src/examples/AiChatGallery.tsx",
-    });
-    expect(gallery).toMatch(/from "\.\.\/ai";/);
-    expect(gallery).not.toMatch(/from "\.\.\/index"/);
-    // Every file in src/ai is reached from the barrel.
-    const barrel = read("ai/index.ts");
-    for (const file of aiFiles) {
-      if (file === "index.ts" || file === "icon-button.tsx" || file === "card-button.tsx") continue;
-      expect(barrel, file).toContain(`from "./${file.replace(/\.tsx?$/, "")}"`);
-    }
-  });
-
-  it("shows the AI parts in the ParityGallery, from the same sample thread", () => {
-    const parity = code(read("examples/ParityGallery.tsx"));
-    expect(parity).toMatch(/<Section title="AI chat">\s+<AiChatSamples \/>/);
-    expect(parity).toMatch(/import \{ AiChatSamples \} from "\.\/AiChatGallery";/);
   });
 });

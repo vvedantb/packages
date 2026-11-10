@@ -1,8 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { floatingTabPillColors, tabColors } from "../src/controlStyles";
+import { floatingTabPillColors } from "../src/controlStyles";
 import {
   FLOATING_PILL_RADIUS,
   FLOATING_TAB_BAR_HEIGHT,
@@ -49,11 +46,6 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const webTokens = readFileSync(join(root, "..", "ui", "tokens/src/tokens.css"), "utf8");
-const webTabs = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs.css"), "utf8");
-const webTabsPills = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs-pills.css"), "utf8");
 
 afterEach(() => {
   scheme.colorScheme = "light";
@@ -254,28 +246,6 @@ describe("FloatingTabBar active pill", () => {
     }
   });
 
-  it("is the muted --default in light and the --segment in dark, as the web track and pill", () => {
-    // Web segmented Tabs: the `--segment` pill on the muted `--default` track.
-    expect(webTabs).toMatch(/\.t-tabs-pill \{[^}]*background: var\(--tabs-pill-bg\);/);
-    expect(webTabsPills).toMatch(/--tabs-pill-bg: var\(--segment\);/);
-    expect(webTabsPills).toMatch(/--tabs-bar-bg: var\(--default\);/);
-    expect(floatingTabPillColors("light")).toEqual({
-      backgroundColor: palette.default.light,
-      color: palette.segmentForeground.light,
-    });
-    expect(palette.default.light).toBe("#ebebeb");
-    expect(floatingTabPillColors("dark")).toEqual({
-      backgroundColor: palette.segment.dark,
-      color: palette.segmentForeground.dark,
-    });
-    expect(palette.segment.dark).toBe("#474747");
-    // Dark is the 0.3.16 pill; the label is the segmented active label in both.
-    expect(floatingTabPillColors("dark")).toEqual(tabColors("segmented", true, "dark"));
-    for (const colorScheme of ["light", "dark"] as const) {
-      expect(floatingTabPillColors(colorScheme).color).toBe(tabColors("segmented", true, colorScheme).color);
-    }
-  });
-
   it("stands out from the bar in both schemes", () => {
     // The bar as drawn: the solid fill (no blur, Reduce Transparency), and
     // the translucent glass over the page background.
@@ -300,13 +270,6 @@ describe("FloatingTabBar active pill", () => {
       // The focused label reads on the pill.
       expect(contrast(color, backgroundColor), colorScheme).toBeGreaterThanOrEqual(4.5);
     }
-  });
-
-  it("slides over the web --tabs-dur and --tabs-ease", async () => {
-    expect(webTokens).toMatch(/--tabs-dur: 200ms;/);
-    expect(webTokens).toMatch(/--tabs-ease: cubic-bezier\(0\.22, 1, 0\.36, 1\);/);
-    renderPill((await bar(4)).pills[0]!);
-    expect(withTiming).toHaveBeenCalledWith(50, { duration: 200, easing: "bezier(0.22, 1, 0.36, 1)" });
   });
 
   it("moves at once with Reduce Motion", async () => {

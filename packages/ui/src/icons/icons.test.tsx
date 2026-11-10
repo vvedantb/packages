@@ -1,7 +1,4 @@
 // @vitest-environment happy-dom
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { act, createRef, type ComponentType, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -29,8 +26,6 @@ import {
 } from "./index";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-
-const CSS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../tokens/src/css");
 
 /** Every icon with its default stroke width. */
 const ICONS: [string, ComponentType<IconProps>, string][] = [
@@ -297,80 +292,5 @@ describe("root entry", () => {
   it("exports every icon and the base", () => {
     for (const [name] of ICONS) expect(root, name).toHaveProperty(name);
     expect(root).toHaveProperty("NavIconBase");
-  });
-});
-
-describe("nav-icons.css", () => {
-  const css = readFileSync(join(CSS_DIR, "nav-icons.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-
-  it("is imported by index.css", () => {
-    expect(readFileSync(join(CSS_DIR, "index.css"), "utf8")).toMatch(/^@import "\.\/nav-icons\.css";$/m);
-  });
-
-  it("animates every shape class the icons use, with defined keyframes", async () => {
-    // Classes that group shapes and carry no animation of their own.
-    const hooks = new Set([
-      "vv-icon-building-window", "vv-icon-board-card", "vv-icon-checklist-ring", "vv-icon-checklist-line",
-      "vv-icon-checklist-check", "vv-icon-terminal-typed", "vv-icon-document-line", "vv-icon-flask-bubble",
-      "vv-icon-chart-bar", "vv-icon-draft-pencil", "vv-icon-sidebar-collapsed",
-    ]);
-    const animated = new Set<string>();
-    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-      const value = body?.match(/animation:([^;]+);/)?.[1];
-      if (!selectors || !value) continue;
-      for (const sel of selectors.split(",")) {
-        const last = sel.trim().match(/\.(vv-icon-[\w-]+)$/)?.[1];
-        if (last) animated.add(last);
-      }
-      for (const [keyframes] of value.matchAll(/(?<![\w-])vv-icon-[\w-]+/g)) {
-        expect(css, keyframes).toContain(`@keyframes ${keyframes} {`);
-      }
-    }
-
-    const used = new Set<string>();
-    const variants = [
-      ...ICONS.flatMap(([name, Icon]) => [<Icon key={name} />, <Icon key={`${name}-active`} active />]),
-      <SidebarToggleIcon key="collapsed" collapsed />,
-      <SettingsIcon key="turn" variant="turn" />,
-    ];
-    for (const node of variants) {
-      const svg = await render(node);
-      for (const el of [svg, ...svg.querySelectorAll("*")]) {
-        for (const c of el.classList) if (c.startsWith("vv-icon-")) used.add(c);
-      }
-    }
-    for (const c of used) if (!hooks.has(c)) expect(animated, c).toContain(c);
-    for (const c of animated) expect(used, c).toContain(c);
-  });
-
-  it("gives every shape it transforms its own transform box", async () => {
-    const fillBox = new Set(
-      [...css.matchAll(/([^{}]+)\{[^{}]*transform-box: fill-box;[^{}]*\}/g)].flatMap(([, selectors]) =>
-        (selectors ?? "").split(",").map((sel) => sel.trim().replace(/^\./, "")),
-      ),
-    );
-    const transforming = new Set<string>();
-    for (const [, selectors, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-      const name = body?.match(/animation:\s*(vv-icon-[\w-]+)/)?.[1];
-      const keyframes = name ? css.match(new RegExp(`@keyframes ${name} \\{((?:[^{}]*\\{[^{}]*\\})*)`))?.[1] : undefined;
-      if (!selectors || !keyframes?.includes("transform:")) continue;
-      for (const sel of selectors.split(",")) {
-        const last = sel.trim().match(/\.(vv-icon-[\w-]+)$/)?.[1];
-        if (last) transforming.add(last);
-      }
-    }
-    expect(transforming).toContain("vv-icon-gear-turn");
-    // ReviewIcon's marks keep the svg's box on purpose (see review-icon.tsx).
-    const icons = [
-      ...ICONS.filter(([name]) => name !== "ReviewIcon").map(([name, Icon]) => <Icon key={name} active />),
-      <SettingsIcon key="turn" variant="turn" />,
-    ];
-    for (const node of icons) {
-      const svg = await render(node);
-      for (const el of svg.querySelectorAll("*")) {
-        const classes = [...el.classList];
-        if (classes.some((c) => transforming.has(c))) expect(classes.some((c) => fillBox.has(c)), classes.join(" ")).toBe(true);
-      }
-    }
   });
 });

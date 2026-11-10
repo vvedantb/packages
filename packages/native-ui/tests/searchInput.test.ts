@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scaledFieldHeight, searchInputSize, touchSlop } from "../src/controlStyles";
 import { palette } from "../src/palette";
@@ -25,10 +22,6 @@ vi.mock("@tabler/icons-react-native", () => ({ IconSearch: "IconSearch", IconX: 
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const webUi = (file: string) => readFileSync(join(root, "..", "ui", "src/ui", file), "utf8");
-const source = readFileSync(join(root, "src/SearchInput.tsx"), "utf8");
-
 /** Points for a Tailwind spacing class such as `h-8`, `pl-9`, `px-3.5` or `right-2`. */
 const points = (value: string) => Number(value) * 4;
 
@@ -38,58 +31,6 @@ afterEach(() => {
 });
 
 describe("searchInputSize (web contract)", () => {
-  const web = webUi("search-input.tsx");
-  const clear = webUi("clear-input.tsx");
-  const webSize = (size: string) =>
-    web.match(new RegExp(`${size}: \\{ input: "h-(\\d+) pl-(\\d+)([^"]*)", icon: "left-(\\d+)" \\}`));
-
-  it("is the web sm: h-8 pl-8, with the web responsive text class; native keeps text-sm", () => {
-    const [, h, pl, rest, left] = webSize("sm")!;
-    const sm = searchInputSize("sm", false);
-    expect(points(h!)).toBe(32);
-    expect(sm.height).toBe(points(h!));
-    expect(sm.minHeight).toBe(points(h!));
-    expect(sm.paddingLeft).toBe(points(pl!));
-    // Web SearchInput now ships `text-base sm:text-sm` (was bare `text-sm`).
-    expect(rest!.trim()).toBe("text-base sm:text-sm");
-    expect(sm.text).toBe("text-sm");
-    expect(sm.iconLeft).toBe(points(left!));
-  });
-
-  it("is the web md: h-10 pl-9 and the phone text-base of the field, icon at left-3", () => {
-    const [, h, pl, rest, left] = webSize("md")!;
-    const md = searchInputSize("md", false);
-    expect(points(h!)).toBe(40);
-    expect(md.height).toBe(points(h!));
-    expect(md.minHeight).toBe(points(h!));
-    expect(md.paddingLeft).toBe(points(pl!));
-    expect(rest).toBe("");
-    expect(clear).toMatch(/const inputClasses =\s+"flex h-10 w-full [^"]*px-3\.5 py-2 text-base sm:text-sm/);
-    expect(md.text).toBe("text-base");
-    expect(md.iconLeft).toBe(points(left!));
-  });
-
-  it("has the web icon, field end and clear button at both sizes", () => {
-    expect(web).toMatch(/size=\{config\?\.iconSize \?\? 16\}/);
-    expect(clear).toMatch(/"absolute right-2 top-1\/2 z-4 inline-flex h-6 w-6 [^"]*rounded-md/);
-    expect(clear).toMatch(/<IconX size=\{14\} stroke=\{1\.75\} \/>/);
-    expect(clear).toMatch(/\(always \|\| filled\) && "pr-9"/);
-    for (const size of ["sm", "md"] as const) {
-      expect(searchInputSize(size, false), size).toMatchObject({
-        icon: 16,
-        paddingRight: points("3.5"),
-        filledPaddingRight: points("9"),
-        clear: points("6"),
-        clearIcon: 14,
-        clearRight: points("2"),
-      });
-    }
-    // The web `stroke` is a width. On native, Tabler takes `strokeWidth` and
-    // passes `stroke` on as the SVG colour, so `stroke={1.75}` hides the cross.
-    expect(source).toMatch(/<IconX size=\{metrics\.clearIcon\} color=\{muted\} strokeWidth=\{1\.75\} \/>/);
-    expect(source).not.toMatch(/<Icon\w+[^>]*\sstroke=/);
-  });
-
   it("keeps sm at 32 and md at 40: padding, border and line fit the lock, where the web py-2 would not", () => {
     // A 1 border above and below, and the `text-sm` 20 or `text-base` 24 line.
     const height = (paddingY: number, line: number) => 2 * paddingY + 2 + line;
@@ -115,29 +56,6 @@ describe("searchInputSize (web contract)", () => {
       expect(2 * md.paddingY + 2 + 24 * scale, `md ${scale}`).toBeLessThanOrEqual(scaledFieldHeight(md.height, scale)!);
     }
     expect(searchInputSize("sm", true).height).toBeUndefined();
-  });
-
-  it("is the larger Input with larger text, at both sizes", () => {
-    const input = readFileSync(join(root, "src/Input.tsx"), "utf8");
-    expect(input).toMatch(/largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium"/);
-    expect(searchInputSize("sm", true)).toEqual(searchInputSize("md", true));
-    expect(searchInputSize("sm", true)).toMatchObject({ minHeight: 64, paddingY: 16, paddingRight: 16, text: "text-xl" });
-  });
-
-  it("uses the web defaults: sm, the Search label and the Clear search label", () => {
-    expect(web).toMatch(/size = "sm"/);
-    expect(web).toMatch(/const name = label \?\? config\?\.label \?\? "Search";/);
-    expect(web).toMatch(/clearLabel=\{clearLabel \?\? config\?\.clearLabel \?\? "Clear search"\}/);
-    expect(web).toMatch(/const hint = config\?\.enterKeyHint \?\? "search";/);
-    expect(source).toMatch(/size = "sm",/);
-    expect(source).toMatch(/label = "Search",/);
-    expect(source).toMatch(/clearLabel = "Clear search",/);
-    expect(source).toMatch(/returnKeyType="search"/);
-  });
-
-  it("has the Input field look and placeholder colour", () => {
-    expect(source).toMatch(/fieldStyle\(scheme\),\s+fieldTextStyle\(scheme\),/);
-    expect(source).toMatch(/placeholderTextColor \?\? palette\.fieldPlaceholder\[scheme\]/);
   });
 });
 

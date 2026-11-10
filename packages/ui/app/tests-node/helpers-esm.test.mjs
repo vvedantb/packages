@@ -2,7 +2,7 @@
 // helpers transpiled as they are and imported from a fixture that has react and
 // react-dom but no `motion`. The package root itself ships TypeScript and other
 // root modules import `motion`, so the root cannot be loaded this way; this
-// proves the new helpers add no `motion` import.
+// proves the helpers load without a `motion` import.
 // Run with: node --test app/tests-node/helpers-esm.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -23,20 +23,13 @@ const modules = [
   "time/compactRelativeTime.ts",
 ];
 
-test("helper sources import nothing but react", () => {
-  for (const file of modules) {
-    const source = readFileSync(join(pkgDir, "app/src", file), "utf8");
-    const specifiers = [...source.matchAll(/from\s+"([^"]+)"/g)].map((m) => m[1]);
-    for (const specifier of specifiers) assert.ok(specifier === "react", `${file} imports ${specifier}`);
-  }
-});
-
 test("plain Node ESM imports and renders the helpers without motion installed", () => {
   const dir = mkdtempSync(join(tmpdir(), "vvedantb-ui-helpers-"));
   try {
     for (const file of modules) {
       const out = join(dir, file.replace(/\.tsx?$/, ".js"));
       mkdirSync(dirname(out), { recursive: true });
+      // allow-source-read: the source is transpiled and run, not matched as text
       const { outputText } = ts.transpileModule(readFileSync(join(pkgDir, "app/src", file), "utf8"), {
         compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
       });

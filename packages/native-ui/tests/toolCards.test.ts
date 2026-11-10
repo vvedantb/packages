@@ -1,10 +1,5 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MIN_TOUCH_TARGET } from "../src/controlStyles";
-import { palette, withAlpha } from "../src/palette";
-import { tokens } from "../src/tokens";
+import { palette } from "../src/palette";
 
 // Tool and subagent cards and the bot label (0.13.0). Same harness as `ai.test.ts`.
 // The AI chat parts (`@vvedantb/native-ui/ai`). There is no React renderer in
@@ -13,7 +8,7 @@ import { tokens } from "../src/tokens";
 // stubbed, keeps their state between calls, renders again when state changes
 // (also from a timer or a press), and runs effects after each render. React
 // Native, Reanimated, the safe-area hook and the icons are stubbed, and the
-// checks read the element trees the parts return. Source checks at the end.
+// checks read the element trees the parts return.
 
 type Effect = { deps?: unknown[]; cleanup?: void | (() => void) };
 
@@ -195,13 +190,6 @@ vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
-const readWeb = (file: string) => readFileSync(join(root, "..", "ui", "src", file), "utf8");
-const aiFiles = readdirSync(join(root, "src", "ai")).filter((file) => /\.tsx?$/.test(file));
-/** Source without comments. */
-const code = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
-
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
 function elements(node: unknown): Element[] {
@@ -213,17 +201,12 @@ function elements(node: unknown): Element[] {
 
 const find = (node: unknown, test: (element: Element) => boolean) => elements(node).find(test);
 const byType = (node: unknown, type: unknown) => elements(node).filter((element) => element.type === type);
-const byLabel = (node: unknown, label: string) =>
-  find(node, (element) => element.props.accessibilityLabel === label || element.props.label === label);
 
 const flatten = (style: unknown): Record<string, unknown> =>
   Array.isArray(style) ? Object.assign({}, ...style.map(flatten)) : ((style as Record<string, unknown>) ?? {});
 
 /** Calls a function component element, as React would. */
 const render = (element: Element) => (element.type as (props: unknown) => unknown)(element.props);
-
-/** Makes `value` what `useContext` returns for the context a provider element names. */
-const provide = (provider: Element) => hooks.state.contexts.set(provider.type, provider.props.value);
 
 beforeEach(() => {
   hooks.state.contexts.clear();
