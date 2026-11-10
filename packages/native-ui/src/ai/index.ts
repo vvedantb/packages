@@ -151,6 +151,8 @@ export { ChoiceQuestion, choiceAnswers } from "./choice-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
 export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";
+export { UnifiedDiff, DiffStat, UNIFIED_DIFF } from "./unified-diff";
+export type { UnifiedDiffProps, UnifiedDiffLine, DiffStatProps } from "./unified-diff";
 export { ToolApprovalCard, ToolDraftCard, summarizeArgs, ARGS_MAX_CHARS } from "./tool-approval-card";
 export type { ToolApprovalCardProps, ToolDraftCardProps, ToolDecision } from "./tool-approval-card";
 export { SubagentRunCard, SubagentResultCard, subagentStatusColors } from "./subagent-cards";

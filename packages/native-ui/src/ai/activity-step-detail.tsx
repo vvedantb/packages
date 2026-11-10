@@ -6,6 +6,7 @@ import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import { MONO_FONT, chatTextSize } from "./chat-text";
+import { EMERALD } from "./unified-diff";
 import { CodeBlock } from "./code-block";
 
 /** The step fields the detail reads: the web `ActivityStep` subset. */
@@ -29,9 +30,6 @@ export type ActivityStepDetailProps = {
   /** Default "Loading output...". */
   loadingLabel?: string;
 };
-
-/** Web `bg-emerald-500/10` and `text-emerald-700` (dark `text-emerald-300`). */
-const EMERALD = { fill: "#10b981", light: "#047857", dark: "#6ee7b7" } as const;
 
 /**
  * A tool step's body, as the web `ActivityStepDetail`: exit code and
