@@ -105,11 +105,14 @@ export type { ActivityStepProps, ActivityStepStatus } from "./activity-step";
 export {
   PromptInput,
   PromptInputButton,
+  PromptInputChip,
   PromptInputSubmit,
+  PROMPT_INPUT_CHIP,
   isGenerating,
 } from "./prompt-input";
 export type {
   ChatStatus,
+  PromptInputChipProps,
   PromptInputProps,
   PromptInputButtonProps,
   PromptInputSubmitProps,

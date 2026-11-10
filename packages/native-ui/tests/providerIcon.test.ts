@@ -8,10 +8,11 @@ vi.mock("react-native", () => ({ Platform: { OS: "web" } }));
 vi.mock("react-native-svg", () => ({ default: "Svg", Path: "Path", Rect: "Rect" }));
 vi.mock("../src/useScheme", () => ({ useScheme: () => "light" }));
 
-const { PROVIDER_MARKS, ProviderIcon, providerMark } = await import("../src/brand/ProviderIcon");
+const { PROVIDER_MARKS, ProviderIcon, providerLabel, providerMark } = await import("../src/brand/ProviderIcon");
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const web = readFileSync(join(root, "..", "ui/src/ai-elements/provider-icon.tsx"), "utf8");
+const webPickerTypes = readFileSync(join(root, "..", "ui/src/ai-elements/model-picker-types.ts"), "utf8");
 
 /** Web mark function bodies in source order: ClaudeMark, OpenAIMark, OpencodeMark, CursorMark. */
 const webMarks = [...web.matchAll(/function (\w+Mark)\([\s\S]*?\n}\n/g)].map(([body, name]) => ({ name, body }));
@@ -43,6 +44,15 @@ describe("ProviderIcon parity with @vvedantb/ui", () => {
       expect(mark.layers.some((layer) => "square" in layer)).toBe(/<rect width="512" height="512"/.test(body));
     });
   }
+
+  it("names each provider as the web getProviderLabel", () => {
+    const body = /export function getProviderLabel[\s\S]*?\n}\n/.exec(webPickerTypes)?.[0] ?? "";
+    const cases = [...body.matchAll(/case "(\w+)":\s*return "([^"]+)";/g)].map(([, id, label]) => [id, label]);
+    expect(cases).toHaveLength(4);
+    for (const [id, label] of cases) expect(providerLabel(id ?? "")).toBe(label);
+    expect(body).toMatch(/default:\s*return provider;/);
+    expect(providerLabel("gemini")).toBe("gemini");
+  });
 
   it("draws the Claude mark for an unknown provider, as the web default", () => {
     expect(providerMark("gemini")).toBe(PROVIDER_MARKS.claude);

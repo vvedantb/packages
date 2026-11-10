@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { IconCheck, type IconProps } from "@tabler/icons-react-native";
 import { cn } from "./cn";
@@ -11,6 +11,8 @@ import { useScheme } from "./useScheme";
 export type SheetRowProps = {
   /** A Tabler icon at the start. */
   icon?: ComponentType<IconProps>;
+  /** At the start in place of `icon`: a mark that is not a Tabler icon, such as `ProviderIcon`. */
+  leading?: ReactNode;
   title: string;
   /** Muted line under the title, also the accessibility hint. */
   detail?: string;
@@ -25,7 +27,7 @@ export type SheetRowProps = {
 
 /**
  * One action in a `Sheet` or bottom sheet, a touch size of the web menu item:
- * icon, title and optional detail, at least 56 high (64 with larger text) with
+ * icon (or another `leading` mark), title and optional detail, at least 56 high (64 with larger text) with
  * the `ListRow` padding (`px-4 py-3`). While pressed it takes the web menu
  * item highlight (`bg-default`). `danger` draws the title and icon in the
  * danger colour; `active` adds a check; `disabled` dims it to 50%, as the web
@@ -33,6 +35,7 @@ export type SheetRowProps = {
  */
 export function SheetRow({
   icon: Icon,
+  leading,
   title,
   detail,
   active = false,
@@ -66,7 +69,7 @@ export function SheetRow({
         backgroundColor: pressed && !disabled ? palette.default[scheme] : "transparent",
       })}
     >
-      {Icon ? <Icon size={iconSize} color={color} /> : null}
+      {leading ?? (Icon ? <Icon size={iconSize} color={color} /> : null)}
       <View className="min-w-0 flex-1">
         <Text
           className={cn("font-instrument-sans-medium", titleSize)}
