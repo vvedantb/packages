@@ -9,7 +9,7 @@
  * is assignable to the wide `Href`, and a plain `string` that is not assignable
  * to it. The props take `Href`, so a typed route compiles with no cast.
  */
-import type { Href, Router } from "expo-router";
+import type { Href, useRouter } from "expo-router";
 import { GoogleSignInButton, SignInScreen, type SignInScreenProps } from "../src/auth";
 
 /** A typedRoutes-style route union: path strings and object hrefs. */
@@ -19,7 +19,7 @@ declare const typedHome: AppHref;
 declare const typedSignUp: Extract<AppHref, "/sign-up">;
 
 /** The options of `router.replace`, as the props type them. */
-type ReplaceOptions = Parameters<Router["replace"]>[1];
+type ReplaceOptions = Parameters<ReturnType<typeof useRouter>["replace"]>[1];
 const anchored: ReplaceOptions = { withAnchor: true };
 
 // Typed routes and object hrefs.

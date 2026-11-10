@@ -49,6 +49,27 @@ describe("Markdown", () => {
     expect(styles.h4?.fontSize).toBe(16);
     expect(styles.h6?.color).toBe(tokens.color.muted.light);
     expect(styles.text).toMatchObject({ fontFamily: "InstrumentSans_400Regular", fontSize: 16, lineHeight: 24, color: "#111111" });
+    // Inline styles restate the body size: the library starts them at its own 16 / 24.
+    expect(markdownStyles("light", { fontSize: 14, lineHeight: 22.75 }, "#111111").strong).toMatchObject({ fontSize: 14, lineHeight: 22.75 });
+    // No rule under h1 and h2, and 16 between blocks (half above, half below).
+    expect(styles.h2).toMatchObject({ borderBottomWidth: 0, paddingBottom: 0, marginVertical: 8 });
+  });
+
+  it("reads the faces from fontFamily at call time, so configureTheme({ font }) reaches them", async () => {
+    const { markdownStyles } = await import("../src/markdown/Markdown");
+    const { configureTheme } = await import("../src/configureTheme");
+    const { fontFamily } = await import("../src/typography");
+    const original = { ...fontFamily };
+    configureTheme({ font: { regular: "Inter_400Regular", semibold: "Inter_600SemiBold" } });
+    try {
+      const styles = markdownStyles("light", body, "#111111");
+      expect(styles.text?.fontFamily).toBe("Inter_400Regular");
+      expect(styles.li?.fontFamily).toBe("Inter_400Regular");
+      expect(styles.h1?.fontFamily).toBe("Inter_600SemiBold");
+      expect(styles.strong?.fontFamily).toBe("Inter_600SemiBold");
+    } finally {
+      configureTheme({ font: original });
+    }
   });
 
   it("underlines links in the primary colour at 30%, as the web .markdown-link", async () => {
@@ -56,6 +77,10 @@ describe("Markdown", () => {
     expect(webCss).toMatch(/text-decoration-color: rgb\(var\(--primary\) \/ 0\.3\)/);
     for (const scheme of ["light", "dark"] as const) {
       expect(markdownStyles(scheme, body, "#000").link).toEqual({
+        // The body size, so a link does not grow the line, and never the library's italic.
+        fontSize: 16,
+        lineHeight: 24,
+        fontStyle: "normal",
         color: palette.primary[scheme],
         textDecorationLine: "underline",
         textDecorationColor: withAlpha(palette.primary[scheme], 0.3),

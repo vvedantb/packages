@@ -234,11 +234,23 @@ export function AgentTraceCollapsibleContent({
 }
 
 export type AgentTraceFoldProps = Omit<CollapsibleProps, "children"> & {
-  /** How long the turn ran, in seconds. The title reads "Worked for 1m 5s". */
-  seconds: number;
   /** The settled turn's steps, shown in an `AgentTrace` when open. */
   children: ReactNode;
-};
+} & (
+    | {
+        /** How long the turn ran, in seconds. The title reads "Worked for 1m 5s" (`formatElapsed`). */
+        seconds: number;
+        duration?: never;
+      }
+    | {
+        /**
+         * The duration already formatted, as the web `ActivityTasks` `duration`:
+         * the title reads "Worked for " and this. For an app's own formatter.
+         */
+        duration: string;
+        seconds?: never;
+      }
+  );
 
 /**
  * A settled turn folded behind one line, as the web `ActivityTasks` in its
@@ -246,14 +258,22 @@ export type AgentTraceFoldProps = Omit<CollapsibleProps, "children"> & {
  * (`border-b border-border pb-1.5`), closed by default, and the steps in an
  * `AgentTrace` 8 below when open.
  */
-export function AgentTraceFold({ seconds, children, defaultOpen = false, className, ...props }: AgentTraceFoldProps) {
+export function AgentTraceFold({
+  seconds,
+  duration,
+  children,
+  defaultOpen = false,
+  className,
+  ...props
+}: AgentTraceFoldProps) {
   const scheme = useScheme();
+  const elapsed = duration ?? formatElapsed(seconds ?? 0);
   return (
     <Collapsible className={cn("w-full min-w-0", className)} defaultOpen={defaultOpen} {...props}>
       <View style={{ borderBottomWidth: 1, borderBottomColor: tokens.color.border[scheme], paddingBottom: 6 }}>
         <AgentTraceCollapsibleTrigger>
           <AgentTraceLine>
-            <AgentTraceTitle>{`Worked for ${formatElapsed(seconds)}`}</AgentTraceTitle>
+            <AgentTraceTitle>{`Worked for ${elapsed}`}</AgentTraceTitle>
           </AgentTraceLine>
         </AgentTraceCollapsibleTrigger>
       </View>

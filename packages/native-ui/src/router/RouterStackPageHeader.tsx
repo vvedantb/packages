@@ -1,4 +1,4 @@
-import { useRouter, type Href, type Router } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { StackPageHeader, type StackPageHeaderProps } from "../StackPageHeader";
 
 export type RouterStackPageHeaderProps = Omit<StackPageHeaderProps, "onBack"> & {
@@ -7,7 +7,7 @@ export type RouterStackPageHeaderProps = Omit<StackPageHeaderProps, "onBack"> & 
 };
 
 /** Goes back when the stack has a screen below, else replaces the route with `fallbackHref`. */
-export function goBackOrReplace(router: Pick<Router, "canGoBack" | "back" | "replace">, fallbackHref: Href = "/") {
+export function goBackOrReplace(router: Pick<ReturnType<typeof useRouter>, "canGoBack" | "back" | "replace">, fallbackHref: Href = "/") {
   if (router.canGoBack()) router.back();
   else router.replace(fallbackHref);
 }

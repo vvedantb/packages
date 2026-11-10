@@ -42,6 +42,20 @@ describe("style prop types for React Native 0.88 and react-native-svg 15", () =>
     }
   });
 
+  // React Native's `StyleProp` takes a mutable array, so an `as const` style
+  // tuple fails in an app. The shim matches, so `pnpm typecheck` fails too.
+  it("the peers shim types StyleProp arrays as mutable, as React Native does", () => {
+    const peers = readFileSync(join(srcDir, "..", "types", "peers.d.ts"), "utf8");
+    expect(peers).toMatch(/interface RecursiveArray<T> extends Array</);
+    expect(peers).not.toMatch(/ReadonlyArray<StyleProp</);
+  });
+
+  it("Message builds its layout style as a ViewProps[\"style\"] array, not an as-const tuple", () => {
+    const src = readSrc("ai/message.tsx");
+    expect(src).toMatch(/const layout: ViewProps\["style"\] = \[/);
+    expect(src).not.toMatch(/layout as never/);
+  });
+
   it("the Switch primitive types thumbStyle as ViewProps[\"style\"]", () => {
     const src = readSrc("primitives/switch.tsx");
     expect(src).toMatch(/thumbStyle\?: ViewProps\["style"\];/);

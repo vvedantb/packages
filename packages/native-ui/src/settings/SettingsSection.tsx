@@ -1,8 +1,9 @@
 import { View, Text } from "react-native";
 import { cn } from "../cn";
-import { cardStyle, textStyle, typeStyle } from "../controlStyles";
+import { cardStyle, sizeStyle, textStyle, typeStyle } from "../controlStyles";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
+import { relaxedSizeStyle } from "./relaxedSizeStyle";
 
 type SettingsSectionBodyVariant = "form" | "list" | "compact";
 
@@ -32,10 +33,11 @@ export function SettingsSection({
       <View className="flex-row items-start justify-between gap-4 px-4">
         <View className="min-w-0 flex-1">
           {typeof title === "string" ? (
+            // Web `text-sm font-semibold`: 14 / 20, 600.
             <Text
               accessibilityRole="header"
-              className="text-lg font-instrument-sans-semibold"
-              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+              className="text-sm font-instrument-sans-semibold"
+              style={[textStyle("foreground", scheme), sizeStyle("text-sm"), typeStyle("semibold")]}
             >
               {title}
             </Text>
@@ -44,9 +46,10 @@ export function SettingsSection({
           )}
           {description != null ? (
             typeof description === "string" ? (
+              // Web `text-sm leading-relaxed`: 14 / 22.75, muted.
               <Text
-                className="mt-0.5 text-base font-instrument-sans"
-                style={textStyle("muted", scheme)}
+                className="mt-0.5 text-sm leading-relaxed font-instrument-sans"
+                style={[textStyle("muted", scheme), relaxedSizeStyle("text-sm")]}
               >
                 {description}
               </Text>

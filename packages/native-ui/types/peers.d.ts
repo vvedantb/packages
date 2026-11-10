@@ -56,12 +56,10 @@ declare module "react-native" {
   }
   export interface TextStyle extends ViewStyle {}
   export interface ImageStyle extends ViewStyle {}
-  export type StyleProp<T> =
-    | T
-    | null
-    | undefined
-    | false
-    | ReadonlyArray<StyleProp<T>>;
+  // As React Native's own: the outer array is mutable, so a readonly
+  // (`as const`) tuple style fails here as it does in an app.
+  interface RecursiveArray<T> extends Array<T | ReadonlyArray<T> | RecursiveArray<T>> {}
+  export type StyleProp<T> = T | null | undefined | false | RecursiveArray<T | null | undefined | false>;
 
   export type Role = string;
   export type AccessibilityRole = string;
@@ -540,13 +538,13 @@ declare module "expo-router" {
     withAnchor?: boolean;
     dangerouslySingular?: boolean | string;
   }
-  export interface Router {
+  // expo-router 57 exports no `Router` type, so neither does this shim.
+  export function useRouter(): {
     push(href: Href, options?: NavigationOptions): void;
     replace(href: Href, options?: NavigationOptions): void;
     back(): void;
     canGoBack(): boolean;
-  }
-  export function useRouter(): Router;
+  };
 }
 
 declare module "expo-router/html" {
@@ -594,6 +592,7 @@ declare module "react-native-marked" {
     paragraph?: ViewStyle;
     strong?: TextStyle;
     em?: TextStyle;
+    strikethrough?: TextStyle;
     link?: TextStyle;
     h1?: TextStyle;
     h2?: TextStyle;
@@ -614,6 +613,15 @@ declare module "react-native-marked" {
     code(text: string, language?: string, containerStyle?: ViewStyle, textStyle?: TextStyle): ReactNode;
     codespan(text: string, styles?: TextStyle): ReactNode;
     list(ordered: boolean, li: ReactNode[], listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode;
+    blockquote(children: ReactNode[], styles?: ViewStyle): ReactNode;
+    link(children: string | ReactNode[], href: string, styles?: TextStyle, title?: string): ReactNode;
+    table(
+      header: ReactNode[][],
+      rows: ReactNode[][][],
+      tableStyle?: ViewStyle,
+      rowStyle?: ViewStyle,
+      cellStyle?: ViewStyle,
+    ): ReactNode;
     getKey(): string;
   }
   export function useMarkdown(
@@ -743,6 +751,7 @@ declare module "@tabler/icons-react-native" {
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
   export const IconCopy: Icon;
+  export const IconTextWrap: Icon;
   export const IconDots: Icon;
   export const IconFile: Icon;
   export const IconFileText: Icon;

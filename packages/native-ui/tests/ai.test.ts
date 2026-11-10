@@ -257,7 +257,7 @@ describe("formatElapsed and the reasoning message", () => {
   it("steps body, small and caption text up with larger text", async () => {
     const { chatTextSize } = await import("../src/ai/chat-text");
     expect([chatTextSize("body", false), chatTextSize("small", false), chatTextSize("caption", false)]).toEqual([
-      "text-base",
+      "text-sm",
       "text-sm",
       "text-xs",
     ]);
@@ -509,7 +509,8 @@ describe("Message", () => {
       const { content } = await message("user", "Hello", "tint");
       expect(content.props.value).toBe(tokens.color.foreground[colorScheme]);
       const bubble = content.props.children as Element;
-      expect(bubble.props.className).toBe("min-w-0 max-w-full gap-2 px-3 py-2");
+      // Eva's web bubble is still `px-4 py-3`: the Message config padding wins over `px-3 py-2`.
+      expect(bubble.props.className).toBe("min-w-0 max-w-full gap-2 px-4 py-3");
       expect(flatten(bubble.props.style)).toEqual({
         backgroundColor: withAlpha(palette.primary[colorScheme], 0.1),
         borderRadius: 16,
@@ -591,7 +592,7 @@ describe("ResponseText", () => {
     expect(inherited.type).toBe("Text");
     expect(inherited.props.children).toBe(text);
     expect(inherited.props.selectable).toBe(true);
-    expect(flatten(inherited.props.style)).toEqual({ fontSize: 16, lineHeight: 24, color: "#123456" });
+    expect(flatten(inherited.props.style)).toEqual({ fontSize: 14, lineHeight: 20, color: "#123456" });
     const muted = ResponseText({ children: text, tone: "muted", size: "small" }) as unknown as Element;
     expect(flatten(muted.props.style)).toEqual({ fontSize: 14, lineHeight: 20, color: tokens.color.muted.light });
     hooks.state.contexts.clear();
@@ -803,14 +804,15 @@ describe("PromptInput", () => {
     expect(elements(surface).some((element) => element.props.children === "TOOLS")).toBe(true);
   });
 
-  it("is Send (primary, or secondary and disabled when empty), and Stop while the AI answers", async () => {
+  it("is Send (primary, disabled when empty, as the web), and Stop while the AI answers", async () => {
     const { PromptInputSubmit } = await import("../src/ai/prompt-input");
     const onSubmit = vi.fn();
     const onStop = vi.fn();
     const send = PromptInputSubmit({ onSubmit }) as unknown as Element;
     expect(send.props).toMatchObject({ icon: "IconArrowUp", label: "Send", variant: "primary", disabled: false });
     const empty = PromptInputSubmit({ onSubmit, canSubmit: false }) as unknown as Element;
-    expect(empty.props).toMatchObject({ label: "Send", variant: "secondary", disabled: true });
+    expect(empty.props).toMatchObject({ label: "Send", variant: "primary", disabled: true });
+    expect((PromptInputSubmit({ onSubmit, size: "md" }) as unknown as Element).props.size).toBe("md");
     for (const status of ["streaming", "submitted"] as const) {
       const stop = PromptInputSubmit({ status, onSubmit, onStop }) as unknown as Element;
       expect(stop.props).toMatchObject({ icon: "IconPlayerStopFilled", label: "Stop", variant: "primary", disabled: false });
@@ -947,6 +949,16 @@ describe("CodeBlock", () => {
     const bare = CodeBlock({ code: "a" }) as unknown as Element;
     expect(byType(bare, CodeBlockCopyButton)).toHaveLength(0);
     expect(byType(bare, "ScrollView")[0]!.props).toMatchObject({ horizontal: true, contentContainerClassName: "p-4" });
+    expect(flatten(code.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20 });
+    // `markdown`, the web MarkdownCodeBlock: `.markdown-code pre` is 4 above (13 with no header), 14 at the sides, 13 below.
+    const element = CodeBlock({ code: "a", variant: "markdown" }) as unknown as Element;
+    const fenced = hooks.mount(() => (element.type as (props: unknown) => Element)(element.props)).tree;
+    expect(byType(fenced, "ScrollView")[0]!.props).toMatchObject({
+      horizontal: true,
+      contentContainerStyle: { paddingTop: 13, paddingHorizontal: 14, paddingBottom: 13 },
+    });
+    const fencedCode = byType(fenced, "Text").find((text) => text.props.children === "a")!;
+    expect(flatten(fencedCode.props.style)).toMatchObject({ fontSize: 13, lineHeight: 13 * 1.55 });
   });
 });
 

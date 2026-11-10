@@ -501,7 +501,8 @@ describe("Tabs and PillTabs (source contract)", () => {
     expect(pills).toMatch(/const colors = tabColors\("pills", isSelected, scheme\);/);
     for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
       expect(source, file).toMatch(
-        /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: trigger\.minHeight \}\}/,
+        // `TabsTrigger` takes `height`, its `minHeight` prop or the trigger size (tabsTriggerHeight.test.ts).
+        /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: (?:trigger\.minHeight|height) \}\}/,
       );
       expect(source, file).toMatch(/style=\{\[\{ color: colors\.color \}, /);
     }
@@ -941,7 +942,7 @@ describe("tabTriggerSize", () => {
     }
     expect(touchSlop(MIN_TOUCH_TARGET, 30)).toEqual({ top: 7, bottom: 7, left: 0, right: 0 });
     for (const file of ["Tabs.tsx", "PillTabs.tsx"]) {
-      expect(read(file), file).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, trigger\.minHeight\)\}/);
+      expect(read(file), file).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, (?:trigger\.minHeight|height)\)\}/);
     }
   });
 });

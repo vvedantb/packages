@@ -10,7 +10,8 @@
  *   };
  *
  * It nests `nativewind/preset`, so callers pass only this one. It sets
- * `darkMode`, the Instrument Sans font classes, the colour keys native-ui
+ * `darkMode`, the `font-instrument-sans*` font classes (Instrument Sans unless
+ * `font` names other families), the colour keys native-ui
  * classes use, `borderWidth.hairline` and, when asked, `borderRadius` from
  * `--radius`.
  * App colours, display fonts, keyframes and font-weight plugins stay in the
@@ -34,6 +35,7 @@ const hslVar = (name) => `hsl(var(--${name}))`;
 /** `rgb(var(--name) / <alpha-value>)`, for variables that hold `r g b` channels. Keeps opacity modifiers. */
 const rgbAlpha = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
+/** The default families of the four font classes, as `fontFamily` in `typography.ts`. */
 const INSTRUMENT_SANS = {
   regular: "InstrumentSans_400Regular",
   medium: "InstrumentSans_500Medium",
@@ -202,9 +204,14 @@ function cssVariablesPlugin(darkMode) {
  * - `injectCssVariables`: write the colour variables and `--radius` from `tokens.ts` and `palette.ts`. Default `false`.
  * - `radiusVariable`: `rounded-lg`, `-md` and `-sm` from `var(--radius)`, as vibot and Velth. Default: on with
  *   `injectCssVariables`, else off, so an app without `--radius` keeps the Tailwind radii.
+ * - `font`: `{ regular, medium, semibold, bold }` family names for `sans` and the four `font-instrument-sans*`
+ *   classes. Keys not given keep Instrument Sans. Pass the same names to `configureTheme({ font })`, which sets
+ *   the JS styles; the app loads the font files.
  */
 function nativeUiPreset(options = {}) {
   const darkMode = options.darkMode === "media" ? "media" : "class";
+  const font = { ...INSTRUMENT_SANS };
+  for (const [key, value] of Object.entries(options.font || {})) if (value !== undefined) font[key] = value;
   const inject = options.injectCssVariables === true;
   const color = options.color || (inject ? rgbAlpha : cssVar);
   const radius = options.radiusVariable ?? inject;
@@ -215,11 +222,11 @@ function nativeUiPreset(options = {}) {
       extend: {
         colors: themeColors(color),
         fontFamily: {
-          sans: [INSTRUMENT_SANS.regular],
-          "instrument-sans": [INSTRUMENT_SANS.regular],
-          "instrument-sans-medium": [INSTRUMENT_SANS.medium],
-          "instrument-sans-semibold": [INSTRUMENT_SANS.semibold],
-          "instrument-sans-bold": [INSTRUMENT_SANS.bold],
+          sans: [font.regular],
+          "instrument-sans": [font.regular],
+          "instrument-sans-medium": [font.medium],
+          "instrument-sans-semibold": [font.semibold],
+          "instrument-sans-bold": [font.bold],
         },
         borderRadius: radius
           ? {

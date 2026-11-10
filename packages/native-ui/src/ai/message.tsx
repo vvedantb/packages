@@ -16,8 +16,8 @@ import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
-import { chatTextSize } from "./chat-text";
-import { ChatIconButton } from "./icon-button";
+import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
+import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
 import { MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
@@ -120,10 +120,10 @@ export function Message({
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
-  const layout = [
+  const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
     style,
-  ] as const;
+  ];
   const merged = cn("w-full max-w-[95%] gap-2", className);
   const parts = (
     <>
@@ -139,7 +139,7 @@ export function Message({
           <Pressable
             accessible={false}
             className={merged}
-            style={layout as never}
+            style={layout}
             onLongPress={() => {
               onLongPress?.();
               if (hasActions) setSheetOpen(true);
@@ -181,8 +181,8 @@ export function userBubbleStyle(scheme: "light" | "dark") {
 /**
  * A user bubble's look. `primary` is the web default (`bg-primary` with the
  * label colour). `tint` is the chat override Eva uses (`rounded-surface
- * bg-primary/10 px-3 py-2 text-foreground`): a 10% wash of the primary colour
- * with foreground text and every corner at 16.
+ * bg-primary/10 text-foreground`, still `px-4 py-3`): a 10% wash of the
+ * primary colour with foreground text and every corner at 16.
  */
 export type MessageBubble = "primary" | "tint";
 
@@ -239,9 +239,9 @@ export type MessageContentProps = ViewProps & {
 };
 
 /**
- * The message body. A user message is a filled bubble: by default `px-4 py-3`
- * with the primary fill and label colour, or with `bubble="tint"` `px-3 py-2`
- * on a 10% primary wash with the foreground colour. An assistant message has
+ * The message body. A user message is a filled bubble, `px-4 py-3`: by
+ * default with the primary fill and label colour, or with `bubble="tint"` on
+ * a 10% primary wash with the foreground colour. An assistant message has
  * no fill and the foreground colour. A string child is drawn as
  * `ResponseText`, and `ResponseText` inside takes the colour.
  */
@@ -256,7 +256,7 @@ export function MessageContent({ children, bubble = "primary", quote, className,
   return (
     <ChatTextColorContext.Provider value={color}>
       <View
-        className={cn("min-w-0 max-w-full gap-2", user && (tint ? "px-3 py-2" : "px-4 py-3"), className)}
+        className={cn("min-w-0 max-w-full gap-2", user && "px-4 py-3", className)}
         style={[bubbleStyle, style]}
         {...props}
       >
@@ -273,21 +273,33 @@ export function MessageContent({ children, bubble = "primary", quote, className,
   );
 }
 
-export type MessageMetaProps = { children: ReactNode; className?: string };
+export type MessageMetaProps = {
+  children: ReactNode;
+  /**
+   * Default `caption` (`text-xs`, 12 / 16). `2xs` is the web `text-2xs` token
+   * (11 / 16), as Eva's web chat. Larger text draws both at the caption step.
+   */
+  size?: "caption" | "2xs";
+  className?: string;
+};
 
 /**
  * The muted clock and duration after a message's actions, as Eva's web chat
- * (`text-2xs tabular-nums text-muted-foreground/60`, "10:21 PM · 1m"): the
- * caption size on phones, the muted colour at 60%, tabular figures.
+ * (`tabular-nums text-muted-foreground/60`, "10:21 PM · 1m"): the caption
+ * size (or `size="2xs"`), the muted colour at 60%, tabular figures.
  */
-export function MessageMeta({ children, className }: MessageMetaProps) {
+export function MessageMeta({ children, size = "caption", className }: MessageMetaProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
-  const size = chatTextSize("caption", largerText);
+  const caption = chatTextSize("caption", largerText);
+  const tiny = size === "2xs" && !largerText;
   return (
     <Text
-      className={cn(size, "font-instrument-sans", className)}
-      style={[sizeStyle(size), { color: withAlpha(tokens.color.muted[scheme], 0.6), fontVariant: ["tabular-nums"] }]}
+      className={cn(!tiny && caption, "font-instrument-sans", className)}
+      style={[
+        tiny ? META_TEXT_STYLE : sizeStyle(caption),
+        { color: withAlpha(tokens.color.muted[scheme], 0.6), fontVariant: ["tabular-nums"] },
+      ]}
     >
       {children}
     </Text>
@@ -325,12 +337,14 @@ export type MessageActionProps = {
    */
   selected?: boolean;
   disabled?: boolean;
+  /** Default `sm`, the web `icon-sm` (32, 16 icon). `xs` is the web `icon-xs` (28, 14 icon), as Eva's chat. */
+  size?: ChatIconButtonSize;
   testID?: string;
 };
 
 /**
- * A ghost icon button under a message: the web `icon-sm` (32, 16 icon) with
- * the slop to 44. Copying is up to the app (`onPress`): React Native's own
+ * A ghost icon button under a message: the web `icon-sm` (32, 16 icon), or
+ * `icon-xs` with `size="xs"`, with the slop to 44. Copying is up to the app (`onPress`): React Native's own
  * `Clipboard` is deprecated, and native-ui adds no clipboard package.
  */
 export function MessageAction({
@@ -340,6 +354,7 @@ export function MessageAction({
   onPress,
   selected = false,
   disabled,
+  size,
   testID,
 }: MessageActionProps) {
   const scheme = useScheme();
@@ -353,6 +368,7 @@ export function MessageAction({
       accessibilityState={{ selected }}
       onPress={onPress}
       disabled={disabled}
+      size={size}
       testID={testID}
     />
   );

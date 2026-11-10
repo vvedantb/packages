@@ -61,6 +61,19 @@ describe("tailwind preset API", () => {
     });
   });
 
+  it("maps the same classes to the families in `font`, keeping Instrument Sans for keys not given", () => {
+    const fontFamily = preset.nativeUiPreset({ font: { regular: "Inter_400Regular", semibold: "Inter_600SemiBold", bold: undefined } })
+      .theme.extend.fontFamily;
+    expect(fontFamily).toEqual({
+      sans: ["Inter_400Regular"],
+      "instrument-sans": ["Inter_400Regular"],
+      "instrument-sans-medium": ["InstrumentSans_500Medium"],
+      "instrument-sans-semibold": ["Inter_600SemiBold"],
+      "instrument-sans-bold": ["InstrumentSans_700Bold"],
+    });
+    expect(preset.INSTRUMENT_SANS.regular).toBe("InstrumentSans_400Regular");
+  });
+
   it("has the shared colour keys, through `color`", () => {
     const colors = preset.nativeUiPreset({ color: preset.hslVar }).theme.extend.colors as Record<string, any>;
     for (const key of ["background", "foreground", "border", "input", "ring", "separator"]) {
