@@ -5,18 +5,24 @@ import type { TextSize } from "../controlStyles";
 export type ChatTextKind = "body" | "small" | "caption";
 
 /**
- * `body` is message text: `text-base` (16 / 24), the phone body size (the web
- * `MessageContent` is `text-sm`, but the web composer is 16 on phones).
- * `small` is the secondary text of triggers, trace lines and sources:
- * `text-sm` (14 / 20; the web sources trigger is `text-xs`). `caption` is
- * `text-xs` (12 / 16): step descriptions, file chips and code headers. Larger
- * text steps each up, as `Textarea` does.
+ * `body` is message text: `text-sm` (14 / 20), as the web `MessageContent`.
+ * `small` is the secondary text of triggers, trace lines and sources: also
+ * `text-sm` (the web sources trigger is `text-xs`). `caption` is `text-xs`
+ * (12 / 16): step descriptions, file chips and code headers. Larger text
+ * steps each up, as `Textarea` does.
  */
 export function chatTextSize(kind: ChatTextKind, largerText: boolean): TextSize {
-  if (kind === "body") return largerText ? "text-xl" : "text-base";
+  if (kind === "body") return largerText ? "text-xl" : "text-sm";
   if (kind === "small") return largerText ? "text-lg" : "text-sm";
   return largerText ? "text-base" : "text-xs";
 }
+
+/**
+ * The web `text-2xs` token (11 / 16, tracking 0.01em) as a style, for
+ * `MessageMeta size="2xs"` and an app's own small labels. React Native has no
+ * `em`, so the tracking is in points.
+ */
+export const META_TEXT_STYLE = { fontSize: 11, lineHeight: 16, letterSpacing: 0.11 } as const;
 
 /** The system monospace face, for code and reasoning text (web `font-mono`). */
 export const MONO_FONT = Platform.select({ ios: "Menlo", default: "monospace" });

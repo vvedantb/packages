@@ -2,7 +2,7 @@
 // `@vvedantb/native-ui/ai` entry only, so apps without a chat do not bundle
 // them. Generic: no model names and no app logic.
 export { useStreamingDisclosure } from "./use-streaming-disclosure";
-export { chatTextSize, formatElapsed, MONO_FONT } from "./chat-text";
+export { chatTextSize, formatElapsed, META_TEXT_STYLE, MONO_FONT } from "./chat-text";
 export type { ChatTextKind } from "./chat-text";
 export { Shimmer, SHIMMER_LOW_OPACITY } from "./shimmer";
 export type { ShimmerProps } from "./shimmer";

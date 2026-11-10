@@ -602,7 +602,7 @@ describe("quoted replies (source contract)", () => {
   it("uses selectionHaptic and adds no dependency", () => {
     expect(read("ai/message-action-sheet.tsx")).toMatch(/selectionHaptic\(\)/);
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    expect(pkg.version).toBe("0.13.0");
+    expect(pkg.version).toBe("0.14.0");
     expect(pkg.dependencies ?? {}).not.toHaveProperty("expo-haptics");
     expect(pkg.peerDependenciesMeta["expo-haptics"]).toEqual({ optional: true });
   });

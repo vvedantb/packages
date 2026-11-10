@@ -592,6 +592,7 @@ declare module "react-native-marked" {
     paragraph?: ViewStyle;
     strong?: TextStyle;
     em?: TextStyle;
+    strikethrough?: TextStyle;
     link?: TextStyle;
     h1?: TextStyle;
     h2?: TextStyle;
@@ -612,6 +613,15 @@ declare module "react-native-marked" {
     code(text: string, language?: string, containerStyle?: ViewStyle, textStyle?: TextStyle): ReactNode;
     codespan(text: string, styles?: TextStyle): ReactNode;
     list(ordered: boolean, li: ReactNode[], listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode;
+    blockquote(children: ReactNode[], styles?: ViewStyle): ReactNode;
+    link(children: string | ReactNode[], href: string, styles?: TextStyle, title?: string): ReactNode;
+    table(
+      header: ReactNode[][],
+      rows: ReactNode[][][],
+      tableStyle?: ViewStyle,
+      rowStyle?: ViewStyle,
+      cellStyle?: ViewStyle,
+    ): ReactNode;
     getKey(): string;
   }
   export function useMarkdown(
@@ -741,6 +751,7 @@ declare module "@tabler/icons-react-native" {
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
   export const IconCopy: Icon;
+  export const IconTextWrap: Icon;
   export const IconDots: Icon;
   export const IconFile: Icon;
   export const IconFileText: Icon;

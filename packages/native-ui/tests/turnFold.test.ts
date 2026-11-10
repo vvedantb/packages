@@ -17,7 +17,8 @@ describe("AgentTraceFold", () => {
   it("reads \"Worked for …\" over the web hairline (border-b pb-1.5), closed by default", () => {
     expect(web).toMatch(/<div className="border-b border-border pb-1\.5">/);
     expect(web).toMatch(/`Worked for \$\{duration\}`/);
-    expect(trace).toMatch(/`Worked for \$\{formatElapsed\(seconds\)\}`/);
+    expect(trace).toMatch(/const elapsed = duration \?\? formatElapsed\(seconds \?\? 0\);/);
+    expect(trace).toMatch(/`Worked for \$\{elapsed\}`/);
     expect(trace).toMatch(/borderBottomWidth: 1, borderBottomColor: tokens\.color\.border\[scheme\], paddingBottom: 6/);
     expect(trace).toMatch(/defaultOpen = false/);
     expect(trace).toMatch(/<AgentTrace className="mt-2">\{children\}<\/AgentTrace>/);
@@ -47,8 +48,9 @@ describe("PromptInput layout=\"inline\"", () => {
     expect(composer).toMatch(/rounded-\[1\.25rem\]/);
     expect(composer).toMatch(/data-slot="composer-row" className="flex min-w-0 items-end gap-1 p-1\.5"/);
     expect(input).toMatch(/const INLINE_RADIUS = 20;/);
-    expect(input).toMatch(/<View className="flex-row items-end gap-1 p-1\.5">/);
+    expect(input).toMatch(/className=\{cn\("flex-row items-end gap-1", !pill && "p-1\.5"\)\}/);
     expect(input).toMatch(/layout = "stacked"/);
-    expect(input.indexOf("{leading}")).toBeLessThan(input.indexOf('className={cn(\n                  "min-h-8 flex-1'));
+    expect(input).toMatch(/shape = "rounded"/);
+    expect(input.indexOf("{leading}")).toBeLessThan(input.indexOf('"flex-1 border-0 text-sm font-instrument-sans"'));
   });
 });

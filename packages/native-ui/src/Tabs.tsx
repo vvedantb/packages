@@ -107,6 +107,12 @@ export type TabsTriggerProps = {
   children: ReactNode;
   disabled?: boolean;
   className?: string;
+  /**
+   * The trigger height on screen, for an app whose web call site sizes its
+   * list (a `h-8` list with `p-1` has 24-high triggers). Default: the web
+   * `.t-tab` 30, or the larger-text size. The hit slop still reaches 44.
+   */
+  minHeight?: number;
   testID?: string;
   accessibilityLabel?: string;
 };
@@ -116,6 +122,7 @@ export function TabsTrigger({
   children,
   disabled,
   className,
+  minHeight,
   testID,
   accessibilityLabel,
 }: TabsTriggerProps) {
@@ -128,6 +135,7 @@ export function TabsTrigger({
   // `bg-surface` can stay light in dark mode, under a light label.
   const colors = tabColors(variant, selected, scheme);
   const trigger = tabTriggerSize(variant, size, largerText);
+  const height = minHeight ?? trigger.minHeight;
   // The web `.t-tab` is `font-medium`; the soft trigger is regular.
   const medium = variant !== "soft";
 
@@ -139,8 +147,8 @@ export function TabsTrigger({
         accessibilityLabel ?? (typeof children === "string" ? children : undefined)
       }
       accessibilityState={{ selected, disabled: Boolean(disabled) }}
-      // The web height (30) on screen, a 44 target to touch.
-      hitSlop={touchSlop(MIN_TOUCH_TARGET, trigger.minHeight)}
+      // The trigger height on screen (the web 30 by default), a 44 target to touch.
+      hitSlop={touchSlop(MIN_TOUCH_TARGET, height)}
       disabled={disabled}
       onPress={() => {
         if (selected) return;
@@ -156,7 +164,7 @@ export function TabsTrigger({
       )}
       // A plain object: NativeWind puts the class styles and `style` in an
       // array, where a `({ pressed }) => ...` style is dropped.
-      style={{ backgroundColor: colors.backgroundColor, minHeight: trigger.minHeight }}
+      style={{ backgroundColor: colors.backgroundColor, minHeight: height }}
     >
       {typeof children === "string" || typeof children === "number" ? (
         <Text

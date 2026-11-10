@@ -133,23 +133,26 @@ const TEXT_SIZE = {
 
 export type TextSize = keyof typeof TEXT_SIZE;
 
-/** Tailwind `leading-tight` and `leading-snug`, as multiples of the size. */
-const LEADING = { tight: 1.25, snug: 1.375 } as const;
+/** Tailwind `leading-tight`, `leading-snug` and `leading-relaxed`, as multiples of the size. */
+const LEADING = { tight: 1.25, snug: 1.375, relaxed: 1.625 } as const;
+
+export type TextLeading = keyof typeof LEADING;
 
 /**
  * Font size and line height of a `text-*` class as a style, set beside the
  * class. On Expo web at 390 wide (0.3.6 gallery), `Button` labels with
  * `text-sm` measured 16, so the class alone does not always reach the text.
- * `"tight"` and `"snug"` are the Tailwind `leading-tight` (1.25 × the size)
- * and `leading-snug` (1.375 ×).
+ * `"tight"`, `"snug"` and `"relaxed"` are the Tailwind `leading-tight` (1.25 ×
+ * the size), `leading-snug` (1.375 ×) and `leading-relaxed` (1.625 ×, the web
+ * `.markdown` body and the settings descriptions).
  */
-export function sizeStyle(size: TextSize, leading?: "tight" | "snug") {
+export function sizeStyle(size: TextSize, leading?: TextLeading) {
   const { fontSize, lineHeight } = TEXT_SIZE[size];
   return { fontSize, lineHeight: leading ? fontSize * LEADING[leading] : lineHeight };
 }
 
-/** Tailwind `tracking-tight`, in em. */
-const TRACKING = { tight: -0.025 } as const;
+/** Tailwind `tracking-tight` and `tracking-wide`, in em. */
+const TRACKING = { tight: -0.025, wide: 0.025 } as const;
 
 /**
  * Letter spacing of a `tracking-*` class at `fontSize`, as a style in points.
