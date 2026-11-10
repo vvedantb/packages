@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.15.0
+
+### Minor Changes
+
+- [#161](https://github.com/vvedantb/packages/pull/161) [`bf27550`](https://github.com/vvedantb/packages/commit/bf27550b114e38d8edd8a91b51a0e5723916d706) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Add `ProviderIcon` to `@vvedantb/native-ui/brand` (and the root entry): the four AI provider marks of the web `ProviderIcon` (Claude, OpenAI for `codex`, OpenCode, Cursor) as `react-native-svg` marks with the same path data, viewBoxes and fills. Any other provider draws the Claude mark, as on the web. Props: `provider`, `size` (default 14), `title` (accessible name; without it the mark is hidden from assistive tech), `testID` and `style`. The OpenAI and Cursor marks follow the colour scheme, as the web `dark:` classes. `PROVIDER_MARKS` and `providerMark(provider)` expose the data. A test checks the marks against `@vvedantb/ui` `ai-elements/provider-icon.tsx`.
+
+- [#161](https://github.com/vvedantb/packages/pull/161) [`bf27550`](https://github.com/vvedantb/packages/commit/bf27550b114e38d8edd8a91b51a0e5723916d706) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `Switch` takes an optional `size` prop. `"sm"` (the default) is unchanged: the 36 × 20 web `Switch` with a 16 thumb. `"md"` is a 40 × 24 track with a 20 thumb that sits 2 in from the left and moves 18 when on, for apps that set the larger switch on the web through `UiConfig.Switch`. Larger text keeps the 56 × 32 size at both sizes. `switchSize(largerText, size?)` now also returns the `off` thumb class.
+  
+  `TabsTrigger` labels now use the web type-scale letter spacing: `sm` triggers (`text-xs`) get 0.06 (0.005em), default triggers (`text-sm`) stay 0. Larger text keeps 0. `tabTriggerSize` returns this as `letterSpacing`.
+
 ## 0.14.0
 
 ### Minor Changes
