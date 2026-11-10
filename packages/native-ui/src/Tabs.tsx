@@ -174,7 +174,7 @@ export function TabsTrigger({
             medium ? "font-instrument-sans-medium" : "font-instrument-sans",
             trigger.textClassName,
           )}
-          style={[{ color: colors.color }, medium ? typeStyle("medium") : null]}
+          style={[{ color: colors.color }, { letterSpacing: trigger.letterSpacing }, medium ? typeStyle("medium") : null]}
         >
           {children}
         </Text>
