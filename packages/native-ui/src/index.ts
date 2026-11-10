@@ -12,7 +12,8 @@ export { palette, withAlpha } from "./palette";
 export type { Palette } from "./palette";
 export { configureTheme } from "./configureTheme";
 export type { ThemeConfig, ThemeColors, ThemePalette } from "./configureTheme";
-export { fontClass } from "./typography";
+export { fontClass, fontFamily } from "./typography";
+export type { ThemeFonts } from "./typography";
 export {
   FLOATING_INSET,
   FLOATING_TAB_BAR_HEIGHT,
@@ -86,6 +87,8 @@ export type { SpinnerProps } from "./Spinner";
 export { Avatar, AvatarImage, AvatarFallback } from "./Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "./Avatar";
 export { initials } from "./initials";
+export { formatCompactRelativeTime } from "./relativeTime";
+export type { CompactRelativeTimeOptions } from "./relativeTime";
 export { Chip } from "./Chip";
 export { PillTabs } from "./PillTabs";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs";

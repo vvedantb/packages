@@ -17,7 +17,10 @@ export const GOOGLE_ERROR_MESSAGE = "Could not continue with Google";
 export type AuthNavigationOptions = {
   /** Where to go after a session starts. Default `"/"`. */
   afterAuthHref?: Href;
-  /** Passed to `router.replace`, such as `{ withAnchor: true }`. */
+  /**
+   * Passed to `router.replace`, such as `{ withAnchor: true }`. Typed from
+   * `useRouter`, as expo-router 57 exports no `Router` type.
+   */
   replaceOptions?: Parameters<ReturnType<typeof useRouter>["replace"]>[1];
   /** Called after a session starts, in place of `router.replace`. */
   onSuccess?: () => void;

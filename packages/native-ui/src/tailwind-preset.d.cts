@@ -14,6 +14,11 @@ export interface NativeUiPresetOptions {
   injectCssVariables?: boolean;
   /** `rounded-lg`, `-md` and `-sm` from `var(--radius)`. Default: the value of `injectCssVariables`. */
   radiusVariable?: boolean;
+  /**
+   * Family names for `sans` and the four `font-instrument-sans*` classes. Keys not given keep Instrument Sans.
+   * Pass the same names to `configureTheme({ font })`; the app loads the font files.
+   */
+  font?: { regular?: string; medium?: string; semibold?: string; bold?: string };
 }
 
 export interface NativeUiPreset {

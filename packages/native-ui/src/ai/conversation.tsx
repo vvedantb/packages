@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   Platform,
+  Pressable,
   ScrollView,
   Text,
   View,
@@ -20,7 +21,8 @@ import { IconArrowDown, type IconProps } from "@tabler/icons-react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 import { Button } from "../Button";
 import { cn } from "../cn";
-import { sizeStyle, textStyle, typeStyle } from "../controlStyles";
+import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop, typeStyle } from "../controlStyles";
+import { withAlpha } from "../palette";
 import { NativeOnlyAnimatedView } from "../primitives/native-only-animated-view";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -201,28 +203,40 @@ export function ConversationEmptyState({
 }
 
 export type ConversationScrollButtonProps = {
-  /** The accessibility label. Default "Scroll to bottom". */
+  /** The accessibility label, and the text with `showLabel`. Default "Scroll to bottom". */
   label?: string;
   /** Replaces the down arrow. */
   icon?: ComponentType<IconProps>;
+  /**
+   * Draw `label` after the icon in a compact pill, as the web button with a
+   * `label` in Eva's chat ("Scroll to end": 28 high, `px-3`, `text-xs`
+   * muted, a 60% border on the surface). Default `false`: the round arrow.
+   */
+  showLabel?: boolean;
   testID?: string;
 };
+
+/** The labelled pill's height (web `h-7`). */
+const SCROLL_PILL_HEIGHT = 28;
 
 /**
  * Round outline arrow, centred 16 above the bottom of the `Conversation`,
  * shown while the reader is away from the end (the web `absolute bottom-4`).
  * The web `Button` `icon` size (40, slop to 48). It has an opaque surface
- * fill and no shadow, so it reads over the messages under it.
+ * fill and no shadow, so it reads over the messages under it. With
+ * `showLabel`, a compact pill with the icon and `label`.
  */
 export function ConversationScrollButton({
   label = "Scroll to bottom",
   icon: Icon = IconArrowDown,
+  showLabel = false,
   testID,
 }: ConversationScrollButtonProps) {
   const { isAtBottom, scrollToBottom } = useConversation();
   const scheme = useScheme();
   const largerText = useLargerText();
   if (isAtBottom) return null;
+  const caption = chatTextSize("caption", largerText);
   return (
     <NativeOnlyAnimatedView
       entering={FadeIn.duration(150)}
@@ -230,16 +244,44 @@ export function ConversationScrollButton({
       pointerEvents="box-none"
       style={{ position: "absolute", left: 0, right: 0, bottom: 16, alignItems: "center" }}
     >
-      <Button
-        variant="outline"
-        size="icon"
-        accessibilityLabel={label}
-        onPress={scrollToBottom}
-        testID={testID}
-        style={{ borderRadius: tokens.radius.pill, backgroundColor: tokens.color.surface[scheme] }}
-      >
-        <Icon size={largerText ? 20 : 16} color={tokens.color.foreground[scheme]} />
-      </Button>
+      {showLabel ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={label}
+          onPress={scrollToBottom}
+          testID={testID}
+          // Wider than 44 with its label; only the height needs slop.
+          hitSlop={touchSlop(MIN_TOUCH_TARGET, SCROLL_PILL_HEIGHT)}
+          style={({ pressed }) => ({
+            minHeight: SCROLL_PILL_HEIGHT,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            paddingHorizontal: 12,
+            borderRadius: tokens.radius.pill,
+            borderWidth: 1,
+            borderColor: withAlpha(tokens.color.border[scheme], 0.6),
+            backgroundColor: tokens.color.surface[scheme],
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Icon size={largerText ? 20 : 16} color={tokens.color.muted[scheme]} />
+          <Text className={cn(caption, "font-instrument-sans")} style={[sizeStyle(caption), textStyle("muted", scheme)]}>
+            {label}
+          </Text>
+        </Pressable>
+      ) : (
+        <Button
+          variant="outline"
+          size="icon"
+          accessibilityLabel={label}
+          onPress={scrollToBottom}
+          testID={testID}
+          style={{ borderRadius: tokens.radius.pill, backgroundColor: tokens.color.surface[scheme] }}
+        >
+          <Icon size={largerText ? 20 : 16} color={tokens.color.foreground[scheme]} />
+        </Button>
+      )}
     </NativeOnlyAnimatedView>
   );
 }

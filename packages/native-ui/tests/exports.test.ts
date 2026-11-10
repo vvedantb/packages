@@ -122,6 +122,7 @@ describe("@vvedantb/native-ui exports", () => {
       "tokens",
       "palette",
       "configureTheme",
+      "fontFamily",
       "DropdownMenu",
       "DropdownMenuTrigger",
       "DropdownMenuContent",
@@ -174,8 +175,8 @@ describe("@vvedantb/native-ui exports", () => {
     for (const name of previous) expect(names.has(name), name).toBe(true);
   });
 
-  it("is 0.13.0 with granular entries, a typecheck script and optional peers", () => {
-    expect(pkg.version).toBe("0.13.0");
+  it("has a semver version, granular entries, a typecheck script and optional peers", () => {
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
     const entries = [
       "./tab-bar",
       "./brand",

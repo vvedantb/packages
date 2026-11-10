@@ -50,6 +50,8 @@ export type { SpinnerProps } from "../Spinner";
 export { Avatar, AvatarImage, AvatarFallback } from "../Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "../Avatar";
 export { initials } from "../initials";
+export { formatCompactRelativeTime } from "../relativeTime";
+export type { CompactRelativeTimeOptions } from "../relativeTime";
 export { Chip } from "../Chip";
 export { PillTabs } from "../PillTabs";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "../Tabs";

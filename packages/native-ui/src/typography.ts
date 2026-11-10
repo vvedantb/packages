@@ -1,7 +1,24 @@
+/** The four font families: one per weight, as the app loads them. */
+export type ThemeFonts = { regular: string; medium: string; semibold: string; bold: string };
+
 /**
- * NativeWind classes for Instrument Sans. The app loads the font files and maps
- * these classes to them (see README). Literal strings, so Tailwind's source
- * scan generates them.
+ * The font family names JS styles use, Instrument Sans by default (the
+ * Expo Google Fonts names, as `INSTRUMENT_SANS` in tailwind-preset.cjs).
+ * `configureTheme({ font })` writes into this object, and components read it at
+ * render, so do not copy a value out at import.
+ */
+export const fontFamily: ThemeFonts = {
+  regular: "InstrumentSans_400Regular",
+  medium: "InstrumentSans_500Medium",
+  semibold: "InstrumentSans_600SemiBold",
+  bold: "InstrumentSans_700Bold",
+};
+
+/**
+ * NativeWind classes for the four faces (Instrument Sans by default). The app
+ * loads the font files and maps these classes to them (see README, and the
+ * preset's `font` option). Literal strings, so Tailwind's source scan
+ * generates them.
  */
 export const fontClass = {
   regular: "font-instrument-sans",

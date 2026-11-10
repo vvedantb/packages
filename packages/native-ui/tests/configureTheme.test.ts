@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -6,17 +6,18 @@ import { configureTheme } from "../src/configureTheme";
 import { floatingFill, floatingSolidFill } from "../src/floating";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { fontFamily } from "../src/typography";
 
 // `configureTheme` writes an app's colours into the shared `tokens.color` and
-// `palette` objects. The values below are Eva's web theme (`globals.css`,
+// `palette` objects, and its fonts into `fontFamily`. The values below are Eva's web theme (`globals.css`,
 // `--background`, `--card`, `--primary`), as hex.
 
 vi.mock("react-native", () => ({ Platform: { OS: "ios", select: () => ({}) } }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const original = { color: structuredClone(tokens.color), palette: structuredClone(palette) };
+const original = { color: structuredClone(tokens.color), palette: structuredClone(palette), font: { ...fontFamily } };
 
-afterEach(() => configureTheme({ color: original.color, palette: original.palette }));
+afterEach(() => configureTheme(original));
 
 describe("configureTheme", () => {
   it("sets light and dark values for the given keys and leaves the others", () => {
@@ -56,6 +57,35 @@ describe("configureTheme", () => {
       const source = readFileSync(join(root, file), "utf8");
       expect(source, file).toMatch(/export \{ configureTheme \} from "\.\.?\/configureTheme";/);
       expect(source, file).toMatch(/export type \{ ThemeConfig, ThemeColors, ThemePalette \}/);
+      expect(source, file).toMatch(/export \{ fontClass, fontFamily \} from "\.\.?\/typography";/);
+      expect(source, file).toMatch(/export type \{ ThemeFonts \} from "\.\.?\/typography";/);
     }
+  });
+});
+
+describe("configureTheme font", () => {
+  it("defaults to Instrument Sans", () => {
+    expect(fontFamily).toEqual({
+      regular: "InstrumentSans_400Regular",
+      medium: "InstrumentSans_500Medium",
+      semibold: "InstrumentSans_600SemiBold",
+      bold: "InstrumentSans_700Bold",
+    });
+  });
+
+  it("sets the given faces and leaves the others", () => {
+    configureTheme({ font: { regular: "Inter_400Regular", semibold: "Inter_600SemiBold", bold: undefined } });
+    expect(fontFamily).toEqual({ ...original.font, regular: "Inter_400Regular", semibold: "Inter_600SemiBold" });
+  });
+
+  // Every JS style reads `fontFamily`, so the override reaches it. The preset
+  // keeps its own default copy, as it runs in Node without TypeScript.
+  it("names the Instrument Sans files only in typography.ts and the preset", () => {
+    const allowed = ["typography.ts", "tailwind-preset.cjs", "tailwind-preset.d.cts"];
+    const files = readdirSync(join(root, "src"), { recursive: true, encoding: "utf8" });
+    const offenders = files.filter(
+      (file) => /\.(tsx?|c?js|d\.cts)$/.test(file) && !allowed.includes(file) && readFileSync(join(root, "src", file), "utf8").includes("InstrumentSans_"),
+    );
+    expect(offenders).toEqual([]);
   });
 });

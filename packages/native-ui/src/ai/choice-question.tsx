@@ -1,10 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { IconArrowLeft, IconArrowRight, IconCheck, IconPencil } from "@tabler/icons-react-native";
-import { Badge } from "../Badge";
 import { Button } from "../Button";
 import { Input } from "../Input";
-import { sizeStyle, textStyle, typeStyle } from "../controlStyles";
+import { buttonColors, sizeStyle, textStyle, trackingStyle, typeStyle } from "../controlStyles";
 import { palette } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -35,6 +34,11 @@ export type ChoiceQuestionProps = {
   otherPlaceholder?: string;
   /** Inside the web dock card (`rounded-surface bg-card p-3`, scrolling past 60% of the screen). Default `true`. */
   framed?: boolean;
+  /**
+   * Back, Next and Submit label weight. Default `medium`, the `Button` label
+   * (web `font-medium`). `semibold` for apps whose web buttons are semibold, as Eva.
+   */
+  buttonWeight?: "medium" | "semibold";
 };
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -72,10 +76,24 @@ export function ChoiceQuestion({
   otherLabel = "Other...",
   otherPlaceholder = "Type your answer...",
   framed = true,
+  buttonWeight = "medium",
 }: ChoiceQuestionProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const icon = largerText ? 18 : 15;
+  const buttonText = largerText ? "text-xl" : "text-sm";
+  // A string child draws the `Button` medium label; a semibold one is drawn here, in the variant's label colour.
+  const buttonLabel = (text: string, variant: "primary" | "ghost") =>
+    buttonWeight === "medium" ? (
+      text
+    ) : (
+      <Text
+        className={`${buttonText} font-instrument-sans-semibold`}
+        style={[sizeStyle(buttonText), typeStyle("semibold"), { color: buttonColors(variant, scheme)?.color }]}
+      >
+        {text}
+      </Text>
+    );
   const [step, setStep] = useState(0);
   const [picked, setPicked] = useState<Record<number, string[]>>({});
   const [other, setOther] = useState<Record<number, string>>({});
@@ -109,18 +127,13 @@ export function ChoiceQuestion({
       <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
         <Text
           className="flex-1 font-instrument-sans-semibold"
-          // Web `text-[15px] leading-snug`; larger text steps up to 18.
-          style={[{ fontSize: largerText ? 18 : 15, lineHeight: largerText ? 24 : 20 }, textStyle("foreground", scheme), typeStyle("semibold")]}
+          // Web `text-[15px] leading-snug` (15 / 20.625); larger text steps up to 18.
+          style={[{ fontSize: largerText ? 18 : 15, lineHeight: largerText ? 24 : 15 * 1.375 }, textStyle("foreground", scheme), typeStyle("semibold")]}
         >
           {question.question}
         </Text>
         <View className="flex-row items-center" style={{ gap: 6 }}>
-          {/* Web `text-3xs`: a compact badge beside the question. */}
-          {question.header ? (
-            <Badge variant="secondary" className="px-2 py-0.5" textClassName={largerText ? "text-sm" : "text-xs"}>
-              {question.header}
-            </Badge>
-          ) : null}
+          {question.header ? <TopicBadge>{question.header}</TopicBadge> : null}
           {total > 1 ? (
             <Text className="font-instrument-sans-medium" style={[sizeStyle(chatTextSize("caption", largerText)), textStyle("muted", scheme), typeStyle("medium")]}>
               {`${step + 1}/${total}`}
@@ -174,8 +187,9 @@ export function ChoiceQuestion({
               disabled={loading}
               onPress={() => setStep(step - 1)}
               startContent={<IconArrowLeft size={icon} strokeWidth={2.5} color={tokens.color.foreground[scheme]} />}
+              accessibilityLabel="Back"
             >
-              Back
+              {buttonLabel("Back", "ghost")}
             </Button>
           </View>
         ) : null}
@@ -184,11 +198,12 @@ export function ChoiceQuestion({
             disabled={!hasAnswer}
             loading={loading}
             onPress={next}
+            accessibilityLabel={isLast ? "Submit" : "Next"}
             endContent={
               loading ? null : <IconArrowRight size={icon} strokeWidth={2.5} color={palette.primaryForeground[scheme]} />
             }
           >
-            {isLast ? "Submit" : "Next"}
+            {buttonLabel(isLast ? "Submit" : "Next", "primary")}
           </Button>
         </View>
       </View>
@@ -206,9 +221,37 @@ export function ChoiceQuestion({
 }
 
 /**
+ * The question's topic, the web `Badge variant="secondary"` with Eva's
+ * `text-3xs font-semibold` (10 / 14, 600) in a `px-2.5 py-0.5` pill. Drawn here
+ * because `Badge` sets its own size and weight.
+ */
+function TopicBadge({ children }: { children: string }) {
+  const scheme = useScheme();
+  const largerText = useLargerText();
+  const fontSize = largerText ? 14 : 10;
+  return (
+    <View
+      className="rounded-full px-2.5 py-0.5"
+      style={{ backgroundColor: palette.default[scheme], borderRadius: tokens.radius.pill }}
+    >
+      <Text
+        numberOfLines={1}
+        className="font-instrument-sans-semibold"
+        style={[
+          { fontSize, lineHeight: largerText ? 20 : 14, color: palette.defaultForeground[scheme] },
+          typeStyle("semibold"),
+        ]}
+      >
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+/**
  * One option row (web `Card` with `bg-secondary`, `py-2 px-2.5`, radius 16): a round 24 mark
  * (30 with larger text; letter, or a pencil for "Other"; a check on the primary fill when picked),
- * the label and the description. Picked: a 2-wide primary ring on the accent.
+ * the label and the description. Picked: a 1-wide primary ring outside, on the accent.
  */
 function ChoiceRow({
   selected,
@@ -231,20 +274,42 @@ function ChoiceRow({
   const largerText = useLargerText();
   const muted = tokens.color.muted[scheme];
   const markSize = largerText ? 30 : 24;
+  const markText = largerText ? 14 : 11;
   const glyph = largerText ? 16 : 13;
+  const small = chatTextSize("small", largerText);
+  // Web: an option label is `text-sm leading-snug font-medium`; "Other..." is
+  // plain `text-sm`, medium only once picked.
+  const plain = mark === "other" && !selected;
+  // The web label is an inline `leading-snug` span in a 16 / 24 block, so each
+  // line box is the block's 24, not 19.25: rows are 24 a line, as on the web.
+  const labelLine = largerText ? sizeStyle(small, "snug") : { ...sizeStyle(small, "snug"), lineHeight: 24 };
   return (
     <View
       style={{
-        // Web `Card` (rounded-surface, 16) with `py-2 px-2.5` inside a 1 border + 1 ring.
+        // Web `Card` (rounded-surface, 16) with `py-2 px-2.5` and no border width.
         borderRadius: tokens.radius.lg,
-        borderWidth: 2,
-        borderColor: selected ? palette.primary[scheme] : "transparent",
         backgroundColor: selected ? tokens.color.background[scheme] : palette.default[scheme],
         opacity: disabled ? 0.5 : 1,
         paddingVertical: 8,
         paddingHorizontal: 10,
       }}
     >
+      {selected ? (
+        // Web `ring-1 ring-primary`: a 1 line just outside the card, so picking a row moves nothing.
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: -1,
+            left: -1,
+            right: -1,
+            bottom: -1,
+            borderRadius: tokens.radius.lg + 1,
+            borderWidth: 1,
+            borderColor: palette.primary[scheme],
+          }}
+        />
+      ) : null}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -272,20 +337,38 @@ function ChoiceRow({
           ) : mark === "other" ? (
             <IconPencil size={glyph} color={muted} />
           ) : (
-            <Text className="font-instrument-sans-semibold" style={[typeStyle("semibold"), { fontSize: largerText ? 14 : 11, color: muted, letterSpacing: 0.4 }]}>
+            // Web `text-2xs font-bold tracking-wide`, at semibold: native-ui draws no bold face.
+            <Text
+              className="font-instrument-sans-semibold"
+              style={[
+                { fontSize: markText, lineHeight: largerText ? 20 : 16, color: muted },
+                trackingStyle(markText, "wide"),
+                typeStyle("semibold"),
+              ]}
+            >
               {mark}
             </Text>
           )}
         </View>
         <View className="min-w-0 flex-1">
-          <Text
-            className="font-instrument-sans-medium"
-            style={[sizeStyle(chatTextSize("small", largerText), "snug"), typeStyle("medium"), { color: selected ? palette.primary[scheme] : muted }]}
-          >
-            {label}
-          </Text>
+          {plain ? (
+            <Text className="font-instrument-sans" style={[sizeStyle(small), { color: muted }]}>
+              {label}
+            </Text>
+          ) : (
+            <Text
+              className="font-instrument-sans-medium"
+              style={[labelLine, typeStyle("medium"), { color: selected ? palette.primary[scheme] : muted }]}
+            >
+              {label}
+            </Text>
+          )}
           {description ? (
-            <Text className="font-instrument-sans" style={[sizeStyle(chatTextSize("caption", largerText)), { color: muted, marginTop: 2 }]}>
+            // Web `text-xs mt-0.5 leading-relaxed` (12 / 19.5).
+            <Text
+              className="font-instrument-sans"
+              style={[sizeStyle(chatTextSize("caption", largerText), "relaxed"), { color: muted, marginTop: 2 }]}
+            >
               {description}
             </Text>
           ) : null}

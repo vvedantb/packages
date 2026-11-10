@@ -1,5 +1,6 @@
 import { palette, type Palette } from "./palette";
 import { tokens, type Tokens } from "./tokens";
+import { fontFamily, type ThemeFonts } from "./typography";
 
 /** `tokens` and `palette` value types with the literal hex widened to `string` and `readonly` dropped. */
 type Widen<T> = T extends string ? string : { -readonly [K in keyof T]: Widen<T[K]> };
@@ -15,6 +16,8 @@ export type ThemeConfig = {
   color?: Partial<ThemeColors>;
   /** Overrides for `palette` (primary, danger, overlay and the other web semantic colours). */
   palette?: Partial<ThemePalette>;
+  /** Overrides for `fontFamily`: the family name for each weight, as the app loads the fonts. */
+  font?: Partial<ThemeFonts>;
 };
 
 type ColorValue = string | { light: string; dark: string };
@@ -24,7 +27,7 @@ type ColorValue = string | { light: string; dark: string };
  * the existing pair object, so values that hold the pair (`floatingFill`,
  * `floatingHairline`, `floatingSolidFill`) follow it.
  */
-function assignColors(
+function assignValues(
   target: { readonly [key: string]: ColorValue },
   source: { readonly [key: string]: ColorValue | undefined },
 ) {
@@ -37,24 +40,28 @@ function assignColors(
 }
 
 /**
- * Sets the app's own colours. It writes into the shared `tokens.color` and
- * `palette` objects, which every component reads at render, so call it once at
- * app start, before the first render (for example at the top of the root
- * `_layout.tsx`, outside the component). A call after the first render does not
- * redraw mounted components. Each pair gives both schemes:
+ * Sets the app's own colours and fonts. It writes into the shared
+ * `tokens.color`, `palette` and `fontFamily` objects, which every component
+ * reads at render, so call it once at app start, before the first render (for
+ * example at the top of the root `_layout.tsx`, outside the component). A call
+ * after the first render does not redraw mounted components. Each pair gives
+ * both schemes:
  *
  * ```ts
  * configureTheme({
  *   color: { background: { light: "#f4f5f6", dark: "#020202" } },
  *   palette: { primary: { light: "#09090b", dark: "#fafafa" } },
+ *   font: { regular: "Inter_400Regular", semibold: "Inter_600SemiBold" },
  * });
  * ```
  *
- * Only the JS colours change. NativeWind classes keep the app's Tailwind theme
- * (`tailwind-preset` reads the package values from source), and constants copied
- * out before the call (`NEUTRAL_500`) keep the package value.
+ * Only the JS values change. NativeWind classes keep the app's Tailwind theme
+ * (`tailwind-preset` reads the package values from source; pass the same
+ * family names to `nativeUiPreset({ font })`), and constants copied out before
+ * the call (`NEUTRAL_500`) keep the package value. The app loads the font files.
  */
 export function configureTheme(config: ThemeConfig): void {
-  if (config.color) assignColors(tokens.color, config.color);
-  if (config.palette) assignColors(palette, config.palette);
+  if (config.color) assignValues(tokens.color, config.color);
+  if (config.palette) assignValues(palette, config.palette);
+  if (config.font) assignValues(fontFamily, config.font);
 }
