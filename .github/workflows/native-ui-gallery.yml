@@ -127,6 +127,16 @@ jobs:
             adb logcat -c
             maestro test --format junit --output maestro-report.xml --debug-output maestro-debug .maestro || (adb logcat -d -t 2000 > logcat.txt; exit 1)
 
+      - name: Collect Maestro debug output
+        if: always()
+        run: |
+          mkdir -p apps/native-gallery/maestro-debug
+          # Maestro may write under --debug-output or ~/.maestro/tests depending on version.
+          if [ -d "$HOME/.maestro/tests" ]; then
+            cp -R "$HOME/.maestro/tests/." apps/native-gallery/maestro-debug/ || true
+          fi
+          ls -la apps/native-gallery/maestro-debug || true
+
       - name: Upload screenshots and reports
         if: always()
         uses: actions/upload-artifact@v4

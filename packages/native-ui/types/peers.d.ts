@@ -658,6 +658,8 @@ declare module "@gorhom/bottom-sheet" {
   >;
   export class BottomSheetModal extends React.Component<{
     children?: React.ReactNode;
+    snapPoints?: Array<string | number>;
+    enableDynamicSizing?: boolean;
     backdropComponent?: (props: BottomSheetDefaultBackdropProps) => React.ReactNode;
     backgroundComponent?: React.ComponentType<{
       style?: ViewProps["style"];
@@ -672,6 +674,29 @@ declare module "@gorhom/bottom-sheet" {
     present(): void;
     dismiss(): void;
   }
+  // Default export is the controlled BottomSheet (not BottomSheetModal).
+  class BottomSheet extends React.Component<{
+    children?: React.ReactNode;
+    index?: number;
+    snapPoints?: Array<string | number>;
+    enableDynamicSizing?: boolean;
+    backdropComponent?: (props: BottomSheetDefaultBackdropProps) => React.ReactNode;
+    backgroundComponent?: React.ComponentType<{
+      style?: ViewProps["style"];
+      pointerEvents?: ViewProps["pointerEvents"];
+    }>;
+    handleIndicatorStyle?: ViewProps["style"];
+    onClose?: () => void;
+    enableContentPanningGesture?: boolean;
+    enableHandlePanningGesture?: boolean;
+    enablePanDownToClose?: boolean;
+    keyboardBehavior?: "extend" | "fillParent" | "interactive";
+  }> {
+    snapToIndex(index: number): void;
+    close(): void;
+  }
+  export { BottomSheet };
+  export default BottomSheet;
   export const BottomSheetView: React.ComponentType<ViewProps>;
 }
 
