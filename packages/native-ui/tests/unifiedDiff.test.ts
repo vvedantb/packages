@@ -2,12 +2,13 @@ import { Children, isValidElement, type ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
-import type { UnifiedDiffLine } from "../src/ai/unified-diff";
+import type { UnifiedDiffLine, UnifiedDiffProps } from "../src/ai/unified-diff";
 
 // `UnifiedDiff` and `DiffStat` (`/ai`): the web Code tab's unified diff and
 // `PrDiffStat`, for a phone diff screen.
 
 vi.mock("react-native", () => ({
+  Pressable: "Pressable",
   ScrollView: "ScrollView",
   Text: "Text",
   View: "View",
@@ -22,6 +23,8 @@ type Part = {
   children?: ReactNode;
   horizontal?: boolean;
   accessibilityLabel?: string;
+  selectable?: boolean;
+  onPress?: () => void;
 };
 
 function part(node: ReactNode) {
@@ -46,9 +49,9 @@ const lines: UnifiedDiffLine[] = [
   { kind: "added", text: "const b = 3;", oldLine: null, newLine: 10 },
 ];
 
-async function renderDiff() {
+async function renderDiff(props: Omit<UnifiedDiffProps, "lines"> = {}) {
   const { UnifiedDiff } = await import("../src/ai/unified-diff");
-  const tree = part(UnifiedDiff({ lines }));
+  const tree = part(UnifiedDiff({ lines, ...props }));
   const rows = Children.toArray(part(tree.props.children).props.children).map(part);
   return { tree, rows };
 }
@@ -83,6 +86,30 @@ describe("UnifiedDiff", () => {
     expect(flatStyle(rows[1]?.props.style).backgroundColor).toBeUndefined();
     expect(flatStyle(rows[2]?.props.style).backgroundColor).toBe(withAlpha(palette.danger.light, 0.1));
     expect(flatStyle(rows[3]?.props.style).backgroundColor).toBe(withAlpha("#10b981", 0.1));
+  });
+
+  it("keeps rows plain and the code selectable without onLinePress", async () => {
+    const { rows } = await renderDiff();
+    expect(rows.slice(1).map((row) => row.type)).toEqual(["View", "View", "View"]);
+    const code = Children.toArray(rows[1]?.props.children).map(part)[1];
+    expect(code?.props.selectable).toBe(true);
+  });
+
+  it("makes code rows buttons that report their index, and fills the gutter of marked rows", async () => {
+    const onLinePress = vi.fn();
+    const { rows } = await renderDiff({ onLinePress, markedLines: new Set([2]) });
+    expect(rows.map((row) => row.type)).toEqual(["Text", "Pressable", "Pressable", "Pressable"]);
+    expect(rows[2]?.props.accessibilityLabel).toBe("Line 10");
+    rows[2]?.props.onPress?.();
+    expect(onLinePress).toHaveBeenCalledWith(2);
+    const [markedGutter, code] = Children.toArray(rows[2]?.props.children).map(part);
+    expect(code?.props.selectable).toBe(false);
+    expect(flatStyle(markedGutter?.props.style)).toMatchObject({
+      backgroundColor: withAlpha(palette.primary.light, 0.12),
+      color: tokens.color.foreground.light,
+    });
+    const [plainGutter] = Children.toArray(rows[1]?.props.children).map(part);
+    expect(flatStyle(plainGutter?.props.style).backgroundColor).toBeUndefined();
   });
 });
 

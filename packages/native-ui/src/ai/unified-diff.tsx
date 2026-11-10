@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, type TextStyle } from "react-native";
+import { Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import { sizeStyle, textStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { tokens } from "../tokens";
@@ -40,6 +40,16 @@ const TABULAR: TextStyle = { fontVariant: ["tabular-nums"] };
 
 export type UnifiedDiffProps = {
   lines: ReadonlyArray<UnifiedDiffLine>;
+  /**
+   * Makes each code row (not a hunk header) a button: a tap calls this with
+   * the row's index in `lines`. The code is then not selectable, so a tap
+   * always lands.
+   */
+  onLinePress?: (index: number) => void;
+  /** What a row's button does, for a screen reader (`accessibilityHint`). */
+  linePressHint?: string;
+  /** Indexes in `lines` of the rows to mark, such as those with a comment: their gutter fills. */
+  markedLines?: ReadonlySet<number>;
   className?: string;
 };
 
@@ -49,9 +59,11 @@ export type UnifiedDiffProps = {
  * the new one otherwise), the `+`/`-` marker, and the line in mono 14 / 22.
  * Added lines tint green and removed lines red, each at 10%; a hunk header is
  * a muted row on the secondary surface. Long lines do not wrap: the whole
- * diff scrolls sideways, and every row spans the widest line.
+ * diff scrolls sideways, and every row spans the widest line. With
+ * `onLinePress` a code row is a button (`Line N`); `markedLines` fills the
+ * gutter of the rows it names at 12% of the primary colour.
  */
-export function UnifiedDiff({ lines, className }: UnifiedDiffProps) {
+export function UnifiedDiff({ lines, onLinePress, linePressHint, markedLines, className }: UnifiedDiffProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const fontSize = largerText ? LARGER_FONT_SIZE : UNIFIED_DIFF.fontSize;
@@ -88,22 +100,50 @@ export function UnifiedDiff({ lines, className }: UnifiedDiffProps) {
                 ? withAlpha(palette.danger[scheme], 0.1)
                 : undefined;
           const number = line.kind === "removed" ? line.oldLine : line.newLine;
+          const cells = [
+            <Text
+              key="gutter"
+              style={[
+                mono,
+                textStyle(markedLines?.has(index) ? "foreground" : "muted", scheme),
+                TABULAR,
+                { width: gutter, paddingHorizontal: UNIFIED_DIFF.gutterPadding, textAlign: "right" },
+                markedLines?.has(index) ? { backgroundColor: withAlpha(palette.primary[scheme], 0.12) } : null,
+              ]}
+            >
+              {number ?? ""}
+            </Text>,
+            <Text
+              key="code"
+              selectable={onLinePress === undefined}
+              style={[mono, textStyle("foreground", scheme), { paddingRight: UNIFIED_DIFF.gutterPadding * 2 }]}
+            >
+              {`${SIGN[line.kind]} ${line.text}`}
+            </Text>,
+          ];
+          if (onLinePress === undefined) {
+            return (
+              <View key={index} className="flex-row" style={{ backgroundColor: tint }}>
+                {cells}
+              </View>
+            );
+          }
           return (
-            <View key={index} className="flex-row" style={{ backgroundColor: tint }}>
-              <Text
-                style={[
-                  mono,
-                  textStyle("muted", scheme),
-                  TABULAR,
-                  { width: gutter, paddingHorizontal: UNIFIED_DIFF.gutterPadding, textAlign: "right" },
-                ]}
-              >
-                {number ?? ""}
-              </Text>
-              <Text selectable style={[mono, textStyle("foreground", scheme), { paddingRight: UNIFIED_DIFF.gutterPadding * 2 }]}>
-                {`${SIGN[line.kind]} ${line.text}`}
-              </Text>
-            </View>
+            <Pressable
+              key={index}
+              accessibilityRole="button"
+              accessibilityLabel={`Line ${number ?? ""}`}
+              accessibilityHint={linePressHint}
+              // No slop: rows tile the diff edge to edge, so any slop would take
+              // the next line's taps. Each row is a full-width 22 high target,
+              // as dense as the code it holds.
+              hitSlop={0}
+              onPress={() => onLinePress(index)}
+              className="flex-row active:opacity-60"
+              style={{ backgroundColor: tint }}
+            >
+              {cells}
+            </Pressable>
           );
         })}
       </View>
