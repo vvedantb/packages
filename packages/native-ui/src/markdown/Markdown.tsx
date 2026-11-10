@@ -1,4 +1,4 @@
-import { Children, cloneElement, isValidElement, useContext, type ReactNode } from "react";
+import { Children, cloneElement, Fragment, isValidElement, useContext, type ReactNode } from "react";
 import { StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { Renderer, useMarkdown, type MarkedStyles } from "react-native-marked";
 import { CodeBlock } from "../ai/code-block";
@@ -54,6 +54,11 @@ export type MarkdownProps = {
    * `text-sm` on it: Eva's user bubbles.
    */
   leading?: "relaxed" | "normal";
+  /**
+   * Draws a link your way (an app's mention chip): called with the link's
+   * href and plain text; return undefined to keep the default link.
+   */
+  renderLink?: (href: string, text: string) => ReactNode | undefined;
 };
 
 /**
@@ -66,13 +71,13 @@ export type MarkdownProps = {
  * Needs the optional peer `react-native-marked` (it renders through
  * `useMarkdown`, so it nests in a `ScrollView` without a `FlatList`).
  */
-export function Markdown({ children, onCopyCode, leading = "relaxed" }: MarkdownProps) {
+export function Markdown({ children, onCopyCode, leading = "relaxed", renderLink }: MarkdownProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const inherited = useContext(ChatTextColorContext);
   const body = sizeStyle(chatTextSize("body", largerText), leading === "relaxed" ? "relaxed" : undefined);
   const color = inherited ?? tokens.color.foreground[scheme];
-  const renderer = new NativeUiMarkdownRenderer(scheme, body.fontSize, color, onCopyCode);
+  const renderer = new NativeUiMarkdownRenderer(scheme, body.fontSize, color, onCopyCode, renderLink);
   const elements = useMarkdown(children, {
     colorScheme: scheme,
     renderer,
@@ -195,6 +200,16 @@ function restyleText(node: ReactNode, map: (style: TextStyle) => TextStyle): Rea
   });
 }
 
+/** A link's text with its styling stripped: the strings in it, in order. */
+function plainText(node: ReactNode): string {
+  let out = "";
+  Children.forEach(node, (child) => {
+    if (typeof child === "string" || typeof child === "number") out += String(child);
+    else if (isValidElement<StyledNodeProps>(child)) out += plainText(child.props.children);
+  });
+  return out;
+}
+
 /** Web `.markdown` lists: 1.25rem (20) indent, 0.25rem (4) between items, muted markers (a 5-wide disc). */
 export const MARKDOWN_LIST = { indent: 20, itemGap: 4, disc: 5 } as const;
 
@@ -210,6 +225,7 @@ class NativeUiMarkdownRenderer extends Renderer {
     private readonly fontSize: number,
     private readonly color: string,
     private readonly onCopyCode: MarkdownProps["onCopyCode"],
+    private readonly renderLink: MarkdownProps["renderLink"],
   ) {
     super();
   }
@@ -220,6 +236,8 @@ class NativeUiMarkdownRenderer extends Renderer {
    * text in it.
    */
   override link(children: string | ReactNode[], href: string, styles?: TextStyle, title?: string): ReactNode {
+    const custom = this.renderLink?.(href, plainText(children));
+    if (custom !== undefined) return <Fragment key={this.getKey()}>{custom}</Fragment>;
     const medium = (style: TextStyle): TextStyle => ({ ...style, fontFamily: fontFamily.medium, ...typeStyle("medium") });
     const content = typeof children === "string" ? children : Children.toArray(restyleText(children, medium));
     return super.link(content, href, medium(styles ?? {}), title);
