@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { IconArrowUp, IconPlayerStopFilled } from "@tabler/icons-react-native";
+import { IconArrowUp, IconChevronDown, IconPlayerStopFilled } from "@tabler/icons-react-native";
 import { cn } from "../cn";
-import { fieldStyle, fieldTextStyle, sizeStyle, typeStyle } from "../controlStyles";
+import { MIN_TOUCH_TARGET, fieldStyle, fieldTextStyle, sizeStyle, touchSlop, typeStyle } from "../controlStyles";
+import { withAlpha } from "../palette";
+import { tokens } from "../tokens";
 import { Input as FieldInput } from "../primitives/input";
 import { useControllableState } from "../primitives/use-controllable-state";
 import { useLargerText } from "../theme";
@@ -82,6 +84,114 @@ export function PromptInputButton(props: PromptInputButtonProps) {
   return <ChatIconButton variant="ghost" {...props} />;
 }
 
+/**
+ * The web `ModelPicker` trigger (`model-picker.tsx` `TRIGGER_CLASS`), the
+ * chip a composer footer holds: `h-7 gap-1.5 rounded-md px-2 text-xs`, a 14
+ * icon, the suffix at `/70` after " · ", and a 12 chevron at `opacity-60`.
+ */
+export const PROMPT_INPUT_CHIP = {
+  height: 28,
+  paddingX: 8,
+  gap: 6,
+  radius: tokens.radius.md,
+  iconSize: 14,
+  chevronSize: 12,
+  chevronOpacity: 0.6,
+  suffixOpacity: 0.7,
+} as const;
+
+export type PromptInputChipProps = {
+  /** Before the label: a `PROMPT_INPUT_CHIP.iconSize` (14) mark, such as `ProviderIcon` or a Tabler icon. */
+  icon?: ReactNode;
+  label: string;
+  /** After the label, " · " between, at 70% of `color`: the web trigger suffix (the reasoning level). */
+  suffix?: string;
+  /** After the label in medium weight with tabular figures, such as a saved count. */
+  count?: number;
+  /** The chevron after the label. Default `true`. */
+  chevron?: boolean;
+  /** Label weight. Default `medium`, the web trigger; a quieter footer passes `normal`. */
+  weight?: "normal" | "medium";
+  /** Text, chevron and Tabler icon colour. Default `tokens.color.muted`, the web `text-muted-foreground`. */
+  color?: string;
+  /** Default: the label, then the suffix and count. */
+  accessibilityLabel?: string;
+  /** Whether the menu it opens is open, for VoiceOver and TalkBack. */
+  expanded?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
+  testID?: string;
+};
+
+/**
+ * A chip for the composer `footer`, the web `ModelPicker` trigger: 28 high on
+ * screen, slop to 44 above and below. The label shrinks and truncates, so a
+ * long model name gives up width to the chips beside it, as the web
+ * `max-sm:truncate`. Disabled dims to 50%, as the web `disabled:opacity-50`.
+ */
+export function PromptInputChip({
+  icon,
+  label,
+  suffix,
+  count,
+  chevron = true,
+  weight = "medium",
+  color,
+  accessibilityLabel,
+  expanded,
+  disabled = false,
+  onPress,
+  testID,
+}: PromptInputChipProps) {
+  const scheme = useScheme();
+  const tint = color ?? tokens.color.muted[scheme];
+  const text = [sizeStyle("text-xs"), { color: tint }];
+  const name = accessibilityLabel ?? [label, suffix, count].filter((part) => part !== undefined).join(", ");
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={name}
+      accessibilityState={{ disabled, expanded }}
+      disabled={disabled}
+      onPress={onPress}
+      // Slop only above and below: chips sit side by side, so the width stays theirs.
+      hitSlop={touchSlop(MIN_TOUCH_TARGET, PROMPT_INPUT_CHIP.height)}
+      className={cn("min-w-0 shrink flex-row items-center active:opacity-70", disabled && "opacity-50")}
+      // `minHeight`, so a larger system font size can still grow it.
+      style={{
+        minHeight: PROMPT_INPUT_CHIP.height,
+        paddingHorizontal: PROMPT_INPUT_CHIP.paddingX,
+        gap: PROMPT_INPUT_CHIP.gap,
+        borderRadius: PROMPT_INPUT_CHIP.radius,
+      }}
+    >
+      {icon}
+      <Text
+        numberOfLines={1}
+        className={cn("min-w-0 shrink text-xs", weight === "medium" ? "font-instrument-sans-medium" : "font-instrument-sans")}
+        style={[...text, weight === "medium" ? typeStyle("medium") : null]}
+      >
+        {label}
+        {suffix ? <Text style={{ color: withAlpha(tint, PROMPT_INPUT_CHIP.suffixOpacity) }}>{` · ${suffix}`}</Text> : null}
+      </Text>
+      {count !== undefined ? (
+        <Text
+          className="font-instrument-sans-medium text-xs"
+          style={[...text, typeStyle("medium"), { fontVariant: ["tabular-nums"] }]}
+        >
+          {count}
+        </Text>
+      ) : null}
+      {chevron ? (
+        <View style={{ opacity: PROMPT_INPUT_CHIP.chevronOpacity }}>
+          <IconChevronDown size={PROMPT_INPUT_CHIP.chevronSize} color={tint} />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 export type PromptInputProps = {
   value?: string;
   defaultValue?: string;
@@ -104,6 +214,11 @@ export type PromptInputProps = {
   header?: ReactNode;
   /** Before the send button, such as `PromptInputButton`s. */
   toolbar?: ReactNode;
+  /**
+   * Under the field, inside the keyboard lift and above the bottom inset: a
+   * row of `PromptInputChip`s, as the bar under Eva's web composer.
+   */
+  footer?: ReactNode;
   /**
    * `stacked` (default): the field over a footer of tools and send, the web
    * `PromptInput`. `inline`: one row, as the web `Composer layout="inline"`
@@ -169,6 +284,7 @@ export function PromptInput({
   replyTo,
   header,
   toolbar,
+  footer,
   layout = "stacked",
   shape = "rounded",
   leading,
@@ -317,6 +433,7 @@ export function PromptInput({
             </View>
           </View>
         )}
+        {footer}
       </View>
     </KeyboardAvoidingView>
   );

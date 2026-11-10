@@ -569,6 +569,12 @@ describe("SheetRow", () => {
     expect(pressedFill(tree, false)).toBe("transparent");
   });
 
+  it("draws a leading mark in place of the icon", async () => {
+    const tree = await sheetRow({ leading: "MARK", icon: TestIcon });
+    expect(tree.props.children).toContain("MARK");
+    expect(ofType(tree, TestIcon)).toHaveLength(0);
+  });
+
   it("draws danger rows in the danger colour, title and icon", async () => {
     const tree = await sheetRow({ danger: true, icon: TestIcon });
     expect(ofType(tree, TestIcon)[0]!.props.color).toBe(palette.danger.light);

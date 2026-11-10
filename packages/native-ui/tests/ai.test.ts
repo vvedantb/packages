@@ -793,8 +793,9 @@ describe("PromptInput", () => {
 
   it("draws the web field surface with the header and toolbar slots", async () => {
     const { h } = await composer({ header: "HEADER", toolbar: "TOOLS" });
-    const surface = (h.tree.props.children as Element).props.children as Element;
-    expect(surface.props.style).toEqual({
+    // The field surface, then the (empty) footer slot.
+    const [surface] = (h.tree.props.children as Element).props.children as Element[];
+    expect(surface!.props.style).toEqual({
       backgroundColor: tokens.color.surface.light,
       borderColor: tokens.color.border.light,
       borderRadius: tokens.radius.field,
@@ -802,6 +803,16 @@ describe("PromptInput", () => {
     expect(surface.props.className).toBe("border");
     expect(elements(surface).some((element) => element.props.children === "HEADER")).toBe(true);
     expect(elements(surface).some((element) => element.props.children === "TOOLS")).toBe(true);
+  });
+
+  it("puts the footer under the field, inside the safe-area padding, in both layouts", async () => {
+    for (const layout of ["inline", "stacked"]) {
+      const { h } = await composer({ layout, footer: "FOOTER" });
+      const pad = h.tree.props.children as Element;
+      const children = pad.props.children as unknown[];
+      expect(children.at(-1), layout).toBe("FOOTER");
+      expect(elements(children[0]).some((element) => element.props.children === "FOOTER"), layout).toBe(false);
+    }
   });
 
   it("is Send (primary, disabled when empty, as the web), and Stop while the AI answers", async () => {
@@ -822,6 +833,43 @@ describe("PromptInput", () => {
     expect(onSubmit).not.toHaveBeenCalled();
     expect((PromptInputSubmit({ status: "streaming" }) as unknown as Element).props.disabled).toBe(true);
     expect((PromptInputSubmit({ status: "error", onSubmit }) as unknown as Element).props.label).toBe("Send");
+  });
+});
+
+describe("PromptInputChip", () => {
+  it("is a 28-high muted chip that reaches 44, with the suffix, count and chevron", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const onPress = vi.fn();
+    const chip = PromptInputChip({ icon: "MARK", label: "Opus", suffix: "High", onPress, expanded: false }) as unknown as Element;
+    expect(chip.type).toBe("Pressable");
+    expect(chip.props).toMatchObject({
+      accessibilityRole: "button",
+      accessibilityLabel: "Opus, High",
+      accessibilityState: { disabled: false, expanded: false },
+      hitSlop: touchSlop(MIN_TOUCH_TARGET, 28),
+    });
+    expect(chip.props.style).toMatchObject({ minHeight: 28, paddingHorizontal: 8, gap: 6, borderRadius: tokens.radius.md });
+    const [label] = byType(chip, "Text");
+    expect(flatten(label!.props.style)).toMatchObject({ fontSize: 12, lineHeight: 16, color: tokens.color.muted.light, fontWeight: "500" });
+    expect(label!.props.numberOfLines).toBe(1);
+    const suffix = byType(label, "Text")[1]!;
+    expect(suffix.props.children).toBe(" · High");
+    expect(byType(chip, "IconChevronDown")[0]!.props).toMatchObject({ size: 12, color: tokens.color.muted.light });
+    (chip.props.onPress as () => void)();
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it("takes a count in tabular figures, a colour, a normal weight, no chevron, and dims when disabled", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const chip = PromptInputChip({ label: "Stash", count: 3, chevron: false, weight: "normal", color: "#646567", disabled: true }) as unknown as Element;
+    expect(chip.props.accessibilityLabel).toBe("Stash, 3");
+    expect(chip.props.className).toContain("opacity-50");
+    const [label, count] = byType(chip, "Text");
+    expect(flatten(label!.props.style)).not.toHaveProperty("fontWeight");
+    expect(flatten(label!.props.style).color).toBe("#646567");
+    expect(count!.props.children).toBe(3);
+    expect(flatten(count!.props.style)).toMatchObject({ fontWeight: "500", fontVariant: ["tabular-nums"] });
+    expect(byType(chip, "IconChevronDown")).toHaveLength(0);
   });
 });
 

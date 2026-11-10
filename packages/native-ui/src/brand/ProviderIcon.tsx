@@ -71,6 +71,26 @@ export function providerMark(provider: string): ProviderMark {
   }
 }
 
+/**
+ * The provider's name in a model picker, as the web `getProviderLabel`
+ * (`ai-elements/model-picker-types.ts`): "Claude", "GPT" for Codex,
+ * "Opencode", "Cursor", and any other provider as given.
+ */
+export function providerLabel(provider: string): string {
+  switch (provider) {
+    case "claude":
+      return "Claude";
+    case "codex":
+      return "GPT";
+    case "opencode":
+      return "Opencode";
+    case "cursor":
+      return "Cursor";
+    default:
+      return provider;
+  }
+}
+
 export type ProviderIconProps = {
   /** "claude", "codex", "opencode" or "cursor". Any other value draws the Claude mark, as the web. */
   provider: string;
