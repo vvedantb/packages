@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, buttonColors, touchSlop } from "../src/controlStyles";
-import { palette } from "../src/palette";
+import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
 
 // The AI chat parts (`@vvedantb/native-ui/ai`). There is no React renderer in
@@ -141,6 +141,7 @@ vi.mock("react-native", () => ({
   KeyboardAvoidingView: "KeyboardAvoidingView",
   Image: "Image",
   Modal: "Modal",
+  useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 }),
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
@@ -794,7 +795,7 @@ describe("PromptInput", () => {
   it("draws the web field surface with the header and toolbar slots", async () => {
     const { h } = await composer({ header: "HEADER", toolbar: "TOOLS" });
     // The field surface, then the (empty) footer slot.
-    const [surface] = (h.tree.props.children as Element).props.children as Element[];
+    const [surface] = ((h.tree.props.children as Element).props.children as Element[]).filter(Boolean);
     expect(surface!.props.style).toEqual({
       backgroundColor: tokens.color.surface.light,
       borderColor: tokens.color.border.light,
@@ -870,6 +871,90 @@ describe("PromptInputChip", () => {
     expect(count!.props.children).toBe(3);
     expect(flatten(count!.props.style)).toMatchObject({ fontWeight: "500", fontVariant: ["tabular-nums"] });
     expect(byType(chip, "IconChevronDown")).toHaveLength(0);
+  });
+});
+
+describe("PromptInput menu slot", () => {
+  it("docks the menu right above the field, 6 clear, inside the keyboard lift, in both layouts", async () => {
+    const { PromptInput } = await import("../src/ai/prompt-input");
+    for (const layout of ["inline", "stacked"]) {
+      const h = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), layout, menu: "MENU" } as never) as unknown as Element);
+      expect(h.tree.type, layout).toBe("KeyboardAvoidingView");
+      const [slot, surface] = (h.tree.props.children as Element).props.children as Element[];
+      expect(slot!.props, layout).toMatchObject({ className: "mb-1.5", children: "MENU" });
+      expect(surface!.props.className, layout).toBe("border");
+      const closed = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), layout } as never) as unknown as Element);
+      expect(((closed.tree.props.children as Element).props.children as unknown[])[0], layout).toBeNull();
+    }
+  });
+});
+
+describe("PromptInputMenu and PromptInputMenuItem", () => {
+  it("is a labelled listbox on the popover surface that scrolls past the web cap and keeps taps with the keyboard up", async () => {
+    const { PromptInputMenu, promptInputMenuHeight } = await import("../src/ai/prompt-input-menu");
+    const menu = PromptInputMenu({ title: "Mentions", children: ["ROW"] }) as unknown as Element;
+    expect(menu.props.className).toContain("border");
+    expect(flatten(menu.props.style)).toMatchObject({
+      backgroundColor: palette.overlay.light,
+      borderColor: tokens.color.border.light,
+      borderRadius: tokens.radius.lg,
+      maxHeight: promptInputMenuHeight(844),
+    });
+    const [list] = byType(menu, "ScrollView");
+    expect(list!.props).toMatchObject({ accessibilityRole: "list", accessibilityLabel: "Mentions", keyboardShouldPersistTaps: "always" });
+    expect(list!.props.children).toEqual(["ROW"]);
+    // The web panel: 160 to 340.
+    expect([promptInputMenuHeight(300), promptInputMenuHeight(844), promptInputMenuHeight(2000)]).toEqual([160, 295, 340]);
+  });
+
+  it("says No matches. with no rows, or the empty content it is given", async () => {
+    const { PromptInputMenu } = await import("../src/ai/prompt-input-menu");
+    const empty = PromptInputMenu({ title: "Skills", children: [] }) as unknown as Element;
+    expect(byType(empty, "ScrollView")).toHaveLength(0);
+    expect(byType(empty, "Text")[0]!.props.children).toBe("No matches.");
+    const custom = PromptInputMenu({ title: "Skills", empty: "No available skills." }) as unknown as Element;
+    expect(byType(custom, "Text")[0]!.props.children).toBe("No available skills.");
+  });
+
+  it("is a 44-high option with the muted prefix, the label, a one-line description and a badge", async () => {
+    const { PromptInputMenuItem } = await import("../src/ai/prompt-input-menu");
+    const onPress = vi.fn();
+    const row = PromptInputMenuItem({
+      prefix: "/",
+      label: "code-review",
+      description: `Review   the diff ${"x".repeat(100)}`,
+      badge: "Claude",
+      badgeIcon: "MARK",
+      onPress,
+    }) as unknown as Element;
+    expect(row.type).toBe("Pressable");
+    expect(row.props).toMatchObject({ accessibilityRole: "button", accessibilityState: { selected: false } });
+    expect(row.props.style).toMatchObject({ minHeight: MIN_TOUCH_TARGET, backgroundColor: "transparent" });
+    expect(row.props.className).toContain("active:opacity-70");
+    const texts = byType(row, "Text");
+    const [label, prefix] = texts;
+    expect(label!.props.numberOfLines).toBe(1);
+    expect(prefix!.props).toMatchObject({ children: "/", style: { color: tokens.color.muted.light } });
+    const description = texts.find((text) => typeof text.props.children === "string" && text.props.children.startsWith("Review"));
+    expect(description!.props.children).toHaveLength(72);
+    expect(description!.props.children).toMatch(/^Review the diff x+…$/);
+    expect(texts.some((text) => text.props.children === "Claude")).toBe(true);
+    expect(elements(row).some((element) => element.props.children === "MARK" || (Array.isArray(element.props.children) && element.props.children.includes("MARK")))).toBe(true);
+    expect(row.props.accessibilityLabel).toMatch(/^\/code-review, Review the diff x+…, Claude$/);
+    (row.props.onPress as () => void)();
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it("tints the selected row as the web keyboard row, and puts a leading avatar and a trailing icon in place of the badge", async () => {
+    const { PromptInputMenuItem } = await import("../src/ai/prompt-input-menu");
+    const row = PromptInputMenuItem({ label: "Ada Lovelace", leading: "AVATAR", trailing: "ICON", badge: "Person", selected: true }) as unknown as Element;
+    expect(row.props.accessibilityState).toEqual({ selected: true });
+    expect(flatten(row.props.style).backgroundColor).toBe(withAlpha(palette.primary.light, 0.15));
+    const children = elements(row).flatMap((element) => (Array.isArray(element.props.children) ? element.props.children : [element.props.children]));
+    expect(children).toContain("AVATAR");
+    expect(children).toContain("ICON");
+    expect(byType(row, "Text").some((text) => text.props.children === "Person")).toBe(false);
+    expect(flatten(byType(row, "Text")[0]!.props.style)).toMatchObject({ fontWeight: "500" });
   });
 });
 

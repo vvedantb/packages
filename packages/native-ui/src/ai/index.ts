@@ -117,6 +117,8 @@ export type {
   PromptInputButtonProps,
   PromptInputSubmitProps,
 } from "./prompt-input";
+export { PromptInputMenu, PromptInputMenuItem, PROMPT_INPUT_MENU, promptInputMenuHeight } from "./prompt-input-menu";
+export type { PromptInputMenuProps, PromptInputMenuItemProps } from "./prompt-input-menu";
 export { Suggestions, Suggestion } from "./suggestion";
 export type { SuggestionsProps, SuggestionProps } from "./suggestion";
 export { Sources, SourcesTrigger, SourcesContent, Source, sourcesLabel } from "./sources";

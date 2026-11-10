@@ -220,6 +220,12 @@ export type PromptInputProps = {
    */
   footer?: ReactNode;
   /**
+   * Right above the field, the field's width and 6 clear of it, inside the
+   * keyboard lift: a `PromptInputMenu`, the web `@` / `/` picker. Pass it only
+   * while the picker is open.
+   */
+  menu?: ReactNode;
+  /**
    * `stacked` (default): the field over a footer of tools and send, the web
    * `PromptInput`. `inline`: one row, as the web `Composer layout="inline"`
    * (Eva's chat): `leading`, the field, `toolbar`, then send, in a 20-radius
@@ -285,6 +291,7 @@ export function PromptInput({
   header,
   toolbar,
   footer,
+  menu,
   layout = "stacked",
   shape = "rounded",
   leading,
@@ -342,6 +349,8 @@ export function PromptInput({
         className={cn("pt-2", className)}
         style={{ paddingBottom: bottom + 8, paddingLeft: insets.left + 12, paddingRight: insets.right + 12 }}
       >
+        {/* The web panel picker's 6 gap (`POPUP_GAP`) above the field. */}
+        {menu ? <View className="mb-1.5">{menu}</View> : null}
         {layout === "inline" ? (
           // Web `Composer` inline: `rounded-[1.25rem]` and a `p-1.5` row, items at the bottom as the field grows.
           <View className="border" style={[fieldStyle(scheme), { borderRadius: pill ? PILL.radius : INLINE_RADIUS }]}>
