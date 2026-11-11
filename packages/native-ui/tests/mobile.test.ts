@@ -252,12 +252,13 @@ describe("Reduce Motion", () => {
   });
 
   it("turns off the Modal animation of overlays and the pricing sheet", () => {
-    expect(read("primitives/overlay.tsx")).toMatch(/animationType=\{reduceMotion \? "none" : "fade"\}/);
+    // A bottom sheet slides itself (`slides`), so its Modal never animates.
+    expect(read("primitives/overlay.tsx")).toMatch(/animationType=\{slides \|\| reduceMotion \? "none" : "fade"\}/);
     expect(read("marketing/PricingModal.tsx")).toMatch(/animationType=\{reduceMotion \? "none" : "slide"\}/);
     for (const file of files) {
       const source = code(read(file));
       if (!/<Modal\b/.test(source)) continue;
-      expect(source, file).toMatch(/animationType=\{reduceMotion \? "none" : /);
+      expect(source, file).toMatch(/animationType=\{(slides \|\| )?reduceMotion \? "none" : /);
     }
   });
 });

@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { FadeInUp, FadeOutUp, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { notificationHaptic } from "./haptics";
+import { EASE_OUT } from "./motion";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import Svg, { Path } from "react-native-svg";
 import { cn } from "./cn";
@@ -32,6 +34,11 @@ import { getToasts, subscribeToasts, toast, type ToastItem } from "./toastStore"
 const FullWindowOverlay = Platform.OS === "ios" ? RNFullWindowOverlay : Fragment;
 
 const toastShadow = toastShadowStyle(Platform.OS);
+
+// Down from the top edge and back up the way it came, the exit 20% quicker:
+// the reader is done with it.
+const TOAST_ENTER = FadeInUp.duration(200).easing(EASE_OUT);
+const TOAST_EXIT = FadeOutUp.duration(160).easing(EASE_OUT);
 
 /**
  * Renders the `toast()` queue at the top of the screen, inside the safe-area
@@ -93,6 +100,12 @@ function ToastCard({ item }: { item: ToastItem }) {
     return () => clearTimeout(timer);
   }, [item]);
 
+  // A success or error toast reports an operation the user started: one
+  // notification haptic as it shows (or turns from loading into a result).
+  useEffect(() => {
+    if (item.variant === "success" || item.variant === "error") notificationHaptic(item.variant);
+  }, [item.id, item.variant]);
+
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
       item.description ? `${item.title}. ${item.description}` : item.title,
@@ -101,8 +114,8 @@ function ToastCard({ item }: { item: ToastItem }) {
 
   return (
     <NativeOnlyAnimatedView
-      entering={FadeInUp.duration(200)}
-      exiting={FadeOutUp.duration(160)}
+      entering={TOAST_ENTER}
+      exiting={TOAST_EXIT}
       layout={LinearTransition}
     >
       {/* The web toast: flat overlay fill, radius 16, ring and a light shadow. */}

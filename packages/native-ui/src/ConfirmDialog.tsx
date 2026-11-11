@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./AlertDialog";
+import { impactHaptic } from "./haptics";
 import { useOverlay } from "./primitives/overlay";
 
 export type ConfirmDialogProps = {
@@ -82,6 +83,7 @@ export function ConfirmDialog({
   );
 }
 
+/** Confirms and closes. A destructive confirm lands with a medium haptic. */
 function ConfirmAction({
   onConfirm,
   ...props
@@ -97,6 +99,7 @@ function ConfirmAction({
     <AlertDialogAction
       {...props}
       onPress={() => {
+        if (props.variant === "destructive") impactHaptic("medium");
         onConfirm?.();
         setOpen(false);
       }}

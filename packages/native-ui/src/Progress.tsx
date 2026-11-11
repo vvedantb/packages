@@ -38,16 +38,18 @@ export function Progress({
   const width = useSharedValue(percent);
 
   useEffect(() => {
-    width.value = reduceMotion
-      ? percent
-      : withTiming(percent, {
-          duration: 300,
-          easing: Easing.bezier(0.22, 1, 0.36, 1),
-        });
+    width.set(
+      reduceMotion
+        ? percent
+        : withTiming(percent, {
+            duration: 300,
+            easing: Easing.bezier(0.22, 1, 0.36, 1),
+          }),
+    );
   }, [percent, reduceMotion, width]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
-    width: `${width.value}%` as const,
+    width: `${width.get()}%` as const,
   }));
 
   return (

@@ -7,6 +7,7 @@ import { MIN_TOUCH_TARGET, fieldStyle, fieldTextStyle, sizeStyle, touchSlop, typ
 import { withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { Input as FieldInput } from "../primitives/input";
+import { usePressFeedback } from "../motion";
 import { useControllableState } from "../primitives/use-controllable-state";
 import { useLargerText } from "../theme";
 import { useScheme } from "../useScheme";
@@ -144,6 +145,7 @@ export function PromptInputChip({
   testID,
 }: PromptInputChipProps) {
   const scheme = useScheme();
+  const pressed = usePressFeedback();
   const tint = color ?? tokens.color.muted[scheme];
   const text = [sizeStyle("text-xs"), { color: tint }];
   const name = accessibilityLabel ?? [label, suffix, count].filter((part) => part !== undefined).join(", ");
@@ -157,7 +159,7 @@ export function PromptInputChip({
       onPress={onPress}
       // Slop only above and below: chips sit side by side, so the width stays theirs.
       hitSlop={touchSlop(MIN_TOUCH_TARGET, PROMPT_INPUT_CHIP.height)}
-      className={cn("min-w-0 shrink flex-row items-center active:opacity-70", disabled && "opacity-50")}
+      className={cn("min-w-0 shrink flex-row items-center", pressed, disabled && "opacity-50")}
       // `minHeight`, so a larger system font size can still grow it.
       style={{
         minHeight: PROMPT_INPUT_CHIP.height,

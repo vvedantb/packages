@@ -29,7 +29,10 @@ vi.mock("react", async (importOriginal) => ({
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
   Easing: { bezier: (...points: number[]) => `bezier(${points.join(", ")})` },
-  useSharedValue: <T>(value: T) => ({ value }),
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
   withTiming,
 }));

@@ -184,11 +184,11 @@ function ActiveTabPill({ index, count }: { index: number; count: number }) {
   const offset = useSharedValue(left);
 
   useEffect(() => {
-    offset.value = reduceMotion ? left : withTiming(left, PILL_SLIDE);
+    offset.set(reduceMotion ? left : withTiming(left, PILL_SLIDE));
   }, [left, reduceMotion, offset]);
 
   const slide = useAnimatedStyle(() => ({
-    left: `${offset.value}%` as const,
+    left: `${offset.get()}%` as const,
   }));
 
   return (

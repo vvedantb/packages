@@ -1,5 +1,4 @@
 import { View, type ViewProps } from "react-native";
-import { SlideInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
@@ -7,7 +6,6 @@ import { withAlpha } from "./palette";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 import { DialogBody, DialogDescription, DialogTitle } from "./Dialog";
-import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
 import { SheetDragView } from "./primitives/sheet-drag";
 import {
   OverlayClose,
@@ -50,10 +48,11 @@ export type SheetContentProps = ViewProps & {
 
 /**
  * Panel pinned to the bottom edge: opaque surface, top corners at the card
- * radius, safe-area bottom padding, slides in. Drag it down to close (when
- * `dismissible`): it follows the finger, the backdrop fades, and a flick or a
- * drag past half closes it while a short slow one springs back
- * (`SheetDragView`). Its bottom corners sit below the
+ * radius, safe-area bottom padding. It slides up on open and back down on
+ * close, with the backdrop fading to match (`OverlayModal`). Drag it down to
+ * close (when `dismissible`): it follows the finger, the backdrop fades, and
+ * a flick or a drag past half carries it out while a short slow one springs
+ * back (`SheetDragView`). Its bottom corners sit below the
  * screen edge, so only the top corners show. Taller than the room (a short
  * window, or the keyboard up), it shrinks to fit under the top inset, so a
  * `SheetBody` or other scroll view inside scrolls and the title stays on screen.
@@ -70,10 +69,7 @@ export function SheetContent({
   const insets = useSafeAreaInsets();
   return (
     <OverlayModal part="SheetContent" placement="bottom" dismissible={dismissible} onShow={onShow}>
-      <NativeOnlyAnimatedView
-        entering={SlideInDown.duration(240)}
-        style={{ marginBottom: -SHEET_RADIUS, flexShrink: 1 }}
-      >
+      <View style={{ marginBottom: -SHEET_RADIUS, flexShrink: 1 }}>
         <SheetDragView enabled={dismissible} style={{ flexShrink: 1 }}>
           <FloatingSurface blur={false} radius={SHEET_RADIUS} style={{ flexShrink: 1 }}>
             <View
@@ -87,7 +83,7 @@ export function SheetContent({
             </View>
           </FloatingSurface>
         </SheetDragView>
-      </NativeOnlyAnimatedView>
+      </View>
     </OverlayModal>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isSheetDragDown, SHEET_OVERPULL, sheetDismissDuration, sheetDragDismisses, sheetDragOffset } from "../src/sheetDrag";
+import { isSheetDragDown, SHEET_OVERPULL, sheetDragDismisses, sheetDragOffset, sheetSnapVelocity } from "../src/sheetDrag";
 
 // The drag-to-dismiss rules every bottom sheet (`SheetContent`, the compact
 // `DialogContent`) uses through `SheetDragView`.
@@ -37,11 +37,10 @@ describe("sheet drag to dismiss", () => {
     expect(sheetDragDismisses({ dy: 120, vy: 0, height: 400 })).toBe(false);
   });
 
-  it("slides out faster after a faster release, within 120 to 250 ms", () => {
-    const slow = sheetDismissDuration({ dy: 200, vy: 0, height: 400 });
-    const fast = sheetDismissDuration({ dy: 200, vy: 2, height: 400 });
-    expect(fast).toBeLessThan(slow);
-    expect(fast).toBeGreaterThanOrEqual(120);
-    expect(slow).toBeLessThanOrEqual(250);
+  it("springs home at the release speed, except a fling up from above rest", () => {
+    expect(sheetSnapVelocity(120, -800)).toBe(-800);
+    expect(sheetSnapVelocity(120, 300)).toBe(300);
+    expect(sheetSnapVelocity(-8, -2000)).toBe(0);
+    expect(sheetSnapVelocity(-8, 500)).toBe(500);
   });
 });

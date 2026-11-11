@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { Pressable, ScrollView, Text, View, useWindowDimensions, type ViewStyle } from "react-native";
-import { FadeInUp, FadeOutDown } from "react-native-reanimated";
+import { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconDots, IconX, type IconProps } from "@tabler/icons-react-native";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./DropdownMenu";
@@ -10,6 +10,7 @@ import { palette, withAlpha } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
+import { EASE_OUT } from "./motion";
 import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
 
 /**
@@ -65,6 +66,11 @@ function barMetrics(largerText: boolean) {
     : { height: 36, icon: 17, text: sizeStyle("text-sm"), caption: sizeStyle("text-xs") };
 }
 
+// Docked at the bottom: it rises into place and sinks back out, the exit 20%
+// quicker.
+const BAR_ENTER = FadeInDown.duration(150).easing(EASE_OUT);
+const BAR_EXIT = FadeOutDown.duration(120).easing(EASE_OUT);
+
 /**
  * The floating selection bar, as the web `BulkActionBar`: a pill-ended glass
  * bar (`FloatingSurface`, radius 16, `px-2.5 py-2`, `gap-1`) centred at the
@@ -101,8 +107,8 @@ export function BulkActionBar({
     <NativeOnlyAnimatedView
       testID={barKey}
       pointerEvents="box-none"
-      entering={FadeInUp.duration(150)}
-      exiting={FadeOutDown.duration(150)}
+      entering={BAR_ENTER}
+      exiting={BAR_EXIT}
       style={{
         position: "absolute",
         left: 0,

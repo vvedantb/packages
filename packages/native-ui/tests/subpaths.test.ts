@@ -162,14 +162,17 @@ describe("granular entries", () => {
     expect(heavyRefs("./ai-gallery")).toEqual(loader);
   });
 
-  it("brand, button, search-input, page-title, and toast reach no heavy peer, not even a loader", () => {
+  it("brand, button, search-input and page-title reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
     expect(heavyRefs("./password-input")).toEqual([]);
     expect(heavyRefs("./page-title")).toEqual([]);
+  });
+
+  it("toast reaches expo-haptics only through the optional-peer loader (success and error haptics)", () => {
     // From 0.3.12 the toast surface is flat, so the entry no longer reaches the expo-blur loader.
-    expect(heavyRefs("./toast")).toEqual([]);
+    expect(heavyRefs("./toast")).toEqual(["haptics.ts: lazy expo-haptics", "haptics.ts: type expo-haptics"]);
   });
 
   it("loads expo-linear-gradient on the ambient entry only through its loader", () => {

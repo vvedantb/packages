@@ -54,18 +54,16 @@ export function Shimmer({
   useEffect(() => {
     if (reduceMotion) {
       cancelAnimation(opacity);
-      opacity.value = 1;
+      opacity.set(1);
       return;
     }
-    opacity.value = withRepeat(
-      withTiming(SHIMMER_LOW_OPACITY, { duration: (duration * 1000) / 2 }),
-      -1,
-      true,
+    opacity.set(
+      withRepeat(withTiming(SHIMMER_LOW_OPACITY, { duration: (duration * 1000) / 2 }), -1, true),
     );
     return () => cancelAnimation(opacity);
   }, [opacity, reduceMotion, duration]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
   const textSize = chatTextSize(size, largerText);
 
   return (

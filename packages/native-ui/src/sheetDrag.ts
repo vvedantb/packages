@@ -19,8 +19,9 @@ export function isSheetDragDown(dx: number, dy: number): boolean {
 }
 
 /**
- * Where the sheet sits for a finger `dy` from the start: it follows the finger
- * down, and an upward pull meets growing resistance, up to `SHEET_OVERPULL`.
+ * Where the sheet sits for a drag that would put it `dy` below rest (where
+ * the drag started plus the finger's travel): it follows the finger down, and
+ * past rest upward it meets growing resistance, up to `SHEET_OVERPULL`.
  */
 export function sheetDragOffset(dy: number): number {
   if (dy >= 0) return dy;
@@ -29,8 +30,8 @@ export function sheetDragOffset(dy: number): number {
 
 /**
  * Whether a released drag closes the sheet: a quick flick down, or a drag
- * whose position, carried on by its speed, passes half the sheet. A slow,
- * short drag springs back.
+ * whose position (`dy` below rest), carried on by its speed, passes half the
+ * sheet. A slow, short drag springs back.
  */
 export function sheetDragDismisses({ dy, vy, height }: { dy: number; vy: number; height: number }): boolean {
   if (dy <= 0) return false;
@@ -38,9 +39,12 @@ export function sheetDragDismisses({ dy, vy, height }: { dy: number; vy: number;
   return dy + Math.max(0, vy) * PROJECTION_MS > height / 2;
 }
 
-/** The slide out after a release, in ms: the rest of the way at the release speed, kept between 120 and 250. */
-export function sheetDismissDuration({ dy, vy, height }: { dy: number; vy: number; height: number }): number {
-  const remaining = Math.max(0, height - dy);
-  const speed = Math.max(vy, 0.8);
-  return Math.round(Math.min(250, Math.max(120, remaining / speed)));
+/**
+ * The velocity (pt/s) a sheet springs home with after a release at
+ * `position` (its offset from rest, up negative). Speed toward rest carries
+ * on; speed away from rest above the top is dropped, so a flick up does not
+ * lift the sheet off the bottom edge.
+ */
+export function sheetSnapVelocity(position: number, velocity: number): number {
+  return position < 0 ? Math.max(0, velocity) : velocity;
 }
