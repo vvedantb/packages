@@ -105,6 +105,31 @@ export type {
 } from "./chain-of-thought";
 export { ActivityStep } from "./activity-step";
 export type { ActivityStepProps, ActivityStepStatus } from "./activity-step";
+// The web timeline's pure logic (byte-identical copies) and its folded rules.
+// The step type is `ActivityTimelineStep` here: `ActivityStep` is the line above.
+export { activityStepHasRichDetail } from "./activity-step-types";
+export type {
+  ActivityStep as ActivityTimelineStep,
+  ActivityStepEdit,
+  ActivityStepOutput,
+  ActivityTodoItem,
+} from "./activity-step-types";
+export {
+  deriveActionGroupSummary,
+  deriveReadableCommandDisplay,
+  deriveStepRowPresentation,
+  resolveCommandVisualKind,
+} from "./activity-step-label";
+export type { CommandVisualKind, StepRowPresentation } from "./activity-step-label";
+export { activityRowKey, activitySegmentKey, buildActivityRows, groupActivityRows } from "./activity-tasks-utils";
+export type { ActivityRow, ActivitySegment } from "./activity-tasks-utils";
+export {
+  ACTIVITY_MAX_VISIBLE_BLOCKS,
+  ACTIVITY_MAX_VISIBLE_CHILDREN,
+  activityChildRows,
+  activityStepSeconds,
+  foldedActivitySegments,
+} from "./activity-timeline";
 export {
   PromptInput,
   PromptInputButton,

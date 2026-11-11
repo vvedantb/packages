@@ -256,9 +256,10 @@ const INLINE_RADIUS = 20;
 /**
  * Eva's `pill` composer: 48 high on one line (border 1, then 5 around a 36
  * field: the web `h-12 py-1` centres the 36 field and send button in 38),
- * `pl-1.5` / `pr-1.5`, and radius 24 (`rounded-full` at 48).
+ * `pl-1.5` / `pr-1.5`, and radius 24 (`rounded-full` at 48). Its placeholder
+ * is the muted colour at 90% (`data-empty:before:text-muted-foreground/90`).
  */
-const PILL = { radius: 24, paddingY: 5, paddingX: 6, lineHeight: 36 } as const;
+const PILL = { radius: 24, paddingY: 5, paddingX: 6, lineHeight: 36, placeholderAlpha: 0.9 } as const;
 
 /** The field grows to this height, then scrolls: about 6 lines of 24 (with `py-2.5`), and about 8 of `text-xl` with larger text. */
 const MAX_FIELD_HEIGHT = { regular: 160, larger: 240 } as const;
@@ -372,6 +373,7 @@ export function PromptInput({
                 value={text}
                 onChangeText={changeText}
                 placeholder={placeholder}
+                placeholderTextColor={pill ? withAlpha(tokens.color.muted[scheme], PILL.placeholderAlpha) : undefined}
                 accessibilityLabel={accessibilityLabel}
                 editable={!disabled}
                 textAlignVertical="center"

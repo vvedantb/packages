@@ -105,10 +105,10 @@ describe("markdown", () => {
     expect(markdownCss).toMatch(/\.markdown :is\(p, ul, ol, blockquote, table,[^{]*\{\s*margin-block: 0\.65rem;/);
     // The header row: the table's `divide-y divide-border`.
     expect(streamdown).toMatch(/w-full divide-y divide-border/);
-    const source = native("markdown/Markdown.tsx");
+    const source = native("markdown/MarkdownTable.tsx");
     expect(source).toMatch(/fontScale: 0\.93,\s*lineHeight: 1\.5,\s*cellPaddingX: 12,\s*cellPaddingY: 7,/);
     expect(source).toMatch(/panelPadding: \{ top: 4, x: 5, bottom: 6 \},\s*tableMargin: 10,/);
-    expect(source).toMatch(/withAlpha\(tokens\.color\.border\[this\.scheme\], 0\.7\)/);
+    expect(source).toMatch(/withAlpha\(tokens\.color\.border\[scheme\], 0\.7\)/);
   });
 
   it("draws fenced code as the web MarkdownCodeBlock: header, pre, icon-xs wrap toggle and copy", () => {

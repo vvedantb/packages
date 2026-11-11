@@ -13,6 +13,11 @@ declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
 // `src/ThemeToggle.tsx` logs a failed `setColorScheme`; `src/auth/SignInScreen.tsx` warns on an unhandled sign-in status.
 declare const console: { error(...data: unknown[]): void; warn(...data: unknown[]): void };
+// React Native's global `URL`; `src/ai/activity-step-label.ts` (a copy of the web file) reads a fetched page's host.
+declare class URL {
+  constructor(url: string);
+  readonly hostname: string;
+}
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`, `src/highlight.ts`). React Native's own typing returns
 // `any`; `src/highlight.ts` assigns without a cast, so its peer has an overload.
@@ -778,6 +783,7 @@ declare module "@tabler/icons-react-native" {
   export const IconFileText: Icon;
   export const IconInbox: Icon;
   export const IconInfoCircle: Icon;
+  export const IconMaximize: Icon;
   export const IconMinus: Icon;
   export const IconMoon: Icon;
   export const IconMusic: Icon;
