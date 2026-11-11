@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { useContext, useRef, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
@@ -13,6 +13,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { impactHaptic } from "../haptics";
+import { InsidePagerContext } from "../Pager";
 import { EASE_OUT } from "../motion";
 import { palette } from "../palette";
 import type { SwipeableRowProps } from "../SwipeableRow";
@@ -22,8 +23,8 @@ import {
   markSwipeRowClosed,
   markSwipeRowOpen,
   SWIPE_ACTION_WIDTH,
-  SWIPE_ACTIVE_OFFSET_X,
   SWIPE_FAIL_OFFSET_Y,
+  swipeRowActivation,
   swipeRowArmed,
   swipeRowOffset,
   swipeRowSettle,
@@ -33,6 +34,7 @@ import {
 } from "../swipeRow";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
+import { useWebClickGuard } from "./web-click-guard";
 
 // The swipeable row on Gesture Handler: the track phase and the release run
 // as worklets on the UI thread, so the row never lags the finger. The rules
@@ -78,7 +80,8 @@ export function GestureSwipeableRow({
 
   // Whether this touch began while a row was open, so its release only closes that row. Nothing renders from it.
   const closesOnRelease = useRef(false);
-  const webClicks = useWebClickGuard();
+  const webClicks = useWebClickGuard(isSwipeRowOpen);
+  const insidePager = useContext(InsidePagerContext);
   const opened = () => {
     closesOnRelease.current = false;
     webClicks.swallowNext();
@@ -126,11 +129,14 @@ export function GestureSwipeableRow({
 
   // Built on each render (for `enabled` and the actions): the detector keeps
   // the same handler, and a drag in flight, and only takes the new config.
+  const activation = swipeRowActivation({ leading, trailing }, insidePager);
   const pan = Gesture.Pan()
     .enabled(enabled && leading + trailing > 0)
     // Sideways intent first; a drag that goes vertical first is the list's scroll.
-    .activeOffsetX([-SWIPE_ACTIVE_OFFSET_X, SWIPE_ACTIVE_OFFSET_X])
-    .failOffsetY([-SWIPE_FAIL_OFFSET_Y, SWIPE_FAIL_OFFSET_Y])
+    .activeOffsetX(activation.activeOffsetX)
+    .failOffsetY([-SWIPE_FAIL_OFFSET_Y, SWIPE_FAIL_OFFSET_Y]);
+  if (activation.failOffsetX !== undefined) pan.failOffsetX(activation.failOffsetX);
+  pan
     .onStart(() => {
       cancelAnimation(x);
       start.set(x.get());
@@ -204,53 +210,6 @@ export function GestureSwipeableRow({
       </GestureDetector>
     </View>
   );
-}
-
-/** The part of a DOM element the web click guard uses: on the web a `View` is a DOM element. */
-type DomNode = {
-  addEventListener: (type: string, listener: (event: DomEvent) => void, capture: boolean) => void;
-  removeEventListener: (type: string, listener: (event: DomEvent) => void, capture: boolean) => void;
-};
-type DomEvent = { stopPropagation: () => void; preventDefault: () => void };
-
-function isDomNode(node: object): node is DomNode {
-  return "addEventListener" in node && typeof node.addEventListener === "function";
-}
-
-/**
- * On the web a pressable presses on the DOM click, which neither the touch
- * responder nor Gesture Handler cancels (it captures the pointer on the
- * element pressed). So, in the capture phase on the row's content, this
- * drops the click that ends a swipe (`swallowNext`, at the swipe's start) or
- * a tap made while a row is open. On Android and iOS it does nothing: there
- * the swipe cancels the press, and the responder capture takes the tap.
- */
-function useWebClickGuard() {
-  const swallow = useRef(false);
-  return {
-    swallowNext: () => {
-      swallow.current = true;
-    },
-    ref: (node: View | null) => {
-      if (Platform.OS !== "web" || !node || !isDomNode(node)) return;
-      const onClick = (event: DomEvent) => {
-        if (!swallow.current) return;
-        swallow.current = false;
-        event.stopPropagation();
-        event.preventDefault();
-      };
-      // Each touch starts afresh (a touch swipe clicks nothing, so its flag must not outlive it).
-      const onPointerDown = () => {
-        swallow.current = isSwipeRowOpen();
-      };
-      node.addEventListener("click", onClick, true);
-      node.addEventListener("pointerdown", onPointerDown, true);
-      return () => {
-        node.removeEventListener("click", onClick, true);
-        node.removeEventListener("pointerdown", onPointerDown, true);
-      };
-    },
-  };
 }
 
 /**

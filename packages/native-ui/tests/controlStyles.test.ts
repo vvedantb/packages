@@ -489,11 +489,14 @@ describe("Tabs and PillTabs (source contract)", () => {
   it("take fill and label from tabColors as styles", () => {
     expect(fn(tabs, "TabsTrigger")).toMatch(/const colors = tabColors\(variant, selected, scheme\);/);
     expect(pills).toMatch(/const colors = tabColors\("pills", isSelected, scheme\);/);
+    expect(fn(tabs, "TabsTrigger")).toMatch(
+      // `TabsTrigger` takes `height`, its `minHeight` prop or the trigger size (tabsTriggerHeight.test.ts).
+      /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: (?:trigger\.minHeight|height) \}\}/,
+    );
+    // Linked to a `Pager`, the moving indicator takes the selected fill (`tabColors` too).
+    expect(pills).toMatch(/backgroundColor: progress \? "transparent" : colors\.backgroundColor,\s+minHeight: trigger\.minHeight,/);
+    expect(pills).toMatch(/backgroundColor: tabColors\("pills", true, scheme\)\.backgroundColor/);
     for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
-      expect(source, file).toMatch(
-        // `TabsTrigger` takes `height`, its `minHeight` prop or the trigger size (tabsTriggerHeight.test.ts).
-        /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: (?:trigger\.minHeight|height) \}\}/,
-      );
       expect(source, file).toMatch(/style=\{\[\{ color: colors\.color \}, /);
     }
     expect(fn(tabs, "TabsList")).toMatch(/variant === "segmented" \? \[tabTrackStyle\(scheme\), style\] : style/);

@@ -32,6 +32,10 @@ const larger = vi.hoisted(() => ({ value: false }));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useEffect: () => {},
+  // No `GestureHandlerProvider`: the toast is drawn with no drag.
+  useContext: () => null,
+  useRef: <T>(current: T) => ({ current }),
+  useState: <T>(initial: T) => [initial, () => {}],
   useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot(),
 }));
 vi.mock("react-native", () => ({
