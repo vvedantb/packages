@@ -1,6 +1,7 @@
 import * as Slot from "@rn-primitives/slot";
 import {
   createContext,
+  Fragment,
   useContext,
   useEffect,
   useState,
@@ -22,6 +23,7 @@ import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import {
   SheetDragProvider,
+  SheetGestureContext,
   slideSheetIn,
   slideSheetOut,
   useSheetBackdropStyle,
@@ -117,7 +119,10 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
  * `Modal` stays up until the sheet is out of sight. The backdrop closes the
  * overlay only when `dismissible`; Android back and the VoiceOver escape
  * gesture always close it, as Escape does on the web. With Reduce Motion on,
- * overlays appear and leave in place.
+ * overlays appear and leave in place. With the Gesture Handler parts
+ * (`GestureHandlerProvider`), the content sits in its own root view: on
+ * Android a `Modal` is a separate root, and without one there every gesture
+ * in it silently does nothing.
  */
 export function OverlayModal({
   part,
@@ -141,6 +146,7 @@ export function OverlayModal({
   if (open && !shown) setShown(true);
   if (!open && shown && !slides) setShown(false);
   const close = () => setOpen(false);
+  const ModalRoot = useContext(SheetGestureContext)?.ModalRoot ?? Fragment;
 
   return (
     <Modal
@@ -151,17 +157,19 @@ export function OverlayModal({
       onRequestClose={close}
       onShow={onShow}
     >
-      <OverlayModalBody
-        placement={placement}
-        dismissible={dismissible}
-        open={open}
-        slides={slides}
-        close={close}
-        onHidden={() => setShown(false)}
-        part={part}
-      >
-        {children}
-      </OverlayModalBody>
+      <ModalRoot>
+        <OverlayModalBody
+          placement={placement}
+          dismissible={dismissible}
+          open={open}
+          slides={slides}
+          close={close}
+          onHidden={() => setShown(false)}
+          part={part}
+        >
+          {children}
+        </OverlayModalBody>
+      </ModalRoot>
     </Modal>
   );
 }

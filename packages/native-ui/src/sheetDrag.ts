@@ -1,7 +1,8 @@
 /**
  * The rules of a bottom sheet's drag to dismiss, as plain numbers, so they
  * stay testable apart from the gesture. Distances are in points, `vy` in
- * points per millisecond (the React Native `PanResponder` unit).
+ * points per millisecond (the React Native `PanResponder` unit). Each is a
+ * worklet, so the Gesture Handler drag runs them on the UI thread.
  */
 
 /** How far ahead (ms) the release velocity carries the sheet when deciding to close. */
@@ -15,6 +16,7 @@ export const SHEET_OVERPULL = 12;
 
 /** A drag that starts the sheet gesture: down, more vertical than sideways, past a small slop. */
 export function isSheetDragDown(dx: number, dy: number): boolean {
+  "worklet";
   return dy > 4 && Math.abs(dy) > Math.abs(dx);
 }
 
@@ -24,8 +26,21 @@ export function isSheetDragDown(dx: number, dy: number): boolean {
  * past rest upward it meets growing resistance, up to `SHEET_OVERPULL`.
  */
 export function sheetDragOffset(dy: number): number {
+  "worklet";
   if (dy >= 0) return dy;
   return -SHEET_OVERPULL * (1 - 1 / (1 - dy / (SHEET_OVERPULL * 4)));
+}
+
+/**
+ * The finger position (window `y`) a drag's travel counts from, so the point
+ * the finger holds stays under it: where it touched down, moved down by any
+ * scroll the same touch spent bringing the body back to its top before the
+ * sheet took over (`scrollAtDown` to `scrollNow`). Without that, the sheet
+ * would jump by the scroll when it takes over.
+ */
+export function sheetDragAnchor(downY: number, scrollAtDown: number, scrollNow: number): number {
+  "worklet";
+  return downY + Math.max(0, scrollAtDown - scrollNow);
 }
 
 /**
@@ -34,6 +49,7 @@ export function sheetDragOffset(dy: number): number {
  * sheet. A slow, short drag springs back.
  */
 export function sheetDragDismisses({ dy, vy, height }: { dy: number; vy: number; height: number }): boolean {
+  "worklet";
   if (dy <= 0) return false;
   if (vy >= FLICK_VELOCITY) return true;
   return dy + Math.max(0, vy) * PROJECTION_MS > height / 2;
@@ -46,5 +62,6 @@ export function sheetDragDismisses({ dy, vy, height }: { dy: number; vy: number;
  * lift the sheet off the bottom edge.
  */
 export function sheetSnapVelocity(position: number, velocity: number): number {
+  "worklet";
   return position < 0 ? Math.max(0, velocity) : velocity;
 }

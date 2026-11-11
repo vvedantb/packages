@@ -25,6 +25,7 @@ Optional, only if you import those components:
 - `@gorhom/bottom-sheet` — `BottomSheetContainer`
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
 - `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
+- `react-native-gesture-handler` (`>=2.0.0`) — `@vvedantb/native-ui/gesture-handler` (Unreleased). Wrap the app in `GestureHandlerRootView`, and put `GestureHandlerProvider` from that entry inside it: the sheet drags (`SheetContent`, the compact `DialogContent`) then run on Gesture Handler, on the UI thread, and each overlay's `Modal` gets its own root view (Android needs one in every `Modal`). Without the provider, the sheets drag with `PanResponder`, with the same rules. Only that entry imports the peer, so an app without it bundles as before. In a Metro monorepo, resolve the peer from the app (one copy), as for `react`.
 - `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`), `GoogleMark` and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
 
 Optional and loaded only when installed, so the package imports and runs without them:
@@ -79,6 +80,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/push` | `useExpoPushRegistration`, `getExpoPushToken`, `showPushesInForeground`, the three loaders and the types (0.9.0). Pass `register` from your backend (for `@vvedantb/server`: `useMutation(api.push.register)`) and route taps in `onNotificationTap` | `expo-notifications`, `expo-constants`, `expo-device` (loaders) |
 | `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
+| `@vvedantb/native-ui/gesture-handler` | `GestureHandlerProvider` (Unreleased): the sheet drags on Gesture Handler | `react-native-gesture-handler` (import) |
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry.. From 0.12.0: `ChatThread`, `UIMessage`, `ChatJumpRail` and the `Attachment` props `onPress` and `accessibilityLabel` | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
