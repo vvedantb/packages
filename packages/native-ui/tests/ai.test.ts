@@ -362,9 +362,9 @@ describe("Collapsible", () => {
     expect(h.tree.content).toBeNull();
     (h.tree.trigger.props.onPress as () => void)();
     expect(h.tree.trigger.props.accessibilityState).toEqual({ expanded: true });
-    expect(h.tree.content!.type).toBe("NativeOnlyAnimatedView");
-    // Fades in through the view that drops layout animations with Reduce Motion.
-    expect(h.tree.content!.props.entering).toBe("FadeIn(150)");
+    // Appears at once: a plain view, with no entering animation.
+    expect(h.tree.content!.type).toBe("View");
+    expect(h.tree.content!.props.entering).toBeUndefined();
     (h.tree.trigger.props.onPress as () => void)();
     expect(h.tree.content).toBeNull();
   });

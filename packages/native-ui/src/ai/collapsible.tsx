@@ -1,20 +1,17 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, View, type PressableProps, type ViewProps } from "react-native";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react-native";
-import Animated, { FadeIn, cubicBezier } from "react-native-reanimated";
+import Animated, { cubicBezier } from "react-native-reanimated";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, touchSlop } from "../controlStyles";
-import { EASE_OUT } from "../motion";
-import { NativeOnlyAnimatedView } from "../primitives/native-only-animated-view";
 import { useControllableState } from "../primitives/use-controllable-state";
 import { useReduceMotion } from "../useReduceMotion";
 
 // A small fold for the AI parts: native-ui has no `Collapsible`. A `Pressable`
-// trigger and content that mounts only while open. The content fades in on
-// iOS and Android and the chevron turns, both in 150 ms; with Reduce Motion
-// they change in place.
-
-const CONTENT_ENTER = FadeIn.duration(150).easing(EASE_OUT);
+// trigger and content that mounts only while open. The content appears at
+// once: a fade would also run each time a list mounts an open fold (a chat
+// opening, a virtualised row scrolled back). The chevron turns in 150 ms; with
+// Reduce Motion it changes in place.
 
 /** The web chevron: `transition-transform duration-150`, on the strong ease-out. */
 const CHEVRON_TURN = {
@@ -87,14 +84,10 @@ export function CollapsibleTrigger({
 }
 
 /** Mounted only while the fold is open. */
-export function CollapsibleContent({ children, ...props }: ViewProps & { className?: string }) {
+export function CollapsibleContent(props: ViewProps & { className?: string }) {
   const { open } = useCollapsible();
   if (!open) return null;
-  return (
-    <NativeOnlyAnimatedView entering={CONTENT_ENTER} {...props}>
-      {children}
-    </NativeOnlyAnimatedView>
-  );
+  return <View {...props} />;
 }
 
 /**
