@@ -168,9 +168,10 @@ describe("accessibility roles and states", () => {
     expect(select).toMatch(/accessibilityRole="combobox"/);
     expect(select).toMatch(/accessibilityLabel=\{accessibilityLabel\}/);
     expect(select).toMatch(/accessibilityState=\{\{ disabled: Boolean\(disabled\) \}\}/);
-    expect(select).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, largerText \? 64 : 40\)\}/);
-    const { top, bottom } = touchSlop(MIN_TOUCH_TARGET, 40);
-    expect(40 + top + bottom).toBe(44);
+    // 44 high on screen, so it needs no slop.
+    expect(select).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, largerText \? 64 : 44\)\}/);
+    const { top, bottom } = touchSlop(MIN_TOUCH_TARGET, 44);
+    expect(top + bottom).toBe(0);
   });
 
   it("the dialog close button is a 44 labelled button; Dialog and Sheet closes are buttons", () => {
@@ -327,7 +328,7 @@ describe("Dynamic Type", () => {
   });
 
   it("uses minimum heights on labelled pressables", () => {
-    expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full/);
+    expect(read("Select.tsx")).toMatch(/"h-auto min-h-11 w-full/);
     expect(read("Select.tsx")).toMatch(/largerText && "min-h-16 px-4"/);
     expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-9 px-3"/);
     expect(read("DateTimeField.tsx")).toMatch(/largerText \? "min-h-16" : "min-h-14"/);

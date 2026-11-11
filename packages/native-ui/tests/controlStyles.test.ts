@@ -237,7 +237,7 @@ describe("field sizes (source contract)", () => {
     expect(read("Textarea.tsx")).toMatch(
       /"min-h-20 border px-3\.5 py-2\.5 text-base font-instrument-sans"/,
     );
-    expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full border px-3\.5 py-0 shadow-none"/);
+    expect(read("Select.tsx")).toMatch(/"h-auto min-h-11 w-full border px-3\.5 py-0 shadow-none"/);
   });
 
   it("Select shows its placeholder in the field placeholder colour", () => {
