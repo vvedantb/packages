@@ -128,7 +128,7 @@ export type PromptInputChipProps = {
  * A chip for the composer `footer`, the web `ModelPicker` trigger: 28 high on
  * screen, slop to 44 above and below. The label shrinks and truncates, so a
  * long model name gives up width to the chips beside it, as the web
- * `max-sm:truncate`. Disabled dims to 50%, as the web `disabled:opacity-50`.
+ * `max-sm:truncate`; the icon and chevron keep their size. Disabled dims to 50%, as the web `disabled:opacity-50`.
  */
 export function PromptInputChip({
   icon,
@@ -168,7 +168,8 @@ export function PromptInputChip({
         borderRadius: PROMPT_INPUT_CHIP.radius,
       }}
     >
-      {icon}
+      {/* Held whole: in a squeezed chip only the label gives up width. */}
+      {icon ? <View className="shrink-0">{icon}</View> : null}
       <Text
         numberOfLines={1}
         className={cn("min-w-0 shrink text-xs", weight === "medium" ? "font-instrument-sans-medium" : "font-instrument-sans")}

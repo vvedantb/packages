@@ -54,6 +54,13 @@ export interface BulkActionBarProps {
    * `tabBarReserve(largerText, insets.bottom)`.
    */
   bottomOffset?: number;
+  /**
+   * Native only: keep Cancel selection (X) and its divider outside the
+   * sideways scroll, at the bar's right end, so it shows even when the bar
+   * is wider than the screen. The rest of the bar still scrolls. Default
+   * `false`: the X scrolls with the actions, as the web.
+   */
+  pinCancel?: boolean;
 }
 
 /** The web `sm` breakpoint: below it, bar buttons are icon-only and "selected" is hidden. */
@@ -78,7 +85,8 @@ const BAR_EXIT = FadeOutDown.duration(120).easing(EASE_OUT);
  * count chip, Select all (n) / Clear, a divider, the primary actions, a More
  * menu, the destructive action, and Cancel selection (X). Actions are off with
  * no selection. Below 640 wide (the web `sm`) the actions are icon-only. Put it
- * last in a full-size container; it scrolls sideways when it does not fit.
+ * last in a full-size container; it scrolls sideways when it does not fit
+ * (with `pinCancel`, all but the X scrolls).
  */
 export function BulkActionBar({
   isSelecting,
@@ -92,6 +100,7 @@ export function BulkActionBar({
   destructiveAction,
   barKey,
   bottomOffset,
+  pinCancel = false,
 }: BulkActionBarProps) {
   const scheme = useScheme();
   const metrics = barMetrics(useLargerText());
@@ -102,6 +111,14 @@ export function BulkActionBar({
   const hasSelection = selectedCount > 0;
   const allSelected = totalCount > 0 && selectedCount >= totalCount;
   const muted = tokens.color.muted[scheme];
+  const cancel = (
+    <>
+      <BarDivider />
+      <BarPressable height={metrics.height} paddingX={0} label="Cancel selection" onPress={onExitSelect}>
+        <IconX size={metrics.icon} color={muted} />
+      </BarPressable>
+    </>
+  );
 
   return (
     <NativeOnlyAnimatedView
@@ -119,92 +136,105 @@ export function BulkActionBar({
       }}
     >
       <FloatingSurface radius={tokens.radius.lg} style={{ maxWidth: width - 32 }}>
-        <ScrollView
-          horizontal
-          bounces={false}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 8 }}
-        >
-          <View
-            accessible
-            accessibilityLabel={`${selectedCount} selected`}
-            style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 4, paddingRight: 2 }}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <ScrollView
+            horizontal
+            bounces={false}
+            showsHorizontalScrollIndicator={false}
+            // Pinned: the scroll gives up width first, and the X part keeps the right padding.
+            style={pinCancel ? { flexShrink: 1 } : undefined}
+            contentContainerStyle={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              paddingLeft: 10,
+              paddingRight: pinCancel ? 0 : 10,
+              paddingVertical: 8,
+            }}
           >
             <View
-              style={{
-                borderRadius: tokens.radius.md,
-                paddingHorizontal: 8,
-                paddingVertical: 2,
-                backgroundColor: tokens.color.surfaceSecondary[scheme],
-              }}
+              accessible
+              accessibilityLabel={`${selectedCount} selected`}
+              style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 4, paddingRight: 2 }}
             >
-              <Text
-                className="font-instrument-sans-semibold"
-                style={[metrics.caption, typeStyle("semibold"), { fontVariant: ["tabular-nums"], color: tokens.color.foreground[scheme] }]}
+              <View
+                style={{
+                  borderRadius: tokens.radius.md,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  backgroundColor: tokens.color.surfaceSecondary[scheme],
+                }}
               >
-                {selectedCount}
-              </Text>
+                <Text
+                  className="font-instrument-sans-semibold"
+                  style={[metrics.caption, typeStyle("semibold"), { fontVariant: ["tabular-nums"], color: tokens.color.foreground[scheme] }]}
+                >
+                  {selectedCount}
+                </Text>
+              </View>
+              {wide ? (
+                <Text className="font-instrument-sans-medium" style={[metrics.text, typeStyle("medium"), { color: muted }]}>
+                  selected
+                </Text>
+              ) : null}
             </View>
-            {wide ? (
-              <Text className="font-instrument-sans-medium" style={[metrics.text, typeStyle("medium"), { color: muted }]}>
-                selected
-              </Text>
+
+            {totalCount > 0 ? (
+              <BarPressable height={metrics.height} paddingX={8} onPress={allSelected ? onClearSelection : onSelectAll}>
+                <Text className="font-instrument-sans-medium" style={[metrics.text, typeStyle("medium"), { color: muted }]}>
+                  {allSelected ? "Clear" : `Select all (${totalCount})`}
+                </Text>
+              </BarPressable>
             ) : null}
-          </View>
 
-          {totalCount > 0 ? (
-            <BarPressable height={metrics.height} paddingX={8} onPress={allSelected ? onClearSelection : onSelectAll}>
-              <Text className="font-instrument-sans-medium" style={[metrics.text, typeStyle("medium"), { color: muted }]}>
-                {allSelected ? "Clear" : `Select all (${totalCount})`}
-              </Text>
-            </BarPressable>
+            <BarDivider />
+
+            {primaryActions.map((action) => (
+              <BarButton key={action.key} action={action} disabled={!hasSelection} wide={wide} />
+            ))}
+
+            {moreActions && moreActions.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  accessibilityLabel="More actions"
+                  disabled={!hasSelection}
+                  hitSlop={touchSlop(MIN_TOUCH_TARGET, metrics.height)}
+                  style={({ pressed }) => barButtonStyle(metrics.height, 0, pressed, !hasSelection, false, scheme)}
+                >
+                  <IconDots size={metrics.icon} color={muted} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8}>
+                  {moreActions.map((action) => (
+                    <DropdownMenuItem
+                      key={action.key}
+                      icon={action.icon}
+                      destructive={action.destructive}
+                      disabled={!hasSelection || Boolean(action.disabled)}
+                      onSelect={action.onClick}
+                    >
+                      {action.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+
+            {destructiveAction ? (
+              <>
+                <BarDivider />
+                <BarButton action={destructiveAction} disabled={!hasSelection} wide={wide} />
+              </>
+            ) : null}
+
+            {pinCancel ? null : cancel}
+          </ScrollView>
+          {pinCancel ? (
+            // The scroll's 4 gap before the divider, then the bar's 10 end padding.
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 4, paddingRight: 10 }}>
+              {cancel}
+            </View>
           ) : null}
-
-          <BarDivider />
-
-          {primaryActions.map((action) => (
-            <BarButton key={action.key} action={action} disabled={!hasSelection} wide={wide} />
-          ))}
-
-          {moreActions && moreActions.length > 0 ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                accessibilityLabel="More actions"
-                disabled={!hasSelection}
-                hitSlop={touchSlop(MIN_TOUCH_TARGET, metrics.height)}
-                style={({ pressed }) => barButtonStyle(metrics.height, 0, pressed, !hasSelection, false, scheme)}
-              >
-                <IconDots size={metrics.icon} color={muted} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={8}>
-                {moreActions.map((action) => (
-                  <DropdownMenuItem
-                    key={action.key}
-                    icon={action.icon}
-                    destructive={action.destructive}
-                    disabled={!hasSelection || Boolean(action.disabled)}
-                    onSelect={action.onClick}
-                  >
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-
-          {destructiveAction ? (
-            <>
-              <BarDivider />
-              <BarButton action={destructiveAction} disabled={!hasSelection} wide={wide} />
-            </>
-          ) : null}
-
-          <BarDivider />
-
-          <BarPressable height={metrics.height} paddingX={0} label="Cancel selection" onPress={onExitSelect}>
-            <IconX size={metrics.icon} color={muted} />
-          </BarPressable>
-        </ScrollView>
+        </View>
       </FloatingSurface>
     </NativeOnlyAnimatedView>
   );

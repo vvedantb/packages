@@ -109,7 +109,7 @@ describe("BulkActionBar", () => {
     expect(surface.props).toEqual(expect.objectContaining({ radius: 16, style: { maxWidth: 358 } }));
     expect(elements(tree).find((element) => element.type === "ScrollView")!.props).toMatchObject({
       horizontal: true,
-      contentContainerStyle: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 8 },
+      contentContainerStyle: { flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 10, paddingRight: 10, paddingVertical: 8 },
     });
     expect(((await bar({ bottomOffset: 130 })).tree.props.style as Style).bottom).toBe(142);
   });
@@ -143,6 +143,23 @@ describe("BulkActionBar", () => {
     expect(onExitSelect).toHaveBeenCalledOnce();
     // Dividers: after Select all, before the destructive action, before Cancel.
     expect(elements(tree).filter((element) => (element.props.style as Style | undefined)?.width === 1)).toHaveLength(3);
+  });
+
+  it("scrolls Cancel with the actions by default, and pins it outside the scroll with pinCancel", async () => {
+    const scrolled = (tree: Element) => elements(tree).find((element) => element.type === "ScrollView")!;
+    const { tree } = await bar({ destructiveAction: remove });
+    expect(button(scrolled(tree), "Cancel selection")).toBeDefined();
+    const pinned = await bar({ destructiveAction: remove, pinCancel: true });
+    const scroll = scrolled(pinned.tree);
+    expect(scroll.props.style).toEqual({ flexShrink: 1 });
+    expect((scroll.props.contentContainerStyle as Style).paddingRight).toBe(0);
+    expect(button(scroll, "Cancel selection")).toBeUndefined();
+    const exit = button(pinned.tree, "Cancel selection");
+    (exit.props.onPress as () => void)();
+    expect(pinned.onExitSelect).toHaveBeenCalledOnce();
+    // Still three dividers: the one before Cancel moves out with it.
+    expect(elements(scroll).filter((element) => (element.props.style as Style | undefined)?.width === 1)).toHaveLength(2);
+    expect(elements(pinned.tree).filter((element) => (element.props.style as Style | undefined)?.width === 1)).toHaveLength(3);
   });
 
   it("button boxes are the web h-9 rounded-lg, at least 44 wide, surface-secondary when pressed", async () => {
