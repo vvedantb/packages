@@ -17,6 +17,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { impactHaptic } from "../haptics";
+import { SwipeRowGestureContext } from "../SwipeableRow";
 import { sheetDragAnchor, sheetDragOffset } from "../sheetDrag";
 import {
   settleSheet,
@@ -29,6 +30,7 @@ import {
   type SheetMotion,
   SheetGestureContext,
 } from "./sheet-drag";
+import { GestureSwipeableRow } from "./swipe-row-gesture";
 
 // The sheet drag on Gesture Handler: the touch, the track phase and the
 // release all run as worklets on the UI thread, so a busy JavaScript thread
@@ -151,12 +153,16 @@ const PARTS: SheetGestureParts = {
 
 /**
  * Runs the kit's sheet drags (`SheetContent`, the compact `DialogContent`)
- * on Gesture Handler instead of `PanResponder`. Put it inside the app's
- * `GestureHandlerRootView`; each overlay adds its own root view inside its
- * `Modal`.
+ * on Gesture Handler instead of `PanResponder`, and turns on the swipe of
+ * `SwipeableRow`. Put it inside the app's `GestureHandlerRootView`; each
+ * overlay adds its own root view inside its `Modal`.
  */
 export function GestureHandlerProvider({ children }: { children: ReactNode }) {
-  return <SheetGestureContext.Provider value={PARTS}>{children}</SheetGestureContext.Provider>;
+  return (
+    <SheetGestureContext.Provider value={PARTS}>
+      <SwipeRowGestureContext.Provider value={GestureSwipeableRow}>{children}</SwipeRowGestureContext.Provider>
+    </SheetGestureContext.Provider>
+  );
 }
 
 const styles = StyleSheet.create({
