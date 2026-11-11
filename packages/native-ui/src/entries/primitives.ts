@@ -56,6 +56,8 @@ export { formatCompactRelativeTime } from "../relativeTime";
 export type { CompactRelativeTimeOptions } from "../relativeTime";
 export { Chip } from "../Chip";
 export { PillTabs } from "../PillTabs";
+export { Pager } from "../Pager";
+export type { PagerProps } from "../Pager";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "../Tabs";
 export type {
   TabsProps,
@@ -86,7 +88,8 @@ export {
   CardFooter,
 } from "../Card";
 export type { CardProps } from "../Card";
-export { Skeleton, CardSkeleton } from "../Skeleton";
+export { Skeleton, CardSkeleton, SkeletonList, SkeletonRow } from "../Skeleton";
+export type { SkeletonListProps, SkeletonRowProps } from "../Skeleton";
 export { EmptyState } from "../EmptyState";
 export type { EmptyStateVariant } from "../EmptyState";
 export {

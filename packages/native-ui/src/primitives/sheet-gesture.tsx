@@ -30,7 +30,11 @@ import {
   type SheetMotion,
   SheetGestureContext,
 } from "./sheet-drag";
+import { PagerGestureContext } from "../Pager";
+import { ToastDragContext } from "../toastDrag";
+import { GesturePager } from "./pager-gesture";
 import { GestureSwipeableRow } from "./swipe-row-gesture";
+import { GestureToastDrag } from "./toast-drag-gesture";
 
 // The sheet drag on Gesture Handler: the touch, the track phase and the
 // release all run as worklets on the UI thread, so a busy JavaScript thread
@@ -153,14 +157,19 @@ const PARTS: SheetGestureParts = {
 
 /**
  * Runs the kit's sheet drags (`SheetContent`, the compact `DialogContent`)
- * on Gesture Handler instead of `PanResponder`, and turns on the swipe of
- * `SwipeableRow`. Put it inside the app's `GestureHandlerRootView`; each
- * overlay adds its own root view inside its `Modal`.
+ * on Gesture Handler instead of `PanResponder`, and turns on the swipes of
+ * `SwipeableRow`, `Pager` and the `Toaster` toasts (up to dismiss). Put it
+ * inside the app's `GestureHandlerRootView`; each overlay adds its own root
+ * view inside its `Modal`.
  */
 export function GestureHandlerProvider({ children }: { children: ReactNode }) {
   return (
     <SheetGestureContext.Provider value={PARTS}>
-      <SwipeRowGestureContext.Provider value={GestureSwipeableRow}>{children}</SwipeRowGestureContext.Provider>
+      <SwipeRowGestureContext.Provider value={GestureSwipeableRow}>
+        <PagerGestureContext.Provider value={GesturePager}>
+          <ToastDragContext.Provider value={GestureToastDrag}>{children}</ToastDragContext.Provider>
+        </PagerGestureContext.Provider>
+      </SwipeRowGestureContext.Provider>
     </SheetGestureContext.Provider>
   );
 }

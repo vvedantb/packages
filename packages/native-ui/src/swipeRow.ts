@@ -44,6 +44,25 @@ export const SWIPE_ACTIVE_OFFSET_X = 12;
 /** Vertical travel (pt) that hands the touch to the list's scroll first: a small diagonal drag scrolls. */
 export const SWIPE_FAIL_OFFSET_Y = 8;
 
+/**
+ * The pan's sideways thresholds. A row takes a sideways drag past
+ * `SWIPE_ACTIVE_OFFSET_X` either way. Inside a `Pager` it takes only the
+ * directions it has actions for, and a drag the other way fails it at once,
+ * so the pager behind moves instead (a Sessions row swiped right).
+ */
+export function swipeRowActivation(
+  sides: Pick<SwipeSides, "leading" | "trailing">,
+  insidePager: boolean,
+): { activeOffsetX: number | [number, number]; failOffsetX?: number } {
+  if (!insidePager || (sides.leading > 0 && sides.trailing > 0)) {
+    return { activeOffsetX: [-SWIPE_ACTIVE_OFFSET_X, SWIPE_ACTIVE_OFFSET_X] };
+  }
+  // Left (negative) reveals the trailing actions; right the leading ones.
+  return sides.trailing > 0
+    ? { activeOffsetX: -SWIPE_ACTIVE_OFFSET_X, failOffsetX: SWIPE_ACTIVE_OFFSET_X }
+    : { activeOffsetX: SWIPE_ACTIVE_OFFSET_X, failOffsetX: -SWIPE_ACTIVE_OFFSET_X };
+}
+
 /** How far ahead (s) the release velocity carries the row when deciding where it settles. */
 const PROJECTION_S = 0.2;
 

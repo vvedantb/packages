@@ -555,10 +555,13 @@ declare module "react-native-gesture-handler" {
     enabled(enabled: boolean): PanGesture;
     manualActivation(manual: boolean): PanGesture;
     activeOffsetX(offset: number | number[]): PanGesture;
+    activeOffsetY(offset: number | number[]): PanGesture;
+    failOffsetX(offset: number | number[]): PanGesture;
     failOffsetY(offset: number | number[]): PanGesture;
     simultaneousWithExternalGesture(...gestures: GestureType[]): PanGesture;
     onTouchesDown(handler: TouchHandler): PanGesture;
     onTouchesMove(handler: TouchHandler): PanGesture;
+    onBegin(handler: (event: PanGestureEvent) => void): PanGesture;
     onStart(handler: (event: PanGestureEvent) => void): PanGesture;
     onUpdate(handler: (event: PanGestureEvent) => void): PanGesture;
     onEnd(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;

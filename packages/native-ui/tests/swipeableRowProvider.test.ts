@@ -65,4 +65,20 @@ describe("SwipeableRow", () => {
     expect(row.props.enabled).toBe(false);
     expect(row.props.children).toBe("row");
   });
+
+  it("turns on the Pager swipe and the toast drag under GestureHandlerProvider", async () => {
+    const { GestureHandlerProvider } = await import("../src/entries/gesture-handler");
+    const { PagerGestureContext } = await import("../src/Pager");
+    const { ToastDragContext } = await import("../src/toastDrag");
+    const { GesturePager } = await import("../src/primitives/pager-gesture");
+    const { GestureToastDrag } = await import("../src/primitives/toast-drag-gesture");
+    const provider: Element = GestureHandlerProvider({ children: "app" });
+    const pager = (provider.props.children as Element).props.children as Element;
+    expect(pager.type).toBe(PagerGestureContext.Provider);
+    expect(pager.props.value).toBe(GesturePager);
+    const toastDrag = pager.props.children as Element;
+    expect(toastDrag.type).toBe(ToastDragContext.Provider);
+    expect(toastDrag.props.value).toBe(GestureToastDrag);
+    expect(toastDrag.props.children).toBe("app");
+  });
 });
