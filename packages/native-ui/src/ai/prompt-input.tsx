@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { useContext, useState, type ReactNode } from "react";
+import { Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconArrowUp, IconChevronDown, IconPlayerStopFilled } from "@tabler/icons-react-native";
 import { cn } from "../cn";
@@ -7,6 +7,7 @@ import { MIN_TOUCH_TARGET, fieldStyle, fieldTextStyle, sizeStyle, touchSlop, typ
 import { withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { Input as FieldInput } from "../primitives/input";
+import { COMPOSER_INPUT_ID, KeyboardAvoidingView, KeyboardLiftContext } from "../primitives/keyboard-parts";
 import { usePressFeedback } from "../motion";
 import { useControllableState } from "../primitives/use-controllable-state";
 import { useLargerText } from "../theme";
@@ -261,7 +262,7 @@ export type PromptInputProps = {
   disabled?: boolean;
   /** Pad the bottom safe-area inset (home indicator). Default `true`; turn it off when a tab bar below already does. */
   safeBottom?: boolean;
-  /** Height of anything above the screen's own top, such as a navigation header, for the `KeyboardAvoidingView`. Default 0. */
+  /** Height of anything above the screen's own top, such as a navigation header, for the keyboard lift. Default 0. */
   keyboardVerticalOffset?: number;
   className?: string;
   testID?: string;
@@ -293,8 +294,10 @@ const ONE_ROW = Platform.OS === "web" ? 1 : undefined;
  * bg-field-background`, `fieldStyle`) with an optional `header` row, a
  * multiline field that grows from one line, and a footer of `toolbar` tools
  * and the send / stop button. It sits in a `KeyboardAvoidingView` (padding,
- * on iOS and Android) and pads the safe-area insets, so put it last in a
- * full-height column, under the `Conversation`.
+ * on iOS and Android; frame by frame with `KeyboardControllerProvider`) and
+ * pads the safe-area insets, so put it last in a full-height column, under the
+ * `Conversation`. Inside a part that lifts it already (`ConversationDock`
+ * with `KeyboardControllerProvider`, `ChatThread`) it adds no lift of its own.
  */
 export function PromptInput({
   value,
@@ -322,6 +325,7 @@ export function PromptInput({
   const scheme = useScheme();
   const largerText = useLargerText();
   const insets = useSafeAreaInsets();
+  const lifted = useContext(KeyboardLiftContext);
   const [text, setText] = useControllableState({ value, defaultValue, onChange: onChangeText });
   const message = text.trim();
   const canSubmit = message.length > 0 && !disabled && !isGenerating(status);
@@ -355,94 +359,46 @@ export function PromptInput({
     setContentHeight(0);
   };
 
-  return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      // The keyboard covers the home indicator, so the inset padded below is
-      // taken off the lift: the composer sits right on the keyboard.
-      keyboardVerticalOffset={keyboardVerticalOffset - bottom}
+  const composer = (
+    <View
+      testID={testID}
+      className={cn("pt-2", className)}
+      style={{ paddingBottom: bottom + 8, paddingLeft: insets.left + 12, paddingRight: insets.right + 12 }}
     >
-      <View
-        testID={testID}
-        className={cn("pt-2", className)}
-        style={{ paddingBottom: bottom + 8, paddingLeft: insets.left + 12, paddingRight: insets.right + 12 }}
-      >
-        {/* The web panel picker's 6 gap (`POPUP_GAP`) above the field. */}
-        {menu ? <View className="mb-1.5">{menu}</View> : null}
-        {layout === "inline" ? (
-          // Web `Composer` inline: `rounded-[1.25rem]` and a `p-1.5` row, items at the bottom as the field grows.
-          <View className="border" style={[fieldStyle(scheme), { borderRadius: pill ? PILL.radius : INLINE_RADIUS }]}>
-            {replyTo ? <View className="px-1.5 pt-1.5">{replyTo}</View> : null}
-            {header ? <View className="flex-row flex-wrap gap-1 px-1.5 pt-1.5">{header}</View> : null}
-            <View
-              className={cn("flex-row items-end gap-1", !pill && "p-1.5")}
-              style={pill ? { paddingVertical: PILL.paddingY, paddingHorizontal: PILL.paddingX } : null}
-            >
-              {leading ? (
-                // In the pill, centred on the 36 line, as the web `items-center` row.
-                <View className="shrink-0 flex-row items-center gap-1" style={pill ? { minHeight: PILL.lineHeight } : null}>
-                  {leading}
-                </View>
-              ) : null}
-              <FieldInput
-                multiline
-                numberOfLines={ONE_ROW}
-                value={text}
-                onChangeText={changeText}
-                placeholder={placeholder}
-                placeholderTextColor={pill ? withAlpha(tokens.color.muted[scheme], PILL.placeholderAlpha) : undefined}
-                accessibilityLabel={accessibilityLabel}
-                editable={!disabled}
-                textAlignVertical="center"
-                scrollEnabled={scrollEnabled}
-                onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
-                className={cn(
-                  "flex-1 border-0 text-sm font-instrument-sans",
-                  pill ? "min-h-9 px-1 py-2" : "min-h-8 px-2 py-1",
-                  largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
-                )}
-                style={[
-                  fieldTextStyle(scheme),
-                  fieldText,
-                  largerText ? typeStyle("medium") : null,
-                  {
-                    backgroundColor: "transparent",
-                    maxHeight,
-                    ...growStyle,
-                  },
-                ]}
-              />
+      {/* The web panel picker's 6 gap (`POPUP_GAP`) above the field. */}
+      {menu ? <View className="mb-1.5">{menu}</View> : null}
+      {layout === "inline" ? (
+        // Web `Composer` inline: `rounded-[1.25rem]` and a `p-1.5` row, items at the bottom as the field grows.
+        <View className="border" style={[fieldStyle(scheme), { borderRadius: pill ? PILL.radius : INLINE_RADIUS }]}>
+          {replyTo ? <View className="px-1.5 pt-1.5">{replyTo}</View> : null}
+          {header ? <View className="flex-row flex-wrap gap-1 px-1.5 pt-1.5">{header}</View> : null}
+          <View
+            className={cn("flex-row items-end gap-1", !pill && "p-1.5")}
+            style={pill ? { paddingVertical: PILL.paddingY, paddingHorizontal: PILL.paddingX } : null}
+          >
+            {leading ? (
+              // In the pill, centred on the 36 line, as the web `items-center` row.
               <View className="shrink-0 flex-row items-center gap-1" style={pill ? { minHeight: PILL.lineHeight } : null}>
-                {toolbar}
-                <PromptInputSubmit
-                  status={status}
-                  onSubmit={submit}
-                  onStop={onStop}
-                  canSubmit={canSubmit}
-                  size={pill ? "md" : undefined}
-                />
+                {leading}
               </View>
-            </View>
-          </View>
-        ) : (
-          <View className="border" style={fieldStyle(scheme)}>
-            {replyTo ? <View className="px-2 pt-2">{replyTo}</View> : null}
-            {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
-            {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
+            ) : null}
             <FieldInput
+              nativeID={COMPOSER_INPUT_ID}
               multiline
               numberOfLines={ONE_ROW}
               value={text}
               onChangeText={changeText}
               placeholder={placeholder}
+              placeholderTextColor={pill ? withAlpha(tokens.color.muted[scheme], PILL.placeholderAlpha) : undefined}
               accessibilityLabel={accessibilityLabel}
               editable={!disabled}
-              textAlignVertical="top"
+              textAlignVertical="center"
               scrollEnabled={scrollEnabled}
               onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
               className={cn(
-                "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
-                largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
+                "flex-1 border-0 text-sm font-instrument-sans",
+                pill ? "min-h-9 px-1 py-2" : "min-h-8 px-2 py-1",
+                largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
               )}
               style={[
                 fieldTextStyle(scheme),
@@ -455,14 +411,67 @@ export function PromptInput({
                 },
               ]}
             />
-            <View className="flex-row items-center justify-between gap-1 px-2 pb-2">
-              <View className="min-w-0 shrink flex-row items-center gap-1">{toolbar}</View>
-              <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
+            <View className="shrink-0 flex-row items-center gap-1" style={pill ? { minHeight: PILL.lineHeight } : null}>
+              {toolbar}
+              <PromptInputSubmit
+                status={status}
+                onSubmit={submit}
+                onStop={onStop}
+                canSubmit={canSubmit}
+                size={pill ? "md" : undefined}
+              />
             </View>
           </View>
-        )}
-        {footer}
-      </View>
+        </View>
+      ) : (
+        <View className="border" style={fieldStyle(scheme)}>
+          {replyTo ? <View className="px-2 pt-2">{replyTo}</View> : null}
+          {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
+          {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
+          <FieldInput
+            nativeID={COMPOSER_INPUT_ID}
+            multiline
+            numberOfLines={ONE_ROW}
+            value={text}
+            onChangeText={changeText}
+            placeholder={placeholder}
+            accessibilityLabel={accessibilityLabel}
+            editable={!disabled}
+            textAlignVertical="top"
+            scrollEnabled={scrollEnabled}
+            onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
+            className={cn(
+              "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
+              largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
+            )}
+            style={[
+              fieldTextStyle(scheme),
+              fieldText,
+              largerText ? typeStyle("medium") : null,
+              {
+                backgroundColor: "transparent",
+                maxHeight,
+                ...growStyle,
+              },
+            ]}
+          />
+          <View className="flex-row items-center justify-between gap-1 px-2 pb-2">
+            <View className="min-w-0 shrink flex-row items-center gap-1">{toolbar}</View>
+            <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
+          </View>
+        </View>
+      )}
+      {footer}
+    </View>
+  );
+  if (lifted) return composer;
+  return (
+    <KeyboardAvoidingView
+      // The keyboard covers the home indicator, so the inset padded below is
+      // taken off the lift: the composer sits right on the keyboard.
+      keyboardVerticalOffset={keyboardVerticalOffset - bottom}
+    >
+      {composer}
     </KeyboardAvoidingView>
   );
 }

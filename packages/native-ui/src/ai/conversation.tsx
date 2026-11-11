@@ -12,6 +12,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
   type FlatListProps,
@@ -23,11 +24,13 @@ import {
 } from "react-native";
 import { IconArrowDown, type IconProps } from "@tabler/icons-react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EASE_OUT } from "../motion";
 import { Button } from "../Button";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop, typeStyle } from "../controlStyles";
 import { withAlpha } from "../palette";
+import { KeyboardLiftContext, useKeyboardParts } from "../primitives/keyboard-parts";
 import { NativeOnlyAnimatedView } from "../primitives/native-only-animated-view";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -38,9 +41,16 @@ import { chatTextSize } from "./chat-text";
 /** Within this many points of the end, the thread counts as at the bottom and keeps following new content. */
 export const AT_BOTTOM_THRESHOLD = 70;
 
-/** Whether a scroll position is within `AT_BOTTOM_THRESHOLD` of the end. Content shorter than the view is at the bottom. */
-export function isScrolledToBottom({ contentOffset, contentSize, layoutMeasurement }: NativeScrollEvent) {
-  return contentSize.height - layoutMeasurement.height - contentOffset.y <= AT_BOTTOM_THRESHOLD;
+/**
+ * Whether a scroll position is within `AT_BOTTOM_THRESHOLD` of the end.
+ * Content shorter than the view is at the bottom. `bottomInset` is space
+ * added past the content (the keyboard's, with `KeyboardControllerProvider`).
+ */
+export function isScrolledToBottom(
+  { contentOffset, contentSize, layoutMeasurement }: NativeScrollEvent,
+  bottomInset = 0,
+) {
+  return contentSize.height + bottomInset - layoutMeasurement.height - contentOffset.y <= AT_BOTTOM_THRESHOLD;
 }
 
 /** What the thread scrolls with: the `ScrollView` of `ConversationContent` or the `FlatList` of `ConversationList`. */
@@ -50,7 +60,8 @@ type ConversationContextValue = {
   isAtBottom: boolean;
   scrollToBottom: () => void;
   scrollRef: RefObject<ConversationScroller | null>;
-  onScroll: (event: NativeScrollEvent) => void;
+  /** `bottomInset`: space past the content, as `isScrolledToBottom`. */
+  onScroll: (event: NativeScrollEvent, bottomInset?: number) => void;
   onUserScroll: () => void;
   followContent: () => void;
   /** The height of the `ConversationDock` under the thread, 0 without one. */
@@ -97,8 +108,8 @@ export function Conversation({ className, ...props }: ConversationProps) {
       update(true);
       scrollRef.current?.scrollToEnd({ animated: !reduceMotion });
     },
-    onScroll: (event) => {
-      const bottom = isScrolledToBottom(event);
+    onScroll: (event, bottomInset) => {
+      const bottom = isScrolledToBottom(event, bottomInset);
       if (bottom) autoScrolling.current = false;
       else if (autoScrolling.current) return;
       update(bottom);
@@ -129,7 +140,11 @@ type ConversationScrollHandlers = {
   onLayout?: ((event: LayoutChangeEvent) => void) | null;
 };
 
-/** Taps reach rows while the keyboard is up; a drag lowers it (interactively on iOS); scroll events at 60 Hz. */
+/**
+ * Taps reach rows while the keyboard is up; a drag lowers it (interactively
+ * on iOS, and on Android 11+ with `KeyboardControllerProvider`, in
+ * `ConversationList`); scroll events at 60 Hz.
+ */
 const SCROLL_DEFAULTS: Pick<ScrollViewProps, "keyboardShouldPersistTaps" | "keyboardDismissMode" | "scrollEventThrottle"> = {
   keyboardShouldPersistTaps: "handled",
   keyboardDismissMode: Platform.OS === "ios" ? "interactive" : "on-drag",
@@ -143,13 +158,11 @@ const SCROLL_DEFAULTS: Pick<ScrollViewProps, "keyboardShouldPersistTaps" | "keyb
  * defaults come first so `props` can override them; the handlers come last
  * and call the app's own after the thread's.
  */
-function useConversationScroll<P extends ConversationScrollHandlers>({
-  onScroll,
-  onScrollBeginDrag,
-  onContentSizeChange,
-  onLayout,
-  ...props
-}: P) {
+function useConversationScroll<P extends ConversationScrollHandlers>(
+  { onScroll, onScrollBeginDrag, onContentSizeChange, onLayout, ...props }: P,
+  /** Space past the content that `onScroll` does not report, read at each event. */
+  bottomInset?: () => number,
+) {
   const conversation = useConversation();
   return {
     ref: (scroller: ConversationScroller | null) => {
@@ -158,7 +171,7 @@ function useConversationScroll<P extends ConversationScrollHandlers>({
     ...SCROLL_DEFAULTS,
     ...props,
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      conversation.onScroll(event.nativeEvent);
+      conversation.onScroll(event.nativeEvent, bottomInset?.());
       onScroll?.(event);
     },
     onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -211,6 +224,13 @@ export type ConversationListProps<T> = FlatListProps<T> & {
  * It scrolls to the end it has measured, not with `FlatList.scrollToEnd`,
  * which places the end from estimated row heights (zero before the rows are
  * measured, so a thread opened at its end would stay at the top).
+ *
+ * With `KeyboardControllerProvider` the list keeps its size as the keyboard
+ * opens: its content gains the keyboard's height at the end and rises with
+ * the keyboard frame by frame, so the newest message stays on the composer.
+ * A drag down on it moves the keyboard with the finger once the finger
+ * reaches the composer, and lets it go at the finger's speed (iOS, Android
+ * 11+; Android 10 and below lower it at once, as without the provider).
  */
 export function ConversationList<T>({
   className,
@@ -220,31 +240,64 @@ export function ConversationList<T>({
   ...props
 }: ConversationListProps<T>) {
   const conversation = useConversation();
-  // Sizes from the list's own events, for the scroll offset; no render reads them.
-  const size = useRef({ content: 0, view: 0 });
-  const wired = useConversationScroll({
-    ...props,
-    onContentSizeChange: (width: number, height: number) => {
-      size.current.content = height;
-      onContentSizeChange?.(width, height);
+  const keyboard = useKeyboardParts();
+  const insets = useSafeAreaInsets();
+  // Sizes from the list's own events, for the scroll offset; no render reads
+  // them. `inset` is the keyboard's space past the content.
+  const size = useRef({ content: 0, view: 0, inset: 0 });
+  const wired = useConversationScroll(
+    {
+      ...props,
+      onContentSizeChange: (width: number, height: number) => {
+        size.current.content = height;
+        onContentSizeChange?.(width, height);
+      },
+      onLayout: (event: LayoutChangeEvent) => {
+        size.current.view = event.nativeEvent.layout.height;
+        onLayout?.(event);
+      },
     },
-    onLayout: (event: LayoutChangeEvent) => {
-      size.current.view = event.nativeEvent.layout.height;
-      onLayout?.(event);
-    },
-  });
-  return (
+    () => size.current.inset,
+  );
+  const list = (
     <FlatList
       className={cn("flex-1", className)}
       contentContainerClassName={cn("px-3 py-3", contentContainerClassName)}
       {...wired}
+      keyboardDismissMode={
+        props.keyboardDismissMode ?? (keyboard?.interactive ? "interactive" : SCROLL_DEFAULTS.keyboardDismissMode)
+      }
+      renderScrollComponent={
+        keyboard
+          ? (scrollProps: ScrollViewProps) => (
+              <keyboard.ChatScrollView
+                {...scrollProps}
+                // The composer pads the bottom inset, which the keyboard covers: the content rises by the rest.
+                bottomOffset={insets.bottom}
+                onInsetChange={(bottom) => {
+                  size.current.inset = bottom;
+                }}
+              />
+            )
+          : props.renderScrollComponent
+      }
       ref={(list: FlatList<T> | null) => {
         conversation.scrollRef.current = list && {
           scrollToEnd: (options) =>
-            list.scrollToOffset({ offset: Math.max(0, size.current.content - size.current.view), animated: options?.animated }),
+            list.scrollToOffset({
+              offset: Math.max(0, size.current.content + size.current.inset - size.current.view),
+              animated: options?.animated,
+            }),
         };
       }}
     />
+  );
+  if (!keyboard) return list;
+  // The keyboard follows the finger from the composer's top: the dock less the inset it pads.
+  return (
+    <keyboard.GestureArea offset={Math.max(0, conversation.dockHeight - insets.bottom)} style={styles.fill}>
+      {list}
+    </keyboard.GestureArea>
   );
 }
 
@@ -305,10 +358,17 @@ export type ConversationDockProps = ViewProps & { className?: string };
  * dock), so the button stays with the dock as it grows (a reply quote, a
  * taller field) and as the keyboard lifts it, instead of a fixed height over
  * the messages.
+ *
+ * With `KeyboardControllerProvider` the dock moves with the keyboard frame by
+ * frame (`translateY`, no layout), less the bottom inset: its content pads
+ * that inset, as `PromptInput` does, and the keyboard covers it. A
+ * `PromptInput` in it then adds no lift of its own.
  */
 export function ConversationDock({ onLayout, ...props }: ConversationDockProps) {
   const { setDockHeight } = useConversation();
-  return (
+  const keyboard = useKeyboardParts();
+  const insets = useSafeAreaInsets();
+  const dock = (
     <View
       {...props}
       onLayout={(event) => {
@@ -316,6 +376,12 @@ export function ConversationDock({ onLayout, ...props }: ConversationDockProps) 
         onLayout?.(event);
       }}
     />
+  );
+  if (!keyboard) return dock;
+  return (
+    <keyboard.StickyView bottomOffset={insets.bottom}>
+      <KeyboardLiftContext.Provider value>{dock}</KeyboardLiftContext.Provider>
+    </keyboard.StickyView>
   );
 }
 
@@ -361,11 +427,13 @@ export function ConversationScrollButton({
   testID,
 }: ConversationScrollButtonProps) {
   const { isAtBottom, scrollToBottom, dockHeight } = useConversation();
+  const keyboard = useKeyboardParts();
+  const safeArea = useSafeAreaInsets();
   const scheme = useScheme();
   const largerText = useLargerText();
   if (isAtBottom) return null;
   const caption = chatTextSize("caption", largerText);
-  return (
+  const button = (
     <NativeOnlyAnimatedView
       entering={SCROLL_BUTTON_ENTER}
       exiting={SCROLL_BUTTON_EXIT}
@@ -418,4 +486,17 @@ export function ConversationScrollButton({
       )}
     </NativeOnlyAnimatedView>
   );
+  if (!keyboard) return button;
+  // It rides with the dock: the same move with the keyboard.
+  return (
+    <keyboard.StickyView bottomOffset={safeArea.bottom} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      {button}
+    </keyboard.StickyView>
+  );
 }
+
+const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
+});

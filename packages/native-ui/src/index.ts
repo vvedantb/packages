@@ -83,6 +83,8 @@ export type { SeparatorProps } from "./Separator";
 export { Progress } from "./Progress";
 export type { ProgressProps } from "./Progress";
 export { Spinner, CenteredSpinner } from "./Spinner";
+export { KeyboardAvoidingView } from "./primitives/keyboard-parts";
+export type { KeyboardAvoidingViewProps } from "./primitives/keyboard-parts";
 export type { SpinnerProps } from "./Spinner";
 export { Avatar, AvatarImage, AvatarFallback } from "./Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "./Avatar";

@@ -30,6 +30,8 @@ declare module "react-native" {
   export type PlatformOSType = "ios" | "android" | "web" | "windows" | "macos";
   export const Platform: {
     OS: PlatformOSType;
+    /** The Android API level, or the iOS version string. */
+    Version: number | string;
     select<T>(
       specifics: Partial<Record<PlatformOSType | "native" | "default", T>>,
     ): T | undefined;
@@ -255,6 +257,7 @@ declare module "react-native" {
     ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
     initialNumToRender?: number;
     windowSize?: number;
+    renderScrollComponent?: (props: ScrollViewProps) => React.ReactElement;
   }
   export class FlatList<T> extends React.Component<FlatListProps<T>> {
     scrollToEnd(options?: { animated?: boolean }): void;
@@ -568,6 +571,39 @@ declare module "react-native-gesture-handler" {
   };
   export const GestureDetector: React.ComponentType<{ gesture: GestureType; children?: React.ReactNode }>;
   export const GestureHandlerRootView: React.ComponentType<{
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
+}
+
+declare module "react-native-keyboard-controller" {
+  import type * as React from "react";
+  import type { ScrollViewProps, StyleProp, ViewProps, ViewStyle } from "react-native";
+
+  export const KeyboardAvoidingView: React.ComponentType<
+    ViewProps & {
+      behavior?: "height" | "padding" | "position" | "translate-with-padding";
+      keyboardVerticalOffset?: number;
+      enabled?: boolean;
+      children?: React.ReactNode;
+    }
+  >;
+  export const KeyboardStickyView: React.ComponentType<
+    ViewProps & { offset?: { closed?: number; opened?: number }; enabled?: boolean; children?: React.ReactNode }
+  >;
+  export type ScrollViewContentInsets = { top: number; bottom: number; left: number; right: number };
+  export const KeyboardChatScrollView: React.ComponentType<
+    ScrollViewProps & {
+      offset?: number;
+      keyboardLiftBehavior?: "always" | "whenAtEnd" | "persistent" | "never";
+      onContentInsetChange?: (insets: ScrollViewContentInsets) => void;
+      children?: React.ReactNode;
+    }
+  >;
+  export const KeyboardGestureArea: React.ComponentType<{
+    interpolator?: "ios" | "linear";
+    offset?: number;
+    textInputNativeID?: string;
     style?: StyleProp<ViewStyle>;
     children?: React.ReactNode;
   }>;
