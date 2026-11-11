@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { floatingTabPillColors, tabColors } from "../src/controlStyles";
+import { configureTheme } from "../src/configureTheme";
 import {
   FLOATING_PILL_RADIUS,
   FLOATING_TAB_BAR_HEIGHT,
@@ -15,10 +16,28 @@ import { tokens } from "../src/tokens";
 import type { FloatingTabBarProps } from "../src/FloatingTabBar";
 
 // Hidden tabs (Expo Router `href: null`) and the active pill. The component
-// checks call `FloatingTabBar` and its pill with React Native and the
-// safe-area hook stubbed, and read the element tree they return.
+// checks call `FloatingTabBar` and its pill with React Native, Reanimated, the
+// safe-area hook and the React effects stubbed, and read the element tree they
+// return. Effects run at once, and `withTiming` returns its target.
 
 const scheme = vi.hoisted(() => ({ colorScheme: "light" as "light" | "dark" }));
+const reduceMotion = vi.hoisted(() => ({ value: false }));
+const withTiming = vi.hoisted(() => vi.fn((to: number, _config?: unknown) => to));
+vi.mock("react", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react")>()),
+  useEffect: (effect: () => void) => effect(),
+}));
+vi.mock("react-native-reanimated", () => ({
+  default: { View: "Animated.View" },
+  Easing: { bezier: (...points: number[]) => `bezier(${points.join(", ")})` },
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
+  useAnimatedStyle: <T>(updater: () => T) => updater(),
+  withTiming,
+}));
+vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => reduceMotion.value }));
 
 vi.mock("react-native", () => ({
   Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
@@ -36,11 +55,14 @@ vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Bool
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const webTokens = readFileSync(join(root, "..", "ui", "tokens/src/tokens.css"), "utf8");
 const webTabs = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs.css"), "utf8");
 const webTabsPills = readFileSync(join(root, "..", "ui", "tokens/src/css/tabs-pills.css"), "utf8");
 
 afterEach(() => {
   scheme.colorScheme = "light";
+  reduceMotion.value = false;
+  withTiming.mockClear();
 });
 
 describe("isTabBarRouteVisible", () => {
@@ -221,7 +243,7 @@ describe("FloatingTabBar active pill", () => {
     for (const colorScheme of ["light", "dark"] as const) {
       scheme.colorScheme = colorScheme;
       const { fill } = renderPill((await bar(4)).pills[0]!);
-      expect(fill.type).toBe("View");
+      expect(fill.type).toBe("Animated.View");
       expect(flatten(fill.props.style)).toEqual({
         position: "absolute",
         top: 0,
@@ -258,6 +280,17 @@ describe("FloatingTabBar active pill", () => {
     }
   });
 
+  it("keeps its own fill when an app themes the segmented thumb", () => {
+    const before = { ...palette.segment };
+    try {
+      configureTheme({ palette: { segment: { light: "#ffffff", dark: "#202020" } } });
+      expect(floatingTabPillColors("dark").backgroundColor).toBe("#474747");
+      expect(tabColors("segmented", true, "dark").backgroundColor).toBe("#202020");
+    } finally {
+      configureTheme({ palette: { segment: before } });
+    }
+  });
+
   it("stands out from the bar in both schemes", () => {
     // The bar as drawn: the solid fill (no blur, Reduce Transparency), and
     // the translucent glass over the page background.
@@ -282,6 +315,20 @@ describe("FloatingTabBar active pill", () => {
       // The focused label reads on the pill.
       expect(contrast(color, backgroundColor), colorScheme).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it("slides over the web --tabs-dur and --tabs-ease", async () => {
+    expect(webTokens).toMatch(/--tabs-dur: 200ms;/);
+    expect(webTokens).toMatch(/--tabs-ease: cubic-bezier\(0\.22, 1, 0\.36, 1\);/);
+    renderPill((await bar(4)).pills[0]!);
+    expect(withTiming).toHaveBeenCalledWith(50, { duration: 200, easing: "bezier(0.22, 1, 0.36, 1)" });
+  });
+
+  it("moves at once with Reduce Motion", async () => {
+    reduceMotion.value = true;
+    const { fill } = renderPill((await bar(4)).pills[0]!);
+    expect(withTiming).not.toHaveBeenCalled();
+    expect(flatten(fill.props.style).left).toBe("50%");
   });
 });
 
