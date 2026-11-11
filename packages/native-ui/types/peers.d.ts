@@ -840,6 +840,8 @@ declare module "react-native-marked" {
     constructor(options?: { selectable?: boolean });
     code(text: string, language?: string, containerStyle?: ViewStyle, textStyle?: TextStyle): ReactNode;
     codespan(text: string, styles?: TextStyle): ReactNode;
+    paragraph(children: ReactNode[], styles?: ViewStyle): ReactNode;
+    listItem(children: ReactNode[], styles?: ViewStyle): ReactNode;
     list(ordered: boolean, li: ReactNode[], listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode;
     blockquote(children: ReactNode[], styles?: ViewStyle): ReactNode;
     link(children: string | ReactNode[], href: string, styles?: TextStyle, title?: string): ReactNode;

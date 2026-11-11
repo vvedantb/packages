@@ -4,7 +4,7 @@ import { Renderer, useMarkdown, type MarkedStyles } from "react-native-marked";
 import { CodeBlock } from "../ai/code-block";
 import { MONO_FONT, chatTextSize } from "../ai/chat-text";
 import { ChatTextColorContext } from "../ai/response-text";
-import { sizeStyle, typeStyle } from "../controlStyles";
+import { sizeStyle, trackingStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -47,7 +47,16 @@ export type MarkdownProps = {
    * href and plain text; return undefined to keep the default link.
    */
   renderLink?: (href: string, text: string) => ReactNode | undefined;
+  /**
+   * Heading look. Default `default`, the web `.markdown` scale. `label`
+   * demotes every heading to a quiet section label (`text-xs` medium,
+   * uppercase, `tracking-wide`, muted, 16 above and 8 below), as a digest
+   * of short themed lists (Eva's standup cards) styles its `###` headings.
+   */
+  headings?: MarkdownHeadings;
 };
+
+export type MarkdownHeadings = "default" | "label";
 
 /**
  * Markdown at chat size, styled as the web `.markdown` (Streamdown) block:
@@ -59,7 +68,7 @@ export type MarkdownProps = {
  * Needs the optional peer `react-native-marked` (it renders through
  * `useMarkdown`, so it nests in a `ScrollView` without a `FlatList`).
  */
-export function Markdown({ children, onCopyCode, onCopyTable, leading = "relaxed", renderLink }: MarkdownProps) {
+export function Markdown({ children, onCopyCode, onCopyTable, leading = "relaxed", renderLink, headings = "default" }: MarkdownProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const inherited = useContext(ChatTextColorContext);
@@ -77,7 +86,7 @@ export function Markdown({ children, onCopyCode, onCopyTable, leading = "relaxed
         border: tokens.color.border[scheme],
       },
     },
-    styles: markdownStyles(scheme, body, color),
+    styles: markdownStyles(scheme, body, color, headings),
   });
   // Every block has half the gap above and below (React Native margins do not
   // collapse), so 16 between blocks; this takes the outer halves off, as the
@@ -90,8 +99,23 @@ export function markdownStyles(
   scheme: "light" | "dark",
   body: { fontSize: number; lineHeight: number },
   color: string,
+  headings: MarkdownHeadings = "default",
 ): MarkedStyles {
-  const heading = (scale: number): TextStyle => ({
+  const label: TextStyle = {
+    fontFamily: fontFamily.medium,
+    ...typeStyle("medium"),
+    ...sizeStyle("text-xs"),
+    ...trackingStyle(12, "wide"),
+    textTransform: "uppercase",
+    color: tokens.color.muted[scheme],
+    // With the half gap each block keeps (margins do not collapse): 16 above,
+    // the next block's 8 below (the web `mt-4 mb-1.5`, collapsed).
+    marginTop: MARKDOWN_SCALE.blockGap / 2,
+    marginBottom: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+  };
+  const scaled = (scale: number): TextStyle => ({
     fontFamily: fontFamily.semibold,
     fontWeight: "600",
     fontSize: Math.round(body.fontSize * scale),
@@ -103,6 +127,7 @@ export function markdownStyles(
     paddingBottom: 0,
     borderBottomWidth: 0,
   });
+  const heading = (scale: number): TextStyle => (headings === "label" ? label : scaled(scale));
   const gap = { marginVertical: MARKDOWN_SCALE.blockGap / 2 };
   // The library's inline styles start from its own 16 / 24 text, so each one
   // restates the body size, or a bold or linked word grows the line.
@@ -155,7 +180,15 @@ export function inlineCodeStyle(scheme: "light" | "dark", fontSize: number, colo
   };
 }
 
-type StyledNodeProps = { children?: ReactNode; style?: StyleProp<TextStyle>; accessibilityRole?: string };
+/**
+ * A paragraph block. A component of its own so `listItem` can find it in a
+ * loose list (the parser's own paragraph is a plain `View`).
+ */
+function Paragraph({ style, children }: { style?: StyleProp<ViewStyle>; children?: ReactNode }) {
+  return <View style={style}>{children}</View>;
+}
+
+type StyledNodeProps ={ children?: ReactNode; style?: StyleProp<TextStyle>; accessibilityRole?: string };
 
 /**
  * An inline-code chip (see `codespan`). A component of its own so
@@ -287,6 +320,29 @@ class NativeUiMarkdownRenderer extends Renderer {
           color={this.color}
           onCopy={this.onCopyTable}
         />
+      </View>
+    );
+  }
+
+  override paragraph(children: ReactNode[], styles?: ViewStyle): ReactNode {
+    return (
+      <Paragraph key={this.getKey()} style={styles}>
+        {children}
+      </Paragraph>
+    );
+  }
+
+  /**
+   * A loose list (items a blank line apart, as Eva's doc editor writes them)
+   * puts each item's text in a paragraph. Its outer margins come off, as in
+   * a quote, so the text sits on the marker's line, as the tight list.
+   */
+  override listItem(children: ReactNode[], styles?: ViewStyle): ReactNode {
+    const loose = children.some((child) => isValidElement(child) && child.type === Paragraph);
+    if (!loose) return super.listItem(children, styles);
+    return (
+      <View key={this.getKey()} style={styles}>
+        <View style={{ marginVertical: -MARKDOWN_SCALE.blockGap / 2 }}>{children}</View>
       </View>
     );
   }
