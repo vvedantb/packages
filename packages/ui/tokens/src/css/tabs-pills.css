@@ -43,13 +43,15 @@
     padding: 0;
     background: transparent;
   }
-  .t-tabs--pills
-    .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover {
-    background: color-mix(
-      in oklch,
-      var(--tabs-pill-active-bg) 50%,
-      transparent
-    );
+  @media (hover: hover) and (pointer: fine) {
+    .t-tabs--pills
+      .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover {
+      background: color-mix(
+        in oklch,
+        var(--tabs-pill-active-bg) 50%,
+        transparent
+      );
+    }
   }
   .t-tabs--pills .t-tab[aria-selected="true"],
   .t-tabs--pills .t-tab[data-state="active"] {

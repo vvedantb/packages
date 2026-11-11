@@ -5,7 +5,8 @@
  *   @import "@vvedantb/ui/tokens/css/nav-icons.css";
  *
  * Every icon is an `svg.vv-icon` with:
- *   data-animate="hover"  animate while an ancestor with the `group` class is hovered (default)
+ *   data-animate="hover"  animate while an ancestor with the `group` class is hovered (default;
+ *                         fine pointers only, so a tap on a phone does not leave it running)
  *   data-animate="true"   animate all the time
  *   data-animate="false"  never animate, no hover scale
  *   data-hover-scale      root scale on group hover: "1.15" (spring) or "1.12" (ease out)
@@ -29,11 +30,28 @@
 .vv-icon[data-hover-scale="1.12"] {
   transition: transform 0.25s var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
 }
-.group:hover .vv-icon[data-hover-scale="1.15"]:not([data-animate="false"]) {
-  transform: scale(1.15);
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .vv-icon[data-hover-scale="1.15"]:not([data-animate="false"]) {
+    transform: scale(1.15);
+  }
+  .group:hover .vv-icon[data-hover-scale="1.12"]:not([data-animate="false"]) {
+    transform: scale(1.12);
+  }
 }
-.group:hover .vv-icon[data-hover-scale="1.12"]:not([data-animate="false"]) {
-  transform: scale(1.12);
+
+/* ── Parts: each shape sets --vv-icon-animation; these rules run it. Hover runs
+ *    only on a fine pointer: on touch a tap leaves :hover stuck. */
+@property --vv-icon-animation {
+  syntax: "*";
+  inherits: false;
+}
+.vv-icon[data-animate="true"] [class*="vv-icon-"] {
+  animation: var(--vv-icon-animation, none);
+}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .vv-icon[data-animate="hover"] [class*="vv-icon-"] {
+    animation: var(--vv-icon-animation, none);
+  }
 }
 
 /* ── SVG transforms need an explicit box and origin */
@@ -108,13 +126,11 @@
     opacity: 0;
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-memory-core,
-.vv-icon[data-animate="true"] .vv-icon-memory-core {
-  animation: vv-icon-memory-core calc(1s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-memory-core {
+  --vv-icon-animation: vv-icon-memory-core calc(1s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-memory-ring,
-.vv-icon[data-animate="true"] .vv-icon-memory-ring {
-  animation: vv-icon-memory-ring calc(1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
+.vv-icon .vv-icon-memory-ring {
+  --vv-icon-animation: vv-icon-memory-ring calc(1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
 }
 
 /* ── BuildingIcon: windows blink in turn */
@@ -132,23 +148,19 @@
     opacity: 1;
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-1,
-.vv-icon[data-animate="true"] .vv-icon-building-window-1 {
-  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-building-window-1 {
+  --vv-icon-animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-2,
-.vv-icon[data-animate="true"] .vv-icon-building-window-2 {
-  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-building-window-2 {
+  --vv-icon-animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.18s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-3,
-.vv-icon[data-animate="true"] .vv-icon-building-window-3 {
-  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-building-window-3 {
+  --vv-icon-animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.36s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-building-window-4,
-.vv-icon[data-animate="true"] .vv-icon-building-window-4 {
-  animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-building-window-4 {
+  --vv-icon-animation: vv-icon-building-window-blink calc(1.6s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.54s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -162,9 +174,8 @@
     transform: translate(2.5px, -2.5px);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-files-back,
-.vv-icon[data-animate="true"] .vv-icon-files-back {
-  animation: vv-icon-files-slide calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-files-back {
+  --vv-icon-animation: vv-icon-files-slide calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
 /* ── BoltIcon: flashes big then settles */
@@ -180,9 +191,8 @@
     transform: scale(0.94);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-bolt,
-.vv-icon[data-animate="true"] .vv-icon-bolt {
-  animation: vv-icon-bolt-flash calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-bolt {
+  --vv-icon-animation: vv-icon-bolt-flash calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
 /* ── InboxIcon: letter drops into the tray */
@@ -206,9 +216,8 @@
     opacity: 0;
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-letter,
-.vv-icon[data-animate="true"] .vv-icon-inbox-letter {
-  animation: vv-icon-inbox-drop calc(1.3s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-inbox-letter {
+  --vv-icon-animation: vv-icon-inbox-drop calc(1.3s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
 /* ── SettingsIcon (default variant="spin"): continuous spin */
@@ -217,9 +226,8 @@
     transform: rotate(360deg);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-gear,
-.vv-icon[data-animate="true"] .vv-icon-gear {
-  animation: vv-icon-gear-spin calc(2.5s * var(--vv-icon-duration-scale, 1)) linear infinite;
+.vv-icon .vv-icon-gear {
+  --vv-icon-animation: vv-icon-gear-spin calc(2.5s * var(--vv-icon-duration-scale, 1)) linear infinite;
 }
 
 /* ── SettingsIcon variant="turn": six-tooth gear clicks round one notch at a time */
@@ -252,9 +260,8 @@
     transform: rotate(360deg);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-gear-turn,
-.vv-icon[data-animate="true"] .vv-icon-gear-turn {
-  animation: vv-icon-gear-turn calc(2.4s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-gear-turn {
+  --vv-icon-animation: vv-icon-gear-turn calc(2.4s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
 }
 
@@ -316,33 +323,29 @@
 .vv-icon-board-traveler {
   opacity: 0;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-1,
-.vv-icon[data-animate="true"] .vv-icon-board-card-1 {
-  animation:
+.vv-icon .vv-icon-board-card-1 {
+  --vv-icon-animation:
     vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
       var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) both,
     vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
       calc(0.55s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-2,
-.vv-icon[data-animate="true"] .vv-icon-board-card-2 {
-  animation:
+.vv-icon .vv-icon-board-card-2 {
+  --vv-icon-animation:
     vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
       var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.1s * var(--vv-icon-duration-scale, 1)) both,
     vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
       calc(0.75s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-card-3,
-.vv-icon[data-animate="true"] .vv-icon-board-card-3 {
-  animation:
+.vv-icon .vv-icon-board-card-3 {
+  --vv-icon-animation:
     vv-icon-board-card-drop calc(0.55s * var(--vv-icon-duration-scale, 1))
       var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.2s * var(--vv-icon-duration-scale, 1)) both,
     vv-icon-board-card-breathe calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
       calc(0.95s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-board-traveler,
-.vv-icon[data-animate="true"] .vv-icon-board-traveler {
-  animation: vv-icon-board-traveler calc(1.8s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-board-traveler {
+  --vv-icon-animation: vv-icon-board-traveler calc(1.8s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.5s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -387,34 +390,28 @@
     transform: scaleX(1);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-check-1,
-.vv-icon[data-animate="true"] .vv-icon-checklist-check-1 {
-  animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-check-1 {
+  --vv-icon-animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-check-2,
-.vv-icon[data-animate="true"] .vv-icon-checklist-check-2 {
-  animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-check-2 {
+  --vv-icon-animation: vv-icon-checklist-check-loop calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.25s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-ring-1,
-.vv-icon[data-animate="true"] .vv-icon-checklist-ring-1 {
-  animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-ring-1 {
+  --vv-icon-animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-ring-2,
-.vv-icon[data-animate="true"] .vv-icon-checklist-ring-2 {
-  animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-ring-2 {
+  --vv-icon-animation: vv-icon-checklist-ring-burst calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.65s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-line-1,
-.vv-icon[data-animate="true"] .vv-icon-checklist-line-1 {
-  animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-line-1 {
+  --vv-icon-animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-checklist-line-2,
-.vv-icon[data-animate="true"] .vv-icon-checklist-line-2 {
-  animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-checklist-line-2 {
+  --vv-icon-animation: vv-icon-checklist-line-sweep calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.25s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -456,27 +453,22 @@
   transform: scale(0);
   opacity: 0;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-prompt,
-.vv-icon[data-animate="true"] .vv-icon-terminal-prompt {
-  animation: vv-icon-terminal-prompt-nudge calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-terminal-prompt {
+  --vv-icon-animation: vv-icon-terminal-prompt-nudge calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-cursor,
-.vv-icon[data-animate="true"] .vv-icon-terminal-cursor {
-  animation: vv-icon-terminal-cursor-blink calc(0.45s * var(--vv-icon-duration-scale, 1)) steps(2, end) infinite;
+.vv-icon .vv-icon-terminal-cursor {
+  --vv-icon-animation: vv-icon-terminal-cursor-blink calc(0.45s * var(--vv-icon-duration-scale, 1)) steps(2, end) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-1,
-.vv-icon[data-animate="true"] .vv-icon-terminal-typed-1 {
-  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-terminal-typed-1 {
+  --vv-icon-animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) 0s infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-2,
-.vv-icon[data-animate="true"] .vv-icon-terminal-typed-2 {
-  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-terminal-typed-2 {
+  --vv-icon-animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.2s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-terminal-typed-3,
-.vv-icon[data-animate="true"] .vv-icon-terminal-typed-3 {
-  animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-terminal-typed-3 {
+  --vv-icon-animation: vv-icon-terminal-typed calc(1.4s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -502,24 +494,20 @@
     transform: rotate(-25deg) scale(0.78);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-1,
-.vv-icon[data-animate="true"] .vv-icon-document-line-1 {
-  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-document-line-1 {
+  --vv-icon-animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-2,
-.vv-icon[data-animate="true"] .vv-icon-document-line-2 {
-  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-document-line-2 {
+  --vv-icon-animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.15s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-line-3,
-.vv-icon[data-animate="true"] .vv-icon-document-line-3 {
-  animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-document-line-3 {
+  --vv-icon-animation: vv-icon-document-line-draw calc(1.5s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.3s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-document-corner,
-.vv-icon[data-animate="true"] .vv-icon-document-corner {
-  animation: vv-icon-document-corner-fold calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-document-corner {
+  --vv-icon-animation: vv-icon-document-corner-fold calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.2s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -551,27 +539,22 @@
     transform: rotate(9deg);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask,
-.vv-icon[data-animate="true"] .vv-icon-flask {
-  animation: vv-icon-flask-slosh calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-flask {
+  --vv-icon-animation: vv-icon-flask-slosh calc(1.4s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-1,
-.vv-icon[data-animate="true"] .vv-icon-flask-bubble-1 {
-  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
+.vv-icon .vv-icon-flask-bubble-1 {
+  --vv-icon-animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-2,
-.vv-icon[data-animate="true"] .vv-icon-flask-bubble-2 {
-  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+.vv-icon .vv-icon-flask-bubble-2 {
+  --vv-icon-animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
     calc(0.27s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-3,
-.vv-icon[data-animate="true"] .vv-icon-flask-bubble-3 {
-  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+.vv-icon .vv-icon-flask-bubble-3 {
+  --vv-icon-animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
     calc(0.55s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-flask-bubble-4,
-.vv-icon[data-animate="true"] .vv-icon-flask-bubble-4 {
-  animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
+.vv-icon .vv-icon-flask-bubble-4 {
+  --vv-icon-animation: vv-icon-flask-bubble-rise calc(1.1s * var(--vv-icon-duration-scale, 1)) ease-out
     calc(0.82s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -608,14 +591,12 @@
 .vv-icon-inbox-notif {
   opacity: 0;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-arrow,
-.vv-icon[data-animate="true"] .vv-icon-inbox-arrow {
-  animation: vv-icon-inbox-arrow-drop calc(1.1s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-inbox-arrow {
+  --vv-icon-animation: vv-icon-inbox-arrow-drop calc(1.1s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-inbox-notif,
-.vv-icon[data-animate="true"] .vv-icon-inbox-notif {
-  animation: vv-icon-inbox-notif-pulse calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out
+.vv-icon .vv-icon-inbox-notif {
+  --vv-icon-animation: vv-icon-inbox-notif-pulse calc(0.7s * var(--vv-icon-duration-scale, 1)) ease-in-out
     calc(0.3s * var(--vv-icon-duration-scale, 1)) infinite;
   opacity: 1;
 }
@@ -649,17 +630,14 @@
 .vv-icon-automation-sparks {
   opacity: 0;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-orbit,
-.vv-icon[data-animate="true"] .vv-icon-automation-orbit {
-  animation: vv-icon-automation-orbit-spin calc(1.8s * var(--vv-icon-duration-scale, 1)) linear infinite;
+.vv-icon .vv-icon-automation-orbit {
+  --vv-icon-animation: vv-icon-automation-orbit-spin calc(1.8s * var(--vv-icon-duration-scale, 1)) linear infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-play,
-.vv-icon[data-animate="true"] .vv-icon-automation-play {
-  animation: vv-icon-automation-play-pulse calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-automation-play {
+  --vv-icon-animation: vv-icon-automation-play-pulse calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-automation-sparks,
-.vv-icon[data-animate="true"] .vv-icon-automation-sparks {
-  animation: vv-icon-automation-sparks-burst calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-automation-sparks {
+  --vv-icon-animation: vv-icon-automation-sparks-burst calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
 /* ── BarChartIcon: bars grow with a bounce, trend line draws. */
@@ -693,24 +671,20 @@
     stroke-dashoffset: 0;
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-1,
-.vv-icon[data-animate="true"] .vv-icon-chart-bar-1 {
-  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-chart-bar-1 {
+  --vv-icon-animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-2,
-.vv-icon[data-animate="true"] .vv-icon-chart-bar-2 {
-  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-chart-bar-2 {
+  --vv-icon-animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.12s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-bar-3,
-.vv-icon[data-animate="true"] .vv-icon-chart-bar-3 {
-  animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-chart-bar-3 {
+  --vv-icon-animation: vv-icon-chart-bar-grow calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-emphasized, cubic-bezier(0.2, 0.8, 0.2, 1)) calc(0.24s * var(--vv-icon-duration-scale, 1)) infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-chart-trend,
-.vv-icon[data-animate="true"] .vv-icon-chart-trend {
-  animation: vv-icon-chart-trend-draw calc(1.6s * var(--vv-icon-duration-scale, 1))
+.vv-icon .vv-icon-chart-trend {
+  --vv-icon-animation: vv-icon-chart-trend-draw calc(1.6s * var(--vv-icon-duration-scale, 1))
     var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) calc(0.4s * var(--vv-icon-duration-scale, 1)) infinite;
 }
 
@@ -738,13 +712,11 @@
     transform: scale(1.6);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-search,
-.vv-icon[data-animate="true"] .vv-icon-search {
-  animation: vv-icon-search-scan calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-search {
+  --vv-icon-animation: vv-icon-search-scan calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-search-glint,
-.vv-icon[data-animate="true"] .vv-icon-search-glint {
-  animation: vv-icon-search-glint calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-search-glint {
+  --vv-icon-animation: vv-icon-search-glint calc(1.2s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
 
 /* ── SidebarToggleIcon: panel squeezes, chevron nudges the way it points. */
@@ -778,15 +750,12 @@
     transform: translateX(2.5px);
   }
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-sidebar-panel,
-.vv-icon[data-animate="true"] .vv-icon-sidebar-panel {
-  animation: vv-icon-sidebar-squeeze calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-sidebar-panel {
+  --vv-icon-animation: vv-icon-sidebar-squeeze calc(0.9s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"] .vv-icon-sidebar-chevron,
-.vv-icon[data-animate="true"] .vv-icon-sidebar-chevron {
-  animation: vv-icon-sidebar-nudge calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon .vv-icon-sidebar-chevron {
+  --vv-icon-animation: vv-icon-sidebar-nudge calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }
-.group:hover .vv-icon[data-animate="hover"].vv-icon-sidebar-collapsed .vv-icon-sidebar-chevron,
-.vv-icon[data-animate="true"].vv-icon-sidebar-collapsed .vv-icon-sidebar-chevron {
-  animation: vv-icon-sidebar-nudge-out calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
+.vv-icon.vv-icon-sidebar-collapsed .vv-icon-sidebar-chevron {
+  --vv-icon-animation: vv-icon-sidebar-nudge-out calc(0.8s * var(--vv-icon-duration-scale, 1)) ease-in-out infinite;
 }

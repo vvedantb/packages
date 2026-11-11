@@ -30,13 +30,15 @@
       transparent;
   }
 
-  .scrollbar-thin:hover {
-    scrollbar-color: color-mix(
-        in oklch,
-        var(--scrollbar) var(--scrollbar-thin-hover),
-        transparent
-      )
-      transparent;
+  @media (hover: hover) and (pointer: fine) {
+    .scrollbar-thin:hover {
+      scrollbar-color: color-mix(
+          in oklch,
+          var(--scrollbar) var(--scrollbar-thin-hover),
+          transparent
+        )
+        transparent;
+    }
   }
 
   @supports not (scrollbar-color: auto) {
@@ -57,12 +59,14 @@
       border-radius: 3px;
     }
 
-    .scrollbar-thin:hover::-webkit-scrollbar-thumb {
-      background-color: color-mix(
-        in oklch,
-        var(--scrollbar) var(--scrollbar-thin-hover),
-        transparent
-      );
+    @media (hover: hover) and (pointer: fine) {
+      .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+        background-color: color-mix(
+          in oklch,
+          var(--scrollbar) var(--scrollbar-thin-hover),
+          transparent
+        );
+      }
     }
   }
 }

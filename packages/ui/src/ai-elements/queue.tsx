@@ -292,7 +292,7 @@ function QueueWidgetItem({
           <Textarea
             value={editText}
             onChange={(e) => setEditText(e.currentTarget.value)}
-            className="min-h-[60px] text-sm"
+            className="min-h-[60px]"
             autoFocus
           />
           <div className="flex justify-end gap-2">

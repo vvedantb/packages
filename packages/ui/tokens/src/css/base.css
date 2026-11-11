@@ -14,6 +14,29 @@
     accent-color: var(--accent);
   }
 
+  /* No double-tap-zoom wait on controls, so a tap fires `click` at once.
+     touch-action is not inherited and the `html` value stops at the first
+     scroll container, so controls inside scroll areas need their own. In
+     `@layer base`, so a `touch-*` utility (e.g. `touch-pan-y`) still wins. */
+  button,
+  a[href],
+  summary,
+  label,
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  [role="option"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    touch-action: manipulation;
+  }
+
   ::selection {
     background-color: color-mix(in oklch, var(--accent) 18%, transparent);
     color: var(--foreground);

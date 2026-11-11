@@ -47,8 +47,9 @@ export function AgentTraceLine({
       data-status={status}
       className={merge(
         "flex w-fit max-w-full min-w-0 items-center gap-2 text-muted-foreground text-sm transition-colors",
-        "in-[button:hover]:text-foreground",
-        "data-[status=error]:text-destructive data-[status=error]:in-[button:hover]:text-destructive",
+        // Gated like `hover:` plus a fine pointer, so a tap on a phone does not leave it lit.
+        "[@media(hover:hover)_and_(pointer:fine)]:in-[button:hover]:text-foreground",
+        "data-[status=error]:text-destructive data-[status=error]:[@media(hover:hover)_and_(pointer:fine)]:in-[button:hover]:text-destructive",
         "data-[status=pending]:opacity-60",
         className,
       )}

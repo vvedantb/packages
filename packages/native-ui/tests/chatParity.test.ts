@@ -140,8 +140,8 @@ describe("markdown", () => {
 describe("composer and scroll button", () => {
   it("sets the inline field as the web Composer and the stacked one as the web PromptInput Textarea", () => {
     expect(webComposer).toMatch(/const TEXT_METRICS_BASE = "block w-full text-sm leading-6/);
-    // Below `sm` (phones) the Textarea is `text-base`.
-    expect(webTextarea).toMatch(/text-base sm:text-sm/);
+    // On touch (and below `sm`) the Textarea is `text-base`.
+    expect(webTextarea).toMatch(/text-base sm:pointer-fine:text-sm/);
     expect(webPromptInput).toMatch(/<InputGroupTextarea/);
     const source = native("ai/prompt-input.tsx");
     expect(source).toMatch(/\? \{ fontSize: 14, lineHeight: pill \? 20 : 24 \}\s*: sizeStyle\("text-base"\)/);
