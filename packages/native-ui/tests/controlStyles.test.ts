@@ -347,15 +347,6 @@ describe("Dialog layout (source contract)", () => {
     expect(content).not.toMatch(/if \(compact\)/);
   });
 
-  it("the sheet slides up through NativeOnlyAnimatedView, so Reduce Motion turns it off", () => {
-    expect(content).toMatch(
-      /<NativeOnlyAnimatedView\s+entering=\{compact \? SlideInDown\.duration\(240\) : undefined\}/,
-    );
-    expect(read("primitives/native-only-animated-view.tsx")).toMatch(
-      /entering=\{reduceMotion \? undefined : entering\}/,
-    );
-  });
-
   it("the handle is the web h-1 w-12 surface-tertiary pill in a 44 row, hidden from screen readers", () => {
     const handle = fn(dialog, "DialogHandle");
     expect(handle).toMatch(/className="mb-1 min-h-11 items-center justify-center"/);
@@ -371,9 +362,8 @@ describe("Dialog layout (source contract)", () => {
     expect(dialog).toMatch(/const PANEL = \{ width: "100%", maxWidth: 480, alignSelf: "center" \} as const;/);
     expect(dialog).toMatch(/const CENTRED: DialogLayout = \{ compact: false, stacked: false \};/);
     expect(tokens.radius.card).toBe(24);
-    // No handle, no extra bottom padding and no slide when not compact.
+    // No handle and no extra bottom padding when not compact.
     expect(content).toMatch(/compact \? <DialogHandle \/> : null/);
-    expect(content).toMatch(/compact \? SlideInDown\.duration\(240\) : undefined/);
   });
 
   it("AlertDialogContent and ConfirmDialog get the same behaviour from DialogContent", () => {

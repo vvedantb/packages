@@ -358,6 +358,7 @@ declare module "react-native" {
   type PanResponderHandler<R> = (event: GestureResponderEvent, gesture: PanResponderGestureState) => R;
   export interface PanResponderCallbacks {
     onStartShouldSetPanResponder?: PanResponderHandler<boolean>;
+    onStartShouldSetPanResponderCapture?: PanResponderHandler<boolean>;
     onMoveShouldSetPanResponder?: PanResponderHandler<boolean>;
     onMoveShouldSetPanResponderCapture?: PanResponderHandler<boolean>;
     onPanResponderTerminationRequest?: PanResponderHandler<boolean>;
@@ -394,23 +395,37 @@ declare module "react-native-safe-area-context" {
 
 declare module "react-native-reanimated" {
   import type * as React from "react";
-  import type { ViewProps, ViewStyle } from "react-native";
+  import type { StyleProp, ViewProps, ViewStyle } from "react-native";
 
   export interface LayoutAnimationBuilder {
     duration(ms: number): LayoutAnimationBuilder;
     delay(ms: number): LayoutAnimationBuilder;
+    easing(easing: EasingFunction): LayoutAnimationBuilder;
     springify(): LayoutAnimationBuilder;
   }
   export const FadeIn: LayoutAnimationBuilder;
   export const FadeOut: LayoutAnimationBuilder;
   export const FadeInUp: LayoutAnimationBuilder;
+  export const FadeInDown: LayoutAnimationBuilder;
   export const FadeOutUp: LayoutAnimationBuilder;
   export const FadeOutDown: LayoutAnimationBuilder;
   export const SlideInDown: LayoutAnimationBuilder;
   export const SlideOutDown: LayoutAnimationBuilder;
   export const LinearTransition: LayoutAnimationBuilder;
 
-  export type AnimatedProps<P> = P & {
+  /** Reanimated 4 CSS transitions, for a state-driven change with no gesture. */
+  export type CSSTransitionStyle = {
+    transitionProperty?: string | string[];
+    transitionDuration?: number | string;
+    transitionTimingFunction?: string | CubicBezier;
+  };
+  export interface CubicBezier {
+    readonly __cubicBezier: true;
+  }
+  export function cubicBezier(x1: number, y1: number, x2: number, y2: number): CubicBezier;
+
+  export type AnimatedProps<P> = Omit<P, "style"> & {
+    style?: StyleProp<ViewStyle & CSSTransitionStyle>;
     entering?: LayoutAnimationBuilder;
     exiting?: LayoutAnimationBuilder;
     layout?: LayoutAnimationBuilder;
@@ -418,6 +433,8 @@ declare module "react-native-reanimated" {
 
   export interface SharedValue<T> {
     value: T;
+    get(): T;
+    set(value: T | ((value: T) => T)): void;
   }
   export type EasingFunction = (t: number) => number;
   export const Easing: {
@@ -445,12 +462,13 @@ declare module "react-native-reanimated" {
     toValue: T,
     config?: {
       velocity?: number;
-      damping?: number;
-      stiffness?: number;
-      mass?: number;
+      duration?: number;
+      dampingRatio?: number;
+      clamp?: { min?: number; max?: number };
       overshootClamping?: boolean;
       reduceMotion?: ReduceMotion;
     },
+    callback?: (finished?: boolean) => void,
   ): T;
   export function interpolate(
     value: number,
@@ -579,7 +597,19 @@ declare module "expo-notifications" {
 }
 
 declare module "expo-haptics" {
+  export enum ImpactFeedbackStyle {
+    Light = "light",
+    Medium = "medium",
+    Heavy = "heavy",
+  }
+  export enum NotificationFeedbackType {
+    Success = "success",
+    Warning = "warning",
+    Error = "error",
+  }
   export function selectionAsync(): Promise<void>;
+  export function impactAsync(style?: ImpactFeedbackStyle): Promise<void>;
+  export function notificationAsync(type?: NotificationFeedbackType): Promise<void>;
 }
 
 declare module "expo-router" {

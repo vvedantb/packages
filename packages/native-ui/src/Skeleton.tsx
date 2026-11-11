@@ -23,15 +23,15 @@ export function Skeleton({
 
   useEffect(() => {
     if (reduceMotion) {
-      opacity.value = 0.7;
+      opacity.set(0.7);
       return;
     }
-    opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
+    opacity.set(withRepeat(withTiming(1, { duration: 800 }), -1, true));
     return () => cancelAnimation(opacity);
   }, [opacity, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    opacity: opacity.get(),
   }));
 
   return (

@@ -1,15 +1,27 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, View, type PressableProps, type ViewProps } from "react-native";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react-native";
-import { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, cubicBezier } from "react-native-reanimated";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, touchSlop } from "../controlStyles";
+import { EASE_OUT } from "../motion";
 import { NativeOnlyAnimatedView } from "../primitives/native-only-animated-view";
 import { useControllableState } from "../primitives/use-controllable-state";
+import { useReduceMotion } from "../useReduceMotion";
 
 // A small fold for the AI parts: native-ui has no `Collapsible`. A `Pressable`
 // trigger and content that mounts only while open. The content fades in on
-// iOS and Android, and appears in place with Reduce Motion.
+// iOS and Android and the chevron turns, both in 150 ms; with Reduce Motion
+// they change in place.
+
+const CONTENT_ENTER = FadeIn.duration(150).easing(EASE_OUT);
+
+/** The web chevron: `transition-transform duration-150`, on the strong ease-out. */
+const CHEVRON_TURN = {
+  transitionProperty: "transform",
+  transitionDuration: 150,
+  transitionTimingFunction: cubicBezier(0.23, 1, 0.32, 1),
+} as const;
 
 type CollapsibleContextValue = { open: boolean; setOpen: (open: boolean) => void };
 
@@ -79,7 +91,7 @@ export function CollapsibleContent({ children, ...props }: ViewProps & { classNa
   const { open } = useCollapsible();
   if (!open) return null;
   return (
-    <NativeOnlyAnimatedView entering={FadeIn.duration(150)} {...props}>
+    <NativeOnlyAnimatedView entering={CONTENT_ENTER} {...props}>
       {children}
     </NativeOnlyAnimatedView>
   );
@@ -88,7 +100,7 @@ export function CollapsibleContent({ children, ...props }: ViewProps & { classNa
 /**
  * The fold chevron: `down` turns up when open (reasoning, sources, chain of
  * thought), `right` turns down (trace lines), as the web `rotate-180` and
- * `rotate-90`. It turns at once; the web eases it over 150 ms.
+ * `rotate-90`, easing over 150 ms as the web does (at once with Reduce Motion).
  */
 export function CollapsibleChevron({
   open,
@@ -102,10 +114,11 @@ export function CollapsibleChevron({
   color: string;
 }) {
   const Icon = variant === "down" ? IconChevronDown : IconChevronRight;
+  const reduceMotion = useReduceMotion();
   const turn = variant === "down" ? "180deg" : "90deg";
   return (
-    <View style={{ transform: [{ rotate: open ? turn : "0deg" }] }}>
+    <Animated.View style={[{ transform: [{ rotate: open ? turn : "0deg" }] }, reduceMotion ? null : CHEVRON_TURN]}>
       <Icon size={size} color={color} />
-    </View>
+    </Animated.View>
   );
 }

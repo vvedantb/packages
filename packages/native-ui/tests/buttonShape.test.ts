@@ -49,6 +49,7 @@ vi.mock("../src/Dialog", () => ({
 vi.mock("../src/dialogLayout", () => ({ useDialogLayout: () => layout.value }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
+vi.mock("../src/motion", () => ({ usePressFeedback: () => "active:scale-[0.97]" }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (file: string) => readFileSync(join(root, "src", file), "utf8");

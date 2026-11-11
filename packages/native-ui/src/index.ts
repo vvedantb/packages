@@ -27,7 +27,7 @@ export {
   floatingSolidFill,
   tabBarReserve,
 } from "./floating";
-export { selectionHaptic } from "./haptics";
+export { impactHaptic, notificationHaptic, selectionHaptic } from "./haptics";
 export { useReduceTransparency } from "./useReduceTransparency";
 export { FloatingSurface, GlassSheetBackground } from "./FloatingSurface";
 export {

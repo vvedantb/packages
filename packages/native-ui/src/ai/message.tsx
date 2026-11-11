@@ -68,13 +68,13 @@ function MessageHighlight() {
   const wash = useSharedValue(reduceMotion ? 0.5 : 1);
   useEffect(() => {
     if (reduceMotion) {
-      wash.value = 0.5;
+      wash.set(0.5);
       return;
     }
-    wash.value = 1;
-    wash.value = withTiming(0, { duration: MESSAGE_HIGHLIGHT_MS });
+    wash.set(1);
+    wash.set(withTiming(0, { duration: MESSAGE_HIGHLIGHT_MS }));
   }, [wash, reduceMotion]);
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: wash.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: wash.get() }));
   return (
     <Animated.View
       testID="message-highlight"

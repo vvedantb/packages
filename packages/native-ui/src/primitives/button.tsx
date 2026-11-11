@@ -3,10 +3,11 @@ import { cn } from "../cn";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Platform, Pressable } from "react-native";
+import { usePressFeedback } from "../motion";
 
 const buttonVariants = cva(
   cn(
-    "group flex-row items-center justify-center gap-2 shadow-none active:opacity-80",
+    "group flex-row items-center justify-center gap-2 shadow-none",
     Platform.select({
       web: "outline-none transition-all",
     }),
@@ -88,12 +89,14 @@ const Button = React.forwardRef<
   React.ElementRef<typeof Pressable>,
   ButtonProps
 >(({ className, variant, size, shape, ...props }, ref) => {
+  const pressed = usePressFeedback();
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
       <Pressable
         ref={ref}
         className={cn(
           buttonVariants({ variant, size, shape }),
+          pressed,
           props.disabled && "opacity-45",
           className,
         )}

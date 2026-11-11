@@ -19,8 +19,11 @@ vi.mock("react-native", () => ({
   useWindowDimensions: () => ({ width: env.width, height: 844, scale: 3, fontScale: 1 }),
 }));
 vi.mock("react-native-reanimated", () => ({
-  FadeInUp: { duration: (ms: number) => `FadeInUp(${ms})` },
-  FadeOutDown: { duration: (ms: number) => `FadeOutDown(${ms})` },
+  FadeInDown: { duration: (ms: number) => ({ easing: () => `FadeInDown(${ms})` }) },
+  FadeOutDown: { duration: (ms: number) => ({ easing: () => `FadeOutDown(${ms})` }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
 }));
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
@@ -100,7 +103,7 @@ describe("BulkActionBar", () => {
   it("floats 12 above the safe area, or above bottomOffset, centred on the glass surface at radius 16", async () => {
     const { tree } = await bar({ barKey: "tasks-bulk-bar" });
     expect(tree.type).toBe("AnimatedView");
-    expect(tree.props).toMatchObject({ testID: "tasks-bulk-bar", entering: "FadeInUp(150)", exiting: "FadeOutDown(150)", pointerEvents: "box-none" });
+    expect(tree.props).toMatchObject({ testID: "tasks-bulk-bar", entering: "FadeInDown(150)", exiting: "FadeOutDown(120)", pointerEvents: "box-none" });
     expect(tree.props.style).toEqual({ position: "absolute", left: 0, right: 0, bottom: 46, alignItems: "center", paddingHorizontal: 16 });
     const surface = elements(tree).find((element) => element.type === "FloatingSurface")!;
     expect(surface.props).toEqual(expect.objectContaining({ radius: 16, style: { maxWidth: 358 } }));

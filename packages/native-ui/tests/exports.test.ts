@@ -148,6 +148,8 @@ describe("@vvedantb/native-ui exports", () => {
       "floatingShadow",
       "tabBarReserve",
       "selectionHaptic",
+      "impactHaptic",
+      "notificationHaptic",
       "useReduceTransparency",
       "FloatingSurface",
       "GlassSheetBackground",

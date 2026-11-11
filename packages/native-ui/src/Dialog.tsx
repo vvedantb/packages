@@ -7,7 +7,6 @@ import {
   type TextProps,
   type ViewProps,
 } from "react-native";
-import { SlideInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconX } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
@@ -18,7 +17,6 @@ import { palette } from "./palette";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
-import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
 import { SheetDragView, useSheetScrollBinding } from "./primitives/sheet-drag";
 import {
   OverlayClose,
@@ -88,7 +86,8 @@ const STACKED: DialogLayout = { compact: true, stacked: true };
  * In a compact window (the web `COMPACT_OVERLAY_QUERY`, from the window size)
  * it is the web phone bottom sheet: full width, top corners 16, a handle,
  * `pt-3 px-6`, the bottom safe-area inset (at least 24) below, and it slides
- * up unless Reduce Motion is on. Drag it down to close, as `SheetContent`
+ * up on open and down on close unless Reduce Motion is on. Drag it down to
+ * close, as `SheetContent`
  * (when `dismissible`). Its bottom corners sit below the screen edge,
  * as `SheetContent`'s do. `DialogFooter` stacks its buttons there. Taller than
  * the room, it shrinks to fit, so a `DialogBody` inside scrolls.
@@ -117,10 +116,7 @@ export function DialogContent({
         dismissible={dismissible}
         onShow={onShow}
       >
-        <NativeOnlyAnimatedView
-          entering={compact ? SlideInDown.duration(240) : undefined}
-          style={compact ? SHEET : PANEL}
-        >
+        <View style={compact ? SHEET : PANEL}>
           <SheetDragView enabled={compact && dismissible} style={compact ? SHRINK : undefined}>
             <FloatingSurface blur={false} radius={compact ? SHEET_RADIUS : tokens.radius.card} style={compact ? SHRINK : undefined}>
               <View
@@ -138,7 +134,7 @@ export function DialogContent({
               {hideCloseButton ? null : <DialogCloseButton />}
             </FloatingSurface>
           </SheetDragView>
-        </NativeOnlyAnimatedView>
+        </View>
       </OverlayModal>
     </DialogLayoutContext.Provider>
   );

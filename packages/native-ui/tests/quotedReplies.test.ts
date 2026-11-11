@@ -148,9 +148,15 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
-  FadeIn: { duration: (ms: number) => `FadeIn(${ms})` },
-  FadeOut: { duration: (ms: number) => `FadeOut(${ms})` },
-  useSharedValue: <T>(value: T) => ({ value }),
+  FadeIn: { duration: (ms: number) => ({ easing: () => `FadeIn(${ms})` }) },
+  FadeOut: { duration: (ms: number) => ({ easing: () => `FadeOut(${ms})` }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
   ...animation,
 }));

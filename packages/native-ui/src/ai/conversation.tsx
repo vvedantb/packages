@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { IconArrowDown, type IconProps } from "@tabler/icons-react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
+import { EASE_OUT } from "../motion";
 import { Button } from "../Button";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop, typeStyle } from "../controlStyles";
@@ -337,6 +338,10 @@ export type ConversationScrollButtonProps = {
   testID?: string;
 };
 
+/** The scroll button fades in and out on the strong ease-out. */
+const SCROLL_BUTTON_ENTER = FadeIn.duration(150).easing(EASE_OUT);
+const SCROLL_BUTTON_EXIT = FadeOut.duration(120).easing(EASE_OUT);
+
 /** The labelled pill's height (web `h-7`). */
 const SCROLL_PILL_HEIGHT = 28;
 
@@ -362,8 +367,8 @@ export function ConversationScrollButton({
   const caption = chatTextSize("caption", largerText);
   return (
     <NativeOnlyAnimatedView
-      entering={FadeIn.duration(150)}
-      exiting={FadeOut.duration(150)}
+      entering={SCROLL_BUTTON_ENTER}
+      exiting={SCROLL_BUTTON_EXIT}
       pointerEvents="box-none"
       style={{
         position: "absolute",

@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import { cn } from "./cn";
+import { selectionHaptic } from "./haptics";
 import {
   MIN_TOUCH_TARGET,
   tabColors,
@@ -40,7 +41,11 @@ export function PillTabs<T extends string>({
             key={tab.id}
             testID={tab.testID}
             accessibilityLabel={tab.label}
-            onPress={() => onChange(tab.id)}
+            onPress={() => {
+              // A segmented choice ticking to a new value, as `TabsTrigger`.
+              if (!isSelected) selectionHaptic();
+              onChange(tab.id);
+            }}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
             hitSlop={touchSlop(MIN_TOUCH_TARGET, trigger.minHeight)}

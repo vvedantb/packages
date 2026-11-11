@@ -44,8 +44,11 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
-  FadeInUp: { duration: () => "enter" },
-  FadeOutUp: { duration: () => "exit" },
+  FadeInUp: { duration: () => ({ easing: () => "enter" }) },
+  FadeOutUp: { duration: () => ({ easing: () => "exit" }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
   LinearTransition: "layout",
 }));
 vi.mock("react-native-safe-area-context", () => ({
