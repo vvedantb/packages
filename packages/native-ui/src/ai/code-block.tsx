@@ -110,6 +110,12 @@ export type CodeBlockProps = {
  * draws for fenced code: 13 / 20.15 code, a 32 header with `icon-xs` actions,
  * a wrap toggle ("Wrap long lines", foreground while on) and then copy.
  */
+/**
+ * Android fades the code at a side with more to scroll (there is no scroll
+ * bar), so a cut line reads as "scroll sideways". iOS ignores it.
+ */
+const CODE_FADING_EDGE = 24;
+
 export function CodeBlock({ code, language, highlight = true, onCopy, variant = "default", className }: CodeBlockProps) {
   const parts = useCodeParts(code, language, highlight, variant === "markdown");
   if (variant === "markdown") {
@@ -124,7 +130,12 @@ export function CodeBlock({ code, language, highlight = true, onCopy, variant = 
           {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} /> : null}
         </View>
       ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName={header ? "px-4 pb-4" : "p-4"}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        fadingEdgeLength={CODE_FADING_EDGE}
+        contentContainerClassName={header ? "px-4 pb-4" : "p-4"}
+      >
         {parts.text}
       </ScrollView>
     </View>
@@ -172,7 +183,12 @@ function MarkdownCodeBlock({
       {wrap ? (
         <View style={padding}>{parts.text}</View>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={padding}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          fadingEdgeLength={CODE_FADING_EDGE}
+          contentContainerStyle={padding}
+        >
           {parts.text}
         </ScrollView>
       )}

@@ -197,6 +197,9 @@ vi.mock("@tabler/icons-react-native", () =>
       "IconBook",
       "IconBrain",
       "IconCheck",
+      "IconArrowLeft",
+      "IconArrowRight",
+      "IconPencil",
       "IconChevronDown",
       "IconChevronRight",
       "IconCopy",
@@ -659,13 +662,13 @@ describe("Conversation", () => {
     expect(isScrolledToBottom(event(0, 300))).toBe(true);
   });
 
-  async function conversation() {
+  async function conversation(buttonProps: { label?: string; showLabel?: boolean } = {}) {
     const { Conversation, ConversationScrollButton } = await import("../src/ai/conversation");
     const scrollToEnd = vi.fn();
     const h = hooks.mount(() => {
       const frame = Conversation({ children: null }) as unknown as Element;
       provide(frame);
-      return { frame, button: ConversationScrollButton({}) as unknown as Element | null };
+      return { frame, button: ConversationScrollButton(buttonProps) as unknown as Element | null };
     });
     type Value = {
       isAtBottom: boolean;
@@ -720,6 +723,14 @@ describe("Conversation", () => {
     value().onUserScroll();
     value().onScroll(event(300));
     expect(h.tree.button).not.toBeNull();
+  });
+
+  it("draws a labelled pill at text-sm, the phone floor for tappable text", async () => {
+    const { h, value } = await conversation({ label: "Scroll to end", showLabel: true });
+    value().onScroll(event(400));
+    const text = byType(h.tree.button, "Text")[0]!;
+    expect(text.props.children).toBe("Scroll to end");
+    expect(flatten(text.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20 });
   });
 
   it("jumps instead of animating with Reduce Motion", async () => {
@@ -1096,7 +1107,8 @@ describe("PromptInputChip", () => {
     });
     expect(chip.props.style).toMatchObject({ minHeight: 28, paddingHorizontal: 8, gap: 6, borderRadius: tokens.radius.md });
     const [label] = byType(chip, "Text");
-    expect(flatten(label!.props.style)).toMatchObject({ fontSize: 12, lineHeight: 16, color: tokens.color.muted.light, fontWeight: "500" });
+    // `text-sm`, the phone floor for tappable text (the web trigger is `text-xs`).
+    expect(flatten(label!.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20, color: tokens.color.muted.light, fontWeight: "500" });
     expect(label!.props.numberOfLines).toBe(1);
     const suffix = byType(label, "Text")[1]!;
     expect(suffix.props.children).toBe(" · High");
@@ -1134,7 +1146,9 @@ describe("PromptInputChip", () => {
     layout(5);
     expect(opacity()).toBe(0);
     expect(h.tree.props.accessibilityLabel).toBe("Base branch: main");
-    layout(24);
+    layout(27);
+    expect(opacity()).toBe(0);
+    layout(28);
     expect(opacity()).toBeUndefined();
   });
 });
@@ -1359,6 +1373,8 @@ describe("CodeBlock", () => {
     expect(byType(block, CodeBlockCopyButton)).toHaveLength(1);
     const code = byType(block, "Text").find((text) => text.props.children === "a\nb")!;
     expect(code.props.selectable).toBe(true);
+    // Android fades the side with more code to scroll to.
+    expect(byType(block, "ScrollView")[0]!.props).toMatchObject({ horizontal: true, fadingEdgeLength: 24 });
     expect(flatten(code.props.style).fontFamily).toBe(MONO_FONT);
     expect(MONO_FONT).toBe("Menlo");
     const bare = CodeBlock({ code: "a" }) as unknown as Element;
@@ -1391,6 +1407,70 @@ describe("CodeBlock", () => {
       ChatIconButton({ icon: () => null, label: "x", size: "xs", slop }) as unknown as Element;
     expect(button({ left: 8, right: 0 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 8, right: 0 });
     expect(button({ left: 0, right: 5 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 0, right: 5 });
+  });
+});
+
+describe("ChoiceQuestion options", () => {
+  /** Renders the option rows (function components named `ChoiceRow`) into their host elements. */
+  const rows = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(rows);
+    if (!node || typeof node !== "object" || !("props" in node)) return node;
+    const element = node as Element;
+    if (typeof element.type === "function" && element.type.name === "ChoiceRow") return rows(render(element));
+    return { ...element, props: { ...element.props, children: rows(element.props.children) } };
+  };
+  const question = (multiSelect: boolean) => ({
+    question: "Which?",
+    header: "",
+    multiSelect,
+    options: [
+      { label: "Chrome", description: "The browser" },
+      { label: "Safari", description: "" },
+    ],
+  });
+
+  async function mountQuestion(multiSelect: boolean) {
+    const { ChoiceQuestion } = await import("../src/ai/choice-question");
+    return hooks.mount(() => rows(ChoiceQuestion({ questions: [question(multiSelect)], onSubmit: () => {}, framed: false })));
+  }
+
+  afterEach(() => {
+    reduceMotion.value = false;
+  });
+
+  it("single-select options are radios that report checked, at least a 44 card", async () => {
+    const h = await mountQuestion(false);
+    const chrome = byLabel(h.tree, "Chrome")!;
+    expect(chrome.props).toMatchObject({ accessibilityRole: "radio", accessibilityHint: "The browser", accessibilityState: { checked: false, disabled: false } });
+    expect(flatten(chrome.props.style).minHeight).toBe(44 - 16);
+    expect(byLabel(h.tree, "Other...")!.props.accessibilityRole).toBe("radio");
+    (chrome.props.onPress as () => void)();
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityState).toEqual({ checked: true, disabled: false });
+    expect(byLabel(h.tree, "Safari")!.props.accessibilityState).toEqual({ checked: false, disabled: false });
+  });
+
+  it("multi-select options are checkboxes", async () => {
+    const h = await mountQuestion(true);
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityRole).toBe("checkbox");
+    (byLabel(h.tree, "Chrome")!.props.onPress as () => void)();
+    (byLabel(h.tree, "Safari")!.props.onPress as () => void)();
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityState).toMatchObject({ checked: true });
+    expect(byLabel(h.tree, "Safari")!.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  it("the card scales to 0.97 while pressed, or dims with Reduce Motion", async () => {
+    const h = await mountQuestion(false);
+    const card = () => find(h.tree, (element) => element.type === "View" && elements(element.props.children).includes(byLabel(h.tree, "Chrome")!) && flatten(element.props.style).borderRadius !== undefined)!;
+    expect(flatten(card().props.style).transform).toBeUndefined();
+    (byLabel(h.tree, "Chrome")!.props.onPressIn as () => void)();
+    expect(flatten(card().props.style).transform).toEqual([{ scale: 0.97 }]);
+    (byLabel(h.tree, "Chrome")!.props.onPressOut as () => void)();
+    expect(flatten(card().props.style).transform).toBeUndefined();
+    reduceMotion.value = true;
+    h.rerender();
+    (byLabel(h.tree, "Chrome")!.props.onPressIn as () => void)();
+    expect(flatten(card().props.style)).toMatchObject({ opacity: 0.8 });
+    expect(flatten(card().props.style).transform).toBeUndefined();
   });
 });
 
@@ -1486,7 +1566,7 @@ describe("AI parts (source contract)", () => {
     for (const [file, source] of Object.entries(sources)) {
       for (const tag of source.match(/<Pressable\b[\s\S]*?>/g) ?? []) {
         count++;
-        expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessible=\{false\}/);
+        expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessibilityRole=\{multiple \? "checkbox" : "radio"\}|accessible=\{false\}/);
         // A hidden container (the long-pressable `Message`) is not a target.
         if (!/accessible=\{false\}/.test(tag)) expect(tag, file).toMatch(/hitSlop=\{/);
       }

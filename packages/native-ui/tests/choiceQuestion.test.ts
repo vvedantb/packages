@@ -17,6 +17,7 @@ vi.mock("@tabler/icons-react-native", () => ({}));
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/Input", () => ({ Input: "Input" }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
+vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => false }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

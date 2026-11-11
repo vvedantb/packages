@@ -46,8 +46,9 @@ export function UpgradeToProCard({
   const largerText = useLargerText();
   // Each class is also set as a style (`sizeStyle`): web `text-sm` is 14 / 20.
   const titleSize = largerText ? "text-lg" : "text-sm";
-  const ctaSize = largerText ? "text-base" : "text-xs";
-  // The web pill is a `Button` `sm` (`font-medium`) in `bg-foreground text-background`.
+  const ctaSize = largerText ? "text-base" : "text-sm";
+  // The web pill is a `Button` `sm` (`font-medium`) in `bg-foreground text-background`,
+  // at the phone `Button` `sm` size: 36 high with a 14 label (the web h-8 `text-xs`).
   const pill = (label: string, accessibilityLabel?: string) => (
     <Pressable
       testID={testID ? `${testID}-cta` : undefined}
@@ -57,7 +58,7 @@ export function UpgradeToProCard({
       hitSlop={HIT_SLOP}
       className={cn(
         "shrink-0 items-center justify-center rounded-full active:opacity-80",
-        largerText ? "min-h-12 px-4" : "min-h-8 px-3",
+        largerText ? "min-h-12 px-4" : "min-h-9 px-3",
       )}
       style={{ backgroundColor: tokens.color.foreground[scheme] }}
     >

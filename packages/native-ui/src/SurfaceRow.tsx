@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
+import { impactHaptic } from "./haptics";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
@@ -24,8 +25,9 @@ export type SurfaceRowProps = {
   accessibilityHint?: string;
   onPress: () => void;
   /**
-   * A long press, such as the row menu (the web right-click). VoiceOver and
-   * TalkBack reach it as the `longpress` action, named by `longPressLabel`.
+   * A long press, such as the row menu (the web right-click), with a light
+   * haptic as it fires. VoiceOver and TalkBack reach it as the `longpress`
+   * action, named by `longPressLabel`.
    */
   onLongPress?: () => void;
   /** The spoken name of the long-press action. Default "More actions". */
@@ -88,7 +90,14 @@ export function SurfaceRow({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
-      onLongPress={onLongPress}
+      onLongPress={
+        onLongPress
+          ? () => {
+              impactHaptic("light");
+              onLongPress();
+            }
+          : undefined
+      }
       accessibilityActions={onLongPress ? [{ name: "longpress", label: longPressLabel }] : undefined}
       onAccessibilityAction={(event) => {
         if (event.nativeEvent.actionName === "longpress") onLongPress?.();

@@ -62,14 +62,15 @@ const SIZE_ALIAS = {
   icon: "icon",
 } as const;
 
-// `regular` is the web `Button` (`sm` h-8 px-3, `default` h-10 px-4, `lg`
-// h-11 px-6, `icon` h-10 w-10). `larger` is the larger-text step-up from
+// `regular` is the web `Button` (`default` h-10 px-4, `lg` h-11 px-6, `icon`
+// h-10 w-10), except `sm`: the web h-8 `text-xs` is a desktop size, so here it
+// is 36 high with a 14 label (`text-sm`). `larger` is the larger-text step-up from
 // 0.3.2. Labelled sizes are minimum heights (`h-auto` drops the primitive's
 // `h-10`), so a large Dynamic Type size grows the button instead of clipping
 // the label.
 const HEIGHT = {
   regular: {
-    small: "h-auto min-h-8 px-3",
+    small: "h-auto min-h-9 px-3",
     medium: "h-auto min-h-10 px-4",
     large: "h-auto min-h-11 px-6",
     icon: "h-10 w-10 px-0",
@@ -84,7 +85,7 @@ const HEIGHT = {
 
 // Each class is also set as a style (`sizeStyle`): web `text-sm` is 14 / 20.
 const TEXT = {
-  regular: { small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" },
+  regular: { small: "text-sm", medium: "text-sm", large: "text-sm", icon: "text-sm" },
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
 } as const;
 

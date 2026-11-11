@@ -8,6 +8,8 @@ import type { SurfaceRowProps } from "../src/SurfaceRow";
 
 vi.mock("react-native", () => ({ Pressable: "Pressable", View: "View" }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
+const haptics = vi.hoisted(() => ({ impactHaptic: vi.fn() }));
+vi.mock("../src/haptics", () => haptics);
 
 type Part = {
   style?: Record<string, string | number | undefined>;
@@ -62,12 +64,16 @@ describe("SurfaceRow", () => {
     const { tree } = await render({ onLongPress, longPressLabel: "Task actions" });
     expect(tree.props.accessibilityActions).toEqual([{ name: "longpress", label: "Task actions" }]);
     tree.props.onLongPress?.();
+    // The finger's long press ticks; TalkBack's action has its own feedback.
+    expect(haptics.impactHaptic).toHaveBeenCalledExactlyOnceWith("light");
     tree.props.onAccessibilityAction?.({ nativeEvent: { actionName: "longpress" } });
     expect(onLongPress).toHaveBeenCalledTimes(2);
+    expect(haptics.impactHaptic).toHaveBeenCalledOnce();
   });
 
   it("has no long-press action without a handler", async () => {
     const { tree } = await render({});
     expect(tree.props.accessibilityActions).toBeUndefined();
+    expect(tree.props.onLongPress).toBeUndefined();
   });
 });

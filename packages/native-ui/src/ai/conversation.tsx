@@ -392,8 +392,9 @@ export type ConversationScrollButtonProps = {
   icon?: ComponentType<IconProps>;
   /**
    * Draw `label` after the icon in a compact pill, as the web button with a
-   * `label` in Eva's chat ("Scroll to end": 28 high, `px-3`, `text-xs`
-   * muted, a 60% border on the surface). Default `false`: the round arrow.
+   * `label` in Eva's chat ("Scroll to end": 28 high, `px-3`, muted, a 60%
+   * border on the surface), with a `text-sm` label, the phone floor for
+   * tappable text (the web is `text-xs`). Default `false`: the round arrow.
    */
   showLabel?: boolean;
   /**
@@ -432,7 +433,7 @@ export function ConversationScrollButton({
   const scheme = useScheme();
   const largerText = useLargerText();
   if (isAtBottom) return null;
-  const caption = chatTextSize("caption", largerText);
+  const labelSize = chatTextSize("small", largerText);
   const button = (
     <NativeOnlyAnimatedView
       entering={SCROLL_BUTTON_ENTER}
@@ -468,7 +469,7 @@ export function ConversationScrollButton({
           })}
         >
           <Icon size={largerText ? 20 : 16} color={tokens.color.muted[scheme]} />
-          <Text className={cn(caption, "font-instrument-sans")} style={[sizeStyle(caption), textStyle("muted", scheme)]}>
+          <Text className={cn(labelSize, "font-instrument-sans")} style={[sizeStyle(labelSize), textStyle("muted", scheme)]}>
             {label}
           </Text>
         </Pressable>

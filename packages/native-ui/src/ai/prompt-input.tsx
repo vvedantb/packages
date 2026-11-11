@@ -88,8 +88,9 @@ export function PromptInputButton(props: PromptInputButtonProps) {
 
 /**
  * The web `ModelPicker` trigger (`model-picker.tsx` `TRIGGER_CLASS`), the
- * chip a composer footer holds: `h-7 gap-1.5 rounded-md px-2 text-xs`, a 14
- * icon, the suffix at `/70` after " · ", and a 12 chevron at `opacity-60`.
+ * chip a composer footer holds: `h-7 gap-1.5 rounded-md px-2`, a 14 icon, the
+ * suffix at `/70` after " · ", and a 12 chevron at `opacity-60`. The label is
+ * `text-sm` (14), the phone floor for tappable text (the web is `text-xs`).
  */
 export const PROMPT_INPUT_CHIP = {
   height: 28,
@@ -100,8 +101,8 @@ export const PROMPT_INPUT_CHIP = {
   chevronSize: 12,
   chevronOpacity: 0.6,
   suffixOpacity: 0.7,
-  /** The narrowest label worth drawing: about two characters and the ellipsis at `text-xs` (2em). */
-  labelMinWidth: 24,
+  /** The narrowest label worth drawing: about two characters and the ellipsis at `text-sm` (2em). */
+  labelMinWidth: 28,
   /** `size="touch"`: 36 on screen, 4 slop above and below, so a 44 bar holds its whole target. */
   touchHeight: 36,
 } as const;
@@ -169,7 +170,7 @@ export function PromptInputChip({
   // wider slot later shows the label again.
   const [readable, setReadable] = useState(true);
   const tint = color ?? tokens.color.muted[scheme];
-  const text = [sizeStyle("text-xs"), { color: tint }];
+  const text = [sizeStyle("text-sm"), { color: tint }];
   const name = accessibilityLabel ?? [label, suffix, count].filter((part) => part !== undefined).join(", ");
   return (
     <Pressable
@@ -197,7 +198,7 @@ export function PromptInputChip({
         onLayout={(event) =>
           setReadable(event.nativeEvent.layout.width >= PROMPT_INPUT_CHIP.labelMinWidth * Math.max(1, fontScale))
         }
-        className={cn("min-w-0 shrink text-xs", weight === "medium" ? "font-instrument-sans-medium" : "font-instrument-sans")}
+        className={cn("min-w-0 shrink text-sm", weight === "medium" ? "font-instrument-sans-medium" : "font-instrument-sans")}
         style={[...text, weight === "medium" ? typeStyle("medium") : null, readable ? null : { opacity: 0 }]}
       >
         {label}
@@ -205,7 +206,7 @@ export function PromptInputChip({
       </Text>
       {count !== undefined ? (
         <Text
-          className="font-instrument-sans-medium text-xs"
+          className="font-instrument-sans-medium text-sm"
           style={[...text, typeStyle("medium"), { fontVariant: ["tabular-nums"] }]}
         >
           {count}

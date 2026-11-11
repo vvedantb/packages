@@ -119,7 +119,9 @@ describe("Button (source contract)", () => {
   const nativeSize = (size: string) => regular.match(new RegExp(`${size}: "([^"]+)"`))?.[1] ?? "";
 
   it("uses the web heights (as minimums) and padding without larger text", () => {
-    const pairs = { small: "sm", medium: "default", large: "lg", icon: "icon" } as const;
+    // `sm` is the phone size instead (36, `text-sm`): the web h-8 `text-xs` is a desktop size.
+    const pairs = { medium: "default", large: "lg", icon: "icon" } as const;
+    expect(nativeSize("small")).toBe("h-auto min-h-9 px-3");
     for (const [native, webName] of Object.entries(pairs)) {
       // `min-h-10` is the web `h-10` as a minimum; `h-auto` drops the primitive's `h-10`.
       const classes = nativeSize(native)
@@ -130,7 +132,7 @@ describe("Button (source contract)", () => {
       for (const c of classes) expect(webSize(webName), `${native} ${c}`).toContain(c);
     }
     expect(button).toMatch(
-      /regular: \{ small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" \}/,
+      /regular: \{ small: "text-sm", medium: "text-sm", large: "text-sm", icon: "text-sm" \}/,
     );
     expect(button).toMatch(/"font-instrument-sans-medium",/);
   });
@@ -229,8 +231,9 @@ describe("fields", () => {
 });
 
 describe("field sizes (source contract)", () => {
-  it("Input, Textarea and the Select trigger have the web height and padding without larger text", () => {
-    expect(read("Input.tsx")).toMatch(/"min-h-10 border px-3\.5 py-2 text-base font-instrument-sans"/);
+  it("Input, Textarea and the Select trigger have the web padding without larger text", () => {
+    // Input is 44 high, a phone field (the web `h-10` is 40).
+    expect(read("Input.tsx")).toMatch(/"min-h-11 border px-3\.5 py-2 text-base font-instrument-sans"/);
     expect(read("Textarea.tsx")).toMatch(
       /"min-h-20 border px-3\.5 py-2\.5 text-base font-instrument-sans"/,
     );
@@ -670,7 +673,8 @@ describe("type sizes (source contract)", () => {
     const regular = button.match(/regular: \{ small: "(text-\w+)", medium: "(text-\w+)"/);
     expect(regular?.[2]).toBe("text-sm");
     expect(sizeStyle(regular![2] as "text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
-    expect(sizeStyle(regular![1] as "text-xs").fontSize).toBe(12);
+    // `sm` too: a 14 label, the phone floor for tappable text (the web `sm` is `text-xs`).
+    expect(regular?.[1]).toBe("text-sm");
     expect(Number(typeStyle("medium").fontWeight)).toBe(500);
     // Larger text keeps its step-up.
     expect(button).toMatch(
@@ -728,11 +732,11 @@ describe("type sizes (source contract)", () => {
     expect(card).toMatch(
       /style=\{\[textStyle\("foreground", scheme\), sizeStyle\(titleSize\), typeStyle\("semibold"\)\]\}/,
     );
-    expect(card).toMatch(/const ctaSize = largerText \? "text-base" : "text-xs";/);
+    // The phone `Button` `sm`: a 14 label, 36 high.
+    expect(card).toMatch(/const ctaSize = largerText \? "text-base" : "text-sm";/);
     expect(card).toMatch(/cn\("font-instrument-sans-medium", ctaSize\)/);
     expect(card).toMatch(/sizeStyle\(ctaSize\),\s+typeStyle\("medium"\),/);
-    // The web `h-8` as a minimum, and the `sm` padding.
-    expect(card).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
+    expect(card).toMatch(/largerText \? "min-h-12 px-4" : "min-h-9 px-3"/);
     expect(card).toMatch(/bg-surface-secondary px-3 py-2\.5"/);
     expect(card).toMatch(/const RADIUS = tokens\.radius\.lg;/);
     expect(card).toMatch(/style=\{\{ borderRadius: RADIUS \}\}/);

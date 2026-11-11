@@ -68,8 +68,8 @@ describe("Button (phone)", () => {
         }
       }
     }
-    // The web `sm` (32), `default` (40) and `icon` (40) stay that size on screen.
-    expect(points(sizeClass("regular", "small"), "h")).toBe(32);
+    // The web `default` (40) and `icon` (40) stay that size on screen; `sm` is 36, up from the web 32.
+    expect(points(sizeClass("regular", "small"), "h")).toBe(36);
     expect(points(sizeClass("regular", "medium"), "h")).toBe(40);
     expect(button).toMatch(/hitSlop=\{HIT_SLOP\[scale\]\[resolvedSize\]\}/);
   });
@@ -107,14 +107,14 @@ describe("Button (phone)", () => {
 describe("UpgradeToProCard (phone)", () => {
   const card = read("marketing/UpgradeToProCard.tsx");
 
-  it("keeps the web 32 pill on screen and reaches 44 with the web hit-target slop", () => {
+  it("draws the phone Button sm pill (36) and reaches 44 with the web hit-target slop", () => {
     const utilities = readFileSync(join(root, "..", "ui", "tokens/src/css/utilities.css"), "utf8");
     expect(utilities).toMatch(/@utility hit-target \{[\s\S]*?inset: -8px;/);
     const slop = Number(card.match(/const HIT_SLOP = (\d+);/)?.[1]);
     expect(slop).toBe(8);
     expect(card).toMatch(/hitSlop=\{HIT_SLOP\}/);
     const heights = card.match(/largerText \? "(min-h-[^"]+)" : "(min-h-[^"]+)"/);
-    expect(points(heights![2]!, "h")).toBe(32);
+    expect(points(heights![2]!, "h")).toBe(36);
     expect(points(heights![1]!, "h")).toBe(48);
     for (const classes of [heights![1]!, heights![2]!]) {
       expect(points(classes, "h") + 2 * slop, classes).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
@@ -329,7 +329,7 @@ describe("Dynamic Type", () => {
   it("uses minimum heights on labelled pressables", () => {
     expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full/);
     expect(read("Select.tsx")).toMatch(/largerText && "min-h-16 px-4"/);
-    expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
+    expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-9 px-3"/);
     expect(read("DateTimeField.tsx")).toMatch(/largerText \? "min-h-16" : "min-h-14"/);
     expect(read("SearchInput.tsx")).toMatch(/minHeight: metrics\.minHeight,/);
     // The SearchInput lock grows with the font scale (tests/searchInput.test.ts).
