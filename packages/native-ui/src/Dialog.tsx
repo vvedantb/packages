@@ -19,6 +19,7 @@ import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
+import { SheetDragView, useSheetScrollBinding } from "./primitives/sheet-drag";
 import {
   OverlayClose,
   OverlayModal,
@@ -87,7 +88,8 @@ const STACKED: DialogLayout = { compact: true, stacked: true };
  * In a compact window (the web `COMPACT_OVERLAY_QUERY`, from the window size)
  * it is the web phone bottom sheet: full width, top corners 16, a handle,
  * `pt-3 px-6`, the bottom safe-area inset (at least 24) below, and it slides
- * up unless Reduce Motion is on. Its bottom corners sit below the screen edge,
+ * up unless Reduce Motion is on. Drag it down to close, as `SheetContent`
+ * (when `dismissible`). Its bottom corners sit below the screen edge,
  * as `SheetContent`'s do. `DialogFooter` stacks its buttons there. Taller than
  * the room, it shrinks to fit, so a `DialogBody` inside scrolls.
  */
@@ -119,21 +121,23 @@ export function DialogContent({
           entering={compact ? SlideInDown.duration(240) : undefined}
           style={compact ? SHEET : PANEL}
         >
-          <FloatingSurface blur={false} radius={compact ? SHEET_RADIUS : tokens.radius.card} style={compact ? SHRINK : undefined}>
-            <View
-              accessibilityViewIsModal
-              className={cn(compact ? "gap-4 px-6 pt-3" : "gap-4 p-6", className)}
-              {...props}
-              style={[
-                compact ? { paddingBottom: Math.max(24, insets.bottom) + SHEET_RADIUS, flexShrink: 1 } : null,
-                style,
-              ]}
-            >
-              {compact ? <DialogHandle /> : null}
-              {children}
-            </View>
-            {hideCloseButton ? null : <DialogCloseButton />}
-          </FloatingSurface>
+          <SheetDragView enabled={compact && dismissible} style={compact ? SHRINK : undefined}>
+            <FloatingSurface blur={false} radius={compact ? SHEET_RADIUS : tokens.radius.card} style={compact ? SHRINK : undefined}>
+              <View
+                accessibilityViewIsModal
+                className={cn(compact ? "gap-4 px-6 pt-3" : "gap-4 p-6", className)}
+                {...props}
+                style={[
+                  compact ? { paddingBottom: Math.max(24, insets.bottom) + SHEET_RADIUS, flexShrink: 1 } : null,
+                  style,
+                ]}
+              >
+                {compact ? <DialogHandle /> : null}
+                {children}
+              </View>
+              {hideCloseButton ? null : <DialogCloseButton />}
+            </FloatingSurface>
+          </SheetDragView>
         </NativeOnlyAnimatedView>
       </OverlayModal>
     </DialogLayoutContext.Provider>
@@ -142,7 +146,7 @@ export function DialogContent({
 
 /**
  * The web compact handle: an `h-1 w-12` pill in `surface-tertiary`, in a
- * 44-high row. It is not a drag target, on the web either.
+ * 44-high row. The whole sheet drags (`SheetDragView`), the handle with it.
  */
 function DialogHandle() {
   const scheme = useScheme();
@@ -220,19 +224,33 @@ export function DialogDescription({ className, style, ...props }: TextPartProps)
   );
 }
 
-/** Scrolling body for long content. Height is capped at `maxHeight` (default 60% of the window). */
+/**
+ * Scrolling body for long content. Height is capped at `maxHeight` (default
+ * 60% of the window). In a bottom sheet it reports its scroll, so dragging
+ * down scrolls it back first and moves the sheet only from the top, and it
+ * holds still while the sheet follows the finger.
+ */
 export function DialogBody({
   maxHeight,
   style,
+  onScroll,
+  scrollEnabled = true,
   ...props
 }: ScrollViewProps & { maxHeight?: number }) {
   const { height } = useWindowDimensions();
+  const sheet = useSheetScrollBinding();
   return (
     <ScrollView
       bounces={false}
       keyboardShouldPersistTaps="handled"
+      scrollEventThrottle={16}
       style={[{ maxHeight: maxHeight ?? height * 0.6 }, style]}
       {...props}
+      scrollEnabled={scrollEnabled && (sheet?.scrollEnabled ?? true)}
+      onScroll={(event) => {
+        sheet?.onScroll(event);
+        onScroll?.(event);
+      }}
     />
   );
 }
