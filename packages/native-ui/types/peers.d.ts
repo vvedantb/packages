@@ -220,6 +220,7 @@ declare module "react-native" {
     keyboardDismissMode?: "none" | "on-drag" | "interactive";
     bounces?: boolean;
     alwaysBounceVertical?: boolean;
+    scrollEnabled?: boolean;
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle?: number;
@@ -347,6 +348,30 @@ declare module "react-native" {
     scale: number;
     fontScale: number;
   };
+
+  export interface PanResponderGestureState {
+    dx: number;
+    dy: number;
+    vx: number;
+    vy: number;
+  }
+  type PanResponderHandler<R> = (event: GestureResponderEvent, gesture: PanResponderGestureState) => R;
+  export interface PanResponderCallbacks {
+    onStartShouldSetPanResponder?: PanResponderHandler<boolean>;
+    onMoveShouldSetPanResponder?: PanResponderHandler<boolean>;
+    onMoveShouldSetPanResponderCapture?: PanResponderHandler<boolean>;
+    onPanResponderTerminationRequest?: PanResponderHandler<boolean>;
+    onPanResponderGrant?: PanResponderHandler<void>;
+    onPanResponderMove?: PanResponderHandler<void>;
+    onPanResponderRelease?: PanResponderHandler<void>;
+    onPanResponderTerminate?: PanResponderHandler<void>;
+  }
+  export interface PanResponderInstance {
+    panHandlers: Partial<ViewProps>;
+  }
+  export const PanResponder: {
+    create(callbacks: PanResponderCallbacks): PanResponderInstance;
+  };
 }
 
 declare module "nativewind" {
@@ -398,7 +423,14 @@ declare module "react-native-reanimated" {
   export const Easing: {
     bezier(x1: number, y1: number, x2: number, y2: number): EasingFunction;
     linear: EasingFunction;
+    cubic: EasingFunction;
+    out(easing: EasingFunction): EasingFunction;
   };
+  export enum ReduceMotion {
+    System = "system",
+    Always = "always",
+    Never = "never",
+  }
   export function useSharedValue<T>(initial: T): SharedValue<T>;
   export function useAnimatedStyle<T extends ViewStyle>(
     updater: () => T,
@@ -406,8 +438,32 @@ declare module "react-native-reanimated" {
   ): T;
   export function withTiming<T extends number>(
     toValue: T,
-    config?: { duration?: number; easing?: EasingFunction },
+    config?: { duration?: number; easing?: EasingFunction; reduceMotion?: ReduceMotion },
+    callback?: (finished?: boolean) => void,
   ): T;
+  export function withSpring<T extends number>(
+    toValue: T,
+    config?: {
+      velocity?: number;
+      damping?: number;
+      stiffness?: number;
+      mass?: number;
+      overshootClamping?: boolean;
+      reduceMotion?: ReduceMotion;
+    },
+  ): T;
+  export function interpolate(
+    value: number,
+    input: readonly number[],
+    output: readonly number[],
+    extrapolate?: "clamp" | "extend" | "identity",
+  ): number;
+  export function useAnimatedReaction<T>(
+    prepare: () => T,
+    react: (current: T, previous: T | null) => void,
+    deps?: unknown[],
+  ): void;
+  export function runOnJS<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => void;
   export function withRepeat<T>(
     animation: T,
     numberOfReps?: number,

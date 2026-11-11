@@ -13,10 +13,12 @@ import {
   View,
   type GestureResponderEvent,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette } from "../palette";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
+import { SheetDragProvider, useSheetBackdropStyle, useSheetDragState } from "./sheet-drag";
 import { useControllableState } from "./use-controllable-state";
 
 type OverlayContextValue = {
@@ -101,9 +103,10 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
  * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance.
  * `placement="center"` centres the child (dialogs) inside the insets on every
  * side; `"bottom"` pins it to the bottom edge (sheets), which pad their own
- * bottom inset. The backdrop closes the overlay only when `dismissible`;
- * Android back and the VoiceOver escape gesture always close it, as Escape
- * does on the web. With Reduce Motion on, the fade is off.
+ * bottom inset and may be dragged down to close (`SheetDragView`): the
+ * backdrop fades with the drag. The backdrop closes the overlay only when
+ * `dismissible`; Android back and the VoiceOver escape gesture always close
+ * it, as Escape does on the web. With Reduce Motion on, the fade is off.
  */
 export function OverlayModal({
   part,
@@ -120,8 +123,6 @@ export function OverlayModal({
   children: ReactNode;
 }) {
   const { open, setOpen } = useOverlay(part);
-  const scheme = useScheme();
-  const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
   const close = () => setOpen(false);
 
@@ -134,20 +135,52 @@ export function OverlayModal({
       onRequestClose={close}
       onShow={onShow}
     >
+      <OverlayModalBody part={part} placement={placement} dismissible={dismissible} close={close}>
+        {children}
+      </OverlayModalBody>
+    </Modal>
+  );
+}
+
+/** The `Modal`'s content: mounted with each opening, so a sheet's drag starts at rest. */
+function OverlayModalBody({
+  part,
+  placement,
+  dismissible,
+  close,
+  children,
+}: {
+  part: string;
+  placement: "center" | "bottom";
+  dismissible: boolean;
+  close: () => void;
+  children: ReactNode;
+}) {
+  const scheme = useScheme();
+  const insets = useSafeAreaInsets();
+  const drag = useSheetDragState(close);
+  const backdropStyle = useSheetBackdropStyle(drag);
+  return (
+    <SheetDragProvider value={drag}>
       {/* Android too: a modal window with `statusBarTranslucent` may not
           resize for the keyboard, which then covers the fields. The padding
           is the measured overlap, so it drops to 0 where the window does
           resize. */}
       <KeyboardAvoidingView behavior="padding" style={styles.fill}>
-        <Pressable
-          testID={`${part}-backdrop`}
-          accessible={dismissible}
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          disabled={!dismissible}
-          onPress={close}
-          style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop[scheme] }]}
-        />
+        <Animated.View
+          pointerEvents="box-none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop[scheme] }, backdropStyle]}
+        >
+          <Pressable
+            testID={`${part}-backdrop`}
+            accessible={dismissible}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            disabled={!dismissible}
+            onPress={close}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
         <View
           pointerEvents="box-none"
           onAccessibilityEscape={close}
@@ -172,7 +205,7 @@ export function OverlayModal({
           {children}
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </SheetDragProvider>
   );
 }
 

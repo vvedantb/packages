@@ -20,6 +20,7 @@ export {
   ConversationList,
   ConversationEmptyState,
   ConversationScrollButton,
+  ConversationDock,
   useConversation,
   isScrolledToBottom,
   AT_BOTTOM_THRESHOLD,
@@ -31,6 +32,7 @@ export type {
   ConversationScroller,
   ConversationEmptyStateProps,
   ConversationScrollButtonProps,
+  ConversationDockProps,
 } from "./conversation";
 export {
   Message,

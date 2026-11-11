@@ -52,6 +52,9 @@ type ConversationContextValue = {
   onScroll: (event: NativeScrollEvent) => void;
   onUserScroll: () => void;
   followContent: () => void;
+  /** The height of the `ConversationDock` under the thread, 0 without one. */
+  dockHeight: number;
+  setDockHeight: (height: number) => void;
 };
 
 const ConversationContext = createContext<ConversationContextValue | null>(null);
@@ -78,6 +81,7 @@ export function Conversation({ className, ...props }: ConversationProps) {
   // yet at the bottom) do not count as the reader leaving.
   const autoScrolling = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [dockHeight, setDockHeight] = useState(0);
 
   const update = (next: boolean) => {
     atBottom.current = next;
@@ -105,6 +109,8 @@ export function Conversation({ className, ...props }: ConversationProps) {
     followContent: () => {
       if (atBottom.current) scrollRef.current?.scrollToEnd({ animated: false });
     },
+    dockHeight,
+    setDockHeight,
   };
 
   return (
@@ -289,6 +295,29 @@ export function ConversationEmptyState({
   );
 }
 
+export type ConversationDockProps = ViewProps & { className?: string };
+
+/**
+ * The group under the thread, inside `Conversation` after the list: the
+ * composer, or a docked question card in its place. `ConversationScrollButton`
+ * sits centred 16 above its top edge (the web button's `bottom-4` over the
+ * dock), so the button stays with the dock as it grows (a reply quote, a
+ * taller field) and as the keyboard lifts it, instead of a fixed height over
+ * the messages.
+ */
+export function ConversationDock({ onLayout, ...props }: ConversationDockProps) {
+  const { setDockHeight } = useConversation();
+  return (
+    <View
+      {...props}
+      onLayout={(event) => {
+        setDockHeight(event.nativeEvent.layout.height);
+        onLayout?.(event);
+      }}
+    />
+  );
+}
+
 export type ConversationScrollButtonProps = {
   /** The accessibility label, and the text with `showLabel`. Default "Scroll to bottom". */
   label?: string;
@@ -300,6 +329,11 @@ export type ConversationScrollButtonProps = {
    * muted, a 60% border on the surface). Default `false`: the round arrow.
    */
   showLabel?: boolean;
+  /**
+   * The row the button centres in, full width by default. Inset a side (for
+   * example `{ right: 10 }`) to centre it on a thread that sits off-centre.
+   */
+  insets?: { left?: number; right?: number };
   testID?: string;
 };
 
@@ -307,8 +341,9 @@ export type ConversationScrollButtonProps = {
 const SCROLL_PILL_HEIGHT = 28;
 
 /**
- * Round outline arrow, centred 16 above the bottom of the `Conversation`,
- * shown while the reader is away from the end (the web `absolute bottom-4`).
+ * Round outline arrow, centred 16 above the bottom of the `Conversation`, or
+ * above its `ConversationDock` when it has one, shown while the reader is
+ * away from the end (the web `absolute bottom-4`).
  * The web `Button` `icon` size (40, slop to 48). It has an opaque surface
  * fill and no shadow, so it reads over the messages under it. With
  * `showLabel`, a compact pill with the icon and `label`.
@@ -317,9 +352,10 @@ export function ConversationScrollButton({
   label = "Scroll to bottom",
   icon: Icon = IconArrowDown,
   showLabel = false,
+  insets,
   testID,
 }: ConversationScrollButtonProps) {
-  const { isAtBottom, scrollToBottom } = useConversation();
+  const { isAtBottom, scrollToBottom, dockHeight } = useConversation();
   const scheme = useScheme();
   const largerText = useLargerText();
   if (isAtBottom) return null;
@@ -329,7 +365,13 @@ export function ConversationScrollButton({
       entering={FadeIn.duration(150)}
       exiting={FadeOut.duration(150)}
       pointerEvents="box-none"
-      style={{ position: "absolute", left: 0, right: 0, bottom: 16, alignItems: "center" }}
+      style={{
+        position: "absolute",
+        left: insets?.left ?? 0,
+        right: insets?.right ?? 0,
+        bottom: dockHeight + 16,
+        alignItems: "center",
+      }}
     >
       {showLabel ? (
         <Pressable
