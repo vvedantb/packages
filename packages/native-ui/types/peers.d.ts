@@ -396,7 +396,7 @@ declare module "react-native-safe-area-context" {
 
 declare module "react-native-reanimated" {
   import type * as React from "react";
-  import type { StyleProp, ViewProps, ViewStyle } from "react-native";
+  import type { ScrollViewProps, StyleProp, ViewProps, ViewStyle } from "react-native";
 
   export interface LayoutAnimationBuilder {
     duration(ms: number): LayoutAnimationBuilder;
@@ -491,10 +491,82 @@ declare module "react-native-reanimated" {
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
   export function useReducedMotion(): boolean;
 
+  // The sheet body's scroll on the UI thread (`src/primitives/sheet-gesture.tsx`).
+  export interface AnimatedRef<T> {
+    (component?: T | null): void;
+    current: T | null;
+  }
+  export function useAnimatedRef<T>(): AnimatedRef<T>;
+  export function useScrollOffset<T>(ref: AnimatedRef<T>, offset?: SharedValue<number>): SharedValue<number>;
+  export function scrollTo<T>(ref: AnimatedRef<T>, x: number, y: number, animated: boolean): void;
+  class AnimatedScrollView extends React.Component<AnimatedProps<ScrollViewProps>> {}
+
   declare const Animated: {
     View: React.ComponentType<AnimatedProps<ViewProps>>;
+    ScrollView: typeof AnimatedScrollView;
   };
+  declare namespace Animated {
+    type ScrollView = AnimatedScrollView;
+  }
   export default Animated;
+}
+
+declare module "react-native-gesture-handler" {
+  import type * as React from "react";
+  import type { StyleProp, ViewStyle } from "react-native";
+
+  export interface GestureStateManager {
+    begin(): void;
+    activate(): void;
+    fail(): void;
+    end(): void;
+  }
+  export interface TouchData {
+    id: number;
+    x: number;
+    y: number;
+    absoluteX: number;
+    absoluteY: number;
+  }
+  export interface GestureTouchEvent {
+    numberOfTouches: number;
+    allTouches: TouchData[];
+    changedTouches: TouchData[];
+  }
+  export interface PanGestureEvent {
+    absoluteX: number;
+    absoluteY: number;
+    translationX: number;
+    translationY: number;
+    velocityX: number;
+    velocityY: number;
+  }
+  type TouchHandler = (event: GestureTouchEvent, manager: GestureStateManager) => void;
+  export interface NativeGesture {
+    enabled(enabled: boolean): NativeGesture;
+    disallowInterruption(disallow: boolean): NativeGesture;
+  }
+  export interface PanGesture {
+    enabled(enabled: boolean): PanGesture;
+    manualActivation(manual: boolean): PanGesture;
+    simultaneousWithExternalGesture(...gestures: GestureType[]): PanGesture;
+    onTouchesDown(handler: TouchHandler): PanGesture;
+    onTouchesMove(handler: TouchHandler): PanGesture;
+    onStart(handler: (event: PanGestureEvent) => void): PanGesture;
+    onUpdate(handler: (event: PanGestureEvent) => void): PanGesture;
+    onEnd(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
+    onFinalize(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
+  }
+  export type GestureType = PanGesture | NativeGesture;
+  export const Gesture: {
+    Pan(): PanGesture;
+    Native(): NativeGesture;
+  };
+  export const GestureDetector: React.ComponentType<{ gesture: GestureType; children?: React.ReactNode }>;
+  export const GestureHandlerRootView: React.ComponentType<{
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
 }
 
 declare module "react-native-screens" {

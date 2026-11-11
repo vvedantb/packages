@@ -194,6 +194,7 @@ describe("@vvedantb/native-ui exports", () => {
       "./marketing",
       "./ambient",
       "./bottom-sheet",
+      "./gesture-handler",
       "./date-time",
       "./ai",
       "./gallery",
@@ -297,7 +298,7 @@ describe("@vvedantb/native-ui exports", () => {
     expect(names.has("ButtonShape")).toBe(true);
   });
 
-  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown, then highlighting)", () => {
+  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown, then highlighting, then Gesture Handler)", () => {
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
       "@clerk/clerk-expo",
@@ -326,6 +327,7 @@ describe("@vvedantb/native-ui exports", () => {
       "prism-react-renderer",
       "react",
       "react-native",
+      "react-native-gesture-handler",
       "react-native-marked",
       "react-native-reanimated",
       "react-native-safe-area-context",
@@ -349,6 +351,7 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-router",
       "expo-web-browser",
       "prism-react-renderer",
+      "react-native-gesture-handler",
       "react-native-marked",
       "react-native-svg",
     ]);

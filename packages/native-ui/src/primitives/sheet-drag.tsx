@@ -1,10 +1,13 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ComponentType, type ReactNode } from "react";
 import {
   PanResponder,
+  ScrollView,
+  View,
   useWindowDimensions,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
+  type LayoutChangeEvent,
+  type ScrollViewProps,
   type StyleProp,
+  type ViewProps,
   type ViewStyle,
 } from "react-native";
 import Animated, {
@@ -28,6 +31,8 @@ import { isSheetDragDown, SHEET_OVERPULL, sheetDragDismisses, sheetDragOffset, s
  * One `offset` drives the slide in, the drag, the release and the slide out,
  * so each can take over from the others mid-flight. Shared values, so the
  * motion runs on the UI thread and a drag re-renders nothing per move.
+ * `dragging` is for the `PanResponder` drag only; the Gesture Handler drag
+ * (`SheetGestureParts`) holds the body still on the UI thread instead.
  */
 export type SheetDragState = {
   /** How far down the sheet sits from rest. */
@@ -42,7 +47,7 @@ export type SheetDragState = {
   closing: SharedValue<boolean>;
   /** The sheet slides in from below on its first layout (a bottom sheet, Reduce Motion off). */
   slides: boolean;
-  /** While the sheet follows a finger: the body inside stops scrolling, so the native scroll does not take the touch. */
+  /** While the sheet follows a `PanResponder` finger: the body inside stops scrolling, so the native scroll does not take the touch. */
   dragging: boolean;
   setDragging: (dragging: boolean) => void;
 };
@@ -74,6 +79,27 @@ export function useSheetDragState(close: () => void, slides: boolean): SheetDrag
 
 export const SheetDragProvider = SheetDragContext.Provider;
 
+export type SheetDragViewProps = {
+  enabled: boolean;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+};
+
+/**
+ * The Gesture Handler build of the sheet parts, from
+ * `@vvedantb/native-ui/gesture-handler`. Without it (the peer is optional)
+ * the sheets drag with `PanResponder`. A context, so only that entry imports
+ * `react-native-gesture-handler` and an app without it bundles as before.
+ */
+export type SheetGestureParts = {
+  /** Wraps each overlay's `Modal` content: on Android a `Modal` is its own root, and gestures need a root view there. */
+  ModalRoot: ComponentType<{ children: ReactNode }>;
+  DragView: ComponentType<SheetDragViewProps & { drag: SheetDragState }>;
+  ScrollView: ComponentType<ScrollViewProps & { drag: SheetDragState }>;
+};
+
+export const SheetGestureContext = createContext<SheetGestureParts | null>(null);
+
 /** The backdrop's opacity, from the sheet's offset: 1 at rest, 0 with the sheet out of sight. */
 export function useSheetBackdropStyle(drag: SheetDragState) {
   return useAnimatedStyle(() => {
@@ -102,21 +128,31 @@ export function slideSheetOut(drag: SheetDragState, done: () => void) {
 }
 
 /**
- * For a scroll view inside a sheet: `onScroll` reports its offset, so a
- * downward drag moves the sheet only once the content is scrolled to the top,
- * and `scrollEnabled` is off while the sheet follows the finger, so the native
- * scroll does not take the touch over (Android and iOS would cancel the drag).
- * Returns nothing outside a sheet.
+ * A scroll view that hands a downward drag to the sheet around it: the drag
+ * moves the sheet only once the content is scrolled to its top, and the
+ * content holds still while the sheet follows the finger. With
+ * `react-native-gesture-handler` (`SheetGestureParts`) both run on the UI
+ * thread; with `PanResponder`, `onScroll` reports the offset and
+ * `scrollEnabled` is off during a drag, so the native scroll does not take
+ * the touch over (Android and iOS would cancel the drag). Outside a sheet, a
+ * plain `ScrollView`.
  */
-export function useSheetScrollBinding() {
+export function SheetScrollView(props: ScrollViewProps) {
   const drag = useContext(SheetDragContext);
-  if (!drag) return null;
-  return {
-    scrollEnabled: !drag.dragging,
-    onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      drag.scrollTop.set(event.nativeEvent.contentOffset.y);
-    },
-  };
+  const gestures = useContext(SheetGestureContext);
+  if (!drag) return <ScrollView {...props} />;
+  if (gestures) return <gestures.ScrollView {...props} drag={drag} />;
+  const { onScroll, scrollEnabled = true } = props;
+  return (
+    <ScrollView
+      {...props}
+      scrollEnabled={scrollEnabled && !drag.dragging}
+      onScroll={(event) => {
+        drag.scrollTop.set(event.nativeEvent.contentOffset.y);
+        onScroll?.(event);
+      }}
+    />
+  );
 }
 
 /**
@@ -130,51 +166,41 @@ export function useSheetScrollBinding() {
  * resistance. On its first layout it slides in from below when `slides`.
  * With Reduce Motion on it still follows the finger, and the release settles
  * at once. `enabled={false}` (a sheet that may not be dismissed) leaves it
- * still under the finger.
+ * still under the finger. The drag runs on Gesture Handler when the app
+ * provides it (`SheetGestureParts`), else on `PanResponder`.
  */
-export function SheetDragView({
-  enabled,
-  style,
-  children,
-}: {
-  enabled: boolean;
-  style?: StyleProp<ViewStyle>;
-  children: ReactNode;
-}) {
+export function SheetDragView({ enabled, style, children }: SheetDragViewProps) {
   const drag = useContext(SheetDragContext);
-  // Created once: its handlers only touch shared values and `start`, so they never go stale.
-  const [responder] = useState(() => {
-    if (!drag) return null;
-    // Where the sheet was when the finger caught it.
-    let start = 0;
-    return PanResponder.create({
-      // A touch on a sheet in motion catches it: it stops under the finger.
-      onStartShouldSetPanResponderCapture: () => !drag.closing.get() && drag.offset.get() > 1,
-      // Capture, so a downward drag wins over the rows and over a body
-      // scrolled to its top. Only then: a body scrolled down keeps its
-      // scroll both ways, and an upward drag always scrolls it.
-      onMoveShouldSetPanResponderCapture: (_event, gesture) =>
-        !drag.closing.get() && isSheetDragDown(gesture.dx, gesture.dy) && drag.scrollTop.get() <= 0,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: () => {
-        cancelAnimation(drag.offset);
-        start = drag.offset.get();
-        drag.setDragging(true);
-      },
-      // Track phase: one shared value write per move, no React render.
-      onPanResponderMove: (_event, gesture) => {
-        drag.offset.set(sheetDragOffset(start + gesture.dy));
-      },
-      onPanResponderRelease: (_event, gesture) => settle(drag, start + gesture.dy, gesture.vy, true),
-      onPanResponderTerminate: (_event, gesture) => settle(drag, start + gesture.dy, gesture.vy, false),
-    });
-  });
-  const dragStyle = useAnimatedStyle(() => ({ transform: [{ translateY: drag ? drag.offset.get() : 0 }] }));
+  const gestures = useContext(SheetGestureContext);
+  if (!drag) return <View style={style}>{children}</View>;
+  if (gestures) {
+    return (
+      <gestures.DragView drag={drag} enabled={enabled} style={style}>
+        {children}
+      </gestures.DragView>
+    );
+  }
+  return (
+    <PanResponderDragView drag={drag} enabled={enabled} style={style}>
+      {children}
+    </PanResponderDragView>
+  );
+}
+
+/**
+ * The view that moves: `translateY` from the sheet's offset, and the slide in
+ * from below on its first layout. Both drags wrap it.
+ */
+export function SheetMotionView({
+  drag,
+  style,
+  ...props
+}: ViewProps & { drag: SheetDragState }) {
+  const dragStyle = useAnimatedStyle(() => ({ transform: [{ translateY: drag.offset.get() }] }));
   return (
     <Animated.View
-      {...(enabled && responder ? responder.panHandlers : null)}
-      onLayout={(event) => {
-        if (!drag) return;
+      {...props}
+      onLayout={(event: LayoutChangeEvent) => {
         const height = event.nativeEvent.layout.height;
         const first = drag.height.get() === 0;
         drag.height.set(height);
@@ -185,19 +211,77 @@ export function SheetDragView({
         }
       }}
       style={[style, dragStyle]}
-    >
-      {children}
-    </Animated.View>
+    />
   );
+}
+
+/** The drag on the JavaScript thread, for an app without `react-native-gesture-handler`. */
+function PanResponderDragView({
+  drag,
+  enabled,
+  style,
+  children,
+}: SheetDragViewProps & { drag: SheetDragState }) {
+  // Created once: its handlers only touch shared values and `start`, so they never go stale.
+  const [responder] = useState(() => {
+    // Where the sheet was when the finger caught it.
+    let start = 0;
+    const release = (position: number, vy: number, mayDismiss: boolean) => {
+      drag.setDragging(false);
+      if (settleSheet(drag, position, vy, mayDismiss)) impactHaptic("light");
+    };
+    return PanResponder.create({
+      // A touch on a sheet in motion catches it: it stops under the finger.
+      onStartShouldSetPanResponderCapture: () => sheetCatches(drag),
+      // Capture, so a downward drag wins over the rows and over a body
+      // scrolled to its top. Only then: a body scrolled down keeps its
+      // scroll both ways, and an upward drag always scrolls it.
+      onMoveShouldSetPanResponderCapture: (_event, gesture) => sheetTakesDrag(drag, gesture.dx, gesture.dy),
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => {
+        cancelAnimation(drag.offset);
+        start = drag.offset.get();
+        drag.setDragging(true);
+      },
+      // Track phase: one shared value write per move, no React render.
+      onPanResponderMove: (_event, gesture) => {
+        drag.offset.set(sheetDragOffset(start + gesture.dy));
+      },
+      onPanResponderRelease: (_event, gesture) => release(start + gesture.dy, gesture.vy, true),
+      onPanResponderTerminate: (_event, gesture) => release(start + gesture.dy, gesture.vy, false),
+    });
+  });
+  return (
+    <SheetMotionView drag={drag} {...(enabled ? responder.panHandlers : null)} style={style}>
+      {children}
+    </SheetMotionView>
+  );
+}
+
+/** The parts of the motion state a worklet may capture (no React setter). */
+export type SheetMotion = Pick<SheetDragState, "offset" | "height" | "scrollTop" | "dismissed" | "closing">;
+
+/** A touch on a sheet in motion (sliding in, springing home, flung out) catches it; one sliding out after a close does not. */
+export function sheetCatches(drag: SheetMotion): boolean {
+  "worklet";
+  return !drag.closing.get() && drag.offset.get() > 1;
+}
+
+/** A downward drag takes the sheet once the body inside is at its top. */
+export function sheetTakesDrag(drag: SheetMotion, dx: number, dy: number): boolean {
+  "worklet";
+  return !drag.closing.get() && isSheetDragDown(dx, dy) && drag.scrollTop.get() <= 0;
 }
 
 /**
  * Release phase, at `position` below rest with velocity `vy` (pt/ms): the
  * sheet springs on at the finger's speed, out (then the overlay closes) or
- * home. `mayDismiss` is false when the system took the touch away.
+ * home. `mayDismiss` is false when the system took the touch away. Returns
+ * true when it springs home from below rest: the caller fires the light
+ * haptic, in the same frame.
  */
-function settle(drag: SheetDragState, position: number, vy: number, mayDismiss: boolean) {
-  drag.setDragging(false);
+export function settleSheet(drag: SheetMotion, position: number, vy: number, mayDismiss: boolean): boolean {
+  "worklet";
   const height = drag.height.get();
   const velocity = vy * 1000;
   if (mayDismiss && sheetDragDismisses({ dy: position, vy, height })) {
@@ -207,7 +291,7 @@ function settle(drag: SheetDragState, position: number, vy: number, mayDismiss: 
         if (finished) drag.dismissed.set(true);
       }),
     );
-    return;
+    return false;
   }
   drag.offset.set(
     withSpring(0, {
@@ -217,5 +301,5 @@ function settle(drag: SheetDragState, position: number, vy: number, mayDismiss: 
       clamp: { min: -SHEET_OVERPULL },
     }),
   );
-  if (position > 1) impactHaptic("light");
+  return position > 1;
 }

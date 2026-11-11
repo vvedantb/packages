@@ -74,6 +74,10 @@
       "types": "./src/entries/bottom-sheet.ts",
       "default": "./src/entries/bottom-sheet.ts"
     },
+    "./gesture-handler": {
+      "types": "./src/entries/gesture-handler.ts",
+      "default": "./src/entries/gesture-handler.ts"
+    },
     "./date-time": {
       "types": "./src/entries/date-time.ts",
       "default": "./src/entries/date-time.ts"
@@ -165,6 +169,7 @@
     "prism-react-renderer": ">=2.0.0",
     "react": ">=19.0.0",
     "react-native": ">=0.76.0",
+    "react-native-gesture-handler": ">=2.0.0",
     "react-native-marked": ">=8.0.0",
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
@@ -216,6 +221,9 @@
       "optional": true
     },
     "prism-react-renderer": {
+      "optional": true
+    },
+    "react-native-gesture-handler": {
       "optional": true
     },
     "react-native-marked": {

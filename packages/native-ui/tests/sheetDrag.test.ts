@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { isSheetDragDown, SHEET_OVERPULL, sheetDragDismisses, sheetDragOffset, sheetSnapVelocity } from "../src/sheetDrag";
+import {
+  isSheetDragDown,
+  SHEET_OVERPULL,
+  sheetDragAnchor,
+  sheetDragDismisses,
+  sheetDragOffset,
+  sheetSnapVelocity,
+} from "../src/sheetDrag";
 
 // The drag-to-dismiss rules every bottom sheet (`SheetContent`, the compact
 // `DialogContent`) uses through `SheetDragView`.
@@ -42,5 +49,12 @@ describe("sheet drag to dismiss", () => {
     expect(sheetSnapVelocity(120, 300)).toBe(300);
     expect(sheetSnapVelocity(-8, -2000)).toBe(0);
     expect(sheetSnapVelocity(-8, 500)).toBe(500);
+  });
+
+  it("counts the drag from the touch-down, past any scroll the same touch spent reaching the top", () => {
+    expect(sheetDragAnchor(450, 0, 0)).toBe(450);
+    expect(sheetDragAnchor(400, 140, 0)).toBe(540);
+    // A touch that first scrolled the body further down adds nothing.
+    expect(sheetDragAnchor(400, 20, 60)).toBe(400);
   });
 });

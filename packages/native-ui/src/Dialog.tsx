@@ -1,5 +1,4 @@
 import {
-  ScrollView,
   Text,
   View,
   useWindowDimensions,
@@ -17,7 +16,7 @@ import { palette } from "./palette";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
-import { SheetDragView, useSheetScrollBinding } from "./primitives/sheet-drag";
+import { SheetDragView, SheetScrollView } from "./primitives/sheet-drag";
 import {
   OverlayClose,
   OverlayModal,
@@ -222,31 +221,19 @@ export function DialogDescription({ className, style, ...props }: TextPartProps)
 
 /**
  * Scrolling body for long content. Height is capped at `maxHeight` (default
- * 60% of the window). In a bottom sheet it reports its scroll, so dragging
- * down scrolls it back first and moves the sheet only from the top, and it
- * holds still while the sheet follows the finger.
+ * 60% of the window). In a bottom sheet (`SheetScrollView`) dragging down
+ * scrolls it back first and moves the sheet only from the top, and it holds
+ * still while the sheet follows the finger.
  */
-export function DialogBody({
-  maxHeight,
-  style,
-  onScroll,
-  scrollEnabled = true,
-  ...props
-}: ScrollViewProps & { maxHeight?: number }) {
+export function DialogBody({ maxHeight, style, ...props }: ScrollViewProps & { maxHeight?: number }) {
   const { height } = useWindowDimensions();
-  const sheet = useSheetScrollBinding();
   return (
-    <ScrollView
+    <SheetScrollView
       bounces={false}
       keyboardShouldPersistTaps="handled"
       scrollEventThrottle={16}
       style={[{ maxHeight: maxHeight ?? height * 0.6 }, style]}
       {...props}
-      scrollEnabled={scrollEnabled && (sheet?.scrollEnabled ?? true)}
-      onScroll={(event) => {
-        sheet?.onScroll(event);
-        onScroll?.(event);
-      }}
     />
   );
 }
