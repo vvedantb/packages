@@ -100,6 +100,8 @@ declare module "react-native" {
     accessibilityViewIsModal?: boolean;
     accessibilityLiveRegion?: "none" | "polite" | "assertive";
     importantForAccessibility?: "auto" | "yes" | "no" | "no-hide-descendants";
+    accessibilityActions?: ReadonlyArray<{ name: string; label?: string }>;
+    onAccessibilityAction?: (event: { nativeEvent: { actionName: string } }) => void;
     role?: Role;
     "aria-level"?: number | string;
     "aria-hidden"?: boolean;

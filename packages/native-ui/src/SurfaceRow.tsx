@@ -23,6 +23,13 @@ export type SurfaceRowProps = {
   /** Read after the label, such as the status and age. */
   accessibilityHint?: string;
   onPress: () => void;
+  /**
+   * A long press, such as the row menu (the web right-click). VoiceOver and
+   * TalkBack reach it as the `longpress` action, named by `longPressLabel`.
+   */
+  onLongPress?: () => void;
+  /** The spoken name of the long-press action. Default "More actions". */
+  longPressLabel?: string;
   /** Classes on the body, in place of the web row inset `p-2.5 pl-3`. */
   className?: string;
   testID?: string;
@@ -32,7 +39,8 @@ export type SurfaceRowProps = {
  * The shell of a status list row, as the web `ListRow`: a card surface with
  * the surface radius, a 4 wide status stripe on the leading edge (inset 8 top
  * and bottom, rounded on its outer side) and the body over it. The whole row
- * is one button that fades while pressed, so put no other control in it.
+ * is one button that fades while pressed, so put no other control in it; a
+ * long press (`onLongPress`) can open its menu.
  */
 export function SurfaceRow({
   children,
@@ -42,6 +50,8 @@ export function SurfaceRow({
   accessibilityLabel,
   accessibilityHint,
   onPress,
+  onLongPress,
+  longPressLabel = "More actions",
   className,
   testID,
 }: SurfaceRowProps) {
@@ -78,6 +88,11 @@ export function SurfaceRow({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
+      onLongPress={onLongPress}
+      accessibilityActions={onLongPress ? [{ name: "longpress", label: longPressLabel }] : undefined}
+      onAccessibilityAction={(event) => {
+        if (event.nativeEvent.actionName === "longpress") onLongPress?.();
+      }}
       className="overflow-hidden active:opacity-80"
       style={style}
     >

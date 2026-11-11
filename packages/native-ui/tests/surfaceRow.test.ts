@@ -16,6 +16,9 @@ type Part = {
   accessibilityLabel?: string;
   accessibilityHint?: string;
   onPress?: () => void;
+  onLongPress?: () => void;
+  accessibilityActions?: Array<{ name: string; label?: string }>;
+  onAccessibilityAction?: (event: { nativeEvent: { actionName: string } }) => void;
 };
 
 function part(node: ReactNode) {
@@ -52,5 +55,19 @@ describe("SurfaceRow", () => {
     const { tree, parts } = await render({ borderColor: "#ff0000", backgroundColor: "#fff5f5" });
     expect(parts).toHaveLength(1);
     expect(tree.props.style).toMatchObject({ backgroundColor: "#fff5f5", borderWidth: 1, borderColor: "#ff0000" });
+  });
+
+  it("opens its menu on a long press, and offers it to VoiceOver and TalkBack as a named action", async () => {
+    const onLongPress = vi.fn();
+    const { tree } = await render({ onLongPress, longPressLabel: "Task actions" });
+    expect(tree.props.accessibilityActions).toEqual([{ name: "longpress", label: "Task actions" }]);
+    tree.props.onLongPress?.();
+    tree.props.onAccessibilityAction?.({ nativeEvent: { actionName: "longpress" } });
+    expect(onLongPress).toHaveBeenCalledTimes(2);
+  });
+
+  it("has no long-press action without a handler", async () => {
+    const { tree } = await render({});
+    expect(tree.props.accessibilityActions).toBeUndefined();
   });
 });
