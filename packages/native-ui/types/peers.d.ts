@@ -123,6 +123,8 @@ declare module "react-native" {
     onLayout?: (event: LayoutChangeEvent) => void;
     onAccessibilityEscape?: () => void;
     collapsable?: boolean;
+    onStartShouldSetResponderCapture?: () => boolean;
+    onResponderRelease?: () => void;
   }
   export class View extends React.Component<ViewProps> {
     measureInWindow(callback: (x: number, y: number, width: number, height: number) => void): void;
@@ -549,6 +551,8 @@ declare module "react-native-gesture-handler" {
   export interface PanGesture {
     enabled(enabled: boolean): PanGesture;
     manualActivation(manual: boolean): PanGesture;
+    activeOffsetX(offset: number | number[]): PanGesture;
+    failOffsetY(offset: number | number[]): PanGesture;
     simultaneousWithExternalGesture(...gestures: GestureType[]): PanGesture;
     onTouchesDown(handler: TouchHandler): PanGesture;
     onTouchesMove(handler: TouchHandler): PanGesture;
