@@ -931,6 +931,23 @@ describe("PromptInputChip", () => {
     expect(flatten(count!.props.style)).toMatchObject({ fontWeight: "500", fontVariant: ["tabular-nums"] });
     expect(byType(chip, "IconChevronDown")).toHaveLength(0);
   });
+
+  it("hides a label squeezed below two characters and an ellipsis, keeps the full name, and shows it again when wider", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const h = hooks.mount(
+      () => PromptInputChip({ icon: "MARK", label: "main", accessibilityLabel: "Base branch: main" }) as unknown as Element,
+    );
+    const label = () => byType(h.tree, "Text")[0];
+    const opacity = () => flatten(label()?.props.style).opacity;
+    const layout = (width: number) =>
+      (label()?.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width, height: 16 } } });
+    expect(opacity()).toBeUndefined();
+    layout(5);
+    expect(opacity()).toBe(0);
+    expect(h.tree.props.accessibilityLabel).toBe("Base branch: main");
+    layout(24);
+    expect(opacity()).toBeUndefined();
+  });
 });
 
 describe("PromptInput menu slot", () => {

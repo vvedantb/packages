@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconArrowUp, IconChevronDown, IconPlayerStopFilled } from "@tabler/icons-react-native";
 import { cn } from "../cn";
@@ -99,6 +99,8 @@ export const PROMPT_INPUT_CHIP = {
   chevronSize: 12,
   chevronOpacity: 0.6,
   suffixOpacity: 0.7,
+  /** The narrowest label worth drawing: about two characters and the ellipsis at `text-xs` (2em). */
+  labelMinWidth: 24,
 } as const;
 
 export type PromptInputChipProps = {
@@ -128,7 +130,10 @@ export type PromptInputChipProps = {
  * A chip for the composer `footer`, the web `ModelPicker` trigger: 28 high on
  * screen, slop to 44 above and below. The label shrinks and truncates, so a
  * long model name gives up width to the chips beside it, as the web
- * `max-sm:truncate`; the icon and chevron keep their size. Disabled dims to 50%, as the web `disabled:opacity-50`.
+ * `max-sm:truncate`; the icon and chevron keep their size. Below
+ * `labelMinWidth` (scaled by the system font size) the label hides, so a
+ * squeezed chip is its icon and chevron, as the web at 390, not a sliver of a
+ * letter. Disabled dims to 50%, as the web `disabled:opacity-50`.
  */
 export function PromptInputChip({
   icon,
@@ -146,6 +151,12 @@ export function PromptInputChip({
 }: PromptInputChipProps) {
   const scheme = useScheme();
   const pressed = usePressFeedback();
+  const { fontScale } = useWindowDimensions();
+  // Whether the label slot is wide enough to read. Hiding it only sets the
+  // opacity, so the layout and the next `onLayout` width stay the same: the
+  // state changes once per threshold crossing, never in a layout loop, and a
+  // wider slot later shows the label again.
+  const [readable, setReadable] = useState(true);
   const tint = color ?? tokens.color.muted[scheme];
   const text = [sizeStyle("text-xs"), { color: tint }];
   const name = accessibilityLabel ?? [label, suffix, count].filter((part) => part !== undefined).join(", ");
@@ -172,8 +183,11 @@ export function PromptInputChip({
       {icon ? <View className="shrink-0">{icon}</View> : null}
       <Text
         numberOfLines={1}
+        onLayout={(event) =>
+          setReadable(event.nativeEvent.layout.width >= PROMPT_INPUT_CHIP.labelMinWidth * Math.max(1, fontScale))
+        }
         className={cn("min-w-0 shrink text-xs", weight === "medium" ? "font-instrument-sans-medium" : "font-instrument-sans")}
-        style={[...text, weight === "medium" ? typeStyle("medium") : null]}
+        style={[...text, weight === "medium" ? typeStyle("medium") : null, readable ? null : { opacity: 0 }]}
       >
         {label}
         {suffix ? <Text style={{ color: withAlpha(tint, PROMPT_INPUT_CHIP.suffixOpacity) }}>{` · ${suffix}`}</Text> : null}
