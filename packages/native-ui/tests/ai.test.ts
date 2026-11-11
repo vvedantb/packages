@@ -912,6 +912,9 @@ describe("PromptInputChip", () => {
     const suffix = byType(label, "Text")[1]!;
     expect(suffix.props.children).toBe(" · High");
     expect(byType(chip, "IconChevronDown")[0]!.props).toMatchObject({ size: 12, color: tokens.color.muted.light });
+    // Only the label shrinks: the icon sits in a box that keeps its width.
+    const children = chip.props.children as Element[];
+    expect(children[0]!.props).toMatchObject({ className: "shrink-0", children: "MARK" });
     (chip.props.onPress as () => void)();
     expect(onPress).toHaveBeenCalledOnce();
   });
