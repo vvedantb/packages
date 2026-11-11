@@ -11,6 +11,7 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
+declare function requestAnimationFrame(callback: (time: number) => void): number;
 // `src/ThemeToggle.tsx` logs a failed `setColorScheme`; `src/auth/SignInScreen.tsx` warns on an unhandled sign-in status.
 declare const console: { error(...data: unknown[]): void; warn(...data: unknown[]): void };
 // React Native's global `URL`; `src/ai/activity-step-label.ts` (a copy of the web file) reads a fetched page's host.

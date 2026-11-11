@@ -245,16 +245,30 @@ export function ConversationList<T>({
   // Sizes from the list's own events, for the scroll offset; no render reads
   // them. `inset` is the keyboard's space past the content.
   const size = useRef({ content: 0, view: 0, inset: 0 });
+  // A FlatList draws from its start, so a thread opened with messages would
+  // show its first rows and then jump to the end. It stays hidden until its
+  // first jump to the end (the next frame, once both sizes are known), so it
+  // appears already at the end. An empty list (a spinner, an empty state)
+  // shows at once.
+  const hasRows = (props.data?.length ?? 0) > 0;
+  const [placed, setPlaced] = useState(false);
+  const placeOnce = () => {
+    if (!placed && hasRows && size.current.content > 0 && size.current.view > 0) {
+      requestAnimationFrame(() => setPlaced(true));
+    }
+  };
   const wired = useConversationScroll(
     {
       ...props,
       onContentSizeChange: (width: number, height: number) => {
         size.current.content = height;
         onContentSizeChange?.(width, height);
+        placeOnce();
       },
       onLayout: (event: LayoutChangeEvent) => {
         size.current.view = event.nativeEvent.layout.height;
         onLayout?.(event);
+        placeOnce();
       },
     },
     () => size.current.inset,
@@ -264,6 +278,7 @@ export function ConversationList<T>({
       className={cn("flex-1", className)}
       contentContainerClassName={cn("px-3 py-3", contentContainerClassName)}
       {...wired}
+      style={[wired.style, hasRows && !placed ? styles.hidden : null]}
       keyboardDismissMode={
         props.keyboardDismissMode ?? (keyboard?.interactive ? "interactive" : SCROLL_DEFAULTS.keyboardDismissMode)
       }
@@ -499,5 +514,8 @@ export function ConversationScrollButton({
 const styles = StyleSheet.create({
   fill: {
     flex: 1,
+  },
+  hidden: {
+    opacity: 0,
   },
 });

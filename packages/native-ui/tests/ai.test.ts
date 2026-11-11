@@ -646,6 +646,18 @@ describe("ResponseText", () => {
   });
 });
 
+// React Native has `requestAnimationFrame`; Node does not. Frames run at once
+// unless a test queues them itself.
+beforeEach(() => {
+  vi.stubGlobal("requestAnimationFrame", (run: () => void) => {
+    run();
+    return 0;
+  });
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("Conversation", () => {
   const event = (offset: number, content = 2000, view = 800) => ({
     contentOffset: { x: 0, y: offset },
@@ -810,6 +822,32 @@ describe("Conversation", () => {
     const button = (h.tree.button as Element).props.children as Element;
     (button.props.onPress as () => void)();
     expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 5200, animated: true });
+  });
+
+  it("stays hidden until its first jump to the end, so a thread opens at its end", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const frames: (() => void)[] = [];
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => frames.push(run));
+    const mount = (data: string[]) =>
+      hooks.mount(() => {
+        provide(Conversation({ children: null }) as unknown as Element);
+        return { list: ConversationList({ data, renderItem: () => null }) as unknown as Element };
+      });
+    const hidden = (list: Element) => JSON.stringify(list.props.style).includes('"opacity":0');
+    // An empty thread (its spinner or empty state) shows at once.
+    expect(hidden(mount([]).tree.list)).toBe(false);
+    const h = mount(["a", "b"]);
+    const scrollToOffset = vi.fn();
+    (h.tree.list.props.ref as (list: unknown) => void)({ scrollToOffset });
+    expect(hidden(h.tree.list)).toBe(true);
+    (h.tree.list.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 800 } } });
+    expect(frames).toHaveLength(0);
+    (h.tree.list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    // The jump to the end comes first; the list shows on the next frame.
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    expect(hidden(h.tree.list)).toBe(true);
+    for (const run of frames.splice(0)) run();
+    expect(hidden(h.tree.list)).toBe(false);
   });
 });
 
