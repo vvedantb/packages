@@ -140,6 +140,7 @@ declare module "react-native" {
     allowFontScaling?: boolean;
     maxFontSizeMultiplier?: number;
     onPress?: (event: GestureResponderEvent) => void;
+    onLayout?: (event: LayoutChangeEvent) => void;
   }
   export class Text extends React.Component<TextProps> {}
 
