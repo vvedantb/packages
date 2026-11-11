@@ -1248,7 +1248,11 @@ describe("AI parts (source contract)", () => {
   });
 
   it("stays generic: no model or provider names, and the AI wording", () => {
+    // The web timeline copies (`activityTimeline.test.ts` keeps them byte-identical)
+    // list the agents' old "… is reasoning..." filler lines, to drop them.
+    const webCopies = new Set(["activity-step-label.ts", "activity-tasks-utils.ts", "activity-step-types.ts"]);
     for (const [file, source] of Object.entries({ ...sources, "AiChatGallery.tsx": gallery })) {
+      if (webCopies.has(file)) continue;
       expect(source, file).not.toMatch(/\b(?:gpt|claude|gemini|llama|mistral|openai|anthropic|vibot)\b/i);
     }
     expect(sources["reasoning.tsx"]).toMatch(/"Thinking…"/);

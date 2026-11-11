@@ -1,4 +1,4 @@
-import type { ActivityStep } from "./activity-shared";
+import type { ActivityStep } from "./activity-step-types";
 
 export type CommandVisualKind = "inspect" | "git" | "terminal";
 

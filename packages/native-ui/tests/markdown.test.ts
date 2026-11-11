@@ -15,6 +15,7 @@ vi.mock("react-native-marked", () => ({ Renderer: class {}, useMarkdown: () => [
 vi.mock("../src/ai/code-block", () => ({ CodeBlock: "CodeBlock" }));
 vi.mock("../src/ai/response-text", () => ({ ChatTextColorContext: {} }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
+vi.mock("../src/markdown/MarkdownTable", () => ({ MarkdownTable: "MarkdownTable", MARKDOWN_TABLE: { fontScale: 0.93, lineHeight: 1.5 } }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const webCss = readFileSync(join(root, "..", "ui", "tokens", "src", "css", "markdown.css"), "utf8");

@@ -10,6 +10,7 @@ import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { fontFamily } from "../typography";
 import { useScheme } from "../useScheme";
+import { MARKDOWN_TABLE, MarkdownTable } from "./MarkdownTable";
 
 /**
  * Sizes from the web `markdown.css` (`@vvedantb/ui/tokens/css/markdown.css`),
@@ -28,26 +29,13 @@ export const MARKDOWN_SCALE = {
   blockGap: 16,
 } as const;
 
-/**
- * Web `.markdown table` and its Streamdown wrapper: text at 0.93em with
- * line-height 1.5, cells `0.45rem 0.75rem`, header cells semibold, rows split
- * by the border at 70% (the header's in the full border), the table 0.65rem
- * inside the code-block panel (padding `0.25rem 0.3rem 0.4rem`).
- */
-export const MARKDOWN_TABLE = {
-  fontScale: 0.93,
-  lineHeight: 1.5,
-  cellPaddingX: 12,
-  cellPaddingY: 7,
-  panelPadding: { top: 4, x: 5, bottom: 6 },
-  tableMargin: 10,
-} as const;
-
 export type MarkdownProps = {
   /** The markdown source. */
   children: string;
   /** With it, fenced code blocks get a copy button (native-ui adds no clipboard package). */
   onCopyCode?: (code: string) => void | Promise<void>;
+  /** With it, tables get the web Copy table button: the table as Markdown, CSV or TSV. */
+  onCopyTable?: (text: string) => void | Promise<void>;
   /**
    * Body line height. Default `relaxed`, the web `.markdown` 1.625 (14 / 22.75).
    * `normal` is the text size's own (14 / 20), as a web `Markdown` with
@@ -71,13 +59,13 @@ export type MarkdownProps = {
  * Needs the optional peer `react-native-marked` (it renders through
  * `useMarkdown`, so it nests in a `ScrollView` without a `FlatList`).
  */
-export function Markdown({ children, onCopyCode, leading = "relaxed", renderLink }: MarkdownProps) {
+export function Markdown({ children, onCopyCode, onCopyTable, leading = "relaxed", renderLink }: MarkdownProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const inherited = useContext(ChatTextColorContext);
   const body = sizeStyle(chatTextSize("body", largerText), leading === "relaxed" ? "relaxed" : undefined);
   const color = inherited ?? tokens.color.foreground[scheme];
-  const renderer = new NativeUiMarkdownRenderer(scheme, body.fontSize, color, onCopyCode, renderLink);
+  const renderer = new NativeUiMarkdownRenderer(scheme, body.fontSize, color, onCopyCode, onCopyTable, renderLink);
   const elements = useMarkdown(children, {
     colorScheme: scheme,
     renderer,
@@ -210,6 +198,25 @@ function plainText(node: ReactNode): string {
   return out;
 }
 
+/**
+ * A cell's plain text, as the web reads a cell's `textContent` for Copy
+ * table: inline code without the no-break spaces that pad its chip.
+ */
+function cellText(cell: ReactNode): string {
+  return nodeText(cell).trim();
+}
+
+function nodeText(node: ReactNode): string {
+  return Children.toArray(node)
+    .map((child) => {
+      if (typeof child === "string" || typeof child === "number") return String(child);
+      if (!isValidElement<StyledNodeProps>(child)) return "";
+      const text = nodeText(child.props.children);
+      return child.type === InlineCode ? text.replace(/^\u00A0|\u00A0$/g, "") : text;
+    })
+    .join("");
+}
+
 /** Web `.markdown` lists: 1.25rem (20) indent, 0.25rem (4) between items, muted markers (a 5-wide disc). */
 export const MARKDOWN_LIST = { indent: 20, itemGap: 4, disc: 5 } as const;
 
@@ -225,6 +232,7 @@ class NativeUiMarkdownRenderer extends Renderer {
     private readonly fontSize: number,
     private readonly color: string,
     private readonly onCopyCode: MarkdownProps["onCopyCode"],
+    private readonly onCopyTable: MarkdownProps["onCopyTable"],
     private readonly renderLink: MarkdownProps["renderLink"],
   ) {
     super();
@@ -257,12 +265,11 @@ class NativeUiMarkdownRenderer extends Renderer {
   }
 
   /**
-   * The web table on its panel (`MARKDOWN_TABLE`): header cells semibold,
-   * rows split by a 70% border. The columns share the width equally and the
-   * cells wrap (the web sizes columns to their words), so they line up.
+   * The web table on its panel (`MarkdownTable`): header cells semibold,
+   * rows split by a 70% border, and the table actions above it.
    */
   override table(header: ReactNode[][], rows: ReactNode[][][]): ReactNode {
-    const { fontScale, lineHeight, cellPaddingX, cellPaddingY, panelPadding } = MARKDOWN_TABLE;
+    const { fontScale, lineHeight } = MARKDOWN_TABLE;
     const small = (style: TextStyle): TextStyle => {
       const size = typeof style.fontSize === "number" ? style.fontSize * fontScale : this.fontSize * fontScale;
       // Body text takes the table line height; inline code keeps its own.
@@ -271,35 +278,15 @@ class NativeUiMarkdownRenderer extends Renderer {
         : { ...style, fontSize: size, lineHeight: size * lineHeight };
     };
     const semibold = (style: TextStyle): TextStyle => ({ ...small(style), fontFamily: fontFamily.semibold, ...typeStyle("semibold") });
-    // The header row is ruled off in the border colour, body rows at 70%.
-    const rule = (index: number) =>
-      index === 1 ? tokens.color.border[this.scheme] : withAlpha(tokens.color.border[this.scheme], 0.7);
-    const row = (cells: ReactNode[][], map: (style: TextStyle) => TextStyle, index: number) => (
-      <View key={index} style={{ flexDirection: "row", borderTopWidth: index > 0 ? 1 : 0, borderTopColor: rule(index) }}>
-        {cells.map((cell, cellIndex) => (
-          <View key={cellIndex} style={{ flex: 1, paddingHorizontal: cellPaddingX, paddingVertical: cellPaddingY }}>
-            <Text style={{ color: this.color }}>{restyleText(cell, map)}</Text>
-          </View>
-        ))}
-      </View>
-    );
     return (
-      <View
-        key={this.getKey()}
-        style={{
-          marginVertical: MARKDOWN_SCALE.blockGap / 2,
-          borderRadius: tokens.radius.lg,
-          backgroundColor: tokens.color.surfaceSecondary[this.scheme],
-          paddingTop: panelPadding.top,
-          paddingHorizontal: panelPadding.x,
-          paddingBottom: panelPadding.bottom,
-        }}
-      >
-        {/* The table's own `margin-block: 0.65rem` inside the panel. The web also has a row of table actions above it. */}
-        <View style={{ marginVertical: MARKDOWN_TABLE.tableMargin }}>
-          {row(header, semibold, 0)}
-          {rows.map((cells, index) => row(cells, small, index + 1))}
-        </View>
+      <View key={this.getKey()} style={{ marginVertical: MARKDOWN_SCALE.blockGap / 2 }}>
+        <MarkdownTable
+          header={header.map((cell) => restyleText(cell, semibold))}
+          rows={rows.map((cells) => cells.map((cell) => restyleText(cell, small)))}
+          data={{ headers: header.map(cellText), rows: rows.map((cells) => cells.map(cellText)) }}
+          color={this.color}
+          onCopy={this.onCopyTable}
+        />
       </View>
     );
   }

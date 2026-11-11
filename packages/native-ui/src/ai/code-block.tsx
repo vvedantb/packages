@@ -3,7 +3,16 @@ import { ScrollView, Text, View } from "react-native";
 import { IconCheck, IconCopy, IconTextWrap } from "@tabler/icons-react-native";
 import { cn } from "../cn";
 import { sizeStyle, textStyle } from "../controlStyles";
-import { GITHUB_CODE_COLORS, codeTokenColor, loadPrismReactRenderer } from "../highlight";
+import {
+  GITHUB_CODE_COLORS,
+  SCRIPT_LANGUAGES,
+  SHELL_LANGUAGES,
+  codeTokenColor,
+  loadPrismReactRenderer,
+  scriptTokens,
+  shellTokens,
+  type CodeToken,
+} from "../highlight";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
@@ -197,36 +206,61 @@ function useCodeParts(code: string, language: string | undefined, highlight: boo
 }
 
 /**
- * Prism tokens as nested `Text` spans, one colour each, lines joined by
- * newlines. They inherit the size and font of the code `Text` around them.
- * Without `prism-react-renderer` it is the plain code.
+ * Coloured runs as nested `Text` spans, lines joined by newlines. They
+ * inherit the size and font of the code `Text` around them.
+ */
+function CodeRuns({ lines, scheme }: { lines: CodeToken[][]; scheme: "light" | "dark" }) {
+  return (
+    <>
+      {lines.map((line, lineIndex) => (
+        <Fragment key={lineIndex}>
+          {lineIndex > 0 ? "\n" : null}
+          {line.map((token, tokenIndex) => (
+            <Text key={tokenIndex} style={{ color: GITHUB_CODE_COLORS[scheme][token.role] }}>
+              {token.content}
+            </Text>
+          ))}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+/**
+ * The code in the web's Shiki colours: shell blocks through `shellTokens`
+ * (no peer needed), other languages through Prism, the JavaScript family
+ * recoloured where Prism and Shiki disagree (`scriptTokens`). Without
+ * `prism-react-renderer` a non-shell block is the plain code.
  */
 function HighlightedCode({ code, language, scheme }: { code: string; language: string; scheme: "light" | "dark" }) {
+  const lang = language.toLowerCase();
+  const source = code.replace(/\n$/, "");
+  if (SHELL_LANGUAGES.has(lang)) return <CodeRuns lines={shellTokens(source)} scheme={scheme} />;
   const Highlight = loadPrismReactRenderer()?.Highlight;
   if (!Highlight) return code;
   return (
-    <Highlight
-      code={code.replace(/\n$/, "")}
-      language={language.toLowerCase()}
-      theme={{ plain: { color: GITHUB_CODE_COLORS[scheme].plain }, styles: [] }}
-    >
-      {({ tokens }) => (
-        <>
-          {tokens.map((line, lineIndex) => (
-            <Fragment key={lineIndex}>
-              {lineIndex > 0 ? "\n" : null}
-              {/* An empty line is one `empty` token whose content is "\n": the join above already breaks it. */}
-              {line.map((token, tokenIndex) =>
-                token.empty ? null : (
-                  <Text key={tokenIndex} style={{ color: codeTokenColor(token.types, scheme) }}>
-                    {token.content}
-                  </Text>
-                ),
-              )}
-            </Fragment>
-          ))}
-        </>
-      )}
+    <Highlight code={source} language={lang} theme={{ plain: { color: GITHUB_CODE_COLORS[scheme].plain }, styles: [] }}>
+      {({ tokens }) =>
+        SCRIPT_LANGUAGES.has(lang) ? (
+          <CodeRuns lines={scriptTokens(tokens)} scheme={scheme} />
+        ) : (
+          <>
+            {tokens.map((line, lineIndex) => (
+              <Fragment key={lineIndex}>
+                {lineIndex > 0 ? "\n" : null}
+                {/* An empty line is one `empty` token whose content is "\n": the join above already breaks it. */}
+                {line.map((token, tokenIndex) =>
+                  token.empty ? null : (
+                    <Text key={tokenIndex} style={{ color: codeTokenColor(token.types, scheme) }}>
+                      {token.content}
+                    </Text>
+                  ),
+                )}
+              </Fragment>
+            ))}
+          </>
+        )
+      }
     </Highlight>
   );
 }
