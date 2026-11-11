@@ -194,6 +194,7 @@ declare module "react-native" {
     autoCorrect?: boolean;
     keyboardType?: string;
     returnKeyType?: string;
+    submitBehavior?: "submit" | "blurAndSubmit" | "newline";
     secureTextEntry?: boolean;
     autoComplete?: string;
     textContentType?: string;
@@ -231,6 +232,7 @@ declare module "react-native" {
     scrollEventThrottle?: number;
     onContentSizeChange?: (width: number, height: number) => void;
     refreshControl?: React.ReactElement<RefreshControlProps>;
+    fadingEdgeLength?: number;
   }
   export interface RefreshControlProps extends ViewProps {
     refreshing: boolean;
@@ -318,6 +320,10 @@ declare module "react-native" {
   export interface KeyboardEvent {
     endCoordinates: { height: number; screenY: number; width: number; screenX: number };
   }
+  export const BackHandler: {
+    addEventListener(event: "hardwareBackPress", handler: () => boolean | null | undefined): { remove(): void };
+  };
+
   export const Keyboard: {
     addListener(
       event: "keyboardWillShow" | "keyboardDidShow" | "keyboardWillHide" | "keyboardDidHide",
@@ -382,6 +388,7 @@ declare module "react-native" {
 }
 
 declare module "nativewind" {
+  export function cssInterop<P>(component: import("react").ComponentType<P>, mapping: { className: "style" }): void;
   export function useColorScheme(): {
     colorScheme: "light" | "dark" | undefined;
     setColorScheme(scheme: "light" | "dark" | "system"): void;
@@ -401,7 +408,7 @@ declare module "react-native-safe-area-context" {
 
 declare module "react-native-reanimated" {
   import type * as React from "react";
-  import type { ScrollViewProps, StyleProp, ViewProps, ViewStyle } from "react-native";
+  import type { ScrollViewProps, StyleProp, TextProps, TextStyle, ViewProps, ViewStyle } from "react-native";
 
   export interface LayoutAnimationBuilder {
     duration(ms: number): LayoutAnimationBuilder;
@@ -482,6 +489,7 @@ declare module "react-native-reanimated" {
     output: readonly number[],
     extrapolate?: "clamp" | "extend" | "identity",
   ): number;
+  export function interpolateColor(value: number, input: readonly number[], output: readonly string[]): string;
   export function useAnimatedReaction<T>(
     prepare: () => T,
     react: (current: T, previous: T | null) => void,
@@ -508,6 +516,7 @@ declare module "react-native-reanimated" {
 
   declare const Animated: {
     View: React.ComponentType<AnimatedProps<ViewProps>>;
+    Text: React.ComponentType<Omit<TextProps, "style"> & { style?: StyleProp<TextStyle> }>;
     ScrollView: typeof AnimatedScrollView;
   };
   declare namespace Animated {

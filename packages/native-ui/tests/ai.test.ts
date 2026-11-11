@@ -129,6 +129,19 @@ const animation = vi.hoisted(() => ({
   cancelAnimation: vi.fn(),
 }));
 
+// Android back: the listeners added, newest first, as React Native calls them.
+const back = vi.hoisted(() => {
+  const listeners: Array<() => boolean | null | undefined> = [];
+  return {
+    listeners,
+    addEventListener: (_event: string, listener: () => boolean | null | undefined) => {
+      listeners.unshift(listener);
+      return { remove: () => void listeners.splice(listeners.indexOf(listener), 1) };
+    },
+    press: () => listeners.some((listener) => listener() === true),
+  };
+});
+
 const platform = vi.hoisted(() => ({
   OS: "ios",
   Version: 17 as number | string,
@@ -140,6 +153,7 @@ vi.mock("react-native", () => ({
   StyleSheet: { create: <T>(styles: T) => styles, absoluteFill: {}, absoluteFillObject: {}, hairlineWidth: 1 },
   AccessibilityInfo: {},
   Linking: { openURL },
+  BackHandler: back,
   View: "View",
   Text: "Text",
   Pressable: "Pressable",
@@ -194,6 +208,7 @@ vi.mock("@tabler/icons-react-native", () =>
       "IconPlayerStopFilled",
       "IconPointFilled",
       "IconRefresh",
+      "IconTextWrap",
       "IconThumbDown",
       "IconThumbUp",
       "IconVideo",
@@ -1157,6 +1172,20 @@ describe("PromptInputMenu and PromptInputMenuItem", () => {
     expect([promptInputMenuHeight(300), promptInputMenuHeight(844), promptInputMenuHeight(2000)]).toEqual([160, 295, 340]);
   });
 
+  it("closes on Android back while mounted, before the screen behind, and lets go when unmounted", async () => {
+    const { PromptInputMenu } = await import("../src/ai/prompt-input-menu");
+    const onDismiss = vi.fn();
+    const menu = hooks.mount(() => PromptInputMenu({ title: "Mentions", children: ["ROW"], onDismiss }));
+    expect(back.press()).toBe(true);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    menu.unmount();
+    expect(back.press()).toBe(false);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    // Without `onDismiss` it leaves back alone.
+    hooks.mount(() => PromptInputMenu({ title: "Mentions", children: ["ROW"] })).unmount();
+    expect(back.listeners).toHaveLength(0);
+  });
+
   it("says No matches. with no rows, or the empty content it is given", async () => {
     const { PromptInputMenu } = await import("../src/ai/prompt-input-menu");
     const empty = PromptInputMenu({ title: "Skills", children: [] }) as unknown as Element;
@@ -1277,8 +1306,11 @@ describe("Suggestion, Source, FileChip and Attachment", () => {
     const onRemove = vi.fn();
     const chip = Attachment({ data: { id: "1", filename: "notes.pdf", mediaType: "application/pdf" }, onRemove }) as unknown as Element;
     const remove = byLabel(chip, "Remove notes.pdf")!;
-    expect(remove.props).toMatchObject({ accessibilityRole: "button", hitSlop: touchSlop(20) });
+    expect(remove.props).toMatchObject({ accessibilityRole: "button", hitSlop: { top: 12, bottom: 12, left: 12, right: 8 } });
     expect(20 + 2 * touchSlop(20).top).toBe(44);
+    // With a pressable label 6 before it, the remove cross reaches only half way back.
+    const pressable = Attachment({ data: { id: "1", filename: "notes.pdf" }, onRemove, onPress: vi.fn() }) as unknown as Element;
+    expect(byLabel(pressable, "Remove notes.pdf")!.props.hitSlop).toEqual({ top: 12, bottom: 12, left: 3, right: 8 });
     (remove.props.onPress as () => void)();
     expect(onRemove).toHaveBeenCalledOnce();
     expect(byType(chip, "IconFileText")).toHaveLength(1);
@@ -1343,6 +1375,23 @@ describe("CodeBlock", () => {
     const fencedCode = byType(fenced, "Text").find((text) => text.props.children === "a")!;
     expect(flatten(fencedCode.props.style)).toMatchObject({ fontSize: 13, lineHeight: 13 * 1.55 });
   });
+
+  it("keeps Wrap's and Copy's targets apart: 2 apart, each slops only up, down and outward", async () => {
+    const { CodeBlock } = await import("../src/ai/code-block");
+    const { ChatIconButton } = await import("../src/ai/icon-button");
+    const element = CodeBlock({ code: "a", variant: "markdown", onCopy: vi.fn() }) as unknown as Element;
+    const fenced = hooks.mount(() => (element.type as (props: unknown) => Element)(element.props)).tree;
+    const wrap = byLabel(fenced, "Wrap long lines")!;
+    expect(wrap.props.slop).toEqual({ left: 8, right: 0 });
+    const copyElement = find(fenced, (node) => typeof node.type === "function" && node.props.code === "a")!;
+    const copy = hooks.mount(() => render(copyElement) as Element).tree;
+    expect(copy.props.slop).toEqual({ left: 0, right: 5 });
+    // The 28 `xs` square: 8 above and below to 44, and only the outer side.
+    const button = (slop: { left: number; right: number }) =>
+      ChatIconButton({ icon: () => null, label: "x", size: "xs", slop }) as unknown as Element;
+    expect(button({ left: 8, right: 0 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 8, right: 0 });
+    expect(button({ left: 0, right: 5 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 0, right: 5 });
+  });
 });
 
 describe("trace lines and activity steps", () => {
@@ -1354,6 +1403,22 @@ describe("trace lines and activity steps", () => {
     const pending = AgentTraceLine({ status: "pending" }) as unknown as Element;
     expect(pending.props.value).toBe(tokens.color.muted.light);
     expect(flatten((pending.props.children as Element).props.style).opacity).toBe(0.6);
+  });
+
+  it("stacks 28 high lines with no gap, and a fold's trigger and chevron take no slop over the next line", async () => {
+    const { AgentTrace, AgentTraceLine, AgentTraceCollapsibleTrigger } = await import("../src/ai/trace");
+    const { Collapsible } = await import("../src/ai/collapsible");
+    expect((AgentTrace({}) as unknown as Element).props.className).not.toMatch(/\bgap-/);
+    const line = (AgentTraceLine({}) as unknown as Element).props.children as Element;
+    expect(line.props.className).toMatch(/\bpy-1\b/);
+    provide(hooks.mount(() => Collapsible({}) as unknown as Element).tree);
+    const plain = AgentTraceCollapsibleTrigger({ children: "LINE" }) as unknown as Element;
+    expect(plain.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 0, right: 0 });
+    const withChip = AgentTraceCollapsibleTrigger({ children: "LINE", trailing: "CHIP" }) as unknown as Element;
+    const [trigger, , chevron] = withChip.props.children as Element[];
+    expect(trigger!.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 0, right: 0 });
+    expect(trigger!.props.className).toMatch(/\bself-stretch\b/);
+    expect(chevron!.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 4, right: 14 });
   });
 
   it("an activity step reads its label, status and description, and pulses while running", async () => {

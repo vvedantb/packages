@@ -1,5 +1,5 @@
-import { Children, type ReactNode } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Children, useEffect, type ReactNode } from "react";
+import { BackHandler, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
@@ -27,6 +27,11 @@ export type PromptInputMenuProps = {
   children?: ReactNode;
   /** Shown when there are no rows. Default "No matches.", as the web. */
   empty?: ReactNode;
+  /**
+   * Closes the picker, as Escape does on the web. Android back calls it while
+   * the picker is mounted, before the screen behind gets the press.
+   */
+  onDismiss?: () => void;
   testID?: string;
 };
 
@@ -39,8 +44,17 @@ export type PromptInputMenuProps = {
  * `promptInputMenuHeight`. Taps reach a row while the keyboard
  * is up, so picking never drops the keyboard.
  */
-export function PromptInputMenu({ title, children, empty = "No matches.", testID }: PromptInputMenuProps) {
+export function PromptInputMenu({ title, children, empty = "No matches.", onDismiss, testID }: PromptInputMenuProps) {
   const scheme = useScheme();
+  // Back closes the picker first. An effect: the subscription is a native one.
+  useEffect(() => {
+    if (!onDismiss) return;
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      onDismiss();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [onDismiss]);
   const { height } = useWindowDimensions();
   const hasRows = Children.toArray(children).length > 0;
   return (

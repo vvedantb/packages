@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "./AlertDialog";
 import { impactHaptic } from "./haptics";
-import { useOverlay } from "./primitives/overlay";
+import { useControllableState } from "./primitives/use-controllable-state";
 
 export type ConfirmDialogProps = {
   open?: boolean;
@@ -34,8 +34,10 @@ export type ConfirmDialogProps = {
 
 /**
  * Blocking confirm dialog that closes on either button: the web `ConfirmDialog`
- * legacy props with `size="default"`. The `sm` / `md` sizes and the composable
- * `ConfirmDialog.*` parts are web-only; compose `AlertDialog` parts instead.
+ * legacy props with `size="default"`. Every close but Confirm (Cancel, Android
+ * back, the VoiceOver escape) calls `onCancel`, as the web `onOpenChange`
+ * close does. The `sm` / `md` sizes and the composable `ConfirmDialog.*`
+ * parts are web-only; compose `AlertDialog` parts instead.
  */
 export function ConfirmDialog({
   open,
@@ -52,8 +54,15 @@ export function ConfirmDialog({
   children,
   testID,
 }: ConfirmDialogProps) {
+  const [isOpen, setOpen] = useControllableState({ value: open, defaultValue: defaultOpen ?? false, onChange: onOpenChange });
   return (
-    <AlertDialog open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(next) => {
+        if (!next) onCancel?.();
+        setOpen(next);
+      }}
+    >
       {children}
       <AlertDialogContent testID={testID}>
         <AlertDialogHeader>
@@ -63,46 +72,24 @@ export function ConfirmDialog({
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel
-            testID={testID ? `${testID}-cancel` : undefined}
-            onPress={onCancel}
-          >
-            {cancelLabel}
-          </AlertDialogCancel>
-          <ConfirmAction
+          {/* Closes the dialog, and so calls `onCancel`. */}
+          <AlertDialogCancel testID={testID ? `${testID}-cancel` : undefined}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction
             testID={testID ? `${testID}-confirm` : undefined}
             variant={variant}
             disabled={confirmDisabled}
-            onConfirm={onConfirm}
+            onPress={() => {
+              // A destructive confirm lands with a medium haptic.
+              if (variant === "destructive") impactHaptic("medium");
+              onConfirm?.();
+              // Past the dialog's own close, so a confirm is not a cancel.
+              setOpen(false);
+            }}
           >
             {confirmLabel}
-          </ConfirmAction>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-}
-
-/** Confirms and closes. A destructive confirm lands with a medium haptic. */
-function ConfirmAction({
-  onConfirm,
-  ...props
-}: {
-  onConfirm?: () => void;
-  variant: "default" | "destructive";
-  disabled?: boolean;
-  testID?: string;
-  children: ReactNode;
-}) {
-  const { setOpen } = useOverlay("ConfirmDialog");
-  return (
-    <AlertDialogAction
-      {...props}
-      onPress={() => {
-        if (props.variant === "destructive") impactHaptic("medium");
-        onConfirm?.();
-        setOpen(false);
-      }}
-    />
   );
 }

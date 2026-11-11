@@ -15,7 +15,7 @@
 export const PAGER_ACTIVE_OFFSET_X = 24;
 
 /** Vertical travel (pt) that leaves the touch to the page's own scroll. */
-export const PAGER_FAIL_OFFSET_Y = 10;
+export const PAGER_FAIL_OFFSET_Y = 14;
 
 /** A sideways flick at this speed (pt/s) turns the page, however short the drag. */
 const FLICK_VELOCITY = 500;
@@ -64,4 +64,39 @@ export function pagerSettle(position: number, vx: number, width: number, from: n
     target = Math.round(width > 0 ? position - (vx * PROJECTION_S) / width : position);
   }
   return Math.min(count - 1, Math.max(0, Math.min(from + 1, Math.max(from - 1, target))));
+}
+
+/**
+ * Every page from `from` to `to`, both included: the pages a slide from
+ * outside (a tab press) passes, which the pager draws so it never crosses a
+ * blank page.
+ */
+export function pagesBetween(from: number, to: number): number[] {
+  const low = Math.min(from, to);
+  return Array.from({ length: Math.abs(to - from) + 1 }, (_, step) => low + step);
+}
+
+/**
+ * The scroll offset (pt) of a sideways tab row that centres the tab at
+ * `position` (in pages, as the pager's: 1.5 is halfway between the second
+ * and the third tab), given each tab's `x` and `width` in the row and the
+ * row's visible `viewport` width. Between two tabs it blends their centres;
+ * it never scrolls before the first tab or past the last.
+ */
+export function centredTabScroll(
+  tabs: ReadonlyArray<{ x: number; width: number }>,
+  position: number,
+  viewport: number,
+): number {
+  "worklet";
+  const last = tabs[tabs.length - 1];
+  if (!last || viewport <= 0) return 0;
+  const at = Math.min(tabs.length - 1, Math.max(0, position));
+  const below = Math.floor(at);
+  const left = tabs[below] ?? last;
+  const right = tabs[Math.min(tabs.length - 1, below + 1)] ?? last;
+  const share = at - below;
+  const centre = left.x + left.width / 2 + (right.x + right.width / 2 - (left.x + left.width / 2)) * share;
+  const end = Math.max(0, last.x + last.width - viewport);
+  return Math.min(end, Math.max(0, centre - viewport / 2));
 }

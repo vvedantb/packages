@@ -19,9 +19,9 @@ describe("AgentTraceFold", () => {
     expect(web).toMatch(/`Worked for \$\{duration\}`/);
     expect(trace).toMatch(/const elapsed = duration \?\? formatElapsed\(seconds \?\? 0\);/);
     expect(trace).toMatch(/`Worked for \$\{elapsed\}`/);
-    expect(trace).toMatch(/borderBottomWidth: 1, borderBottomColor: tokens\.color\.border\[scheme\], paddingBottom: 6/);
+    expect(trace).toMatch(/borderBottomWidth: 1, borderBottomColor: tokens\.color\.border\[scheme\], paddingBottom: 2/);
     expect(trace).toMatch(/defaultOpen = false/);
-    expect(trace).toMatch(/<AgentTrace className="mt-2">\{children\}<\/AgentTrace>/);
+    expect(trace).toMatch(/<AgentTrace className="mt-1">\{children\}<\/AgentTrace>/);
   });
 
   it("formats the duration as the web formatActivityElapsed", async () => {

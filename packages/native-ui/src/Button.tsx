@@ -88,10 +88,13 @@ const TEXT = {
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
 } as const;
 
-// The web sizes are under the 44 pt touch target; the slop brings each to 48.
+// The web sizes are under the 44 pt touch target; the slop brings each to 44
+// or more. `small` (32) slops only above and below: small buttons sit 4 apart
+// in a row (Cancel and Delete), and side slop would let one steal the other's
+// taps. The larger sizes are 56 or more and need none.
 const HIT_SLOP = {
-  regular: { small: 8, medium: 4, large: 2, icon: 4 },
-  larger: { small: 8, medium: undefined, large: undefined, icon: 8 },
+  regular: { small: { top: 6, bottom: 6, left: 0, right: 0 }, medium: 4, large: 2, icon: 4 },
+  larger: { small: undefined, medium: undefined, large: undefined, icon: undefined },
 };
 
 // The web `shape` (from @vvedantb/ui 0.31.0). `pill` is `rounded-full`:

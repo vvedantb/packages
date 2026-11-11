@@ -49,8 +49,10 @@ describe("Button (phone)", () => {
   const slops = block("HIT_SLOP");
   const sizeClass = (scale: string, size: string) =>
     heights.match(new RegExp(`${scale}: \\{[\\s\\S]*?${size}: "([^"]+)"`))?.[1] ?? "";
+  // The vertical slop of a size: a number on every side, or an object's `top`.
   const slop = (scale: string, size: string) => {
-    const value = slops.match(new RegExp(`${scale}: \\{[^}]*\\b${size}: (\\d+|undefined)`))?.[1];
+    const line = slops.split("\n").find((row) => row.trim().startsWith(`${scale}:`)) ?? "";
+    const value = line.match(new RegExp(`\\b${size}: (?:\\{ top: )?(\\d+|undefined)`))?.[1];
     expect(value, `${scale} ${size}`).toBeDefined();
     return value === "undefined" ? 0 : Number(value);
   };
@@ -156,8 +158,8 @@ describe("accessibility roles and states", () => {
     const pills = read("PillTabs.tsx");
     expect(pills).toMatch(/accessibilityRole="tablist"/);
     expect(pills).toMatch(/accessibilityRole="tab"/);
-    expect(pills).toMatch(/accessibilityState=\{\{ selected: isSelected \}\}/);
-    expect(pills).toMatch(/accessibilityLabel=\{tab\.label\}/);
+    expect(pills).toMatch(/accessibilityState=\{\{ selected \}\}/);
+    expect(pills).toMatch(/accessibilityLabel=\{label\}/);
   });
 
   it("the Select trigger is a labelled combobox with disabled state and a 44 target", () => {

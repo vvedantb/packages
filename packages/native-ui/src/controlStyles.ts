@@ -316,15 +316,15 @@ export function tabColors(variant: TabsVariant, selected: boolean, scheme: Schem
 export type TabsSize = "default" | "sm";
 
 /**
- * Trigger box and type for `TabsTrigger` and `PillTabs`. Without larger text
- * these are the web sizes: `pills` and `segmented` are the web `.t-tab` (30
- * high, `px-3 py-1`, `text-sm`), `soft` the web soft trigger (`px-4 py-2
- * text-sm`) and `sm` the web `sm` list (`px-2.5 py-1 text-xs`). With larger
- * text they are the 0.3.4 sizes. `minHeight` is a minimum, so a large Dynamic
- * Type size grows the trigger instead of clipping its label. `letterSpacing`
- * is the web type-scale tracking of the label (`tokens/src/css/type-scale.css`),
- * in points: `text-xs` is 0.005em (0.06 at 12), `text-sm` is 0em. Larger text
- * keeps 0, as in 0.3.4.
+ * Trigger box and type for `TabsTrigger` and `PillTabs`. Phone-tuned from the
+ * web look: `pills` and `segmented` are the web `.t-tab` (`py-1`, `text-sm`)
+ * grown to 36 high with `px-3.5`, so the 4 slop above and below makes 44;
+ * `sm` is the web `sm` list (`px-2.5 py-1 text-xs`) with the label kept at 14
+ * (`text-sm`, `px-3`) and also 36 high; `soft` is the web soft trigger
+ * (`px-4 py-2 text-sm`). With larger text they are the 0.3.4 sizes.
+ * `minHeight` is a minimum, so a large Dynamic Type size grows the trigger
+ * instead of clipping its label. `letterSpacing` is the web type-scale
+ * tracking of the label (`tokens/src/css/type-scale.css`): `text-sm` is 0em.
  */
 export function tabTriggerSize(variant: TabsVariant, size: TabsSize, largerText: boolean) {
   if (largerText) {
@@ -332,10 +332,10 @@ export function tabTriggerSize(variant: TabsVariant, size: TabsSize, largerText:
       ? { minHeight: 48, className: "px-4 py-2", textClassName: "text-lg", letterSpacing: 0 }
       : { minHeight: 56, className: "px-4 py-3", textClassName: "text-xl", letterSpacing: 0 };
   }
-  if (size === "sm") return { minHeight: 30, className: "px-2.5 py-1", textClassName: "text-xs", letterSpacing: 0.06 };
+  if (size === "sm") return { minHeight: 36, className: "px-3 py-1", textClassName: "text-sm", letterSpacing: 0 };
   return variant === "soft"
     ? { minHeight: 36, className: "px-4 py-2", textClassName: "text-sm", letterSpacing: 0 }
-    : { minHeight: 30, className: "px-3 py-1", textClassName: "text-sm", letterSpacing: 0 };
+    : { minHeight: 36, className: "px-3.5 py-1", textClassName: "text-sm", letterSpacing: 0 };
 }
 
 /** The segmented track, web `--tabs-bar-bg` (`--default`). */

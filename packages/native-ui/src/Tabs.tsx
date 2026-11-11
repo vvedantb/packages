@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from "react";
-import { Pressable, Text, View, type ViewProps } from "react-native";
+import { Children, createContext, isValidElement, useContext, type ReactNode } from "react";
+import { Pressable, View, type ViewProps } from "react-native";
+import Animated, { type SharedValue } from "react-native-reanimated";
 import { cn } from "./cn";
 import {
   MIN_TOUCH_TARGET,
@@ -13,6 +14,7 @@ import {
 } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { useControllableState } from "./primitives/use-controllable-state";
+import { useTabIndicator, useTabLabelStyle } from "./tabIndicator";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -27,7 +29,12 @@ const TabsContext = createContext<{
 const TabsListContext = createContext<{
   variant: TabsListVariant;
   size: TabsSize;
+  progress?: SharedValue<number>;
+  indicator?: ReturnType<typeof useTabIndicator>;
 }>({ variant: "pills", size: "default" });
+
+/** A trigger's place in its list, for the linked indicator and label colour. */
+const TabIndexContext = createContext(0);
 
 function useTabs(part: string) {
   const context = useContext(TabsContext);
@@ -68,36 +75,67 @@ export type TabsListProps = ViewProps & {
   variant?: TabsListVariant;
   /** `sm` makes the triggers smaller. */
   size?: TabsSize;
+  /**
+   * Where a linked `Pager` is, in pages: the first trigger is page 0. With it,
+   * as in `PillTabs`, the selected fill is one indicator that slides with the
+   * pages and each label blends to the selected colour with it. The triggers
+   * are the list's direct children, in page order.
+   */
+  progress?: SharedValue<number>;
   className?: string;
 };
 
 export function TabsList({
   variant = "pills",
   size = "default",
+  progress,
   className,
   style,
+  children,
   ...props
 }: TabsListProps) {
   const scheme = useScheme();
+  const triggers = Children.toArray(children);
+  const indicator = useTabIndicator(progress, triggers.length);
   return (
-    <TabsListContext.Provider value={{ variant, size }}>
+    <TabsListContext.Provider value={{ variant, size, progress, indicator }}>
       <View
         accessibilityRole="tablist"
         className={cn(
           "flex-row",
           // The web lists: `segmented` and `pills` are `inline-flex` (as wide
           // as their tabs), `soft` a full-width row of centred, wrapping pills.
-          // Pills wrap rather than run off a phone screen.
+          // Pills wrap rather than run off a phone screen, except under a
+          // linked indicator, which slides along one line.
           variant === "segmented"
             ? "max-w-full gap-[3px] self-start rounded-full p-[3px]"
             : variant === "soft"
               ? "flex-wrap items-center justify-center gap-1.5"
-              : "max-w-full flex-wrap gap-1.5 self-start",
+              : progress
+                ? "max-w-full gap-1.5 self-start"
+                : "max-w-full flex-wrap gap-1.5 self-start",
           className,
         )}
         style={variant === "segmented" ? [tabTrackStyle(scheme), style] : style}
         {...props}
-      />
+      >
+        {indicator.measured ? (
+          // The selected fill under the triggers, as `PillTabs`.
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              { position: "absolute", left: 0, borderRadius: 9999 },
+              { backgroundColor: tabColors(variant, true, scheme).backgroundColor },
+              indicator.style,
+            ]}
+          />
+        ) : null}
+        {triggers.map((trigger, index) => (
+          <TabIndexContext.Provider key={isValidElement(trigger) && trigger.key !== null ? trigger.key : index} value={index}>
+            {trigger}
+          </TabIndexContext.Provider>
+        ))}
+      </View>
     </TabsListContext.Provider>
   );
 }
@@ -127,13 +165,20 @@ export function TabsTrigger({
   accessibilityLabel,
 }: TabsTriggerProps) {
   const { value: current, setValue } = useTabs("TabsTrigger");
-  const { variant, size } = useContext(TabsListContext);
+  const { variant, size, progress, indicator } = useContext(TabsListContext);
+  const index = useContext(TabIndexContext);
   const largerText = useLargerText();
   const scheme = useScheme();
   const selected = current === value;
   // Fill and label are styles from `tabColors`: apps' `bg-secondary` and
   // `bg-surface` can stay light in dark mode, under a light label.
   const colors = tabColors(variant, selected, scheme);
+  const labelStyle = useTabLabelStyle(
+    progress,
+    index,
+    { selected: tabColors(variant, true, scheme).color, muted: tabColors(variant, false, scheme).color },
+    colors.color,
+  );
   const trigger = tabTriggerSize(variant, size, largerText);
   const height = minHeight ?? trigger.minHeight;
   // The web `.t-tab` is `font-medium`; the soft trigger is regular.
@@ -164,20 +209,22 @@ export function TabsTrigger({
       )}
       // A plain object: NativeWind puts the class styles and `style` in an
       // array, where a `({ pressed }) => ...` style is dropped.
-      style={{ backgroundColor: colors.backgroundColor, minHeight: height }}
+      // When linked and measured, the list's indicator draws the selected fill.
+      style={{ backgroundColor: indicator?.measured ? "transparent" : colors.backgroundColor, minHeight: height }}
+      onLayout={progress ? indicator?.onLayout(index) : undefined}
     >
       {typeof children === "string" || typeof children === "number" ? (
-        <Text
+        <Animated.Text
           numberOfLines={1}
           className={cn(
             "text-center",
             medium ? "font-instrument-sans-medium" : "font-instrument-sans",
             trigger.textClassName,
           )}
-          style={[{ color: colors.color }, { letterSpacing: trigger.letterSpacing }, medium ? typeStyle("medium") : null]}
+          style={[{ letterSpacing: trigger.letterSpacing }, medium ? typeStyle("medium") : null, labelStyle]}
         >
           {children}
-        </Text>
+        </Animated.Text>
       ) : (
         children
       )}
