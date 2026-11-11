@@ -42,6 +42,8 @@ export type { IconButtonProps, IconButtonSize, IconButtonVariant } from "../Icon
 export { CaptureButton } from "../CaptureButton";
 export type { CaptureButtonProps } from "../CaptureButton";
 export { Separator } from "../Separator";
+export { KeyboardAvoidingView } from "../primitives/keyboard-parts";
+export type { KeyboardAvoidingViewProps } from "../primitives/keyboard-parts";
 export type { SeparatorProps } from "../Separator";
 export { Progress } from "../Progress";
 export type { ProgressProps } from "../Progress";

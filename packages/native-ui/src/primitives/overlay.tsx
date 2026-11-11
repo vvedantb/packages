@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
   Pressable,
   StyleSheet,
@@ -19,6 +18,7 @@ import {
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette } from "../palette";
+import { KeyboardAvoidingView, KeyboardLiftContext } from "./keyboard-parts";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import {
@@ -110,7 +110,8 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
 }
 
 /**
- * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance.
+ * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance
+ * (`KeyboardAvoidingView`: frame by frame with `KeyboardControllerProvider`).
  * `placement="center"` centres the child (dialogs) inside the insets on every
  * side, and the `Modal` fades in and out. `"bottom"` pins it to the bottom
  * edge (sheets), which pad their own bottom inset: the sheet slides up on
@@ -212,45 +213,48 @@ function OverlayModalBody({
       {/* Android too: a modal window with `statusBarTranslucent` may not
           resize for the keyboard, which then covers the fields. The padding
           is the measured overlap, so it drops to 0 where the window does
-          resize. */}
-      <KeyboardAvoidingView behavior="padding" style={styles.fill}>
-        <Animated.View
-          pointerEvents="box-none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop[scheme] }, backdropStyle]}
-        >
-          <Pressable
-            testID={`${part}-backdrop`}
-            accessible={dismissible}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            disabled={!dismissible}
-            onPress={close}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-        <View
-          pointerEvents="box-none"
-          onAccessibilityEscape={close}
-          style={[
-            styles.fill,
-            placement === "bottom"
-              ? {
-                  justifyContent: "flex-end",
-                  paddingTop: insets.top + 16,
-                  paddingLeft: insets.left,
-                  paddingRight: insets.right,
-                }
-              : {
-                  justifyContent: "center",
-                  paddingTop: insets.top + 16,
-                  paddingBottom: insets.bottom + 16,
-                  paddingLeft: insets.left + 16,
-                  paddingRight: insets.right + 16,
-                },
-          ]}
-        >
-          {children}
-        </View>
+          resize. Frame by frame with `KeyboardControllerProvider`. */}
+      <KeyboardAvoidingView style={styles.fill}>
+        {/* A `Modal` is its own window: a dock it opened from does not lift what is in it. */}
+        <KeyboardLiftContext.Provider value={false}>
+          <Animated.View
+            pointerEvents="box-none"
+            style={[StyleSheet.absoluteFill, { backgroundColor: palette.backdrop[scheme] }, backdropStyle]}
+          >
+            <Pressable
+              testID={`${part}-backdrop`}
+              accessible={dismissible}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              disabled={!dismissible}
+              onPress={close}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+          <View
+            pointerEvents="box-none"
+            onAccessibilityEscape={close}
+            style={[
+              styles.fill,
+              placement === "bottom"
+                ? {
+                    justifyContent: "flex-end",
+                    paddingTop: insets.top + 16,
+                    paddingLeft: insets.left,
+                    paddingRight: insets.right,
+                  }
+                : {
+                    justifyContent: "center",
+                    paddingTop: insets.top + 16,
+                    paddingBottom: insets.bottom + 16,
+                    paddingLeft: insets.left + 16,
+                    paddingRight: insets.right + 16,
+                  },
+            ]}
+          >
+            {children}
+          </View>
+        </KeyboardLiftContext.Provider>
       </KeyboardAvoidingView>
     </SheetDragProvider>
   );

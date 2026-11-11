@@ -129,8 +129,14 @@ const animation = vi.hoisted(() => ({
   cancelAnimation: vi.fn(),
 }));
 
+const platform = vi.hoisted(() => ({
+  OS: "ios",
+  Version: 17 as number | string,
+  select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default,
+}));
+
 vi.mock("react-native", () => ({
-  Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
+  Platform: platform,
   StyleSheet: { create: <T>(styles: T) => styles, absoluteFill: {}, absoluteFillObject: {}, hairlineWidth: 1 },
   AccessibilityInfo: {},
   Linking: { openURL },
@@ -159,6 +165,13 @@ vi.mock("react-native-reanimated", () => ({
   ...animation,
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => insets }));
+// Not installed in this repository: the optional peer of `/keyboard-controller`.
+vi.mock("react-native-keyboard-controller", () => ({
+  KeyboardAvoidingView: "KC.KeyboardAvoidingView",
+  KeyboardStickyView: "KC.KeyboardStickyView",
+  KeyboardChatScrollView: "KC.KeyboardChatScrollView",
+  KeyboardGestureArea: "KC.KeyboardGestureArea",
+}));
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("@tabler/icons-react-native", () =>
   Object.fromEntries(
@@ -774,6 +787,165 @@ describe("Conversation", () => {
   });
 });
 
+describe("keyboard-controller parts", () => {
+  afterEach(() => {
+    platform.OS = "ios";
+    platform.Version = 17;
+    vi.resetModules();
+  });
+
+  type Value = { scrollRef: { current: unknown }; setDockHeight(height: number): void; isAtBottom: boolean };
+  const event = (offset: number) => ({
+    contentOffset: { x: 0, y: offset },
+    contentSize: { width: 390, height: 2000 },
+    layoutMeasurement: { width: 390, height: 800 },
+  });
+  type Parts = import("../src/primitives/keyboard-parts").KeyboardParts;
+
+  /** A chat (list, dock with a composer, scroll button), with `KeyboardControllerProvider` when `withProvider`. */
+  async function chat(withProvider: boolean, override: Partial<Parts> = {}) {
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const { Conversation, ConversationDock, ConversationList, ConversationScrollButton } = await import(
+      "../src/ai/conversation"
+    );
+    const parts: Parts = { ...(KeyboardControllerProvider({ children: null }).props.value as Parts), ...override };
+    const h = hooks.mount(() => {
+      if (withProvider) hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return {
+        frame,
+        list: ConversationList({ data: ["a"], renderItem: () => null }) as unknown as Element,
+        dock: ConversationDock({ children: "COMPOSER" }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const value = () => h.tree.frame.props.value as Value;
+    return { h, value, parts };
+  }
+  let keyboardModule: typeof import("../src/primitives/keyboard-parts");
+  beforeEach(async () => {
+    keyboardModule = await import("../src/primitives/keyboard-parts");
+  });
+
+  it("keeps React Native's KeyboardAvoidingView and the plain list, dock and button without the provider", async () => {
+    const { KeyboardAvoidingView } = keyboardModule;
+    expect(KeyboardAvoidingView({ children: "FORM" })).toMatchObject({
+      type: "KeyboardAvoidingView",
+      props: { behavior: "padding", children: "FORM" },
+    });
+    const { h, value } = await chat(false);
+    expect(h.tree.list.type).toBe("FlatList");
+    expect(h.tree.list.props.renderScrollComponent).toBeUndefined();
+    expect(h.tree.dock.type).toBe("View");
+    value().scrollRef.current = { scrollToEnd: vi.fn() };
+    (h.tree.list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (h.tree.list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    expect((h.tree.button as Element).type).toBe("NativeOnlyAnimatedView");
+  });
+
+  it("pads frame by frame with the provider: KeyboardAvoidingView is keyboard-controller's", async () => {
+    const { KeyboardAvoidingView, KeyboardPartsContext } = keyboardModule;
+    const { parts } = await chat(true);
+    hooks.state.contexts.set(KeyboardPartsContext, parts);
+    const avoiding = KeyboardAvoidingView({ keyboardVerticalOffset: 12, children: "FORM" }) as unknown as Element;
+    expect(avoiding.type).toBe(parts.AvoidingView);
+    expect(render(avoiding)).toMatchObject({
+      type: "KC.KeyboardAvoidingView",
+      props: { behavior: "padding", keyboardVerticalOffset: 12, children: "FORM" },
+    });
+  });
+
+  it("runs the transcript in the chat scroll view, inside the gesture area, and counts the keyboard's space", async () => {
+    const { h, value, parts } = await chat(true);
+    value().setDockHeight(120);
+    // The gesture area: the keyboard follows the finger from the composer's top (the dock less the inset it pads).
+    const area = h.tree.list;
+    expect(area.type).toBe(parts.GestureArea);
+    expect(area.props.offset).toBe(120 - insets.bottom);
+    expect(render(area)).toMatchObject({
+      type: "KC.KeyboardGestureArea",
+      props: { interpolator: "ios", offset: 120 - insets.bottom, textInputNativeID: keyboardModule.COMPOSER_INPUT_ID },
+    });
+    const list = area.props.children as Element;
+    expect(list.type).toBe("FlatList");
+    // iOS: an interactive drag.
+    expect(list.props.keyboardDismissMode).toBe("interactive");
+    const scroller = (list.props.renderScrollComponent as (props: unknown) => Element)({ scrollEventThrottle: 16 });
+    expect(scroller.type).toBe(parts.ChatScrollView);
+    expect(scroller.props).toMatchObject({ scrollEventThrottle: 16, bottomOffset: insets.bottom });
+    expect(render(scroller)).toMatchObject({
+      type: "KC.KeyboardChatScrollView",
+      props: { offset: insets.bottom, keyboardLiftBehavior: "always" },
+    });
+    // The keyboard's space past the content: the end, and the bottom, count it.
+    const scrollToOffset = vi.fn();
+    (list.props.ref as (list: unknown) => void)({ scrollToOffset });
+    (list.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { height: 800 } } });
+    (list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    const inset = (render(scroller) as Element).props.onContentInsetChange as (insets: { bottom: number }) => void;
+    inset({ bottom: 300 });
+    (list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4500, animated: false });
+    // With 300 of keyboard past the content, the end is at 1500 (2000 + 300 - 800): 1200 is 300 short of it.
+    (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(1200) });
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(1200) });
+    expect(value().isAtBottom).toBe(false);
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(1450) });
+    expect(value().isAtBottom).toBe(true);
+  });
+
+  it("moves the dock and the scroll button with the keyboard, less the inset; a composer in the dock adds no lift", async () => {
+    const { h, parts } = await chat(true);
+    const dock = h.tree.dock;
+    expect(dock.type).toBe(parts.StickyView);
+    expect(dock.props.bottomOffset).toBe(insets.bottom);
+    expect(render(dock)).toMatchObject({ type: "KC.KeyboardStickyView", props: { offset: { opened: insets.bottom } } });
+    const lift = dock.props.children as Element;
+    expect(lift.type).toBe(keyboardModule.KeyboardLiftContext);
+    expect(lift.props.value).toBe(true);
+    expect((lift.props.children as Element).props.children).toBe("COMPOSER");
+    // In the dock, the composer is its padded column, with no KeyboardAvoidingView around it.
+    const { PromptInput } = await import("../src/ai/prompt-input");
+    provide(lift);
+    const composer = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), testID: "composer" }) as unknown as Element);
+    expect(composer.tree.type).toBe("View");
+    expect(composer.tree.props.testID).toBe("composer");
+    expect(byType(composer.tree, "FieldInput")[0]!.props.nativeID).toBe(keyboardModule.COMPOSER_INPUT_ID);
+    // Inside the dock nothing else lifts either: the parts are off there.
+    expect(hooks.mount(() => keyboardModule.useKeyboardParts()).tree).toBeNull();
+    // Away from the end, the button rides with the dock.
+    hooks.state.contexts.clear();
+    const again = await chat(true);
+    again.value().scrollRef.current = { scrollToEnd: vi.fn() };
+    const list = again.h.tree.list.props.children as Element;
+    (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    const sticky = again.h.tree.button as Element;
+    expect(sticky.type).toBe(again.parts.StickyView);
+    expect(sticky.props).toMatchObject({ bottomOffset: insets.bottom, pointerEvents: "box-none" });
+    expect((sticky.props.children as Element).type).toBe("NativeOnlyAnimatedView");
+  });
+
+  it("drags the keyboard on Android 11+, and lowers it at once on Android 10 and below", async () => {
+    for (const [version, mode] of [
+      [30, "interactive"],
+      [29, "on-drag"],
+    ] as const) {
+      vi.resetModules();
+      hooks.state.contexts.clear();
+      platform.OS = "android";
+      platform.Version = version;
+      keyboardModule = await import("../src/primitives/keyboard-parts");
+      const { h, parts } = await chat(true);
+      expect(parts.interactive, String(version)).toBe(version >= 30);
+      const list = h.tree.list.props.children as Element;
+      expect(list.props.keyboardDismissMode, String(version)).toBe(mode);
+    }
+  });
+});
+
 describe("PromptInput", () => {
   async function composer(props: Record<string, unknown> = {}) {
     const { PromptInput, PromptInputSubmit } = await import("../src/ai/prompt-input");
@@ -836,9 +1008,11 @@ describe("PromptInput", () => {
   });
 
   it("sits on the keyboard with padding and pads the safe-area insets", async () => {
+    const { KeyboardAvoidingView } = await import("../src/primitives/keyboard-parts");
     const { h } = await composer({ keyboardVerticalOffset: 100 });
-    expect(h.tree.type).toBe("KeyboardAvoidingView");
-    expect(h.tree.props.behavior).toBe("padding");
+    expect(h.tree.type).toBe(KeyboardAvoidingView);
+    // Without `KeyboardControllerProvider`: React Native's, with padding.
+    expect(render(h.tree)).toMatchObject({ type: "KeyboardAvoidingView", props: { behavior: "padding" } });
     // The home indicator inset is padded below, and the keyboard covers it.
     expect(h.tree.props.keyboardVerticalOffset).toBe(100 - insets.bottom);
     const pad = h.tree.props.children as Element;
@@ -955,7 +1129,7 @@ describe("PromptInput menu slot", () => {
     const { PromptInput } = await import("../src/ai/prompt-input");
     for (const layout of ["inline", "stacked"]) {
       const h = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), layout, menu: "MENU" } as never) as unknown as Element);
-      expect(h.tree.type, layout).toBe("KeyboardAvoidingView");
+      expect(typeof h.tree.type, layout).toBe("function");
       const [slot, surface] = (h.tree.props.children as Element).props.children as Element[];
       expect(slot!.props, layout).toMatchObject({ className: "mb-1.5", children: "MENU" });
       expect(surface!.props.className, layout).toBe("border");

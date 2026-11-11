@@ -108,10 +108,12 @@ const HEAVY_PEERS: Record<string, string | null> = {
   "expo-web-browser": null,
   // Only /gesture-handler imports it; every other entry drags with `PanResponder`.
   "react-native-gesture-handler": null,
+  // Only /keyboard-controller imports it; every other entry keeps React Native's `KeyboardAvoidingView`.
+  "react-native-keyboard-controller": null,
 };
 
 // Entries that may import heavy peers. Every other entry in `exports` must not.
-const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./gesture-handler", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
+const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./gesture-handler", "./keyboard-controller", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
 
 const basicEntries = Object.keys(pkg.exports).filter(
   (subpath) => subpath !== "./package.json" && !HEAVY_ENTRIES.includes(subpath),
@@ -196,6 +198,9 @@ describe("granular entries", () => {
   it("finds the static heavy imports on the heavy entries", () => {
     expect(heavyRefs("./bottom-sheet")).toContain("BottomSheetContainer.tsx: static @gorhom/bottom-sheet");
     expect(heavyRefs("./gesture-handler")).toContain("primitives/sheet-gesture.tsx: static react-native-gesture-handler");
+    expect(heavyRefs("./keyboard-controller")).toEqual([
+      "primitives/keyboard-controller.tsx: static react-native-keyboard-controller",
+    ]);
     expect(heavyRefs("./date-time")).toEqual([
       "DateTimeField.tsx: static @react-native-community/datetimepicker",
       "DateTimeField.tsx: static dayjs",
@@ -205,8 +210,9 @@ describe("granular entries", () => {
     expect(rootRefs).toContain("DateTimeField.tsx: static dayjs");
     // The root entry no longer imports expo-router or expo-linear-gradient.
     expect(rootRefs.filter((ref) => / static expo-/.test(ref))).toEqual([]);
-    // Nor Gesture Handler: an app opts in with /gesture-handler.
+    // Nor Gesture Handler or keyboard-controller: an app opts in with /gesture-handler and /keyboard-controller.
     expect(rootRefs.filter((ref) => ref.endsWith(" react-native-gesture-handler"))).toEqual([]);
+    expect(rootRefs.filter((ref) => ref.endsWith(" react-native-keyboard-controller"))).toEqual([]);
   });
 
   it("names the optional-peer modules only in their loaders, across the whole package", () => {
