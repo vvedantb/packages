@@ -166,7 +166,7 @@ describe("composer and scroll button", () => {
 });
 
 describe("composer footer chip", () => {
-  it("is the web ModelPicker trigger: h-7 gap-1.5 rounded-md px-2 text-xs font-medium, muted", () => {
+  it("is the web ModelPicker trigger: h-7 gap-1.5 rounded-md px-2 font-medium, muted, with a text-sm label", () => {
     const trigger = /const TRIGGER_CLASS =\s*(?:\/\/.*\n\s*)*"([^"]+)"/.exec(webModelPicker)?.[1] ?? "";
     for (const part of ["h-7", "gap-1.5", "rounded-md", "px-2", "text-xs", "font-medium", "text-muted-foreground", "disabled:opacity-50"]) {
       expect(trigger.split(" "), part).toContain(part);
@@ -175,7 +175,8 @@ describe("composer footer chip", () => {
     expect(source).toMatch(/height: 28,\s*paddingX: 8,\s*gap: 6,\s*radius: tokens\.radius\.md,/);
     expect(source).toMatch(/weight = "medium"/);
     expect(source).toMatch(/const tint = color \?\? tokens\.color\.muted\[scheme\];/);
-    expect(source).toMatch(/sizeStyle\("text-xs"\)/);
+    // The label is the phone floor for tappable text, a step up from the web `text-xs`.
+    expect(source).toMatch(/sizeStyle\("text-sm"\)/);
     expect(source).toMatch(/disabled && "opacity-50"/);
   });
 

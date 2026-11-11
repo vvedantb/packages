@@ -18,7 +18,7 @@ import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
-import { MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
+import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -100,9 +100,9 @@ function MessageHighlight() {
  *
  * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
  * `className`, `style` and view props) and a long press opens the
- * `MessageActionSheet`. It stays a non-accessible container so its buttons and
- * links keep their own focus: also offer the actions in a `MessageActionsBar`
- * for screen reader users. `highlighted` draws the quote-jump highlight.
+ * `MessageActionSheet`; TalkBack reaches it as the `longpress` action. It stays
+ * a non-accessible container so its buttons and links keep their own focus:
+ * also offer the actions in a `MessageActionsBar` for screen reader users. `highlighted` draws the quote-jump highlight.
  */
 export function Message({
   from,
@@ -120,6 +120,10 @@ export function Message({
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
+  const longPress = () => {
+    onLongPress?.();
+    if (hasActions) setSheetOpen(true);
+  };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
     style,
@@ -140,9 +144,11 @@ export function Message({
             accessible={false}
             className={merged}
             style={layout}
-            onLongPress={() => {
-              onLongPress?.();
-              if (hasActions) setSheetOpen(true);
+            onLongPress={longPress}
+            // TalkBack's actions menu reaches the same sheet as a long press.
+            accessibilityActions={[{ name: "longpress", label: actionSheetTitle ?? MESSAGE_ACTIONS_TITLE }]}
+            onAccessibilityAction={(event) => {
+              if (event.nativeEvent.actionName === "longpress") longPress();
             }}
             {...props}
           >

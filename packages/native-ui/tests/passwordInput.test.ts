@@ -167,11 +167,11 @@ describe("PasswordInput (behaviour)", () => {
   it("gives the field the same size and font classes as Input", async () => {
     const { input } = await render({ className: "mt-2" });
     const classes = String(input!.props.className).split(/\s+/);
-    for (const token of ["min-h-10", "border", "px-3.5", "py-2", "text-base", "font-instrument-sans", "mt-2"]) {
+    for (const token of ["min-h-11", "border", "px-3.5", "py-2", "text-base", "font-instrument-sans", "mt-2"]) {
       expect(classes).toContain(token);
     }
     expect(classes).not.toContain("text-xl");
-    expect(read("src/Input.tsx")).toContain("min-h-10 border px-3.5 py-2 text-base font-instrument-sans");
+    expect(read("src/Input.tsx")).toContain("min-h-11 border px-3.5 py-2 text-base font-instrument-sans");
   });
 
   it("adds the larger-text classes and type style with larger text", async () => {

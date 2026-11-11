@@ -16,7 +16,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconCheck, type IconProps } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
-import { MIN_TOUCH_TARGET, sizeStyle, typeStyle } from "./controlStyles";
+import { sizeStyle, typeStyle } from "./controlStyles";
+import { selectionHaptic } from "./haptics";
 import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
@@ -29,7 +30,8 @@ import { useControllableState } from "./primitives/use-controllable-state";
  * p-1.5 rounded-lg`, `sideOffset` 4 and `collisionPadding` 8; items `px-2.5
  * py-2 rounded-menu-item` (8) with a 16 icon `gap-2`; radio items `pl-8` with
  * the check at `left-2.5`; the label `px-2.5 py-1.5`; the separator `-mx-1.5
- * my-1 h-px`. Items are at least 44 high (the web `max-sm:min-h-10` is 40).
+ * my-1 h-px`. Items are at least 48 high, a phone menu row (the web
+ * `max-sm:min-h-10` is 40).
  */
 export const DROPDOWN_MENU = {
   minWidth: 192,
@@ -37,6 +39,7 @@ export const DROPDOWN_MENU = {
   radius: tokens.radius.lg,
   sideOffset: 4,
   edge: 8,
+  itemHeight: 48,
   itemRadius: 8,
   itemPaddingX: 10,
   itemPaddingY: 8,
@@ -206,9 +209,11 @@ export function DropdownMenuContent({
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
-  const [contentHeight, setContentHeight] = useState(0);
+  // `null` until the content is measured: only then is it known whether the
+  // menu fits below the trigger or flips above, so it stays hidden till then.
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
   const close = () => setOpen(false);
-  const position = dropdownMenuPosition({ trigger, window, insets, align, sideOffset, contentHeight });
+  const position = dropdownMenuPosition({ trigger, window, insets, align, sideOffset, contentHeight: contentHeight ?? 0 });
   return (
     <Modal
       visible={open}
@@ -237,6 +242,7 @@ export function DropdownMenuContent({
             ...position,
             minWidth: DROPDOWN_MENU.minWidth,
             maxWidth: window.width - insets.left - insets.right - 2 * DROPDOWN_MENU.edge,
+            opacity: contentHeight === null ? 0 : 1,
           }}
         >
           <FloatingSurface blur={false} radius={DROPDOWN_MENU.radius} style={{ maxHeight: position.maxHeight }}>
@@ -257,11 +263,11 @@ export function DropdownMenuContent({
   );
 }
 
-/** Item type and icon size: the web `text-sm` with a 16 icon, or `text-lg` with a 22 icon and 56 rows with larger text. */
+/** Item type and icon size: the web `text-sm` with a 16 icon in 48 rows, or `text-lg` with a 22 icon and 56 rows with larger text. */
 function itemMetrics(largerText: boolean) {
   return largerText
     ? { text: sizeStyle("text-lg"), icon: 22, minHeight: 56 }
-    : { text: sizeStyle("text-sm"), icon: 16, minHeight: MIN_TOUCH_TARGET };
+    : { text: sizeStyle("text-sm"), icon: 16, minHeight: DROPDOWN_MENU.itemHeight };
 }
 
 type MenuIcon = ComponentType<IconProps>;
@@ -308,6 +314,8 @@ function MenuRow({
       disabled={disabled}
       accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled), ...(checked === undefined ? null : { checked }) }}
       onPress={() => {
+        // A new pick from a set ticks; a plain action and the current choice do not.
+        if (checked === false) selectionHaptic();
         onSelect?.();
         if (closeOnSelect) setOpen(false);
       }}

@@ -16,8 +16,15 @@ export type SheetRowProps = {
   title: string;
   /** Muted line under the title, also the accessibility hint. */
   detail?: string;
-  /** The current choice: a check at the end, and `selected` for assistive tech. */
+  /**
+   * Makes the row one choice of a picker: `true` draws a check at the end.
+   * Set (`true` or `false`) on every row of the picker, so assistive tech
+   * reads each as a `radio` (a `checkbox` with `multiple`) with `checked`.
+   * Leave it out on an action row.
+   */
   active?: boolean;
+  /** A picker where several rows can be on at once (or a single on/off row): `checkbox`, not `radio`. */
+  multiple?: boolean;
   /** A destructive action: title and icon in `palette.danger`. */
   danger?: boolean;
   /** The web `text-warning` item (such as Archive): title and icon in `palette.warning`. */
@@ -32,7 +39,7 @@ export type SheetRowProps = {
  * icon (or another `leading` mark), title and optional detail, at least 56 high (64 with larger text) with
  * the `ListRow` padding (`px-4 py-3`). While pressed it takes the web menu
  * item highlight (`bg-default`). `danger` draws the title and icon in the
- * danger colour, `warning` in the warning colour; `active` adds a check; `disabled` dims it to 50%, as the web
+ * danger colour, `warning` in the warning colour; `active` makes it a choice with a check; `disabled` dims it to 50%, as the web
  * item, and ignores presses.
  */
 export function SheetRow({
@@ -40,7 +47,8 @@ export function SheetRow({
   leading,
   title,
   detail,
-  active = false,
+  active,
+  multiple = false,
   danger = false,
   warning = false,
   disabled = false,
@@ -60,10 +68,10 @@ export function SheetRow({
   return (
     <Pressable
       testID={testID}
-      accessibilityRole="button"
+      accessibilityRole={active === undefined ? "button" : multiple ? "checkbox" : "radio"}
       accessibilityLabel={title}
       accessibilityHint={detail}
-      accessibilityState={{ disabled, selected: active }}
+      accessibilityState={active === undefined ? { disabled } : { disabled, checked: active }}
       disabled={disabled}
       onPress={onPress}
       className={cn(

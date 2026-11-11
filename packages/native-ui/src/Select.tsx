@@ -107,12 +107,12 @@ function Select<TValue = string | number | null>({
         accessibilityRole="combobox"
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ disabled: Boolean(disabled) }}
-        // 40 high on screen, as on the web; a 44 target to touch.
-        hitSlop={touchSlop(MIN_TOUCH_TARGET, largerText ? 64 : 40)}
+        // 44 high on screen, as `Input` (the web h-10 is a desktop 40): a whole touch target.
+        hitSlop={touchSlop(MIN_TOUCH_TARGET, largerText ? 64 : 44)}
         className={cn(
-          // The web trigger: h-10 px-3.5, 16 px type (its phone size). A
+          // The web trigger px-3.5 with 16 px type (its phone size), 44 high. A
           // minimum height, so a large Dynamic Type size does not clip the value.
-          "h-auto min-h-10 w-full border px-3.5 py-0 shadow-none",
+          "h-auto min-h-11 w-full border px-3.5 py-0 shadow-none",
           largerText && "min-h-16 px-4",
           triggerClassName,
           className,

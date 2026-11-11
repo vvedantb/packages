@@ -561,7 +561,7 @@ describe("SheetRow", () => {
       accessibilityRole: "button",
       accessibilityLabel: "Delete",
       accessibilityHint: "From all devices",
-      accessibilityState: { disabled: false, selected: false },
+      accessibilityState: { disabled: false },
       onPress,
     });
     expect(tree.props.className).toMatch(/min-h-14/);
@@ -594,7 +594,14 @@ describe("SheetRow", () => {
   it("checks the active row and dims a disabled one", async () => {
     const active = await sheetRow({ active: true });
     expect(ofType(active, "IconCheck")).toHaveLength(1);
-    expect(active.props.accessibilityState).toMatchObject({ selected: true });
+    expect(active.props.accessibilityRole).toBe("radio");
+    expect(active.props.accessibilityState).toEqual({ disabled: false, checked: true });
+    const other = await sheetRow({ active: false });
+    expect(other.props.accessibilityRole).toBe("radio");
+    expect(other.props.accessibilityState).toEqual({ disabled: false, checked: false });
+    expect(ofType(other, "IconCheck")).toHaveLength(0);
+    const multiple = await sheetRow({ active: true, multiple: true });
+    expect(multiple.props.accessibilityRole).toBe("checkbox");
     expect(ofType(await sheetRow(), "IconCheck")).toHaveLength(0);
     const disabled = await sheetRow({ disabled: true, onPress: () => {} });
     expect(disabled.props.disabled).toBe(true);

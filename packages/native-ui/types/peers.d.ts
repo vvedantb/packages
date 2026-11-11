@@ -222,6 +222,8 @@ declare module "react-native" {
     horizontal?: boolean;
     showsVerticalScrollIndicator?: boolean;
     showsHorizontalScrollIndicator?: boolean;
+    /** Android: fades the scrolling edges over this many points. */
+    fadingEdgeLength?: number;
     keyboardShouldPersistTaps?: "always" | "never" | "handled";
     keyboardDismissMode?: "none" | "on-drag" | "interactive";
     bounces?: boolean;

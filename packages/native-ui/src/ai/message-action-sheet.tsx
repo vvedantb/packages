@@ -22,6 +22,9 @@ export type MessageSheetAction = {
   onPress: () => void;
 };
 
+/** The sheet's default title, also the message's `longpress` action label. */
+export const MESSAGE_ACTIONS_TITLE = "Message actions";
+
 export type MessageActionSheetProps = {
   open: boolean;
   /** Called on a backdrop tap, Cancel, Android back and after an action runs. */
@@ -45,7 +48,7 @@ export function MessageActionSheet({
   open,
   onClose,
   actions,
-  title = "Message actions",
+  title = MESSAGE_ACTIONS_TITLE,
   cancelLabel = "Cancel",
   testID = "message-action-sheet",
 }: MessageActionSheetProps) {
