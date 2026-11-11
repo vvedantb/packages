@@ -102,6 +102,8 @@ export const PROMPT_INPUT_CHIP = {
   suffixOpacity: 0.7,
   /** The narrowest label worth drawing: about two characters and the ellipsis at `text-xs` (2em). */
   labelMinWidth: 24,
+  /** `size="touch"`: 36 on screen, 4 slop above and below, so a 44 bar holds its whole target. */
+  touchHeight: 36,
 } as const;
 
 export type PromptInputChipProps = {
@@ -123,13 +125,19 @@ export type PromptInputChipProps = {
   /** Whether the menu it opens is open, for VoiceOver and TalkBack. */
   expanded?: boolean;
   disabled?: boolean;
+  /**
+   * Default `sm`, the web trigger: 28 high, slop to 44. `touch` has no web
+   * twin: 36 high, for a phone bar that is 44 itself, so the slop stays
+   * inside the bar and never reaches the field above.
+   */
+  size?: "sm" | "touch";
   onPress?: () => void;
   testID?: string;
 };
 
 /**
  * A chip for the composer `footer`, the web `ModelPicker` trigger: 28 high on
- * screen, slop to 44 above and below. The label shrinks and truncates, so a
+ * screen (36 with `size="touch"`), slop to 44 above and below. The label shrinks and truncates, so a
  * long model name gives up width to the chips beside it, as the web
  * `max-sm:truncate`; the icon and chevron keep their size. Below
  * `labelMinWidth` (scaled by the system font size) the label hides, so a
@@ -147,9 +155,11 @@ export function PromptInputChip({
   accessibilityLabel,
   expanded,
   disabled = false,
+  size = "sm",
   onPress,
   testID,
 }: PromptInputChipProps) {
+  const height = size === "touch" ? PROMPT_INPUT_CHIP.touchHeight : PROMPT_INPUT_CHIP.height;
   const scheme = useScheme();
   const pressed = usePressFeedback();
   const { fontScale } = useWindowDimensions();
@@ -170,11 +180,11 @@ export function PromptInputChip({
       disabled={disabled}
       onPress={onPress}
       // Slop only above and below: chips sit side by side, so the width stays theirs.
-      hitSlop={touchSlop(MIN_TOUCH_TARGET, PROMPT_INPUT_CHIP.height)}
+      hitSlop={touchSlop(MIN_TOUCH_TARGET, height)}
       className={cn("min-w-0 shrink flex-row items-center", pressed, disabled && "opacity-50")}
       // `minHeight`, so a larger system font size can still grow it.
       style={{
-        minHeight: PROMPT_INPUT_CHIP.height,
+        minHeight: height,
         paddingHorizontal: PROMPT_INPUT_CHIP.paddingX,
         gap: PROMPT_INPUT_CHIP.gap,
         borderRadius: PROMPT_INPUT_CHIP.radius,

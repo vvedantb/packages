@@ -13,12 +13,15 @@ export const CHAT_ICON_BUTTON_SIZE = 32;
 /**
  * Side and icon per size: `sm` is the web `icon-sm` (32, 16 icon), `xs` the
  * web `icon-xs` (28, 14 icon) and `md` the web `size-9` (36, 16 icon), Eva's
- * composer send button.
+ * composer send button. `touch` has no web twin: a 44 square with a 16 icon,
+ * for a row of ghost buttons a thumb taps (the message actions), where the
+ * web 28 squares 2 apart are a mouse's density.
  */
 const CHAT_ICON_BUTTON = {
   xs: { side: 28, icon: 14, className: "h-7 w-7" },
   sm: { side: CHAT_ICON_BUTTON_SIZE, icon: 16, className: "h-8 w-8" },
   md: { side: 36, icon: 16, className: "h-9 w-9" },
+  touch: { side: MIN_TOUCH_TARGET, icon: 16, className: "h-11 w-11" },
 } as const;
 
 export type ChatIconButtonSize = keyof typeof CHAT_ICON_BUTTON;

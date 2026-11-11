@@ -337,7 +337,11 @@ export type MessageActionProps = {
    */
   selected?: boolean;
   disabled?: boolean;
-  /** Default `sm`, the web `icon-sm` (32, 16 icon). `xs` is the web `icon-xs` (28, 14 icon), as Eva's chat. */
+  /**
+   * Default `sm`, the web `icon-sm` (32, 16 icon). `xs` is the web `icon-xs`
+   * (28, 14 icon), as Eva's web chat; `touch` is a whole 44 square (16 icon)
+   * for a phone, so the row needs no slop.
+   */
   size?: ChatIconButtonSize;
   testID?: string;
 };
