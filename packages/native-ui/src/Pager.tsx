@@ -3,7 +3,7 @@ import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 
 export type PagerProps = {
-  /** The page shown, from 0. A change from outside (a tab press, a link) jumps there, with no slide. */
+  /** The page shown, from 0. A change from outside (a tab press, a link) slides there in 220 ms, through the pages between (at once with Reduce Motion, and without the swipe). */
   index: number;
   count: number;
   /** A swipe settled on another page. Set `index` to it. */

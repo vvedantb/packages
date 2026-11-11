@@ -172,6 +172,10 @@ export function ChoiceQuestion({
                 placeholder={otherPlaceholder}
                 editable={!loading}
                 autoFocus
+                // Return is the Next or Submit button. Until there is an
+                // answer it keeps the keyboard up, as the button does nothing.
+                returnKeyType={isLast ? "send" : "next"}
+                submitBehavior={isLast && hasAnswer ? "blurAndSubmit" : "submit"}
                 onSubmitEditing={next}
               />
             </View>

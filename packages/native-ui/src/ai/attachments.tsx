@@ -175,7 +175,9 @@ export function Attachment({ data, onRemove, onPress, accessibilityLabel, testID
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Remove ${label}`}
-          hitSlop={touchSlop(REMOVE_SIZE)}
+          // A pressable label sits 6 before it, and the next chip 8 past this
+          // chip's edge: the slop stops short of both, so neither steals a tap.
+          hitSlop={{ ...touchSlop(REMOVE_SIZE), left: onPress ? 3 : touchSlop(REMOVE_SIZE).left, right: 8 }}
           onPress={onRemove}
           className="items-center justify-center rounded-full active:opacity-70"
           style={{ width: REMOVE_SIZE, height: REMOVE_SIZE }}

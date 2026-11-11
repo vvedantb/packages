@@ -17,7 +17,7 @@ import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import { MONO_FONT, chatTextSize } from "./chat-text";
-import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
+import { ChatIconButton, type ChatIconButtonProps, type ChatIconButtonSize } from "./icon-button";
 
 /**
  * `variant="markdown"`, the web `.markdown-code` (`MarkdownCodeBlock`): the header is `0.25rem 0.3rem 0 0.9rem` around a 28
@@ -45,10 +45,12 @@ export type CodeBlockCopyButtonProps = {
   label?: string;
   /** Default `sm` (the web `CodeBlock` copy button); the markdown code block uses `xs`. */
   size?: ChatIconButtonSize;
+  /** Default `"square"`. See `ChatIconButton`. */
+  slop?: ChatIconButtonProps["slop"];
 };
 
 /** Ghost copy button: the copy icon, then a check for `timeout` after a copy. */
-export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Copy code", size }: CodeBlockCopyButtonProps) {
+export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Copy code", size, slop }: CodeBlockCopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -71,6 +73,7 @@ export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Cop
       icon={copied ? IconCheck : IconCopy}
       label={copied ? "Copied" : label}
       size={size}
+      slop={slop}
       onPress={() => void copy()}
     />
   );
@@ -150,7 +153,8 @@ function MarkdownCodeBlock({
           style={largerText ? { paddingLeft: headerBox.paddingLeft, paddingRight: headerBox.paddingRight } : headerBox}
         >
           {parts.label}
-          {/* Web `.markdown-code-actions`: `gap-0.5`. */}
+          {/* Web `.markdown-code-actions`: `gap-0.5`. The two sit 2 apart, so
+              each slops only above and below and on its outer side. */}
           <View className="flex-row items-center gap-0.5">
             <ChatIconButton
               icon={IconTextWrap}
@@ -158,9 +162,10 @@ function MarkdownCodeBlock({
               size="xs"
               iconColor={wrap ? tokens.color.foreground[scheme] : tokens.color.muted[scheme]}
               accessibilityState={{ selected: wrap }}
+              slop={{ left: 8, right: 0 }}
               onPress={() => setWrap(!wrap)}
             />
-            {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} size="xs" /> : null}
+            {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} size="xs" slop={{ left: 0, right: 5 }} /> : null}
           </View>
         </View>
       ) : null}

@@ -1,0 +1,5 @@
+---
+"@vvedantb/native-ui": minor
+---
+
+Tabs are phone-tuned, with the web look. `PillTabs` is one sideways line that never wraps: when the pills do not fit (larger system text) it scrolls, and the active pill scrolls into view, centred, on each change and frame by frame under a `Pager` swipe (Android fades the scrolling edge). Pills are 36 high (`px-3.5`, 14 px labels) with 4 slop above and below (44). With `progress`, the indicator moves on x and width only, each label blends to the selected colour with it (`interpolateColor`), so fill and label agree mid-swipe, and the selected pill paints its own fill until the pills are measured, so the first frame shows the selection. `TabsList` takes the same optional `progress`, so a `Pager` can drive its fill and labels (its triggers are its direct children, in page order). `tabTriggerSize`: `pills` and `segmented` are 36 high (`px-3.5 py-1`), and `sm` keeps a 14 px label (`text-sm`, `px-3 py-1`, 36 high, no letter spacing) in place of the web `text-xs` 30.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pagerPosition, pagerSettle } from "../src/pagerSwipe";
+import { centredTabScroll, pagerPosition, pagerSettle, pagesBetween } from "../src/pagerSwipe";
 import { swipeRowActivation, SWIPE_ACTION_WIDTH, SWIPE_ACTIVE_OFFSET_X } from "../src/swipeRow";
 import { toastDragDismisses, toastDragOffset } from "../src/toastDrag";
 
@@ -93,5 +93,38 @@ describe("toast drag", () => {
     expect(toastDragDismisses(-20, -100, 60)).toBe(true);
     expect(toastDragDismisses(-20, 300, 60)).toBe(false);
     expect(toastDragDismisses(10, -900, 60)).toBe(false);
+  });
+});
+
+describe("a tab press slide", () => {
+  it("draws every page between the old and the new one, either way", () => {
+    expect(pagesBetween(0, 3)).toEqual([0, 1, 2, 3]);
+    expect(pagesBetween(3, 1)).toEqual([1, 2, 3]);
+    expect(pagesBetween(2, 2)).toEqual([2]);
+  });
+});
+
+describe("centredTabScroll", () => {
+  // Four pills in a 200 wide row: 80 wide, 6 apart (the Projects tabs at larger text).
+  const tabs = [0, 1, 2, 3].map((index) => ({ x: index * 86, width: 80 }));
+
+  it("centres the active tab, and never scrolls before the first or past the last", () => {
+    expect(centredTabScroll(tabs, 0, 200)).toBe(0);
+    expect(centredTabScroll(tabs, 2, 200)).toBe(2 * 86 + 40 - 100);
+    expect(centredTabScroll(tabs, 3, 200)).toBe(3 * 86 + 80 - 200);
+    expect(centredTabScroll(tabs, 5, 200)).toBe(3 * 86 + 80 - 200);
+    expect(centredTabScroll(tabs, -0.4, 200)).toBe(0);
+  });
+
+  it("follows a swipe between two tabs", () => {
+    const halfway = centredTabScroll(tabs, 1.5, 200);
+    expect(halfway).toBeGreaterThan(centredTabScroll(tabs, 1, 200));
+    expect(halfway).toBeLessThan(centredTabScroll(tabs, 2, 200));
+  });
+
+  it("stays at 0 when the row fits, or before it is measured", () => {
+    expect(centredTabScroll(tabs, 3, 400)).toBe(0);
+    expect(centredTabScroll([], 1, 200)).toBe(0);
+    expect(centredTabScroll(tabs, 1, 0)).toBe(0);
   });
 });

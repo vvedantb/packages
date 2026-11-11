@@ -8,10 +8,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { selectionHaptic } from "../haptics";
 import { InsidePagerContext, type PagerProps } from "../Pager";
-import { PAGER_ACTIVE_OFFSET_X, PAGER_FAIL_OFFSET_Y, pagerPosition, pagerSettle } from "../pagerSwipe";
+import { PAGER_ACTIVE_OFFSET_X, PAGER_FAIL_OFFSET_Y, pagerPosition, pagerSettle, pagesBetween } from "../pagerSwipe";
 import { useWebClickGuard } from "./web-click-guard";
 
 // The pager on Gesture Handler: the track phase and the release run as
@@ -21,24 +22,31 @@ import { useWebClickGuard } from "./web-click-guard";
 /** The release: springs on at the finger's speed, no bounce (an overshoot would flash the next page's edge). */
 const PAGER_SPRING = { duration: 250, dampingRatio: 1, reduceMotion: ReduceMotion.System } as const;
 
+/** A page set from outside (a tab press) slides there; at once with Reduce Motion. */
+const PAGER_SLIDE = { duration: 220, reduceMotion: ReduceMotion.System } as const;
+
 export function GesturePager({ index, count, onIndexChange, progress, renderPage }: PagerProps) {
   const width = useSharedValue(0);
   // Where the pages were when the finger caught them, and the finger's travel then.
   const start = useSharedValue(0);
   const startX = useSharedValue(0);
   const [mounted, setMounted] = useState<ReadonlySet<number>>(() => new Set([index]));
-  // A page reached from outside is drawn from then on.
-  if (!mounted.has(index)) setMounted(new Set([...mounted, index]));
+  const [shown, setShown] = useState(index);
+  // A page reached from outside is drawn from then on, with every page the
+  // slide there passes, so it never crosses a blank page.
+  if (shown !== index) {
+    setShown(index);
+    setMounted(new Set([...mounted, ...pagesBetween(shown, index)]));
+  }
   // The page a swipe settled on, until the new `index` comes back: that one must not stop the spring.
   const settling = useRef<number | null>(null);
-  // A page set from outside jumps there (a tab press does not slide). An
-  // effect: a shared value is never written in render.
+  // A page set from outside slides there. An effect: a shared value is never
+  // written in render.
   useEffect(() => {
     const fromSwipe = settling.current === index;
     settling.current = null;
     if (fromSwipe) return;
-    cancelAnimation(progress);
-    progress.set(index);
+    progress.set(withTiming(index, PAGER_SLIDE));
   }, [index, progress]);
 
   const webClicks = useWebClickGuard();
