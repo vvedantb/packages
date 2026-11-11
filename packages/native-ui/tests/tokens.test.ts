@@ -46,8 +46,8 @@ function cssColour(value: string): string {
   throw new Error(`Unsupported colour ${value}`);
 }
 
-/** `palette` keys with one `tokens.css` variable each. `destructive` and `overlayMuted` are derived. */
-const PALETTE_VARS: Record<Exclude<keyof typeof palette, "destructive" | "overlayMuted">, string> = {
+/** `palette` keys with one `tokens.css` variable each. `destructive`, `overlayMuted` and `tabBarPill` are derived. */
+const PALETTE_VARS: Record<Exclude<keyof typeof palette, "destructive" | "overlayMuted" | "tabBarPill">, string> = {
   primary: "--accent",
   primaryForeground: "--accent-foreground",
   danger: "--danger",
@@ -118,6 +118,10 @@ describe("tokens", () => {
 });
 
 describe("palette", () => {
+  it("tabBarPill is --default in light and --segment in dark", () => {
+    expect(palette.tabBarPill).toEqual({ light: palette.default.light, dark: palette.segment.dark });
+  });
+
 
   for (const [key, name] of Object.entries(PALETTE_VARS)) {
     it(`${key} matches ${name} in tokens.css`, () => {

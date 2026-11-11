@@ -1,10 +1,18 @@
+import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { floatingTabPillColors, tabColors, typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
 import { isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
 import { useLargerText } from "./theme";
+import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
 import {
   FLOATING_INSET,
@@ -18,6 +26,9 @@ import {
  * in points. The same all round, so the pill follows the bar's curve.
  */
 const TAB_BAR_PADDING = 4;
+
+/** The web `--tabs-dur` (200ms) and `--tabs-ease` (`tokens.css`). */
+const PILL_SLIDE = { duration: 200, easing: Easing.bezier(0.22, 1, 0.36, 1) };
 
 /**
  * The fields this bar reads from the props Expo Router's `Tabs` passes to
@@ -162,12 +173,23 @@ export function FloatingTabBar({
  * the row equally), `TAB_BAR_PADDING` inside the bar, in
  * `floatingTabPillColors` (the muted `--default` in light, `--segment` in
  * dark, so it shows on the glass bar) and the `TabsTrigger` pills outline.
- * It moves to a newly focused tab at once: a tab switch happens many times a
- * day, so a slide would read as delay. Behind the tablist, so assistive tech
+ * It slides to a newly focused tab, as the web segmented pill does,
+ * and moves at once with Reduce Motion. Behind the tablist, so assistive tech
  * reads only the tabs.
  */
 function ActiveTabPill({ index, count }: { index: number; count: number }) {
   const scheme = useScheme();
+  const reduceMotion = useReduceMotion();
+  const left = (100 * index) / count;
+  const offset = useSharedValue(left);
+
+  useEffect(() => {
+    offset.set(reduceMotion ? left : withTiming(left, PILL_SLIDE));
+  }, [left, reduceMotion, offset]);
+
+  const slide = useAnimatedStyle(() => ({
+    left: `${offset.get()}%` as const,
+  }));
 
   return (
     <View
@@ -180,17 +202,19 @@ function ActiveTabPill({ index, count }: { index: number; count: number }) {
         right: TAB_BAR_PADDING,
       }}
     >
-      <View
+      <Animated.View
         className="border border-white/40 dark:border-white/10"
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: `${(100 * index) / count}%`,
-          width: `${100 / count}%`,
-          borderRadius: FLOATING_PILL_RADIUS,
-          backgroundColor: floatingTabPillColors(scheme).backgroundColor,
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: `${100 / count}%` as const,
+            borderRadius: FLOATING_PILL_RADIUS,
+            backgroundColor: floatingTabPillColors(scheme).backgroundColor,
+          },
+          slide,
+        ]}
       />
     </View>
   );
