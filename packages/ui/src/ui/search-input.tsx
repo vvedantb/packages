@@ -7,7 +7,7 @@ import { Kbd } from "./kbd";
 import { useCn, useUiConfig } from "./ui-config";
 
 const sizeClasses = {
-  sm: { input: "h-8 pl-8 text-base sm:text-sm", icon: "left-2" },
+  sm: { input: "h-8 pl-8 text-base sm:pointer-fine:text-sm", icon: "left-2" },
   md: { input: "h-10 pl-9", icon: "left-3" },
 };
 

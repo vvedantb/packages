@@ -181,8 +181,10 @@
     text-underline-offset: 0.2em;
     transition: text-decoration-color var(--motion-fast, 150ms) ease-out;
   }
-  .markdown-link:hover {
-    text-decoration-color: currentColor;
+  @media (hover: hover) and (pointer: fine) {
+    .markdown-link:hover {
+      text-decoration-color: currentColor;
+    }
   }
   .markdown-link-icon {
     display: inline-block;

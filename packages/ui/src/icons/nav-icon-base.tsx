@@ -1,7 +1,7 @@
 import { useId, type CSSProperties, type ReactNode, type SVGProps } from "react";
 import { cn } from "../utils/cn";
 
-/** `"hover"`: animate while an ancestor with the `group` class is hovered. `true`: always. `false`: never. */
+/** `"hover"`: animate while an ancestor with the `group` class is hovered by a mouse (fine pointer). `true`: always. `false`: never. */
 export type IconAnimate = boolean | "hover";
 
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "children" | "color" | "height" | "width" | "strokeWidth"> & {

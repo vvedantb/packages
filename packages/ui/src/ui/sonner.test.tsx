@@ -233,6 +233,20 @@ describe("SonnerToaster position", () => {
   });
 });
 
+describe("SonnerToaster mobileOffset", () => {
+  it("adds the safe-area insets to sonner's 16px top and bottom offset on phones", () => {
+    expect(render().mobileOffset).toEqual({
+      top: "calc(16px + env(safe-area-inset-top, 0px))",
+      bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+    });
+    expect(render({ mobileOffset: undefined }).mobileOffset).toEqual(render().mobileOffset);
+  });
+
+  it("lets a prop replace the default", () => {
+    expect(render({ mobileOffset: 8 }).mobileOffset).toBe(8);
+  });
+});
+
 describe("SonnerToaster merging", () => {
   it("keeps default toast and description classes when toastOptions.classNames is partial", () => {
     const defaults = createToasterClassNames();

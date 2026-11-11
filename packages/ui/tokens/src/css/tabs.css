@@ -42,10 +42,14 @@
   .t-tab:active {
     transform: scale(0.97);
   }
-  .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover,
   .t-tab[aria-selected="true"],
   .t-tab[data-state="active"] {
     color: var(--tabs-text-active);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .t-tab:not([aria-selected="true"]):not([data-state="active"]):hover {
+      color: var(--tabs-text-active);
+    }
   }
   .t-tabs-pill {
     position: absolute;
