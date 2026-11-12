@@ -25,6 +25,11 @@ export type LoadingStateProps = {
   size?: LoadingStateSize;
   /** Cell colour. Default the muted text colour. Native has no `currentColor`. */
   color?: string;
+  /**
+   * One colour per column, left to right, as the web `LoadingState` `colors`
+   * (Eva's brand purple-to-blue sweep). Wins over `color`.
+   */
+  colors?: readonly [string, string, string];
   /** Hold a still frame, for example while the screen is not focused. Default `false`. */
   paused?: boolean;
 };
@@ -38,10 +43,11 @@ export type LoadingStateProps = {
  * clock. The labelled form (label and elapsed timer) and the `Dots` and
  * `Orbit` variants are not ported.
  */
-export function LoadingState({ label = "Working", size = "default", color, paused = false }: LoadingStateProps) {
+export function LoadingState({ label = "Working", size = "default", color, colors, paused = false }: LoadingStateProps) {
   const scheme = useScheme();
   const reduceMotion = useReduceMotion();
-  const fill = color ?? tokens.color.muted[scheme];
+  const single = color ?? tokens.color.muted[scheme];
+  const fill: Fills = colors ?? [single, single, single];
   const still = reduceMotion || paused;
   return (
     <View
@@ -60,8 +66,11 @@ export function LoadingState({ label = "Working", size = "default", color, pause
   );
 }
 
+/** Column colours, left to right. */
+type Fills = readonly [string, string, string];
+
 /** Owns the clock, so unmounting it (Reduce Motion, `paused`) stops the frame callback. */
-function RunningDriveGrid({ size, fill }: { size: LoadingStateSize; fill: string }) {
+function RunningDriveGrid({ size, fill }: { size: LoadingStateSize; fill: Fills }) {
   const elapsed = useSharedValue(0);
   useFrameCallback((frame) => {
     "worklet";
@@ -77,7 +86,7 @@ function DriveGrid({
   elapsed,
 }: {
   size: LoadingStateSize;
-  fill: string;
+  fill: Fills;
   elapsed: SharedValue<number> | undefined;
 }) {
   const { gap } = DRIVE_SIZES[size];
@@ -88,11 +97,11 @@ function DriveGrid({
         <View key={row} style={{ flexDirection: "row", gap }}>
           {DRIVE_DELAYS.slice(row * 3, row * 3 + 3).map((delay, column) =>
             elapsed ? (
-              <DriveCell key={column} size={size} fill={fill} delay={delay} elapsed={elapsed} />
+              <DriveCell key={column} size={size} fill={fill[column] ?? fill[0]} delay={delay} elapsed={elapsed} />
             ) : (
               <View
                 key={column}
-                style={[cellStyle(size, fill), { opacity: driveCellOpacity(DRIVE_STILL_FRAME_MS, delay) }]}
+                style={[cellStyle(size, fill[column] ?? fill[0]), { opacity: driveCellOpacity(DRIVE_STILL_FRAME_MS, delay) }]}
               />
             ),
           )}

@@ -105,6 +105,12 @@ describe("LoadingState", () => {
     expect(later.map((cell) => flat(cell.style).opacity)).toEqual(DRIVE_DELAYS.map((delay) => driveCellOpacity(400, delay)));
   });
 
+  it("colours each column from colors, left to right, as the web column colours", () => {
+    const tree = render(createElement(LoadingState, { size: "sm", colors: ["#8B3FB8", "#6360c9", "#3B7DD8"] }));
+    const cells = hosts(tree, "Animated.View").map((cell) => flat(cell.style).backgroundColor);
+    expect(cells).toEqual(["#8B3FB8", "#6360c9", "#3B7DD8", "#8B3FB8", "#6360c9", "#3B7DD8", "#8B3FB8", "#6360c9", "#3B7DD8"]);
+  });
+
   it("holds a still chevron with Reduce Motion or paused, and runs no clock", () => {
     for (const setup of [() => (motion.reduce = true), () => undefined]) {
       frames.callbacks = [];
