@@ -5,7 +5,9 @@ import {
   KeyboardChatScrollView,
   KeyboardGestureArea,
   KeyboardStickyView,
+  useKeyboardHandler,
 } from "react-native-keyboard-controller";
+import { runOnJS } from "react-native-reanimated";
 import { COMPOSER_INPUT_ID, KeyboardPartsContext, type KeyboardParts } from "./keyboard-parts";
 
 // The keyboard parts on `react-native-keyboard-controller`: the keyboard's
@@ -32,14 +34,41 @@ function StickyView({ bottomOffset, ...props }: ComponentProps<KeyboardParts["St
 /**
  * `always`: the content rises with the keyboard wherever the reader is, so
  * what sat on the composer stays there (the newest message, at the end).
+ * Inverted, the keyboard's space is the content's top inset, the visual
+ * bottom: iOS scrolls below offset 0 into it, so the end moves there; Android
+ * moves the content down by it instead, so offset 0 stays the end. While the
+ * keyboard moves, the list scrolls with it, through offsets that are not the
+ * end on either platform.
  */
-function ChatScrollView({ bottomOffset, onInsetChange, ...props }: ComponentProps<KeyboardParts["ChatScrollView"]>) {
+function ChatScrollView({
+  bottomOffset,
+  inverted = false,
+  onInsetChange,
+  onKeyboardMove,
+  ...props
+}: ComponentProps<KeyboardParts["ChatScrollView"]>) {
+  useKeyboardHandler(
+    {
+      onStart: () => {
+        "worklet";
+        runOnJS(onKeyboardMove)(true);
+      },
+      onEnd: () => {
+        "worklet";
+        runOnJS(onKeyboardMove)(false);
+      },
+    },
+    [onKeyboardMove],
+  );
   return (
     <KeyboardChatScrollView
       {...props}
+      inverted={inverted}
       offset={bottomOffset}
       keyboardLiftBehavior="always"
-      onContentInsetChange={(insets) => onInsetChange(insets.bottom)}
+      onContentInsetChange={(insets) =>
+        onInsetChange(inverted ? (Platform.OS === "ios" ? insets.top : 0) : insets.bottom)
+      }
     />
   );
 }

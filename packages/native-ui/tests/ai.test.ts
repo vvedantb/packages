@@ -176,11 +176,17 @@ vi.mock("react-native-reanimated", () => ({
     return shared;
   },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
+  runOnJS: <A extends unknown[]>(fn: (...args: A) => void) => fn,
   ...animation,
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => insets }));
 // Not installed in this repository: the optional peer of `/keyboard-controller`.
+// `keyboardHandler` holds the last `useKeyboardHandler` handler, to move the keyboard by hand.
+const keyboardHandler = vi.hoisted(() => ({ current: { onStart: () => {}, onEnd: () => {} } }));
 vi.mock("react-native-keyboard-controller", () => ({
+  useKeyboardHandler: (handler: typeof keyboardHandler.current) => {
+    keyboardHandler.current = handler;
+  },
   KeyboardAvoidingView: "KC.KeyboardAvoidingView",
   KeyboardStickyView: "KC.KeyboardStickyView",
   KeyboardChatScrollView: "KC.KeyboardChatScrollView",
@@ -674,6 +680,16 @@ describe("Conversation", () => {
     expect(isScrolledToBottom(event(0, 300))).toBe(true);
   });
 
+  it("counts an inverted list within 70 of offset 0 as the bottom, below 0 too (iOS keyboard inset)", async () => {
+    const { isScrolledToBottom } = await import("../src/ai/conversation");
+    expect(isScrolledToBottom(event(0), 0, true)).toBe(true);
+    expect(isScrolledToBottom(event(70), 0, true)).toBe(true);
+    expect(isScrolledToBottom(event(71), 0, true)).toBe(false);
+    // The far end of the content is the oldest message, not the bottom.
+    expect(isScrolledToBottom(event(1200), 0, true)).toBe(false);
+    expect(isScrolledToBottom(event(-300), 300, true)).toBe(true);
+  });
+
   async function conversation(buttonProps: { label?: string; showLabel?: boolean } = {}) {
     const { Conversation, ConversationScrollButton } = await import("../src/ai/conversation");
     const scrollToEnd = vi.fn();
@@ -849,6 +865,65 @@ describe("Conversation", () => {
     for (const run of frames.splice(0)) run();
     expect(hidden(h.tree.list)).toBe(false);
   });
+
+  it("inverted: shows its newest row at offset 0 at once, with no follow, and keeps the view while scrolled up", async () => {
+    const { Conversation, ConversationList, ConversationScrollButton } = await import("../src/ai/conversation");
+    const frames: (() => void)[] = [];
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => frames.push(run));
+    const h = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return {
+        list: ConversationList({ inverted: true, data: ["c", "b", "a"], renderItem: () => null }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const list = () => h.tree.list;
+    expect(list().type).toBe("FlatList");
+    expect(list().props.inverted).toBe(true);
+    // A short thread sits at the column's end, the top of an inverted list.
+    expect(list().props.contentContainerClassName).toBe("px-3 py-3 grow justify-end");
+    const scrollToOffset = vi.fn();
+    (list().props.ref as (list: unknown) => void)({ scrollToOffset });
+    (list().props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 800 } } });
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    // Never hidden, no jump: the newest row is already in view.
+    expect(JSON.stringify(list().props.style)).not.toContain('"opacity":0');
+    expect(frames).toHaveLength(0);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    // At the bottom, a new row shows at offset 0; nothing pins the old rows.
+    expect(list().props.maintainVisibleContentPosition).toBeUndefined();
+    // Scrolled up (away from offset 0): the button shows and new rows keep the view.
+    (list().props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(400) });
+    (list().props.onScroll as (event: unknown) => void)({ nativeEvent: event(400) });
+    expect(h.tree.button).not.toBeNull();
+    expect(list().props.maintainVisibleContentPosition).toEqual({ minIndexForVisible: 0 });
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 6000);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    // The button scrolls to offset 0, animated, and the bottom stops pinning.
+    const button = (h.tree.button as Element).props.children as Element;
+    (button.props.onPress as () => void)();
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: true });
+    expect(h.tree.button).toBeNull();
+    expect(list().props.maintainVisibleContentPosition).toBeUndefined();
+  });
+
+  it("inverted: draws an empty thread's spinner or empty state the right way up, in place of the list", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const Spinner = () => null;
+    const h = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return ConversationList({ inverted: true, data: [], renderItem: () => null, ListEmptyComponent: Spinner }) as unknown as Element;
+    });
+    expect(h.tree.type).toBe("View");
+    expect((h.tree.props.children as Element).type).toBe(Spinner);
+    const { createElement } = await import("react");
+    const element = createElement("EMPTY");
+    const withElement = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return ConversationList({ inverted: true, data: [], renderItem: () => null, ListEmptyComponent: element }) as unknown as Element;
+    });
+    expect(withElement.tree.props.children).toBe(element);
+  });
 });
 
 describe("keyboard-controller parts", () => {
@@ -958,6 +1033,74 @@ describe("keyboard-controller parts", () => {
     expect(value().isAtBottom).toBe(false);
     (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(1450) });
     expect(value().isAtBottom).toBe(true);
+  });
+
+  it("inverted: the chat scroll view is inverted and its keyboard space sits before offset 0 on iOS only", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const parts = KeyboardControllerProvider({ children: null }).props.value as Parts;
+    const mount = () =>
+      hooks.mount(() => {
+        hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+        const frame = Conversation({ children: null }) as unknown as Element;
+        provide(frame);
+        return { frame, area: ConversationList({ inverted: true, data: ["a"], renderItem: () => null }) as unknown as Element };
+      });
+    // iOS scrolls below 0 into the keyboard's space; Android moves the content down by it, so 0 stays the end.
+    for (const [os, end] of [
+      ["ios", -300],
+      ["android", 0],
+    ] as const) {
+      platform.OS = os;
+      const h = mount();
+      const value = () => h.tree.frame.props.value as Value & { scrollToBottom(): void };
+      const list = h.tree.area.props.children as Element;
+      const scroller = (list.props.renderScrollComponent as (props: unknown) => Element)({});
+      expect(scroller.props.inverted, os).toBe(true);
+      const native = render(scroller) as Element;
+      expect(native).toMatchObject({ type: "KC.KeyboardChatScrollView", props: { inverted: true, keyboardLiftBehavior: "always" } });
+      // The keyboard's space is the content's top inset, the visual bottom.
+      (native.props.onContentInsetChange as (insets: { top: number; bottom: number }) => void)({ top: 300, bottom: 0 });
+      const scrollToOffset = vi.fn();
+      (list.props.ref as (list: unknown) => void)({ scrollToOffset });
+      const scroll = (offset: number) => (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(offset) });
+      // The reader 100 above the end is away from the bottom.
+      (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(end + 100) });
+      scroll(end + 100);
+      expect(value().isAtBottom, os).toBe(false);
+      value().scrollToBottom();
+      expect(scrollToOffset, os).toHaveBeenLastCalledWith({ offset: end, animated: true });
+      scroll(end);
+      expect(value().isAtBottom, os).toBe(true);
+    }
+  });
+
+  it("does not count the keyboard scrolling the list as the reader leaving the bottom", async () => {
+    platform.OS = "android";
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const parts = KeyboardControllerProvider({ children: null }).props.value as Parts;
+    const h = hooks.mount(() => {
+      hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return { frame, area: ConversationList({ inverted: true, data: ["a"], renderItem: () => null }) as unknown as Element };
+    });
+    const value = () => h.tree.frame.props.value as Value;
+    const list = h.tree.area.props.children as Element;
+    render((list.props.renderScrollComponent as (props: unknown) => Element)({}));
+    const scroll = (offset: number) => (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(offset) });
+    // Android opens the keyboard by scrolling the list from its height back to 0.
+    keyboardHandler.current.onStart();
+    scroll(300);
+    scroll(150);
+    expect(value().isAtBottom).toBe(true);
+    keyboardHandler.current.onEnd();
+    scroll(0);
+    expect(value().isAtBottom).toBe(true);
+    // Once it has stopped, the reader's scroll counts again.
+    scroll(300);
+    expect(value().isAtBottom).toBe(false);
   });
 
   it("moves the dock and the scroll button with the keyboard, less the inset; a composer in the dock adds no lift", async () => {

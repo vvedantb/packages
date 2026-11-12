@@ -25,12 +25,21 @@ export type KeyboardParts = {
   StickyView: ComponentType<ViewProps & { bottomOffset: number }>;
   /**
    * The chat transcript's scroll view (a `FlatList` `renderScrollComponent`).
-   * Its content gains the keyboard height less `bottomOffset` at the end, and
-   * moves up with the keyboard, so the newest message stays in view.
-   * `onInsetChange` gets that extra space, which `onScroll` does not report.
+   * Its content gains the keyboard height less `bottomOffset` at the end (at
+   * its start when `inverted`, the visual bottom either way), and moves up
+   * with the keyboard, so the newest message stays in view. `onInsetChange`
+   * gets that extra space as the scroll offset sees it, which `onScroll` does
+   * not report: past the content's end, or when `inverted` before offset 0.
+   * `onKeyboardMove` is true from the start to the end of each keyboard
+   * move, while the keyboard, not the reader, scrolls the list.
    */
   ChatScrollView: ComponentType<
-    ScrollViewProps & { bottomOffset: number; onInsetChange: (bottom: number) => void }
+    ScrollViewProps & {
+      bottomOffset: number;
+      inverted?: boolean;
+      onInsetChange: (inset: number) => void;
+      onKeyboardMove: (moving: boolean) => void;
+    }
   >;
   /**
    * Around the transcript: a drag that reaches `offset` above the keyboard
