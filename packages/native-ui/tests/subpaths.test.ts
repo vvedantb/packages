@@ -110,10 +110,13 @@ const HEAVY_PEERS: Record<string, string | null> = {
   "react-native-gesture-handler": null,
   // Only /keyboard-controller imports it; every other entry keeps React Native's `KeyboardAvoidingView`.
   "react-native-keyboard-controller": null,
+  // Only /video and /webview import these.
+  "expo-video": null,
+  "react-native-webview": null,
 };
 
 // Entries that may import heavy peers. Every other entry in `exports` must not.
-const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./gesture-handler", "./keyboard-controller", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
+const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./gesture-handler", "./keyboard-controller", "./video", "./webview", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
 
 const basicEntries = Object.keys(pkg.exports).filter(
   (subpath) => subpath !== "./package.json" && !HEAVY_ENTRIES.includes(subpath),
@@ -201,6 +204,8 @@ describe("granular entries", () => {
     expect(heavyRefs("./keyboard-controller")).toEqual([
       "primitives/keyboard-controller.tsx: static react-native-keyboard-controller",
     ]);
+    expect(heavyRefs("./video")).toEqual(["video/InlineVideo.tsx: static expo-video"]);
+    expect(heavyRefs("./webview")).toEqual(["webview/HtmlView.tsx: static react-native-webview"]);
     expect(heavyRefs("./date-time")).toEqual([
       "DateTimeField.tsx: static @react-native-community/datetimepicker",
       "DateTimeField.tsx: static dayjs",
@@ -213,6 +218,8 @@ describe("granular entries", () => {
     // Nor Gesture Handler or keyboard-controller: an app opts in with /gesture-handler and /keyboard-controller.
     expect(rootRefs.filter((ref) => ref.endsWith(" react-native-gesture-handler"))).toEqual([]);
     expect(rootRefs.filter((ref) => ref.endsWith(" react-native-keyboard-controller"))).toEqual([]);
+    // Nor the video player or WebView: /video and /webview.
+    expect(rootRefs.filter((ref) => ref.endsWith(" expo-video") || ref.endsWith(" react-native-webview"))).toEqual([]);
   });
 
   it("names the optional-peer modules only in their loaders, across the whole package", () => {

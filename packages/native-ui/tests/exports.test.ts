@@ -197,6 +197,8 @@ describe("@vvedantb/native-ui exports", () => {
       "./bottom-sheet",
       "./gesture-handler",
       "./keyboard-controller",
+      "./video",
+      "./webview",
       "./date-time",
       "./ai",
       "./gallery",
@@ -300,7 +302,7 @@ describe("@vvedantb/native-ui exports", () => {
     expect(names.has("ButtonShape")).toBe(true);
   });
 
-  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown, then highlighting, then Gesture Handler, then keyboard-controller)", () => {
+  it("adds no dependency, and only optional peers since 0.7.0 (auth, then markdown, then highlighting, then Gesture Handler, then keyboard-controller, then video and WebView)", () => {
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([
       "@clerk/clerk-expo",
@@ -323,6 +325,7 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-linear-gradient",
       "expo-notifications",
       "expo-router",
+      "expo-video",
       "expo-web-browser",
       "lucide-react-native",
       "nativewind",
@@ -336,6 +339,7 @@ describe("@vvedantb/native-ui exports", () => {
       "react-native-safe-area-context",
       "react-native-screens",
       "react-native-svg",
+      "react-native-webview",
       "tailwind-merge",
     ]);
     expect(Object.keys(pkg.peerDependenciesMeta).sort()).toEqual([
@@ -352,12 +356,14 @@ describe("@vvedantb/native-ui exports", () => {
       "expo-linear-gradient",
       "expo-notifications",
       "expo-router",
+      "expo-video",
       "expo-web-browser",
       "prism-react-renderer",
       "react-native-gesture-handler",
       "react-native-keyboard-controller",
       "react-native-marked",
       "react-native-svg",
+      "react-native-webview",
     ]);
     // No tailwindcss-animate (or Tailwind itself): apps that want it keep it in their config.
     expect(Object.keys(pkg.peerDependencies)).not.toContain("tailwindcss-animate");
