@@ -82,6 +82,14 @@
       "types": "./src/entries/keyboard-controller.ts",
       "default": "./src/entries/keyboard-controller.ts"
     },
+    "./video": {
+      "types": "./src/entries/video.ts",
+      "default": "./src/entries/video.ts"
+    },
+    "./webview": {
+      "types": "./src/entries/webview.ts",
+      "default": "./src/entries/webview.ts"
+    },
     "./date-time": {
       "types": "./src/entries/date-time.ts",
       "default": "./src/entries/date-time.ts"
@@ -167,6 +175,7 @@
     "expo-linear-gradient": "*",
     "expo-notifications": "*",
     "expo-router": "*",
+    "expo-video": "*",
     "expo-web-browser": "*",
     "lucide-react-native": "*",
     "nativewind": ">=4.0.0",
@@ -180,6 +189,7 @@
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
     "react-native-svg": "*",
+    "react-native-webview": "*",
     "tailwind-merge": ">=2.0.0"
   },
   "peerDependenciesMeta": {
@@ -222,6 +232,9 @@
     "expo-router": {
       "optional": true
     },
+    "expo-video": {
+      "optional": true
+    },
     "expo-web-browser": {
       "optional": true
     },
@@ -238,6 +251,9 @@
       "optional": true
     },
     "react-native-svg": {
+      "optional": true
+    },
+    "react-native-webview": {
       "optional": true
     }
   },

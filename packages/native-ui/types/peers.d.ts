@@ -265,6 +265,11 @@ declare module "react-native" {
     windowSize?: number;
     inverted?: boolean | null;
     renderScrollComponent?: (props: ScrollViewProps) => React.ReactElement;
+    // `ImageViewer`'s pages.
+    pagingEnabled?: boolean;
+    initialScrollIndex?: number;
+    getItemLayout?: (data: ArrayLike<T> | null | undefined, index: number) => { length: number; offset: number; index: number };
+    onMomentumScrollEnd?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   }
   export class FlatList<T> extends React.Component<FlatListProps<T>> {
     scrollToEnd(options?: { animated?: boolean }): void;
@@ -678,6 +683,57 @@ declare module "react-native-svg" {
   export default Svg;
 }
 
+declare module "expo-video" {
+  import type * as React from "react";
+  import type { StyleProp, ViewStyle } from "react-native";
+  export interface VideoPlayer {
+    loop: boolean;
+    muted: boolean;
+    play(): void;
+    pause(): void;
+  }
+  export function useVideoPlayer(source: string | null, setup?: (player: VideoPlayer) => void): VideoPlayer;
+  export const VideoView: React.ComponentType<{
+    player: VideoPlayer;
+    style?: StyleProp<ViewStyle>;
+    nativeControls?: boolean;
+    contentFit?: "contain" | "cover" | "fill";
+    fullscreenOptions?: { enable: boolean };
+    allowsPictureInPicture?: boolean;
+  }>;
+}
+
+declare module "react-native-webview" {
+  import type * as React from "react";
+  import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
+  export interface WebViewProps {
+    source: { html: string; baseUrl?: string } | { uri: string };
+    style?: StyleProp<ViewStyle>;
+    accessibilityLabel?: string;
+    originWhitelist?: string[];
+    javaScriptEnabled?: boolean;
+    injectedJavaScriptBeforeContentLoaded?: string;
+    onMessage?: (event: NativeSyntheticEvent<{ data: string }>) => void;
+    onShouldStartLoadWithRequest?: (request: { url: string; isTopFrame: boolean }) => boolean;
+    setSupportMultipleWindows?: boolean;
+    onOpenWindow?: (event: NativeSyntheticEvent<{ targetUrl: string }>) => void;
+    onLoadEnd?: () => void;
+    incognito?: boolean;
+    domStorageEnabled?: boolean;
+    thirdPartyCookiesEnabled?: boolean;
+    sharedCookiesEnabled?: boolean;
+    allowFileAccess?: boolean;
+    allowFileAccessFromFileURLs?: boolean;
+    allowUniversalAccessFromFileURLs?: boolean;
+    mixedContentMode?: "never" | "always" | "compatibility";
+    mediaPlaybackRequiresUserAction?: boolean;
+    nestedScrollEnabled?: boolean;
+  }
+  export class WebView extends React.Component<WebViewProps> {
+    injectJavaScript(script: string): void;
+  }
+}
+
 declare module "expo-blur" {
   import type * as React from "react";
   import type { View, ViewProps } from "react-native";
@@ -1038,6 +1094,8 @@ declare module "@tabler/icons-react-native" {
   export const IconX: Icon;
   export const IconTool: Icon;
   export const IconRobot: Icon;
+  export const IconExternalLink: Icon;
+  export const IconPlayerPlayFilled: Icon;
 }
 
 declare module "@rn-primitives/slot" {
