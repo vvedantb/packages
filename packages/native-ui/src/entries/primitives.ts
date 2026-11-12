@@ -49,6 +49,8 @@ export { Progress } from "../Progress";
 export type { ProgressProps } from "../Progress";
 export { Spinner, CenteredSpinner } from "../Spinner";
 export type { SpinnerProps } from "../Spinner";
+export { LoadingState } from "../LoadingState";
+export type { LoadingStateProps, LoadingStateSize } from "../LoadingState";
 export { Avatar, AvatarImage, AvatarFallback } from "../Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "../Avatar";
 export { initials } from "../initials";

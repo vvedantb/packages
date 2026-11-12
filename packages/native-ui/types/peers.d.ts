@@ -508,6 +508,16 @@ declare module "react-native-reanimated" {
   ): T;
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
   export function useReducedMotion(): boolean;
+  /** One callback per frame on the UI thread (`LoadingState`'s clock). */
+  export interface FrameInfo {
+    timestamp: number;
+    timeSincePreviousFrame: number | null;
+    timeSinceFirstFrame: number;
+  }
+  export function useFrameCallback(
+    callback: (frameInfo: FrameInfo) => void,
+    autostart?: boolean,
+  ): { setActive(isActive: boolean): void; isActive: boolean; callbackId: number };
 
   // The sheet body's scroll on the UI thread (`src/primitives/sheet-gesture.tsx`).
   export interface AnimatedRef<T> {

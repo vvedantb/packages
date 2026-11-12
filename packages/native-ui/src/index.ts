@@ -86,6 +86,8 @@ export { Spinner, CenteredSpinner } from "./Spinner";
 export { KeyboardAvoidingView } from "./primitives/keyboard-parts";
 export type { KeyboardAvoidingViewProps } from "./primitives/keyboard-parts";
 export type { SpinnerProps } from "./Spinner";
+export { LoadingState } from "./LoadingState";
+export type { LoadingStateProps, LoadingStateSize } from "./LoadingState";
 export { Avatar, AvatarImage, AvatarFallback } from "./Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "./Avatar";
 export { initials } from "./initials";
