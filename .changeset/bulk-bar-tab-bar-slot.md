@@ -7,3 +7,5 @@
 `FloatingTabBar` draws nothing while the focused route's `tabBarStyle` resolves to `display: "none"`, as React Navigation's own bar does. A screen hides the bar with `navigation.setOptions` or Expo Router's `<Tabs.Screen options>` inside the screen. New type: `BulkBarPlacement`.
 
 `PageHeader` takes `leading`: content before the title, such as a close button while a page is in select mode.
+
+Docked, the bar has no Cancel (X): the screen header carries the exit, as Android's contextual action bar, which leaves room for every label.

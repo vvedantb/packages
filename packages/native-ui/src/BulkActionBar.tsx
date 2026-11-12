@@ -141,15 +141,18 @@ export function BulkActionBar({
   if (!isSelecting) return null;
   const docked = placement === "tabBar";
   const metrics = barMetrics(largerText, docked);
-  const pinned = pinCancel || docked;
+  // Docked has no X to pin: the header holds it.
+  const pinned = pinCancel && !docked;
   // Docked, every action shows its label (under the icon).
   const labelled = docked || width >= BULK_BAR_LABEL_MIN_WIDTH;
   const hasSelection = selectedCount > 0;
   const allSelected = totalCount > 0 && selectedCount >= totalCount;
   const muted = tokens.color.muted[scheme];
-  const cancel = (
+  // Docked, the screen's header carries the close X (Android's contextual
+  // action bar), so the bar has none: one exit, and room for every label.
+  const cancel = docked ? null : (
     <>
-      {docked ? null : <BarDivider />}
+      <BarDivider />
       <BarPressable height={metrics.height} paddingX={0} docked={docked} label="Cancel selection" onPress={onExitSelect}>
         <IconX size={metrics.icon} color={muted} />
       </BarPressable>
@@ -187,7 +190,7 @@ export function BulkActionBar({
             bounces={false}
             showsHorizontalScrollIndicator={false}
             // Pinned: the scroll gives up width first, and the X part keeps the right padding.
-            style={pinned ? { flexShrink: 1 } : undefined}
+            style={pinned || docked ? { flexShrink: 1 } : undefined}
             contentContainerStyle={{
               // Docked, the actions grow to fill the bar, and it scrolls only when they do not fit.
               ...(docked ? { flexGrow: 1 } : null),
@@ -195,7 +198,7 @@ export function BulkActionBar({
               alignItems: "center",
               gap: docked ? 0 : 4,
               paddingLeft: docked ? 8 : 10,
-              paddingRight: pinned ? 0 : 10,
+              paddingRight: docked ? 8 : pinned ? 0 : 10,
               paddingVertical: docked ? 0 : 8,
             }}
           >

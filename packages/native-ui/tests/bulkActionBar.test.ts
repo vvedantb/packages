@@ -249,23 +249,21 @@ describe("BulkActionBar", () => {
       expect((label.props.style as Style[])[0]).toEqual({ fontSize: 12, lineHeight: 16 });
       (action.props.onPress as () => void)();
       expect(read.onClick).toHaveBeenCalledOnce();
-      // Select all and Cancel keep their own width.
+      // Select all keeps its own width; the header, not the bar, holds the X.
       const selectAll = find(tree, (element) => element.type === "Pressable" && text(element)[0] === "Select all (5)");
       expect(pressStyle(selectAll).flexGrow).toBeUndefined();
-      expect(pressStyle(button(tree, "Cancel selection"))).toMatchObject({ height: 48, minWidth: 48 });
+      expect(button(tree, "Cancel selection")).toBeUndefined();
     });
 
-    it("pins Cancel outside the scroll, which grows to fill the bar, with no dividers", async () => {
+    it("has no Cancel (the header's X exits), and its scroll grows to fill the bar, with no dividers", async () => {
       const { tree, onExitSelect } = await docked();
       const scroll = find(tree, (element) => element.type === "ScrollView");
       expect(scroll.props.style).toEqual({ flexShrink: 1 });
-      expect(scroll.props.contentContainerStyle).toMatchObject({ flexGrow: 1, gap: 0, paddingLeft: 8, paddingRight: 0, paddingVertical: 0 });
+      expect(scroll.props.contentContainerStyle).toMatchObject({ flexGrow: 1, gap: 0, paddingLeft: 8, paddingRight: 8, paddingVertical: 0 });
       // No dividers, as the tab bar, even with a destructive action.
       const withDelete = await docked({ destructiveAction: remove });
       expect(elements(withDelete.tree).filter((element) => (element.props.style as Style | undefined)?.width === 1)).toHaveLength(0);
-      expect(button(scroll, "Cancel selection")).toBeUndefined();
-      (button(tree, "Cancel selection").props.onPress as () => void)();
-      expect(onExitSelect).toHaveBeenCalledOnce();
+      expect(button(tree, "Cancel selection")).toBeUndefined();
     });
 
     it("steps up to 56 high, a 24 icon and a 14 label with larger text, in the 72 bar", async () => {
