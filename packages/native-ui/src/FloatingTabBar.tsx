@@ -10,16 +10,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { floatingTabPillColors, tabColors, typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
 import { FloatingSurface } from "./FloatingSurface";
-import { isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
+import { isTabBarHidden, isTabBarRouteVisible, type FloatingTabOptions } from "./tabBarRoutes";
 import { useLargerText } from "./theme";
 import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
-import {
-  FLOATING_INSET,
-  FLOATING_PILL_RADIUS,
-  FLOATING_TAB_BAR_HEIGHT,
-  FLOATING_TAB_BAR_HEIGHT_LARGE,
-} from "./floating";
+import { FLOATING_PILL_RADIUS, tabBarHeight, tabBarSlotStyle } from "./floating";
 
 /**
  * Space between the bar edge and the tabs, on every side of the active pill,
@@ -58,7 +53,8 @@ export type FloatingTabBarProps = {
  * `tabBarActiveTintColor` and `tabBarInactiveTintColor` override the label
  * and icon colours. Hide a tab with `options={{ href: null }}` on its
  * `Tabs.Screen`: the bar draws no tab for it (`isTabBarRouteVisible`), and
- * the other tabs keep their focus and navigation.
+ * the other tabs keep their focus and navigation. The focused route hides the
+ * whole bar with `tabBarStyle: { display: "none" }` (`isTabBarHidden`).
  */
 export function FloatingTabBar({
   state,
@@ -68,27 +64,22 @@ export function FloatingTabBar({
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
   const scheme = useScheme();
-  const height = largerText
-    ? FLOATING_TAB_BAR_HEIGHT_LARGE
-    : FLOATING_TAB_BAR_HEIGHT;
+  const height = tabBarHeight(largerText);
+  const focusedRoute = state.routes[state.index];
+  if (focusedRoute && isTabBarHidden(descriptors[focusedRoute.key]?.options)) {
+    return null;
+  }
   // The pill counts only the tabs drawn. No pill while a hidden route is focused.
   const visible = state.routes.filter((route) =>
     isTabBarRouteVisible(descriptors[route.key]?.options),
   );
-  const active = visible.findIndex(
-    (route) => route.key === state.routes[state.index]?.key,
-  );
+  const active = visible.findIndex((route) => route.key === focusedRoute?.key);
 
   return (
     <View
       pointerEvents="box-none"
       // Inside the home indicator and, in landscape, the notch.
-      style={{
-        position: "absolute",
-        left: insets.left + FLOATING_INSET,
-        right: insets.right + FLOATING_INSET,
-        bottom: FLOATING_INSET + Math.max(insets.bottom, 8),
-      }}
+      style={tabBarSlotStyle(insets)}
     >
       <FloatingSurface radius={FLOATING_PILL_RADIUS}>
         {active >= 0 ? (

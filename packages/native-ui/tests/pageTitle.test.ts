@@ -125,8 +125,8 @@ describe("PageHeader", () => {
   async function render(props: Record<string, unknown> = {}) {
     const mod = await import("../src/PageTitle");
     const header = mod.PageHeader({ title: "Apps", ...props } as never) as unknown as Element;
-    const [title, slot] = children(header);
-    return { header, title: title!, slot, PageTitle: mod.PageTitle };
+    const [lead, title, slot] = children(header);
+    return { header, lead, title: title!, slot, PageTitle: mod.PageTitle };
   }
 
   it("pads the top by the safe-area inset by default, with a 56 row below it", async () => {
@@ -157,6 +157,16 @@ describe("PageHeader", () => {
     expect(slot!.type).toBe("View");
     expect(slot!.props.className).toBe("shrink-0");
     expect(slot!.props.children).toBe(action);
+  });
+
+  it("renders the leading part before the title, in a view that does not shrink", async () => {
+    const close = createElement("Close");
+    const { lead, title } = await render({ leading: close, title: "2 selected" });
+    expect(lead?.type).toBe("View");
+    expect(lead?.props.className).toBe("shrink-0");
+    expect(lead?.props.children).toBe(close);
+    expect(title.props.children).toBe("2 selected");
+    expect((await render()).lead).toBeNull();
   });
 
   it("renders no action slot without an action", async () => {

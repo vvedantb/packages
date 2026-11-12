@@ -118,7 +118,7 @@ export {
 export type { AlertDialogProps, AlertDialogContentProps } from "../AlertDialog";
 export { ConfirmDialog } from "../ConfirmDialog";
 export { BulkActionBar, BULK_BAR_LABEL_MIN_WIDTH } from "../BulkActionBar";
-export type { BulkActionBarProps, BulkBarAction } from "../BulkActionBar";
+export type { BulkActionBarProps, BulkBarAction, BulkBarPlacement } from "../BulkActionBar";
 export {
   DropdownMenu,
   DropdownMenuTrigger,

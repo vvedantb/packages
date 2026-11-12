@@ -285,9 +285,7 @@ describe("safe area and keyboard", () => {
     const toast = read("Toast.tsx");
     expect(toast).toMatch(/top: insets\.top \+ offset,/);
     expect(toast).toMatch(/left: insets\.left \+ FLOATING_INSET,\s+right: insets\.right \+ FLOATING_INSET,/);
-    const bar = read("FloatingTabBar.tsx");
-    expect(bar).toMatch(/left: insets\.left \+ FLOATING_INSET,\s+right: insets\.right \+ FLOATING_INSET,/);
-    expect(bar).toMatch(/bottom: FLOATING_INSET \+ Math\.max\(insets\.bottom, 8\),/);
+    // The tab bar's slot (`tabBarSlotStyle`) is checked by calling it, in tabBar.test.ts.
     const fab = read("FloatingFAB.tsx");
     expect(fab).toMatch(/right: insets\.right \+ FLOATING_INSET,/);
     expect(fab).toMatch(/bottom: FLOATING_INSET \+ Math\.max\(insets\.bottom, 8\) \+ tabBar \+ 20,/);
