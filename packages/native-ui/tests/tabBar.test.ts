@@ -25,6 +25,8 @@ const reduceMotion = vi.hoisted(() => ({ value: false }));
 const withTiming = vi.hoisted(() => vi.fn((to: number, _config?: unknown) => to));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  useContext: () => 0,
   useEffect: (effect: () => void) => effect(),
 }));
 vi.mock("react-native-reanimated", () => ({

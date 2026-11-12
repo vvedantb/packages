@@ -18,6 +18,9 @@ import { svgA11yProps } from "../src/svgA11y";
 const platform = vi.hoisted(() => ({ OS: "web" }));
 vi.mock("react-native", () => ({ Platform: platform }));
 vi.mock("react-native-svg", () => ({ default: "Svg", G: "G", Path: "Path", Rect: "Rect" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));

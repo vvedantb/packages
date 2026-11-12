@@ -14,6 +14,9 @@ vi.mock("react-native", () => ({
   View: "View",
   Platform: { select: (options: { default: string }) => options.default },
 }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
 

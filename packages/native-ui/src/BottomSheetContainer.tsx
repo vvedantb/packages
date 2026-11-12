@@ -5,13 +5,13 @@ import {
 } from "@gorhom/bottom-sheet";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRef, useEffect, useCallback, JSX } from "react";
-import { useColorScheme } from "nativewind";
 import { Colors } from "./colors";
 import { textStyle, typeStyle } from "./controlStyles";
 import { IconX } from "@tabler/icons-react-native";
 import { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
 import { GlassSheetBackground } from "./LiquidGlass";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 export function BottomSheetContainer({
   visible,
@@ -28,7 +28,7 @@ export function BottomSheetContainer({
 }) {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const largerText = useLargerText();
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useScheme();
 
   useEffect(() => {
     if (visible) {
