@@ -109,14 +109,21 @@ const MAX_VISIBLE_ROWS = 8;
 /** Max nested child rows shown under a subtask before "+N more". */
 const MAX_VISIBLE_CHILDREN = 8;
 
-const HIDDEN_TYPES = new Set<ActivityStep["type"]>(["thinking", "response"]);
+/**
+ * Both layouts show mid-turn reply text in the timeline, in the order it was
+ * written, so a live turn never stacks its first words below newer steps.
+ */
+const HIDDEN_TYPES = new Set<ActivityStep["type"]>(["thinking"]);
 
-/** Inline layout shows mid-turn reply text in the timeline; thinking stays hidden. */
-const INLINE_HIDDEN_TYPES = new Set<ActivityStep["type"]>(["thinking"]);
+/** A subagent's own text belongs to its child thread view, not under its row. */
+const HIDDEN_CHILD_TYPES = new Set<ActivityStep["type"]>([
+  "thinking",
+  "response",
+]);
 
 /**
- * `folded` (Codex-style): a settled turn collapses behind "Worked for …",
- * long timelines cap behind "Show N more", and mid-turn text is hidden.
+ * `folded` (Codex-style): a settled turn collapses behind "Worked for …" and
+ * long timelines cap behind "Show N more".
  * `inline` (Claude-style): every step and the text between them stay open.
  */
 export type ActivityLayout = "folded" | "inline";
@@ -396,10 +403,8 @@ function ActivityStepRow({
   if (step.type === "reasoning") return <ActivityReasoningLine step={step} />;
 
   const Icon = iconForStep(step);
-  // A subagent's own text (`response` children) belongs to its child thread
-  // view, not the parent's timeline.
   const childRows = (children ?? []).filter(
-    (child) => !HIDDEN_TYPES.has(child.step.type),
+    (child) => !HIDDEN_CHILD_TYPES.has(child.step.type),
   );
   const openSubagent =
     step.type === "subtask" ? (
@@ -693,10 +698,9 @@ export const ActivityTasks = memo(
   }: ActivityTasksProps) => {
     const merge = useCn();
     const inline = layout === "inline";
-    const hiddenTypes = inline ? INLINE_HIDDEN_TYPES : HIDDEN_TYPES;
     const rows = buildActivityRows(steps).filter(
       (row) =>
-        !hiddenTypes.has(row.step.type) &&
+        !HIDDEN_TYPES.has(row.step.type) &&
         // A subagent's text whose Agent row is missing still belongs to its
         // child thread, never to the parent's inline reply.
         !(row.step.type === "response" && row.step.parentToolUseId),
