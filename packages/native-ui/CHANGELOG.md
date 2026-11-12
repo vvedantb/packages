@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.0
+
+### Minor Changes
+
+- [#197](https://github.com/vvedantb/packages/pull/197) [`ecb3b9e`](https://github.com/vvedantb/packages/commit/ecb3b9e7491f79ca801bdb55b5f2e02f6a54f062) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Chat media parts. `ImageGallery` is the web `ImageGalleryPreview`: one image at its own shape (at most 384 high), or a 2 x 2 grid of 4:3 tiles with "+N" on the fourth; a tap opens `ImageViewer`, the web `ImageLightbox` on a phone (full screen, swipe between images, "2 / 5", close and "Open in browser"; no pinch zoom). `MediaCard` is a 56 pt card for a turn's output: an icon, a title, a muted line, and either a press or a trailing control. Two new optional entries, each the only one that imports its peer: `@vvedantb/native-ui/video` (`InlineVideo` on `expo-video`: a fixed 16:9 box, no autoplay, the player mounts on the first press with the platform controls) and `@vvedantb/native-ui/webview` (`HtmlView` on `react-native-webview`: an HTML document with scripts on, incognito with no storage, cookies or file access, every top-level http(s) link and popup handed to `onOpenLink`, other schemes dropped, and the page's height reported for a box that fits it; a sandboxed iframe on web). `expo-video` and `react-native-webview` are new optional peers.
+
 ## 0.16.0
 
 ### Minor Changes
