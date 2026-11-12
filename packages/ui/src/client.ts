@@ -326,6 +326,9 @@ export type {
   SiteFooterProps,
   SiteFooterSocial,
 } from "./marketing/SiteFooter";
+export { ProductHero } from "./marketing/ProductHero";
+export type { ProductHeroAction, ProductHeroProps } from "./marketing/ProductHero";
+export { PROJECT_V_HOME_URL } from "./marketing/projectV";
 export { PricingModal, V_PRO_APP_BENEFITS } from "./marketing/PricingModal";
 export type {
   PricingModalLegacyProps,
