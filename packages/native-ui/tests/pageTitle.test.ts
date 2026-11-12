@@ -23,6 +23,9 @@ vi.mock("react-native", () => ({ Text: "Text", View: "View" }));
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
 }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
@@ -122,8 +125,8 @@ describe("PageHeader", () => {
   async function render(props: Record<string, unknown> = {}) {
     const mod = await import("../src/PageTitle");
     const header = mod.PageHeader({ title: "Apps", ...props } as never) as unknown as Element;
-    const [title, slot] = children(header);
-    return { header, title: title!, slot, PageTitle: mod.PageTitle };
+    const [lead, title, slot] = children(header);
+    return { header, lead, title: title!, slot, PageTitle: mod.PageTitle };
   }
 
   it("pads the top by the safe-area inset by default, with a 56 row below it", async () => {
@@ -154,6 +157,16 @@ describe("PageHeader", () => {
     expect(slot!.type).toBe("View");
     expect(slot!.props.className).toBe("shrink-0");
     expect(slot!.props.children).toBe(action);
+  });
+
+  it("renders the leading part before the title, in a view that does not shrink", async () => {
+    const close = createElement("Close");
+    const { lead, title } = await render({ leading: close, title: "2 selected" });
+    expect(lead?.type).toBe("View");
+    expect(lead?.props.className).toBe("shrink-0");
+    expect(lead?.props.children).toBe(close);
+    expect(title.props.children).toBe("2 selected");
+    expect((await render()).lead).toBeNull();
   });
 
   it("renders no action slot without an action", async () => {

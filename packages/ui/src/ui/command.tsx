@@ -131,7 +131,7 @@ const CommandInput = React.forwardRef<
         ref={ref}
         className={merge(
           config?.classes?.input ??
-            "flex h-11 w-full max-sm:min-w-0 bg-transparent text-base sm:text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-11 w-full max-sm:min-w-0 bg-transparent text-base sm:pointer-fine:text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
         {...props}

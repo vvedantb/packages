@@ -43,6 +43,8 @@ const hooks = vi.hoisted(() => {
 
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  useContext: () => 0,
   useState: hooks.useState,
 }));
 vi.mock("react-native", () => ({
@@ -561,12 +563,18 @@ describe("SheetRow", () => {
       accessibilityRole: "button",
       accessibilityLabel: "Delete",
       accessibilityHint: "From all devices",
-      accessibilityState: { disabled: false, selected: false },
+      accessibilityState: { disabled: false },
       onPress,
     });
     expect(tree.props.className).toMatch(/min-h-14/);
     expect(pressedFill(tree, true)).toBe(palette.default.light);
     expect(pressedFill(tree, false)).toBe("transparent");
+  });
+
+  it("draws a leading mark in place of the icon", async () => {
+    const tree = await sheetRow({ leading: "MARK", icon: TestIcon });
+    expect(tree.props.children).toContain("MARK");
+    expect(ofType(tree, TestIcon)).toHaveLength(0);
   });
 
   it("draws danger rows in the danger colour, title and icon", async () => {
@@ -578,10 +586,24 @@ describe("SheetRow", () => {
     expect(ofType(plain, TestIcon)[0]!.props.color).toBe(tokens.color.foreground.light);
   });
 
+  it("draws warning rows (the web Archive) in the warning colour, title and icon", async () => {
+    const tree = await sheetRow({ warning: true, icon: TestIcon });
+    expect(ofType(tree, TestIcon)[0]!.props.color).toBe(palette.warning.light);
+    const title = ofType(tree, "Text").find((text) => text.props.children === "Delete")!;
+    expect(flatten(title.props.style).color).toBe(palette.warning.light);
+  });
+
   it("checks the active row and dims a disabled one", async () => {
     const active = await sheetRow({ active: true });
     expect(ofType(active, "IconCheck")).toHaveLength(1);
-    expect(active.props.accessibilityState).toMatchObject({ selected: true });
+    expect(active.props.accessibilityRole).toBe("radio");
+    expect(active.props.accessibilityState).toEqual({ disabled: false, checked: true });
+    const other = await sheetRow({ active: false });
+    expect(other.props.accessibilityRole).toBe("radio");
+    expect(other.props.accessibilityState).toEqual({ disabled: false, checked: false });
+    expect(ofType(other, "IconCheck")).toHaveLength(0);
+    const multiple = await sheetRow({ active: true, multiple: true });
+    expect(multiple.props.accessibilityRole).toBe("checkbox");
     expect(ofType(await sheetRow(), "IconCheck")).toHaveLength(0);
     const disabled = await sheetRow({ disabled: true, onPress: () => {} });
     expect(disabled.props.disabled).toBe(true);

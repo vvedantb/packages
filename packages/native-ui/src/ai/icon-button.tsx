@@ -13,12 +13,15 @@ export const CHAT_ICON_BUTTON_SIZE = 32;
 /**
  * Side and icon per size: `sm` is the web `icon-sm` (32, 16 icon), `xs` the
  * web `icon-xs` (28, 14 icon) and `md` the web `size-9` (36, 16 icon), Eva's
- * composer send button.
+ * composer send button. `touch` has no web twin: a 44 square with a 16 icon,
+ * for a row of ghost buttons a thumb taps (the message actions), where the
+ * web 28 squares 2 apart are a mouse's density.
  */
 const CHAT_ICON_BUTTON = {
   xs: { side: 28, icon: 14, className: "h-7 w-7" },
   sm: { side: CHAT_ICON_BUTTON_SIZE, icon: 16, className: "h-8 w-8" },
   md: { side: 36, icon: 16, className: "h-9 w-9" },
+  touch: { side: MIN_TOUCH_TARGET, icon: 16, className: "h-11 w-11" },
 } as const;
 
 export type ChatIconButtonSize = keyof typeof CHAT_ICON_BUTTON;
@@ -31,6 +34,14 @@ export type ChatIconButtonProps = Omit<ButtonProps, "children" | "size" | "icon"
   iconColor?: string;
   /** Default `sm`. Larger text paints each 44 with a 20 icon. */
   size?: ChatIconButtonSize;
+  /**
+   * `"square"` (default) slops to 44 on every side. `"vertical"` slops only
+   * the height to 44, for a dense row (the message actions sit 2 to 4 apart),
+   * where sideways slop would overlap the next button and steal its taps.
+   * `{ left, right }` is `"vertical"` plus that much on each side, for the
+   * outer side of a button at the end of such a row.
+   */
+  slop?: "square" | "vertical" | { left: number; right: number };
 };
 
 /**
@@ -46,6 +57,7 @@ export function ChatIconButton({
   iconColor,
   variant = "ghost",
   size = "sm",
+  slop = "square",
   className,
   ...props
 }: ChatIconButtonProps) {
@@ -60,7 +72,11 @@ export function ChatIconButton({
       variant={variant}
       size="icon"
       accessibilityLabel={label}
-      hitSlop={touchSlop(metrics.side)}
+      hitSlop={
+        slop === "square"
+          ? touchSlop(metrics.side)
+          : { ...touchSlop(MIN_TOUCH_TARGET, metrics.side), ...(slop === "vertical" ? null : slop) }
+      }
       className={cn(metrics.className, className)}
       {...props}
     >

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { cn } from "../cn";
+import { KeyboardAvoidingView, KeyboardLiftContext } from "../primitives/keyboard-parts";
 import {
   Conversation,
   ConversationContent,
@@ -48,10 +49,10 @@ function lastIndexOfRole(messages: UIMessage[], role: UIMessage["role"]) {
  * The chat column as one piece: `Conversation`, `ConversationContent`, the
  * messages, a `thinking` row right after the last user message while
  * `working`, `ConversationScrollButton` and the `footer` last. The whole
- * column sits in a `KeyboardAvoidingView` (`padding`, as `PromptInput`), which
- * also lifts the footer on Android edge-to-edge, where the window does not
- * resize. A `PromptInput` footer has its own `KeyboardAvoidingView`; the outer
- * lift moves it clear of the keyboard, so it adds no second lift.
+ * column sits in a `KeyboardAvoidingView` (`padding`, as `PromptInput`; frame
+ * by frame with `KeyboardControllerProvider`), which also lifts the footer on
+ * Android edge-to-edge, where the window does not resize. A `PromptInput`
+ * footer and the scroll button add no lift of their own (`KeyboardLiftContext`).
  */
 export function ChatThread<M extends UIMessage = UIMessage>({
   messages,
@@ -69,28 +70,34 @@ export function ChatThread<M extends UIMessage = UIMessage>({
   const streaming = working ? lastIndexOfRole(messages, "assistant") : -1;
 
   return (
-    <KeyboardAvoidingView
-      testID={testID}
-      behavior="padding"
-      keyboardVerticalOffset={keyboardVerticalOffset}
-      className={cn("flex-1", className)}
-    >
-      <Conversation>
-        <ConversationContent contentContainerClassName={contentContainerClassName}>
-          {messages.length === 0
-            ? emptyState
-            : messages.map((message, index) => (
-                <View key={message.id}>
-                  {renderMessage(message, index === streaming)}
-                  {index === lastUser && thinking != null ? (
-                    <View className="mt-4">{thinking}</View>
-                  ) : null}
-                </View>
-              ))}
-        </ConversationContent>
-        <ConversationScrollButton testID="chat-thread-scroll-bottom" />
-      </Conversation>
-      {footer}
+    <KeyboardAvoidingView testID={testID} keyboardVerticalOffset={keyboardVerticalOffset} style={styles.fill}>
+      {/* The column lifts as a whole: the parts in it add no lift of their own. */}
+      <KeyboardLiftContext.Provider value>
+        <View className={cn("flex-1", className)}>
+          <Conversation>
+            <ConversationContent contentContainerClassName={contentContainerClassName}>
+              {messages.length === 0
+                ? emptyState
+                : messages.map((message, index) => (
+                    <View key={message.id}>
+                      {renderMessage(message, index === streaming)}
+                      {index === lastUser && thinking != null ? (
+                        <View className="mt-4">{thinking}</View>
+                      ) : null}
+                    </View>
+                  ))}
+            </ConversationContent>
+            <ConversationScrollButton testID="chat-thread-scroll-bottom" />
+          </Conversation>
+          {footer}
+        </View>
+      </KeyboardLiftContext.Provider>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
+});

@@ -284,11 +284,13 @@
     );
   }
 
-  .sidebar-section-label:hover {
-    color: color-mix(
-      in oklch,
-      var(--muted) var(--sidebar-section-label-hover-mix),
-      transparent
-    );
+  @media (hover: hover) and (pointer: fine) {
+    .sidebar-section-label:hover {
+      color: color-mix(
+        in oklch,
+        var(--muted) var(--sidebar-section-label-hover-mix),
+        transparent
+      );
+    }
   }
 }

@@ -42,11 +42,15 @@ export type { IconButtonProps, IconButtonSize, IconButtonVariant } from "../Icon
 export { CaptureButton } from "../CaptureButton";
 export type { CaptureButtonProps } from "../CaptureButton";
 export { Separator } from "../Separator";
+export { KeyboardAvoidingView } from "../primitives/keyboard-parts";
+export type { KeyboardAvoidingViewProps } from "../primitives/keyboard-parts";
 export type { SeparatorProps } from "../Separator";
 export { Progress } from "../Progress";
 export type { ProgressProps } from "../Progress";
 export { Spinner, CenteredSpinner } from "../Spinner";
 export type { SpinnerProps } from "../Spinner";
+export { LoadingState } from "../LoadingState";
+export type { LoadingStateProps, LoadingStateSize } from "../LoadingState";
 export { Avatar, AvatarImage, AvatarFallback } from "../Avatar";
 export type { AvatarProps, AvatarImageProps, AvatarFallbackProps } from "../Avatar";
 export { initials } from "../initials";
@@ -54,6 +58,8 @@ export { formatCompactRelativeTime } from "../relativeTime";
 export type { CompactRelativeTimeOptions } from "../relativeTime";
 export { Chip } from "../Chip";
 export { PillTabs } from "../PillTabs";
+export { Pager } from "../Pager";
+export type { PagerProps } from "../Pager";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "../Tabs";
 export type {
   TabsProps,
@@ -63,9 +69,21 @@ export type {
   TabsContentProps,
 } from "../Tabs";
 export { ListRow } from "../ListRow";
-export { DividedList } from "../DividedList";
+export { DividedList, ListDivider } from "../DividedList";
 export type { DividedListProps } from "../DividedList";
 export type { ListRowProps } from "../ListRow";
+export { SwipeableRow } from "../SwipeableRow";
+export type { SwipeableRowProps } from "../SwipeableRow";
+export { closeSwipeRows, swipeActionsAccessibility } from "../swipeRow";
+export type { SwipeAction } from "../swipeRow";
+export { ImageGallery, ImageViewer } from "../media/ImageGallery";
+export type { ImageGalleryProps, ImageViewerProps } from "../media/ImageGallery";
+export { MediaCard } from "../media/MediaCard";
+export type { MediaCardProps } from "../media/MediaCard";
+export { imageAspect, imageGridTiles, imageViewerPage, MEDIA } from "../media/imageGrid";
+export type { GalleryImage, ImageGridTile } from "../media/imageGrid";
+export { SurfaceRow, SURFACE_ROW } from "../SurfaceRow";
+export type { SurfaceRowProps } from "../SurfaceRow";
 export { HeaderIconButton } from "../HeaderIconButton";
 export { ThemeToggle } from "../ThemeToggle";
 export type { ThemeToggleProps } from "../ThemeToggle";
@@ -78,7 +96,8 @@ export {
   CardFooter,
 } from "../Card";
 export type { CardProps } from "../Card";
-export { Skeleton, CardSkeleton } from "../Skeleton";
+export { Skeleton, CardSkeleton, SkeletonList, SkeletonRow } from "../Skeleton";
+export type { SkeletonListProps, SkeletonRowProps } from "../Skeleton";
 export { EmptyState } from "../EmptyState";
 export type { EmptyStateVariant } from "../EmptyState";
 export {
@@ -107,7 +126,7 @@ export {
 export type { AlertDialogProps, AlertDialogContentProps } from "../AlertDialog";
 export { ConfirmDialog } from "../ConfirmDialog";
 export { BulkActionBar, BULK_BAR_LABEL_MIN_WIDTH } from "../BulkActionBar";
-export type { BulkActionBarProps, BulkBarAction } from "../BulkActionBar";
+export type { BulkActionBarProps, BulkBarAction, BulkBarPlacement } from "../BulkActionBar";
 export {
   DropdownMenu,
   DropdownMenuTrigger,

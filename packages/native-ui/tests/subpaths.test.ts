@@ -106,10 +106,17 @@ const HEAVY_PEERS: Record<string, string | null> = {
   convex: null,
   "expo-auth-session": null,
   "expo-web-browser": null,
+  // Only /gesture-handler imports it; every other entry drags with `PanResponder`.
+  "react-native-gesture-handler": null,
+  // Only /keyboard-controller imports it; every other entry keeps React Native's `KeyboardAvoidingView`.
+  "react-native-keyboard-controller": null,
+  // Only /video and /webview import these.
+  "expo-video": null,
+  "react-native-webview": null,
 };
 
 // Entries that may import heavy peers. Every other entry in `exports` must not.
-const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
+const HEAVY_ENTRIES = [".", "./gallery", "./bottom-sheet", "./gesture-handler", "./keyboard-controller", "./video", "./webview", "./date-time", "./auth", "./expo-router", "./expo-web-root"];
 
 const basicEntries = Object.keys(pkg.exports).filter(
   (subpath) => subpath !== "./package.json" && !HEAVY_ENTRIES.includes(subpath),
@@ -162,14 +169,17 @@ describe("granular entries", () => {
     expect(heavyRefs("./ai-gallery")).toEqual(loader);
   });
 
-  it("brand, button, search-input, page-title, and toast reach no heavy peer, not even a loader", () => {
+  it("brand, button, search-input and page-title reach no heavy peer, not even a loader", () => {
     expect(heavyRefs("./brand")).toEqual([]);
     expect(heavyRefs("./button")).toEqual([]);
     expect(heavyRefs("./search-input")).toEqual([]);
     expect(heavyRefs("./password-input")).toEqual([]);
     expect(heavyRefs("./page-title")).toEqual([]);
+  });
+
+  it("toast reaches expo-haptics only through the optional-peer loader (success and error haptics)", () => {
     // From 0.3.12 the toast surface is flat, so the entry no longer reaches the expo-blur loader.
-    expect(heavyRefs("./toast")).toEqual([]);
+    expect(heavyRefs("./toast")).toEqual(["haptics.ts: lazy expo-haptics", "haptics.ts: type expo-haptics"]);
   });
 
   it("loads expo-linear-gradient on the ambient entry only through its loader", () => {
@@ -190,6 +200,12 @@ describe("granular entries", () => {
   // entries do have.
   it("finds the static heavy imports on the heavy entries", () => {
     expect(heavyRefs("./bottom-sheet")).toContain("BottomSheetContainer.tsx: static @gorhom/bottom-sheet");
+    expect(heavyRefs("./gesture-handler")).toContain("primitives/sheet-gesture.tsx: static react-native-gesture-handler");
+    expect(heavyRefs("./keyboard-controller")).toEqual([
+      "primitives/keyboard-controller.tsx: static react-native-keyboard-controller",
+    ]);
+    expect(heavyRefs("./video")).toEqual(["video/InlineVideo.tsx: static expo-video"]);
+    expect(heavyRefs("./webview")).toEqual(["webview/HtmlView.tsx: static react-native-webview"]);
     expect(heavyRefs("./date-time")).toEqual([
       "DateTimeField.tsx: static @react-native-community/datetimepicker",
       "DateTimeField.tsx: static dayjs",
@@ -199,6 +215,11 @@ describe("granular entries", () => {
     expect(rootRefs).toContain("DateTimeField.tsx: static dayjs");
     // The root entry no longer imports expo-router or expo-linear-gradient.
     expect(rootRefs.filter((ref) => / static expo-/.test(ref))).toEqual([]);
+    // Nor Gesture Handler or keyboard-controller: an app opts in with /gesture-handler and /keyboard-controller.
+    expect(rootRefs.filter((ref) => ref.endsWith(" react-native-gesture-handler"))).toEqual([]);
+    expect(rootRefs.filter((ref) => ref.endsWith(" react-native-keyboard-controller"))).toEqual([]);
+    // Nor the video player or WebView: /video and /webview.
+    expect(rootRefs.filter((ref) => ref.endsWith(" expo-video") || ref.endsWith(" react-native-webview"))).toEqual([]);
   });
 
   it("names the optional-peer modules only in their loaders, across the whole package", () => {
@@ -231,6 +252,8 @@ describe("granular entries", () => {
         "AppWordmark",
         "GoogleMark",
         "GoogleMarkProps",
+        "ProviderIcon",
+        "ProviderIconProps",
         "APP_ICONS",
         "IconVibot",
         "IconProjectV",

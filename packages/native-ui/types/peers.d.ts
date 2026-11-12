@@ -11,8 +11,14 @@
 
 declare function setTimeout(callback: () => void, ms?: number): number;
 declare function clearTimeout(handle: number | undefined): void;
+declare function requestAnimationFrame(callback: (time: number) => void): number;
 // `src/ThemeToggle.tsx` logs a failed `setColorScheme`; `src/auth/SignInScreen.tsx` warns on an unhandled sign-in status.
 declare const console: { error(...data: unknown[]): void; warn(...data: unknown[]): void };
+// React Native's global `URL`; `src/ai/activity-step-label.ts` (a copy of the web file) reads a fetched page's host.
+declare class URL {
+  constructor(url: string);
+  readonly hostname: string;
+}
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`, `src/highlight.ts`). React Native's own typing returns
 // `any`; `src/highlight.ts` assigns without a cast, so its peer has an overload.
@@ -25,6 +31,8 @@ declare module "react-native" {
   export type PlatformOSType = "ios" | "android" | "web" | "windows" | "macos";
   export const Platform: {
     OS: PlatformOSType;
+    /** The Android API level, or the iOS version string. */
+    Version: number | string;
     select<T>(
       specifics: Partial<Record<PlatformOSType | "native" | "default", T>>,
     ): T | undefined;
@@ -100,6 +108,8 @@ declare module "react-native" {
     accessibilityViewIsModal?: boolean;
     accessibilityLiveRegion?: "none" | "polite" | "assertive";
     importantForAccessibility?: "auto" | "yes" | "no" | "no-hide-descendants";
+    accessibilityActions?: ReadonlyArray<{ name: string; label?: string }>;
+    onAccessibilityAction?: (event: { nativeEvent: { actionName: string } }) => void;
     role?: Role;
     "aria-level"?: number | string;
     "aria-hidden"?: boolean;
@@ -116,6 +126,8 @@ declare module "react-native" {
     onLayout?: (event: LayoutChangeEvent) => void;
     onAccessibilityEscape?: () => void;
     collapsable?: boolean;
+    onStartShouldSetResponderCapture?: () => boolean;
+    onResponderRelease?: () => void;
   }
   export class View extends React.Component<ViewProps> {
     measureInWindow(callback: (x: number, y: number, width: number, height: number) => void): void;
@@ -133,6 +145,7 @@ declare module "react-native" {
     allowFontScaling?: boolean;
     maxFontSizeMultiplier?: number;
     onPress?: (event: GestureResponderEvent) => void;
+    onLayout?: (event: LayoutChangeEvent) => void;
   }
   export class Text extends React.Component<TextProps> {}
 
@@ -182,6 +195,7 @@ declare module "react-native" {
     autoCorrect?: boolean;
     keyboardType?: string;
     returnKeyType?: string;
+    submitBehavior?: "submit" | "blurAndSubmit" | "newline";
     secureTextEntry?: boolean;
     autoComplete?: string;
     textContentType?: string;
@@ -209,15 +223,20 @@ declare module "react-native" {
     horizontal?: boolean;
     showsVerticalScrollIndicator?: boolean;
     showsHorizontalScrollIndicator?: boolean;
+    /** Android: fades the scrolling edges over this many points. */
+    fadingEdgeLength?: number;
     keyboardShouldPersistTaps?: "always" | "never" | "handled";
     keyboardDismissMode?: "none" | "on-drag" | "interactive";
     bounces?: boolean;
     alwaysBounceVertical?: boolean;
+    scrollEnabled?: boolean;
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle?: number;
     onContentSizeChange?: (width: number, height: number) => void;
     refreshControl?: React.ReactElement<RefreshControlProps>;
+    fadingEdgeLength?: number;
+    maintainVisibleContentPosition?: { minIndexForVisible: number; autoscrollToTopThreshold?: number | null } | null;
   }
   export interface RefreshControlProps extends ViewProps {
     refreshing: boolean;
@@ -229,6 +248,32 @@ declare module "react-native" {
   export class RefreshControl extends React.Component<RefreshControlProps> {}
   export class ScrollView extends React.Component<ScrollViewProps> {
     scrollToEnd(options?: { animated?: boolean }): void;
+  }
+  export interface ListRenderItemInfo<T> {
+    item: T;
+    index: number;
+  }
+  export interface FlatListProps<T> extends ScrollViewProps {
+    data: ReadonlyArray<T> | null | undefined;
+    renderItem: (info: ListRenderItemInfo<T>) => React.ReactElement | null;
+    keyExtractor?: (item: T, index: number) => string;
+    ItemSeparatorComponent?: React.ComponentType | null;
+    ListEmptyComponent?: React.ComponentType | React.ReactElement | null;
+    ListFooterComponent?: React.ComponentType | React.ReactElement | null;
+    ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
+    initialNumToRender?: number;
+    windowSize?: number;
+    inverted?: boolean | null;
+    renderScrollComponent?: (props: ScrollViewProps) => React.ReactElement;
+    // `ImageViewer`'s pages.
+    pagingEnabled?: boolean;
+    initialScrollIndex?: number;
+    getItemLayout?: (data: ArrayLike<T> | null | undefined, index: number) => { length: number; offset: number; index: number };
+    onMomentumScrollEnd?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  }
+  export class FlatList<T> extends React.Component<FlatListProps<T>> {
+    scrollToEnd(options?: { animated?: boolean }): void;
+    scrollToOffset(params: { offset: number; animated?: boolean }): void;
   }
 
   export interface ModalProps {
@@ -285,6 +330,10 @@ declare module "react-native" {
   export interface KeyboardEvent {
     endCoordinates: { height: number; screenY: number; width: number; screenX: number };
   }
+  export const BackHandler: {
+    addEventListener(event: "hardwareBackPress", handler: () => boolean | null | undefined): { remove(): void };
+  };
+
   export const Keyboard: {
     addListener(
       event: "keyboardWillShow" | "keyboardDidShow" | "keyboardWillHide" | "keyboardDidHide",
@@ -321,9 +370,35 @@ declare module "react-native" {
     scale: number;
     fontScale: number;
   };
+
+  export interface PanResponderGestureState {
+    dx: number;
+    dy: number;
+    vx: number;
+    vy: number;
+  }
+  type PanResponderHandler<R> = (event: GestureResponderEvent, gesture: PanResponderGestureState) => R;
+  export interface PanResponderCallbacks {
+    onStartShouldSetPanResponder?: PanResponderHandler<boolean>;
+    onStartShouldSetPanResponderCapture?: PanResponderHandler<boolean>;
+    onMoveShouldSetPanResponder?: PanResponderHandler<boolean>;
+    onMoveShouldSetPanResponderCapture?: PanResponderHandler<boolean>;
+    onPanResponderTerminationRequest?: PanResponderHandler<boolean>;
+    onPanResponderGrant?: PanResponderHandler<void>;
+    onPanResponderMove?: PanResponderHandler<void>;
+    onPanResponderRelease?: PanResponderHandler<void>;
+    onPanResponderTerminate?: PanResponderHandler<void>;
+  }
+  export interface PanResponderInstance {
+    panHandlers: Partial<ViewProps>;
+  }
+  export const PanResponder: {
+    create(callbacks: PanResponderCallbacks): PanResponderInstance;
+  };
 }
 
 declare module "nativewind" {
+  export function cssInterop<P>(component: import("react").ComponentType<P>, mapping: { className: "style" }): void;
   export function useColorScheme(): {
     colorScheme: "light" | "dark" | undefined;
     setColorScheme(scheme: "light" | "dark" | "system"): void;
@@ -343,23 +418,37 @@ declare module "react-native-safe-area-context" {
 
 declare module "react-native-reanimated" {
   import type * as React from "react";
-  import type { ViewProps, ViewStyle } from "react-native";
+  import type { ScrollViewProps, StyleProp, TextProps, TextStyle, ViewProps, ViewStyle } from "react-native";
 
   export interface LayoutAnimationBuilder {
     duration(ms: number): LayoutAnimationBuilder;
     delay(ms: number): LayoutAnimationBuilder;
+    easing(easing: EasingFunction): LayoutAnimationBuilder;
     springify(): LayoutAnimationBuilder;
   }
   export const FadeIn: LayoutAnimationBuilder;
   export const FadeOut: LayoutAnimationBuilder;
   export const FadeInUp: LayoutAnimationBuilder;
+  export const FadeInDown: LayoutAnimationBuilder;
   export const FadeOutUp: LayoutAnimationBuilder;
   export const FadeOutDown: LayoutAnimationBuilder;
   export const SlideInDown: LayoutAnimationBuilder;
   export const SlideOutDown: LayoutAnimationBuilder;
   export const LinearTransition: LayoutAnimationBuilder;
 
-  export type AnimatedProps<P> = P & {
+  /** Reanimated 4 CSS transitions, for a state-driven change with no gesture. */
+  export type CSSTransitionStyle = {
+    transitionProperty?: string | string[];
+    transitionDuration?: number | string;
+    transitionTimingFunction?: string | CubicBezier;
+  };
+  export interface CubicBezier {
+    readonly __cubicBezier: true;
+  }
+  export function cubicBezier(x1: number, y1: number, x2: number, y2: number): CubicBezier;
+
+  export type AnimatedProps<P> = Omit<P, "style"> & {
+    style?: StyleProp<ViewStyle & CSSTransitionStyle>;
     entering?: LayoutAnimationBuilder;
     exiting?: LayoutAnimationBuilder;
     layout?: LayoutAnimationBuilder;
@@ -367,12 +456,21 @@ declare module "react-native-reanimated" {
 
   export interface SharedValue<T> {
     value: T;
+    get(): T;
+    set(value: T | ((value: T) => T)): void;
   }
   export type EasingFunction = (t: number) => number;
   export const Easing: {
     bezier(x1: number, y1: number, x2: number, y2: number): EasingFunction;
     linear: EasingFunction;
+    cubic: EasingFunction;
+    out(easing: EasingFunction): EasingFunction;
   };
+  export enum ReduceMotion {
+    System = "system",
+    Always = "always",
+    Never = "never",
+  }
   export function useSharedValue<T>(initial: T): SharedValue<T>;
   export function useAnimatedStyle<T extends ViewStyle>(
     updater: () => T,
@@ -380,8 +478,34 @@ declare module "react-native-reanimated" {
   ): T;
   export function withTiming<T extends number>(
     toValue: T,
-    config?: { duration?: number; easing?: EasingFunction },
+    config?: { duration?: number; easing?: EasingFunction; reduceMotion?: ReduceMotion },
+    callback?: (finished?: boolean) => void,
   ): T;
+  export function withSpring<T extends number>(
+    toValue: T,
+    config?: {
+      velocity?: number;
+      duration?: number;
+      dampingRatio?: number;
+      clamp?: { min?: number; max?: number };
+      overshootClamping?: boolean;
+      reduceMotion?: ReduceMotion;
+    },
+    callback?: (finished?: boolean) => void,
+  ): T;
+  export function interpolate(
+    value: number,
+    input: readonly number[],
+    output: readonly number[],
+    extrapolate?: "clamp" | "extend" | "identity",
+  ): number;
+  export function interpolateColor(value: number, input: readonly number[], output: readonly string[]): string;
+  export function useAnimatedReaction<T>(
+    prepare: () => T,
+    react: (current: T, previous: T | null) => void,
+    deps?: unknown[],
+  ): void;
+  export function runOnJS<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => void;
   export function withRepeat<T>(
     animation: T,
     numberOfReps?: number,
@@ -389,11 +513,137 @@ declare module "react-native-reanimated" {
   ): T;
   export function cancelAnimation<T>(sharedValue: SharedValue<T>): void;
   export function useReducedMotion(): boolean;
+  /** One callback per frame on the UI thread (`LoadingState`'s clock). */
+  export interface FrameInfo {
+    timestamp: number;
+    timeSincePreviousFrame: number | null;
+    timeSinceFirstFrame: number;
+  }
+  export function useFrameCallback(
+    callback: (frameInfo: FrameInfo) => void,
+    autostart?: boolean,
+  ): { setActive(isActive: boolean): void; isActive: boolean; callbackId: number };
+
+  // The sheet body's scroll on the UI thread (`src/primitives/sheet-gesture.tsx`).
+  export interface AnimatedRef<T> {
+    (component?: T | null): void;
+    current: T | null;
+  }
+  export function useAnimatedRef<T>(): AnimatedRef<T>;
+  export function useScrollOffset<T>(ref: AnimatedRef<T>, offset?: SharedValue<number>): SharedValue<number>;
+  export function scrollTo<T>(ref: AnimatedRef<T>, x: number, y: number, animated: boolean): void;
+  class AnimatedScrollView extends React.Component<AnimatedProps<ScrollViewProps>> {}
 
   declare const Animated: {
     View: React.ComponentType<AnimatedProps<ViewProps>>;
+    Text: React.ComponentType<Omit<TextProps, "style"> & { style?: StyleProp<TextStyle> }>;
+    ScrollView: typeof AnimatedScrollView;
   };
+  declare namespace Animated {
+    type ScrollView = AnimatedScrollView;
+  }
   export default Animated;
+}
+
+declare module "react-native-gesture-handler" {
+  import type * as React from "react";
+  import type { StyleProp, ViewStyle } from "react-native";
+
+  export interface GestureStateManager {
+    begin(): void;
+    activate(): void;
+    fail(): void;
+    end(): void;
+  }
+  export interface TouchData {
+    id: number;
+    x: number;
+    y: number;
+    absoluteX: number;
+    absoluteY: number;
+  }
+  export interface GestureTouchEvent {
+    numberOfTouches: number;
+    allTouches: TouchData[];
+    changedTouches: TouchData[];
+  }
+  export interface PanGestureEvent {
+    absoluteX: number;
+    absoluteY: number;
+    translationX: number;
+    translationY: number;
+    velocityX: number;
+    velocityY: number;
+  }
+  type TouchHandler = (event: GestureTouchEvent, manager: GestureStateManager) => void;
+  export interface NativeGesture {
+    enabled(enabled: boolean): NativeGesture;
+    disallowInterruption(disallow: boolean): NativeGesture;
+  }
+  export interface PanGesture {
+    enabled(enabled: boolean): PanGesture;
+    manualActivation(manual: boolean): PanGesture;
+    activeOffsetX(offset: number | number[]): PanGesture;
+    activeOffsetY(offset: number | number[]): PanGesture;
+    failOffsetX(offset: number | number[]): PanGesture;
+    failOffsetY(offset: number | number[]): PanGesture;
+    simultaneousWithExternalGesture(...gestures: GestureType[]): PanGesture;
+    onTouchesDown(handler: TouchHandler): PanGesture;
+    onTouchesMove(handler: TouchHandler): PanGesture;
+    onBegin(handler: (event: PanGestureEvent) => void): PanGesture;
+    onStart(handler: (event: PanGestureEvent) => void): PanGesture;
+    onUpdate(handler: (event: PanGestureEvent) => void): PanGesture;
+    onEnd(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
+    onFinalize(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
+  }
+  export type GestureType = PanGesture | NativeGesture;
+  export const Gesture: {
+    Pan(): PanGesture;
+    Native(): NativeGesture;
+  };
+  export const GestureDetector: React.ComponentType<{ gesture: GestureType; children?: React.ReactNode }>;
+  export const GestureHandlerRootView: React.ComponentType<{
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
+}
+
+declare module "react-native-keyboard-controller" {
+  import type * as React from "react";
+  import type { ScrollViewProps, StyleProp, ViewProps, ViewStyle } from "react-native";
+
+  export const KeyboardAvoidingView: React.ComponentType<
+    ViewProps & {
+      behavior?: "height" | "padding" | "position" | "translate-with-padding";
+      keyboardVerticalOffset?: number;
+      enabled?: boolean;
+      children?: React.ReactNode;
+    }
+  >;
+  export const KeyboardStickyView: React.ComponentType<
+    ViewProps & { offset?: { closed?: number; opened?: number }; enabled?: boolean; children?: React.ReactNode }
+  >;
+  export type ScrollViewContentInsets = { top: number; bottom: number; left: number; right: number };
+  export const KeyboardChatScrollView: React.ComponentType<
+    ScrollViewProps & {
+      inverted?: boolean;
+      offset?: number;
+      keyboardLiftBehavior?: "always" | "whenAtEnd" | "persistent" | "never";
+      onContentInsetChange?: (insets: ScrollViewContentInsets) => void;
+      children?: React.ReactNode;
+    }
+  >;
+  export function useKeyboardHandler(
+    handler: { onStart?: (event: { height: number }) => void; onEnd?: (event: { height: number }) => void },
+    deps?: unknown[],
+  ): void;
+  export const KeyboardGestureArea: React.ComponentType<{
+    interpolator?: "ios" | "linear";
+    offset?: number;
+    textInputNativeID?: string;
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
 }
 
 declare module "react-native-screens" {
@@ -431,6 +681,57 @@ declare module "react-native-svg" {
   >;
   declare const Svg: React.ComponentType<SvgProps>;
   export default Svg;
+}
+
+declare module "expo-video" {
+  import type * as React from "react";
+  import type { StyleProp, ViewStyle } from "react-native";
+  export interface VideoPlayer {
+    loop: boolean;
+    muted: boolean;
+    play(): void;
+    pause(): void;
+  }
+  export function useVideoPlayer(source: string | null, setup?: (player: VideoPlayer) => void): VideoPlayer;
+  export const VideoView: React.ComponentType<{
+    player: VideoPlayer;
+    style?: StyleProp<ViewStyle>;
+    nativeControls?: boolean;
+    contentFit?: "contain" | "cover" | "fill";
+    fullscreenOptions?: { enable: boolean };
+    allowsPictureInPicture?: boolean;
+  }>;
+}
+
+declare module "react-native-webview" {
+  import type * as React from "react";
+  import type { NativeSyntheticEvent, StyleProp, ViewStyle } from "react-native";
+  export interface WebViewProps {
+    source: { html: string; baseUrl?: string } | { uri: string };
+    style?: StyleProp<ViewStyle>;
+    accessibilityLabel?: string;
+    originWhitelist?: string[];
+    javaScriptEnabled?: boolean;
+    injectedJavaScriptBeforeContentLoaded?: string;
+    onMessage?: (event: NativeSyntheticEvent<{ data: string }>) => void;
+    onShouldStartLoadWithRequest?: (request: { url: string; isTopFrame: boolean }) => boolean;
+    setSupportMultipleWindows?: boolean;
+    onOpenWindow?: (event: NativeSyntheticEvent<{ targetUrl: string }>) => void;
+    onLoadEnd?: () => void;
+    incognito?: boolean;
+    domStorageEnabled?: boolean;
+    thirdPartyCookiesEnabled?: boolean;
+    sharedCookiesEnabled?: boolean;
+    allowFileAccess?: boolean;
+    allowFileAccessFromFileURLs?: boolean;
+    allowUniversalAccessFromFileURLs?: boolean;
+    mixedContentMode?: "never" | "always" | "compatibility";
+    mediaPlaybackRequiresUserAction?: boolean;
+    nestedScrollEnabled?: boolean;
+  }
+  export class WebView extends React.Component<WebViewProps> {
+    injectJavaScript(script: string): void;
+  }
 }
 
 declare module "expo-blur" {
@@ -497,7 +798,19 @@ declare module "expo-notifications" {
 }
 
 declare module "expo-haptics" {
+  export enum ImpactFeedbackStyle {
+    Light = "light",
+    Medium = "medium",
+    Heavy = "heavy",
+  }
+  export enum NotificationFeedbackType {
+    Success = "success",
+    Warning = "warning",
+    Error = "error",
+  }
   export function selectionAsync(): Promise<void>;
+  export function impactAsync(style?: ImpactFeedbackStyle): Promise<void>;
+  export function notificationAsync(type?: NotificationFeedbackType): Promise<void>;
 }
 
 declare module "expo-router" {
@@ -612,6 +925,8 @@ declare module "react-native-marked" {
     constructor(options?: { selectable?: boolean });
     code(text: string, language?: string, containerStyle?: ViewStyle, textStyle?: TextStyle): ReactNode;
     codespan(text: string, styles?: TextStyle): ReactNode;
+    paragraph(children: ReactNode[], styles?: ViewStyle): ReactNode;
+    listItem(children: ReactNode[], styles?: ViewStyle): ReactNode;
     list(ordered: boolean, li: ReactNode[], listStyle?: ViewStyle, textStyle?: TextStyle, startIndex?: number): ReactNode;
     blockquote(children: ReactNode[], styles?: ViewStyle): ReactNode;
     link(children: string | ReactNode[], href: string, styles?: TextStyle, title?: string): ReactNode;
@@ -757,6 +1072,7 @@ declare module "@tabler/icons-react-native" {
   export const IconFileText: Icon;
   export const IconInbox: Icon;
   export const IconInfoCircle: Icon;
+  export const IconMaximize: Icon;
   export const IconMinus: Icon;
   export const IconMoon: Icon;
   export const IconMusic: Icon;
@@ -778,6 +1094,8 @@ declare module "@tabler/icons-react-native" {
   export const IconX: Icon;
   export const IconTool: Icon;
   export const IconRobot: Icon;
+  export const IconExternalLink: Icon;
+  export const IconPlayerPlayFilled: Icon;
 }
 
 declare module "@rn-primitives/slot" {

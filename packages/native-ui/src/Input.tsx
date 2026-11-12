@@ -21,8 +21,8 @@ const Input = React.forwardRef<
       ref={ref}
       placeholderTextColor={placeholderTextColor ?? palette.fieldPlaceholder[scheme]}
       className={cn(
-        // The web field: h-10 px-3.5 py-2, 16 px type (its phone size).
-        "min-h-10 border px-3.5 py-2 text-base font-instrument-sans",
+        // The web field px-3.5 py-2 with 16 px type (its phone size), 44 high (the web h-10 is a desktop 40).
+        "min-h-11 border px-3.5 py-2 text-base font-instrument-sans",
         largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium",
         className,
       )}

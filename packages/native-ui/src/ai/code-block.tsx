@@ -3,12 +3,21 @@ import { ScrollView, Text, View } from "react-native";
 import { IconCheck, IconCopy, IconTextWrap } from "@tabler/icons-react-native";
 import { cn } from "../cn";
 import { sizeStyle, textStyle } from "../controlStyles";
-import { GITHUB_CODE_COLORS, codeTokenColor, loadPrismReactRenderer } from "../highlight";
+import {
+  GITHUB_CODE_COLORS,
+  SCRIPT_LANGUAGES,
+  SHELL_LANGUAGES,
+  codeTokenColor,
+  loadPrismReactRenderer,
+  scriptTokens,
+  shellTokens,
+  type CodeToken,
+} from "../highlight";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import { MONO_FONT, chatTextSize } from "./chat-text";
-import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
+import { ChatIconButton, type ChatIconButtonProps, type ChatIconButtonSize } from "./icon-button";
 
 /**
  * `variant="markdown"`, the web `.markdown-code` (`MarkdownCodeBlock`): the header is `0.25rem 0.3rem 0 0.9rem` around a 28
@@ -36,10 +45,12 @@ export type CodeBlockCopyButtonProps = {
   label?: string;
   /** Default `sm` (the web `CodeBlock` copy button); the markdown code block uses `xs`. */
   size?: ChatIconButtonSize;
+  /** Default `"square"`. See `ChatIconButton`. */
+  slop?: ChatIconButtonProps["slop"];
 };
 
 /** Ghost copy button: the copy icon, then a check for `timeout` after a copy. */
-export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Copy code", size }: CodeBlockCopyButtonProps) {
+export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Copy code", size, slop }: CodeBlockCopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -62,6 +73,7 @@ export function CodeBlockCopyButton({ code, onCopy, timeout = 2000, label = "Cop
       icon={copied ? IconCheck : IconCopy}
       label={copied ? "Copied" : label}
       size={size}
+      slop={slop}
       onPress={() => void copy()}
     />
   );
@@ -98,6 +110,12 @@ export type CodeBlockProps = {
  * draws for fenced code: 13 / 20.15 code, a 32 header with `icon-xs` actions,
  * a wrap toggle ("Wrap long lines", foreground while on) and then copy.
  */
+/**
+ * Android fades the code at a side with more to scroll (there is no scroll
+ * bar), so a cut line reads as "scroll sideways". iOS ignores it.
+ */
+const CODE_FADING_EDGE = 24;
+
 export function CodeBlock({ code, language, highlight = true, onCopy, variant = "default", className }: CodeBlockProps) {
   const parts = useCodeParts(code, language, highlight, variant === "markdown");
   if (variant === "markdown") {
@@ -112,7 +130,12 @@ export function CodeBlock({ code, language, highlight = true, onCopy, variant = 
           {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} /> : null}
         </View>
       ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName={header ? "px-4 pb-4" : "p-4"}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        fadingEdgeLength={CODE_FADING_EDGE}
+        contentContainerClassName={header ? "px-4 pb-4" : "p-4"}
+      >
         {parts.text}
       </ScrollView>
     </View>
@@ -141,7 +164,8 @@ function MarkdownCodeBlock({
           style={largerText ? { paddingLeft: headerBox.paddingLeft, paddingRight: headerBox.paddingRight } : headerBox}
         >
           {parts.label}
-          {/* Web `.markdown-code-actions`: `gap-0.5`. */}
+          {/* Web `.markdown-code-actions`: `gap-0.5`. The two sit 2 apart, so
+              each slops only above and below and on its outer side. */}
           <View className="flex-row items-center gap-0.5">
             <ChatIconButton
               icon={IconTextWrap}
@@ -149,16 +173,22 @@ function MarkdownCodeBlock({
               size="xs"
               iconColor={wrap ? tokens.color.foreground[scheme] : tokens.color.muted[scheme]}
               accessibilityState={{ selected: wrap }}
+              slop={{ left: 8, right: 0 }}
               onPress={() => setWrap(!wrap)}
             />
-            {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} size="xs" /> : null}
+            {onCopy ? <CodeBlockCopyButton code={code} onCopy={onCopy} size="xs" slop={{ left: 0, right: 5 }} /> : null}
           </View>
         </View>
       ) : null}
       {wrap ? (
         <View style={padding}>{parts.text}</View>
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={padding}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          fadingEdgeLength={CODE_FADING_EDGE}
+          contentContainerStyle={padding}
+        >
           {parts.text}
         </ScrollView>
       )}
@@ -197,36 +227,61 @@ function useCodeParts(code: string, language: string | undefined, highlight: boo
 }
 
 /**
- * Prism tokens as nested `Text` spans, one colour each, lines joined by
- * newlines. They inherit the size and font of the code `Text` around them.
- * Without `prism-react-renderer` it is the plain code.
+ * Coloured runs as nested `Text` spans, lines joined by newlines. They
+ * inherit the size and font of the code `Text` around them.
+ */
+function CodeRuns({ lines, scheme }: { lines: CodeToken[][]; scheme: "light" | "dark" }) {
+  return (
+    <>
+      {lines.map((line, lineIndex) => (
+        <Fragment key={lineIndex}>
+          {lineIndex > 0 ? "\n" : null}
+          {line.map((token, tokenIndex) => (
+            <Text key={tokenIndex} style={{ color: GITHUB_CODE_COLORS[scheme][token.role] }}>
+              {token.content}
+            </Text>
+          ))}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+/**
+ * The code in the web's Shiki colours: shell blocks through `shellTokens`
+ * (no peer needed), other languages through Prism, the JavaScript family
+ * recoloured where Prism and Shiki disagree (`scriptTokens`). Without
+ * `prism-react-renderer` a non-shell block is the plain code.
  */
 function HighlightedCode({ code, language, scheme }: { code: string; language: string; scheme: "light" | "dark" }) {
+  const lang = language.toLowerCase();
+  const source = code.replace(/\n$/, "");
+  if (SHELL_LANGUAGES.has(lang)) return <CodeRuns lines={shellTokens(source)} scheme={scheme} />;
   const Highlight = loadPrismReactRenderer()?.Highlight;
   if (!Highlight) return code;
   return (
-    <Highlight
-      code={code.replace(/\n$/, "")}
-      language={language.toLowerCase()}
-      theme={{ plain: { color: GITHUB_CODE_COLORS[scheme].plain }, styles: [] }}
-    >
-      {({ tokens }) => (
-        <>
-          {tokens.map((line, lineIndex) => (
-            <Fragment key={lineIndex}>
-              {lineIndex > 0 ? "\n" : null}
-              {/* An empty line is one `empty` token whose content is "\n": the join above already breaks it. */}
-              {line.map((token, tokenIndex) =>
-                token.empty ? null : (
-                  <Text key={tokenIndex} style={{ color: codeTokenColor(token.types, scheme) }}>
-                    {token.content}
-                  </Text>
-                ),
-              )}
-            </Fragment>
-          ))}
-        </>
-      )}
+    <Highlight code={source} language={lang} theme={{ plain: { color: GITHUB_CODE_COLORS[scheme].plain }, styles: [] }}>
+      {({ tokens }) =>
+        SCRIPT_LANGUAGES.has(lang) ? (
+          <CodeRuns lines={scriptTokens(tokens)} scheme={scheme} />
+        ) : (
+          <>
+            {tokens.map((line, lineIndex) => (
+              <Fragment key={lineIndex}>
+                {lineIndex > 0 ? "\n" : null}
+                {/* An empty line is one `empty` token whose content is "\n": the join above already breaks it. */}
+                {line.map((token, tokenIndex) =>
+                  token.empty ? null : (
+                    <Text key={tokenIndex} style={{ color: codeTokenColor(token.types, scheme) }}>
+                      {token.content}
+                    </Text>
+                  ),
+                )}
+              </Fragment>
+            ))}
+          </>
+        )
+      }
     </Highlight>
   );
 }

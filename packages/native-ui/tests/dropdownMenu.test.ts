@@ -39,6 +39,8 @@ vi.mock("@tabler/icons-react-native", () => ({ IconCheck: "IconCheck" }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("../src/FloatingSurface", () => ({ FloatingSurface: "FloatingSurface" }));
 vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => false }));
+const haptics = vi.hoisted(() => ({ selectionHaptic: vi.fn() }));
+vi.mock("../src/haptics", () => haptics);
 vi.mock("../src/theme", () => ({ useLargerText: () => menu.larger }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
@@ -166,7 +168,8 @@ describe("DropdownMenu parts", () => {
     expect(value.setOpen).toHaveBeenCalledWith(false);
     const panel = elements(modal).find((element) => element.props.accessibilityRole === "menu")!;
     expect(panel.props.accessibilityViewIsModal).toBe(true);
-    expect(panel.props.style).toMatchObject({ position: "absolute", right: 50, top: 144, minWidth: 192, maxWidth: 374 });
+    // Hidden until the content is measured, so it never shows below and then flips above.
+    expect(panel.props.style).toMatchObject({ position: "absolute", right: 50, top: 144, minWidth: 192, maxWidth: 374, opacity: 0 });
     const surface = elements(modal).find((element) => element.type === "FloatingSurface")!;
     expect(surface.props).toMatchObject({ blur: false, radius: tokens.radius.lg });
     expect(elements(modal).find((element) => element.type === "ScrollView")!.props.contentContainerStyle).toEqual({ padding: 6 });
@@ -175,7 +178,7 @@ describe("DropdownMenu parts", () => {
     expect((DropdownMenuContent({ children: null }) as unknown as Element).props.visible).toBe(false);
   });
 
-  it("an item is a 44-high menuitem with a 16 icon that selects, then closes", async () => {
+  it("an item is a 48-high menuitem with a 16 icon that selects, then closes, with no haptic", async () => {
     const { DropdownMenuItem } = await import("../src/DropdownMenu");
     const value = context(true);
     const onSelect = vi.fn();
@@ -183,7 +186,7 @@ describe("DropdownMenu parts", () => {
     expect(tree.type).toBe("Pressable");
     expect(tree.props.accessibilityRole).toBe("menuitem");
     const style = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
-    expect(style).toMatchObject({ minHeight: 44, paddingLeft: 10, paddingRight: 10, paddingVertical: 8, borderRadius: 8, gap: 8, backgroundColor: "transparent" });
+    expect(style).toMatchObject({ minHeight: 48, paddingLeft: 10, paddingRight: 10, paddingVertical: 8, borderRadius: 8, gap: 8, backgroundColor: "transparent" });
     const pressed = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: true });
     expect(pressed.backgroundColor).toBe(palette.default.light);
     const icon = elements(tree).find((element) => element.type === "IconPencil")!;
@@ -194,6 +197,7 @@ describe("DropdownMenu parts", () => {
     (tree.props.onPress as () => void)();
     expect(onSelect).toHaveBeenCalledOnce();
     expect(value.setOpen).toHaveBeenCalledWith(false);
+    expect(haptics.selectionHaptic).not.toHaveBeenCalled();
   });
 
   it("a destructive item is in the danger colour; closeOnSelect false keeps the menu; disabled fades", async () => {
@@ -212,6 +216,15 @@ describe("DropdownMenu parts", () => {
     expect(value.setOpen).not.toHaveBeenCalled();
   });
 
+  it("a warning item (the web Archive) is in the warning colour, label and icon", async () => {
+    const { DropdownMenuItem } = await import("../src/DropdownMenu");
+    context(true);
+    const tree = render(DropdownMenuItem({ children: "Archive", warning: true, icon: "IconArchive" as never })) as Element;
+    const label = elements(tree).find((element) => element.type === "Text")!;
+    expect(label.props.style).toEqual([{ fontSize: 14, lineHeight: 20 }, { color: palette.warning.light }]);
+    expect(elements(tree).find((element) => element.type === "IconArchive")?.props.color).toBe(palette.warning.light);
+  });
+
   it("a radio item reports checked and shows the check at left 10, the label inset 32", async () => {
     const { DropdownMenuRadioItem } = await import("../src/DropdownMenu");
     context(true);
@@ -223,6 +236,11 @@ describe("DropdownMenu parts", () => {
     const off = render(DropdownMenuRadioItem({ children: "Oldest", checked: false })) as Element;
     expect(off.props.accessibilityState).toEqual({ disabled: false, checked: false });
     expect(elements(off).some((element) => element.type === "IconCheck")).toBe(false);
+    haptics.selectionHaptic.mockClear();
+    (on.props.onPress as () => void)();
+    expect(haptics.selectionHaptic).not.toHaveBeenCalled();
+    (off.props.onPress as () => void)();
+    expect(haptics.selectionHaptic).toHaveBeenCalledOnce();
   });
 
   it("steps up with larger text", async () => {

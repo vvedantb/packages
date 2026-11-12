@@ -119,7 +119,9 @@ describe("Button (source contract)", () => {
   const nativeSize = (size: string) => regular.match(new RegExp(`${size}: "([^"]+)"`))?.[1] ?? "";
 
   it("uses the web heights (as minimums) and padding without larger text", () => {
-    const pairs = { small: "sm", medium: "default", large: "lg", icon: "icon" } as const;
+    // `sm` is the phone size instead (36, `text-sm`): the web h-8 `text-xs` is a desktop size.
+    const pairs = { medium: "default", large: "lg", icon: "icon" } as const;
+    expect(nativeSize("small")).toBe("h-auto min-h-9 px-3");
     for (const [native, webName] of Object.entries(pairs)) {
       // `min-h-10` is the web `h-10` as a minimum; `h-auto` drops the primitive's `h-10`.
       const classes = nativeSize(native)
@@ -130,7 +132,7 @@ describe("Button (source contract)", () => {
       for (const c of classes) expect(webSize(webName), `${native} ${c}`).toContain(c);
     }
     expect(button).toMatch(
-      /regular: \{ small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" \}/,
+      /regular: \{ small: "text-sm", medium: "text-sm", large: "text-sm", icon: "text-sm" \}/,
     );
     expect(button).toMatch(/"font-instrument-sans-medium",/);
   });
@@ -229,12 +231,13 @@ describe("fields", () => {
 });
 
 describe("field sizes (source contract)", () => {
-  it("Input, Textarea and the Select trigger have the web height and padding without larger text", () => {
-    expect(read("Input.tsx")).toMatch(/"min-h-10 border px-3\.5 py-2 text-base font-instrument-sans"/);
+  it("Input, Textarea and the Select trigger have the web padding without larger text", () => {
+    // Input is 44 high, a phone field (the web `h-10` is 40).
+    expect(read("Input.tsx")).toMatch(/"min-h-11 border px-3\.5 py-2 text-base font-instrument-sans"/);
     expect(read("Textarea.tsx")).toMatch(
       /"min-h-20 border px-3\.5 py-2\.5 text-base font-instrument-sans"/,
     );
-    expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full border px-3\.5 py-0 shadow-none"/);
+    expect(read("Select.tsx")).toMatch(/"h-auto min-h-11 w-full border px-3\.5 py-0 shadow-none"/);
   });
 
   it("Select shows its placeholder in the field placeholder colour", () => {
@@ -328,12 +331,12 @@ describe("Dialog layout (source contract)", () => {
     expect(dialog).toMatch(/const SHEET_RADIUS = tokens\.radius\.lg;/);
     expect(tokens.radius.lg).toBe(16);
     expect(content).toMatch(/radius=\{compact \? SHEET_RADIUS : tokens\.radius\.card\}/);
-    expect(dialog).toMatch(/const SHEET = \{ marginBottom: -SHEET_RADIUS \};/);
+    expect(dialog).toMatch(/const SHEET = \{ marginBottom: -SHEET_RADIUS, flexShrink: 1 \};/);
     expect(content).toMatch(/style=\{compact \? SHEET : PANEL\}/);
     // The web `pt-3`, `p-6` sides and `pb-[max(1.5rem,env(safe-area-inset-bottom))]`.
     expect(content).toMatch(/className=\{cn\(compact \? "gap-4 px-6 pt-3" : "gap-4 p-6", className\)\}/);
     expect(content).toMatch(
-      /compact \? \{ paddingBottom: Math\.max\(24, insets\.bottom\) \+ SHEET_RADIUS \} : null,\s+style,/,
+      /compact \? \{ paddingBottom: Math\.max\(24, insets\.bottom\) \+ SHEET_RADIUS, flexShrink: 1 \} : null,\s+style,/,
     );
     expect(content).toMatch(/\{compact \? <DialogHandle \/> : null\}\s+\{children\}/);
     expect(content).toMatch(/hideCloseButton \? null : <DialogCloseButton \/>/);
@@ -345,15 +348,6 @@ describe("Dialog layout (source contract)", () => {
     expect(content.match(/<OverlayModal\b/g)).toHaveLength(1);
     expect(content.match(/\{children\}/g)).toHaveLength(1);
     expect(content).not.toMatch(/if \(compact\)/);
-  });
-
-  it("the sheet slides up through NativeOnlyAnimatedView, so Reduce Motion turns it off", () => {
-    expect(content).toMatch(
-      /<NativeOnlyAnimatedView\s+entering=\{compact \? SlideInDown\.duration\(240\) : undefined\}/,
-    );
-    expect(read("primitives/native-only-animated-view.tsx")).toMatch(
-      /entering=\{reduceMotion \? undefined : entering\}/,
-    );
   });
 
   it("the handle is the web h-1 w-12 surface-tertiary pill in a 44 row, hidden from screen readers", () => {
@@ -371,9 +365,8 @@ describe("Dialog layout (source contract)", () => {
     expect(dialog).toMatch(/const PANEL = \{ width: "100%", maxWidth: 480, alignSelf: "center" \} as const;/);
     expect(dialog).toMatch(/const CENTRED: DialogLayout = \{ compact: false, stacked: false \};/);
     expect(tokens.radius.card).toBe(24);
-    // No handle, no extra bottom padding and no slide when not compact.
+    // No handle and no extra bottom padding when not compact.
     expect(content).toMatch(/compact \? <DialogHandle \/> : null/);
-    expect(content).toMatch(/compact \? SlideInDown\.duration\(240\) : undefined/);
   });
 
   it("AlertDialogContent and ConfirmDialog get the same behaviour from DialogContent", () => {
@@ -498,13 +491,18 @@ describe("Tabs and PillTabs (source contract)", () => {
 
   it("take fill and label from tabColors as styles", () => {
     expect(fn(tabs, "TabsTrigger")).toMatch(/const colors = tabColors\(variant, selected, scheme\);/);
-    expect(pills).toMatch(/const colors = tabColors\("pills", isSelected, scheme\);/);
+    expect(pills).toMatch(/const colors = tabColors\("pills", selected, scheme\);/);
+    expect(fn(tabs, "TabsTrigger")).toMatch(
+      // `TabsTrigger` takes `height`, its `minHeight` prop or the trigger size (tabsTriggerHeight.test.ts).
+      /style=\{\{ backgroundColor: indicator\?\.measured \? "transparent" : colors\.backgroundColor, minHeight: height \}\}/,
+    );
+    // Linked to a `Pager` and measured, the moving indicator takes the selected fill (`tabColors` too).
+    expect(pills).toMatch(/backgroundColor: filled \? colors\.backgroundColor : "transparent",\s+minHeight: trigger\.minHeight,/);
+    expect(pills).toMatch(/backgroundColor: tabColors\("pills", true, scheme\)\.backgroundColor/);
+    expect(fn(tabs, "TabsList")).toMatch(/backgroundColor: tabColors\(variant, true, scheme\)\.backgroundColor/);
+    // The label colour: `colors.color`, or blended by `progress` between the `tabColors` pair.
     for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
-      expect(source, file).toMatch(
-        // `TabsTrigger` takes `height`, its `minHeight` prop or the trigger size (tabsTriggerHeight.test.ts).
-        /style=\{\{ backgroundColor: colors\.backgroundColor, minHeight: (?:trigger\.minHeight|height) \}\}/,
-      );
-      expect(source, file).toMatch(/style=\{\[\{ color: colors\.color \}, /);
+      expect(source, file).toMatch(/useTabLabelStyle\(\s+progress,\s+index,\s+\{ selected: tabColors\([^)]*true, scheme\)\.color, muted: tabColors\([^)]*false, scheme\)\.color \},\s+colors\.color,\s+\)/);
     }
     expect(fn(tabs, "TabsList")).toMatch(/variant === "segmented" \? \[tabTrackStyle\(scheme\), style\] : style/);
   });
@@ -675,7 +673,8 @@ describe("type sizes (source contract)", () => {
     const regular = button.match(/regular: \{ small: "(text-\w+)", medium: "(text-\w+)"/);
     expect(regular?.[2]).toBe("text-sm");
     expect(sizeStyle(regular![2] as "text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
-    expect(sizeStyle(regular![1] as "text-xs").fontSize).toBe(12);
+    // `sm` too: a 14 label, the phone floor for tappable text (the web `sm` is `text-xs`).
+    expect(regular?.[1]).toBe("text-sm");
     expect(Number(typeStyle("medium").fontWeight)).toBe(500);
     // Larger text keeps its step-up.
     expect(button).toMatch(
@@ -733,11 +732,11 @@ describe("type sizes (source contract)", () => {
     expect(card).toMatch(
       /style=\{\[textStyle\("foreground", scheme\), sizeStyle\(titleSize\), typeStyle\("semibold"\)\]\}/,
     );
-    expect(card).toMatch(/const ctaSize = largerText \? "text-base" : "text-xs";/);
+    // The phone `Button` `sm`: a 14 label, 36 high.
+    expect(card).toMatch(/const ctaSize = largerText \? "text-base" : "text-sm";/);
     expect(card).toMatch(/cn\("font-instrument-sans-medium", ctaSize\)/);
     expect(card).toMatch(/sizeStyle\(ctaSize\),\s+typeStyle\("medium"\),/);
-    // The web `h-8` as a minimum, and the `sm` padding.
-    expect(card).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
+    expect(card).toMatch(/largerText \? "min-h-12 px-4" : "min-h-9 px-3"/);
     expect(card).toMatch(/bg-surface-secondary px-3 py-2\.5"/);
     expect(card).toMatch(/const RADIUS = tokens\.radius\.lg;/);
     expect(card).toMatch(/style=\{\{ borderRadius: RADIUS \}\}/);
@@ -784,7 +783,7 @@ describe("type weights (source contract)", () => {
       expect(fn(read(file), name), `${file} ${name}`).toMatch(/typeStyle\("medium"\)/);
     }
     // `PillTabs` is generic (`function PillTabs<T …>(`) and the only component in its file.
-    expect(read("PillTabs.tsx")).toMatch(/style=\{\[\{ color: colors\.color \}, typeStyle\("medium"\)\]\}/);
+    expect(read("PillTabs.tsx")).toMatch(/style=\{\[typeStyle\("medium"\), labelStyle\]\}/);
     // `SheetTitle` and `AlertDialogTitle` are `DialogTitle`.
     expect(read("Sheet.tsx")).toMatch(/export const SheetTitle = DialogTitle;/);
     expect(read("AlertDialog.tsx")).toMatch(/export const AlertDialogTitle = DialogTitle;/);
@@ -851,21 +850,36 @@ describe("switchSize", () => {
     expect(switchSize(false)).toEqual({
       track: "h-5 w-9",
       thumb: "h-4 w-4",
+      off: "translate-x-0",
       on: "translate-x-4",
       width: 36,
       height: 20,
     });
+    expect(switchSize(false, "sm")).toEqual(switchSize(false));
   });
 
-  it("keeps the 0.3.4 size with larger text", () => {
-    expect(switchSize(true)).toMatchObject({ track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6" });
+  it("is a 40 x 24 track with a 20 thumb at md, 2 in from the left and 18 across when on", () => {
+    expect(switchSize(false, "md")).toEqual({
+      track: "h-6 w-10",
+      thumb: "h-5 w-5",
+      off: "translate-x-0.5",
+      on: "translate-x-[18px]",
+      width: 40,
+      height: 24,
+    });
+  });
+
+  it("keeps the 0.3.4 size with larger text at every size", () => {
+    for (const size of ["sm", "md"] as const) {
+      expect(switchSize(true, size)).toMatchObject({ track: "h-8 w-14", thumb: "h-7 w-7", on: "translate-x-6" });
+    }
   });
 
   it("is what Switch draws, centring the thumb", () => {
     const source = read("Switch.tsx");
-    expect(source).toMatch(/const size = switchSize\(useLargerText\(\)\);/);
+    expect(source).toMatch(/const size = switchSize\(useLargerText\(\), sizeName\);/);
     expect(source).toMatch(/className=\{cn\(size\.track, "justify-center"\)\}/);
-    expect(source).toMatch(/thumbClassName=\{cn\(size\.thumb, resolvedValue \? size\.on : "translate-x-0"\)\}/);
+    expect(source).toMatch(/thumbClassName=\{cn\(size\.thumb, resolvedValue \? size\.on : size\.off\)\}/);
     expect(source).not.toMatch(/"h-8 w-14"/);
   });
 });
@@ -876,32 +890,43 @@ describe("tabTriggerSize", () => {
   const webTabs = readFileSync(join(root, "..", "ui", "src/ui/tabs.tsx"), "utf8");
   const variants: TabsVariant[] = ["pills", "segmented", "soft"];
 
-  it("is the web .t-tab for pills and segmented: 30 high, px-3 py-1, text-sm", () => {
+  it("is the web .t-tab for pills and segmented, grown to 36 with px-3.5 for a phone", () => {
     expect(css).toMatch(/\.t-tab \{[^}]*height: 30px;\s+padding: 4px 12px;/);
     expect(webTabs).toMatch(/"t-tab inline-flex [^"]*text-sm font-medium/);
     for (const variant of ["pills", "segmented"] as const) {
       expect(tabTriggerSize(variant, "default", false)).toEqual({
-        minHeight: 30,
-        className: "px-3 py-1",
+        minHeight: 36,
+        className: "px-3.5 py-1",
         textClassName: "text-sm",
+        letterSpacing: 0,
       });
     }
   });
 
-  it("is the web soft trigger and the web sm list", () => {
+  it("is the web soft trigger, and the web sm list with a 14 label, 36 high", () => {
     expect(webTabs).toMatch(/rounded-full px-4 py-2 text-sm text-muted-foreground/);
     expect(webTabs).toMatch(/sm: "\[&_\.t-tab\]:px-2\.5 \[&_\.t-tab\]:py-1 \[&_\.t-tab\]:text-xs"/);
     expect(tabTriggerSize("soft", "default", false)).toMatchObject({ className: "px-4 py-2", textClassName: "text-sm" });
     for (const variant of variants) {
-      expect(tabTriggerSize(variant, "sm", false)).toMatchObject({ className: "px-2.5 py-1", textClassName: "text-xs" });
+      expect(tabTriggerSize(variant, "sm", false)).toEqual({ minHeight: 36, className: "px-3 py-1", textClassName: "text-sm", letterSpacing: 0 });
     }
   });
 
   it("keeps the larger-text sizes", () => {
     for (const variant of variants) {
-      expect(tabTriggerSize(variant, "default", true)).toEqual({ minHeight: 56, className: "px-4 py-3", textClassName: "text-xl" });
-      expect(tabTriggerSize(variant, "sm", true)).toEqual({ minHeight: 48, className: "px-4 py-2", textClassName: "text-lg" });
+      expect(tabTriggerSize(variant, "default", true)).toEqual({ minHeight: 56, className: "px-4 py-3", textClassName: "text-xl", letterSpacing: 0 });
+      expect(tabTriggerSize(variant, "sm", true)).toEqual({ minHeight: 48, className: "px-4 py-2", textClassName: "text-lg", letterSpacing: 0 });
     }
+  });
+
+  it("tracks the label as the web type scale: text-sm 0em", () => {
+    const scale = readFileSync(join(root, "..", "ui", "tokens/src/css/type-scale.css"), "utf8");
+    expect(scale).toMatch(/--text-sm--letter-spacing: 0em;/);
+    for (const variant of variants) {
+      expect(tabTriggerSize(variant, "sm", false).letterSpacing).toBe(0);
+      expect(tabTriggerSize(variant, "default", false).letterSpacing).toBe(0);
+    }
+    expect(code(read("Tabs.tsx"))).toMatch(/letterSpacing: trigger\.letterSpacing/);
   });
 
   it("lays tabs out like the web lists: content-sized at the start, no flex-1 or w-full", () => {
@@ -911,15 +936,18 @@ describe("tabTriggerSize", () => {
     const pills = code(read("PillTabs.tsx"));
     for (const [file, source] of [["Tabs.tsx", tabs], ["PillTabs.tsx", pills]] as const) {
       expect(source, file).not.toMatch(/(?<![\w-])(?:flex-1|w-full)(?![\w-])/);
-      expect(source, file).toMatch(/self-start/);
     }
+    expect(tabs).toMatch(/self-start/);
     const list = fn(tabs, "TabsList");
     expect(list).toMatch(/"max-w-full gap-\[3px\] self-start rounded-full p-\[3px\]"/);
     expect(list).toMatch(/"max-w-full flex-wrap gap-1\.5 self-start"/);
     expect(list).toMatch(/"flex-wrap items-center justify-center gap-1\.5"/);
     expect(fn(tabs, "TabsTrigger")).toMatch(/const trigger = tabTriggerSize\(variant, size, largerText\);/);
     expect(pills).toMatch(/const trigger = tabTriggerSize\("pills", "default", largerText\);/);
-    expect(pills).toMatch(/"max-w-full flex-row flex-wrap gap-1\.5 self-start"/);
+    // One sideways line that never wraps, the pills at its start.
+    expect(pills).toMatch(/<Animated\.ScrollView[^>]*\bhorizontal\b/);
+    expect(pills).toMatch(/contentContainerStyle=\{\{ flexDirection: "row", gap: 6, /);
+    expect(pills).not.toMatch(/flex-wrap/);
   });
 
   it("labels pills and segments in the web medium weight, soft tabs in regular", () => {
@@ -940,9 +968,9 @@ describe("tabTriggerSize", () => {
         }
       }
     }
-    expect(touchSlop(MIN_TOUCH_TARGET, 30)).toEqual({ top: 7, bottom: 7, left: 0, right: 0 });
-    for (const file of ["Tabs.tsx", "PillTabs.tsx"]) {
-      expect(read(file), file).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, (?:trigger\.minHeight|height)\)\}/);
-    }
+    expect(touchSlop(MIN_TOUCH_TARGET, 36)).toEqual({ top: 4, bottom: 4, left: 0, right: 0 });
+    expect(touchSlop(MIN_TOUCH_TARGET, 40)).toEqual({ top: 2, bottom: 2, left: 0, right: 0 });
+    expect(read("Tabs.tsx")).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, height\)\}/);
+    expect(read("PillTabs.tsx")).toMatch(/const slop = touchSlop\(MIN_TOUCH_TARGET, trigger\.minHeight\);/);
   });
 });

@@ -17,8 +17,10 @@ export type { CollapsibleProps, CollapsibleTriggerProps } from "./collapsible";
 export {
   Conversation,
   ConversationContent,
+  ConversationList,
   ConversationEmptyState,
   ConversationScrollButton,
+  ConversationDock,
   useConversation,
   isScrolledToBottom,
   AT_BOTTOM_THRESHOLD,
@@ -26,8 +28,11 @@ export {
 export type {
   ConversationProps,
   ConversationContentProps,
+  ConversationListProps,
+  ConversationScroller,
   ConversationEmptyStateProps,
   ConversationScrollButtonProps,
+  ConversationDockProps,
 } from "./conversation";
 export {
   Message,
@@ -102,18 +107,48 @@ export type {
 } from "./chain-of-thought";
 export { ActivityStep } from "./activity-step";
 export type { ActivityStepProps, ActivityStepStatus } from "./activity-step";
+// The web timeline's pure logic (byte-identical copies) and its folded rules.
+// The step type is `ActivityTimelineStep` here: `ActivityStep` is the line above.
+export { activityStepHasRichDetail } from "./activity-step-types";
+export type {
+  ActivityStep as ActivityTimelineStep,
+  ActivityStepEdit,
+  ActivityStepOutput,
+  ActivityTodoItem,
+} from "./activity-step-types";
+export {
+  deriveActionGroupSummary,
+  deriveReadableCommandDisplay,
+  deriveStepRowPresentation,
+  resolveCommandVisualKind,
+} from "./activity-step-label";
+export type { CommandVisualKind, StepRowPresentation } from "./activity-step-label";
+export { activityRowKey, activitySegmentKey, buildActivityRows, groupActivityRows } from "./activity-tasks-utils";
+export type { ActivityRow, ActivitySegment } from "./activity-tasks-utils";
+export {
+  ACTIVITY_MAX_VISIBLE_BLOCKS,
+  ACTIVITY_MAX_VISIBLE_CHILDREN,
+  activityChildRows,
+  activityStepSeconds,
+  foldedActivitySegments,
+} from "./activity-timeline";
 export {
   PromptInput,
   PromptInputButton,
+  PromptInputChip,
   PromptInputSubmit,
+  PROMPT_INPUT_CHIP,
   isGenerating,
 } from "./prompt-input";
 export type {
   ChatStatus,
+  PromptInputChipProps,
   PromptInputProps,
   PromptInputButtonProps,
   PromptInputSubmitProps,
 } from "./prompt-input";
+export { PromptInputMenu, PromptInputMenuItem, PROMPT_INPUT_MENU, promptInputMenuHeight } from "./prompt-input-menu";
+export type { PromptInputMenuProps, PromptInputMenuItemProps } from "./prompt-input-menu";
 export { Suggestions, Suggestion } from "./suggestion";
 export type { SuggestionsProps, SuggestionProps } from "./suggestion";
 export { Sources, SourcesTrigger, SourcesContent, Source, sourcesLabel } from "./sources";
@@ -146,6 +181,8 @@ export { ChoiceQuestion, choiceAnswers } from "./choice-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
 export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";
+export { UnifiedDiff, DiffStat, UNIFIED_DIFF } from "./unified-diff";
+export type { UnifiedDiffProps, UnifiedDiffLine, DiffStatProps } from "./unified-diff";
 export {
   ToolApprovalCard,
   ToolDraftCard,

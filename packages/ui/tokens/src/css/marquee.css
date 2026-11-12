@@ -35,9 +35,12 @@
   will-change: transform;
 }
 
-.mq-host[data-mq-overflow="true"]:hover .mq-inner,
-.group:hover .mq-host[data-mq-overflow="true"] .mq-inner {
-  max-width: none; /* let the text spill to its full width; the host clips it */
-  transform: translateX(calc(-1 * var(--mq-shift, 0px)));
-  transition: transform var(--mq-dur, 0s) linear var(--mq-delay, 400ms);
+/* Fine pointers only: on touch a tap leaves :hover stuck and the text scrolled. */
+@media (hover: hover) and (pointer: fine) {
+  .mq-host[data-mq-overflow="true"]:hover .mq-inner,
+  .group:hover .mq-host[data-mq-overflow="true"] .mq-inner {
+    max-width: none; /* let the text spill to its full width; the host clips it */
+    transform: translateX(calc(-1 * var(--mq-shift, 0px)));
+    transition: transform var(--mq-dur, 0s) linear var(--mq-delay, 400ms);
+  }
 }

@@ -7,6 +7,7 @@ import { buttonColors, sizeStyle, textStyle, trackingStyle, typeStyle } from "..
 import { palette } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
+import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 
@@ -148,6 +149,7 @@ export function ChoiceQuestion({
             key={`${option.label}-${index}`}
             selected={!otherOn[step] && selected.includes(option.label)}
             disabled={loading}
+            multiple={question.multiSelect}
             mark={LETTERS[index] ?? String(index + 1)}
             label={option.label}
             description={option.description}
@@ -157,6 +159,7 @@ export function ChoiceQuestion({
         <ChoiceRow
           selected={otherOn[step] ?? false}
           disabled={loading}
+          multiple={question.multiSelect}
           mark="other"
           label={otherLabel}
           onPress={() => {
@@ -172,6 +175,10 @@ export function ChoiceQuestion({
                 placeholder={otherPlaceholder}
                 editable={!loading}
                 autoFocus
+                // Return is the Next or Submit button. Until there is an
+                // answer it keeps the keyboard up, as the button does nothing.
+                returnKeyType={isLast ? "send" : "next"}
+                submitBehavior={isLast && hasAnswer ? "blurAndSubmit" : "submit"}
                 onSubmitEditing={next}
               />
             </View>
@@ -248,6 +255,18 @@ function TopicBadge({ children }: { children: string }) {
   );
 }
 
+/** The option card's `py-2 px-2.5`, which is also the slop of its press target. */
+const CARD_PADDING = { top: 8, bottom: 8, left: 10, right: 10 };
+
+/** A whole card is at least a 44 target: the press target inside is this much less its slop. */
+const CARD_MIN_HEIGHT = 44;
+
+/** The card while pressed: the kit 3% press scale, or a dim with Reduce Motion. */
+export function choicePressStyle(pressed: boolean, reduceMotion: boolean) {
+  if (!pressed) return null;
+  return reduceMotion ? { opacity: 0.8 } : { transform: [{ scale: 0.97 }] };
+}
+
 /**
  * One option row (web `Card` with `bg-secondary`, `py-2 px-2.5`, radius 16): a round 24 mark
  * (30 with larger text; letter, or a pencil for "Other"; a check on the primary fill when picked),
@@ -256,6 +275,7 @@ function TopicBadge({ children }: { children: string }) {
 function ChoiceRow({
   selected,
   disabled,
+  multiple,
   mark,
   label,
   description,
@@ -264,6 +284,8 @@ function ChoiceRow({
 }: {
   selected: boolean;
   disabled: boolean;
+  /** A multi-select question: each row is a `checkbox`, not a `radio`. */
+  multiple: boolean;
   mark: string;
   label: string;
   description?: string;
@@ -272,6 +294,9 @@ function ChoiceRow({
 }) {
   const scheme = useScheme();
   const largerText = useLargerText();
+  const reduceMotion = useReduceMotion();
+  // The scale moves the whole card, which is not the Pressable (the "Other" field sits in it too).
+  const [pressed, setPressed] = useState(false);
   const muted = tokens.color.muted[scheme];
   const markSize = largerText ? 30 : 24;
   const markText = largerText ? 14 : 11;
@@ -285,14 +310,17 @@ function ChoiceRow({
   const labelLine = largerText ? sizeStyle(small, "snug") : { ...sizeStyle(small, "snug"), lineHeight: 24 };
   return (
     <View
-      style={{
-        // Web `Card` (rounded-surface, 16) with `py-2 px-2.5` and no border width.
-        borderRadius: tokens.radius.lg,
-        backgroundColor: selected ? tokens.color.background[scheme] : palette.default[scheme],
-        opacity: disabled ? 0.5 : 1,
-        paddingVertical: 8,
-        paddingHorizontal: 10,
-      }}
+      style={[
+        {
+          // Web `Card` (rounded-surface, 16) with `py-2 px-2.5` and no border width.
+          borderRadius: tokens.radius.lg,
+          backgroundColor: selected ? tokens.color.background[scheme] : palette.default[scheme],
+          opacity: disabled ? 0.5 : 1,
+          paddingVertical: CARD_PADDING.top,
+          paddingHorizontal: CARD_PADDING.left,
+        },
+        choicePressStyle(pressed && !disabled, reduceMotion),
+      ]}
     >
       {selected ? (
         // Web `ring-1 ring-primary`: a 1 line just outside the card, so picking a row moves nothing.
@@ -311,14 +339,22 @@ function ChoiceRow({
         />
       ) : null}
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={multiple ? "checkbox" : "radio"}
         accessibilityLabel={label}
-        accessibilityState={{ selected, disabled }}
+        accessibilityHint={description || undefined}
+        accessibilityState={{ checked: selected, disabled }}
         disabled={disabled}
+        // The card's own padding: a tap anywhere on the card picks it, and stops at its edge.
+        hitSlop={CARD_PADDING}
         onPress={onPress}
-        hitSlop={4}
+        onPressIn={() => setPressed(true)}
+        onPressOut={() => setPressed(false)}
         className="flex-row"
-        style={{ gap: 12, alignItems: description ? "flex-start" : "center" }}
+        style={{
+          gap: 12,
+          alignItems: description ? "flex-start" : "center",
+          minHeight: CARD_MIN_HEIGHT - CARD_PADDING.top - CARD_PADDING.bottom,
+        }}
       >
         <View
           style={{

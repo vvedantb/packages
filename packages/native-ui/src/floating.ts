@@ -48,9 +48,30 @@ export const floatingFill = tokens.color.fill;
 /** The `tokens.color.surface` pair itself, so `configureTheme` reaches it. */
 export const floatingSolidFill = tokens.color.surface;
 
+/**
+ * Where `FloatingTabBar` sits: `FLOATING_INSET` in from the screen sides (and,
+ * in landscape, the notch) and above the home indicator. `BulkActionBar` with
+ * `placement="tabBar"` takes the same slot while the tab bar hides.
+ */
+export function tabBarSlotStyle(insets: { left: number; right: number; bottom: number }): {
+  position: "absolute";
+  left: number;
+  right: number;
+  bottom: number;
+} {
+  return {
+    position: "absolute",
+    left: insets.left + FLOATING_INSET,
+    right: insets.right + FLOATING_INSET,
+    bottom: FLOATING_INSET + Math.max(insets.bottom, 8),
+  };
+}
+
+/** The height of `FloatingTabBar`, and of `BulkActionBar` in its slot. */
+export function tabBarHeight(largerText: boolean) {
+  return largerText ? FLOATING_TAB_BAR_HEIGHT_LARGE : FLOATING_TAB_BAR_HEIGHT;
+}
+
 export function tabBarReserve(largerText: boolean, bottomInset: number) {
-  const bar = largerText
-    ? FLOATING_TAB_BAR_HEIGHT_LARGE
-    : FLOATING_TAB_BAR_HEIGHT;
-  return bar + FLOATING_INSET + Math.max(bottomInset, 8) + 28;
+  return tabBarHeight(largerText) + FLOATING_INSET + Math.max(bottomInset, 8) + 28;
 }

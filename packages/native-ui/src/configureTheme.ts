@@ -39,13 +39,32 @@ function assignValues(
   }
 }
 
+/** Bumped by each `configureTheme` call; `useScheme` redraws on it. */
+let themeVersion = 0;
+const themeListeners = new Set<() => void>();
+
+/** Calls `listener` after each `configureTheme`. Returns the unsubscribe. */
+export function subscribeTheme(listener: () => void): () => void {
+  themeListeners.add(listener);
+  return () => {
+    themeListeners.delete(listener);
+  };
+}
+
+/** The number of `configureTheme` calls so far, a snapshot for `useSyncExternalStore`. */
+export function getThemeVersion(): number {
+  return themeVersion;
+}
+
 /**
  * Sets the app's own colours and fonts. It writes into the shared
  * `tokens.color`, `palette` and `fontFamily` objects, which every component
- * reads at render, so call it once at app start, before the first render (for
- * example at the top of the root `_layout.tsx`, outside the component). A call
- * after the first render does not redraw mounted components. Each pair gives
- * both schemes:
+ * reads at render. Call it once at app start, before the first render (for
+ * example at the top of the root `_layout.tsx`, outside the component). A
+ * later call (for example a second dark palette the user picks) redraws the
+ * mounted components under `NativeUiProvider` that read the scheme (`useScheme`); app code that copies
+ * values out, or memoises on the scheme alone, must redraw on its own. Each
+ * pair gives both schemes:
  *
  * ```ts
  * configureTheme({
@@ -64,4 +83,6 @@ export function configureTheme(config: ThemeConfig): void {
   if (config.color) assignValues(tokens.color, config.color);
   if (config.palette) assignValues(palette, config.palette);
   if (config.font) assignValues(fontFamily, config.font);
+  themeVersion += 1;
+  for (const listener of themeListeners) listener();
 }
