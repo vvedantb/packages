@@ -43,6 +43,8 @@ const hooks = vi.hoisted(() => {
 
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  useContext: () => 0,
   useState: hooks.useState,
 }));
 vi.mock("react-native", () => ({

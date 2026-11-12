@@ -1,5 +1,4 @@
 import { Platform, StyleSheet, View, type ViewProps } from "react-native";
-import { useColorScheme } from "nativewind";
 import { glassMode, loadBlur } from "./blur";
 import { cn } from "./cn";
 import { hasDefiniteHeight } from "./definiteSize";
@@ -12,6 +11,7 @@ import {
 } from "./floating";
 import { useGlassBlurTarget } from "./glassBlur";
 import { useReduceTransparency } from "./useReduceTransparency";
+import { useScheme } from "./useScheme";
 
 type FloatingSurfaceProps = ViewProps & {
   className?: string;
@@ -29,7 +29,7 @@ export function FloatingSurface({
   elevated = true,
   ...props
 }: FloatingSurfaceProps) {
-  const { colorScheme } = useColorScheme();
+  const colorScheme = useScheme();
   const reduceTransparency = useReduceTransparency();
   const blurTarget = useGlassBlurTarget();
   const BlurView = loadBlur()?.BlurView;

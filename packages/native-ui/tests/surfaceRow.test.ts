@@ -7,6 +7,9 @@ import type { SurfaceRowProps } from "../src/SurfaceRow";
 // surface with a status stripe, pressed as one button.
 
 vi.mock("react-native", () => ({ Pressable: "Pressable", View: "View" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 const haptics = vi.hoisted(() => ({ impactHaptic: vi.fn() }));
 vi.mock("../src/haptics", () => haptics);

@@ -22,7 +22,9 @@ vi.mock("react", async (importOriginal) => {
     };
     return [store.slots[slot] as T, set] as const;
   };
-  return { ...actual, useState, default: { ...actual, useState } };
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  const useContext = () => 0;
+  return { ...actual, useState, useContext, default: { ...actual, useState, useContext } };
 });
 vi.mock("react-native", () => ({
   Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },

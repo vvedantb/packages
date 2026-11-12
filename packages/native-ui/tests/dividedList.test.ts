@@ -6,6 +6,9 @@ import { tokens } from "../src/tokens";
 // each pair, as the web `divide-y divide-border` lists.
 
 vi.mock("react-native", () => ({ View: "View" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 
 type Element = { type: unknown; props: { style?: { height?: number; marginLeft?: number; backgroundColor?: string }; children?: unknown } };

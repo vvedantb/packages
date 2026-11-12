@@ -12,6 +12,9 @@ const scheme = vi.hoisted(() => ({ colorScheme: "light" as "light" | "dark" | un
 const larger = vi.hoisted(() => ({ value: false }));
 const setColorScheme = vi.hoisted(() => vi.fn());
 vi.mock("react-native", () => ({ TouchableOpacity: "TouchableOpacity" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({
   useColorScheme: () => ({ colorScheme: scheme.colorScheme, setColorScheme, toggleColorScheme: vi.fn() }),
 }));
