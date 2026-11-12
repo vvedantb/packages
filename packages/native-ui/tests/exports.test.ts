@@ -93,6 +93,7 @@ describe("@vvedantb/native-ui exports", () => {
       "Separator",
       "Progress",
       "Spinner",
+      "LoadingState",
       "CenteredSpinner",
       "StatusDot",
       "EmptyState",
