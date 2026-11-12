@@ -16,8 +16,10 @@ const cssFiles = readdirSync(join(TOKENS, "src/css")).map((f) => join(TOKENS, "s
 // Strips comments and strings so brace counting sees only structure.
 const structure = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
 
-test("version is 0.39.0", () => {
-  assert.equal(pkg.version, "0.39.0");
+// Changesets bumps the version in the release PR, so do not pin an exact one here:
+// a pinned version fails the test step of the publish run.
+test("version is a semver", () => {
+  assert.match(pkg.version, /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/);
 });
 
 test("field radius matches rounded-control (10px cap)", () => {
