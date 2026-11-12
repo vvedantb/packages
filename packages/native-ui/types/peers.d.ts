@@ -236,6 +236,7 @@ declare module "react-native" {
     onContentSizeChange?: (width: number, height: number) => void;
     refreshControl?: React.ReactElement<RefreshControlProps>;
     fadingEdgeLength?: number;
+    maintainVisibleContentPosition?: { minIndexForVisible: number; autoscrollToTopThreshold?: number | null } | null;
   }
   export interface RefreshControlProps extends ViewProps {
     refreshing: boolean;
@@ -262,6 +263,7 @@ declare module "react-native" {
     ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
     initialNumToRender?: number;
     windowSize?: number;
+    inverted?: boolean | null;
     renderScrollComponent?: (props: ScrollViewProps) => React.ReactElement;
   }
   export class FlatList<T> extends React.Component<FlatListProps<T>> {
@@ -609,12 +611,17 @@ declare module "react-native-keyboard-controller" {
   export type ScrollViewContentInsets = { top: number; bottom: number; left: number; right: number };
   export const KeyboardChatScrollView: React.ComponentType<
     ScrollViewProps & {
+      inverted?: boolean;
       offset?: number;
       keyboardLiftBehavior?: "always" | "whenAtEnd" | "persistent" | "never";
       onContentInsetChange?: (insets: ScrollViewContentInsets) => void;
       children?: React.ReactNode;
     }
   >;
+  export function useKeyboardHandler(
+    handler: { onStart?: (event: { height: number }) => void; onEnd?: (event: { height: number }) => void },
+    deps?: unknown[],
+  ): void;
   export const KeyboardGestureArea: React.ComponentType<{
     interpolator?: "ios" | "linear";
     offset?: number;
