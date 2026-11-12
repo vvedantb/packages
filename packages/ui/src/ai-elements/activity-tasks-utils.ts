@@ -1,4 +1,4 @@
-import type { ActivityStep } from "./activity-shared";
+import type { ActivityStep } from "./activity-step-types";
 
 /**
  * One row in the activity timeline. Subtask rows may nest child rows that ran

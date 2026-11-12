@@ -25,11 +25,11 @@
 }
 
 /* Row actions that only appear on group-hover. Touch has no hover, so the
-   control stays visible on phones and hides only where hover exists. */
+   control stays visible on phones and hides only for a fine hovering pointer. */
 @utility reveal-on-hover {
   opacity: 1;
 
-  @media (hover: hover) and (width >= theme(--breakpoint-sm)) {
+  @media (hover: hover) and (pointer: fine) and (width >= theme(--breakpoint-sm)) {
     opacity: 0;
 
     &:is(:where(.group):hover *),

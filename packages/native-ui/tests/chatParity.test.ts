@@ -26,6 +26,7 @@ const webCodeBlock = read(ui, "src", "ai-elements", "code-block.tsx");
 const webMarkdownCode = read(ui, "src", "markdown", "MarkdownCodeBlock.tsx");
 const webMarkdown = read(ui, "src", "markdown", "Markdown.tsx");
 const webQuestion = read(ui, "src", "ai-elements", "activity-question.tsx");
+const webModelPicker = read(ui, "src", "ai-elements", "model-picker.tsx");
 // The Streamdown build `@vvedantb/ui` installs: its root and table classes.
 const streamdownDist = join(ui, "node_modules", "streamdown", "dist");
 const streamdown = readdirSync(streamdownDist)
@@ -104,10 +105,10 @@ describe("markdown", () => {
     expect(markdownCss).toMatch(/\.markdown :is\(p, ul, ol, blockquote, table,[^{]*\{\s*margin-block: 0\.65rem;/);
     // The header row: the table's `divide-y divide-border`.
     expect(streamdown).toMatch(/w-full divide-y divide-border/);
-    const source = native("markdown/Markdown.tsx");
+    const source = native("markdown/MarkdownTable.tsx");
     expect(source).toMatch(/fontScale: 0\.93,\s*lineHeight: 1\.5,\s*cellPaddingX: 12,\s*cellPaddingY: 7,/);
     expect(source).toMatch(/panelPadding: \{ top: 4, x: 5, bottom: 6 \},\s*tableMargin: 10,/);
-    expect(source).toMatch(/withAlpha\(tokens\.color\.border\[this\.scheme\], 0\.7\)/);
+    expect(source).toMatch(/withAlpha\(tokens\.color\.border\[scheme\], 0\.7\)/);
   });
 
   it("draws fenced code as the web MarkdownCodeBlock: header, pre, icon-xs wrap toggle and copy", () => {
@@ -139,8 +140,8 @@ describe("markdown", () => {
 describe("composer and scroll button", () => {
   it("sets the inline field as the web Composer and the stacked one as the web PromptInput Textarea", () => {
     expect(webComposer).toMatch(/const TEXT_METRICS_BASE = "block w-full text-sm leading-6/);
-    // Below `sm` (phones) the Textarea is `text-base`.
-    expect(webTextarea).toMatch(/text-base sm:text-sm/);
+    // On touch (and below `sm`) the Textarea is `text-base`.
+    expect(webTextarea).toMatch(/text-base sm:pointer-fine:text-sm/);
     expect(webPromptInput).toMatch(/<InputGroupTextarea/);
     const source = native("ai/prompt-input.tsx");
     expect(source).toMatch(/\? \{ fontSize: 14, lineHeight: pill \? 20 : 24 \}\s*: sizeStyle\("text-base"\)/);
@@ -161,6 +162,34 @@ describe("composer and scroll button", () => {
   it("can draw its label after the icon, as the web button with a label", () => {
     expect(webConversation).toMatch(/\{icon \?\? <IconArrowDown className="size-4" \/>\}\s*\{label\}/);
     expect(native("ai/conversation.tsx")).toMatch(/showLabel \? \(/);
+  });
+});
+
+describe("composer footer chip", () => {
+  it("is the web ModelPicker trigger: h-7 gap-1.5 rounded-md px-2 font-medium, muted, with a text-sm label", () => {
+    const trigger = /const TRIGGER_CLASS =\s*(?:\/\/.*\n\s*)*"([^"]+)"/.exec(webModelPicker)?.[1] ?? "";
+    for (const part of ["h-7", "gap-1.5", "rounded-md", "px-2", "text-xs", "font-medium", "text-muted-foreground", "disabled:opacity-50"]) {
+      expect(trigger.split(" "), part).toContain(part);
+    }
+    const source = native("ai/prompt-input.tsx");
+    expect(source).toMatch(/height: 28,\s*paddingX: 8,\s*gap: 6,\s*radius: tokens\.radius\.md,/);
+    expect(source).toMatch(/weight = "medium"/);
+    expect(source).toMatch(/const tint = color \?\? tokens\.color\.muted\[scheme\];/);
+    // The label is the phone floor for tappable text, a step up from the web `text-xs`.
+    expect(source).toMatch(/sizeStyle\("text-sm"\)/);
+    expect(source).toMatch(/disabled && "opacity-50"/);
+  });
+
+  it("draws the web 14 mark, the suffix at /70 after a middle dot and a 12 chevron at 60%", () => {
+    expect(webModelPicker).toMatch(/<ProviderIcon\s*provider=\{selectedModel\?\.provider \?\? "claude"\}\s*size=\{14\}/);
+    expect(webModelPicker).toMatch(/<span className="text-muted-foreground\/70">\s*\{" · "\}\s*\{triggerSuffix\}/);
+    expect(webModelPicker).toMatch(/<IconChevronDown\s*size=\{12\}\s*className="shrink-0 opacity-60"/);
+    // The phone label gives up width to the chips beside it, as the web `max-sm:truncate`.
+    expect(webModelPicker).toMatch(/max-sm:min-w-0 max-sm:truncate/);
+    const source = native("ai/prompt-input.tsx");
+    expect(source).toMatch(/iconSize: 14,\s*chevronSize: 12,\s*chevronOpacity: 0\.6,\s*suffixOpacity: 0\.7,/);
+    expect(source).toMatch(/\{` · \$\{suffix\}`\}/);
+    expect(source).toMatch(/numberOfLines=\{1\}/);
   });
 });
 

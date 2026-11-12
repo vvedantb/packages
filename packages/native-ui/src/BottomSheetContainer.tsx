@@ -4,7 +4,6 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import type { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
 import { IconX } from "@tabler/icons-react-native";
-import { useColorScheme } from "nativewind";
 import React, { useCallback } from "react";
 import {
   Platform,
@@ -18,6 +17,7 @@ import { textStyle, typeStyle } from "./controlStyles";
 import { floatingSolidFill } from "./floating";
 import { GlassSheetBackground } from "./LiquidGlass";
 import { useLargerText } from "./theme";
+import { useScheme } from "./useScheme";
 
 // One snap point, set explicitly. With dynamic sizing the sheet can measure to
 // height 0 on Android and never appear.
@@ -35,14 +35,14 @@ function SolidSheetBackground({
   style?: ViewProps["style"];
   pointerEvents?: ViewProps["pointerEvents"];
 }) {
-  const { colorScheme } = useColorScheme();
+  const scheme = useScheme();
   return (
     <View
       pointerEvents={pointerEvents}
       style={[
         style,
         {
-          backgroundColor: floatingSolidFill[colorScheme === "dark" ? "dark" : "light"],
+          backgroundColor: floatingSolidFill[scheme],
           borderTopLeftRadius: SHEET_RADIUS,
           borderTopRightRadius: SHEET_RADIUS,
         },
@@ -85,8 +85,7 @@ export function BottomSheetContainer({
   closeTestID?: string;
 }) {
   const largerText = useLargerText();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useScheme() === "dark";
   const renderBackdrop = useCallback(
     (props: BottomSheetDefaultBackdropProps) => <SheetBackdrop {...props} />,
     [],

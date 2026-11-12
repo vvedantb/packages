@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { useRef, useState, type ReactNode } from "react";
+import { Text, View, type TextInput } from "react-native";
 import { useSignIn, useSignUp } from "@clerk/clerk-expo";
 import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
@@ -203,6 +203,9 @@ export function SignInScreen({
   const secondFactor = useSecondFactor({ stageTimeoutMs });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // The field each "next" key moves to.
+  const passwordField = useRef<TextInput>(null);
+  const confirmField = useRef<TextInput>(null);
   const signUp = mode === "sign-up";
   const id = (name: string) => `${testIDPrefix ?? mode}-${name}`;
 
@@ -481,12 +484,15 @@ export function SignInScreen({
           textContentType="newPassword"
           autoFocus
           returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => confirmField.current?.focus()}
           value={newPassword}
           placeholder={AUTH_MESSAGES.newPasswordLabel}
           onChangeText={setNewPassword}
         />
         <PasswordInput
           testID={id("confirm-password")}
+          ref={confirmField}
           accessibilityLabel={AUTH_MESSAGES.confirmPasswordLabel}
           autoCapitalize="none"
           autoComplete="new-password"
@@ -661,12 +667,15 @@ export function SignInScreen({
         textContentType="emailAddress"
         keyboardType="email-address"
         returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordField.current?.focus()}
         value={email}
         placeholder="Email"
         onChangeText={setEmail}
       />
       <PasswordInput
         testID={id("password")}
+        ref={passwordField}
         accessibilityLabel="Password"
         autoCapitalize="none"
         autoComplete={signUp ? "new-password" : "password"}

@@ -49,8 +49,10 @@ describe("Button (phone)", () => {
   const slops = block("HIT_SLOP");
   const sizeClass = (scale: string, size: string) =>
     heights.match(new RegExp(`${scale}: \\{[\\s\\S]*?${size}: "([^"]+)"`))?.[1] ?? "";
+  // The vertical slop of a size: a number on every side, or an object's `top`.
   const slop = (scale: string, size: string) => {
-    const value = slops.match(new RegExp(`${scale}: \\{[^}]*\\b${size}: (\\d+|undefined)`))?.[1];
+    const line = slops.split("\n").find((row) => row.trim().startsWith(`${scale}:`)) ?? "";
+    const value = line.match(new RegExp(`\\b${size}: (?:\\{ top: )?(\\d+|undefined)`))?.[1];
     expect(value, `${scale} ${size}`).toBeDefined();
     return value === "undefined" ? 0 : Number(value);
   };
@@ -66,8 +68,8 @@ describe("Button (phone)", () => {
         }
       }
     }
-    // The web `sm` (32), `default` (40) and `icon` (40) stay that size on screen.
-    expect(points(sizeClass("regular", "small"), "h")).toBe(32);
+    // The web `default` (40) and `icon` (40) stay that size on screen; `sm` is 36, up from the web 32.
+    expect(points(sizeClass("regular", "small"), "h")).toBe(36);
     expect(points(sizeClass("regular", "medium"), "h")).toBe(40);
     expect(button).toMatch(/hitSlop=\{HIT_SLOP\[scale\]\[resolvedSize\]\}/);
   });
@@ -105,14 +107,14 @@ describe("Button (phone)", () => {
 describe("UpgradeToProCard (phone)", () => {
   const card = read("marketing/UpgradeToProCard.tsx");
 
-  it("keeps the web 32 pill on screen and reaches 44 with the web hit-target slop", () => {
+  it("draws the phone Button sm pill (36) and reaches 44 with the web hit-target slop", () => {
     const utilities = readFileSync(join(root, "..", "ui", "tokens/src/css/utilities.css"), "utf8");
     expect(utilities).toMatch(/@utility hit-target \{[\s\S]*?inset: -8px;/);
     const slop = Number(card.match(/const HIT_SLOP = (\d+);/)?.[1]);
     expect(slop).toBe(8);
     expect(card).toMatch(/hitSlop=\{HIT_SLOP\}/);
     const heights = card.match(/largerText \? "(min-h-[^"]+)" : "(min-h-[^"]+)"/);
-    expect(points(heights![2]!, "h")).toBe(32);
+    expect(points(heights![2]!, "h")).toBe(36);
     expect(points(heights![1]!, "h")).toBe(48);
     for (const classes of [heights![1]!, heights![2]!]) {
       expect(points(classes, "h") + 2 * slop, classes).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
@@ -156,8 +158,8 @@ describe("accessibility roles and states", () => {
     const pills = read("PillTabs.tsx");
     expect(pills).toMatch(/accessibilityRole="tablist"/);
     expect(pills).toMatch(/accessibilityRole="tab"/);
-    expect(pills).toMatch(/accessibilityState=\{\{ selected: isSelected \}\}/);
-    expect(pills).toMatch(/accessibilityLabel=\{tab\.label\}/);
+    expect(pills).toMatch(/accessibilityState=\{\{ selected \}\}/);
+    expect(pills).toMatch(/accessibilityLabel=\{label\}/);
   });
 
   it("the Select trigger is a labelled combobox with disabled state and a 44 target", () => {
@@ -166,9 +168,10 @@ describe("accessibility roles and states", () => {
     expect(select).toMatch(/accessibilityRole="combobox"/);
     expect(select).toMatch(/accessibilityLabel=\{accessibilityLabel\}/);
     expect(select).toMatch(/accessibilityState=\{\{ disabled: Boolean\(disabled\) \}\}/);
-    expect(select).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, largerText \? 64 : 40\)\}/);
-    const { top, bottom } = touchSlop(MIN_TOUCH_TARGET, 40);
-    expect(40 + top + bottom).toBe(44);
+    // 44 high on screen, so it needs no slop.
+    expect(select).toMatch(/hitSlop=\{touchSlop\(MIN_TOUCH_TARGET, largerText \? 64 : 44\)\}/);
+    const { top, bottom } = touchSlop(MIN_TOUCH_TARGET, 44);
+    expect(top + bottom).toBe(0);
   });
 
   it("the dialog close button is a 44 labelled button; Dialog and Sheet closes are buttons", () => {
@@ -252,12 +255,13 @@ describe("Reduce Motion", () => {
   });
 
   it("turns off the Modal animation of overlays and the pricing sheet", () => {
-    expect(read("primitives/overlay.tsx")).toMatch(/animationType=\{reduceMotion \? "none" : "fade"\}/);
+    // A bottom sheet slides itself (`slides`), so its Modal never animates.
+    expect(read("primitives/overlay.tsx")).toMatch(/animationType=\{slides \|\| reduceMotion \? "none" : "fade"\}/);
     expect(read("marketing/PricingModal.tsx")).toMatch(/animationType=\{reduceMotion \? "none" : "slide"\}/);
     for (const file of files) {
       const source = code(read(file));
       if (!/<Modal\b/.test(source)) continue;
-      expect(source, file).toMatch(/animationType=\{reduceMotion \? "none" : /);
+      expect(source, file).toMatch(/animationType=\{(slides \|\| )?reduceMotion \? "none" : /);
     }
   });
 });
@@ -281,16 +285,15 @@ describe("safe area and keyboard", () => {
     const toast = read("Toast.tsx");
     expect(toast).toMatch(/top: insets\.top \+ offset,/);
     expect(toast).toMatch(/left: insets\.left \+ FLOATING_INSET,\s+right: insets\.right \+ FLOATING_INSET,/);
-    const bar = read("FloatingTabBar.tsx");
-    expect(bar).toMatch(/left: insets\.left \+ FLOATING_INSET,\s+right: insets\.right \+ FLOATING_INSET,/);
-    expect(bar).toMatch(/bottom: FLOATING_INSET \+ Math\.max\(insets\.bottom, 8\),/);
+    // The tab bar's slot (`tabBarSlotStyle`) is checked by calling it, in tabBar.test.ts.
     const fab = read("FloatingFAB.tsx");
     expect(fab).toMatch(/right: insets\.right \+ FLOATING_INSET,/);
     expect(fab).toMatch(/bottom: FLOATING_INSET \+ Math\.max\(insets\.bottom, 8\) \+ tabBar \+ 20,/);
   });
 
   it("lifts dialog and sheet fields above the keyboard on iOS and Android", () => {
-    expect(overlay).toMatch(/<KeyboardAvoidingView behavior="padding" style=\{styles\.fill\}>/);
+    // The kit `KeyboardAvoidingView` (`primitives/keyboard-parts`), padding by default.
+    expect(overlay).toMatch(/<KeyboardAvoidingView style=\{styles\.fill\}>/);
     expect(code(overlay)).not.toMatch(/Platform\.OS === "ios" \? "padding" : undefined/);
     expect(read("Dialog.tsx")).toMatch(/<OverlayModal\s+part="DialogContent"\s+placement=\{compact \? "bottom" : "center"\}/);
     expect(read("Sheet.tsx")).toMatch(/<OverlayModal part="SheetContent" placement="bottom"/);
@@ -323,9 +326,9 @@ describe("Dynamic Type", () => {
   });
 
   it("uses minimum heights on labelled pressables", () => {
-    expect(read("Select.tsx")).toMatch(/"h-auto min-h-10 w-full/);
+    expect(read("Select.tsx")).toMatch(/"h-auto min-h-11 w-full/);
     expect(read("Select.tsx")).toMatch(/largerText && "min-h-16 px-4"/);
-    expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-8 px-3"/);
+    expect(read("marketing/UpgradeToProCard.tsx")).toMatch(/largerText \? "min-h-12 px-4" : "min-h-9 px-3"/);
     expect(read("DateTimeField.tsx")).toMatch(/largerText \? "min-h-16" : "min-h-14"/);
     expect(read("SearchInput.tsx")).toMatch(/minHeight: metrics\.minHeight,/);
     // The SearchInput lock grows with the font scale (tests/searchInput.test.ts).

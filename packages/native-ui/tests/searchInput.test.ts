@@ -20,6 +20,9 @@ vi.mock("react-native", () => ({
   TextInput: "TextInput",
   useWindowDimensions: () => ({ width: 390, height: 844, scale: 2, fontScale: fontScale.value }),
 }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("@tabler/icons-react-native", () => ({ IconSearch: "IconSearch", IconX: "IconX" }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
@@ -50,8 +53,8 @@ describe("searchInputSize (web contract)", () => {
     expect(sm.height).toBe(points(h!));
     expect(sm.minHeight).toBe(points(h!));
     expect(sm.paddingLeft).toBe(points(pl!));
-    // Web SearchInput now ships `text-base sm:text-sm` (was bare `text-sm`).
-    expect(rest!.trim()).toBe("text-base sm:text-sm");
+    // Web SearchInput ships `text-base sm:pointer-fine:text-sm` (14 px only for a mouse at sm and up).
+    expect(rest!.trim()).toBe("text-base sm:pointer-fine:text-sm");
     expect(sm.text).toBe("text-sm");
     expect(sm.iconLeft).toBe(points(left!));
   });
@@ -64,7 +67,7 @@ describe("searchInputSize (web contract)", () => {
     expect(md.minHeight).toBe(points(h!));
     expect(md.paddingLeft).toBe(points(pl!));
     expect(rest).toBe("");
-    expect(clear).toMatch(/const inputClasses =\s+"flex h-10 w-full [^"]*px-3\.5 py-2 text-base sm:text-sm/);
+    expect(clear).toMatch(/const inputClasses =\s+"flex h-10 w-full [^"]*px-3\.5 py-2 text-base sm:pointer-fine:text-sm/);
     expect(md.text).toBe("text-base");
     expect(md.iconLeft).toBe(points(left!));
   });

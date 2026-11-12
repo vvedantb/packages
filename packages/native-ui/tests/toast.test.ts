@@ -32,6 +32,10 @@ const larger = vi.hoisted(() => ({ value: false }));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useEffect: () => {},
+  // No `GestureHandlerProvider`: the toast is drawn with no drag.
+  useContext: () => null,
+  useRef: <T>(current: T) => ({ current }),
+  useState: <T>(initial: T) => [initial, () => {}],
   useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot(),
 }));
 vi.mock("react-native", () => ({
@@ -44,8 +48,11 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
-  FadeInUp: { duration: () => "enter" },
-  FadeOutUp: { duration: () => "exit" },
+  FadeInUp: { duration: () => ({ easing: () => "enter" }) },
+  FadeOutUp: { duration: () => ({ easing: () => "exit" }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
   LinearTransition: "layout",
 }));
 vi.mock("react-native-safe-area-context", () => ({

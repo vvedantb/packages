@@ -22,7 +22,9 @@ vi.mock("react", async (importOriginal) => {
     };
     return [store.slots[slot] as T, set] as const;
   };
-  return { ...actual, useState, default: { ...actual, useState } };
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  const useContext = () => 0;
+  return { ...actual, useState, useContext, default: { ...actual, useState, useContext } };
 });
 vi.mock("react-native", () => ({
   Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
@@ -167,11 +169,11 @@ describe("PasswordInput (behaviour)", () => {
   it("gives the field the same size and font classes as Input", async () => {
     const { input } = await render({ className: "mt-2" });
     const classes = String(input!.props.className).split(/\s+/);
-    for (const token of ["min-h-10", "border", "px-3.5", "py-2", "text-base", "font-instrument-sans", "mt-2"]) {
+    for (const token of ["min-h-11", "border", "px-3.5", "py-2", "text-base", "font-instrument-sans", "mt-2"]) {
       expect(classes).toContain(token);
     }
     expect(classes).not.toContain("text-xl");
-    expect(read("src/Input.tsx")).toContain("min-h-10 border px-3.5 py-2 text-base font-instrument-sans");
+    expect(read("src/Input.tsx")).toContain("min-h-11 border px-3.5 py-2 text-base font-instrument-sans");
   });
 
   it("adds the larger-text classes and type style with larger text", async () => {

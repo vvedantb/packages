@@ -2,7 +2,7 @@
  * Web semantic colours for React Native, converted from `@vvedantb/ui`
  * `tokens.css` (oklch → sRGB hex, clipped to sRGB). `tokens.ts` holds the
  * neutrals the native app ships; these are the colours it lacks (primary,
- * danger, success, warning, overlay, segment, field placeholder, backdrop,
+ * danger, success, warning, overlay, segment, tab bar pill, field placeholder, backdrop,
  * dialog description).
  *
  * A test in this package converts `tokens.css` and fails when a value here
@@ -25,6 +25,13 @@ export const palette = {
   overlayForeground: { light: "#181818", dark: "#fcfcfc" },
   segment: { light: "#ffffff", dark: "#474747" },
   segmentForeground: { light: "#181818", dark: "#fcfcfc" },
+  /**
+   * The `FloatingTabBar` active pill: `--default` in light (it shows on the
+   * near-white glass bar) and `--segment` in dark. Its own key, so an app that
+   * themes `segment` for the segmented `Tabs` thumb keeps a pill that shows on
+   * the dark glass bar.
+   */
+  tabBarPill: { light: "#ebebeb", dark: "#474747" },
   surfaceTertiary: { light: "#eaeaea", dark: "#282627" },
   fieldPlaceholder: { light: "#727272", dark: "#a0a0a0" },
   backdrop: { light: "rgba(0, 0, 0, 0.5)", dark: "rgba(0, 0, 0, 0.6)" },

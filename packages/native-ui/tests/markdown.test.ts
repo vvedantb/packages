@@ -15,6 +15,7 @@ vi.mock("react-native-marked", () => ({ Renderer: class {}, useMarkdown: () => [
 vi.mock("../src/ai/code-block", () => ({ CodeBlock: "CodeBlock" }));
 vi.mock("../src/ai/response-text", () => ({ ChatTextColorContext: {} }));
 vi.mock("../src/theme", () => ({ useLargerText: () => false }));
+vi.mock("../src/markdown/MarkdownTable", () => ({ MarkdownTable: "MarkdownTable", MARKDOWN_TABLE: { fontScale: 0.93, lineHeight: 1.5 } }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const webCss = readFileSync(join(root, "..", "ui", "tokens", "src", "css", "markdown.css"), "utf8");
@@ -53,6 +54,25 @@ describe("Markdown", () => {
     expect(markdownStyles("light", { fontSize: 14, lineHeight: 22.75 }, "#111111").strong).toMatchObject({ fontSize: 14, lineHeight: 22.75 });
     // No rule under h1 and h2, and 16 between blocks (half above, half below).
     expect(styles.h2).toMatchObject({ borderBottomWidth: 0, paddingBottom: 0, marginVertical: 8 });
+  });
+
+  it("demotes every heading to a muted uppercase label with headings: label", async () => {
+    const { markdownStyles } = await import("../src/markdown/Markdown");
+    const styles = markdownStyles("dark", body, "#111111", "label");
+    for (const level of ["h1", "h2", "h3", "h4", "h5", "h6"] as const) {
+      expect(styles[level]).toMatchObject({
+        fontFamily: "InstrumentSans_500Medium",
+        fontSize: 12,
+        lineHeight: 16,
+        letterSpacing: expect.closeTo(0.3),
+        textTransform: "uppercase",
+        color: tokens.color.muted.dark,
+        marginTop: 8,
+        marginBottom: 0,
+      });
+    }
+    // The default keeps the web scale.
+    expect(markdownStyles("dark", body, "#111111").h3?.fontSize).toBe(18);
   });
 
   it("reads the faces from fontFamily at call time, so configureTheme({ font }) reaches them", async () => {

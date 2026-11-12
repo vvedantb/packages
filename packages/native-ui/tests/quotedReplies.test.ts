@@ -148,9 +148,15 @@ vi.mock("react-native", () => ({
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
-  FadeIn: { duration: (ms: number) => `FadeIn(${ms})` },
-  FadeOut: { duration: (ms: number) => `FadeOut(${ms})` },
-  useSharedValue: <T>(value: T) => ({ value }),
+  FadeIn: { duration: (ms: number) => ({ easing: () => `FadeIn(${ms})` }) },
+  FadeOut: { duration: (ms: number) => ({ easing: () => `FadeOut(${ms})` }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
   ...animation,
 }));
@@ -482,6 +488,21 @@ describe("Message: long press, actions and highlight", () => {
     expect(sheetOf().props.open).toBe(true);
     press(sheetOf(), "onClose");
     expect(sheetOf().props.open).toBe(false);
+  });
+
+  it("offers the long press to TalkBack as the longpress action, which opens the same sheet", async () => {
+    const onLongPress = vi.fn();
+    const h = await message({ actions: [{ key: "reply", label: "Reply", onPress: vi.fn() }], onLongPress, actionSheetTitle: "Reply to Ada" });
+    const pressable = () => find(h.tree, (el) => el.type === "Pressable")!;
+    expect(pressable().props.accessibilityActions).toEqual([{ name: "longpress", label: "Reply to Ada" }]);
+    const act = pressable().props.onAccessibilityAction as (event: { nativeEvent: { actionName: string } }) => void;
+    act({ nativeEvent: { actionName: "activate" } });
+    expect(onLongPress).not.toHaveBeenCalled();
+    act({ nativeEvent: { actionName: "longpress" } });
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+    expect(find(h.tree, (el) => el.type !== undefined && el.props.actions !== undefined)!.props.open).toBe(true);
+    const plain = await message({ onLongPress: vi.fn() });
+    expect(find(plain.tree, (el) => el.type === "Pressable")!.props.accessibilityActions).toEqual([{ name: "longpress", label: "Message actions" }]);
   });
 
   it("keeps a Message with an empty actions list a plain View", async () => {

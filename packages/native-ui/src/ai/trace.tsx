@@ -2,7 +2,7 @@ import { createContext, useContext, type ComponentType, type ReactNode } from "r
 import { Pressable, Text, View, type ViewProps } from "react-native";
 import type { IconProps } from "@tabler/icons-react-native";
 import { cn } from "../cn";
-import { sizeStyle, touchSlop } from "../controlStyles";
+import { sizeStyle } from "../controlStyles";
 import { palette } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -40,9 +40,13 @@ function useTraceColor() {
   return useContext(TraceLineColorContext) ?? tokens.color.muted[scheme];
 }
 
-/** A column of trace lines (web `flex w-full flex-col gap-2`). */
+/**
+ * A column of trace lines (web `flex w-full flex-col gap-2`). Each line is 28
+ * high (its `py-1` around the 20 text) with no gap, so the rows keep the web
+ * 28 pitch and each is its whole tap area, without slop over its neighbours.
+ */
 export function AgentTrace({ className, ...props }: ViewProps & { className?: string }) {
-  return <View className={cn("w-full min-w-0 gap-2", className)} {...props} />;
+  return <View className={cn("w-full min-w-0", className)} {...props} />;
 }
 
 export type AgentTraceLineProps = ViewProps & {
@@ -50,13 +54,13 @@ export type AgentTraceLineProps = ViewProps & {
   className?: string;
 };
 
-/** One line: a row of icon, title and description. `pending` fades it to 60%, `error` turns it the danger colour. */
+/** One line, 28 high (`py-1`): a row of icon, title and description. `pending` fades it to 60%, `error` turns it the danger colour. */
 export function AgentTraceLine({ status, className, style, ...props }: AgentTraceLineProps) {
   const scheme = useScheme();
   return (
     <TraceLineColorContext.Provider value={traceLineColor(status, scheme)}>
       <View
-        className={cn("min-w-0 max-w-full shrink flex-row items-center gap-2", className)}
+        className={cn("min-w-0 max-w-full shrink flex-row items-center gap-2 py-1", className)}
         style={[status === "pending" ? { opacity: 0.6 } : null, style]}
         {...props}
       />
@@ -149,7 +153,17 @@ export type AgentTraceCollapsibleTriggerProps = CollapsibleTriggerProps & {
   trailing?: ReactNode;
 };
 
-/** The line as a toggle, with a chevron after it that turns down when open. */
+/** No slop: the 28 high line is the whole target, as trace lines stack with no gap. */
+const LINE_SLOP = { top: 0, bottom: 0, left: 0, right: 0 } as const;
+
+/** The chevron's slop: 4 back toward the line, 14 on past it (a 34 wide target), none above or below. */
+const CHEVRON_SLOP = { top: 0, bottom: 0, left: 4, right: 14 } as const;
+
+/**
+ * The line as a toggle, with a chevron after it that turns down when open.
+ * The trigger stretches to the line's 28 height and takes no slop above or
+ * below, so a tap under one line never opens the next.
+ */
 export function AgentTraceCollapsibleTrigger({
   children,
   trailing,
@@ -166,6 +180,7 @@ export function AgentTraceCollapsibleTrigger({
   if (trailing === undefined) {
     return (
       <CollapsibleTrigger
+        hitSlop={LINE_SLOP}
         className={cn("max-w-full flex-row items-center gap-1 self-start", className)}
         {...props}
       >
@@ -176,7 +191,7 @@ export function AgentTraceCollapsibleTrigger({
   }
   return (
     <View className={cn("max-w-full flex-row items-center gap-2 self-start", className)}>
-      <CollapsibleTrigger className="min-w-0 shrink flex-row items-center" {...props}>
+      <CollapsibleTrigger hitSlop={LINE_SLOP} className="min-w-0 shrink flex-row items-center self-stretch" {...props}>
         {children}
       </CollapsibleTrigger>
       {trailing}
@@ -184,8 +199,9 @@ export function AgentTraceCollapsibleTrigger({
       <Pressable
         accessible={false}
         importantForAccessibility="no-hide-descendants"
-        hitSlop={touchSlop(iconSize)}
+        hitSlop={CHEVRON_SLOP}
         onPress={() => setOpen(!open)}
+        className="self-stretch justify-center"
       >
         {chevron}
       </Pressable>
@@ -210,7 +226,7 @@ export function AgentTraceCollapsibleContent({
   return (
     <CollapsibleContent>
       <View
-        className={cn("mb-1 mt-2 min-w-0 pl-4 pr-1", className)}
+        className={cn("mb-2 mt-1 min-w-0 pl-4 pr-1", className)}
         style={[
           {
             marginLeft: iconSize / 2 - 1,
@@ -255,7 +271,8 @@ export type AgentTraceFoldProps = Omit<CollapsibleProps, "children"> & {
 /**
  * A settled turn folded behind one line, as the web `ActivityTasks` in its
  * folded (Codex-style) mode: "Worked for …" over a hairline
- * (`border-b border-border pb-1.5`), closed by default, and the steps in an
+ * 6 below the text (web `border-b border-border pb-1.5`: the line's own 4 and
+ * 2 more), closed by default, and the steps in an
  * `AgentTrace` 8 below when open.
  */
 export function AgentTraceFold({
@@ -270,7 +287,7 @@ export function AgentTraceFold({
   const elapsed = duration ?? formatElapsed(seconds ?? 0);
   return (
     <Collapsible className={cn("w-full min-w-0", className)} defaultOpen={defaultOpen} {...props}>
-      <View style={{ borderBottomWidth: 1, borderBottomColor: tokens.color.border[scheme], paddingBottom: 6 }}>
+      <View style={{ borderBottomWidth: 1, borderBottomColor: tokens.color.border[scheme], paddingBottom: 2 }}>
         <AgentTraceCollapsibleTrigger>
           <AgentTraceLine>
             <AgentTraceTitle>{`Worked for ${elapsed}`}</AgentTraceTitle>
@@ -278,7 +295,7 @@ export function AgentTraceFold({
         </AgentTraceCollapsibleTrigger>
       </View>
       <CollapsibleContent>
-        <AgentTrace className="mt-2">{children}</AgentTrace>
+        <AgentTrace className="mt-1">{children}</AgentTrace>
       </CollapsibleContent>
     </Collapsible>
   );

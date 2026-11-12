@@ -23,6 +23,14 @@ export type FloatingTabOptions = {
   href?: string | null;
   /** Only `display: "none"` is read: it hides the tab, as in React Navigation's own bar. */
   tabBarItemStyle?: StyleProp<ViewStyle>;
+  /**
+   * Only `display: "none"` is read: on the focused route it hides the whole
+   * bar, as in React Navigation's own bar (for example while a screen is in
+   * select mode and shows its `BulkActionBar` in the bar's place). Typed
+   * loosely: React Navigation's own type allows animated styles, any of
+   * which is an object or a falsy value.
+   */
+  tabBarStyle?: object | false | "" | null;
 };
 
 /** The `display` a style resolves to: in an array the last one set wins, as in `StyleSheet.flatten`. */
@@ -49,4 +57,14 @@ export function isTabBarRouteVisible(
   options: FloatingTabOptions | undefined,
 ): options is FloatingTabOptions {
   return options !== undefined && options.href !== null && displayOf(options.tabBarItemStyle) !== "none";
+}
+
+/**
+ * Whether `FloatingTabBar` hides itself: the focused route's `tabBarStyle`
+ * resolves to `display: "none"`, the React Navigation way to hide the bar
+ * from a screen (`navigation.setOptions`, or Expo Router's `<Tabs.Screen
+ * options>` inside the screen).
+ */
+export function isTabBarHidden(options: FloatingTabOptions | undefined): boolean {
+  return displayOf(options?.tabBarStyle) === "none";
 }

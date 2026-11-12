@@ -16,6 +16,7 @@ import "./sonner.css";
 //
 // Position: `top-right` by default (sonner's own default is `bottom-right`), as
 // apps mount it. A `position` prop or `UiConfig.SonnerToaster.position` wins.
+// `mobileOffset` adds the safe-area insets to sonner's 16px; a prop or config replaces it.
 //
 // Stacking: `expand={false}` keeps toasts collapsed (offset + scale). Hovering
 // the stack expands them. `sonner.css` hides back-toast content while collapsed
@@ -99,6 +100,14 @@ const defaultCancelButtonClassName =
   "h-7 shrink-0 rounded-control bg-surface-secondary px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-tertiary";
 
 const defaultToasterPosition = "top-right" satisfies ToasterProps["position"];
+
+// Sonner's 16px phone offset (viewport up to 600px) plus the safe-area inset, so
+// toasts clear the notch and home indicator under a translucent status bar
+// (`viewport-fit=cover`). `env()` is 0 without it. Left and right keep 16px.
+const defaultMobileOffset = {
+  top: "calc(16px + env(safe-area-inset-top, 0px))",
+  bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+} satisfies ToasterProps["mobileOffset"];
 
 const toastRadiusClasses = {
   lg: "rounded-lg",
@@ -220,6 +229,7 @@ function SonnerToaster(props: ToasterProps & SonnerToasterOptions) {
     // Defaulted here, not by spreading after a literal, so `position={undefined}`
     // still gets top-right rather than sonner's bottom-right.
     position = defaultToasterPosition,
+    mobileOffset = defaultMobileOffset,
     toastRadius,
     density,
     toastIcons = "default",
@@ -252,6 +262,7 @@ function SonnerToaster(props: ToasterProps & SonnerToasterOptions) {
       gap={12}
       {...rest}
       position={position}
+      mobileOffset={mobileOffset}
       closeButton={closeButton ?? (closeButtonStyle === "hoverChip" ? true : undefined)}
       className={
         toasterClassName && className

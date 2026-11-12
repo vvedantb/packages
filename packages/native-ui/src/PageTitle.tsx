@@ -36,6 +36,11 @@ export type PageHeaderProps = Omit<ViewProps, "children"> & {
   /** The page title, drawn with `PageTitle`. */
   title: string;
   /**
+   * Content before the title, such as a close `HeaderIconButton` while the
+   * page is in select mode (Android's contextual action bar). It keeps its width.
+   */
+  leading?: ReactNode;
+  /**
    * Content at the end of the row, such as an "Update all" `Button` (pass it
    * `fullWidth={false}`). It keeps its width; a long title is cut off instead.
    */
@@ -52,13 +57,14 @@ export type PageHeaderProps = Omit<ViewProps, "children"> & {
 };
 
 /**
- * A screen's title row: `PageTitle` at the start and an optional `action` at
- * the end, with the `ScreenContainer` side padding (`px-4`). The row is at
+ * A screen's title row: an optional `leading` part, `PageTitle` and an
+ * optional `action` at the end, with the `ScreenContainer` side padding (`px-4`). The row is at
  * least `PAGE_HEADER_HEIGHT` (56) high below the top inset, so tab roots with
  * and without an action put their titles at the same height.
  */
 export function PageHeader({
   title,
+  leading,
   action,
   safeTop = true,
   className,
@@ -74,6 +80,7 @@ export function PageHeader({
       style={[{ paddingTop: top, minHeight: top + PAGE_HEADER_HEIGHT }, style]}
       {...props}
     >
+      {leading ? <View className="shrink-0">{leading}</View> : null}
       <PageTitle className={cn("min-w-0 flex-1", titleClassName)}>{title}</PageTitle>
       {action ? <View className="shrink-0">{action}</View> : null}
     </View>

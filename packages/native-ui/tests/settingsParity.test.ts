@@ -14,7 +14,10 @@ import { tokens } from "../src/tokens";
 // the larger-text setting stubbed, and the element trees they return are read.
 
 const larger = vi.hoisted(() => ({ value: false }));
-vi.mock("react-native", () => ({ View: "View", Text: "Text" }));
+vi.mock("react-native", () => ({ View: "View", Text: "Text", Pressable: "Pressable" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 vi.mock("../src/cn", () => ({
@@ -223,6 +226,26 @@ describe("SettingsToggleRow (web SettingsToggleRow.tsx)", () => {
   it("uses the web row padding and gap, with no row min height", async () => {
     const [row] = elements(await render());
     expect(spacing(row?.props.className ?? "")).toEqual(spacing(capture(source, /className=\{cn\(\s*"([^"]+)"/)));
+  });
+
+  it("with onCheckedChange, the whole row is one 56-high switch named by the title, the inner switch hidden", async () => {
+    const { SettingsToggleRow } = await import("../src/settings/SettingsToggleRow");
+    const onCheckedChange = vi.fn();
+    const row = SettingsToggleRow({ title: "Sounds", description: "Play a sound on reply", action, checked: true, onCheckedChange });
+    expect(row.type).toBe("Pressable");
+    expect(row.props).toMatchObject({
+      accessibilityRole: "switch",
+      accessibilityLabel: "Sounds",
+      accessibilityHint: "Play a sound on reply",
+      accessibilityState: { checked: true, disabled: false },
+    });
+    expect(row.props.className).toMatch(/(?:^|\s)min-h-14(?:\s|$)/);
+    row.props.onPress();
+    expect(onCheckedChange).toHaveBeenCalledWith(false);
+    const column = elements(row).find((element) => element.props.children === action);
+    expect(column?.props).toMatchObject({ accessibilityElementsHidden: true, importantForAccessibility: "no-hide-descendants" });
+    const plain = await render();
+    expect(plain.type).toBe("View");
   });
 
   it("keeps a 44 touch target on the action column, above the web min-h-10", async () => {

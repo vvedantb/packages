@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { configureTheme } from "../src/configureTheme";
+import { configureTheme, getThemeVersion, subscribeTheme } from "../src/configureTheme";
 import { floatingFill, floatingSolidFill } from "../src/floating";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
@@ -43,6 +43,18 @@ describe("configureTheme", () => {
     expect(tokens.color.surface).toBe(surface);
     expect(floatingSolidFill).toEqual({ light: "#fefefe", dark: "#111111" });
     expect(floatingFill.dark).toBe("rgba(4, 5, 6, 0.5)");
+  });
+
+  it("tells subscribers after each call, so `useScheme` parts redraw on a run-time palette", () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeTheme(listener);
+    const before = getThemeVersion();
+    configureTheme({ color: { background: { light: "#f4f5f6", dark: "#222325" } } });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(getThemeVersion()).toBe(before + 1);
+    unsubscribe();
+    configureTheme({ color: { background: { light: "#f4f5f6", dark: "#020202" } } });
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it("sets single-value keys and skips undefined ones", () => {

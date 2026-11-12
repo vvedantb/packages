@@ -12,6 +12,9 @@ const scheme = vi.hoisted(() => ({ colorScheme: "light" as "light" | "dark" | un
 const larger = vi.hoisted(() => ({ value: false }));
 const setColorScheme = vi.hoisted(() => vi.fn());
 vi.mock("react-native", () => ({ TouchableOpacity: "TouchableOpacity" }));
+// Parts run as plain functions here, outside a renderer: `useScheme` reads the
+// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
+vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
 vi.mock("nativewind", () => ({
   useColorScheme: () => ({ colorScheme: scheme.colorScheme, setColorScheme, toggleColorScheme: vi.fn() }),
 }));
@@ -113,7 +116,7 @@ describe("ThemeToggle", () => {
     });
     expect(headerIconButtonColors("dark")).toEqual({
       backgroundColor: tokens.color.surface.dark,
-      borderColor: "rgba(255, 255, 255, 0.1)",
+      borderColor: tokens.color.hairline.dark,
     });
     expect((await toggle()).button.props.style).toEqual(headerIconButtonColors("light"));
     scheme.colorScheme = "dark";

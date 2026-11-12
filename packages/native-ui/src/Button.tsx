@@ -62,14 +62,15 @@ const SIZE_ALIAS = {
   icon: "icon",
 } as const;
 
-// `regular` is the web `Button` (`sm` h-8 px-3, `default` h-10 px-4, `lg`
-// h-11 px-6, `icon` h-10 w-10). `larger` is the larger-text step-up from
+// `regular` is the web `Button` (`default` h-10 px-4, `lg` h-11 px-6, `icon`
+// h-10 w-10), except `sm`: the web h-8 `text-xs` is a desktop size, so here it
+// is 36 high with a 14 label (`text-sm`). `larger` is the larger-text step-up from
 // 0.3.2. Labelled sizes are minimum heights (`h-auto` drops the primitive's
 // `h-10`), so a large Dynamic Type size grows the button instead of clipping
 // the label.
 const HEIGHT = {
   regular: {
-    small: "h-auto min-h-8 px-3",
+    small: "h-auto min-h-9 px-3",
     medium: "h-auto min-h-10 px-4",
     large: "h-auto min-h-11 px-6",
     icon: "h-10 w-10 px-0",
@@ -84,14 +85,17 @@ const HEIGHT = {
 
 // Each class is also set as a style (`sizeStyle`): web `text-sm` is 14 / 20.
 const TEXT = {
-  regular: { small: "text-xs", medium: "text-sm", large: "text-sm", icon: "text-sm" },
+  regular: { small: "text-sm", medium: "text-sm", large: "text-sm", icon: "text-sm" },
   larger: { small: "text-base", medium: "text-xl", large: "text-2xl", icon: "text-base" },
 } as const;
 
-// The web sizes are under the 44 pt touch target; the slop brings each to 48.
+// The web sizes are under the 44 pt touch target; the slop brings each to 44
+// or more. `small` (32) slops only above and below: small buttons sit 4 apart
+// in a row (Cancel and Delete), and side slop would let one steal the other's
+// taps. The larger sizes are 56 or more and need none.
 const HIT_SLOP = {
-  regular: { small: 8, medium: 4, large: 2, icon: 4 },
-  larger: { small: 8, medium: undefined, large: undefined, icon: 8 },
+  regular: { small: { top: 6, bottom: 6, left: 0, right: 0 }, medium: 4, large: 2, icon: 4 },
+  larger: { small: undefined, medium: undefined, large: undefined, icon: undefined },
 };
 
 // The web `shape` (from @vvedantb/ui 0.31.0). `pill` is `rounded-full`:

@@ -4,7 +4,7 @@ Shared React 19 web UI. Source-exported: no build step.
 
 | Import | What it is |
 | --- | --- |
-| `@vvedantb/ui` | The main JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
+| `@vvedantb/ui` | The main JavaScript entry. Primitives (Radix-based), AI elements, audio (`playChime`, `useReplyChime`, `playTone`), `toast` and `SonnerToaster`, the composer (`InputArea`, deprecated 0.3 `Composer`), shell (`SidebarHeader`, `SidebarUpgradeCard`, `PillTabs`, `SessionsHoverCard`, and the app shell: `AppShell`, `AppSidebar`, `SidebarRail`, `RailTile`, `SidebarPanel`, `SidebarAccountMenu`, `SignOutDialog` and related helpers), app helpers (confirm skip, update watcher, settings chrome, `useStableAuth`, and from 0.8.0 `createThemeProvider`, `createPageTitleContext`, `PageMotionProvider` and `formatCompactRelativeTime`), marketing pieces from 0.9.0 (`createLandingKit` and the `Landing*` parts, `SiteFooter`, `PricingModal`; `ProductHero` and `PROJECT_V_HOME_URL` in the next release), animated nav icons from 0.11.0 (`MemoryIcon`, `BoardIcon`, ... and `NavIconBase`; `SettingsIcon` `variant` from 0.12.0), artifact viewers from 0.13.0 (`ArtifactFrame`, `ArtifactList`, `ArtifactViewer`, ...), date pickers from 0.14.0 (`Calendar`, `DatePicker`, `DateTimePicker`, `MonthPicker`), `cn`, and the native tokens `tokens` and `Tokens`. See `app/README.md` in the repository for the app helpers. |
 | `@vvedantb/ui/client` | The root without `@vvedantb/server`, convex or Clerk, for Chrome extensions (0.28.0). Leaves out the artifact viewers, `ConvexClerkProvider`, `useStableAuth`, `createUseStableAuth`, `resetStableAuthSession` and `useEnsureUser`. See [Chrome extensions](#chrome-extensions-0280). |
 | `@vvedantb/ui/brand` | App icons (`Icon*`, `APP_ICONS`), `AppWordmark`, deprecated `AppMark`, raw SVG strings and `FAMILY_APPS`. Also in the root and `/client`. |
 | `@vvedantb/ui/logos` | Third-party brand logos (`GitHubIcon`, `GoogleDriveIcon`, `SlackIcon`, `ClaudeIcon`, `VercelIcon`, ...) and `LogoProps` (0.36.0). Also in the root and `/client`. See [Third-party logos](#third-party-logos-0360). |
@@ -953,6 +953,57 @@ links under a separator. Set `app` for the Project V footer (0.37.0):
 | `brand`, `name` | Optional overrides on the `app` path. |
 
 **Deprecated (no `app`):** `brand`, `socials`, `name` and `legalLinks` are required, and the footer renders as before: the brand sits in the Michroma wrapper, with no product-of line and no Apps column. `actions`, `includeAppsColumn` and `showProductOf` do nothing. Set `app` instead.
+
+### `ProductHero`
+
+One hero for every product landing page: copy first, then a concept visual on mobile, side by side from `lg`.
+It sits in `landingShellClass` width. The title is the only `h1` and uses the `PageTitle` contract
+(`pageTitleClass`: Instrument Sans, weight 600, `leading-tight`, `tracking-tight`) at `text-4xl sm:text-5xl lg:text-6xl`.
+Actions are pill `Button`s. The only motion `ProductHero` adds is the `userCount` dot pulse, which stops under `prefers-reduced-motion: reduce`.
+
+```tsx
+<ProductHero
+  title="Make a bot. Keep the chat going."
+  tagline="Each bot has its own ongoing chat and its own memory. vibot is your default bot. It sends each message to the bot that should answer."
+  primaryCta={{ label: "Try vibot free", href: "/sign-up" }}
+  signIn={{ href: "/sign-in" }}
+  visual={<OrbitRings />}
+  visualLabel="Rings orbiting a bot"
+  userCount={userCount} // undefined while loading
+/>
+```
+
+Velth has no Sign in, so it sets no `signIn`:
+
+```tsx
+const V_STORE_DOWNLOAD_URL = "https://projectv.uk/download/v-store";
+
+<ProductHero
+  title="Your health, your control"
+  tagline="..."
+  primaryCta={{ label: "Try the demo", href: "#demo" }}
+  secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL, rel: "nofollow" }}
+  visual={<OrbitRings />}
+/>
+```
+
+#### Feeding `userCount`
+
+The package does no fetching. The app calls a Convex action that wraps the Clerk backend SDK `clerk.users.getCount()` (it needs `CLERK_SECRET_KEY` on the server), once on mount or cached server-side. Pass `undefined` while loading and the positive number when it resolves. The row stays hidden for `undefined`, `null` and values of 0 or less, so a loading `0` never flashes "0+ people".
+
+| Prop | |
+| --- | --- |
+| `title`, `tagline` | Nodes. |
+| `primaryCta` | `{ label, href?, rel?, target?, onClick?, variant? }`. With `href` it renders a plain `a` (no framework link), and `rel` and `target` pass through to it. Otherwise it renders a `button`. Variant default `"default"`. |
+| `secondaryCta` | Same shape. Optional. Variant default `"outline"`. |
+| `signIn` | `{ href?, onClick? }`. Renders exactly one "Sign in" control (`secondary` variant). Omit it for none. Do not also put a Sign in in the page nav. |
+| `visual` | Node. An animated concept visual in the style of https://projectv.uk (ring, orbit, particles). **Not** an app replica or screenshot. If it animates, it must respect `prefers-reduced-motion`. |
+| `visualLabel` | Gives the visual region `role="img"` and this name. Without it the region is `aria-hidden`. |
+| `userCount` | Optional number. Shows "Free to use · {n}+ people already here" under the actions, with a green dot that pulses unless `prefers-reduced-motion: reduce`. `n` is formatted (`1284` is "1,284"). Hidden when `undefined`, `null` or 0 or less. See [Feeding `userCount`](#feeding-usercount). |
+| `showProductOf` | Default `true`: "a product of Project V" linking to `PROJECT_V_HOME_URL` (`https://projectv.uk`, new tab). The link target is fixed: no prop changes it. `false` hides the whole line. The text names no app, unlike `SiteFooter`. |
+| `className` | Added to the section. |
+
+`SiteFooter` uses the same `PROJECT_V_HOME_URL`. A runnable playground is in `examples/product-hero/`.
 
 ### `PageTitle` and `PageHeader`
 

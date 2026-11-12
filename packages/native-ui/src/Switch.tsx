@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Switch as PrimitiveSwitch } from "./primitives/switch";
 import { cn } from "./cn";
-import { switchColors, switchSize, touchSlop } from "./controlStyles";
+import { switchColors, switchSize, touchSlop, type SwitchSize } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
 
@@ -16,16 +16,18 @@ type SwitchProps = Omit<
   /** Track fill when on or off, in place of the `palette` colours. */
   onColor?: string;
   offColor?: string;
+  /** `sm` (default) is the web `Switch`, 36 × 20; `md` is 40 × 24 with a 20 thumb. */
+  size?: SwitchSize;
 };
 
 const Switch = React.forwardRef<
   React.ElementRef<typeof PrimitiveSwitch>,
   SwitchProps
->(({ value, checked, onValueChange, onCheckedChange, onColor, offColor, ...props }, ref) => {
+>(({ value, checked, onValueChange, onCheckedChange, onColor, offColor, size: sizeName, ...props }, ref) => {
   const resolvedValue = checked ?? value ?? false;
   const colors = switchColors(resolvedValue, useScheme());
   const trackColor = resolvedValue ? onColor : offColor;
-  const size = switchSize(useLargerText());
+  const size = switchSize(useLargerText(), sizeName);
 
   const handleCheckedChange = (nextValue: boolean) => {
     onCheckedChange?.(nextValue);
@@ -45,7 +47,7 @@ const Switch = React.forwardRef<
         trackColor ? { backgroundColor: trackColor, borderColor: trackColor } : colors.track
       }
       thumbStyle={colors.thumb}
-      thumbClassName={cn(size.thumb, resolvedValue ? size.on : "translate-x-0")}
+      thumbClassName={cn(size.thumb, resolvedValue ? size.on : size.off)}
       {...props}
       accessibilityState={{
         ...props.accessibilityState,

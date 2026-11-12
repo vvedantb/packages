@@ -54,7 +54,7 @@ const PasswordInput = React.forwardRef<
         // The type comes from these classes only (no style `fontSize`), so it
         // cannot diverge from NativeWind's `text-base` / `text-xl`.
         className={cn(
-          "min-h-10 border px-3.5 py-2 text-base font-instrument-sans",
+          "min-h-11 border px-3.5 py-2 text-base font-instrument-sans",
           largerText && "min-h-16 px-4 py-4 text-xl font-instrument-sans-medium",
           className,
         )}

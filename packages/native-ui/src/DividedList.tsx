@@ -17,21 +17,25 @@ export type DividedListProps = ViewProps & {
  * no divider is left hanging.
  */
 export function DividedList({ children, inset = 0, className, style, ...props }: DividedListProps) {
-  const scheme = useScheme();
   const rows = Children.toArray(children).filter(isValidElement);
   return (
     <View className={className} style={style} {...props}>
       {rows.map((row, index) => (
         <Fragment key={row.key ?? index}>
-          {index > 0 ? (
-            <View
-              accessible={false}
-              style={{ height: 1, marginLeft: inset, backgroundColor: tokens.color.border[scheme] }}
-            />
-          ) : null}
+          {index > 0 ? <ListDivider inset={inset} /> : null}
           {row}
         </Fragment>
       ))}
     </View>
   );
+}
+
+/**
+ * The hairline `DividedList` draws between two rows (1 high, `border`
+ * colour), on its own: the `ItemSeparatorComponent` of a `FlatList` or
+ * `SectionList` whose rows should look like a `DividedList`.
+ */
+export function ListDivider({ inset = 0 }: { inset?: number }) {
+  const scheme = useScheme();
+  return <View accessible={false} style={{ height: 1, marginLeft: inset, backgroundColor: tokens.color.border[scheme] }} />;
 }

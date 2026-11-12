@@ -29,6 +29,7 @@ vi.mock("react-native", () => ({
   ScrollView: "ScrollView",
   KeyboardAvoidingView: "KeyboardAvoidingView",
   RefreshControl: "RefreshControl",
+  StyleSheet: { create: <T>(styles: T) => styles },
 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) }));
 vi.mock("react-native-safe-area-context", () => ({
@@ -221,11 +222,17 @@ describe("ChatThread", () => {
     return { tree, renderMessage };
   }
 
-  it("composes a padding KeyboardAvoidingView, Conversation, the list, the scroll button and the footer last", async () => {
-    const { tree } = await thread({ contentContainerClassName: "px-4 py-4" });
-    expect(tree.type).toBe("KeyboardAvoidingView");
-    expect(tree.props.behavior).toBe("padding");
-    const [conversation, footer] = [tree.props.children].flat().filter(isElement);
+  it("composes a KeyboardAvoidingView, Conversation, the list, the scroll button and the footer last", async () => {
+    const { KeyboardAvoidingView } = await import("../src/primitives/keyboard-parts");
+    const { tree } = await thread({ contentContainerClassName: "px-4 py-4", className: "bg-x" });
+    expect(tree.type).toBe(KeyboardAvoidingView);
+    expect(tree.props.style).toEqual({ flex: 1 });
+    // The column lifts as a whole, so the parts in it add no lift of their own.
+    const lift = tree.props.children as Element;
+    expect(lift.props).toMatchObject({ value: true });
+    const column = lift.props.children as Element;
+    expect(column.props.className).toBe("flex-1 bg-x");
+    const [conversation, footer] = [column.props.children].flat().filter(isElement);
     expect(conversation!.type).toBe("Conversation");
     expect(footer!.type).toBe("Footer");
     const [content] = ofType(conversation, "ConversationContent");

@@ -9,6 +9,8 @@ export { AppWordmark } from "./AppWordmark";
 export type { AppWordmarkProps, ProductAppName } from "./AppWordmark";
 export { GoogleMark } from "./GoogleMark";
 export type { GoogleMarkProps } from "./GoogleMark";
+export { PROVIDER_MARKS, ProviderIcon, providerLabel, providerMark } from "./ProviderIcon";
+export type { ProviderIconProps, ProviderIconProvider, ProviderMark } from "./ProviderIcon";
 export {
   APP_MARKS,
   APP_MARK_CROP_VIEWBOX,

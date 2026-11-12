@@ -1,5 +1,4 @@
 import { View, type ViewProps } from "react-native";
-import { SlideInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
@@ -7,7 +6,7 @@ import { withAlpha } from "./palette";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 import { DialogBody, DialogDescription, DialogTitle } from "./Dialog";
-import { NativeOnlyAnimatedView } from "./primitives/native-only-animated-view";
+import { SheetDragView } from "./primitives/sheet-drag";
 import {
   OverlayClose,
   OverlayModal,
@@ -23,7 +22,7 @@ export type SheetProps = OverlayRootProps;
 
 /**
  * Bottom sheet in an RN `Modal`, with no `@gorhom/bottom-sheet`. Same open
- * state API as `Dialog`. Use `BottomSheetContainer` for drag-to-dismiss.
+ * state API as `Dialog`.
  */
 export function Sheet(props: SheetProps) {
   return <OverlayRoot {...props} />;
@@ -43,40 +42,48 @@ export type SheetContentProps = ViewProps & {
   dismissible?: boolean;
   /** Grab handle above the content. Default `true`. */
   showHandle?: boolean;
+  /** Called once the sheet is on screen: focus its field here, as `DialogContent`'s `onShow`. */
+  onShow?: () => void;
 };
 
 /**
  * Panel pinned to the bottom edge: opaque surface, top corners at the card
- * radius, safe-area bottom padding, slides in. Its bottom corners sit below the
- * screen edge, so only the top corners show.
+ * radius, safe-area bottom padding. It slides up on open and back down on
+ * close, with the backdrop fading to match (`OverlayModal`). Drag it down to
+ * close (when `dismissible`): it follows the finger, the backdrop fades, and
+ * a flick or a drag past half carries it out while a short slow one springs
+ * back (`SheetDragView`). Its bottom corners sit below the
+ * screen edge, so only the top corners show. Taller than the room (a short
+ * window, or the keyboard up), it shrinks to fit under the top inset, so a
+ * `SheetBody` or other scroll view inside scrolls and the title stays on screen.
  */
 export function SheetContent({
   children,
   className,
   dismissible = true,
   showHandle = true,
+  onShow,
   style,
   ...props
 }: SheetContentProps) {
   const insets = useSafeAreaInsets();
   return (
-    <OverlayModal part="SheetContent" placement="bottom" dismissible={dismissible}>
-      <NativeOnlyAnimatedView
-        entering={SlideInDown.duration(240)}
-        style={{ marginBottom: -SHEET_RADIUS }}
-      >
-        <FloatingSurface blur={false} radius={SHEET_RADIUS}>
-          <View
-            accessibilityViewIsModal
-            className={cn("gap-4 px-5 pt-3", className)}
-            {...props}
-            style={[{ paddingBottom: insets.bottom + 20 + SHEET_RADIUS }, style]}
-          >
-            {showHandle ? <SheetHandle /> : null}
-            {children}
-          </View>
-        </FloatingSurface>
-      </NativeOnlyAnimatedView>
+    <OverlayModal part="SheetContent" placement="bottom" dismissible={dismissible} onShow={onShow}>
+      <View style={{ marginBottom: -SHEET_RADIUS, flexShrink: 1 }}>
+        <SheetDragView enabled={dismissible} style={{ flexShrink: 1 }}>
+          <FloatingSurface blur={false} radius={SHEET_RADIUS} style={{ flexShrink: 1 }}>
+            <View
+              accessibilityViewIsModal
+              className={cn("gap-4 px-5 pt-3", className)}
+              {...props}
+              style={[{ paddingBottom: insets.bottom + 20 + SHEET_RADIUS, flexShrink: 1 }, style]}
+            >
+              {showHandle ? <SheetHandle /> : null}
+              {children}
+            </View>
+          </FloatingSurface>
+        </SheetDragView>
+      </View>
     </OverlayModal>
   );
 }

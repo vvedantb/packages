@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, buttonColors, touchSlop } from "../src/controlStyles";
-import { palette } from "../src/palette";
+import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
 
 // The AI chat parts (`@vvedantb/native-ui/ai`). There is no React renderer in
@@ -129,28 +129,69 @@ const animation = vi.hoisted(() => ({
   cancelAnimation: vi.fn(),
 }));
 
+// Android back: the listeners added, newest first, as React Native calls them.
+const back = vi.hoisted(() => {
+  const listeners: Array<() => boolean | null | undefined> = [];
+  return {
+    listeners,
+    addEventListener: (_event: string, listener: () => boolean | null | undefined) => {
+      listeners.unshift(listener);
+      return { remove: () => void listeners.splice(listeners.indexOf(listener), 1) };
+    },
+    press: () => listeners.some((listener) => listener() === true),
+  };
+});
+
+const platform = vi.hoisted(() => ({
+  OS: "ios",
+  Version: 17 as number | string,
+  select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default,
+}));
+
 vi.mock("react-native", () => ({
-  Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
+  Platform: platform,
   StyleSheet: { create: <T>(styles: T) => styles, absoluteFill: {}, absoluteFillObject: {}, hairlineWidth: 1 },
   AccessibilityInfo: {},
   Linking: { openURL },
+  BackHandler: back,
   View: "View",
   Text: "Text",
   Pressable: "Pressable",
   ScrollView: "ScrollView",
+  FlatList: "FlatList",
   KeyboardAvoidingView: "KeyboardAvoidingView",
   Image: "Image",
   Modal: "Modal",
+  useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 }),
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
-  FadeIn: { duration: (ms: number) => `FadeIn(${ms})` },
-  FadeOut: { duration: (ms: number) => `FadeOut(${ms})` },
-  useSharedValue: <T>(value: T) => ({ value }),
+  FadeIn: { duration: (ms: number) => ({ easing: () => `FadeIn(${ms})` }) },
+  FadeOut: { duration: (ms: number) => ({ easing: () => `FadeOut(${ms})` }) },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  cubicBezier: () => "cubic-bezier",
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
+  runOnJS: <A extends unknown[]>(fn: (...args: A) => void) => fn,
   ...animation,
 }));
 vi.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => insets }));
+// Not installed in this repository: the optional peer of `/keyboard-controller`.
+// `keyboardHandler` holds the last `useKeyboardHandler` handler, to move the keyboard by hand.
+const keyboardHandler = vi.hoisted(() => ({ current: { onStart: () => {}, onEnd: () => {} } }));
+vi.mock("react-native-keyboard-controller", () => ({
+  useKeyboardHandler: (handler: typeof keyboardHandler.current) => {
+    keyboardHandler.current = handler;
+  },
+  KeyboardAvoidingView: "KC.KeyboardAvoidingView",
+  KeyboardStickyView: "KC.KeyboardStickyView",
+  KeyboardChatScrollView: "KC.KeyboardChatScrollView",
+  KeyboardGestureArea: "KC.KeyboardGestureArea",
+}));
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("@tabler/icons-react-native", () =>
   Object.fromEntries(
@@ -162,6 +203,9 @@ vi.mock("@tabler/icons-react-native", () =>
       "IconBook",
       "IconBrain",
       "IconCheck",
+      "IconArrowLeft",
+      "IconArrowRight",
+      "IconPencil",
       "IconChevronDown",
       "IconChevronRight",
       "IconCopy",
@@ -173,6 +217,7 @@ vi.mock("@tabler/icons-react-native", () =>
       "IconPlayerStopFilled",
       "IconPointFilled",
       "IconRefresh",
+      "IconTextWrap",
       "IconThumbDown",
       "IconThumbUp",
       "IconVideo",
@@ -341,9 +386,9 @@ describe("Collapsible", () => {
     expect(h.tree.content).toBeNull();
     (h.tree.trigger.props.onPress as () => void)();
     expect(h.tree.trigger.props.accessibilityState).toEqual({ expanded: true });
-    expect(h.tree.content!.type).toBe("NativeOnlyAnimatedView");
-    // Fades in through the view that drops layout animations with Reduce Motion.
-    expect(h.tree.content!.props.entering).toBe("FadeIn(150)");
+    // Appears at once: a plain view, with no entering animation.
+    expect(h.tree.content!.type).toBe("View");
+    expect(h.tree.content!.props.entering).toBeUndefined();
     (h.tree.trigger.props.onPress as () => void)();
     expect(h.tree.content).toBeNull();
   });
@@ -532,7 +577,7 @@ describe("Message", () => {
     expect((body.props.children as Element).type).toBe(ResponseText);
   });
 
-  it("names the five actions and paints them at the web icon-sm size with a 44 target", async () => {
+  it("names the five actions and paints them at the web icon-sm size, 44 high with no sideways slop", async () => {
     const { MessageAction, MESSAGE_ACTIONS } = await import("../src/ai/message");
     const { ChatIconButton } = await import("../src/ai/icon-button");
     expect(Object.values(MESSAGE_ACTIONS).map((action) => action.label)).toEqual([
@@ -553,12 +598,16 @@ describe("Message", () => {
       size: "icon",
       accessibilityLabel: "Good response",
       className: "h-8 w-8",
-      hitSlop: touchSlop(32),
+      // The actions sit 2 to 4 apart: slop to the side would overlap the next one.
+      hitSlop: { top: 6, bottom: 6, left: 0, right: 0 },
     });
     // Round from the `Button` pill default (0.6.0), not a radius of its own.
     expect(button.props).not.toHaveProperty("style");
     expect(button.props).not.toHaveProperty("shape");
     expect(32 + 2 * touchSlop(32).top).toBe(44);
+    // Other chat icon buttons keep the square slop.
+    const send = ChatIconButton({ icon: () => null, label: "Send" }) as unknown as Element;
+    expect(send.props.hitSlop).toEqual(touchSlop(32));
     expect((button.props.children as Element).props).toEqual({ size: 16, color: buttonColors("ghost", "light")!.color });
     (button.props.onPress as () => void)();
     expect(onPress).toHaveBeenCalledOnce();
@@ -603,6 +652,18 @@ describe("ResponseText", () => {
   });
 });
 
+// React Native has `requestAnimationFrame`; Node does not. Frames run at once
+// unless a test queues them itself.
+beforeEach(() => {
+  vi.stubGlobal("requestAnimationFrame", (run: () => void) => {
+    run();
+    return 0;
+  });
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("Conversation", () => {
   const event = (offset: number, content = 2000, view = 800) => ({
     contentOffset: { x: 0, y: offset },
@@ -619,13 +680,23 @@ describe("Conversation", () => {
     expect(isScrolledToBottom(event(0, 300))).toBe(true);
   });
 
-  async function conversation() {
+  it("counts an inverted list within 70 of offset 0 as the bottom, below 0 too (iOS keyboard inset)", async () => {
+    const { isScrolledToBottom } = await import("../src/ai/conversation");
+    expect(isScrolledToBottom(event(0), 0, true)).toBe(true);
+    expect(isScrolledToBottom(event(70), 0, true)).toBe(true);
+    expect(isScrolledToBottom(event(71), 0, true)).toBe(false);
+    // The far end of the content is the oldest message, not the bottom.
+    expect(isScrolledToBottom(event(1200), 0, true)).toBe(false);
+    expect(isScrolledToBottom(event(-300), 300, true)).toBe(true);
+  });
+
+  async function conversation(buttonProps: { label?: string; showLabel?: boolean } = {}) {
     const { Conversation, ConversationScrollButton } = await import("../src/ai/conversation");
     const scrollToEnd = vi.fn();
     const h = hooks.mount(() => {
       const frame = Conversation({ children: null }) as unknown as Element;
       provide(frame);
-      return { frame, button: ConversationScrollButton({}) as unknown as Element | null };
+      return { frame, button: ConversationScrollButton(buttonProps) as unknown as Element | null };
     });
     type Value = {
       isAtBottom: boolean;
@@ -682,6 +753,14 @@ describe("Conversation", () => {
     expect(h.tree.button).not.toBeNull();
   });
 
+  it("draws a labelled pill at text-sm, the phone floor for tappable text", async () => {
+    const { h, value } = await conversation({ label: "Scroll to end", showLabel: true });
+    value().onScroll(event(400));
+    const text = byType(h.tree.button, "Text")[0]!;
+    expect(text.props.children).toBe("Scroll to end");
+    expect(flatten(text.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20 });
+  });
+
   it("jumps instead of animating with Reduce Motion", async () => {
     reduceMotion.value = true;
     const { value, scrollToEnd } = await conversation();
@@ -714,6 +793,363 @@ describe("Conversation", () => {
     const scrolled = { nativeEvent: event(100) };
     (scroll.props.onScroll as (event: unknown) => void)(scrolled);
     expect(onScroll).toHaveBeenCalledWith(scrolled);
+  });
+
+  it("draws a long thread as a FlatList that follows to its measured end", async () => {
+    const { Conversation, ConversationList, ConversationScrollButton } = await import("../src/ai/conversation");
+    const onLayout = vi.fn();
+    const renderItem = () => null;
+    const h = hooks.mount(() => {
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return {
+        frame,
+        list: ConversationList({ data: ["a", "b"], renderItem, onLayout }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const list = () => h.tree.list;
+    expect(list().type).toBe("FlatList");
+    expect(list().props).toMatchObject({
+      data: ["a", "b"],
+      renderItem,
+      className: "flex-1",
+      // No gap: a FlatList gap would also space its placeholders for hidden rows.
+      contentContainerClassName: "px-3 py-3",
+      keyboardShouldPersistTaps: "handled",
+      scrollEventThrottle: 16,
+    });
+    // The list behind the ref is what the follow and the scroll button move.
+    const scrollToOffset = vi.fn();
+    (list().props.ref as (list: unknown) => void)({ scrollToOffset });
+    const layout = (height: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height } } });
+    (list().props.onLayout as (event: unknown) => void)(layout(800));
+    expect(onLayout).toHaveBeenCalledOnce();
+    // To the measured end (content less the view), not FlatList's estimate from row heights.
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    // Scrolled up, it stops following and the button shows; the button scrolls down animated.
+    (list().props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (list().props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    expect(h.tree.button).not.toBeNull();
+    scrollToOffset.mockClear();
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 6000);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    const button = (h.tree.button as Element).props.children as Element;
+    (button.props.onPress as () => void)();
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 5200, animated: true });
+  });
+
+  it("stays hidden until its first jump to the end, so a thread opens at its end", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const frames: (() => void)[] = [];
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => frames.push(run));
+    const mount = (data: string[]) =>
+      hooks.mount(() => {
+        provide(Conversation({ children: null }) as unknown as Element);
+        return { list: ConversationList({ data, renderItem: () => null }) as unknown as Element };
+      });
+    const hidden = (list: Element) => JSON.stringify(list.props.style).includes('"opacity":0');
+    // An empty thread (its spinner or empty state) shows at once.
+    expect(hidden(mount([]).tree.list)).toBe(false);
+    const h = mount(["a", "b"]);
+    const scrollToOffset = vi.fn();
+    (h.tree.list.props.ref as (list: unknown) => void)({ scrollToOffset });
+    expect(hidden(h.tree.list)).toBe(true);
+    (h.tree.list.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 800 } } });
+    expect(frames).toHaveLength(0);
+    (h.tree.list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    // The jump to the end comes first; the list shows on the next frame.
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    expect(hidden(h.tree.list)).toBe(true);
+    for (const run of frames.splice(0)) run();
+    expect(hidden(h.tree.list)).toBe(false);
+  });
+
+  it("inverted: shows its newest row at offset 0 at once, with no follow, and keeps the view while scrolled up", async () => {
+    const { Conversation, ConversationList, ConversationScrollButton } = await import("../src/ai/conversation");
+    const frames: (() => void)[] = [];
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => frames.push(run));
+    const h = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return {
+        list: ConversationList({ inverted: true, data: ["c", "b", "a"], renderItem: () => null }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const list = () => h.tree.list;
+    expect(list().type).toBe("FlatList");
+    expect(list().props.inverted).toBe(true);
+    // A short thread sits at the column's end, the top of an inverted list.
+    expect(list().props.contentContainerClassName).toBe("px-3 py-3 grow justify-end");
+    const scrollToOffset = vi.fn();
+    (list().props.ref as (list: unknown) => void)({ scrollToOffset });
+    (list().props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 800 } } });
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    // Never hidden, no jump: the newest row is already in view.
+    expect(JSON.stringify(list().props.style)).not.toContain('"opacity":0');
+    expect(frames).toHaveLength(0);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    // At the bottom, a new row shows at offset 0; nothing pins the old rows.
+    expect(list().props.maintainVisibleContentPosition).toBeUndefined();
+    // Scrolled up (away from offset 0): the button shows and new rows keep the view.
+    (list().props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(400) });
+    (list().props.onScroll as (event: unknown) => void)({ nativeEvent: event(400) });
+    expect(h.tree.button).not.toBeNull();
+    expect(list().props.maintainVisibleContentPosition).toEqual({ minIndexForVisible: 0 });
+    (list().props.onContentSizeChange as (w: number, h: number) => void)(390, 6000);
+    expect(scrollToOffset).not.toHaveBeenCalled();
+    // The button scrolls to offset 0, animated, and the bottom stops pinning.
+    const button = (h.tree.button as Element).props.children as Element;
+    (button.props.onPress as () => void)();
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 0, animated: true });
+    expect(h.tree.button).toBeNull();
+    expect(list().props.maintainVisibleContentPosition).toBeUndefined();
+  });
+
+  it("inverted: draws an empty thread's spinner or empty state the right way up, in place of the list", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const Spinner = () => null;
+    const h = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return ConversationList({ inverted: true, data: [], renderItem: () => null, ListEmptyComponent: Spinner }) as unknown as Element;
+    });
+    expect(h.tree.type).toBe("View");
+    expect((h.tree.props.children as Element).type).toBe(Spinner);
+    const { createElement } = await import("react");
+    const element = createElement("EMPTY");
+    const withElement = hooks.mount(() => {
+      provide(Conversation({ children: null }) as unknown as Element);
+      return ConversationList({ inverted: true, data: [], renderItem: () => null, ListEmptyComponent: element }) as unknown as Element;
+    });
+    expect(withElement.tree.props.children).toBe(element);
+  });
+});
+
+describe("keyboard-controller parts", () => {
+  afterEach(() => {
+    platform.OS = "ios";
+    platform.Version = 17;
+    vi.resetModules();
+  });
+
+  type Value = { scrollRef: { current: unknown }; setDockHeight(height: number): void; isAtBottom: boolean };
+  const event = (offset: number) => ({
+    contentOffset: { x: 0, y: offset },
+    contentSize: { width: 390, height: 2000 },
+    layoutMeasurement: { width: 390, height: 800 },
+  });
+  type Parts = import("../src/primitives/keyboard-parts").KeyboardParts;
+
+  /** A chat (list, dock with a composer, scroll button), with `KeyboardControllerProvider` when `withProvider`. */
+  async function chat(withProvider: boolean, override: Partial<Parts> = {}) {
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const { Conversation, ConversationDock, ConversationList, ConversationScrollButton } = await import(
+      "../src/ai/conversation"
+    );
+    const parts: Parts = { ...(KeyboardControllerProvider({ children: null }).props.value as Parts), ...override };
+    const h = hooks.mount(() => {
+      if (withProvider) hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return {
+        frame,
+        list: ConversationList({ data: ["a"], renderItem: () => null }) as unknown as Element,
+        dock: ConversationDock({ children: "COMPOSER" }) as unknown as Element,
+        button: ConversationScrollButton({}) as unknown as Element | null,
+      };
+    });
+    const value = () => h.tree.frame.props.value as Value;
+    return { h, value, parts };
+  }
+  let keyboardModule: typeof import("../src/primitives/keyboard-parts");
+  beforeEach(async () => {
+    keyboardModule = await import("../src/primitives/keyboard-parts");
+  });
+
+  it("keeps React Native's KeyboardAvoidingView and the plain list, dock and button without the provider", async () => {
+    const { KeyboardAvoidingView } = keyboardModule;
+    expect(KeyboardAvoidingView({ children: "FORM" })).toMatchObject({
+      type: "KeyboardAvoidingView",
+      props: { behavior: "padding", children: "FORM" },
+    });
+    const { h, value } = await chat(false);
+    expect(h.tree.list.type).toBe("FlatList");
+    expect(h.tree.list.props.renderScrollComponent).toBeUndefined();
+    expect(h.tree.dock.type).toBe("View");
+    value().scrollRef.current = { scrollToEnd: vi.fn() };
+    (h.tree.list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (h.tree.list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    expect((h.tree.button as Element).type).toBe("NativeOnlyAnimatedView");
+  });
+
+  it("pads frame by frame with the provider: KeyboardAvoidingView is keyboard-controller's", async () => {
+    const { KeyboardAvoidingView, KeyboardPartsContext } = keyboardModule;
+    const { parts } = await chat(true);
+    hooks.state.contexts.set(KeyboardPartsContext, parts);
+    const avoiding = KeyboardAvoidingView({ keyboardVerticalOffset: 12, children: "FORM" }) as unknown as Element;
+    expect(avoiding.type).toBe(parts.AvoidingView);
+    expect(render(avoiding)).toMatchObject({
+      type: "KC.KeyboardAvoidingView",
+      props: { behavior: "padding", keyboardVerticalOffset: 12, children: "FORM" },
+    });
+  });
+
+  it("runs the transcript in the chat scroll view, inside the gesture area, and counts the keyboard's space", async () => {
+    const { h, value, parts } = await chat(true);
+    value().setDockHeight(120);
+    // The gesture area: the keyboard follows the finger from the composer's top (the dock less the inset it pads).
+    const area = h.tree.list;
+    expect(area.type).toBe(parts.GestureArea);
+    expect(area.props.offset).toBe(120 - insets.bottom);
+    expect(render(area)).toMatchObject({
+      type: "KC.KeyboardGestureArea",
+      props: { interpolator: "ios", offset: 120 - insets.bottom, textInputNativeID: keyboardModule.COMPOSER_INPUT_ID },
+    });
+    const list = area.props.children as Element;
+    expect(list.type).toBe("FlatList");
+    // iOS: an interactive drag.
+    expect(list.props.keyboardDismissMode).toBe("interactive");
+    const scroller = (list.props.renderScrollComponent as (props: unknown) => Element)({ scrollEventThrottle: 16 });
+    expect(scroller.type).toBe(parts.ChatScrollView);
+    expect(scroller.props).toMatchObject({ scrollEventThrottle: 16, bottomOffset: insets.bottom });
+    expect(render(scroller)).toMatchObject({
+      type: "KC.KeyboardChatScrollView",
+      props: { offset: insets.bottom, keyboardLiftBehavior: "always" },
+    });
+    // The keyboard's space past the content: the end, and the bottom, count it.
+    const scrollToOffset = vi.fn();
+    (list.props.ref as (list: unknown) => void)({ scrollToOffset });
+    (list.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { height: 800 } } });
+    (list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4200, animated: false });
+    const inset = (render(scroller) as Element).props.onContentInsetChange as (insets: { bottom: number }) => void;
+    inset({ bottom: 300 });
+    (list.props.onContentSizeChange as (w: number, h: number) => void)(390, 5000);
+    expect(scrollToOffset).toHaveBeenLastCalledWith({ offset: 4500, animated: false });
+    // With 300 of keyboard past the content, the end is at 1500 (2000 + 300 - 800): 1200 is 300 short of it.
+    (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(1200) });
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(1200) });
+    expect(value().isAtBottom).toBe(false);
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(1450) });
+    expect(value().isAtBottom).toBe(true);
+  });
+
+  it("inverted: the chat scroll view is inverted and its keyboard space sits before offset 0 on iOS only", async () => {
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const parts = KeyboardControllerProvider({ children: null }).props.value as Parts;
+    const mount = () =>
+      hooks.mount(() => {
+        hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+        const frame = Conversation({ children: null }) as unknown as Element;
+        provide(frame);
+        return { frame, area: ConversationList({ inverted: true, data: ["a"], renderItem: () => null }) as unknown as Element };
+      });
+    // iOS scrolls below 0 into the keyboard's space; Android moves the content down by it, so 0 stays the end.
+    for (const [os, end] of [
+      ["ios", -300],
+      ["android", 0],
+    ] as const) {
+      platform.OS = os;
+      const h = mount();
+      const value = () => h.tree.frame.props.value as Value & { scrollToBottom(): void };
+      const list = h.tree.area.props.children as Element;
+      const scroller = (list.props.renderScrollComponent as (props: unknown) => Element)({});
+      expect(scroller.props.inverted, os).toBe(true);
+      const native = render(scroller) as Element;
+      expect(native).toMatchObject({ type: "KC.KeyboardChatScrollView", props: { inverted: true, keyboardLiftBehavior: "always" } });
+      // The keyboard's space is the content's top inset, the visual bottom.
+      (native.props.onContentInsetChange as (insets: { top: number; bottom: number }) => void)({ top: 300, bottom: 0 });
+      const scrollToOffset = vi.fn();
+      (list.props.ref as (list: unknown) => void)({ scrollToOffset });
+      const scroll = (offset: number) => (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(offset) });
+      // The reader 100 above the end is away from the bottom.
+      (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(end + 100) });
+      scroll(end + 100);
+      expect(value().isAtBottom, os).toBe(false);
+      value().scrollToBottom();
+      expect(scrollToOffset, os).toHaveBeenLastCalledWith({ offset: end, animated: true });
+      scroll(end);
+      expect(value().isAtBottom, os).toBe(true);
+    }
+  });
+
+  it("does not count the keyboard scrolling the list as the reader leaving the bottom", async () => {
+    platform.OS = "android";
+    const { Conversation, ConversationList } = await import("../src/ai/conversation");
+    const { KeyboardControllerProvider } = await import("../src/entries/keyboard-controller");
+    const parts = KeyboardControllerProvider({ children: null }).props.value as Parts;
+    const h = hooks.mount(() => {
+      hooks.state.contexts.set(keyboardModule.KeyboardPartsContext, parts);
+      const frame = Conversation({ children: null }) as unknown as Element;
+      provide(frame);
+      return { frame, area: ConversationList({ inverted: true, data: ["a"], renderItem: () => null }) as unknown as Element };
+    });
+    const value = () => h.tree.frame.props.value as Value;
+    const list = h.tree.area.props.children as Element;
+    render((list.props.renderScrollComponent as (props: unknown) => Element)({}));
+    const scroll = (offset: number) => (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(offset) });
+    // Android opens the keyboard by scrolling the list from its height back to 0.
+    keyboardHandler.current.onStart();
+    scroll(300);
+    scroll(150);
+    expect(value().isAtBottom).toBe(true);
+    keyboardHandler.current.onEnd();
+    scroll(0);
+    expect(value().isAtBottom).toBe(true);
+    // Once it has stopped, the reader's scroll counts again.
+    scroll(300);
+    expect(value().isAtBottom).toBe(false);
+  });
+
+  it("moves the dock and the scroll button with the keyboard, less the inset; a composer in the dock adds no lift", async () => {
+    const { h, parts } = await chat(true);
+    const dock = h.tree.dock;
+    expect(dock.type).toBe(parts.StickyView);
+    expect(dock.props.bottomOffset).toBe(insets.bottom);
+    expect(render(dock)).toMatchObject({ type: "KC.KeyboardStickyView", props: { offset: { opened: insets.bottom } } });
+    const lift = dock.props.children as Element;
+    expect(lift.type).toBe(keyboardModule.KeyboardLiftContext);
+    expect(lift.props.value).toBe(true);
+    expect((lift.props.children as Element).props.children).toBe("COMPOSER");
+    // In the dock, the composer is its padded column, with no KeyboardAvoidingView around it.
+    const { PromptInput } = await import("../src/ai/prompt-input");
+    provide(lift);
+    const composer = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), testID: "composer" }) as unknown as Element);
+    expect(composer.tree.type).toBe("View");
+    expect(composer.tree.props.testID).toBe("composer");
+    expect(byType(composer.tree, "FieldInput")[0]!.props.nativeID).toBe(keyboardModule.COMPOSER_INPUT_ID);
+    // Inside the dock nothing else lifts either: the parts are off there.
+    expect(hooks.mount(() => keyboardModule.useKeyboardParts()).tree).toBeNull();
+    // Away from the end, the button rides with the dock.
+    hooks.state.contexts.clear();
+    const again = await chat(true);
+    again.value().scrollRef.current = { scrollToEnd: vi.fn() };
+    const list = again.h.tree.list.props.children as Element;
+    (list.props.onScrollBeginDrag as (event: unknown) => void)({ nativeEvent: event(100) });
+    (list.props.onScroll as (event: unknown) => void)({ nativeEvent: event(100) });
+    const sticky = again.h.tree.button as Element;
+    expect(sticky.type).toBe(again.parts.StickyView);
+    expect(sticky.props).toMatchObject({ bottomOffset: insets.bottom, pointerEvents: "box-none" });
+    expect((sticky.props.children as Element).type).toBe("NativeOnlyAnimatedView");
+  });
+
+  it("drags the keyboard on Android 11+, and lowers it at once on Android 10 and below", async () => {
+    for (const [version, mode] of [
+      [30, "interactive"],
+      [29, "on-drag"],
+    ] as const) {
+      vi.resetModules();
+      hooks.state.contexts.clear();
+      platform.OS = "android";
+      platform.Version = version;
+      keyboardModule = await import("../src/primitives/keyboard-parts");
+      const { h, parts } = await chat(true);
+      expect(parts.interactive, String(version)).toBe(version >= 30);
+      const list = h.tree.list.props.children as Element;
+      expect(list.props.keyboardDismissMode, String(version)).toBe(mode);
+    }
   });
 });
 
@@ -786,9 +1222,11 @@ describe("PromptInput", () => {
   });
 
   it("sits on the keyboard with padding and pads the safe-area insets", async () => {
+    const { KeyboardAvoidingView } = await import("../src/primitives/keyboard-parts");
     const { h } = await composer({ keyboardVerticalOffset: 100 });
-    expect(h.tree.type).toBe("KeyboardAvoidingView");
-    expect(h.tree.props.behavior).toBe("padding");
+    expect(h.tree.type).toBe(KeyboardAvoidingView);
+    // Without `KeyboardControllerProvider`: React Native's, with padding.
+    expect(render(h.tree)).toMatchObject({ type: "KeyboardAvoidingView", props: { behavior: "padding" } });
     // The home indicator inset is padded below, and the keyboard covers it.
     expect(h.tree.props.keyboardVerticalOffset).toBe(100 - insets.bottom);
     const pad = h.tree.props.children as Element;
@@ -800,8 +1238,9 @@ describe("PromptInput", () => {
 
   it("draws the web field surface with the header and toolbar slots", async () => {
     const { h } = await composer({ header: "HEADER", toolbar: "TOOLS" });
-    const surface = (h.tree.props.children as Element).props.children as Element;
-    expect(surface.props.style).toEqual({
+    // The field surface, then the (empty) footer slot.
+    const [surface] = ((h.tree.props.children as Element).props.children as Element[]).filter(Boolean);
+    expect(surface!.props.style).toEqual({
       backgroundColor: tokens.color.surface.light,
       borderColor: tokens.color.border.light,
       borderRadius: tokens.radius.field,
@@ -809,6 +1248,16 @@ describe("PromptInput", () => {
     expect(surface.props.className).toBe("border");
     expect(elements(surface).some((element) => element.props.children === "HEADER")).toBe(true);
     expect(elements(surface).some((element) => element.props.children === "TOOLS")).toBe(true);
+  });
+
+  it("puts the footer under the field, inside the safe-area padding, in both layouts", async () => {
+    for (const layout of ["inline", "stacked"]) {
+      const { h } = await composer({ layout, footer: "FOOTER" });
+      const pad = h.tree.props.children as Element;
+      const children = pad.props.children as unknown[];
+      expect(children.at(-1), layout).toBe("FOOTER");
+      expect(elements(children[0]).some((element) => element.props.children === "FOOTER"), layout).toBe(false);
+    }
   });
 
   it("is Send (primary, disabled when empty, as the web), and Stop while the AI answers", async () => {
@@ -829,6 +1278,164 @@ describe("PromptInput", () => {
     expect(onSubmit).not.toHaveBeenCalled();
     expect((PromptInputSubmit({ status: "streaming" }) as unknown as Element).props.disabled).toBe(true);
     expect((PromptInputSubmit({ status: "error", onSubmit }) as unknown as Element).props.label).toBe("Send");
+  });
+});
+
+describe("PromptInputChip", () => {
+  it("is a 28-high muted chip that reaches 44, with the suffix, count and chevron", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const onPress = vi.fn();
+    const chip = PromptInputChip({ icon: "MARK", label: "Opus", suffix: "High", onPress, expanded: false }) as unknown as Element;
+    expect(chip.type).toBe("Pressable");
+    expect(chip.props).toMatchObject({
+      accessibilityRole: "button",
+      accessibilityLabel: "Opus, High",
+      accessibilityState: { disabled: false, expanded: false },
+      hitSlop: touchSlop(MIN_TOUCH_TARGET, 28),
+    });
+    expect(chip.props.style).toMatchObject({ minHeight: 28, paddingHorizontal: 8, gap: 6, borderRadius: tokens.radius.md });
+    const [label] = byType(chip, "Text");
+    // `text-sm`, the phone floor for tappable text (the web trigger is `text-xs`).
+    expect(flatten(label!.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20, color: tokens.color.muted.light, fontWeight: "500" });
+    expect(label!.props.numberOfLines).toBe(1);
+    const suffix = byType(label, "Text")[1]!;
+    expect(suffix.props.children).toBe(" · High");
+    expect(byType(chip, "IconChevronDown")[0]!.props).toMatchObject({ size: 12, color: tokens.color.muted.light });
+    // Only the label shrinks: the icon sits in a box that keeps its width.
+    const children = chip.props.children as Element[];
+    expect(children[0]!.props).toMatchObject({ className: "shrink-0", children: "MARK" });
+    (chip.props.onPress as () => void)();
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it("takes a count in tabular figures, a colour, a normal weight, no chevron, and dims when disabled", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const chip = PromptInputChip({ label: "Stash", count: 3, chevron: false, weight: "normal", color: "#646567", disabled: true }) as unknown as Element;
+    expect(chip.props.accessibilityLabel).toBe("Stash, 3");
+    expect(chip.props.className).toContain("opacity-50");
+    const [label, count] = byType(chip, "Text");
+    expect(flatten(label!.props.style)).not.toHaveProperty("fontWeight");
+    expect(flatten(label!.props.style).color).toBe("#646567");
+    expect(count!.props.children).toBe(3);
+    expect(flatten(count!.props.style)).toMatchObject({ fontWeight: "500", fontVariant: ["tabular-nums"] });
+    expect(byType(chip, "IconChevronDown")).toHaveLength(0);
+  });
+
+  it("hides a label squeezed below two characters and an ellipsis, keeps the full name, and shows it again when wider", async () => {
+    const { PromptInputChip } = await import("../src/ai/prompt-input");
+    const h = hooks.mount(
+      () => PromptInputChip({ icon: "MARK", label: "main", accessibilityLabel: "Base branch: main" }) as unknown as Element,
+    );
+    const label = () => byType(h.tree, "Text")[0];
+    const opacity = () => flatten(label()?.props.style).opacity;
+    const layout = (width: number) =>
+      (label()?.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width, height: 16 } } });
+    expect(opacity()).toBeUndefined();
+    layout(5);
+    expect(opacity()).toBe(0);
+    expect(h.tree.props.accessibilityLabel).toBe("Base branch: main");
+    layout(27);
+    expect(opacity()).toBe(0);
+    layout(28);
+    expect(opacity()).toBeUndefined();
+  });
+});
+
+describe("PromptInput menu slot", () => {
+  it("docks the menu right above the field, 6 clear, inside the keyboard lift, in both layouts", async () => {
+    const { PromptInput } = await import("../src/ai/prompt-input");
+    for (const layout of ["inline", "stacked"]) {
+      const h = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), layout, menu: "MENU" } as never) as unknown as Element);
+      expect(typeof h.tree.type, layout).toBe("function");
+      const [slot, surface] = (h.tree.props.children as Element).props.children as Element[];
+      expect(slot!.props, layout).toMatchObject({ className: "mb-1.5", children: "MENU" });
+      expect(surface!.props.className, layout).toBe("border");
+      const closed = hooks.mount(() => PromptInput({ onSubmit: vi.fn(), layout } as never) as unknown as Element);
+      expect(((closed.tree.props.children as Element).props.children as unknown[])[0], layout).toBeNull();
+    }
+  });
+});
+
+describe("PromptInputMenu and PromptInputMenuItem", () => {
+  it("is a labelled listbox on the popover surface that scrolls past the web cap and keeps taps with the keyboard up", async () => {
+    const { PromptInputMenu, promptInputMenuHeight } = await import("../src/ai/prompt-input-menu");
+    const menu = PromptInputMenu({ title: "Mentions", children: ["ROW"] }) as unknown as Element;
+    expect(menu.props.className).toContain("border");
+    expect(flatten(menu.props.style)).toMatchObject({
+      backgroundColor: palette.overlay.light,
+      borderColor: tokens.color.border.light,
+      borderRadius: tokens.radius.lg,
+      maxHeight: promptInputMenuHeight(844),
+    });
+    const [list] = byType(menu, "ScrollView");
+    expect(list!.props).toMatchObject({ accessibilityRole: "list", accessibilityLabel: "Mentions", keyboardShouldPersistTaps: "always" });
+    expect(list!.props.children).toEqual(["ROW"]);
+    // The web panel: 160 to 340.
+    expect([promptInputMenuHeight(300), promptInputMenuHeight(844), promptInputMenuHeight(2000)]).toEqual([160, 295, 340]);
+  });
+
+  it("closes on Android back while mounted, before the screen behind, and lets go when unmounted", async () => {
+    const { PromptInputMenu } = await import("../src/ai/prompt-input-menu");
+    const onDismiss = vi.fn();
+    const menu = hooks.mount(() => PromptInputMenu({ title: "Mentions", children: ["ROW"], onDismiss }));
+    expect(back.press()).toBe(true);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    menu.unmount();
+    expect(back.press()).toBe(false);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    // Without `onDismiss` it leaves back alone.
+    hooks.mount(() => PromptInputMenu({ title: "Mentions", children: ["ROW"] })).unmount();
+    expect(back.listeners).toHaveLength(0);
+  });
+
+  it("says No matches. with no rows, or the empty content it is given", async () => {
+    const { PromptInputMenu } = await import("../src/ai/prompt-input-menu");
+    const empty = PromptInputMenu({ title: "Skills", children: [] }) as unknown as Element;
+    expect(byType(empty, "ScrollView")).toHaveLength(0);
+    expect(byType(empty, "Text")[0]!.props.children).toBe("No matches.");
+    const custom = PromptInputMenu({ title: "Skills", empty: "No available skills." }) as unknown as Element;
+    expect(byType(custom, "Text")[0]!.props.children).toBe("No available skills.");
+  });
+
+  it("is a 44-high option with the muted prefix, the label, a one-line description and a badge", async () => {
+    const { PromptInputMenuItem } = await import("../src/ai/prompt-input-menu");
+    const onPress = vi.fn();
+    const row = PromptInputMenuItem({
+      prefix: "/",
+      label: "code-review",
+      description: `Review   the diff ${"x".repeat(100)}`,
+      badge: "Claude",
+      badgeIcon: "MARK",
+      onPress,
+    }) as unknown as Element;
+    expect(row.type).toBe("Pressable");
+    expect(row.props).toMatchObject({ accessibilityRole: "button", accessibilityState: { selected: false } });
+    expect(row.props.style).toMatchObject({ minHeight: MIN_TOUCH_TARGET, backgroundColor: "transparent" });
+    expect(row.props.className).toContain("active:opacity-70");
+    const texts = byType(row, "Text");
+    const [label, prefix] = texts;
+    expect(label!.props.numberOfLines).toBe(1);
+    expect(prefix!.props).toMatchObject({ children: "/", style: { color: tokens.color.muted.light } });
+    const description = texts.find((text) => typeof text.props.children === "string" && text.props.children.startsWith("Review"));
+    expect(description!.props.children).toHaveLength(72);
+    expect(description!.props.children).toMatch(/^Review the diff x+…$/);
+    expect(texts.some((text) => text.props.children === "Claude")).toBe(true);
+    expect(elements(row).some((element) => element.props.children === "MARK" || (Array.isArray(element.props.children) && element.props.children.includes("MARK")))).toBe(true);
+    expect(row.props.accessibilityLabel).toMatch(/^\/code-review, Review the diff x+…, Claude$/);
+    (row.props.onPress as () => void)();
+    expect(onPress).toHaveBeenCalledOnce();
+  });
+
+  it("tints the selected row as the web keyboard row, and puts a leading avatar and a trailing icon in place of the badge", async () => {
+    const { PromptInputMenuItem } = await import("../src/ai/prompt-input-menu");
+    const row = PromptInputMenuItem({ label: "Ada Lovelace", leading: "AVATAR", trailing: "ICON", badge: "Person", selected: true }) as unknown as Element;
+    expect(row.props.accessibilityState).toEqual({ selected: true });
+    expect(flatten(row.props.style).backgroundColor).toBe(withAlpha(palette.primary.light, 0.15));
+    const children = elements(row).flatMap((element) => (Array.isArray(element.props.children) ? element.props.children : [element.props.children]));
+    expect(children).toContain("AVATAR");
+    expect(children).toContain("ICON");
+    expect(byType(row, "Text").some((text) => text.props.children === "Person")).toBe(false);
+    expect(flatten(byType(row, "Text")[0]!.props.style)).toMatchObject({ fontWeight: "500" });
   });
 });
 
@@ -901,8 +1508,11 @@ describe("Suggestion, Source, FileChip and Attachment", () => {
     const onRemove = vi.fn();
     const chip = Attachment({ data: { id: "1", filename: "notes.pdf", mediaType: "application/pdf" }, onRemove }) as unknown as Element;
     const remove = byLabel(chip, "Remove notes.pdf")!;
-    expect(remove.props).toMatchObject({ accessibilityRole: "button", hitSlop: touchSlop(20) });
+    expect(remove.props).toMatchObject({ accessibilityRole: "button", hitSlop: { top: 12, bottom: 12, left: 12, right: 8 } });
     expect(20 + 2 * touchSlop(20).top).toBe(44);
+    // With a pressable label 6 before it, the remove cross reaches only half way back.
+    const pressable = Attachment({ data: { id: "1", filename: "notes.pdf" }, onRemove, onPress: vi.fn() }) as unknown as Element;
+    expect(byLabel(pressable, "Remove notes.pdf")!.props.hitSlop).toEqual({ top: 12, bottom: 12, left: 3, right: 8 });
     (remove.props.onPress as () => void)();
     expect(onRemove).toHaveBeenCalledOnce();
     expect(byType(chip, "IconFileText")).toHaveLength(1);
@@ -951,6 +1561,8 @@ describe("CodeBlock", () => {
     expect(byType(block, CodeBlockCopyButton)).toHaveLength(1);
     const code = byType(block, "Text").find((text) => text.props.children === "a\nb")!;
     expect(code.props.selectable).toBe(true);
+    // Android fades the side with more code to scroll to.
+    expect(byType(block, "ScrollView")[0]!.props).toMatchObject({ horizontal: true, fadingEdgeLength: 24 });
     expect(flatten(code.props.style).fontFamily).toBe(MONO_FONT);
     expect(MONO_FONT).toBe("Menlo");
     const bare = CodeBlock({ code: "a" }) as unknown as Element;
@@ -967,6 +1579,87 @@ describe("CodeBlock", () => {
     const fencedCode = byType(fenced, "Text").find((text) => text.props.children === "a")!;
     expect(flatten(fencedCode.props.style)).toMatchObject({ fontSize: 13, lineHeight: 13 * 1.55 });
   });
+
+  it("keeps Wrap's and Copy's targets apart: 2 apart, each slops only up, down and outward", async () => {
+    const { CodeBlock } = await import("../src/ai/code-block");
+    const { ChatIconButton } = await import("../src/ai/icon-button");
+    const element = CodeBlock({ code: "a", variant: "markdown", onCopy: vi.fn() }) as unknown as Element;
+    const fenced = hooks.mount(() => (element.type as (props: unknown) => Element)(element.props)).tree;
+    const wrap = byLabel(fenced, "Wrap long lines")!;
+    expect(wrap.props.slop).toEqual({ left: 8, right: 0 });
+    const copyElement = find(fenced, (node) => typeof node.type === "function" && node.props.code === "a")!;
+    const copy = hooks.mount(() => render(copyElement) as Element).tree;
+    expect(copy.props.slop).toEqual({ left: 0, right: 5 });
+    // The 28 `xs` square: 8 above and below to 44, and only the outer side.
+    const button = (slop: { left: number; right: number }) =>
+      ChatIconButton({ icon: () => null, label: "x", size: "xs", slop }) as unknown as Element;
+    expect(button({ left: 8, right: 0 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 8, right: 0 });
+    expect(button({ left: 0, right: 5 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 0, right: 5 });
+  });
+});
+
+describe("ChoiceQuestion options", () => {
+  /** Renders the option rows (function components named `ChoiceRow`) into their host elements. */
+  const rows = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(rows);
+    if (!node || typeof node !== "object" || !("props" in node)) return node;
+    const element = node as Element;
+    if (typeof element.type === "function" && element.type.name === "ChoiceRow") return rows(render(element));
+    return { ...element, props: { ...element.props, children: rows(element.props.children) } };
+  };
+  const question = (multiSelect: boolean) => ({
+    question: "Which?",
+    header: "",
+    multiSelect,
+    options: [
+      { label: "Chrome", description: "The browser" },
+      { label: "Safari", description: "" },
+    ],
+  });
+
+  async function mountQuestion(multiSelect: boolean) {
+    const { ChoiceQuestion } = await import("../src/ai/choice-question");
+    return hooks.mount(() => rows(ChoiceQuestion({ questions: [question(multiSelect)], onSubmit: () => {}, framed: false })));
+  }
+
+  afterEach(() => {
+    reduceMotion.value = false;
+  });
+
+  it("single-select options are radios that report checked, at least a 44 card", async () => {
+    const h = await mountQuestion(false);
+    const chrome = byLabel(h.tree, "Chrome")!;
+    expect(chrome.props).toMatchObject({ accessibilityRole: "radio", accessibilityHint: "The browser", accessibilityState: { checked: false, disabled: false } });
+    expect(flatten(chrome.props.style).minHeight).toBe(44 - 16);
+    expect(byLabel(h.tree, "Other...")!.props.accessibilityRole).toBe("radio");
+    (chrome.props.onPress as () => void)();
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityState).toEqual({ checked: true, disabled: false });
+    expect(byLabel(h.tree, "Safari")!.props.accessibilityState).toEqual({ checked: false, disabled: false });
+  });
+
+  it("multi-select options are checkboxes", async () => {
+    const h = await mountQuestion(true);
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityRole).toBe("checkbox");
+    (byLabel(h.tree, "Chrome")!.props.onPress as () => void)();
+    (byLabel(h.tree, "Safari")!.props.onPress as () => void)();
+    expect(byLabel(h.tree, "Chrome")!.props.accessibilityState).toMatchObject({ checked: true });
+    expect(byLabel(h.tree, "Safari")!.props.accessibilityState).toMatchObject({ checked: true });
+  });
+
+  it("the card scales to 0.97 while pressed, or dims with Reduce Motion", async () => {
+    const h = await mountQuestion(false);
+    const card = () => find(h.tree, (element) => element.type === "View" && elements(element.props.children).includes(byLabel(h.tree, "Chrome")!) && flatten(element.props.style).borderRadius !== undefined)!;
+    expect(flatten(card().props.style).transform).toBeUndefined();
+    (byLabel(h.tree, "Chrome")!.props.onPressIn as () => void)();
+    expect(flatten(card().props.style).transform).toEqual([{ scale: 0.97 }]);
+    (byLabel(h.tree, "Chrome")!.props.onPressOut as () => void)();
+    expect(flatten(card().props.style).transform).toBeUndefined();
+    reduceMotion.value = true;
+    h.rerender();
+    (byLabel(h.tree, "Chrome")!.props.onPressIn as () => void)();
+    expect(flatten(card().props.style)).toMatchObject({ opacity: 0.8 });
+    expect(flatten(card().props.style).transform).toBeUndefined();
+  });
 });
 
 describe("trace lines and activity steps", () => {
@@ -978,6 +1671,22 @@ describe("trace lines and activity steps", () => {
     const pending = AgentTraceLine({ status: "pending" }) as unknown as Element;
     expect(pending.props.value).toBe(tokens.color.muted.light);
     expect(flatten((pending.props.children as Element).props.style).opacity).toBe(0.6);
+  });
+
+  it("stacks 28 high lines with no gap, and a fold's trigger and chevron take no slop over the next line", async () => {
+    const { AgentTrace, AgentTraceLine, AgentTraceCollapsibleTrigger } = await import("../src/ai/trace");
+    const { Collapsible } = await import("../src/ai/collapsible");
+    expect((AgentTrace({}) as unknown as Element).props.className).not.toMatch(/\bgap-/);
+    const line = (AgentTraceLine({}) as unknown as Element).props.children as Element;
+    expect(line.props.className).toMatch(/\bpy-1\b/);
+    provide(hooks.mount(() => Collapsible({}) as unknown as Element).tree);
+    const plain = AgentTraceCollapsibleTrigger({ children: "LINE" }) as unknown as Element;
+    expect(plain.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 0, right: 0 });
+    const withChip = AgentTraceCollapsibleTrigger({ children: "LINE", trailing: "CHIP" }) as unknown as Element;
+    const [trigger, , chevron] = withChip.props.children as Element[];
+    expect(trigger!.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 0, right: 0 });
+    expect(trigger!.props.className).toMatch(/\bself-stretch\b/);
+    expect(chevron!.props.hitSlop).toEqual({ top: 0, bottom: 0, left: 4, right: 14 });
   });
 
   it("an activity step reads its label, status and description, and pulses while running", async () => {
@@ -1045,7 +1754,7 @@ describe("AI parts (source contract)", () => {
     for (const [file, source] of Object.entries(sources)) {
       for (const tag of source.match(/<Pressable\b[\s\S]*?>/g) ?? []) {
         count++;
-        expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessible=\{false\}/);
+        expect(tag, file).toMatch(/accessibilityRole="(?:button|link)"|accessibilityRole=\{multiple \? "checkbox" : "radio"\}|accessible=\{false\}/);
         // A hidden container (the long-pressable `Message`) is not a target.
         if (!/accessible=\{false\}/.test(tag)) expect(tag, file).toMatch(/hitSlop=\{/);
       }
@@ -1072,7 +1781,11 @@ describe("AI parts (source contract)", () => {
   });
 
   it("stays generic: no model or provider names, and the AI wording", () => {
+    // The web timeline copies (`activityTimeline.test.ts` keeps them byte-identical)
+    // list the agents' old "… is reasoning..." filler lines, to drop them.
+    const webCopies = new Set(["activity-step-label.ts", "activity-tasks-utils.ts", "activity-step-types.ts"]);
     for (const [file, source] of Object.entries({ ...sources, "AiChatGallery.tsx": gallery })) {
+      if (webCopies.has(file)) continue;
       expect(source, file).not.toMatch(/\b(?:gpt|claude|gemini|llama|mistral|openai|anthropic|vibot)\b/i);
     }
     expect(sources["reasoning.tsx"]).toMatch(/"Thinking…"/);

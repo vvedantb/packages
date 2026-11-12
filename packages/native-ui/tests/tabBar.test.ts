@@ -3,14 +3,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { floatingTabPillColors, tabColors } from "../src/controlStyles";
+import { configureTheme } from "../src/configureTheme";
 import {
   FLOATING_PILL_RADIUS,
   FLOATING_TAB_BAR_HEIGHT,
   floatingFill,
   floatingSolidFill,
+  tabBarSlotStyle,
 } from "../src/floating";
 import { palette } from "../src/palette";
-import { isTabBarRouteVisible } from "../src/tabBarRoutes";
+import { isTabBarHidden, isTabBarRouteVisible } from "../src/tabBarRoutes";
 import { tokens } from "../src/tokens";
 import type { FloatingTabBarProps } from "../src/FloatingTabBar";
 
@@ -24,12 +26,17 @@ const reduceMotion = vi.hoisted(() => ({ value: false }));
 const withTiming = vi.hoisted(() => vi.fn((to: number, _config?: unknown) => to));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
+  // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
+  useContext: () => 0,
   useEffect: (effect: () => void) => effect(),
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },
   Easing: { bezier: (...points: number[]) => `bezier(${points.join(", ")})` },
-  useSharedValue: <T>(value: T) => ({ value }),
+  useSharedValue: <T>(initial: T) => {
+    const shared = { value: initial, get: () => shared.value, set: (next: T) => void (shared.value = next) };
+    return shared;
+  },
   useAnimatedStyle: <T>(updater: () => T) => updater(),
   withTiming,
 }));
@@ -78,6 +85,26 @@ describe("isTabBarRouteVisible", () => {
     expect(isTabBarRouteVisible({ tabBarItemStyle: [{ display: "none" }, null, false] })).toBe(false);
     expect(isTabBarRouteVisible({ tabBarItemStyle: { width: 40 } })).toBe(true);
     expect(isTabBarRouteVisible({ tabBarItemStyle: null })).toBe(true);
+  });
+});
+
+describe("tabBarSlotStyle", () => {
+  it("keeps the bar clear of the notch and the home indicator, at least 8 above the bottom", () => {
+    expect(tabBarSlotStyle({ left: 44, right: 47, bottom: 34 })).toEqual({ position: "absolute", left: 60, right: 63, bottom: 50 });
+    expect(tabBarSlotStyle({ left: 0, right: 0, bottom: 0 })).toEqual({ position: "absolute", left: 16, right: 16, bottom: 24 });
+  });
+});
+
+describe("isTabBarHidden", () => {
+  it("hides the bar when the focused route's tabBarStyle resolves to display: none", () => {
+    expect(isTabBarHidden(undefined)).toBe(false);
+    expect(isTabBarHidden({})).toBe(false);
+    expect(isTabBarHidden({ tabBarStyle: undefined })).toBe(false);
+    expect(isTabBarHidden({ tabBarStyle: { display: "none" } })).toBe(true);
+    expect(isTabBarHidden({ tabBarStyle: [{ height: 64 }, { display: "none" }] })).toBe(true);
+    expect(isTabBarHidden({ tabBarStyle: [{ display: "none" }, { display: "flex" }] })).toBe(false);
+    // A hidden tab is not a hidden bar.
+    expect(isTabBarHidden({ tabBarItemStyle: { display: "none" } })).toBe(false);
   });
 });
 
@@ -190,6 +217,17 @@ describe("FloatingTabBar with hidden routes", () => {
     expect(navigation.navigate).toHaveBeenCalledTimes(1);
   });
 
+  it("sits in tabBarSlotStyle", async () => {
+    expect((await bar(0)).tree.props.style).toEqual(tabBarSlotStyle({ left: 0, right: 0, bottom: 0 }));
+  });
+
+  it("draws nothing while the focused route sets tabBarStyle display: none, and only then", async () => {
+    const hiding: FloatingTabBarProps["descriptors"] = { ...descriptors, "home-1": { options: { title: "Home", tabBarStyle: { display: "none" } } } };
+    expect((await bar(0, false, hiding)).tree).toBeNull();
+    // Another route focused: the bar draws, Home included.
+    expect(labels((await bar(4, false, hiding)).tabs)).toEqual(["Home", "Profile"]);
+  });
+
   it("keeps working while a hidden route is focused", async () => {
     const { tabs, navigation, press } = await bar(1);
     expect(selected(tabs)).toEqual([]);
@@ -273,6 +311,17 @@ describe("FloatingTabBar active pill", () => {
     expect(floatingTabPillColors("dark")).toEqual(tabColors("segmented", true, "dark"));
     for (const colorScheme of ["light", "dark"] as const) {
       expect(floatingTabPillColors(colorScheme).color).toBe(tabColors("segmented", true, colorScheme).color);
+    }
+  });
+
+  it("keeps its own fill when an app themes the segmented thumb", () => {
+    const before = { ...palette.segment };
+    try {
+      configureTheme({ palette: { segment: { light: "#ffffff", dark: "#202020" } } });
+      expect(floatingTabPillColors("dark").backgroundColor).toBe("#474747");
+      expect(tabColors("segmented", true, "dark").backgroundColor).toBe("#202020");
+    } finally {
+      configureTheme({ palette: { segment: before } });
     }
   });
 

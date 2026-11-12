@@ -18,7 +18,7 @@ import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
-import { MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
+import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -68,13 +68,13 @@ function MessageHighlight() {
   const wash = useSharedValue(reduceMotion ? 0.5 : 1);
   useEffect(() => {
     if (reduceMotion) {
-      wash.value = 0.5;
+      wash.set(0.5);
       return;
     }
-    wash.value = 1;
-    wash.value = withTiming(0, { duration: MESSAGE_HIGHLIGHT_MS });
+    wash.set(1);
+    wash.set(withTiming(0, { duration: MESSAGE_HIGHLIGHT_MS }));
   }, [wash, reduceMotion]);
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: wash.value }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: wash.get() }));
   return (
     <Animated.View
       testID="message-highlight"
@@ -100,9 +100,9 @@ function MessageHighlight() {
  *
  * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
  * `className`, `style` and view props) and a long press opens the
- * `MessageActionSheet`. It stays a non-accessible container so its buttons and
- * links keep their own focus: also offer the actions in a `MessageActionsBar`
- * for screen reader users. `highlighted` draws the quote-jump highlight.
+ * `MessageActionSheet`; TalkBack reaches it as the `longpress` action. It stays
+ * a non-accessible container so its buttons and links keep their own focus:
+ * also offer the actions in a `MessageActionsBar` for screen reader users. `highlighted` draws the quote-jump highlight.
  */
 export function Message({
   from,
@@ -120,6 +120,10 @@ export function Message({
   const [sheetOpen, setSheetOpen] = useState(false);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
+  const longPress = () => {
+    onLongPress?.();
+    if (hasActions) setSheetOpen(true);
+  };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
     style,
@@ -140,9 +144,11 @@ export function Message({
             accessible={false}
             className={merged}
             style={layout}
-            onLongPress={() => {
-              onLongPress?.();
-              if (hasActions) setSheetOpen(true);
+            onLongPress={longPress}
+            // TalkBack's actions menu reaches the same sheet as a long press.
+            accessibilityActions={[{ name: "longpress", label: actionSheetTitle ?? MESSAGE_ACTIONS_TITLE }]}
+            onAccessibilityAction={(event) => {
+              if (event.nativeEvent.actionName === "longpress") longPress();
             }}
             {...props}
           >
@@ -337,14 +343,20 @@ export type MessageActionProps = {
    */
   selected?: boolean;
   disabled?: boolean;
-  /** Default `sm`, the web `icon-sm` (32, 16 icon). `xs` is the web `icon-xs` (28, 14 icon), as Eva's chat. */
+  /**
+   * Default `sm`, the web `icon-sm` (32, 16 icon). `xs` is the web `icon-xs`
+   * (28, 14 icon), as Eva's web chat; `touch` is a whole 44 square (16 icon)
+   * for a phone, so the row needs no slop.
+   */
   size?: ChatIconButtonSize;
   testID?: string;
 };
 
 /**
  * A ghost icon button under a message: the web `icon-sm` (32, 16 icon), or
- * `icon-xs` with `size="xs"`, with the slop to 44. Copying is up to the app (`onPress`): React Native's own
+ * `icon-xs` with `size="xs"`, with the slop to 44 high. It has no sideways
+ * slop: the actions sit 2 to 4 apart, and slop there would overlap the next
+ * one, so a tap on Copy could fork or rate instead. Copying is up to the app (`onPress`): React Native's own
  * `Clipboard` is deprecated, and native-ui adds no clipboard package.
  */
 export function MessageAction({
@@ -369,6 +381,7 @@ export function MessageAction({
       onPress={onPress}
       disabled={disabled}
       size={size}
+      slop="vertical"
       testID={testID}
     />
   );
