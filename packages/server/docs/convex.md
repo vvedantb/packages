@@ -14,6 +14,8 @@ None required. `@clerk/backend` is an optional peer. The package never imports i
 
 `convex` is an optional peer for types only: the optimistic-update helpers and the MCP token cache below name Convex types (`FunctionReference`, `OptimisticLocalStore`, `GenericId`, `RegisteredQuery`, the type of `v`). The package never imports `convex` at runtime; the token cache takes `v`, `defineTable` and your function builders as arguments.
 
+`convex-helpers` is an optional peer for types only, used by [the auth function builders](#auth-function-builders). The package never imports it at runtime: the app passes `customQuery`, `customMutation`, `customAction` and `customCtx` in.
+
 ## Usage
 
 ```ts
@@ -71,6 +73,8 @@ expectMcpToolCount(toolNames, 2);
 | `createClerkUserAuth<DataModel>()(config)` | Clerk-user lookups for queries and mutations: `getCurrentUserId`, `requireCurrentUserId`, `getCurrentUser`, `isCurrentUserAdmin`, `getUserByClerkId`, `ensureUser`. See below. |
 | `hasVPlan`, `hasVPro`, `parseVProCompUserIds` | V Pro checks: the session `pla` claim, stored plan slugs and a complimentary id list. See [V Pro plan check](#v-pro-plan-check). |
 | `verifyClerkWebhook`, `parseClerkBillingEvent`, `createVProModule<DataModel>()(config)` | Clerk Billing webhook: verify, read the plan change, write it to the users row. See [Clerk Billing webhook](#clerk-billing-webhook-v-pro). |
+| `createAuthFunctions<DataModel, UserId>(config)` | `authQuery`/`authMutation`/`authAction` on convex-helpers, with `ctx.userId` and an optional maintenance gate. See [Auth function builders](#auth-function-builders). |
+| `createConvexAdminClient(config)`, `convexSiteToCloudUrl`, `parseConvexApiResponse` | Deployment admin client for an MCP "run query" tool: run queries, list tables. URL and admin key as arguments. See [Convex admin API client](#convex-admin-api-client). |
 
 Crypto primitives are in [crypto.md](crypto.md); MCP scaffolding in [mcp.md](mcp.md). Not included: rate limits.
 
@@ -721,6 +725,99 @@ Also stays in the apps, by design:
 - **Refetch on each event.** An app that ignores the payload and refetches the subscription from Clerk calls `activePlanSlugs` with its `grantingStatuses` on the fetched items.
 - **Custom JWT claims.** Checks on app-specific claims (for example a custom `plans` or `plan` claim) stay beside `hasVPro`; `hasVPro` reads only `pla`.
 - **Backfill.** Page size, scheduling and how a 404 from Clerk is stored. Pass the same `grantingStatuses` to `activePlanSlugs` as the webhook uses.
+
+## Auth function builders
+
+`createAuthFunctions` builds `authQuery`, `authMutation` and `authAction` on convex-helpers `customFunctions`. Each handler receives `ctx.userId`, and an unauthenticated caller is rejected before the handler runs. The app wires its own generated builders and its user lookup in one place.
+
+convex-helpers is an [optional peer for types only](#peers): the app imports the four runtime functions and passes them in, so importing `@vvedantb/server` never forces convex-helpers (or convex) on a consumer.
+
+```ts
+// convex/functions.ts
+import { customAction, customCtx, customMutation, customQuery } from "convex-helpers/server/customFunctions";
+import { createAuthFunctions } from "@vvedantb/server";
+import type { DataModel, Id } from "./_generated/dataModel";
+import {
+  action, internalAction, internalMutation, internalQuery, mutation, query,
+} from "./_generated/server";
+import { userAuth } from "./userAuth"; // createClerkUserAuth
+import { resolveActionUserId } from "./lib/actionAuth"; // runs a query, throws when null
+
+const customFunctions = { customQuery, customMutation, customAction, customCtx };
+
+export const { authQuery, authMutation, authAction } = createAuthFunctions<DataModel, Id<"users">>({
+  customFunctions,
+  query, mutation, action,
+  resolveUserId: (ctx) => userAuth.requireCurrentUserId(ctx),
+  resolveActionUserId: (ctx) => resolveActionUserId(ctx),
+  beforeEach: () => assertNotInMaintenance(), // optional gate; omit when there is none
+});
+
+// Internal variants: a second call with the internal builders and no gate.
+export const {
+  authQuery: internalAuthQuery,
+  authMutation: internalAuthMutation,
+  authAction: internalAuthAction,
+} = createAuthFunctions<DataModel, Id<"users">>({
+  customFunctions,
+  query: internalQuery, mutation: internalMutation, action: internalAction,
+  resolveUserId: (ctx) => userAuth.requireCurrentUserId(ctx),
+  resolveActionUserId: (ctx) => resolveActionUserId(ctx),
+});
+```
+
+```ts
+export const myTasks = authQuery({
+  args: {},
+  handler: (ctx) => ctx.db.query("tasks").withIndex("by_owner", (q) => q.eq("ownerId", ctx.userId)).collect(),
+});
+```
+
+| Export | What it does |
+| --- | --- |
+| `createAuthFunctions<DataModel, UserId, Visibility?>(config)` | Returns `{ authQuery, authMutation, authAction }`. Call again with the internal builders for the internal variants. |
+| `AuthCustomFunctions` | The four convex-helpers functions the app injects (`customQuery`, `customMutation`, `customAction`, `customCtx`). |
+| `AuthReadCtx<DataModel>` | A query-or-mutation ctx union, the type `resolveUserId` and `beforeEach` receive. |
+| `CreateAuthFunctionsConfig<DataModel, UserId, Visibility?>`, `AuthFunctions<…>` | The config and the return type. |
+
+Config: `customFunctions`; the generated `query`/`mutation`/`action` (public or internal); `resolveUserId(ctx)` (throws to reject, for example `userAuth.requireCurrentUserId`); `resolveActionUserId(ctx)` (an action has no `ctx.auth` database access, so it usually runs a query and throws on null); and an optional `beforeEach(ctx)` gate that runs on every call before the user is resolved — throw to block it (a maintenance check). Omit `beforeEach` for internal builders that must run during maintenance.
+
+- **Maintenance gate.** `beforeEach` is the optional hook for eva's `assertNotInMaintenance()`. It is not a dependency: an app without a gate omits it.
+- **Internal variants.** A second `createAuthFunctions` call with `internalQuery`/`internalMutation`/`internalAction` and no `beforeEach`, renamed on destructure. The result is the same shape, so the first call's logic is reused.
+
+`tests/convex/authFunctions.test.ts` wires the real convex-helpers builders to stub base builders and runs each wrapped handler: the userId is injected for query, mutation and action; `beforeEach` runs before `resolveUserId` and a throwing gate blocks the handler without resolving the user; an authentication rejection from `resolveUserId` propagates; the internal variant works through a second call.
+
+## Convex admin API client
+
+`createConvexAdminClient` is the deployment admin client each app's MCP "run query" tool uses: run an ad-hoc query against a deployment, run a system query, and list tables (inferred shapes merged with the declared schema). The deployment URL and admin key are arguments; it reads no env vars. `fetch` is injectable for tests. No convex or zod import — plain TypeScript, like the Expo push HTTP helpers.
+
+```ts
+import { convexSiteToCloudUrl, createConvexAdminClient } from "@vvedantb/server";
+
+const client = createConvexAdminClient({
+  cloudUrl: convexSiteToCloudUrl(deploymentUrl), // .convex.site -> .convex.cloud; cloud/self-hosted unchanged
+  adminKey, // the deploy key; passed as an argument, never read from env
+});
+
+const { value, logLines } = await client.runTestFunction(bundledQuerySource, { args: { limit: 10 } });
+const tables = await client.listTables({ hideTable: (name) => name.startsWith("_") });
+```
+
+| Export | What it does |
+| --- | --- |
+| `createConvexAdminClient(config)` | `{ runTestFunction, runSystemQuery, getShapes, listTables }`. `config` is `{ cloudUrl, adminKey, fetch? }`. |
+| `convexSiteToCloudUrl(url)` | Rewrites a `.convex.site` URL to `.convex.cloud`; leaves a cloud or self-hosted URL unchanged. |
+| `parseConvexApiResponse(json)` | Returns `{ value, logLines }` on `status: "success"`; throws the `errorMessage` on `status: "error"`; throws on a non-object or unknown status. |
+| `ConvexAdminClient`, `ConvexAdminClientConfig`, `RunTestFunctionOptions`, `ListTablesOptions`, `ConvexTableInfo`, `ConvexTestFunctionResult`, `ConvexJsonValue` | The client and its types. |
+
+| Method | Semantics |
+| --- | --- |
+| `runTestFunction(source, options?)` | POST `/api/run_test_function` with `{ adminKey, bundle: { path, source }, args, format: "convex_encoded_json" }` (the admin key is in the body). `options.args` defaults to `{}`, `options.path` to `testQuery.js`. Returns `parseConvexApiResponse` of the body, so a query resource-limit error throws its message (format it with `formatConvexQueryError` for MCP). Throws on a non-ok HTTP response. |
+| `runSystemQuery(path, args?)` | POST `/api/query` with `Authorization: Convex <adminKey>`, for a `_system/...` function. |
+| `getShapes()` | GET `/api/shapes2` with the same auth header: inferred table shapes. |
+| `listTables(options?)` | Merges `getShapes` with the declared schema from `_system/frontend/getSchemas`, one `ConvexTableInfo` per table (`name`, `inferredShape`, `declaredSchema`), sorted by name. `options.hideTable(name)` drops tables. |
+
+`tests/convex/convexAdminClient.test.ts` exercises every function against a stubbed `fetch`: the URL rewrite, the parse success/error/unknown cases, the `runTestFunction` body shape, args and path, trailing-slash stripping and error paths, and the `listTables` merge, sort, `hideTable` and admin auth header.
 
 ## Develop
 

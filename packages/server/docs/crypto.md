@@ -43,6 +43,39 @@ The two app copies are the same: encode both strings as UTF-8, return `false` at
 - Unequal lengths return early, so the length is not hidden.
 - Lone surrogates become U+FFFD when encoded, so `"\ud800"` equals `"\udfff"`.
 
+## HMAC and webhook signatures
+
+HMAC-SHA256 and the GitHub-style `sha256=<hex>` signature that webhooks (GitHub, Clerk, Svix and others) send and compare against. WebCrypto only, so they run in the Convex default runtime. The key is imported on each call.
+
+```ts
+import { githubStyleSignature, verifyGithubStyleSignature } from "@vvedantb/server";
+
+// Verify an inbound webhook in an httpAction.
+const body = await request.text();
+const ok = await verifyGithubStyleSignature(secret, body, request.headers.get("X-Hub-Signature-256"));
+if (!ok) return new Response("bad signature", { status: 401 });
+```
+
+| Export | What it does |
+| --- | --- |
+| `hmacSha256(secret, message)` | HMAC-SHA256 as raw bytes. `secret` is a string (UTF-8). `message` is a string (UTF-8) or `Uint8Array`. |
+| `hmacSha256Hex(secret, message)` | The same, lowercase hex. |
+| `githubStyleSignature(secret, message)` | `sha256=<hex>` — the `X-Hub-Signature-256` format. |
+| `verifyGithubStyleSignature(secret, message, signature)` | Constant-time compare (`timingSafeEqual`) of `githubStyleSignature` against the header. `false` for a `null` header. The header is trimmed first. |
+
+- `HmacMessage` is `string | Uint8Array`, so a verifier can take the raw request bytes or the decoded text. A string and its UTF-8 bytes produce the same signature.
+- The secret is never empty: WebCrypto rejects a zero-length HMAC key, and a real webhook secret is never empty.
+- `tests/crypto/hmac.test.ts` checks RFC 4231 test case 2, cross-checks every signature against Node's `createHmac`, and ports each app's wrapper under a neutral name (with a Node Buffer hex encoder, sharing no code) to prove byte-identical output.
+
+### Per-app webhook wrappers
+
+| App | File | Wrapper | Built on |
+| --- | --- | --- | --- |
+| app-b | `convex/routines/triggerEvents.ts` | `githubSignature(secret, bodyBytes)` → `sha256=<hex>`; `verifyGithubSignature` trims the header | `githubStyleSignature`, `verifyGithubStyleSignature` |
+| app-c / app-e | `convex/http.ts`, `convex/_shared/hmac.ts` | `hmacSha256Hex(secret, body)`; webhook verify compares `sha256=<hex>` | `hmacSha256Hex`, `githubStyleSignature` |
+
+- **Header trim.** app-b trims the signature header before comparing; app-c/app-e compare the header as sent. `verifyGithubStyleSignature` trims (app-b behaviour). app-c/app-e never send trailing whitespace, so the result is the same; those apps can keep their own compare or adopt the trimming verifier.
+
 ## Per-app wrappers
 
 `tests/crypto/appFormats.test.ts` ports each wrapper under a neutral name with its random IV made a parameter, and rebuilds it on these primitives. With the same key, IV and plaintext the stored text is equal, and each side decrypts the other's output. `tests/crypto/primitives.test.ts` has the published vectors (RFC 4648, FIPS 180-2, the GCM paper's AES-128 and AES-256 test cases).
