@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.42.0
+
+### Minor Changes
+
+- [#220](https://github.com/vvedantb/packages/pull/220) [`9a279ec`](https://github.com/vvedantb/packages/commit/9a279ecad6b17ab68ba75b98304e0e4901809813) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `@vvedantb/ui/tokens/css/scrollbar.css`: the `scrollbar` Tailwind utility (thin rounded thumb, transparent track) that vibot and eva each kept a copy of. Set `--scrollbar-base` on :root to change the thumb colour; the default is `--muted-foreground`. `tokens/css/index.css` imports it.
+
+### Patch Changes
+
+- [#217](https://github.com/vvedantb/packages/pull/217) [`df6d88e`](https://github.com/vvedantb/packages/commit/df6d88e750cd5782515c773551fb271d9cd203eb) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `dist` is valid Node ESM: relative imports name their file (`./cn.js`, `./ui/index.js`) and the dayjs plugin import names `relativeTime.js`. Node (Vitest, SSR) does not add extensions as bundlers do. The package still imports its own CSS (sonner, katex), so test runners should inline it (Vitest: `server.deps.inline: ["@vvedantb/ui"]`).
+
 ## 0.41.0
 
 ### Minor Changes
