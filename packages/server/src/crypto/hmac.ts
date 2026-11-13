@@ -32,8 +32,8 @@ export async function hmacSha256Hex(secret: string, message: HmacMessage): Promi
 
 /**
  * A GitHub-style `sha256=<hex>` signature of `message` under `secret`. This is
- * the `X-Hub-Signature-256` format GitHub webhooks send, and the shape Clerk,
- * Svix and others compare against.
+ * the `X-Hub-Signature-256` format GitHub webhooks send. It is not the Svix
+ * format (Clerk webhooks): use `verifyClerkWebhook` for those.
  */
 export async function githubStyleSignature(secret: string, message: HmacMessage): Promise<string> {
   return `sha256=${await hmacSha256Hex(secret, message)}`;

@@ -45,7 +45,7 @@ The two app copies are the same: encode both strings as UTF-8, return `false` at
 
 ## HMAC and webhook signatures
 
-HMAC-SHA256 and the GitHub-style `sha256=<hex>` signature that webhooks (GitHub, Clerk, Svix and others) send and compare against. WebCrypto only, so they run in the Convex default runtime. The key is imported on each call.
+HMAC-SHA256 and the GitHub-style `sha256=<hex>` signature that GitHub-style webhooks send. Clerk (Svix) webhooks use a different format; use `verifyClerkWebhook` for those. WebCrypto only, so they run in the Convex default runtime. The key is imported on each call.
 
 ```ts
 import { githubStyleSignature, verifyGithubStyleSignature } from "@vvedantb/server";
