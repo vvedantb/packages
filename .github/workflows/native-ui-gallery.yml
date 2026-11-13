@@ -1,7 +1,9 @@
 name: native-ui-gallery
 
-# Builds the Expo gallery (apps/native-gallery) as a release APK, boots one Android
-# emulator and runs the Maestro flows in apps/native-gallery/.maestro. The job is
+# Builds the Expo gallery (apps/native-gallery) as a release APK with the agent test
+# clock (EXPO_PUBLIC_NATIVE_UI_AGENT=1), boots one Android emulator and runs
+# apps/native-gallery/e2e/run.mjs through the agent driver (scripts/agent.mjs).
+# Before that it proves that a default export has no clock code in it. The job is
 # named native-ui-gallery-android so it can be a required check.
 #
 # The paths filter means a PR that touches none of these paths gets no status from
@@ -13,6 +15,8 @@ on:
     paths:
       - "packages/native-ui/**"
       - "apps/native-gallery/**"
+      - "scripts/agent.mjs"
+      - "scripts/agent/**"
       - ".github/workflows/native-ui-gallery.yml"
 
 concurrency:
@@ -23,14 +27,13 @@ permissions:
   contents: read
 
 env:
-  MAESTRO_VERSION: "2.12.1"
   API_LEVEL: "34"
 
 jobs:
   native-ui-gallery-android:
     name: native-ui-gallery-android
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +63,9 @@ jobs:
       - name: Typecheck the gallery
         run: pnpm --filter native-gallery typecheck
 
+      - name: Test the agent driver and the test clock
+        run: pnpm test:scripts
+
       - name: Cache the Expo and Metro caches
         uses: actions/cache@v4
         with:
@@ -69,19 +75,19 @@ jobs:
           key: expo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/native-gallery/package.json') }}
           restore-keys: expo-${{ runner.os }}-
 
+      # Two real `expo export` runs, with and without the agent flag. The default
+      # bundle must not contain the clock or bridge; the agent bundle must.
+      - name: Prove the default bundle has no agent code
+        run: pnpm --filter native-gallery test:strip
+
       # Prebuild writes apps/native-gallery/android, then Gradle builds an x86_64
       # release APK with the JS bundle inside, so the emulator needs no Metro server.
-      - name: Build the gallery APK
-        run: pnpm --filter native-gallery build:android
+      # The flag puts the clock and the deep-link bridge in this APK only.
+      - name: Build the gallery APK (agent build)
+        run: pnpm --filter native-gallery build:android:agent
 
       - name: Check the APK exists
         run: test -f apps/native-gallery/android/app/build/outputs/apk/release/app-release.apk
-
-      - name: Install Maestro
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-${MAESTRO_VERSION}/maestro.zip"
-          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$HOME"
-          echo "$HOME/maestro/bin" >> "$GITHUB_PATH"
 
       - name: Enable KVM
         run: |
@@ -111,7 +117,7 @@ jobs:
           disable-animations: false
           script: echo "AVD snapshot created"
 
-      - name: Run the Maestro flows
+      - name: Run the e2e flows
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ env.API_LEVEL }}
@@ -126,20 +132,9 @@ jobs:
             adb install -r android/app/build/outputs/apk/release/app-release.apk
             adb logcat -c
             status=0
-            maestro test --format junit --output maestro-report.xml --debug-output maestro-debug .maestro || status=$?
+            node e2e/run.mjs | tee e2e-log.jsonl || status=$?
             adb logcat -d -t 2000 > logcat.txt || true
             exit $status
-
-      - name: Collect Maestro debug output
-        if: always()
-        run: |
-          # `--debug-output` fills maestro-debug. Older runs also write to
-          # ~/.maestro/tests, so copy that too into a separate folder.
-          mkdir -p apps/native-gallery/maestro-debug/home-tests
-          if [ -d "$HOME/.maestro/tests" ]; then
-            cp -R "$HOME/.maestro/tests/." apps/native-gallery/maestro-debug/home-tests/ || true
-          fi
-          ls -la apps/native-gallery/maestro-debug || true
 
       - name: Upload screenshots and reports
         if: always()
@@ -148,8 +143,7 @@ jobs:
           name: native-ui-gallery-android
           path: |
             apps/native-gallery/screenshots
-            apps/native-gallery/maestro-report.xml
-            apps/native-gallery/maestro-debug
+            apps/native-gallery/e2e-log.jsonl
             apps/native-gallery/logcat.txt
           if-no-files-found: warn
           retention-days: 14

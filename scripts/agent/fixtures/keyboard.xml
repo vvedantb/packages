@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<hierarchy rotation="0">
+  <node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="dev.vvedantb.nativegallery" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2400]">
+    <node index="0" text="" resource-id="screen-keyboard" class="android.view.ViewGroup" package="dev.vvedantb.nativegallery" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,63][1080,1300]">
+      <node index="0" text="composer height: 56" resource-id="composer-height" class="android.widget.TextView" package="dev.vvedantb.nativegallery" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[48,90][700,140]" />
+      <node index="1" text="line one&#10;line two" resource-id="composer-input" class="android.widget.EditText" package="dev.vvedantb.nativegallery" content-desc="Message" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="true" scrollable="false" long-clickable="true" password="false" selected="false" bounds="[48,1100][900,1250]" />
+      <node index="2" text="Send" resource-id="composer-send" class="android.widget.Button" package="dev.vvedantb.nativegallery" content-desc="" checkable="false" checked="false" clickable="true" enabled="false" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[920,1100][1032,1250]" />
+      <node index="3" text="Send" resource-id="dd-send" class="android.widget.Button" package="dev.vvedantb.nativegallery" content-desc="" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[920,300][1032,420]" />
+    </node>
+  </node>
+</hierarchy>
