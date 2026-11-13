@@ -6,6 +6,7 @@ test("root exposes former subpath APIs", () => {
     "cn", "toast", "SonnerToaster", "playChime", "useReplyChime", "InputArea",
     "SidebarHeader", "SidebarUpgradeCard", "PillTabs", "SessionsHoverCard",
     "requestConfirm", "useRequestConfirm", "startUpdateAvailableWatcher", "showUpdateAvailableToast",
+    "isChunkLoadError", "installStaleDeployReload", "claimStaleDeployReload", "reloadForStaleDeploy", "stripStaleDeployReloadParam",
     "SettingsPage", "useStableAuth", "tokens",
     "SlideOverPanel", "ToolbarSearchInput", "ConfirmDialog", "SettingsField",
     "CardHeader", "SelectField", "FadePresence", "PanelTransition",
