@@ -1,7 +1,4 @@
 // @vitest-environment happy-dom
-import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -117,17 +114,6 @@ describe("artifact exports", () => {
     };
     const { host } = await mount(<ArtifactCard artifact={row} />);
     expect(host.textContent).toContain("Q3 report");
-  });
-});
-
-describe("artifact source", () => {
-  // Shared by several apps: app details (such as a state alias) come in as props.
-  it("names no app", () => {
-    const dir = dirname(fileURLToPath(import.meta.url));
-    const names = /(?:vibot|vmem|vhub|velth)|\b(?:eva|verve)\b/i;
-    const files = readdirSync(dir).filter((file) => /\.tsx?$/.test(file) && !file.includes(".test."));
-    expect(files).toContain("artifact-frame.tsx");
-    for (const file of files) expect(readFileSync(join(dir, file), "utf8"), file).not.toMatch(names);
   });
 });
 

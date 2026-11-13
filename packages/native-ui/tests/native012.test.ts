@@ -1,9 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PAGE_HEADER_HEIGHT } from "../src/controlStyles";
 
 // The 0.12.0 pieces: `Attachment` onPress, `StackPageHeader` centre,
 // `RouterStackPageHeader`, `ChatThread`, `PinnedBotTile` / `BotPinGrid`,
@@ -60,9 +56,6 @@ vi.mock("../src/StatusDot", () => ({ StatusDot: "StatusDot" }));
 vi.mock("../src/Chip", () => ({ Chip: "Chip" }));
 vi.mock("../src/ListRow", () => ({ ListRow: "ListRow" }));
 vi.mock("../src/DividedList", () => ({ DividedList: "DividedList" }));
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, file), "utf8");
 
 type Element = { type: unknown; key?: string | null; props: Record<string, unknown> & { children?: unknown } };
 const isElement = (node: unknown): node is Element =>
@@ -160,12 +153,6 @@ describe("StackPageHeader centre", () => {
     expect(start!.props.className).toMatch(/^flex-1 /);
     expect(end!.props.className).toMatch(/^flex-1 /);
     expect(centre!.props.className).toMatch(/min-w-0 shrink/);
-  });
-
-  it("keeps the page title Instrument Sans semibold 20 (PageTitle source contract)", () => {
-    expect(read("src/PageTitle.tsx")).toMatch(/PAGE_TITLE_CLASS/);
-    expect(read("src/controlStyles.ts")).toMatch(/PAGE_TITLE_CLASS = "font-instrument-sans-semibold text-xl/);
-    expect(PAGE_HEADER_HEIGHT).toBe(56);
   });
 });
 
@@ -272,14 +259,6 @@ describe("ChatThread", () => {
     expect(ofType(tree, "Empty")).toHaveLength(1);
     expect(renderMessage).not.toHaveBeenCalled();
   });
-
-  it("takes a minimal local UIMessage and no ai dependency (source contract)", () => {
-    const source = read("src/ai/chat-thread.tsx");
-    expect(source).toMatch(/export type UIMessage = \{/);
-    expect(source).not.toMatch(/from "ai"/);
-    expect(read("src/ai/index.ts")).toMatch(/ChatThread[\s\S]*UIMessage/);
-    expect(JSON.parse(read("package.json")).dependencies).toBeUndefined();
-  });
 });
 
 describe("PinnedBotTile and BotPinGrid", () => {
@@ -369,13 +348,6 @@ describe("ScreenContainer pull-to-refresh", () => {
     expect(onRefresh).toHaveBeenCalledOnce();
   });
 
-  it("treats refreshing as controlled: defaults to false, no timer", async () => {
-    const control = (await screen({ onRefresh: () => {} })).scroll.props.refreshControl as Element;
-    expect(control.props.refreshing).toBe(false);
-    const source = read("src/ScreenContainer.tsx");
-    expect(source).not.toMatch(/setTimeout|useState|useEffect/);
-  });
-
   it("does not wait on an async onRefresh", async () => {
     const onRefresh = vi.fn(() => new Promise<void>(() => {}));
     const control = (await screen({ onRefresh })).scroll.props.refreshControl as Element;
@@ -454,55 +426,5 @@ describe("ChatJumpRail", () => {
     (chips[1]!.props.onPress as () => void)();
     expect(onJump).toHaveBeenCalledWith("m2");
     expect(ChatJumpRail({ items: [], onJump })).toBeNull();
-  });
-});
-
-describe("0.12.0 entries and peers (source contract)", () => {
-  const pkg = JSON.parse(read("package.json"));
-
-  it("adds ./expo-router with RouterStackPageHeader, and keeps expo-router an optional peer", () => {
-    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(pkg.exports["./expo-router"]).toEqual({
-      types: "./src/entries/expo-router.ts",
-      default: "./src/entries/expo-router.ts",
-    });
-    expect(pkg.peerDependenciesMeta["expo-router"]).toEqual({ optional: true });
-    expect(read("src/entries/expo-router.ts")).toMatch(/RouterStackPageHeader/);
-  });
-
-  it("does not re-export RouterStackPageHeader from the root, /layout or /page-title", () => {
-    for (const file of ["src/index.ts", "src/entries/layout.ts", "src/entries/page-title.ts", "src/entries/ai.ts"]) {
-      expect(read(file), file).not.toMatch(/RouterStackPageHeader|expo-router/);
-    }
-  });
-
-  it("exports the new pieces from the right entries", () => {
-    const layout = read("src/entries/layout.ts");
-    const root = read("src/index.ts");
-    for (const name of ["PinnedBotTile", "BotPinGrid", "SettingsEmptyState", "ArtifactList", "ScreenContainerProps"]) {
-      expect(layout, name).toContain(name);
-      expect(root, name).toContain(name);
-    }
-    const ai = read("src/ai/index.ts");
-    for (const name of ["ChatThread", "UIMessage", "ChatJumpRail", "ATTACHMENT_PRESS_TARGET"]) expect(ai, name).toContain(name);
-  });
-
-  it("types the auth hrefs as Href and the replace options from useRouter", () => {
-    const google = read("src/auth/GoogleSignInButton.tsx");
-    expect(google).toMatch(/afterAuthHref\?: Href;/);
-    expect(google).toMatch(/replaceOptions\?: Parameters<ReturnType<typeof useRouter>\["replace"\]>\[1\];/);
-    // expo-router 57 exports no `Router` type, so no file may import one.
-    for (const file of ["src/auth/GoogleSignInButton.tsx", "src/auth/SignInScreen.tsx", "src/router/RouterStackPageHeader.tsx"]) {
-      expect(read(file), file).not.toMatch(/type Router\b/);
-    }
-    const signIn = read("src/auth/SignInScreen.tsx");
-    expect(signIn).toMatch(/signUpHref\?: Href;/);
-    expect(signIn).toMatch(/signInHref\?: Href;/);
-    const peers = read("types/peers.d.ts");
-    expect(peers).toMatch(/export type Href = /);
-    expect(peers).toMatch(/push\(href: Href/);
-    expect(peers).toMatch(/replace\(href: Href/);
-    expect(peers).toMatch(/canGoBack\(\): boolean/);
-    expect(read("consumer/authHref.consumer.tsx")).toMatch(/withAnchor: true/);
   });
 });

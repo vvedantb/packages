@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, fieldStyle, fieldTextStyle, touchSlop, typeStyle } from "../src/controlStyles";
@@ -37,10 +36,6 @@ vi.mock("nativewind", () => ({ useColorScheme: () => ({ colorScheme: "light" }) 
 vi.mock("@tabler/icons-react-native", () => ({ IconEye: "IconEye", IconEyeOff: "IconEyeOff" }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, file), "utf8");
-const source = read("src/PasswordInput.tsx");
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
@@ -103,7 +98,6 @@ describe("PasswordInput (behaviour)", () => {
   it("owns secureTextEntry: a caller value cannot fight the toggle", async () => {
     const { input } = await render({ secureTextEntry: false });
     expect(input!.props.secureTextEntry).toBe(true);
-    expect(source).toMatch(/Omit<React\.ComponentPropsWithoutRef<typeof Input>, "secureTextEntry">/);
   });
 
   it("keeps one Input in the tree and never sets a key, so a toggle does not remount it", async () => {
@@ -111,7 +105,6 @@ describe("PasswordInput (behaviour)", () => {
     (before.toggle!.props.onPress as () => void)();
     const after = await render();
     expect(after.input!.type).toBe(before.input!.type);
-    expect(source).not.toMatch(/\bkey=/);
   });
 
   it("names the toggle after the testID, with a default", async () => {
@@ -173,7 +166,6 @@ describe("PasswordInput (behaviour)", () => {
       expect(classes).toContain(token);
     }
     expect(classes).not.toContain("text-xl");
-    expect(read("src/Input.tsx")).toContain("min-h-11 border px-3.5 py-2 text-base font-instrument-sans");
   });
 
   it("adds the larger-text classes and type style with larger text", async () => {
@@ -200,14 +192,6 @@ describe("PasswordInput (behaviour)", () => {
     expect(flatten(input!.props.style)).not.toHaveProperty("lineHeight");
   });
 
-  it("inherits type from the className, as Input does: no sizeStyle or fontSize in either style array", () => {
-    const code = (text: string) => text.replace(/\/\/.*$/gm, "");
-    expect(code(source)).not.toMatch(/sizeStyle|fontSize\s*:/);
-    const input = code(read("src/Input.tsx"));
-    expect(input).not.toMatch(/sizeStyle/);
-    expect(input.match(/style=\{\[[\s\S]*?\]\}/)?.[0]).not.toMatch(/fontSize/);
-  });
-
   it("wraps the field in a relative, full-width View", async () => {
     const { wrapper } = await render({ wrapperClassName: "mb-2" });
     expect(String(wrapper!.props.className).split(/\s+/)).toEqual(expect.arrayContaining(["relative", "w-full", "mb-2"]));
@@ -215,23 +199,5 @@ describe("PasswordInput (behaviour)", () => {
 
   it("hides the toggle when the field is not editable", async () => {
     expect((await render({ editable: false })).toggle).toBeUndefined();
-  });
-});
-
-describe("PasswordInput (exports and auth screens)", () => {
-  it("is exported from the root, primitives and password-input entries", () => {
-    for (const file of ["src/index.ts", "src/entries/primitives.ts", "src/entries/password-input.ts"]) {
-      const entry = read(file);
-      expect(entry, file).toMatch(/export \{ PasswordInput \} from "\.\.?\/(\.\.\/)?PasswordInput"/);
-      expect(entry, file).toMatch(/export type \{ PasswordInputProps \}/);
-    }
-  });
-
-  it("is used by the password, new-password and confirm-password fields of SignInScreen", () => {
-    const screen = read("src/auth/SignInScreen.tsx").replace(/\/\/.*$/gm, "");
-    expect(screen).not.toMatch(/secureTextEntry/);
-    for (const field of ["password", "new-password", "confirm-password"]) {
-      expect(screen).toMatch(new RegExp(`<PasswordInput\\s+testID=\\{id\\("${field}"\\)\\}`));
-    }
   });
 });

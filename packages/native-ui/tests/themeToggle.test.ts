@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tokens } from "../src/tokens";
 
@@ -20,9 +17,6 @@ vi.mock("nativewind", () => ({
 }));
 vi.mock("@tabler/icons-react-native", () => ({ IconMoon: "IconMoon", IconSun: "IconSun" }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
@@ -99,15 +93,6 @@ describe("ThemeToggle", () => {
     }
   });
 
-  it("is built on HeaderIconButton and NativeWind's setColorScheme, with no storage of its own (source contract)", () => {
-    const source = read("ThemeToggle.tsx");
-    expect(source).toMatch(/import \{ HeaderIconButton \} from "\.\/HeaderIconButton";/);
-    expect(source).toMatch(/import \{ useColorScheme \} from "nativewind";/);
-    expect(source).toMatch(/try \{\s*setColorScheme\(next\);\s*\} catch \(error\) \{\s*console\.error\(DARK_MODE_CLASS_HINT, error\);/);
-    expect(source).toMatch(/onPress=\{toggle\}/);
-    expect(source).not.toMatch(/from "react-native"|AsyncStorage|localStorage|SecureStore/);
-  });
-
   it("sits on a HeaderIconButton with the surface fill and hairline of the scheme, as styles", async () => {
     const { headerIconButtonColors } = await import("../src/HeaderIconButton");
     expect(headerIconButtonColors("light")).toEqual({
@@ -124,11 +109,5 @@ describe("ThemeToggle", () => {
     expect(button.props.style).toEqual(headerIconButtonColors("dark"));
     // `bg-surface` stays white in dark mode where an app nests `dark` under `surface`.
     expect(button.props.className).not.toMatch(/bg-|dark:|border-white/);
-  });
-
-  it("is a header action in the gallery's Page title section", () => {
-    const gallery = read("examples/ParityGallery.tsx");
-    const section = gallery.slice(gallery.indexOf('<Section title="Page title">'), gallery.indexOf('<Section title="Brand">'));
-    expect(section).toMatch(/<PageHeader title="Settings" safeTop=\{false\} className="px-0" action=\{<ThemeToggle \/>\} \/>/);
   });
 });

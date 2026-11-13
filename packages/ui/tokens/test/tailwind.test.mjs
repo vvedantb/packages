@@ -1,7 +1,6 @@
 // Compiles the shared CSS and the preset with Tailwind v4 (devDependency,
 // no network). Skips with a message when @tailwindcss/node is missing.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -107,13 +106,6 @@ test("tokens.css alone emits the app CSS moved in 0.15.0", { skip }, async () =>
   }
 });
 
-test("motion.css keyframe names do not clash with animations.css or the preset", { skip }, async () => {
-  const names = (css) => new Set([...css.matchAll(/@keyframes ([\w-]+)/g)].map((m) => m[1]));
-  const motion = names(readFileSync(join(PKG, "src/css/motion.css"), "utf8"));
-  const others = new Set([...names(readFileSync(join(PKG, "src/css/animations.css"), "utf8")), ...Object.keys((await import("../src/tailwind-preset.mjs")).default.theme.extend.keyframes)]);
-  assert.deepEqual([...motion].filter((n) => others.has(n)), []);
-});
-
 test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { skip }, async () => {
   const candidates = ["rounded-surface", "rounded-menu-item", "rounded-control"];
   for (const file of ["./src/tokens.css", "./src/css/compat-shadcn-rgb.css"]) {
@@ -128,9 +120,6 @@ test("bg-sidebar-accent comes with tokens.css and with compat-shadcn-rgb.css", {
   const fromTokens = await build(head, ["bg-sidebar-accent"]);
   assert.match(fromTokens, /--color-sidebar-accent: var\(--sidebar-accent\)/);
   assert.match(fromTokens, /\.bg-sidebar-accent\s*\{\s*background-color: var\(--color-sidebar-accent\)/);
-  const css = readFileSync(join(PKG, "src/tokens.css"), "utf8");
-  assert.match(css, /--sidebar-accent: var\(--surface-tertiary\);/, "light fill matches surface-tertiary");
-  assert.match(css, /--sidebar-accent: oklch\(22\.64% 0 0\);/, "dark fill is sRGB 28 28 28");
   const fromCompat = await build(`@import "tailwindcss"; @import "./src/css/compat-shadcn-rgb.css";`, ["bg-sidebar-accent"]);
   assert.match(fromCompat, /\.bg-sidebar-accent\s*\{\s*background-color: rgb\(var\(--sidebar-accent, var\(--secondary\)\)\)/);
 });
@@ -178,20 +167,5 @@ test("animations.css and the preset define the same keyframes and timings", { sk
   const fromPreset = await build(`@import "tailwindcss"; @config "./test/fixtures/preset.config.mjs";`, candidates);
   const keyframes = (css) => [...css.matchAll(/@keyframes [\w-]+ \{[\s\S]*?\n\}/g)].map((m) => m[0]).sort();
   assert.deepEqual(keyframes(fromCss), keyframes(fromPreset));
-  const { animation } = (await import("../src/tailwind-preset.mjs")).default.theme.extend;
-  const css = readFileSync(join(PKG, "src/css/animations.css"), "utf8");
-  for (const [name, value] of Object.entries(animation)) assert.ok(css.includes(`--animate-${name}: ${value};`), name);
 });
 
-test("calendar day colours: today and outside rules never apply to the selected day", { skip }, async () => {
-  const source = readFileSync(join(PKG, "../src/ui/calendar.tsx"), "utf8");
-  const candidates = [...new Set(source.split(/[\s"'`]+/).filter((c) => c.includes("group-data-")))];
-  const out = await build(head, candidates);
-  const notSelected = ":not(:is(:where(.group\\/day)[data-selected] *))";
-  const colourRules = out.split("}").filter((r) => /\[data-(today|outside)\]/.test(r) && /(^|[\s{;])color:/.test(r));
-  assert.ok(colourRules.length >= 2, "today and outside colour rules are generated");
-  for (const rule of colourRules) assert.ok(rule.includes(notSelected), `rule can beat the selected colour:\n${rule}`);
-  assert.match(out, /\[data-selected\][^{]*\{\s*color: var\(--color-primary-foreground\)/);
-  // the today dot follows the text colour, so it is primary-foreground when selected
-  assert.match(out, /\[data-today\][^{]*:after\s*\{[^}]*background-color: currentcolor/i);
-});

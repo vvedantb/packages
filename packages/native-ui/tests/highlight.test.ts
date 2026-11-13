@@ -1,8 +1,5 @@
 import { createRequire } from "node:module";
 import Module from "node:module";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GITHUB_CODE_COLORS, codeTokenColor, scriptTokens, shellTokens, type CodeToken } from "../src/highlight";
 
@@ -82,11 +79,6 @@ describe("codeTokenColor", () => {
   it("lets the later type win, so tag brackets are plain", () => {
     expect(codeTokenColor(["tag"], "light")).toBe("#22863a");
     expect(codeTokenColor(["tag", "punctuation"], "light")).toBe(GITHUB_CODE_COLORS.light.plain);
-  });
-
-  it("uses the web shiki themes", () => {
-    const web = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../ui/src/ai-elements/code-block.tsx"), "utf8");
-    expect(web).toMatch(/themes: \["github-light", "github-dark"\]/);
   });
 });
 

@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { V_PRO_APP_BENEFITS } from "../src/brand/vProAppBenefits";
 import { initials } from "../src/initials";
@@ -11,8 +8,6 @@ import {
   sortAppBenefits,
   type PricingPlan,
 } from "../src/marketing/pricing";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const plan = (extra: Partial<PricingPlan> = {}): PricingPlan => ({
   id: "pro",
   name: "Pro",
@@ -64,28 +59,5 @@ describe("PricingModal helpers", () => {
       disabled: false,
     });
     expect(planButton(plan({ ctaLabel: "Upgrade" })).label).toBe("Upgrade");
-  });
-
-  it("keeps the web copy", () => {
-    const web = readFileSync(join(root, "..", "ui/src/marketing/PricingModal.tsx"), "utf8");
-    const native = readFileSync(join(root, "src/marketing/PricingModal.tsx"), "utf8");
-    for (const copy of ['"Current plan"', '"Get started"', '"/month"', '"Monthly"', '"Annual"']) {
-      expect(web, copy).toContain(copy);
-      expect(
-        native + readFileSync(join(root, "src/marketing/pricing.ts"), "utf8"),
-        copy,
-      ).toContain(copy);
-    }
-  });
-});
-
-describe("UpgradeToProCard", () => {
-  it("keeps the SidebarUpgradeCard copy", () => {
-    const web = readFileSync(join(root, "..", "ui/shell/src/SidebarUpgradeCard.tsx"), "utf8");
-    const native = readFileSync(join(root, "src/marketing/UpgradeToProCard.tsx"), "utf8");
-    for (const copy of ["Upgrade to Pro", "Upgrade", "Pro"]) {
-      expect(web).toContain(copy);
-      expect(native).toContain(`"${copy}"`);
-    }
   });
 });

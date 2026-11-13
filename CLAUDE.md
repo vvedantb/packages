@@ -21,4 +21,11 @@ What that means in this repository:
 
 Touch targets: every pressable row is at least 44 points high (56 with larger text).
 
+## Testing
+
+- The default is no new test. Add one only when it guards behaviour that nothing else covers.
+- A test must call real code: import it and call it, or render the component.
+- Never read or regex source files in a test. This covers `.ts`, `.tsx`, `.css` and `.md` files, `fs.readFileSync` of `src`, and `?raw` imports. `pnpm lint:tests` fails on it, and `pnpm test` runs that check.
+- A regression test must fail on the old code and must run in CI. Check both before you rely on it.
+
 See also `AGENTS.md`, which has the same rules for all agents.

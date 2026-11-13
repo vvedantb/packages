@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import { cn } from "../utils/cn";
 import type { KanbanColumnDef, KanbanItem } from "./kanban";
@@ -63,24 +60,4 @@ test("a bg-* utility only survives cn() when it comes last", () => {
   expect(
     cn("border border-border", highlightBorder, "border-border"),
   ).not.toContain(highlightBorder);
-});
-
-test("KanbanBoard applies the drop highlight after the caller's className", () => {
-  const source = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), "kanban.tsx"),
-    "utf8",
-  );
-  const classNameAt = source.indexOf("        className,");
-  const highlightAt = source.indexOf(
-    'isDropTarget && "border border-primary/40 bg-primary/10"',
-  );
-  expect(classNameAt, "KanbanBoard's cn() call moved").toBeGreaterThan(-1);
-  expect(
-    highlightAt,
-    "the drop highlight moved or was removed",
-  ).toBeGreaterThan(-1);
-  expect(
-    classNameAt,
-    "the highlight must come after className or tailwind-merge drops it",
-  ).toBeLessThan(highlightAt);
 });

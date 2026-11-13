@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { FAMILY_APPS, familyApp } from "../src/brand/familyApps";
 import {
@@ -10,17 +7,7 @@ import {
 } from "../src/brand/svg";
 import { V_PRO_APP_BENEFITS } from "../src/brand/vProAppBenefits";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-
 describe("brand data copies", () => {
-  for (const file of ["svg.ts", "familyApps.ts", "vProAppBenefits.ts"]) {
-    it(`src/brand/${file} is byte-identical to @vvedantb/ui src/brand/${file}`, () => {
-      expect(readFileSync(join(root, "src/brand", file), "utf8")).toBe(
-        readFileSync(join(root, "..", "ui/src/brand", file), "utf8"),
-      );
-    });
-  }
-
   it("every family app has a mark, and every mark has a centred square viewBox", () => {
     // `eva` and `bee` are marks and icons only, not family apps.
     const familyNames = APP_NAMES.filter((app) => app !== "eva" && app !== "bee");
@@ -39,28 +26,5 @@ describe("brand data copies", () => {
       expect(familyApp(group.app).app).toBe(group.app);
       expect(group.items.length).toBeGreaterThan(0);
     }
-  });
-});
-
-describe("brand components", () => {
-  const read = (file: string) => readFileSync(join(root, "src/brand", file), "utf8");
-
-  it("render with react-native-svg on the shared viewBoxes", () => {
-    expect(read("AppIcons.tsx")).toMatch(/from "react-native-svg"/);
-    expect(read("AppIcons.tsx")).toMatch(/APP_MARK_VIEWBOX_START\[app\] : APP_MARK_VIEWBOX\[app\]/);
-    expect(read("AppMark.tsx")).toMatch(/viewBox=\{MARK_VIEWBOX\}/);
-    expect(read("GoogleMark.tsx")).toMatch(/from "react-native-svg"/);
-    expect(read("GoogleMark.tsx")).toMatch(/viewBox="0 0 24 24"/);
-  });
-
-  it("GoogleMark keeps the Google colours: no color prop", () => {
-    expect(read("GoogleMark.tsx")).not.toMatch(/\bcolor\??:/);
-  });
-
-  it("AppWordmark uses Instrument Sans 500 through WORDMARK", () => {
-    const src = read("AppWordmark.tsx");
-    expect(src).toMatch(/className=\{WORDMARK\.fontClass\}/);
-    expect(src).toMatch(/letterSpacing: size \* WORDMARK\.letterSpacingEm/);
-    expect(src).toMatch(/Math\.round\(size \* WORDMARK\.iconScale\)/);
   });
 });

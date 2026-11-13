@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("react-native", () => ({
@@ -44,25 +41,5 @@ describe("hasDefiniteHeight", () => {
     expect(hasDefiniteHeight({ flex: 1 })).toBe(true);
     expect(hasDefiniteHeight({ flexGrow: 1 })).toBe(true);
     expect(hasDefiniteHeight([{ maxHeight: 300 }, { height: 120 }])).toBe(true);
-  });
-});
-
-describe("FloatingSurface source contract", () => {
-  const src = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), "..", "src", "FloatingSurface.tsx"),
-    "utf8",
-  );
-
-  it("applies styles.fill only for a definite height or flex", () => {
-    expect(src).toMatch(/hasDefiniteHeight\(style\) \? styles\.fill : null/);
-    expect(src).not.toMatch(/style != null \? styles\.fill/);
-  });
-
-  it("DropdownMenuContent still passes maxHeight only", () => {
-    const menu = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), "..", "src", "DropdownMenu.tsx"),
-      "utf8",
-    );
-    expect(menu).toMatch(/style=\{\{ maxHeight: position\.maxHeight \}\}/);
   });
 });

@@ -2,13 +2,11 @@
 // same variables as the existing tokens. Offline. The Tailwind check skips
 // with a message when @tailwindcss/node is missing.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const css = readFileSync(join(PKG, "src/tokens.css"), "utf8");
 
 // alias -> existing token it must match.
 const ALIASES = {
@@ -26,24 +24,6 @@ const ALIASES = {
   input: "border",
   ring: "focus",
 };
-
-// Reads --color-* declarations from the first @theme block (non-inline).
-function themeColours(source) {
-  const start = source.search(/@theme\s*\{/);
-  assert.ok(start >= 0, "tokens.css has no @theme block");
-  const body = source.slice(source.indexOf("{", start) + 1);
-  const end = body.search(/\n\}/);
-  const block = body.slice(0, end).replace(/\/\*[\s\S]*?\*\//g, "");
-  return Object.fromEntries([...block.matchAll(/--color-([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
-}
-
-test("each alias points at the documented token variable", () => {
-  const colours = themeColours(css);
-  for (const [alias, target] of Object.entries(ALIASES)) {
-    assert.equal(colours[alias], `var(--${target})`, `--color-${alias}`);
-    assert.equal(colours[target], `var(--${target})`, `--color-${target} is the existing token`);
-  }
-});
 
 let tw;
 try {

@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, PAGE_HEADER_HEIGHT, cardStyle, touchSlop } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
@@ -87,9 +84,6 @@ vi.mock("../src/primitives/card", () => ({
   CardContent: "PrimitiveCardContent",
 }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
-
 type Element = { type: unknown; key?: string | null; props: Record<string, unknown> & { children?: unknown } };
 
 const isElement = (node: unknown): node is Element =>
@@ -125,16 +119,6 @@ describe("StatusDot info tone", () => {
     expect(dot().backgroundColor).toBe("#3b82f6");
     scheme.colorScheme = "dark";
     expect(dot().backgroundColor).toBe("#60a5fa");
-  });
-
-  it("keeps the colour local: palette has no info key, and the other tones are unchanged", async () => {
-    const { StatusDot } = await import("../src/StatusDot");
-    expect(Object.keys(palette)).not.toContain("info");
-    const colour = (tone: "critical" | "done") =>
-      flatten((StatusDot({ tone }) as unknown as Element).props.style).backgroundColor;
-    expect(colour("critical")).toBe(palette.danger.light);
-    expect(colour("done")).toBe(palette.success.light);
-    expect(read("StatusDot.tsx")).toMatch(/\| "info"\n/);
   });
 });
 
@@ -713,13 +697,6 @@ describe("IconButton", () => {
     expect(disabled.props.disabled).toBe(true);
     expect(disabled.props.className).toMatch(/opacity-50/);
   });
-
-  it("is its own component: it does not import the AI chat button, which keeps its name", () => {
-    expect(read("IconButton.tsx")).not.toMatch(/from "\.\/ai/);
-    expect(read("IconButton.tsx")).toMatch(/export function IconButton\(/);
-    expect(read("ai/icon-button.tsx")).toMatch(/export function ChatIconButton\(/);
-    expect(read("ai/icon-button.tsx")).not.toMatch(/export function IconButton\b/);
-  });
 });
 
 describe("CaptureButton", () => {
@@ -809,96 +786,5 @@ describe("StackPageHeader", () => {
     hooks.reset();
     larger.value = true;
     expect(sides((await header({ onBack: () => {} }))())).toEqual([56, 56]);
-  });
-
-  it("uses the safe-area hook, PageTitle, HeaderIconButton and the Tabler chevron (source contract)", () => {
-    const source = read("StackPageHeader.tsx");
-    expect(source).toMatch(/import \{ useSafeAreaInsets \} from "react-native-safe-area-context";/);
-    expect(source).toMatch(/import \{ PageTitle \} from "\.\/PageTitle";/);
-    expect(source).toMatch(/import \{ HeaderIconButton \} from "\.\/HeaderIconButton";/);
-    expect(source).toMatch(/import \{ IconChevronLeft \} from "@tabler\/icons-react-native";/);
-    expect(source).toMatch(/const insets = useSafeAreaInsets\(\);/);
-  });
-});
-
-describe("0.5.0 package and gallery (source contract)", () => {
-  it("leaves the lockfile entry for this package to its five dev dependencies", () => {
-    const lock = readFileSync(join(root, "..", "..", "pnpm-lock.yaml"), "utf8");
-    const block = lock.slice(lock.indexOf("\n  packages/native-ui:\n"), lock.indexOf("\n  packages/server:\n"));
-    expect(block).toMatch(/^\n {2}packages\/native-ui:\n {4}devDependencies:\n/);
-    expect(block).not.toMatch(/\n {4}(?:dependencies|peerDependencies|optionalDependencies):/);
-    // `@clerk/clerk-expo` is for the consumer type test (`tsconfig.consumer.json`).
-    expect([...block.matchAll(/^ {6}('?[@\w/.-]+'?):$/gm)].map(([, name]) => name)).toEqual([
-      "'@clerk/clerk-expo'",
-      "'@types/react'",
-      "react",
-      "typescript",
-      "vitest",
-    ]);
-  });
-
-  it("uses no NativeWind text colour class in the new components", () => {
-    for (const file of [
-      "ColorSwatches.tsx",
-      "StatGrid.tsx",
-      "SectionLabel.tsx",
-      "SheetRow.tsx",
-      "PageIndicator.tsx",
-      "IconButton.tsx",
-      "CaptureButton.tsx",
-      "StackPageHeader.tsx",
-    ]) {
-      expect(read(file), file).not.toMatch(/["'\s]text-(?:muted-)?foreground(?=["'\s])|dark:/);
-    }
-  });
-
-  it("uses no NativeWind theme fill class in the new and changed components", () => {
-    // `bg-surface`, `bg-secondary` and the like stay light in dark mode where an
-    // app theme nests `dark` under the key; the fills are `tokens` and `palette` styles.
-    for (const file of [
-      "ColorSwatches.tsx",
-      "StatGrid.tsx",
-      "SectionLabel.tsx",
-      "SheetRow.tsx",
-      "PageIndicator.tsx",
-      "IconButton.tsx",
-      "CaptureButton.tsx",
-      "StackPageHeader.tsx",
-      "ListRow.tsx",
-      "DateTimeField.tsx",
-      "HeaderIconButton.tsx",
-    ]) {
-      // Comments name the web classes, so they are left out.
-      const code = read(file).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
-      expect(code, file).not.toMatch(
-        /["'`\s](?:bg|border)-(?:surface|secondary|default|background|card|muted|border|field|overlay|segment|input|primary|foreground)\b/,
-      );
-    }
-  });
-
-  it("shows each new piece in ParityGallery", () => {
-    const gallery = read("examples/ParityGallery.tsx");
-    for (const section of [
-      "ColorSwatches",
-      "DateTimeField",
-      "ListRow",
-      "SectionLabel and StatGrid",
-      "SheetRow",
-      "PageIndicator",
-      "StackPageHeader",
-      "Camera chrome",
-    ]) {
-      expect(gallery, section).toContain(`<Section title="${section}">`);
-    }
-    expect(gallery).toMatch(/mode="date"\s+value=\{due\}\s+onChange=\{setDue\}\s+placeholder="No due date"\s+onClear=\{\(\) => setDue\(null\)\}/);
-    expect(gallery).toMatch(/control=\{<Switch /);
-    expect(gallery).toMatch(/onLongPress=\{/);
-    expect(gallery).toMatch(/titleEnd=\{/);
-    expect(gallery).toMatch(/<Card title="Pressable"[^>]*onPress=\{/);
-    expect(gallery).toMatch(/<AmbientBackground[^>]*>\s+<StackPageHeader/);
-    expect(gallery).toMatch(/<IconButton variant="overlay"/);
-    expect(gallery).toMatch(/<CaptureButton /);
-    const tones = gallery.slice(gallery.indexOf("const STATUS_TONES"), gallery.indexOf("];", gallery.indexOf("const STATUS_TONES")));
-    expect(tones).toContain('"info"');
   });
 });
