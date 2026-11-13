@@ -108,7 +108,15 @@ function elements(node: unknown): Element[] {
   if (Array.isArray(node)) return node.flatMap(elements);
   if (!node || typeof node !== "object" || !("props" in node)) return [];
   const element = node as Element;
+  // A memo component (each tab, `TabBarItem`) draws what its inner function returns.
+  const inner = memoInner(element.type);
+  if (inner) return elements(inner(element.props));
   return [element, ...elements(element.props.children)];
+}
+
+function memoInner(type: unknown) {
+  if (!type || typeof type !== "object" || !("type" in type)) return null;
+  return typeof type.type === "function" ? (type.type as (props: unknown) => unknown) : null;
 }
 
 const routes = [

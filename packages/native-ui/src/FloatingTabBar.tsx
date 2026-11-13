@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
@@ -108,49 +108,19 @@ export function FloatingTabBar({
                 ? options.tabBarActiveTintColor
                 : options.tabBarInactiveTintColor) ??
               tabColors("segmented", focused, scheme).color;
-            const onPress = () => {
-              const event = navigation.emit({
-                type: "tabPress",
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!focused && !event.defaultPrevented) {
-                selectionHaptic();
-                navigation.navigate(route.name, route.params);
-              }
-            };
-
             return (
-              <Pressable
+              <TabBarItem
                 key={route.key}
+                route={route}
+                navigation={navigation}
+                focused={focused}
+                label={label}
+                color={color}
+                largerText={largerText}
+                renderIcon={options.tabBarIcon}
                 testID={options.tabBarButtonTestID}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: focused }}
                 accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
-                onPress={onPress}
-                className="min-h-12 min-w-12 flex-1 items-center justify-center gap-1"
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-              >
-                {options.tabBarIcon
-                  ? options.tabBarIcon({
-                      focused,
-                      color,
-                      size: largerText ? 28 : 24,
-                    })
-                  : null}
-                <Text
-                  numberOfLines={1}
-                  // The bar has a fixed height (`tabBarReserve`), so labels
-                  // scale with Dynamic Type only up to what fits in it.
-                  maxFontSizeMultiplier={1.5}
-                  className={`font-instrument-sans-semibold ${
-                    largerText ? "text-base" : "text-sm"
-                  }`}
-                  style={[{ color }, typeStyle("semibold")]}
-                >
-                  {label}
-                </Text>
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -158,6 +128,73 @@ export function FloatingTabBar({
     </View>
   );
 }
+
+type TabBarItemProps = {
+  route: FloatingTabBarProps["state"]["routes"][number];
+  navigation: FloatingTabBarProps["navigation"];
+  focused: boolean;
+  label: string;
+  color: string;
+  largerText: boolean;
+  renderIcon: FloatingTabOptions["tabBarIcon"];
+  testID: string | undefined;
+  accessibilityLabel: string;
+};
+
+/**
+ * One tab. Memoised: a switch re-renders the bar, and without it every tab
+ * and its SVG icon re-rendered too (the kit is not built with React
+ * Compiler). Now only the two tabs whose focus changed render. The props are
+ * stable between switches: `route` and `navigation` keep their identity, and
+ * `tabBarIcon` is the caller's function.
+ */
+const TabBarItem = memo(function TabBarItem({
+  route,
+  navigation,
+  focused,
+  label,
+  color,
+  largerText,
+  renderIcon,
+  testID,
+  accessibilityLabel,
+}: TabBarItemProps) {
+  const onPress = () => {
+    const event = navigation.emit({
+      type: "tabPress",
+      target: route.key,
+      canPreventDefault: true,
+    });
+    if (!focused && !event.defaultPrevented) {
+      selectionHaptic();
+      navigation.navigate(route.name, route.params);
+    }
+  };
+
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      className="min-h-12 min-w-12 flex-1 items-center justify-center gap-1"
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      {renderIcon ? renderIcon({ focused, color, size: largerText ? 28 : 24 }) : null}
+      <Text
+        numberOfLines={1}
+        // The bar has a fixed height (`tabBarReserve`), so labels
+        // scale with Dynamic Type only up to what fits in it.
+        maxFontSizeMultiplier={1.5}
+        className={`font-instrument-sans-semibold ${largerText ? "text-base" : "text-sm"}`}
+        style={[{ color }, typeStyle("semibold")]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+});
 
 /**
  * The pill behind tab `index` of `count` drawn tabs: one tab wide (they share

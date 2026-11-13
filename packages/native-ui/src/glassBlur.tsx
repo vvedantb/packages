@@ -2,44 +2,68 @@ import {
   createContext,
   useContext,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ComponentRef,
-  type Dispatch,
   type ReactNode,
   type RefObject,
-  type SetStateAction,
 } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import { loadBlur } from "./blur";
 
 type BlurTargetRef = RefObject<ComponentRef<typeof View> | null>;
 
-type GlassBlurContextValue = {
-  target: BlurTargetRef | null;
-  setTarget: Dispatch<SetStateAction<BlurTargetRef | null>> | null;
+/**
+ * The current blur target, outside React state. A target change (each tab
+ * switch hands it from one tab to the next) then re-renders only the glass
+ * that subscribes, not the whole tab tree under the provider: as a context
+ * value it walked every mounted tab twice per switch.
+ */
+type BlurTargetStore = {
+  get: () => BlurTargetRef | null;
+  set: (next: BlurTargetRef | null) => void;
+  subscribe: (listener: () => void) => () => void;
 };
 
-const NO_TARGET: GlassBlurContextValue = { target: null, setTarget: null };
+function createBlurTargetStore(): BlurTargetStore {
+  let current: BlurTargetRef | null = null;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => current,
+    set: (next) => {
+      if (next === current) return;
+      current = next;
+      for (const listener of listeners) listener();
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
 
-const GlassBlurContext = createContext<GlassBlurContextValue>(NO_TARGET);
+// `null` outside a provider and inside a target (a blur view must not sit
+// inside its own target). The value is the provider's one store, so it never
+// changes.
+const BlurTargetStoreContext = createContext<BlurTargetStore | null>(null);
+
+const noSubscribe = () => () => {};
+const noTarget = () => null;
 
 /**
  * The mounted `GlassBlurTarget` that floating glass blurs on Android, or
  * `null` outside a `GlassBlurProvider` and inside the target itself.
  */
 export function useGlassBlurTarget() {
-  return useContext(GlassBlurContext).target;
+  const store = useContext(BlurTargetStoreContext);
+  return useSyncExternalStore(store?.subscribe ?? noSubscribe, store?.get ?? noTarget, noTarget);
 }
 
 export function GlassBlurProvider({ children }: { children: ReactNode }) {
-  const [target, setTarget] = useState<BlurTargetRef | null>(null);
-  const value = useMemo(() => ({ target, setTarget }), [target]);
+  const [store] = useState(createBlurTargetStore);
 
-  return (
-    <GlassBlurContext.Provider value={value}>{children}</GlassBlurContext.Provider>
-  );
+  return <BlurTargetStoreContext.Provider value={store}>{children}</BlurTargetStoreContext.Provider>;
 }
 
 export type GlassBlurTargetProps = ViewProps & {
@@ -59,23 +83,24 @@ export function GlassBlurTarget({
   children,
   ...props
 }: GlassBlurTargetProps) {
-  const { setTarget } = useContext(GlassBlurContext);
+  const store = useContext(BlurTargetStoreContext);
   const ref = useRef<ComponentRef<typeof View>>(null);
   const BlurTargetView = loadBlur()?.BlurTargetView;
 
   // Publish the ref only once it is attached: expo-blur compares
   // `blurTarget.current` between renders to pick up a new target.
   useLayoutEffect(() => {
-    if (!setTarget || !active) {
+    if (!store || !active) {
       return;
     }
-    setTarget(ref);
-    return () => setTarget((current) => (current === ref ? null : current));
-  }, [setTarget, active]);
+    store.set(ref);
+    return () => {
+      if (store.get() === ref) store.set(null);
+    };
+  }, [store, active]);
 
-  const content = (
-    <GlassBlurContext.Provider value={NO_TARGET}>{children}</GlassBlurContext.Provider>
-  );
+  // Surfaces in here get no target: a blur view must not sit inside its own.
+  const content = <BlurTargetStoreContext.Provider value={null}>{children}</BlurTargetStoreContext.Provider>;
 
   return BlurTargetView ? (
     <BlurTargetView ref={ref} style={[styles.fill, style]} {...props}>
