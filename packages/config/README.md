@@ -50,6 +50,33 @@ Generic rules only: plugins `typescript`, `import`, `unicorn`, `react`; `suspici
 
 The severity of `no-console` and `no-unused-vars` is set to `error` here. It was not copied from the source app file, which was not in the extract. Check it against the app.
 
+### Custom oxlint rules (JS plugin)
+
+The package ships one oxlint JS plugin at `@vvedantb/config/oxlint/plugin.mjs`. It holds four rules, with no app prefix:
+
+| Rule | Flags |
+| --- | --- |
+| `no-value-block-in-try` | A value block (`?:`, `&&`/`\|\|`/`??`, optional chaining), loop, `throw`, `finally`, or missing `catch` inside a `try` in a React-compiled function or hook. Any one drops memoization for the whole file silently. |
+| `no-source-text-in-tests` | A source file name (`.ts`, `.tsx`, `.mts`, `.css`, `.html`) passed to a file read (`readFileSync`, `readSource`, …) in a `*.test.*` / `*.spec.*` file. Plain path strings used as data stay allowed. |
+| `no-double-cast` | A double cast such as `x as A as B` or `x as unknown as T`. |
+| `no-json-parse` | A bare `JSON.parse(...)` result that flows unchecked. `schema.parse(JSON.parse(x))` / `schema.safeParse(...)` are always allowed. With `{ "allowUnknownEscapeHatch": true }`, a `: unknown` annotation or `as unknown` cast is also allowed. |
+
+Wire it into the app's `.oxlintrc.json` (or `oxlint.jsonc`):
+
+```json
+{
+  "jsPlugins": [{ "name": "vvedantb", "specifier": "@vvedantb/config/oxlint/plugin.mjs" }],
+  "rules": {
+    "vvedantb/no-value-block-in-try": "error",
+    "vvedantb/no-source-text-in-tests": "error",
+    "vvedantb/no-double-cast": "error",
+    "vvedantb/no-json-parse": "error"
+  }
+}
+```
+
+oxlint reports each as `vvedantb(<rule>)`. For vmem's original `no-json-parse` behaviour, set `"vvedantb/no-json-parse": ["error", { "allowUnknownEscapeHatch": true }]`; the default (eva's) is strict, where `unknown` is not an escape.
+
 ## Vite and Vitest presets
 
 The root never imports Vite or a plugin. The app imports its plugins and passes the factories in, so the versions stay the app's own. The functions return plain objects; spread them into Vite's `defineConfig` and add `server`, `base` or `root` there.
@@ -216,8 +243,86 @@ module.exports = defineExpoMetroConfig({
 
 - `monorepoRoot` sets `watchFolders: [<root>]` and `resolver.nodeModulesPaths` to the app's and the root's `node_modules`.
 - `packageExports: true` sets `resolver.unstable_enablePackageExports: true`.
+- `singletons: ["react", "react-dom", …]` installs a `resolver.resolveRequest` wrapper that rewrites `originModulePath` to the app's `package.json` for those module heads, so a single copy resolves. It composes with nativewind's own resolver and is applied before `withNativeWind`.
+- `nativeWindConfig: "./tailwind.config.ts"` resolves to an absolute path and is passed to `withNativeWind` as `configPath`.
 
-`withNativeWind` copies the config and its resolver and reads neither setting, so the order matches setting them before it.
+`withNativeWind` copies the config and its resolver and reads neither monorepo setting, so the order matches setting them before it.
+
+vmem and eva pass `singletons`; verve and vibot omit it and behave exactly as before. Example (vmem/eva):
+
+```js
+module.exports = defineExpoMetroConfig({
+  projectRoot: __dirname,
+  getDefaultConfig,
+  withNativeWind,
+  inlineRem: 16,
+  monorepoRoot: "../..",
+  singletons: ["react", "react-dom"],
+});
+```
+
+## Release signing (Expo config plugin)
+
+`withReleaseSigning` is an Expo config plugin that signs the Android `release` build type from a sideload keystore. Each value comes from the environment, else from a `keystore.properties` file; a release task fails when any is missing, so a release never falls back to the debug key. `expo/config-plugins` is an optional peer, resolved lazily from the app, so the module loads under plain Node without Expo installed.
+
+Each app keeps a thin wrapper at `apps/mobile/plugins/withReleaseSigning.js` and references it from `app.config`:
+
+```js
+// apps/mobile/plugins/withReleaseSigning.js
+const { withReleaseSigning } = require("@vvedantb/config");
+
+module.exports = (config) =>
+  withReleaseSigning(config, {
+    // Marker the app's build script greps android/app/build.gradle for.
+    marker: "// Added by apps/mobile/plugins/withReleaseSigning.js",
+  });
+```
+
+Options and defaults:
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `marker` | `"// @generated @vvedantb/config plugins/withReleaseSigning.js"` | The idempotency marker and the substring build scripts grep for. The default contains `plugins/withReleaseSigning.js`, so the default already satisfies that grep. |
+| `keystorePropertiesFile` | `rootProject.file("../../../keystore.properties")` | Groovy expression for the properties file (repo root, three levels above `android/app`). |
+| `propertyKeys` | `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | `Partial` override of the env / properties key names. |
+| `storeType` | _(omitted)_ | Emitted as a `storeType "…"` line only when set. |
+| `skipOnEasBuild` | `false` | Skip the append when `EAS_BUILD` is set (EAS handles its own signing). |
+| `releaseTaskCondition` | any task of this project whose name contains `"release"` | Groovy boolean deciding whether a build must sign `release`. |
+
+Exact marker each app expects:
+
+- **vmem** and **eva**: `// Added by apps/mobile/plugins/withReleaseSigning.js` (vmem's own test asserts this string exactly, and that no non-marker line contains the app name — the shared block is generic, so it passes).
+- **vibot**: any marker containing `plugins/withReleaseSigning.js` (its build script only greps that substring). The default works.
+- **verve**: no build-script grep; the default marker is fine.
+
+All four build scripts grep `android/app/build.gradle` for `plugins/withReleaseSigning.js`, which every marker above (and the default) contains.
+
+## Android release build (`vvedantb-android-release`)
+
+`vvedantb-android-release` builds a signed Android release APK in CI. It merges the three app build scripts (vibot, vmem, eva) into one bin driven by a config file, and keeps the reusable-workflow interface: it writes `apk`, `release_json`, `version_name`, `version_code` and `sha256` to `GITHUB_OUTPUT`. It runs on Linux CI with the Android SDK; it is **not** runnable on Windows.
+
+```sh
+VERSION_NAME=1.0.1 VERSION_CODE=1000 \
+  vvedantb-android-release --config android-release.config.json [--root <repo root>]
+```
+
+The config (parsed by `parseAndroidReleaseConfig`) covers the differences between apps:
+
+| Field | Default | Notes |
+| --- | --- | --- |
+| `packageId` | _(required)_ | e.g. `com.projectvdotuk.vmem`; checked against `aapt2` badging. |
+| `apkPrefix` | _(required)_ | Output name `<prefix>-<version>-android.apk`. |
+| `appDir` | `apps/mobile` | Expo app directory. |
+| `publicEnv` | `[]` | `EXPO_PUBLIC_*` names resolved from env, then `publicEnvSources`. |
+| `publicEnvSources` | `[]` | `{ kind: "eas-profile", profile? }` or `{ kind: "config-literal", file, operators? }` (`??`/`\|\|`). |
+| `pnpmFilters` | `["{.}"]` | `pnpm install --filter` targets. |
+| `prebuildNoInstall` | `true` | Adds `--no-install` to `expo prebuild --clean`. |
+| `extraEnv` / `optionalEnv` | `{}` / — | Extra and pass-through env for the build. |
+| `preChecks` / `preBuildSteps` | — | bash steps run in the repo root / app dir before the build. |
+| `gradleWrapperPin` | — | `{ ifContains, distributionUrl }` to pin the Gradle wrapper. |
+| `summary` | — | `{ label, envVar }` echoed at the end. |
+
+Pure helpers (`validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
 
 ## Versions
 
