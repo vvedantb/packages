@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.43.0
+
+### Minor Changes
+
+- [#222](https://github.com/vvedantb/packages/pull/222) [`f470a3a`](https://github.com/vvedantb/packages/commit/f470a3a058b88946ec8005fe9bc95e8951fd5b11) Thanks [@vvedantb](https://github.com/vvedantb)! - Add shared stale-deploy / chunk-load recovery beside the update watcher. After a new deploy serves HTML that points at removed asset hashes, the app can throw a chunk-load error and wedge; this recovers by reloading once with a cooldown guard and a cache-bust param.
+  
+  New exports (root and `@vvedantb/ui/client`): `isChunkLoadError`, `installStaleDeployReload` (registers `vite:preloadError`, capture-phase `error`, and `unhandledrejection` listeners, with an `onBeforeReload` callback for app-specific teardown such as `convex.close()`), plus the primitives `claimStaleDeployReload`, `reloadForStaleDeploy`, `stripStaleDeployReloadParam` and the `STALE_DEPLOY_RELOAD_KEY` / `STALE_DEPLOY_RELOAD_PARAM` constants.
+
+### Patch Changes
+
+- Updated dependencies [[`9e1f80d`](https://github.com/vvedantb/packages/commit/9e1f80db6d5c6af6419989194ab999d56e807a9a)]:
+  - @vvedantb/server@0.15.0
+
 ## 0.42.0
 
 ### Minor Changes
