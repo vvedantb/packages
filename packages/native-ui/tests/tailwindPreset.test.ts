@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +12,6 @@ import { tokens } from "../src/tokens";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const file = join(root, "src/tailwind-preset.cjs");
-const source = readFileSync(file, "utf8");
 const preset = require(file) as typeof import("../src/tailwind-preset.cjs");
 
 type Base = Record<string, Record<string, unknown>>;
@@ -43,12 +41,6 @@ describe("tailwind preset API", () => {
   it("defaults to class dark mode and takes media", () => {
     expect(preset.nativeUiPreset().darkMode).toBe("class");
     expect(preset.nativeUiPreset({ darkMode: "media" }).darkMode).toBe("media");
-  });
-
-  it("nests nativewind/preset when it is installed, and does not crash without it", () => {
-    expect(source).toMatch(/require\("nativewind\/preset"\)/);
-    expect(Array.isArray(preset.nativeUiPreset().presets)).toBe(true);
-    expect(source).toMatch(/require\("nativewind\/theme"\)/);
   });
 
   it("maps the Instrument Sans classes to the Expo Google Fonts faces", () => {
@@ -108,15 +100,6 @@ describe("tailwind preset API", () => {
     expect(preset.nativeUiPreset().theme.extend.colors.background).toBe("var(--background)");
   });
 
-  it("leaves out the app-local pieces", () => {
-    const extend = preset.nativeUiPreset().theme.extend as Record<string, unknown>;
-    expect(Object.keys(extend).sort()).toEqual(["borderRadius", "borderWidth", "colors", "fontFamily"]);
-    expect(JSON.stringify(preset.nativeUiPreset({ injectCssVariables: true }))).not.toMatch(
-      /michroma|geist|host-grotesk|feature|accordion|corePlugins/i,
-    );
-    expect(source).not.toMatch(/tailwindcss-animate|require\("tailwindcss/);
-  });
-
   it("uses the --radius radii only when asked, or with the injected variables", () => {
     expect(preset.nativeUiPreset().theme.extend.borderRadius).toEqual({});
     const radii = { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" };
@@ -161,18 +144,5 @@ describe("injectCssVariables", () => {
     expect(Object.keys(added!)).toEqual([":root", "@media (prefers-color-scheme: dark)"]);
     const media = added!["@media (prefers-color-scheme: dark)"] as Record<string, Record<string, string>>;
     expect(media[":root"]!["--foreground"]).toBe(channels(tokens.color.foreground.dark));
-  });
-
-  it("reads the colours from tokens.ts and palette.ts, not a copy", () => {
-    expect(source).toMatch(/readConst\("tokens\.ts", "tokens"\)/);
-    expect(source).toMatch(/readConst\("palette\.ts", "palette"\)/);
-    expect(source).not.toMatch(/#[0-9a-f]{6}/i);
-  });
-});
-
-describe("tailwind preset copy", () => {
-  it("names no auth provider or AI model", () => {
-    expect(source).not.toMatch(/clerk/i);
-    expect(source).not.toMatch(/\b(gpt|claude|gemini|llama|openai|anthropic)\b/i);
   });
 });

@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { FAMILY_APPS } from "../src/brand/familyApps";
 import {
@@ -13,12 +10,6 @@ import {
   VSTORE_HOME_URL,
   type ProjectVLinking,
 } from "../src/settings/projectVMobileApps";
-
-// "More from Project V" (0.8.0): the phone app data and the open helper are
-// pure, so they run here with a stub `Linking`. The component is checked as source.
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
 
 /** A `Linking` stub: `installed` schemes pass `canOpenURL`; `openURL` rejects URLs in `failing`. */
 function linking(installed: string[], failing: string[] = []) {
@@ -138,30 +129,5 @@ describe("openProjectVApp", () => {
     };
     await expect(openProjectVApp("verve", stub, "ios")).resolves.toBeNull();
     expect(stub.openURL).toHaveBeenCalledWith("https://verve.projectv.uk");
-  });
-});
-
-describe("MoreFromProjectV", () => {
-  const source = read("settings/MoreFromProjectV.tsx");
-
-  it("is a list settings section of ListRows with app marks", () => {
-    expect(source).toMatch(/<SettingsSection title=\{title\} bodyVariant="list"/);
-    expect(source).toMatch(/otherProjectVMobileApps\(current\)/);
-    expect(source).toMatch(/leading=\{<AppMark app=\{MARK\[app\.id\]\}/);
-    expect(source).toMatch(/meta=\{app\.description\}/);
-    expect(source).toMatch(/openProjectVApp\(app\.id, Linking, Platform\.OS\)/);
-    expect(source).toMatch(/title = "More from Project V"/);
-  });
-
-  it("uses the Project V mark for V Store and adds no new glyph", () => {
-    expect(source).toMatch(/vstore: "projectv"/);
-    expect(source).not.toMatch(/react-native-svg/);
-  });
-
-  it("has a subtle footer variant", () => {
-    expect(source).toMatch(/if \(variant === "footer"\) return <FromProjectV/);
-    expect(source).toMatch(/accessibilityLabel="from Project V"/);
-    expect(source).toMatch(/textStyle\("muted", scheme\)/);
-    expect(source).toMatch(/className="text-sm font-instrument-sans"/);
   });
 });

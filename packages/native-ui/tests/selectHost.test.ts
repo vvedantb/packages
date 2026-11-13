@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -86,14 +85,5 @@ describe("SelectHost", () => {
     const web = SelectHost({ children: "x" }) as unknown as Element;
     expect(web.props.children).toBe("x");
     expect(web.type).not.toBe("Modal");
-  });
-
-  it("SelectContent uses the host, not a bare portal child", () => {
-    const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-    const source = readFileSync(join(root, "src/primitives/select.tsx"), "utf8");
-    expect(source).toContain("<SelectHost>");
-    expect(source).not.toContain("FullWindowOverlay");
-    // Android renders the host directly: no Portal around the Modal.
-    expect(source).toMatch(/Platform\.OS === "android"\) \{\s*return <SelectHost>/);
   });
 });

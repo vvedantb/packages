@@ -20,7 +20,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 describe("activity timeline copies", () => {
   for (const file of ["activity-step-label.ts", "activity-tasks-utils.ts", "activity-step-types.ts"]) {
     it(`src/ai/${file} is byte-identical to @vvedantb/ui src/ai-elements/${file}`, () => {
+      // allow-source-read: these files are copies and must stay byte-identical.
       expect(readFileSync(join(root, "src/ai", file), "utf8")).toBe(
+        // allow-source-read: the web original of the copy.
         readFileSync(join(root, "..", "ui/src/ai-elements", file), "utf8"),
       );
     });

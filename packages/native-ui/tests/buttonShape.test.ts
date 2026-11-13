@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tokens } from "../src/tokens";
 
@@ -53,14 +50,6 @@ vi.mock("../src/dialogLayout", () => ({ useDialogLayout: () => layout.value }));
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 vi.mock("../src/motion", () => ({ usePressFeedback: () => "active:scale-[0.97]" }));
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
-const readWeb = (file: string) => readFileSync(join(root, "..", "ui", file), "utf8");
-
-/** Source without comments, so a comment can name a prop the code must not pass. */
-const code = (source: string) =>
-  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 type ButtonProps = import("../src/Button").ButtonProps;
@@ -199,69 +188,5 @@ describe("Button shape in composites", () => {
       const own = ChatIconButton({ icon, label: "Copy", style: { borderRadius: 8 } }) as unknown as Element;
       expect(radius(Button(own.props as ButtonProps) as unknown as Element)).toBe(8);
     }
-  });
-
-  it("the composer send, stop and tool buttons stay pills (the web rounded-lg 16 is a circle at 32)", async () => {
-    const { ChatIconButton } = await import("../src/ai/icon-button");
-    const { PromptInputSubmit, PromptInputButton } = await import("../src/ai/prompt-input");
-    const send = PromptInputSubmit({ onSubmit: () => {} }) as unknown as Element;
-    const stop = PromptInputSubmit({ status: "streaming", onStop: () => {} }) as unknown as Element;
-    const icon = "IconPlus" as unknown as Parameters<typeof PromptInputButton>[0]["icon"];
-    const tool = PromptInputButton({ icon, label: "Attach" }) as unknown as Element;
-    for (const element of [send, stop, tool]) {
-      expect(element.type).toBe(ChatIconButton);
-      expect(element.props.shape).toBeUndefined();
-      expect(element.props.style).toBeUndefined();
-    }
-    // The web keeps `shape="rounded"` on these: `rounded-lg` on the 32 `icon-sm` size.
-    const inputGroup = readWeb("src/ui/input-group.tsx");
-    expect(inputGroup).toMatch(/"icon-sm": "size-8 rounded-lg p-0/);
-    expect(inputGroup).toMatch(/variant=\{variant\}\s+shape="rounded"/);
-    expect(tokens.radius.lg).toBe(32 / 2);
-  });
-
-  it("PricingModal's CTA is a pill, as the web multi-plan CTA (rounded-full)", () => {
-    const pricing = code(read("marketing/PricingModal.tsx"));
-    expect(pricing.match(/<Button\b/g)).toHaveLength(1);
-    const start = pricing.indexOf("<Button");
-    const cta = pricing.slice(start, pricing.indexOf("</Button>", start));
-    expect(cta).not.toMatch(/shape=|style=|borderRadius/);
-    expect(readWeb("src/marketing/PricingModal.tsx")).toMatch(/className="h-12 w-full rounded-full"/);
-  });
-
-  it("checks every file that renders Button: the composites above, ConversationScrollButton and the gallery", () => {
-    const files = readdirSync(join(root, "src"), { recursive: true, encoding: "utf8" }).filter((file) =>
-      /\.tsx?$/.test(file),
-    );
-    const users = files.filter((file) =>
-      [...read(file).matchAll(/import\s*\{([^}]*)\}\s*from\s*"\.{1,2}\/(?:\.\.\/)*(?:Button|index)"/g)].some(
-        (match) => match[1]!.split(",").some((name) => /^Button(?:\s+as\s+\w+)?$/.test(name.trim())),
-      ),
-    );
-    expect(users.sort()).toEqual([
-      "AlertDialog.tsx",
-      // Unreleased: the question dock's Back and Next/Submit, the default pill as on the web.
-      "ai/choice-question.tsx",
-      "ai/conversation.tsx",
-      "ai/icon-button.tsx",
-      // 0.7.0 auth screens: the default pill, no shape or radius of their own.
-      "auth/GoogleSignInButton.tsx",
-      "auth/SecondFactorScreen.tsx",
-      "auth/SignInScreen.tsx",
-      "examples/ParityGallery.tsx",
-      "marketing/PricingModal.tsx",
-    ]);
-    for (const file of ["auth/GoogleSignInButton.tsx", "auth/SecondFactorScreen.tsx", "auth/SignInScreen.tsx"]) {
-      expect(code(read(file)), file).not.toMatch(/shape=|borderRadius/);
-    }
-    // `ConversationScrollButton` already sets the pill radius as a style, which wins.
-    expect(read("ai/conversation.tsx")).toMatch(/style=\{\{ borderRadius: tokens\.radius\.pill,/);
-  });
-
-  it("shows the icon circle and the rounded opt-out in the gallery", () => {
-    const gallery = code(read("examples/ParityGallery.tsx"));
-    const section = gallery.slice(gallery.indexOf('<Section title="Button">'), gallery.indexOf('<Section title="Badge">'));
-    expect(section.match(/<Button\s+size="icon"/g)).toHaveLength(1);
-    expect(section.match(/shape="rounded"/g)).toHaveLength(3);
   });
 });

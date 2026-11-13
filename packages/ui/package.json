@@ -83,6 +83,7 @@
     "./fonts/instrument-sans.css"
   ],
   "scripts": {
+    "check:client-graph": "node scripts/check-client-graph.mjs",
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
     "build": "node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.consumer.json && tsc -p tsconfig.consumer-speech.json && tsc -p tokens/tsconfig.json",
@@ -190,6 +191,7 @@
     "cmdk": "^1.1.1",
     "convex": "^1.47.0",
     "embla-carousel-react": "^8.6.0",
+    "esbuild": "0.28.2",
     "happy-dom": "^18.0.0",
     "motion": "^12.0.0",
     "nanoid": "^5.1.0",

@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { palette, withAlpha } from "../src/palette";
@@ -282,22 +281,5 @@ describe("BulkActionBar", () => {
       expect(button(tree, "Mark read").props.disabled).toBe(true);
       expect(pressStyle(button(tree, "Mark read"))).toMatchObject({ opacity: 0.3 });
     });
-  });
-
-  it("keeps the web props and sizes", () => {
-    const web = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../ui/src/ui/bulk-action-bar.tsx"), "utf8");
-    for (const prop of ["isSelecting", "selectedCount", "totalCount", "onExitSelect", "onSelectAll", "onClearSelection", "primaryActions", "moreActions", "destructiveAction", "barKey"]) {
-      expect(web).toMatch(new RegExp(`\\b${prop}\\??: `));
-    }
-    for (const key of ["key", "label", "shortLabel", "icon", "destructive", "showSkipHint", "onClick"]) {
-      expect(web).toMatch(new RegExp(`\\n  ${key}\\??: `));
-    }
-    expect(web).toMatch(/rounded-surface bg-popover\/95 px-2\.5 py-2 backdrop-blur-md/);
-    expect(web).toMatch(/inline-flex h-9 shrink-0 items-center gap-1\.5 rounded-lg px-2\.5 text-sm font-medium/);
-    expect(web).toMatch(/rounded-md bg-surface-secondary px-2 py-0\.5 text-xs font-semibold text-foreground tabular-nums/);
-    expect(web).toMatch(/className="mx-1\.5 h-5 shrink-0 bg-border"/);
-    expect(web).toMatch(/<span className="hidden sm:inline">/);
-    expect(web).toMatch(/aria-label="Cancel selection"/);
-    expect(web).toMatch(/aria-label="More actions"/);
   });
 });

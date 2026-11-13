@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createElement, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { tokens } from "../src/tokens";
@@ -12,9 +9,6 @@ import { tokens } from "../src/tokens";
 vi.mock("expo-router/html", () => ({ ScrollViewStyleReset: "ScrollViewStyleReset" }));
 
 const { ExpoWebRoot, EXPO_WEB_VIEWPORT } = await import("../src/ExpoWebRoot");
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const source = readFileSync(join(root, "src/ExpoWebRoot.tsx"), "utf8");
 
 type El = ReactElement<{ children?: unknown; [key: string]: unknown }>;
 const kids = (el: El): El[] =>
@@ -64,10 +58,5 @@ describe("ExpoWebRoot", () => {
     const { html, head: nodes } = head({ scrollReset: false, lang: "en-GB", head: createElement("link", { rel: "icon", href: "/x.png" }) });
     expect(html.props.lang).toBe("en-GB");
     expect(nodes.map((n) => n.type)).toEqual(["meta", "meta", "meta", "style", "link"]);
-  });
-
-  it("imports ScrollViewStyleReset from expo-router/html and names no auth provider", () => {
-    expect(source).toMatch(/import \{ ScrollViewStyleReset \} from "expo-router\/html";/);
-    expect(source).not.toMatch(/clerk/i);
   });
 });

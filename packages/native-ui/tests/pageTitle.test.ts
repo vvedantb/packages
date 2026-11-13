@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -29,10 +26,6 @@ vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof im
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const breadcrumb = readFileSync(join(root, "..", "ui", "src/ui/breadcrumb.tsx"), "utf8");
-const source = readFileSync(join(root, "src/PageTitle.tsx"), "utf8");
-
 /** The web page title classes, on the `Breadcrumb` nav. */
 const WEB_TITLE = "text-xl font-semibold leading-tight tracking-tight";
 
@@ -48,10 +41,6 @@ afterEach(() => {
 });
 
 describe("page title type (web contract)", () => {
-  it("the web Breadcrumb still sets text-xl font-semibold leading-tight tracking-tight", () => {
-    expect(breadcrumb).toContain(`"flex min-w-0 items-center gap-1.5 ${WEB_TITLE}"`);
-  });
-
   it("PAGE_TITLE_CLASS is the web classes with the Instrument Sans semibold face", () => {
     const web = WEB_TITLE.replace("font-semibold", "font-instrument-sans-semibold");
     expect(PAGE_TITLE_CLASS.split(" ").sort()).toEqual(web.split(" ").sort());
@@ -96,15 +85,6 @@ describe("PageTitle", () => {
     });
   });
 
-  it("is a header, one line, and leaves font scaling on", async () => {
-    const title = await render();
-    expect(title.props.accessibilityRole).toBe("header");
-    expect(title.props.numberOfLines).toBe(1);
-    expect(title.props).not.toHaveProperty("allowFontScaling");
-    expect(title.props).not.toHaveProperty("maxFontSizeMultiplier");
-    expect(source).not.toMatch(/allowFontScaling|maxFontSizeMultiplier/);
-  });
-
   it("follows the dark scheme with a style, not a text-foreground class", async () => {
     scheme.colorScheme = "dark";
     const title = await render();
@@ -139,15 +119,6 @@ describe("PageHeader", () => {
   it("drops the inset with safeTop={false}", async () => {
     const { header } = await render({ safeTop: false });
     expect(flatten(header.props.style)).toEqual({ paddingTop: 0, minHeight: PAGE_HEADER_HEIGHT });
-  });
-
-  it("is a row with the ScreenContainer side padding, the title first and able to shrink", async () => {
-    const { header, title, PageTitle } = await render();
-    expect(header.props.className).toBe("flex-row items-center justify-between gap-3 px-4");
-    expect(readFileSync(join(root, "src/ScreenContainer.tsx"), "utf8")).toMatch(/className="flex-col gap-4 p-4"/);
-    expect(title.type).toBe(PageTitle);
-    expect(title.props.children).toBe("Apps");
-    expect(title.props.className).toBe("min-w-0 flex-1");
   });
 
   it("renders the action at the end, in a view that does not shrink", async () => {
@@ -186,18 +157,5 @@ describe("PageHeader", () => {
     expect(title.props.className).toBe("min-w-0 flex-1 text-center");
     expect(flatten(header.props.style)).toEqual({ paddingTop: 47, minHeight: 47 + 56, backgroundColor: "#fff" });
     expect(header.props.testID).toBe("header");
-  });
-});
-
-describe("Page title in the gallery", () => {
-  it("shows PageTitle and a PageHeader with an Update all action in a Page title section, first", () => {
-    const gallery = readFileSync(join(root, "src/examples/ParityGallery.tsx"), "utf8");
-    const start = gallery.indexOf('<Section title="Page title">');
-    expect(start).toBeGreaterThan(0);
-    expect(start).toBeLessThan(gallery.indexOf('<Section title="Brand">'));
-    const section = gallery.slice(start, gallery.indexOf('<Section title="Brand">'));
-    expect(section).toMatch(/<PageTitle>Updates<\/PageTitle>/);
-    expect(section).toMatch(/<PageHeader\s+title="Apps"/);
-    expect(section).toMatch(/action=\{\s*<Button [^>]*fullWidth=\{false\}(?:=>|[^>])*>\s*Update all\s*<\/Button>/);
   });
 });

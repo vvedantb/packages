@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Typecheck and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Some tests load built output (for example `@vvedantb/config` dist).
+      - name: Build
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm typecheck
+      # Hermes ES2023 ban, client import graph, native-ui exports and app names.
+      # The client graph check bundles `@vvedantb/ui` against built `@vvedantb/server`,
+      # so it runs after Build.
+      - name: Guards
+        run: pnpm check:guards
+      # Runs the no-source-text check, then the package tests.
+      - name: Test
+        run: pnpm test

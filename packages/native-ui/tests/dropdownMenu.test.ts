@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
@@ -73,9 +70,6 @@ afterEach(() => {
   menu.ref = { current: null };
   menu.larger = false;
 });
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const webMenu = readFileSync(join(root, "..", "ui", "src/ui/_menu-classes.ts"), "utf8");
 
 describe("dropdownMenuPosition", () => {
   const window = { width: 390, height: 844 };
@@ -294,14 +288,5 @@ describe("DropdownMenu parts", () => {
       marginVertical: 4,
       backgroundColor: tokens.color.separator.light,
     });
-  });
-
-  it("takes its sizes from the web menu classes", () => {
-    expect(webMenu).toMatch(/"z-50 min-w-\[12rem\] overflow-hidden p-1\.5 /);
-    expect(webMenu).toMatch(/floatingSurfaceClass =\s*"rounded-lg bg-overlay/);
-    expect(webMenu).toMatch(/menuItemClass =\s*"relative flex cursor-pointer select-none items-center gap-2 rounded-menu-item px-2\.5 py-2 /);
-    expect(webMenu).toMatch(/menuCheckboxRadioItemClass =\s*"[^"]*py-2 max-sm:min-h-10 pl-8 pr-2\.5 text-sm/);
-    expect(webMenu).toMatch(/menuLabelClass =\s*"px-2\.5 py-1\.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground"/);
-    expect(webMenu).toMatch(/menuSeparatorClass = "-mx-1\.5 my-1 h-px bg-separator"/);
   });
 });

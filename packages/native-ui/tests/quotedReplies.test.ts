@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
@@ -15,7 +12,7 @@ import { tokens } from "../src/tokens";
 // stubbed, keeps their state between calls, renders again when state changes
 // (also from a timer or a press), and runs effects after each render. React
 // Native, Reanimated, the safe-area hook and the icons are stubbed, and the
-// checks read the element trees the parts return. Source checks at the end.
+// checks read the element trees the parts return.
 
 type Effect = { deps?: unknown[]; cleanup?: void | (() => void) };
 
@@ -201,13 +198,6 @@ vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (file: string) => readFileSync(join(root, "src", file), "utf8");
-const readWeb = (file: string) => readFileSync(join(root, "..", "ui", "src", file), "utf8");
-const aiFiles = readdirSync(join(root, "src", "ai")).filter((file) => /\.tsx?$/.test(file));
-/** Source without comments. */
-const code = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
-
 type Element = { type: unknown; props: Record<string, unknown> & { children?: unknown } };
 
 function elements(node: unknown): Element[] {
@@ -227,9 +217,6 @@ const flatten = (style: unknown): Record<string, unknown> =>
 
 /** Calls a function component element, as React would. */
 const render = (element: Element) => (element.type as (props: unknown) => unknown)(element.props);
-
-/** Makes `value` what `useContext` returns for the context a provider element names. */
-const provide = (provider: Element) => hooks.state.contexts.set(provider.type, provider.props.value);
 
 beforeEach(() => {
   hooks.state.contexts.clear();
@@ -607,32 +594,6 @@ describe("PromptInput replyTo", () => {
       (field().props.onContentSizeChange as (e: unknown) => void)(size(400));
       expect(flatten(field().props.style), layout).toMatchObject({ height: 160, maxHeight: 160 });
       expect(field().props.scrollEnabled, layout).toBe(true);
-    }
-  });
-});
-
-describe("quoted replies (source contract)", () => {
-  it("exports the new parts and types from the ai entry", () => {
-    const index = read("ai/index.ts");
-    expect(index).toMatch(/MessageActionSheet[\s\S]*MessageActionSheetProps, MessageSheetAction/);
-    expect(index).toMatch(/ReplyQuoteChip[\s\S]*ReplyQuoteChipProps/);
-    expect(index).toMatch(/MessageQuote[\s\S]*MessageQuoteProps/);
-    expect(index).toMatch(/MESSAGE_HIGHLIGHT_MS/);
-  });
-
-  it("uses selectionHaptic and adds no dependency", () => {
-    expect(read("ai/message-action-sheet.tsx")).toMatch(/selectionHaptic\(\)/);
-    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(pkg.dependencies ?? {}).not.toHaveProperty("expo-haptics");
-    expect(pkg.peerDependenciesMeta["expo-haptics"]).toEqual({ optional: true });
-  });
-
-  it("avoids the Hermes-missing array methods and the bottom-sheet peer", () => {
-    for (const file of ["message-action-sheet.tsx", "reply-quote-chip.tsx", "message-quote.tsx", "message.tsx"]) {
-      const source = code(read(`ai/${file}`));
-      expect(source, file).not.toMatch(/\.(?:findLast|findLastIndex|toSorted|toReversed|toSpliced|with)\(/);
-      expect(source, file).not.toMatch(/@gorhom\/bottom-sheet/);
     }
   });
 });

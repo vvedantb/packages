@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 
 // `submitTotpSecondFactor` (0.10.0), ported from Eva. The sign-in resource is
@@ -98,19 +95,6 @@ describe("submitTotpSecondFactor", () => {
 
   it("shows generic messages that name no provider", () => {
     for (const message of Object.values(TOTP_MESSAGES)) expect(message).not.toMatch(/clerk|convex/i);
-  });
-});
-
-describe("useSecondFactor (source contract)", () => {
-  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../src/auth/totp.ts"), "utf8");
-
-  it("uses useSignIn and the shared helper, with no zod", () => {
-    expect(source).toMatch(/useSignIn\(\)/);
-    expect(source).toMatch(/attemptSecondFactor\(\{ strategy: args\.strategy, code: args\.code \}\)/);
-    expect(source).toMatch(/strategy: "totp"/);
-    expect(source).toMatch(/options\.strategy \?\? "totp"/);
-    expect(source).toMatch(/setActive\(\{ session: attempt\.createdSessionId \}\)/);
-    expect(source).not.toMatch(/zod/);
   });
 });
 

@@ -137,9 +137,11 @@ describe("gallery registry", () => {
 
   it("keeps the tailwind preset exports the gallery relies on", () => {
     // `tests/tailwindPreset.test.ts` covers the values. The gallery needs these two names.
+    // allow-source-read: the gallery must load the preset the package ships.
     const preset = readFileSync(join(root, "src/tailwind-preset.cjs"), "utf8");
     expect(preset).toMatch(/nativeUiPreset/);
     expect(preset).toMatch(/nativeUiContent/);
+    // allow-source-read: the gallery must load the preset the package ships.
     expect(readFileSync(join(repo, "apps/native-gallery/tailwind.config.js"), "utf8")).toContain("@vvedantb/native-ui/tailwind-preset");
   });
 });
