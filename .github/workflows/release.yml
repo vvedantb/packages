@@ -94,6 +94,9 @@ jobs:
           done
       - run: pnpm install --frozen-lockfile
       - name: Publish the next pre-release
+        env:
+          # `@changesets/changelog-github` reads PR links while versioning.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! ls .changeset/*.md | grep -qv '/README.md$'; then
             echo "No pending changesets: nothing to pre-release."
