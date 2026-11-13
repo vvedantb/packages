@@ -158,6 +158,9 @@ export * from "./ai-elements/inline-citation";
 export * from "./ai-elements/jump-rail";
 export * from "./ai-elements/jump-rail-geometry";
 export * from "./ai-elements/chat-jump-rail";
+export * from "./ai-elements/chat-day-divider";
+export * from "./ai-elements/chat-last-turn";
+export * from "./ai-elements/collapsible-user-message-body";
 export * from "./ai-elements/message";
 export * from "./ai-elements/model-selector";
 export * from "./ai-elements/prompt-input";
@@ -254,6 +257,10 @@ export type {
 } from "../shell/src/SidebarAccountMenu";
 export { SignOutDialog } from "../shell/src/SignOutDialog";
 export type { SignOutDialogProps } from "../shell/src/SignOutDialog";
+export { PageHeaderBar } from "../shell/src/PageHeaderBar";
+export type { PageHeaderBarProps } from "../shell/src/PageHeaderBar";
+export { PageWrapper } from "../shell/src/PageWrapper";
+export type { PageWrapperProps } from "../shell/src/PageWrapper";
 export {
   railBadgeClass,
   railTileClass,

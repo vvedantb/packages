@@ -43,6 +43,10 @@ export type {
 } from "./SidebarAccountMenu.js";
 export { SignOutDialog } from "./SignOutDialog.js";
 export type { SignOutDialogProps } from "./SignOutDialog.js";
+export { PageHeaderBar } from "./PageHeaderBar.js";
+export type { PageHeaderBarProps } from "./PageHeaderBar.js";
+export { PageWrapper } from "./PageWrapper.js";
+export type { PageWrapperProps } from "./PageWrapper.js";
 export {
   railBadgeClass,
   railTileClass,

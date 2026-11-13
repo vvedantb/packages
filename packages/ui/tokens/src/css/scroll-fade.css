@@ -1,0 +1,122 @@
+/*
+ * @vvedantb/ui/tokens/css/scroll-fade.css: the `.scroll-fade` / `.scroll-fade-x`
+ * edge-fade masks. Put `.scroll-fade` on a vertical scroll area (or
+ * `.scroll-fade-x` on a horizontal one) so its content fades out towards an
+ * edge that has more to scroll, instead of ending in a hard cut. Content flush
+ * against the start or end never fades.
+ *
+ * Each fade length is a registered custom property (a plain `--var` cannot
+ * interpolate) driven by its own slice of the element's scroll timeline: the
+ * leading fade grows in over the first 1.5rem of scroll, the trailing fade
+ * shrinks out over the last 1.5rem.
+ *
+ * `--scroll-fade-max` caps how far a fade may reach, as a share of the axis.
+ * The default `100%` leaves it uncapped; set it lower (for example
+ * `--scroll-fade-max: 30%;` on :root or the element) to stop a short scroll
+ * area from fading more than that share at either end.
+ *
+ * Gated on scroll-driven-animation support: without it a static mask would dim
+ * content that is already fully in view, so unsupported browsers get no mask.
+ * Do not use on page-level scroll, a text field (dims the caret), or an element
+ * that already sets `animation` or has a `position: sticky` child.
+ */
+
+@layer utilities {
+  @property --scroll-fade-top {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --scroll-fade-bottom {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --scroll-fade-left {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+  @property --scroll-fade-right {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @keyframes scroll-fade-top {
+    from {
+      --scroll-fade-top: 0px;
+    }
+    to {
+      --scroll-fade-top: 1.5rem;
+    }
+  }
+  @keyframes scroll-fade-bottom {
+    from {
+      --scroll-fade-bottom: 1.5rem;
+    }
+    to {
+      --scroll-fade-bottom: 0px;
+    }
+  }
+  @keyframes scroll-fade-left {
+    from {
+      --scroll-fade-left: 0px;
+    }
+    to {
+      --scroll-fade-left: 1.5rem;
+    }
+  }
+  @keyframes scroll-fade-right {
+    from {
+      --scroll-fade-right: 1.5rem;
+    }
+    to {
+      --scroll-fade-right: 0px;
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .scroll-fade {
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 min(var(--scroll-fade-top), var(--scroll-fade-max, 100%)),
+        #000
+          max(
+            calc(100% - var(--scroll-fade-max, 100%)),
+            calc(100% - var(--scroll-fade-bottom))
+          ),
+        transparent 100%
+      );
+      animation:
+        scroll-fade-top 1ms linear both,
+        scroll-fade-bottom 1ms linear both;
+      animation-timeline: scroll(self y), scroll(self y);
+      animation-range:
+        0px 1.5rem,
+        calc(100% - 1.5rem) 100%;
+    }
+
+    .scroll-fade-x {
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 min(var(--scroll-fade-left), var(--scroll-fade-max, 100%)),
+        #000
+          max(
+            calc(100% - var(--scroll-fade-max, 100%)),
+            calc(100% - var(--scroll-fade-right))
+          ),
+        transparent 100%
+      );
+      animation:
+        scroll-fade-left 1ms linear both,
+        scroll-fade-right 1ms linear both;
+      animation-timeline: scroll(self x), scroll(self x);
+      animation-range:
+        0px 1.5rem,
+        calc(100% - 1.5rem) 100%;
+    }
+  }
+}
