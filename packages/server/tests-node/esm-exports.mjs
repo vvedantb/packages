@@ -400,6 +400,8 @@ for (const [label, zodDir] of [
     const dir = installFixture("types", {
       zod: zodDir,
       convex: "convex",
+      // createAuthFunctions names convex-helpers types; a consumer with the peer installed.
+      "convex-helpers": "convex-helpers",
       "@modelcontextprotocol/sdk": "@modelcontextprotocol/sdk",
       "@types/node": "@types/node",
     });
