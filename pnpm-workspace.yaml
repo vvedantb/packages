@@ -1,3 +1,11 @@
 packages:
   - packages/*
   - apps/*
+
+# media-chrome/react imports react without declaring it, so it used whichever
+# react pnpm hoisted. With two react versions in the workspace that can be the
+# wrong one, and its hooks then run against a null dispatcher.
+packageExtensions:
+  media-chrome:
+    peerDependencies:
+      react: "*"
