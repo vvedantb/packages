@@ -61,6 +61,50 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  next:
+    # A pre-release of every package with pending changesets, on each push to
+    # main, under the npm `next` tag (version `<next>-next-<commit>`). Apps pin
+    # it to use a change right after merge, before the Version Packages PR
+    # ships the real version. Here, not in its own workflow file: npm trusted
+    # publishing is bound to this file. Skips when no changeset is pending, so
+    # it never publishes a real version under `next`.
+    name: Pre-release (next tag)
+    needs: release
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@^11.5.1
+      - name: Remove empty npm auth tokens
+        # As in the release job: an empty token breaks the OIDC exchange.
+        run: |
+          for f in "$HOME/.npmrc" "${NPM_CONFIG_USERCONFIG:-}" "$RUNNER_TEMP/.npmrc" "$GITHUB_WORKSPACE/.npmrc"; do
+            if [ -n "$f" ] && [ -f "$f" ]; then
+              sed -i '/_authToken=/d' "$f" || true
+            fi
+          done
+      - run: pnpm install --frozen-lockfile
+      - name: Publish the next pre-release
+        run: |
+          if ! ls .changeset/*.md | grep -qv '/README.md$'; then
+            echo "No pending changesets: nothing to pre-release."
+            exit 0
+          fi
+          pnpm ci:publish:next
+          {
+            echo '## Pre-release (npm tag `next`)'
+            for f in packages/*/package.json; do node -e "const p=require('./$f'); if(!p.private) console.log('- '+p.name+'@'+p.version)"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+
   dry-run:
     name: Dry-run pack check
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}

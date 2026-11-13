@@ -1715,15 +1715,30 @@ describe("AI parts (package contract)", () => {
     // Highlighting: the optional peer prism-react-renderer, reached only through the lazy loader in src/highlight.ts.
     expect(pkg.peerDependencies["prism-react-renderer"]).toBe(">=2.0.0");
     expect(pkg.peerDependenciesMeta["prism-react-renderer"]).toEqual({ optional: true });
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/clerk-expo", "@types/react", "react", "typescript", "vitest"]);
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual([
+      "@babel/core",
+      "@babel/preset-typescript",
+      "@clerk/clerk-expo",
+      "@types/react",
+      "babel-plugin-react-compiler",
+      "react",
+      "typescript",
+      "vitest",
+    ]);
     expect(pkg.dependencies).toBeUndefined();
   });
 
   it("is exported from /ai, and the gallery imports the /ai parts, not the root entry", () => {
-    expect(pkg.exports["./ai"]).toEqual({ types: "./src/entries/ai.ts", default: "./src/entries/ai.ts" });
+    // Types from the source, runtime from the compiled `dist` (scripts/build-dist.mjs).
+    expect(pkg.exports["./ai"]).toEqual({
+      types: "./src/entries/ai.ts",
+      source: "./src/entries/ai.ts",
+      default: "./dist/entries/ai.js",
+    });
     expect(pkg.exports["./ai-gallery"]).toEqual({
       types: "./src/examples/AiChatGallery.tsx",
-      default: "./src/examples/AiChatGallery.tsx",
+      source: "./src/examples/AiChatGallery.tsx",
+      default: "./dist/examples/AiChatGallery.jsx",
     });
   });
 });

@@ -16,123 +16,153 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
     },
     "./tab-bar": {
       "types": "./src/entries/tab-bar.ts",
-      "default": "./src/entries/tab-bar.ts"
+      "source": "./src/entries/tab-bar.ts",
+      "default": "./dist/entries/tab-bar.js"
     },
     "./brand": {
       "types": "./src/entries/brand.ts",
-      "default": "./src/entries/brand.ts"
+      "source": "./src/entries/brand.ts",
+      "default": "./dist/entries/brand.js"
     },
     "./button": {
       "types": "./src/entries/button.ts",
-      "default": "./src/entries/button.ts"
+      "source": "./src/entries/button.ts",
+      "default": "./dist/entries/button.js"
     },
     "./primitives": {
       "types": "./src/entries/primitives.ts",
-      "default": "./src/entries/primitives.ts"
+      "source": "./src/entries/primitives.ts",
+      "default": "./dist/entries/primitives.js"
     },
     "./search-input": {
       "types": "./src/entries/search-input.ts",
-      "default": "./src/entries/search-input.ts"
+      "source": "./src/entries/search-input.ts",
+      "default": "./dist/entries/search-input.js"
     },
     "./password-input": {
       "types": "./src/entries/password-input.ts",
-      "default": "./src/entries/password-input.ts"
+      "source": "./src/entries/password-input.ts",
+      "default": "./dist/entries/password-input.js"
     },
     "./page-title": {
       "types": "./src/entries/page-title.ts",
-      "default": "./src/entries/page-title.ts"
+      "source": "./src/entries/page-title.ts",
+      "default": "./dist/entries/page-title.js"
     },
     "./toast": {
       "types": "./src/entries/toast.ts",
-      "default": "./src/entries/toast.ts"
+      "source": "./src/entries/toast.ts",
+      "default": "./dist/entries/toast.js"
     },
     "./theme": {
       "types": "./src/entries/theme.ts",
-      "default": "./src/entries/theme.ts"
+      "source": "./src/entries/theme.ts",
+      "default": "./dist/entries/theme.js"
     },
     "./floating": {
       "types": "./src/entries/floating.ts",
-      "default": "./src/entries/floating.ts"
+      "source": "./src/entries/floating.ts",
+      "default": "./dist/entries/floating.js"
     },
     "./layout": {
       "types": "./src/entries/layout.ts",
-      "default": "./src/entries/layout.ts"
+      "source": "./src/entries/layout.ts",
+      "default": "./dist/entries/layout.js"
     },
     "./marketing": {
       "types": "./src/entries/marketing.ts",
-      "default": "./src/entries/marketing.ts"
+      "source": "./src/entries/marketing.ts",
+      "default": "./dist/entries/marketing.js"
     },
     "./ambient": {
       "types": "./src/entries/ambient.ts",
-      "default": "./src/entries/ambient.ts"
+      "source": "./src/entries/ambient.ts",
+      "default": "./dist/entries/ambient.js"
     },
     "./bottom-sheet": {
       "types": "./src/entries/bottom-sheet.ts",
-      "default": "./src/entries/bottom-sheet.ts"
+      "source": "./src/entries/bottom-sheet.ts",
+      "default": "./dist/entries/bottom-sheet.js"
     },
     "./gesture-handler": {
       "types": "./src/entries/gesture-handler.ts",
-      "default": "./src/entries/gesture-handler.ts"
+      "source": "./src/entries/gesture-handler.ts",
+      "default": "./dist/entries/gesture-handler.js"
     },
     "./keyboard-controller": {
       "types": "./src/entries/keyboard-controller.ts",
-      "default": "./src/entries/keyboard-controller.ts"
+      "source": "./src/entries/keyboard-controller.ts",
+      "default": "./dist/entries/keyboard-controller.js"
     },
     "./video": {
       "types": "./src/entries/video.ts",
-      "default": "./src/entries/video.ts"
+      "source": "./src/entries/video.ts",
+      "default": "./dist/entries/video.js"
     },
     "./webview": {
       "types": "./src/entries/webview.ts",
-      "default": "./src/entries/webview.ts"
+      "source": "./src/entries/webview.ts",
+      "default": "./dist/entries/webview.js"
     },
     "./date-time": {
       "types": "./src/entries/date-time.ts",
-      "default": "./src/entries/date-time.ts"
+      "source": "./src/entries/date-time.ts",
+      "default": "./dist/entries/date-time.js"
     },
     "./ai": {
       "types": "./src/entries/ai.ts",
-      "default": "./src/entries/ai.ts"
+      "source": "./src/entries/ai.ts",
+      "default": "./dist/entries/ai.js"
     },
     "./gallery": {
       "types": "./src/examples/ParityGallery.tsx",
-      "default": "./src/examples/ParityGallery.tsx"
+      "source": "./src/examples/ParityGallery.tsx",
+      "default": "./dist/examples/ParityGallery.jsx"
     },
     "./ai-gallery": {
       "types": "./src/examples/AiChatGallery.tsx",
-      "default": "./src/examples/AiChatGallery.tsx"
+      "source": "./src/examples/AiChatGallery.tsx",
+      "default": "./dist/examples/AiChatGallery.jsx"
     },
     "./blur": {
       "types": "./src/blur.ts",
-      "default": "./src/blur.ts"
+      "source": "./src/blur.ts",
+      "default": "./dist/blur.js"
     },
     "./haptics": {
       "types": "./src/haptics.ts",
-      "default": "./src/haptics.ts"
+      "source": "./src/haptics.ts",
+      "default": "./dist/haptics.js"
     },
     "./push": {
       "types": "./src/push.ts",
-      "default": "./src/push.ts"
+      "source": "./src/push.ts",
+      "default": "./dist/push.js"
     },
     "./auth": {
       "types": "./src/entries/auth.ts",
-      "default": "./src/entries/auth.ts"
+      "source": "./src/entries/auth.ts",
+      "default": "./dist/entries/auth.js"
     },
     "./markdown": {
       "types": "./src/entries/markdown.ts",
-      "default": "./src/entries/markdown.ts"
+      "source": "./src/entries/markdown.ts",
+      "default": "./dist/entries/markdown.js"
     },
     "./expo-router": {
       "types": "./src/entries/expo-router.ts",
-      "default": "./src/entries/expo-router.ts"
+      "source": "./src/entries/expo-router.ts",
+      "default": "./dist/entries/expo-router.js"
     },
     "./expo-web-root": {
       "types": "./src/entries/expo-web-root.ts",
-      "default": "./src/entries/expo-web-root.ts"
+      "source": "./src/entries/expo-web-root.ts",
+      "default": "./dist/entries/expo-web-root.js"
     },
     "./tailwind-preset": {
       "types": "./src/tailwind-preset.d.cts",
@@ -143,18 +173,20 @@
   },
   "types": "./src/index.ts",
   "files": [
+    "dist",
     "src",
     "LICENSE"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "node scripts/check-exports.mjs && node -e \"require('node:fs').accessSync('src/index.ts')\"",
+    "build": "node scripts/build-dist.mjs && node scripts/check-exports.mjs",
     "check:exports": "node scripts/check-exports.mjs",
     "check:hermes": "node scripts/check-hermes-compat.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.typecheck.json && pnpm run typecheck:consumer",
     "typecheck:consumer": "tsc -p tsconfig.consumer.json",
-    "prepack": "node -e \"require('node:fs').accessSync('src/index.ts')\""
+    "prepack": "node -e \"require('node:fs').accessSync('dist/index.js')\"",
+    "build:baseline": "node scripts/build-dist.mjs --update"
   },
   "peerDependencies": {
     "@clerk/clerk-expo": "*",
@@ -260,8 +292,11 @@
     }
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.0",
     "@clerk/clerk-expo": "2.20.2",
     "@types/react": "^19.1.0",
+    "babel-plugin-react-compiler": "1.0.0",
     "react": "^19.1.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"

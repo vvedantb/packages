@@ -17,7 +17,8 @@
     "release:dry-run": "pnpm build && node scripts/release-dry-run.mjs",
     "ci:publish": "pnpm build && pnpm typecheck && pnpm check:guards && pnpm test && changeset publish",
     "agent": "node scripts/agent.mjs",
-    "test:scripts": "node --test \"scripts/*.test.mjs\" \"scripts/agent/*.test.mjs\" apps/native-gallery/tests/clock.test.mjs"
+    "test:scripts": "node --test \"scripts/*.test.mjs\" \"scripts/agent/*.test.mjs\" apps/native-gallery/tests/clock.test.mjs",
+    "ci:publish:next": "pnpm changeset version --snapshot next && pnpm build && pnpm typecheck && pnpm check:guards && pnpm test && changeset publish --tag next --no-git-tag"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
