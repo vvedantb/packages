@@ -1,5 +1,5 @@
 import { memo, useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, type ColorValue } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -134,7 +134,7 @@ type TabBarItemProps = {
   navigation: FloatingTabBarProps["navigation"];
   focused: boolean;
   label: string;
-  color: string;
+  color: ColorValue;
   largerText: boolean;
   renderIcon: FloatingTabOptions["tabBarIcon"];
   testID: string | undefined;
