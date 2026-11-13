@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.18.0
+
+### Minor Changes
+
+- [#210](https://github.com/vvedantb/packages/pull/210) [`f65ece1`](https://github.com/vvedantb/packages/commit/f65ece169d47efc136819249db93f8ef0e72a3ae) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Ships compiled code: `dist/` is built with React Compiler (target 19), so apps get memoised components without compiling `node_modules` (Expo never does). TypeScript is stripped; JSX stays JSX, so the app's NativeWind JSX transform still handles `className`. Types still come from `src`, and Tailwind still scans `src`. A `source` export condition serves `src` to dev tools that ask for it (the gallery dev server). Eight components the compiler skips (Rules of React breaks) ship unmemoised, as before; `compiler-baseline.json` lists them and a new skip fails the build.
+
+### Patch Changes
+
+- [#205](https://github.com/vvedantb/packages/pull/205) [`ea24f3d`](https://github.com/vvedantb/packages/commit/ea24f3d2c16404c7308d578f8f1aa6c89e4ae78a) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - DropdownMenu rows and the labelled Conversation scroll pill keep their layout on Android: the layout moved from a function `style` (which NativeWind drops on a native `Pressable`) to a plain style object, and the press state now draws from the `pressed` render state.
+
+- [#202](https://github.com/vvedantb/packages/pull/202) [`086bd47`](https://github.com/vvedantb/packages/commit/086bd47e23d853436baf770900d40635b13c4b80) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SwipeableRow` (with `GestureHandlerProvider`) mounts its action strips on the row's first touch, not with the row. A list of swipe rows no longer mounts every row's hidden buttons and icons up front (the Eva Inbox: 2 strips on each of up to 100 rows). The strips are invisible until the row moves, and a touch lands a few frames before a swipe can move it, so nothing changes on screen.
+
+- [#206](https://github.com/vvedantb/packages/pull/206) [`d11992f`](https://github.com/vvedantb/packages/commit/d11992f08f8d909169a526e24f8eca2892470dce) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Faster tab switches: `FloatingTabBar` tabs are memoised, so a switch re-renders only the two tabs whose focus changed; the glass blur target lives in a small external store, so handing it from one tab to the next re-renders only the subscribed glass instead of propagating a context change through every mounted tab.
+
+- [#207](https://github.com/vvedantb/packages/pull/207) [`395a301`](https://github.com/vvedantb/packages/commit/395a301e9201fceae77b28d108d9cecb30e53378) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `FloatingTabBar`: the memoised tab takes its colour as `ColorValue`, as the tab colours are typed, so apps on stricter React Native types type-check.
+
 ## 0.17.2
 
 ### Patch Changes
