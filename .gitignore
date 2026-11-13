@@ -13,3 +13,9 @@ packages/*/preview-harness/
 apps/native-gallery/android/
 apps/native-gallery/ios/
 apps/native-gallery/.expo/
+
+# Android sideload signing keys
+keystore.properties
+*.jks
+*.keystore
+*.p12

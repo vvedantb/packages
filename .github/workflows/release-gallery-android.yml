@@ -1,0 +1,67 @@
+name: Release gallery Android APK
+
+# Builds the signed Native UI Gallery sideload APK (apps/native-gallery) and
+# publishes it as a GitHub Release tagged native-gallery-apk-<versionName>.
+# V Store lists it from those releases (its catalog entry sets the same tag
+# prefix). The tag prefix keeps these apart from the npm package tags that
+# the Release workflow makes. See apps/native-gallery/RELEASE.md.
+on:
+  push:
+    branches: [main]
+    # Files that reach the APK: the gallery and the native-ui source it bundles.
+    paths:
+      - "apps/native-gallery/**"
+      - "!apps/native-gallery/**/*.md"
+      - "!apps/native-gallery/.maestro/**"
+      - "!apps/native-gallery/e2e/**"
+      - "!apps/native-gallery/tests/**"
+      - "packages/native-ui/src/**"
+      - "packages/native-ui/package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/release-gallery-android.yml"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "versionName, like 1.0.1. Empty bumps the patch of the highest published release.json versionName."
+        required: false
+        type: string
+      dry_run:
+        description: "Build and sign the APK, but publish nothing."
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# One release at a time: the version is chosen inside the job.
+concurrency:
+  group: release-gallery-android
+  cancel-in-progress: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/release-android-apk.yml
+    with:
+      app_name: native-gallery
+      release_title: Native UI Gallery
+      apk_basename: native-gallery
+      app_dir: apps/native-gallery
+      package_id: dev.vvedantb.nativegallery
+      # The versionName floor is expo.version in app.json.
+      version_name_source: app_json
+      app_json_path: apps/native-gallery/app.json
+      tag_prefix: native-gallery-apk-
+      build_script: apps/native-gallery/scripts/build-android-release.sh
+      # Generated notes only.
+      release_notes_path: ""
+      # The same JDK as the gallery's e2e build (native-ui-gallery.yml).
+      java_version: "17"
+      # Never the repository's "latest" release: that belongs to the packages.
+      mark_as_latest: false
+      # The paths filter above decides; every matching push is a release.
+      release_on: always
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run == true }}
+      upload_dry_run_artifact: true # artifact native-gallery-android-dry-run
+    secrets: inherit
