@@ -199,6 +199,8 @@ vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/haptics", () => ({ selectionHaptic: haptic }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
+vi.mock("../src/Input", () => ({ Input: "DraftInput" }));
+vi.mock("../src/Textarea", () => ({ Textarea: "DraftTextarea" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -335,6 +337,108 @@ describe("ToolDraftCard", () => {
   });
 });
 
+describe("ToolApprovalCard chrome", () => {
+  async function chrome(extra: Record<string, unknown> = {}, draft = false) {
+    const mod = await import("../src/ai/tool-approval-card");
+    const Card = draft ? mod.ToolDraftCard : mod.ToolApprovalCard;
+    return unwrap(Card({ toolName: "send_email", ...extra } as never) as unknown as Element);
+  }
+  const text = (tree: Element, id: string) => find(tree, (e) => e.props.testID === id)?.props.children;
+
+  it("shows server, routine, expiry and target when set", async () => {
+    const tree = await chrome({ server: "mail", routineMode: true, expiresLabel: "tomorrow", target: "Inbox" });
+    expect(text(tree, "tool-approval-card-meta")).toBe("via mail · queued while you were away · Expires tomorrow");
+    expect(text(tree, "tool-approval-card-target")).toBe("Target: Inbox");
+  });
+
+  it("falls back to built-in tool when only expiry is set", async () => {
+    expect(text(await chrome({ expiresLabel: "soon" }), "tool-approval-card-meta")).toBe("built-in tool · Expires soon");
+  });
+
+  it("shows no meta or target when omitted", async () => {
+    const tree = await chrome();
+    expect(find(tree, (e) => e.props.testID === "tool-approval-card-meta")).toBeUndefined();
+    expect(find(tree, (e) => e.props.testID === "tool-approval-card-target")).toBeUndefined();
+  });
+
+  it("lets meta replace the default line and chrome add content", async () => {
+    const meta = { type: "Custom", props: { testID: "my-meta" } };
+    const extra = { type: "Extra", props: { testID: "my-chrome" } };
+    const tree = await chrome({ server: "mail", meta, chrome: extra });
+    expect(find(tree, (e) => e.props.testID === "my-meta")).toBeDefined();
+    expect(find(tree, (e) => e.props.testID === "my-chrome")).toBeDefined();
+    expect(find(tree, (e) => e.props.testID === "tool-approval-card-meta")).toBeUndefined();
+  });
+
+  it("adds the send note to the draft meta only", async () => {
+    expect(text(await chrome({ server: "mail" }, true), "tool-draft-card-meta")).toBe(
+      "via mail · Nothing is sent until you press Send",
+    );
+  });
+});
+
+describe("changedDraftEdits", () => {
+  it("returns only fields whose value changed", async () => {
+    const { changedDraftEdits } = await import("../src/ai/tool-approval-card");
+    const fields = [
+      { key: "a", role: "to", value: "x" },
+      { key: "b", role: "subject", value: "y" },
+      { key: "c", role: "body", value: "z" },
+    ] as const;
+    const values: Record<string, string> = { a: "x", b: "new" };
+    expect(changedDraftEdits(fields, (key) => values[key])).toEqual([{ key: "b", value: "new" }]);
+    expect(changedDraftEdits(fields, () => undefined)).toEqual([]);
+  });
+});
+
+describe("ToolDraftCard fields", () => {
+  const fields = [
+    { key: "to", role: "to", value: "a@example.com" },
+    { key: "subject", role: "subject", value: "Plan" },
+    { key: "body", role: "body", value: "Hello" },
+  ];
+  async function mountDraft() {
+    const { ToolDraftCard } = await import("../src/ai/tool-approval-card");
+    const onDecide = vi.fn();
+    const view = hooks.mount(() => {
+      const el = ToolDraftCard({ toolName: "send_email", fields, onDecide } as never) as unknown as Element;
+      return (el.type as (p: unknown) => unknown)(el.props);
+    });
+    const tree = () => view.tree as Element;
+    const btn = (id: string) => unwrap(find(tree(), (e) => e.props.testID === id)!);
+    return { onDecide, tree, btn };
+  }
+
+  it("previews header fields and body by default", async () => {
+    const { tree } = await mountDraft();
+    const texts = byType(tree(), "Text").map((t) => t.props.children);
+    expect(texts).toEqual(expect.arrayContaining(["To", "a@example.com", "Subject", "Plan", "Hello"]));
+    expect(find(tree(), (e) => e.props.testID === "tool-draft-card-editor")).toBeUndefined();
+  });
+
+  it("opens inputs on Edit, sends only changed fields, and does not emit edit", async () => {
+    const { onDecide, tree, btn } = await mountDraft();
+    press(btn("tool-draft-card-edit"), "onPress");
+    expect(onDecide).not.toHaveBeenCalled();
+    expect(byType(tree(), "DraftInput")).toHaveLength(2);
+    expect(byType(tree(), "DraftTextarea")).toHaveLength(1);
+    (find(tree(), (e) => e.props.testID === "tool-draft-card-field-subject")!.props.onChangeText as (v: string) => void)("New plan");
+    press(btn("tool-draft-card-approve"), "onPress");
+    expect(onDecide).toHaveBeenCalledWith("approve", [{ key: "subject", value: "New plan" }]);
+  });
+
+  it("restores the preview on Cancel edit and approves without edits", async () => {
+    const { onDecide, tree, btn } = await mountDraft();
+    press(btn("tool-draft-card-edit"), "onPress");
+    expect(btn("tool-draft-card-edit").props.accessibilityLabel).toBe("Cancel edit send_email");
+    press(btn("tool-draft-card-edit"), "onPress");
+    expect(find(tree(), (e) => e.props.testID === "tool-draft-card-preview")).toBeDefined();
+    expect(byType(tree(), "DraftInput")).toHaveLength(0);
+    press(btn("tool-draft-card-approve"), "onPress");
+    expect(onDecide).toHaveBeenCalledWith("approve");
+  });
+});
+
 describe("SubagentRunCard", () => {
   async function run(props: Record<string, unknown> = {}) {
     const { SubagentRunCard } = await import("../src/ai/subagent-cards");
@@ -372,6 +476,37 @@ describe("SubagentRunCard", () => {
     expect(subagentStatusColors("done", "light").color).toBe(palette.success.light);
   });
 
+  it("handles queued and timed_out", async () => {
+    const { render, onCancel } = await run();
+    const { subagentStatusColors } = await import("../src/ai/subagent-cards");
+    expect(named(render({ status: "queued" }), "subagent-run-card-status")!.props.accessibilityLabel).toBe("Status: Queued");
+    expect(named(render({ status: "timed_out" }), "subagent-run-card-status")!.props.accessibilityLabel).toBe("Status: Timed out");
+    expect(subagentStatusColors("queued", "light").color).toBe(palette.primary.light);
+    expect(subagentStatusColors("timed_out", "light").color).toBe(palette.danger.light);
+    press(named(render({ status: "queued" }), "subagent-run-card-cancel"), "onPress");
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows status line, error, avatar and the active spinner", async () => {
+    const { render } = await run();
+    const avatar = { type: "Avatar", props: { testID: "av" } };
+    const done = render({ status: "done", statusLine: "Step 3 of 3", error: "Boom", avatar });
+    expect(named(done, "subagent-run-card-status-line")!.props.children).toBe("Step 3 of 3");
+    const err = named(done, "subagent-run-card-error")!;
+    expect(err.props.children).toBe("Boom");
+    expect(flatten(err.props.style).color).toBe(palette.danger.light);
+    expect(find(done, (e) => e.props.testID === "av")).toBeDefined();
+    expect(byType(done, "Spinner")).toHaveLength(0);
+    for (const status of ["queued", "running"]) {
+      const active = render({ status, avatar });
+      expect(byType(active, "Spinner")).toHaveLength(1);
+      expect(find(active, (e) => e.props.testID === "av")).toBeUndefined();
+    }
+    const plain = render({ status: "done" });
+    expect(byType(plain, "IconRobot")).toHaveLength(1);
+    expect(named(plain, "subagent-run-card-error")).toBeUndefined();
+  });
+
   it("omits elapsed when unknown", async () => {
     expect(named((await run()).render({ elapsedSeconds: undefined }), "subagent-run-card-elapsed")).toBeUndefined();
   });
@@ -387,6 +522,29 @@ describe("SubagentResultCard", () => {
     const trigger = parts.find((e) => e.type === CollapsibleTrigger)!;
     expect(trigger.props).toMatchObject({ testID: "subagent-result-card-trigger", accessibilityLabel: "Details for Research" });
     expect(parts.find((e) => e.type === CollapsibleContent)!.props.testID).toBe("subagent-result-card-detail");
+  });
+
+  it("shows approval pending and handoffs", async () => {
+    const { SubagentResultCard } = await import("../src/ai/subagent-cards");
+    const tree = SubagentResultCard({
+      title: "Research",
+      summary: "Done",
+      approvalPending: true,
+      approvalPendingIn: "Planner",
+      handoffs: [{ toolName: "create_task", server: "tasks", argsSummary: "{}" }, { toolName: "note", argsSummary: "x" }],
+    } as never) as unknown as Element;
+    const pending = find(tree, (e) => e.props.testID === "subagent-result-card-approval-pending")!;
+    expect(pending.props.children).toBe("Approval pending in Planner's chat.");
+    expect(flatten(pending.props.style).color).toBe(palette.warning.light);
+    expect(find(tree, (e) => e.props.testID === "subagent-result-card-handoff-0")!.props.children).toBe("create_task via tasks: {}");
+    expect(find(tree, (e) => e.props.testID === "subagent-result-card-handoff-1")!.props.children).toBe("note: x");
+    const fallback = SubagentResultCard({ title: "R", summary: "S", approvalPending: true } as never) as unknown as Element;
+    expect(find(fallback, (e) => e.props.testID === "subagent-result-card-approval-pending")!.props.children).toBe(
+      "Approval pending in the other bot's chat.",
+    );
+    const avatar = { type: "Avatar", props: { testID: "av" } };
+    const withAvatar = SubagentResultCard({ title: "R", summary: "S", avatar } as never) as unknown as Element;
+    expect(find(withAvatar, (e) => e.props.testID === "av")).toBeDefined();
   });
 
   it("has no fold without detail", async () => {
