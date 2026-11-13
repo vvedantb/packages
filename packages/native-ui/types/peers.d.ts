@@ -980,22 +980,38 @@ declare module "@gorhom/bottom-sheet" {
       opacity?: number;
     }
   >;
-  export class BottomSheetModal extends React.Component<{
+  interface BottomSheetBaseProps {
     children?: React.ReactNode;
+    snapPoints?: Array<string | number>;
+    enableDynamicSizing?: boolean;
     backdropComponent?: (props: BottomSheetDefaultBackdropProps) => React.ReactNode;
     backgroundComponent?: React.ComponentType<{
       style?: ViewProps["style"];
       pointerEvents?: ViewProps["pointerEvents"];
     }>;
     handleIndicatorStyle?: ViewProps["style"];
-    onDismiss?: () => void;
     enableContentPanningGesture?: boolean;
     enableHandlePanningGesture?: boolean;
     keyboardBehavior?: "extend" | "fillParent" | "interactive";
-  }> {
+  }
+  export class BottomSheetModal extends React.Component<
+    BottomSheetBaseProps & { onDismiss?: () => void }
+  > {
     present(): void;
     dismiss(): void;
   }
+  /** The default export is the controlled sheet. There is no named `BottomSheet` export at runtime. */
+  declare class BottomSheet extends React.Component<
+    BottomSheetBaseProps & {
+      index?: number;
+      onClose?: () => void;
+      enablePanDownToClose?: boolean;
+    }
+  > {
+    snapToIndex(index: number): void;
+    close(): void;
+  }
+  export default BottomSheet;
   export const BottomSheetView: React.ComponentType<ViewProps>;
 }
 
@@ -1181,6 +1197,13 @@ declare module "@rn-primitives/select" {
   export const Separator: Ref<ViewProps>;
   export const ScrollUpButton: Ref<ViewProps>;
   export const ScrollDownButton: Ref<ViewProps>;
+  /** Root open/position context, used by `SelectHost` to close on Android back. */
+  export function useRootContext(): {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    setTriggerPosition: (position: unknown) => void;
+    setContentLayout: (layout: unknown) => void;
+  };
 }
 
 declare module "clsx" {

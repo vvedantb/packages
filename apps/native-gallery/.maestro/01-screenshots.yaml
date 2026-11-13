@@ -1,0 +1,48 @@
+# Screenshots of the key screens. CI uploads `screenshots/` as an artifact.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: home
+- takeScreenshot: screenshots/home
+
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- assertVisible:
+    id: layering-tab-bar
+- assertVisible: "Home"
+- takeScreenshot: screenshots/layering
+- pressKey: back
+
+- scrollUntilVisible:
+    element:
+      id: link-keyboard
+- tapOn:
+    id: link-keyboard
+- assertVisible:
+    id: composer-input
+- takeScreenshot: screenshots/keyboard
+- pressKey: back
+
+- scrollUntilVisible:
+    element:
+      id: link-auth
+- tapOn:
+    id: link-auth
+- assertVisible:
+    id: sign-in-submit
+- takeScreenshot: screenshots/auth-mock
+- pressKey: back
+
+- scrollUntilVisible:
+    element:
+      id: link-ai
+- tapOn:
+    id: link-ai
+- assertVisible:
+    id: screen-ai
+- takeScreenshot: screenshots/ai

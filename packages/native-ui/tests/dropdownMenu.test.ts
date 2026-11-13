@@ -186,7 +186,7 @@ describe("DropdownMenu parts", () => {
     expect(tree.type).toBe("Pressable");
     expect(tree.props.accessibilityRole).toBe("menuitem");
     const style = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
-    expect(style).toMatchObject({ minHeight: 48, paddingLeft: 10, paddingRight: 10, paddingVertical: 8, borderRadius: 8, gap: 8, backgroundColor: "transparent" });
+    expect(style).toMatchObject({ minHeight: 48, paddingLeft: 10, paddingRight: 10, paddingVertical: 12, borderRadius: 8, gap: 8, backgroundColor: "transparent" });
     const pressed = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: true });
     expect(pressed.backgroundColor).toBe(palette.default.light);
     const icon = elements(tree).find((element) => element.type === "IconPencil")!;
@@ -241,6 +241,27 @@ describe("DropdownMenu parts", () => {
     expect(haptics.selectionHaptic).not.toHaveBeenCalled();
     (off.props.onPress as () => void)();
     expect(haptics.selectionHaptic).toHaveBeenCalledOnce();
+  });
+
+  it("keeps room above and below the label, and a 48 point row (56 with larger text)", async () => {
+    const { DROPDOWN_MENU, DropdownMenuItem, DropdownMenuRadioItem } = await import("../src/DropdownMenu");
+    // 12 each side: a 20 high `text-sm` line plus 24 is 44, under the 48 `minHeight` of a phone menu row.
+    expect(DROPDOWN_MENU.itemPaddingY).toBeGreaterThanOrEqual(12);
+    for (const larger of [false, true]) {
+      menu.larger = larger;
+      context(true);
+      for (const row of [
+        render(DropdownMenuItem({ children: "Rename" })) as Element,
+        render(DropdownMenuRadioItem({ children: "Newest", checked: false })) as Element,
+      ]) {
+        const style = (row.props.style as (state: { pressed: boolean }) => Record<string, number>)({ pressed: false });
+        expect(style.minHeight).toBe(larger ? 56 : 48);
+        expect(style.paddingVertical).toBe(DROPDOWN_MENU.itemPaddingY);
+        // The row height is the larger of `minHeight` and padding plus one line.
+        expect(Math.max(style.minHeight!, style.paddingVertical! * 2 + (larger ? 28 : 20))).toBeGreaterThanOrEqual(44);
+      }
+    }
+    menu.larger = false;
   });
 
   it("steps up with larger text", async () => {

@@ -1,0 +1,29 @@
+# A dropdown opened over the tab bar, and a tap on an item.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- assertVisible:
+    id: layering-tab-bar
+- assertVisible: "Home"
+- tapOn:
+    id: dd-trigger
+- assertVisible:
+    id: dd-item-rename
+- takeScreenshot: screenshots/layering-dropdown-open
+# The radio row keeps the menu closed after a pick, and the result shows.
+- tapOn:
+    id: dd-radio-oldest
+- assertVisible: "Sort: oldest"
+- tapOn:
+    id: dd-trigger
+- tapOn:
+    id: dd-item-rename
+- assertVisible: "Result: rename"
+- assertNotVisible:
+    id: dd-item-rename

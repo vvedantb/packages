@@ -1,0 +1,54 @@
+# The layout and AI cards sections mount the list rows, pager, media, video,
+# HTML view, diff and prompt menu parts. Opening each section proves they render
+# on a device; the taps prove the pager and the prompt menu respond.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: home
+
+- scrollUntilVisible:
+    element:
+      id: link-layout
+- tapOn:
+    id: link-layout
+- assertVisible:
+    id: section-layout
+- scrollUntilVisible:
+    element:
+      id: surface-row
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      id: pager-next
+    timeout: 60000
+- assertVisible: "Page 1 of 3: Chats"
+- tapOn:
+    id: pager-next
+- assertVisible: "Page 2 of 3: Files"
+- takeScreenshot: screenshots/layout-rows-and-pager
+- scrollUntilVisible:
+    element:
+      id: image-viewer-open
+    timeout: 60000
+- takeScreenshot: screenshots/layout-media
+- pressKey: back
+
+- scrollUntilVisible:
+    element:
+      id: link-ai-cards
+- tapOn:
+    id: link-ai-cards
+- assertVisible:
+    id: section-ai-cards
+- scrollUntilVisible:
+    element:
+      id: prompt-menu-summarise
+    timeout: 60000
+- tapOn:
+    id: prompt-menu-summarise
+- scrollUntilVisible:
+    element: "Command: summarise"
+    timeout: 60000
+- takeScreenshot: screenshots/ai-cards-diff-and-menu

@@ -5,7 +5,7 @@ Shared packages for vvedantb apps. Four public npm packages.
 | Package | Version | What it is |
 | --- | --- | --- |
 | `@vvedantb/ui` | `0.30.0` | Shared React 19 web UI from one main JavaScript entry (`.`, also `./brand` for the app marks and `./client`, the root without `@vvedantb/server`, convex or Clerk, for Chrome extensions): primitives, AI elements, audio, `toast` and `SonnerToaster`, the composer, the app shell, app helpers (confirm skip, update watcher, settings chrome, stable Clerk auth, theme provider, page title context, page motion provider, compact relative time, `ConvexClerkProvider`, `parseClientEnv`, `useEnsureUser`), marketing pieces (landing kit, site footer, pricing dialog), animated nav icons, family app marks (`AppMark` and raw SVG strings), artifact viewers (`ArtifactFrame` state bridge, card, list, toolbar, viewer, versions menu) and the native tokens. CSS subpaths: `./tokens`, `./tokens/css/*.css`, `./landing.css` and `./fonts/instrument-sans.css` (packaged Instrument Sans for extension pages); plus the `./tokens/tailwind-preset` build-tool entry. Source-exported. |
-| `@vvedantb/native-ui` | `0.9.0` | React Native + Expo primitives (floating surfaces, forms, dialogs, sheets, toasts, tabs, tab bar, settings chrome), the family app marks and the upgrade card and pricing sheet, plus `./push` (`useExpoPushRegistration`, `getExpoPushToken`). Source-exported. Has no dependency on `@vvedantb/ui`; it carries tested copies of the JS tokens and brand data. Parity with `@vvedantb/ui`: [docs/native-ui-parity.md](docs/native-ui-parity.md). |
+| `@vvedantb/native-ui` | `0.13.0` | React Native + Expo primitives (floating surfaces, forms, dialogs, sheets, toasts, tabs, tab bar, settings chrome), the family app marks and the upgrade card and pricing sheet, plus `./push` (`useExpoPushRegistration`, `getExpoPushToken`). Source-exported. Has no dependency on `@vvedantb/ui`; it carries tested copies of the JS tokens and brand data. Parity with `@vvedantb/ui`: [docs/native-ui-parity.md](docs/native-ui-parity.md). |
 | `@vvedantb/server` | `0.14.0` | Convex backend helpers, Convex optimistic updates and Node-side MCP client OAuth from one root export (`.`), plus Vercel AI Gateway helpers on `./ai` (service tier options, cost, error classification): query-limit errors, Clerk auth and token verification, an MCP bearer-token cache, Expo push helpers (token table, `register`, batched send, receipts, `schedulePush`), Clerk-user lookups and `ensureUser`, V Pro plan checks and Clerk Billing webhook helpers, bearer tokens, env, CORS, `jsonResponse`, MCP server scaffolding (`serverInfo` with optional title, website URL and icons) and route registration for Convex `httpAction`s, WebCrypto primitives, optimistic-update helpers (`mapLoadedQuery`, `patchLoadedQuery`, `tempId`, an in-memory store for tests) and MCP client OAuth for desktop apps (provider, sign-in, refresh, revocation, loopback redirect server; Node built-ins and the MCP SDK load on first use, so Convex V8 bundles stay clean), a QuickJS code sandbox, and a pure artifacts core (Zod contract, state ops, quiz and flashcards pages, sandboxed document wrapper). Compiled. |
 | `@vvedantb/config` | `0.4.0` | Root JS export plus JSON tsconfig and oxlint bases, Vite, Vitest, Babel and Metro presets, pinned tool versions, the `vvedantb-config sync` CLI, the `vvedantb-check-asar` packaged-app check and the `vvedantb-clerk-allow` CLI. `./extension` has the WXT preset and host-permission helper for Chrome extensions. Compiled. |
 
@@ -471,6 +471,16 @@ pnpm typecheck
 `pnpm --filter @vvedantb/ui verify` is not part of `pnpm test`: it needs the five app clones (`APPS_DIR`) and network access to install Tailwind into a scratch directory (`VERIFY_DIR`). It builds each app's CSS before and after its migration and fails on any difference. Results: `packages/ui/tokens/verify/RESULTS.md`.
 
 `pnpm typecheck` runs each package's `typecheck` script.
+
+### Native UI gallery
+
+`apps/native-gallery` is an Expo app that renders every `@vvedantb/native-ui` component, with a layering stress screen and a keyboard screen. Maestro flows live in `apps/native-gallery/.maestro/`, and the `native-ui-gallery-android` workflow runs them on an emulator for pull requests that touch `packages/native-ui` or the gallery. Every new or changed native-ui component needs a gallery entry, a Maestro flow and a hand test on an Android emulator: see [AGENTS.md](AGENTS.md).
+
+```sh
+pnpm install
+pnpm --filter native-gallery start
+# or cd apps/native-gallery && npx expo start
+```
 
 ## Publish
 

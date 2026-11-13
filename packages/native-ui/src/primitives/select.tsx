@@ -5,21 +5,20 @@ import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react-n
 import * as React from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
-import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
 import { NativeOnlyAnimatedView } from "./native-only-animated-view";
+import { SelectHost } from "./select-host";
 import { TextClassContext } from "./text";
 import { LiquidGlass } from "../LiquidGlass";
 import { cn } from "../cn";
 import { textStyle, typeStyle } from "../controlStyles";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
+import { useLargerText } from "../theme";
 
 type Option = SelectPrimitive.Option;
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
-const FullWindowOverlay =
-  Platform.OS === "ios" ? RNFullWindowOverlay : React.Fragment;
 
 type SelectValueProps = React.ComponentPropsWithoutRef<
   typeof SelectPrimitive.Value
@@ -85,48 +84,60 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   SelectContentProps
 >(({ className, children, position = "popper", portalHost, ...props }, ref) => {
+  const overlayFill = Platform.select({ native: StyleSheet.absoluteFill });
+  const content = (
+    <SelectPrimitive.Overlay style={overlayFill}>
+      <TextClassContext.Provider value="text-popover-foreground">
+        <NativeOnlyAnimatedView
+          entering={FadeIn}
+          exiting={FadeOut}
+          className="z-50"
+          // Content is absolutely positioned, so a bare wrapper has zero height
+          // and UI tests drop its children as invisible. Fill the overlay and
+          // let touches fall through to it.
+          style={overlayFill}
+          pointerEvents={Platform.select({ native: "box-none" })}
+        >
+          <SelectPrimitive.Content
+            ref={ref}
+            position={position}
+            className={cn(
+              "z-50 min-w-[8rem] rounded-lg",
+              Platform.select({
+                native: "p-1",
+                web: "max-h-52 overflow-hidden",
+              }),
+              className,
+            )}
+            {...props}
+          >
+            <LiquidGlass
+              pointerEvents="none"
+              elevated={false}
+              className="absolute inset-0 rounded-lg"
+            />
+            <SelectScrollUpButton />
+            <SelectPrimitive.Viewport
+              className={cn("p-1", position === "popper" && "w-full")}
+            >
+              {children}
+            </SelectPrimitive.Viewport>
+            <SelectScrollDownButton />
+          </SelectPrimitive.Content>
+        </NativeOnlyAnimatedView>
+      </TextClassContext.Provider>
+    </SelectPrimitive.Overlay>
+  );
+
+  // Android: no Portal. A Modal inside a portal mounts empty, so `SelectHost`
+  // renders the Modal directly and gates it on `open`. iOS and web keep the
+  // Portal; `SelectHost` adds the full-window layer on iOS.
+  if (Platform.OS === "android") {
+    return <SelectHost>{content}</SelectHost>;
+  }
   return (
     <SelectPrimitive.Portal hostName={portalHost}>
-      <FullWindowOverlay>
-        <SelectPrimitive.Overlay
-          style={Platform.select({ native: StyleSheet.absoluteFill })}
-        >
-          <TextClassContext.Provider value="text-popover-foreground">
-            <NativeOnlyAnimatedView
-              entering={FadeIn}
-              exiting={FadeOut}
-              className="z-50"
-            >
-              <SelectPrimitive.Content
-                ref={ref}
-                position={position}
-                className={cn(
-                  "z-50 min-w-[8rem] rounded-lg",
-                  Platform.select({
-                    native: "p-1",
-                    web: "max-h-52 overflow-hidden",
-                  }),
-                  className,
-                )}
-                {...props}
-              >
-                <LiquidGlass
-                  pointerEvents="none"
-                  elevated={false}
-                  className="absolute inset-0 rounded-lg"
-                />
-                <SelectScrollUpButton />
-                <SelectPrimitive.Viewport
-                  className={cn("p-1", position === "popper" && "w-full")}
-                >
-                  {children}
-                </SelectPrimitive.Viewport>
-                <SelectScrollDownButton />
-              </SelectPrimitive.Content>
-            </NativeOnlyAnimatedView>
-          </TextClassContext.Provider>
-        </SelectPrimitive.Overlay>
-      </FullWindowOverlay>
+      <SelectHost>{content}</SelectHost>
     </SelectPrimitive.Portal>
   );
 });
@@ -166,12 +177,15 @@ const SelectItem = React.forwardRef<
   SelectItemProps
 >(({ className, disabled, ...props }, ref) => {
   const scheme = useScheme();
+  const largerText = useLargerText();
   return (
     <SelectPrimitive.Item
       ref={ref}
       disabled={disabled}
       className={cn(
-        "relative flex-row items-center gap-2 rounded-sm py-3 pl-2 pr-8 active:opacity-70",
+        // 44 high (56 with larger text) so a row is a full touch target.
+        "relative min-h-[44px] flex-row items-center gap-2 rounded-sm py-3 pl-2 pr-8 active:opacity-70",
+        largerText && "min-h-[56px]",
         disabled && "opacity-50",
         className,
       )}

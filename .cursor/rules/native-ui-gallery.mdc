@@ -1,0 +1,9 @@
+---
+description: Gallery, Maestro flow and emulator check for every native-ui component change
+globs: packages/native-ui/**
+alwaysApply: false
+---
+
+Every new or changed `@vvedantb/native-ui` component must be added to the Expo gallery (`apps/native-gallery`) with a Maestro flow covering the change, and must be tested by hand on an Android emulator before merging.
+
+Details are in `AGENTS.md`: gallery section, `galleryRegistry.ts` entry, Maestro flow under `apps/native-gallery/.maestro/`, and the `native-ui-gallery-android` CI job.

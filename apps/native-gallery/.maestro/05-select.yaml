@@ -1,0 +1,20 @@
+# A select opened over the tab bar glass, and an option picked.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- assertVisible: "Select: undefined"
+- tapOn:
+    id: layer-select
+- assertVisible:
+    id: layer-select-pink
+- takeScreenshot: screenshots/layering-select-open
+- tapOn:
+    id: layer-select-pink
+- assertVisible: "Select: pink"
+- assertVisible: "Result: select pink"

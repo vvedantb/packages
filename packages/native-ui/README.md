@@ -59,6 +59,20 @@ To hide a tab, give its screen Expo Router's `href: null`. From 0.3.9 `FloatingT
 
 From 0.3.16 the focused tab sits on a rounded pill with the `TabsTrigger` pills outline, with the foreground label and icon; the other tabs are muted. From 0.3.17 the pill fill is `floatingTabPillColors(scheme)`: the muted `palette.default` (`--default`, `#ebebeb`) in light, so it shows on the near-white glass bar, and `palette.tabBarPill` (`#474747`, the kit `--segment`) in dark. `palette.tabBarPill` is its own key, so an app that themes `segment` (the segmented `Tabs` thumb) keeps a pill that shows on the dark glass bar. On the web the `--segment` pill sits on a `--default` track; here the bar is the raised surface, so the light pill takes the track fill. A route's `tabBarActiveTintColor` and `tabBarInactiveTintColor` still override the label and icon colours. The pill is one tab wide, inset 4 from the bar on every side, and slides to a newly focused tab over the web `--tabs-dur` (200 ms) and `--tabs-ease`. It counts only the tabs drawn, and there is none while a hidden route is focused.
 
+## Gallery, Maestro and CI
+
+`apps/native-gallery` (at the repository root) is an Expo SDK 57 app that renders every component from every entry point, with a layering stress screen (a tab bar over glass, with dropdowns, selects, sheets, dialogs and toasts over it) and a keyboard screen (`PromptInput`, inline and stacked). Clerk is mocked there, so it needs no keys. Run it:
+
+```sh
+pnpm install
+pnpm --filter native-gallery start
+# or cd apps/native-gallery && npx expo start
+```
+
+`tests/galleryRegistry.test.ts` fails when a React component export has no entry in `apps/native-gallery/src/galleryRegistry.ts`. Maestro flows in `apps/native-gallery/.maestro/` drive the dropdown, composer, sheets and select. The `native-ui-gallery-android` GitHub Actions job builds the gallery, boots an API 34 emulator and runs them for pull requests that touch this package or the gallery. A new or changed component needs a gallery entry, a Maestro flow and a hand test on an Android emulator.
+
+The `Select` note stays: mount one `<PortalHost />` from `@rn-primitives/portal` at the app root, outside any `Modal`. The gallery does so in `app/_layout.tsx`.
+
 ## Entry points
 
 The root entry exports everything. It still imports `BottomSheetContainer` and `DateTimeField`, so Metro resolves `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs` for any import from it. Apps without those peers, such as V Store, should import from the smaller entries below. Between them, they export every name the root exports.
