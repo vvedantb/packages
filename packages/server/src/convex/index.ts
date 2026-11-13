@@ -1,4 +1,11 @@
 export { clerkAuthConfig, type ClerkAuthConfigEnv } from "./authConfig.js";
+export {
+  createAuthFunctions,
+  type AuthCustomFunctions,
+  type AuthFunctions,
+  type AuthReadCtx,
+  type CreateAuthFunctionsConfig,
+} from "./authFunctions.js";
 export { extractBearerToken } from "./bearerToken.js";
 export { getClerkClient, type ClerkClientEnv } from "./clerk.js";
 export {
@@ -42,6 +49,18 @@ export {
   mcpCorsHeaders,
   type JsonWithCorsInit,
 } from "./cors.js";
+export {
+  convexSiteToCloudUrl,
+  createConvexAdminClient,
+  parseConvexApiResponse,
+  type ConvexAdminClient,
+  type ConvexAdminClientConfig,
+  type ConvexJsonValue,
+  type ConvexTableInfo,
+  type ConvexTestFunctionResult,
+  type ListTablesOptions,
+  type RunTestFunctionOptions,
+} from "./convexAdminClient.js";
 export {
   formatConvexQueryError,
   isConvexResourceLimitError,
