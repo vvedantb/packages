@@ -14,8 +14,10 @@ import * as dateTime from "@vvedantb/native-ui/date-time";
 import * as expoRouter from "@vvedantb/native-ui/expo-router";
 import * as expoWebRoot from "@vvedantb/native-ui/expo-web-root";
 import * as floating from "@vvedantb/native-ui/floating";
+import * as gestureHandler from "@vvedantb/native-ui/gesture-handler";
 import * as gallery from "@vvedantb/native-ui/gallery";
 import * as haptics from "@vvedantb/native-ui/haptics";
+import * as keyboardController from "@vvedantb/native-ui/keyboard-controller";
 import * as layout from "@vvedantb/native-ui/layout";
 import * as markdown from "@vvedantb/native-ui/markdown";
 import * as marketing from "@vvedantb/native-ui/marketing";
@@ -27,6 +29,8 @@ import * as searchInput from "@vvedantb/native-ui/search-input";
 import * as tabBar from "@vvedantb/native-ui/tab-bar";
 import * as theme from "@vvedantb/native-ui/theme";
 import * as toast from "@vvedantb/native-ui/toast";
+import * as video from "@vvedantb/native-ui/video";
+import * as webview from "@vvedantb/native-ui/webview";
 
 export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   ".": root,
@@ -43,7 +47,9 @@ export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   "/expo-web-root": expoWebRoot,
   "/floating": floating,
   "/gallery": gallery,
+  "/gesture-handler": gestureHandler,
   "/haptics": haptics,
+  "/keyboard-controller": keyboardController,
   "/layout": layout,
   "/markdown": markdown,
   "/marketing": marketing,
@@ -55,4 +61,6 @@ export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   "/tab-bar": tabBar,
   "/theme": theme,
   "/toast": toast,
+  "/video": video,
+  "/webview": webview,
 };

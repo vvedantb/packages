@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { IconTrash } from "@tabler/icons-react-native";
+import { ProviderIcon } from "@vvedantb/native-ui/brand";
 import { Markdown } from "@vvedantb/native-ui/markdown";
 import {
   ActivityStepDetail,
@@ -17,6 +18,10 @@ import {
   CollapsibleContent,
   CollapsibleChevron,
   CollapsibleTrigger,
+  Conversation,
+  ConversationDock,
+  ConversationList,
+  DiffStat,
   Message,
   MessageActionSheet,
   MessageBotLabel,
@@ -24,6 +29,9 @@ import {
   MessageMeta,
   MessageQuote,
   PromptInput,
+  PromptInputChip,
+  PromptInputMenu,
+  PromptInputMenuItem,
   PromptInputSubmit,
   ReplyQuoteChip,
   ResponseText,
@@ -32,13 +40,40 @@ import {
   SubagentRunCard,
   ToolApprovalCard,
   ToolDraftCard,
+  UnifiedDiff,
+  type UnifiedDiffLine,
 } from "@vvedantb/native-ui/ai";
 import { Button } from "@vvedantb/native-ui/button";
 import { Block, GText, LONG_TEXT } from "../ui";
 
 const MARKDOWN = "# Heading\n\nSome **bold**, *italic* and `code`.\n\n- One\n- Two\n\n```ts\nconst a = 1;\n```";
 
+const DIFF_LINES: UnifiedDiffLine[] = [
+  { kind: "hunk", text: "@@ -1,4 +1,5 @@" },
+  { kind: "context", text: "export function total(items: number[]) {", oldLine: 1, newLine: 1 },
+  { kind: "removed", text: "  return items.reduce((a, b) => a + b);", oldLine: 2, newLine: null },
+  { kind: "added", text: "  if (items.length === 0) return 0;", oldLine: null, newLine: 2 },
+  { kind: "added", text: `  return items.reduce((a, b) => a + b, 0); // ${LONG_TEXT}`, oldLine: null, newLine: 3 },
+  { kind: "context", text: "}", oldLine: 3, newLine: 4 },
+];
+
+const MARKED_LINES = new Set([3]);
+
+const THREAD = [
+  { id: "1", text: "Can you total the invoice lines?" },
+  { id: "2", text: "Yes. The total is 42." },
+  { id: "3", text: LONG_TEXT },
+];
+
+const COMMANDS = [
+  { prefix: "/", label: "summarise", description: "Summarise the thread" },
+  { prefix: "/", label: "translate", description: LONG_TEXT },
+];
+
 export function AiCardsSection() {
+  const [command, setCommand] = useState("none");
+  const [chip, setChip] = useState(false);
+  const [diffLine, setDiffLine] = useState("none");
   const [decision, setDecision] = useState("none");
   const [sheet, setSheet] = useState(false);
   const [sheetResult, setSheetResult] = useState("none");
@@ -47,6 +82,49 @@ export function AiCardsSection() {
   const [open, setOpen] = useState(false);
   return (
     <>
+      <Block title="UnifiedDiff and DiffStat">
+        <DiffStat additions={2} deletions={1} />
+        <DiffStat additions={0} deletions={0} hideZero />
+        <UnifiedDiff lines={DIFF_LINES} onLinePress={(index) => setDiffLine(String(index))} linePressHint="Marks the line" markedLines={MARKED_LINES} />
+        <GText testID="diff-line">{`Diff line: ${diffLine}`}</GText>
+      </Block>
+      <Block title="PromptInputChip, PromptInputMenu and ProviderIcon">
+        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+          <PromptInputChip icon={<ProviderIcon provider="claude" size={14} />} label="Claude" suffix="High" expanded={chip} onPress={() => setChip(!chip)} />
+          <PromptInputChip icon={<ProviderIcon provider="codex" size={14} />} label="Saved" count={12} chevron={false} size="touch" />
+          <ProviderIcon provider="cursor" size={20} title="Cursor" />
+        </View>
+        <PromptInputMenu title="Commands" testID="prompt-menu">
+          {COMMANDS.map((item) => (
+            <PromptInputMenuItem
+              key={item.label}
+              prefix={item.prefix}
+              label={item.label}
+              description={item.description}
+              selected={command === item.label}
+              onPress={() => setCommand(item.label)}
+              testID={`prompt-menu-${item.label}`}
+            />
+          ))}
+        </PromptInputMenu>
+        <PromptInputMenu title="Mentions" />
+        <GText testID="prompt-command">{`Command: ${command}`}</GText>
+      </Block>
+      <Block title="ConversationList and ConversationDock">
+        <View style={{ height: 240 }}>
+          <Conversation>
+            <ConversationList
+              data={THREAD}
+              keyExtractor={(row) => row.id}
+              nestedScrollEnabled
+              renderItem={({ item }) => <GText>{item.text}</GText>}
+            />
+            <ConversationDock>
+              <GText>ConversationDock: the composer sits here</GText>
+            </ConversationDock>
+          </Conversation>
+        </View>
+      </Block>
       <Block title="ToolApprovalCard and ToolDraftCard">
         <ToolApprovalCard toolName="send_email" args={{ to: "someone@example.com", body: LONG_TEXT.repeat(3) }} onDecide={setDecision} />
         <ToolDraftCard toolName="create_event" args="title=Review" onDecide={setDecision} />
