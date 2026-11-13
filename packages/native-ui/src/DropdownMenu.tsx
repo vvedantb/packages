@@ -319,9 +319,12 @@ function MenuRow({
         onSelect?.();
         if (closeOnSelect) setOpen(false);
       }}
-      // No `className` on this Pressable: NativeWind drops a function `style`
-      // when a `className` is set, and the row's layout lives in the style.
-      style={({ pressed }) => ({
+      // The row layout is a plain style object. NativeWind's `Pressable`
+      // interop rebuilds `style` from the inline value on native and drops a
+      // function `style` entirely, so a layout kept in one stacked the icon
+      // above the label on Android (React Native's default column). The press
+      // highlight comes from the `pressed` render state as a background layer.
+      style={{
         flexDirection: "row",
         alignItems: "center",
         minHeight: metrics.minHeight,
@@ -330,21 +333,30 @@ function MenuRow({
         paddingRight: DROPDOWN_MENU.itemPaddingX,
         paddingVertical: DROPDOWN_MENU.itemPaddingY,
         borderRadius: DROPDOWN_MENU.itemRadius,
-        backgroundColor: pressed && !disabled ? palette.default[scheme] : "transparent",
         opacity: disabled ? 0.5 : 1,
-      })}
+      }}
     >
-      {leading}
-      {/* A caller `className` lands here, off the Pressable (see the style note above). */}
-      <View className={cn("min-w-0 flex-1 flex-row items-center", className)}>
-        {typeof children === "string" ? (
-          <Text className="flex-1 font-instrument-sans" style={[metrics.text, { color }]}>
-            {children}
-          </Text>
-        ) : (
-          children
-        )}
-      </View>
+      {({ pressed }) => (
+        <>
+          {pressed && !disabled ? (
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { borderRadius: DROPDOWN_MENU.itemRadius, backgroundColor: palette.default[scheme] }]}
+            />
+          ) : null}
+          {leading}
+          {/* A caller `className` lands here, off the Pressable (see the style note above). */}
+          <View className={cn("min-w-0 flex-1 flex-row items-center", className)}>
+            {typeof children === "string" ? (
+              <Text className="flex-1 font-instrument-sans" style={[metrics.text, { color }]}>
+                {children}
+              </Text>
+            ) : (
+              children
+            )}
+          </View>
+        </>
+      )}
     </Pressable>
   );
 }
