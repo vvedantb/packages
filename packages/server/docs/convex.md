@@ -782,7 +782,7 @@ export const myTasks = authQuery({
 
 Config: `customFunctions`; the generated `query`/`mutation`/`action` (public or internal); `resolveUserId(ctx)` (throws to reject, for example `userAuth.requireCurrentUserId`); `resolveActionUserId(ctx)` (an action has no `ctx.auth` database access, so it usually runs a query and throws on null); and an optional `beforeEach(ctx)` gate that runs on every call before the user is resolved — throw to block it (a maintenance check). Omit `beforeEach` for internal builders that must run during maintenance.
 
-- **Maintenance gate.** `beforeEach` is the optional hook for eva's `assertNotInMaintenance()`. It is not a dependency: an app without a gate omits it.
+- **Maintenance gate.** `beforeEach` is the optional hook for an app's maintenance check (for example `assertNotInMaintenance()`). It is not a dependency: an app without a gate omits it.
 - **Internal variants.** A second `createAuthFunctions` call with `internalQuery`/`internalMutation`/`internalAction` and no `beforeEach`, renamed on destructure. The result is the same shape, so the first call's logic is reused.
 
 `tests/convex/authFunctions.test.ts` wires the real convex-helpers builders to stub base builders and runs each wrapped handler: the userId is injected for query, mutation and action; `beforeEach` runs before `resolveUserId` and a throwing gate blocks the handler without resolving the user; an authentication rejection from `resolveUserId` propagates; the internal variant works through a second call.
