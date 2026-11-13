@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.17.1
+
+### Patch Changes
+
+- [#157](https://github.com/vvedantb/packages/pull/157) [`7ef4add`](https://github.com/vvedantb/packages/commit/7ef4addcaa3c0c0428776a36bbeba5689c6cfa3c) Thanks [@vvedantb](https://github.com/vvedantb)! - Add optional `/ai` card props. `ToolApprovalCard` and `ToolDraftCard` take `server`, `routineMode`, `expiresLabel`, `target`, `meta` and `chrome`, and `onDecide` passes `edits`. `ToolDraftCard` takes `fields` for an inline editor, with `changedDraftEdits`, `DRAFT_ROLE_LABELS` and the `DraftField`, `DraftFieldRole` and `DraftEdit` types. `SubagentRunCard` adds `queued` and `timed_out` statuses, `statusLine`, `error` and `avatar`, and Cancel shows while queued. `SubagentResultCard` takes `approvalPending`, `approvalPendingIn`, `handoffs` and `avatar`, with the `SubagentHandoff` type.
+
+- [#157](https://github.com/vvedantb/packages/pull/157) [`7ef4add`](https://github.com/vvedantb/packages/commit/7ef4addcaa3c0c0428776a36bbeba5689c6cfa3c) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix two type errors in apps that typecheck the package source against `react-native-reanimated` 4.3.
+  
+  - `ConversationScroller` (the type of `useConversation().scrollRef`) gains an optional `scrollTo({ y, animated })`. Only the `ScrollView` of `ConversationContent` has it, so call `scrollRef.current?.scrollTo?.(...)`. 0.12.0 narrowed the ref to `scrollToEnd` and broke apps that scroll to a message.
+  - The `/ai` collapsible chevron turns on the predefined `ease-out` curve, not `cubicBezier(0.23, 1, 0.32, 1)`. The duration (150 ms) and reduced-motion handling do not change.
+
 ## 0.17.0
 
 ### Minor Changes

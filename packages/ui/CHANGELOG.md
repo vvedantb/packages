@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 0.40.0
+
+### Minor Changes
+
+- [#170](https://github.com/vvedantb/packages/pull/170) [`94abbff`](https://github.com/vvedantb/packages/commit/94abbfff0b682f473c7383b094f6ad162d557765) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ActivityTasks`: the folded layout now shows mid-turn reply text (`response` steps) in the timeline, like the inline layout. A live turn no longer needs a separate text block after the timeline, so its first words stay above newer steps.
+
+- [#158](https://github.com/vvedantb/packages/pull/158) [`8cda130`](https://github.com/vvedantb/packages/commit/8cda130cefa50a9940922ff3e5c513c0a8bdbcfe) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ProductHero`, a shared hero for product landing pages, and `PROJECT_V_HOME_URL`. Both are exported from `@vvedantb/ui` and `@vvedantb/ui/client`.
+  
+  - Copy first, then the visual on mobile. Side by side from `lg`. Uses `landingShellClass` width.
+  - One `h1` with the `pageTitleClass` family, weight 600, leading and tracking, at a display scale.
+  - Pill primary action, optional secondary action, and at most one "Sign in" control (`signIn`).
+  - `ProductHeroAction` also supports optional `rel` and `target` on `href` CTAs.
+  - `visual` slot for an animated concept visual, not an app replica or screenshot. Decorative (`aria-hidden`) unless `visualLabel` is set.
+  - Optional `userCount` social proof under the actions: "Free to use · 1,284+ people already here", with a green dot that pulses unless `prefers-reduced-motion: reduce`. Hidden for `undefined`, `null` and 0 or less. The package does no fetching; apps feed the number (for example a Convex action around Clerk `users.getCount()`).
+  - "a product of Project V" line, always linked to `PROJECT_V_HOME_URL`. No prop changes the link; `showProductOf={false}` hides the line. `SiteFooter` now uses the same constant; its rendered output does not change.
+  
+  The Velth docs and playground example links its V Store CTA to `https://projectv.uk/download/v-store` with `rel="nofollow"`.
+  
+  `LandingHero` from `createLandingKit` is unchanged.
+
 ## 0.39.1
 
 ### Patch Changes
