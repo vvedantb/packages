@@ -8,6 +8,10 @@
 // Options (per package, see each package's `scripts/build-dist.mjs`):
 // - `dirs`: source folders, relative to the package, each built to the same
 //   path under `dist` (or to `dist` itself when `flat` is set, one folder only).
+// - `explicitExtensions`: rewrites relative imports to name the file
+//   (`./cn` → `./cn.js`, `./ui` → `./ui/index.js`), as Node's ESM resolver
+//   (Vitest, SSR) requires. Not for native-ui: Metro picks `.web` / `.native`
+//   files from an extensionless path.
 // - `jsx`: "preserve" keeps JSX for the app's own JSX transform (native-ui:
 //   NativeWind's `className` depends on `jsxImportSource: "nativewind"`);
 //   "automatic" compiles it to `react/jsx-runtime` (web, plain JavaScript).
@@ -16,7 +20,7 @@
 // runs, unmemoised. `compiler-baseline.json` in the package lists the
 // accepted skips, and a new one fails the build. `--update` rewrites it.
 import { transformFileAsync } from "@babel/core";
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
 
@@ -31,7 +35,7 @@ const walk = (dir) =>
 
 const isTest = (rel) => /\.test\.tsx?$/.test(rel) || /(^|\/)__snapshots__\//.test(rel);
 
-export async function buildDist({ root, dirs, flat = false, jsx, update = process.argv.includes("--update") }) {
+export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensions = false, update = process.argv.includes("--update") }) {
   const name = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).name;
   const dist = join(root, "dist");
   const baselinePath = join(root, "compiler-baseline.json");
@@ -81,6 +85,8 @@ export async function buildDist({ root, dirs, flat = false, jsx, update = proces
     }
   }
 
+  if (explicitExtensions) addExtensions(dist);
+
   const unique = [...new Set(skips)].sort();
   if (update) {
     writeFileSync(baselinePath, `${JSON.stringify(unique, null, 2)}\n`);
@@ -99,4 +105,27 @@ export async function buildDist({ root, dirs, flat = false, jsx, update = proces
     process.exit(1);
   }
   console.log(`${name} build-dist: ${compiled} files compiled; ${unique.length} known compiler skips, none new.`);
+}
+
+const isFile = (path) => existsSync(path) && statSync(path).isFile();
+
+/** Names the file in every relative import of `dist`'s JavaScript; fails on one it cannot resolve. */
+function addExtensions(dist) {
+  const specifier = /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(["'])(\.{1,2}\/[^"']+)\2/g;
+  const unresolved = [];
+  for (const file of walk(dist).filter((f) => f.endsWith(".js"))) {
+    const code = readFileSync(file, "utf8");
+    const next = code.replace(specifier, (match, lead, quote, spec) => {
+      const target = join(dirname(file), spec);
+      if (isFile(target)) return match;
+      if (isFile(`${target}.js`)) return `${lead}${quote}${spec}.js${quote}`;
+      if (isFile(join(target, "index.js"))) return `${lead}${quote}${spec}/index.js${quote}`;
+      unresolved.push(`${relative(dist, file)}: ${spec}`);
+      return match;
+    });
+    if (next !== code) writeFileSync(file, next);
+  }
+  if (unresolved.length > 0) {
+    throw new Error(`build-dist: unresolved relative imports in dist:\n  ${unresolved.join("\n  ")}`);
+  }
 }

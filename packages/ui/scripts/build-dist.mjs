@@ -10,4 +10,6 @@ await buildDist({
   root: join(dirname(fileURLToPath(import.meta.url)), ".."),
   dirs: ["src", "app/src", "shell/src", "tokens/src"],
   jsx: "automatic",
+  // Node ESM (Vitest in apps) needs `./cn.js`, not `./cn`.
+  explicitExtensions: true,
 });
