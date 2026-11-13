@@ -101,6 +101,29 @@ async function growComposer(layout, lines) {
   log({ composer: { layout: layout ?? "inline", before, after } });
 }
 
+async function sectionsWithAnimations() {
+  await fresh();
+  for (const [link, marker, name] of [
+    ["link-layout", "section-layout", "section-layout"],
+    ["link-forms", "section-forms", "section-forms"],
+    ["link-parity", "screen-parity", "screen-parity"],
+    ["link-ai-cards", "section-ai-cards", "section-ai-cards"],
+  ]) {
+    await press(link);
+    await see(marker);
+    for (let i = 0; i < 6; i++) {
+      const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+      swipe(w / 2, Math.round(h * 0.8), w / 2, Math.round(h * 0.25), 300);
+      await settle();
+      await sleep(400);
+    }
+    await see(marker);
+    shot(name);
+    await goBack();
+    await see("home");
+  }
+}
+
 const scenarios = {
   async screens() {
     await fresh();
@@ -124,25 +147,16 @@ const scenarios = {
   // search field, empty states and markdown. Each is scrolled through so every
   // part mounts and animates; the app must still be alive after each one.
   async sections() {
-    await fresh();
-    for (const [link, marker, name] of [
-      ["link-layout", "section-layout", "section-layout"],
-      ["link-forms", "section-forms", "section-forms"],
-      ["link-parity", "screen-parity", "screen-parity"],
-      ["link-ai-cards", "section-ai-cards", "section-ai-cards"],
-    ]) {
-      await press(link);
-      await see(marker);
-      for (let i = 0; i < 6; i++) {
-        const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
-        swipe(w / 2, Math.round(h * 0.8), w / 2, Math.round(h * 0.25), 300);
-        await settle();
-        await sleep(400);
-      }
-      await see(marker);
-      shot(name);
-      await goBack();
-      await see("home");
+    // CI boots the emulator with animations off, which Android reports as
+    // Reduce Motion: the skeleton pulse and the LoadingState frame callback
+    // would take their still paths. Turn animations on so the UI-thread
+    // animation code runs, then restore the CI default.
+    const scales = ["animator_duration_scale", "transition_animation_scale", "window_animation_scale"];
+    for (const key of scales) adb(["shell", "settings", "put", "global", key, "1"]);
+    try {
+      await sectionsWithAnimations();
+    } finally {
+      for (const key of scales) adb(["shell", "settings", "put", "global", key, "0"], { allowFail: true });
     }
   },
   async dropdown() {
