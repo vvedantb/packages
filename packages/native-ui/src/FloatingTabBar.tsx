@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { useEffect } from "react";
 import { Pressable, Text, View, type ColorValue } from "react-native";
 import Animated, {
   Easing,
@@ -142,13 +142,12 @@ type TabBarItemProps = {
 };
 
 /**
- * One tab. Memoised: a switch re-renders the bar, and without it every tab
- * and its SVG icon re-rendered too (the kit is not built with React
- * Compiler). Now only the two tabs whose focus changed render. The props are
- * stable between switches: `route` and `navigation` keep their identity, and
- * `tabBarIcon` is the caller's function.
+ * One tab. React Compiler (the package build) memoises it, so a switch
+ * renders only the two tabs whose focus changed. Its props are stable between
+ * switches: `route` and `navigation` keep their identity, and `tabBarIcon` is
+ * the caller's function.
  */
-const TabBarItem = memo(function TabBarItem({
+function TabBarItem({
   route,
   navigation,
   focused,
@@ -194,7 +193,7 @@ const TabBarItem = memo(function TabBarItem({
       </Text>
     </Pressable>
   );
-});
+}
 
 /**
  * The pill behind tab `index` of `count` drawn tabs: one tab wide (they share

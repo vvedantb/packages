@@ -1,5 +1,3 @@
-"use client";
-
 import { useOptionalPromptInputController } from "./prompt-input";
 import { useCn, useUiConfig } from "../ui/ui-config";
 

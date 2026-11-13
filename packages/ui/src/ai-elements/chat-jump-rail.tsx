@@ -1,4 +1,3 @@
-"use client";
 import { useMemo } from "react";
 import { useStickToBottomContext } from "use-stick-to-bottom";
 import { JumpRail, type JumpRailItem, type JumpRailProps } from "./jump-rail";

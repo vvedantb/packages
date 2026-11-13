@@ -1,4 +1,3 @@
-"use client";
 import { type CSSProperties, type ElementType } from "react";
 import { motion } from "motion/react";
 import { cn } from "../utils/cn";

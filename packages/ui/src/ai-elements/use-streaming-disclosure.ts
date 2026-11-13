@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 const AUTO_CLOSE_DELAY_MS = 1000;

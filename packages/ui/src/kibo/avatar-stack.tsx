@@ -1,5 +1,3 @@
-"use client";
-
 import { Children, type ReactNode } from "react";
 import { useCn } from "../ui/ui-config";
 

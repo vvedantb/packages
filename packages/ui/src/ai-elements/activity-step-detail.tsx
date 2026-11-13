@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "../ui/badge";
 import { useCn } from "../ui/ui-config";
 import type { ActivityStep } from "./activity-shared";

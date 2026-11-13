@@ -1,4 +1,3 @@
-"use client";
 import type { TablerIcon } from "@tabler/icons-react";
 import type { ComponentProps, ReactNode } from "react";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";

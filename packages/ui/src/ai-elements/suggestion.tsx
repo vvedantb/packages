@@ -1,4 +1,3 @@
-"use client";
 import type { ComponentProps, ReactNode } from "react";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "../ui/button";

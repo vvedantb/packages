@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { useMotionBlur } from "@web-kits/motion-blur/react";
 import { Drawer as DrawerPrimitive } from "vaul";

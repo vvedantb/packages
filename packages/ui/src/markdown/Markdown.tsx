@@ -1,5 +1,3 @@
-"use client";
-
 import type { ComponentProps } from "react";
 import { memo } from "react";
 import { cjk } from "@streamdown/cjk";

@@ -1,4 +1,3 @@
-"use client";
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, domAnimation, LazyMotion, m } from "motion/react";

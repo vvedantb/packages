@@ -1,0 +1,23 @@
+[
+  "app/src/convex/ConvexClerkProvider.tsx :: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hook",
+  "shell/src/SessionsHoverCard.tsx :: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled",
+  "src/ai-elements/code-block.tsx :: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement",
+  "src/ai-elements/jump-rail.tsx :: Cannot access refs during render",
+  "src/ai-elements/prompt-input-speech.tsx :: Cannot access refs during render",
+  "src/ai-elements/speech-input.tsx :: (BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause",
+  "src/ai-elements/web-preview.tsx :: Existing memoization could not be preserved",
+  "src/artifacts/artifact-dialogs.tsx :: (BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause",
+  "src/artifacts/artifact-versions-menu.tsx :: Support value blocks (conditional, logical, optional chaining, etc) within a try/catch statement",
+  "src/composer/Composer.tsx :: Cannot access refs during render",
+  "src/composer/input-area/InputAreaEditor.tsx :: This value cannot be modified",
+  "src/composer/input-area/useComposerCompact.ts :: Cannot access refs during render",
+  "src/composer/useComposerPrediction.ts :: Cannot access refs during render",
+  "src/kibo/gantt-features.tsx :: Existing memoization could not be preserved",
+  "src/kibo/gantt-provider.tsx :: Cannot access refs during render",
+  "src/marketing/SiteFooter.tsx :: (BuildHIR::node.lowerReorderableExpression) Expression type `CallExpression` cannot be safely reordered",
+  "src/ui/calendar.tsx :: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value",
+  "src/ui/confirm-dialog-parts.tsx :: (BuildHIR::node.lowerReorderableExpression) Expression type `BinaryExpression` cannot be safely reordered",
+  "src/ui/labeled-slider-row.tsx :: (BuildHIR::node.lowerReorderableExpression) Expression type `ArrowFunctionExpression` cannot be safely reordered",
+  "src/ui/loading-state.tsx :: Cannot access refs during render",
+  "src/ui/time-picker.tsx :: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled"
+]

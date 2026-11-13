@@ -1,4 +1,3 @@
-"use client";
 import type { UIMessage } from "ai";
 import type { ComponentProps, HTMLAttributes, ReactElement, ReactNode } from "react";
 import { Button } from "../ui/button";

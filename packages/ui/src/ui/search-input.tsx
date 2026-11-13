@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { IconSearch } from "@tabler/icons-react";
 import { ClearInput, type ClearInputProps } from "./clear-input";
