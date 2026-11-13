@@ -80,6 +80,12 @@ export function GestureSwipeableRow({
 
   // Whether this touch began while a row was open, so its release only closes that row. Nothing renders from it.
   const closesOnRelease = useRef(false);
+  // The action strips mount on the row's first touch, not with the row: a
+  // list of a hundred rows then mounts no hidden buttons and icons up front.
+  // A touch lands a few frames before a swipe can move the row, so the strip
+  // is there before any of it shows.
+  const [revealed, setRevealed] = useState(false);
+  const reveal = () => setRevealed(true);
   const webClicks = useWebClickGuard(isSwipeRowOpen);
   const insidePager = useContext(InsidePagerContext);
   const opened = () => {
@@ -137,6 +143,9 @@ export function GestureSwipeableRow({
     .failOffsetY([-SWIPE_FAIL_OFFSET_Y, SWIPE_FAIL_OFFSET_Y]);
   if (activation.failOffsetX !== undefined) pan.failOffsetX(activation.failOffsetX);
   pan
+    .onBegin(() => {
+      runOnJS(reveal)();
+    })
     .onStart(() => {
       cancelAnimation(x);
       start.set(x.get());
@@ -184,10 +193,10 @@ export function GestureSwipeableRow({
   const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
   return (
     <View onLayout={(event) => width.set(event.nativeEvent.layout.width)} style={styles.clip}>
-      {leadingActions.length > 0 ? (
+      {revealed && leadingActions.length > 0 ? (
         <ActionStrip side="leading" actions={leadingActions} x={x} armedScale={armedScale} onPress={press} />
       ) : null}
-      {trailingActions.length > 0 ? (
+      {revealed && trailingActions.length > 0 ? (
         <ActionStrip side="trailing" actions={trailingActions} x={x} armedScale={armedScale} onPress={press} />
       ) : null}
       <GestureDetector gesture={pan}>
