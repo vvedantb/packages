@@ -222,7 +222,7 @@ The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inheri
 | `pre_build_command` | string | empty | Inline bash run after `pre_build_script` |
 | `post_publish_script` | string | empty | Script run with bash after a real publish. Gets `TAG`, `RELEASE_URL`, `APK`, `RELEASE_JSON`, `VERSION_NAME`, `VERSION_CODE`, `SHA256` and `GH_TOKEN` |
 | `post_publish_command` | string | empty | Inline bash run after `post_publish_script` |
-| `runs_on` | string | `ubuntu-latest` | Runner. It needs the Android SDK at `ANDROID_HOME` |
+| `runs_on` | string | `ubuntu-latest` | Linux runner. If it has no Android SDK at `ANDROID_HOME` (boat.dev runners, for one), the workflow installs the command line tools first |
 | `timeout_minutes` | number | `90` | Job timeout |
 
 Outputs: `tag`, `version_name`, `version_code`, `sha256`, `published` (`true` or `false`) and `release_url`. All are empty when the release is skipped.
