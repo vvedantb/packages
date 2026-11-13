@@ -30,6 +30,7 @@
     "./tokens/css/utilities.css": "./tokens/src/css/utilities.css",
     "./tokens/css/scrollbar-thin.css": "./tokens/src/css/scrollbar-thin.css",
     "./tokens/css/scroll-fade.css": "./tokens/src/css/scroll-fade.css",
+    "./tokens/css/scrollbar.css": "./tokens/src/css/scrollbar.css",
     "./tokens/css/clear-input.css": "./tokens/src/css/clear-input.css",
     "./tokens/css/motion.css": "./tokens/src/css/motion.css",
     "./tokens/css/animations.css": "./tokens/src/css/animations.css",
