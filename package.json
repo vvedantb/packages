@@ -21,7 +21,11 @@
     "ci:publish:next": "pnpm changeset version --snapshot next && pnpm build && pnpm typecheck && pnpm check:guards && pnpm test && changeset publish --tag next --no-git-tag"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.13",
+    "@babel/preset-react": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
     "@changesets/changelog-github": "^1.0.1",
-    "@changesets/cli": "^3.0.3"
+    "@changesets/cli": "^3.0.3",
+    "babel-plugin-react-compiler": "1.0.0"
   }
 }

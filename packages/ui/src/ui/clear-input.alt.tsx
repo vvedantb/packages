@@ -1,4 +1,3 @@
-"use client";
 import * as React from "react";
 import { fieldFocusClass } from "./_field-classes";
 import { ClearInput, type ClearInputProps } from "./clear-input";

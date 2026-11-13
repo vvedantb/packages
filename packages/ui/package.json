@@ -16,7 +16,8 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "source": "./src/index.ts",
+      "default": "./dist/src/index.js"
     },
     "./tokens": "./tokens/src/tokens.css",
     "./tokens/tokens.css": "./tokens/src/tokens.css",
@@ -45,19 +46,23 @@
     },
     "./brand": {
       "types": "./src/brand/index.ts",
-      "default": "./src/brand/index.ts"
+      "source": "./src/brand/index.ts",
+      "default": "./dist/src/brand/index.js"
     },
     "./logos": {
       "types": "./src/logos/index.ts",
-      "default": "./src/logos/index.ts"
+      "source": "./src/logos/index.ts",
+      "default": "./dist/src/logos/index.js"
     },
     "./icons/animated": {
       "types": "./src/icons/animated/index.ts",
-      "default": "./src/icons/animated/index.ts"
+      "source": "./src/icons/animated/index.ts",
+      "default": "./dist/src/icons/animated/index.js"
     },
     "./client": {
       "types": "./src/client.ts",
-      "default": "./src/client.ts"
+      "source": "./src/client.ts",
+      "default": "./dist/src/client.js"
     },
     "./landing.css": "./src/marketing/landing.css",
     "./fonts/instrument-sans.css": "./fonts/instrument-sans.css",
@@ -65,6 +70,7 @@
   },
   "types": "./src/index.ts",
   "files": [
+    "dist",
     "src",
     "shell/src/**/*.{ts,tsx}",
     "app/src",
@@ -85,14 +91,15 @@
   "scripts": {
     "check:client-graph": "node scripts/check-client-graph.mjs",
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
-    "build": "node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
+    "build": "node scripts/build-dist.mjs && node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.consumer.json && tsc -p tsconfig.consumer-speech.json && tsc -p tokens/tsconfig.json",
     "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
     "analyze": "node tokens/verify/analyze.mjs",
     "brand:assets": "node scripts/build-brand-assets.mjs",
     "brand:sheet": "node scripts/build-brand-sheet.mjs",
-    "prepack": "node tokens/scripts/check-exports.mjs"
+    "prepack": "node -e \"require('node:fs').accessSync('dist/src/index.js')\" && node tokens/scripts/check-exports.mjs",
+    "build:baseline": "node scripts/build-dist.mjs --update"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

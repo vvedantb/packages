@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, memo, useCallback, useContext, useRef, useState } from "react";
 import type { ComponentProps, ComponentType, ReactNode, Ref } from "react";
 import { flushSync } from "react-dom";

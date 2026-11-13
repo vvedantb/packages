@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { IconX } from "@tabler/icons-react";
 import { assignRef } from "../utils/ref";

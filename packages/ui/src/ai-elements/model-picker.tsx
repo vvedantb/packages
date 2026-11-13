@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, type ReactNode } from "react";
 import { IconBolt, IconChevronDown } from "@tabler/icons-react";
 import { SimpleModelLadder } from "./simple-model-ladder";

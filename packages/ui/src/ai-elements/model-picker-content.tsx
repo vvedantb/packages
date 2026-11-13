@@ -1,5 +1,3 @@
-"use client";
-
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { IconCheck, IconSearch } from "@tabler/icons-react";

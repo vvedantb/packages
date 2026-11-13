@@ -1,5 +1,3 @@
-"use client";
-
 import { IconFile } from "@tabler/icons-react";
 
 import { useCn } from "../ui/ui-config";

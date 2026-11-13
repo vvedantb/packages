@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, type ComponentProps } from "react";
 import { z } from "zod";
 import {

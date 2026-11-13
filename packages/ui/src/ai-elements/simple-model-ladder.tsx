@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { IconChevronRight } from "@tabler/icons-react";
 import { useCn } from "../ui/ui-config";

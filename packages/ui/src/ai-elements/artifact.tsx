@@ -1,5 +1,3 @@
-"use client";
-
 import type { ComponentProps, ComponentType, ReactNode } from "react";
 import { isValidElement } from "react";
 import { IconX } from "@tabler/icons-react";
