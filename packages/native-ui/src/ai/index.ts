@@ -183,7 +183,21 @@ export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";
 export { UnifiedDiff, DiffStat, UNIFIED_DIFF } from "./unified-diff";
 export type { UnifiedDiffProps, UnifiedDiffLine, DiffStatProps } from "./unified-diff";
-export { ToolApprovalCard, ToolDraftCard, summarizeArgs, ARGS_MAX_CHARS } from "./tool-approval-card";
-export type { ToolApprovalCardProps, ToolDraftCardProps, ToolDecision } from "./tool-approval-card";
+export {
+  ToolApprovalCard,
+  ToolDraftCard,
+  summarizeArgs,
+  ARGS_MAX_CHARS,
+  changedDraftEdits,
+  DRAFT_ROLE_LABELS,
+} from "./tool-approval-card";
+export type {
+  ToolApprovalCardProps,
+  ToolDraftCardProps,
+  ToolDecision,
+  DraftField,
+  DraftFieldRole,
+  DraftEdit,
+} from "./tool-approval-card";
 export { SubagentRunCard, SubagentResultCard, subagentStatusColors } from "./subagent-cards";
-export type { SubagentRunCardProps, SubagentResultCardProps, SubagentStatus } from "./subagent-cards";
+export type { SubagentRunCardProps, SubagentResultCardProps, SubagentStatus, SubagentHandoff } from "./subagent-cards";

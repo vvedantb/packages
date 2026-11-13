@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Pressable, View, type PressableProps, type ViewProps } from "react-native";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react-native";
-import Animated, { cubicBezier } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, touchSlop } from "../controlStyles";
 import { useControllableState } from "../primitives/use-controllable-state";
@@ -13,11 +13,15 @@ import { useReduceMotion } from "../useReduceMotion";
 // opening, a virtualised row scrolled back). The chevron turns in 150 ms; with
 // Reduce Motion it changes in place.
 
-/** The web chevron: `transition-transform duration-150`, on the strong ease-out. */
+/**
+ * The web chevron: `transition-transform duration-150`. The curve is the
+ * predefined `ease-out`: a `cubicBezier(...)` value in an `Animated.View`
+ * style does not typecheck against `react-native-reanimated` 4.3.
+ */
 const CHEVRON_TURN = {
   transitionProperty: "transform",
   transitionDuration: 150,
-  transitionTimingFunction: cubicBezier(0.23, 1, 0.32, 1),
+  transitionTimingFunction: "ease-out",
 } as const;
 
 type CollapsibleContextValue = { open: boolean; setOpen: (open: boolean) => void };

@@ -248,6 +248,7 @@ declare module "react-native" {
   export class RefreshControl extends React.Component<RefreshControlProps> {}
   export class ScrollView extends React.Component<ScrollViewProps> {
     scrollToEnd(options?: { animated?: boolean }): void;
+    scrollTo(options?: { x?: number; y?: number; animated?: boolean }): void;
   }
   export interface ListRenderItemInfo<T> {
     item: T;

@@ -62,9 +62,13 @@ export function isScrolledToBottom(
 /**
  * What the thread scrolls with: the `ScrollView` of `ConversationContent` or
  * the `FlatList` of `ConversationList`. `scrollToEnd` goes to the newest
- * message, which is offset 0 in an inverted list.
+ * message, which is offset 0 in an inverted list. `scrollTo` goes to an
+ * offset; only the `ScrollView` has it, so call it as `scrollTo?.(...)`.
  */
-export type ConversationScroller = { scrollToEnd: (options?: { animated?: boolean }) => void };
+export type ConversationScroller = {
+  scrollToEnd: (options?: { animated?: boolean }) => void;
+  scrollTo?: (options: { y: number; animated?: boolean }) => void;
+};
 
 type ConversationContextValue = {
   isAtBottom: boolean;

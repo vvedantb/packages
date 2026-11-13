@@ -39,10 +39,17 @@ import {
   SourcesTrigger,
   Suggestion,
   Suggestions,
+  SubagentResultCard,
+  SubagentRunCard,
+  ToolApprovalCard,
+  ToolDraftCard,
   formatElapsed,
   useStreamingDisclosure,
   type AttachmentData,
   type ChatStatus,
+  type DraftEdit,
+  type DraftField,
+  type SubagentStatus,
 } from "../ai";
 
 const SUGGESTIONS = [
@@ -73,6 +80,68 @@ const STREAMING_REASONING =
  * reasoning and trace, reply, code, sources and actions), a second user
  * message, and an assistant message that is still working while `streaming`.
  */
+const DRAFT_FIELDS: DraftField[] = [
+  { key: "to", role: "to", value: "team@example.com" },
+  { key: "subject", role: "subject", value: "Weekly plan" },
+  { key: "body", role: "body", value: "Here is the plan for next week." },
+];
+
+const RUN_STATUSES: SubagentStatus[] = ["queued", "running", "done", "failed", "cancelled", "timed_out"];
+
+/** Tool approval, draft and subagent cards, with testIDs for E2E. */
+export function AiCardSamples() {
+  const [decision, setDecision] = useState("none");
+  const [cancelled, setCancelled] = useState(false);
+  const decide = (name: string) => (choice: string, edits?: DraftEdit[]) =>
+    setDecision(`${name}:${choice}${edits ? `:${JSON.stringify(edits)}` : ""}`);
+  return (
+    <>
+      <ResponseText>{`Last decision: ${decision}`}</ResponseText>
+      <ToolApprovalCard
+        testID="gallery-approval"
+        toolName="create_task"
+        args={{ title: "Review plan" }}
+        server="tasks"
+        routineMode
+        expiresLabel="tomorrow"
+        target="Project board"
+        onDecide={decide("approval")}
+      />
+      <ToolDraftCard
+        testID="gallery-draft"
+        toolName="send_message"
+        fields={DRAFT_FIELDS}
+        server="mail"
+        expiresLabel="in 2 hours"
+        approveLabel="Send"
+        denyLabel="Discard"
+        onDecide={decide("draft")}
+      />
+      {RUN_STATUSES.map((status) => (
+        <SubagentRunCard
+          key={status}
+          testID={`gallery-run-${status}`}
+          title="Research"
+          status={status}
+          elapsedSeconds={65}
+          statusLine={status === "running" ? "Step 2 of 4" : undefined}
+          error={status === "failed" ? "The source could not be reached." : undefined}
+          onCancel={() => setCancelled(true)}
+        />
+      ))}
+      <ResponseText>{`Cancelled: ${cancelled ? "yes" : "no"}`}</ResponseText>
+      <SubagentResultCard
+        testID="gallery-result"
+        title="Research"
+        summary="Three sources found."
+        approvalPending
+        approvalPendingIn="Planner"
+        handoffs={[{ toolName: "create_task", server: "tasks", argsSummary: '{"title":"Review plan"}' }]}
+      />
+    </>
+  );
+}
+
 export function AiChatSamples({ streaming = true }: { streaming?: boolean }) {
   const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
   const searchFold = useStreamingDisclosure(streaming);
@@ -164,6 +233,7 @@ export function AiChatSamples({ streaming = true }: { streaming?: boolean }) {
           )}
         </MessageContent>
       </Message>
+      <AiCardSamples />
     </>
   );
 }
