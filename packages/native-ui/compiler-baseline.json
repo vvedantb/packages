@@ -1,0 +1,10 @@
+[
+  "src/ai/conversation.tsx :: This value cannot be modified",
+  "src/auth/AuthProviders.tsx :: Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hook",
+  "src/auth/GoogleSignInButton.tsx :: (BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause",
+  "src/auth/SignInScreen.tsx :: (BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause",
+  "src/primitives/pager-gesture.tsx :: Cannot access refs during render",
+  "src/primitives/swipe-row-gesture.tsx :: Cannot access refs during render",
+  "src/primitives/toast-drag-gesture.tsx :: Cannot access refs during render",
+  "src/push.ts :: Cannot access refs during render"
+]

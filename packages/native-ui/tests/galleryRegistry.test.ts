@@ -16,7 +16,7 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repo = resolve(root, "../..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
-  exports: Record<string, string | { default?: string }>;
+  exports: Record<string, string | { types?: string; default?: string }>;
 };
 
 function resolveFile(from: string, spec: string): string | null {
@@ -56,7 +56,8 @@ function valueExports(file: string, seen = new Set<string>()): Set<string> {
 const isComponentName = (name: string) => /^[A-Z][A-Za-z0-9]*$/.test(name) && /[a-z]/.test(name);
 
 const entryFiles = Object.entries(pkg.exports).flatMap(([key, target]) => {
-  const file = typeof target === "string" ? target : target.default;
+  // The source each entry is built from (`types`); `default` is the compiled `dist` file.
+  const file = typeof target === "string" ? target : target.types;
   return file && /\.tsx?$/.test(file) ? [[key, join(root, file)] as const] : [];
 });
 

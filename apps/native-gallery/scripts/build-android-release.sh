@@ -65,8 +65,10 @@ if [ -z "$SDKMANAGER" ]; then
 fi
 export PATH="$(dirname "$SDKMANAGER"):$PATH"
 
-# The gallery bundles @vvedantb/native-ui from the workspace source.
+# The gallery bundles @vvedantb/native-ui through its package exports: the
+# compiled `dist` (React Compiler), as apps get it from npm. Build it first.
 pnpm install --frozen-lockfile
+pnpm --filter @vvedantb/native-ui build
 
 cd "$MOBILE"
 

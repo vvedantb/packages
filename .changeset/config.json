@@ -7,5 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["native-gallery"]
+  "ignore": ["native-gallery"],
+  "snapshot": { "useCalculatedVersion": true, "prereleaseTemplate": "{tag}-{commit}" }
 }
