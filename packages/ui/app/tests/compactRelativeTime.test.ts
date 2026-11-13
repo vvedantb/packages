@@ -2,14 +2,14 @@
 // fixed clock, across time zones (DST, a 30-minute DST, half-hour offsets),
 // month ends, future and invalid inputs. Neither copy had tests of its own.
 import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import customParseFormat from "dayjs/plugin/customParseFormat";
-import isBetween from "dayjs/plugin/isBetween";
-import isToday from "dayjs/plugin/isToday";
-import relativeTime from "dayjs/plugin/relativeTime";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-import weekOfYear from "dayjs/plugin/weekOfYear";
+import advancedFormat from "dayjs/plugin/advancedFormat.js";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
+import isBetween from "dayjs/plugin/isBetween.js";
+import isToday from "dayjs/plugin/isToday.js";
+import relativeTime from "dayjs/plugin/relativeTime.js";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
+import weekOfYear from "dayjs/plugin/weekOfYear.js";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatCompactRelativeTime } from "../src/index.js";
 
