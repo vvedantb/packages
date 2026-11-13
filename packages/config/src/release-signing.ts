@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { join } from "node:path";
 
 // Expo config plugin that signs the Android `release` build type with a
 // sideload keystore. Each value comes from the environment, else from a
@@ -28,7 +29,7 @@ export interface ReleaseSigningPropertyKeys {
 export interface ReleaseSigningOptions {
   /**
    * The marker comment line. It makes the append idempotent and is what a
-   * build script greps for. Default `"// @generated @vvedantb/config withReleaseSigning"`.
+   * build script greps for. Default `DEFAULT_RELEASE_SIGNING_MARKER`.
    * Set it to the token the app's build script already matches.
    */
   marker?: string;
@@ -159,7 +160,10 @@ export function appendReleaseSigning(
 }
 
 function loadWithAppBuildGradle(): WithAppBuildGradle {
-  const require = createRequire(import.meta.url);
+  // Resolve from the app (Expo runs config plugins with the app as the working
+  // directory), not from this package: under a strict node_modules layout this
+  // package cannot see the app's `expo`.
+  const require = createRequire(join(process.cwd(), "package.json"));
   const plugins: { withAppBuildGradle: WithAppBuildGradle } = require(
     "expo/config-plugins",
   );
