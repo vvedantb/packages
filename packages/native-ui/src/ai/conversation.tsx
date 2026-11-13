@@ -531,23 +531,27 @@ export function ConversationScrollButton({
           testID={testID}
           // Wider than 44 with its label; only the height needs slop.
           hitSlop={touchSlop(MIN_TOUCH_TARGET, SCROLL_PILL_HEIGHT)}
-          style={({ pressed }) => ({
+          // A plain style object: NativeWind drops a function `style` on a
+          // native `Pressable`, which lost the pill's row, border and fill.
+          style={{
             minHeight: SCROLL_PILL_HEIGHT,
             flexDirection: "row",
             alignItems: "center",
-            gap: 6,
             paddingHorizontal: 12,
             borderRadius: tokens.radius.pill,
             borderWidth: 1,
             borderColor: withAlpha(tokens.color.border[scheme], 0.6),
             backgroundColor: tokens.color.surface[scheme],
-            opacity: pressed ? 0.7 : 1,
-          })}
+          }}
         >
-          <Icon size={largerText ? 20 : 16} color={tokens.color.muted[scheme]} />
-          <Text className={cn(labelSize, "font-instrument-sans")} style={[sizeStyle(labelSize), textStyle("muted", scheme)]}>
-            {label}
-          </Text>
+          {({ pressed }) => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, opacity: pressed ? 0.7 : 1 }}>
+              <Icon size={largerText ? 20 : 16} color={tokens.color.muted[scheme]} />
+              <Text className={cn(labelSize, "font-instrument-sans")} style={[sizeStyle(labelSize), textStyle("muted", scheme)]}>
+                {label}
+              </Text>
+            </View>
+          )}
         </Pressable>
       ) : (
         <Button

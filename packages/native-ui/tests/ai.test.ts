@@ -242,7 +242,9 @@ function elements(node: unknown): Element[] {
   if (Array.isArray(node)) return node.flatMap(elements);
   if (!node || typeof node !== "object" || !("props" in node)) return [];
   const element = node as Element;
-  return [element, ...elements(element.props.children)];
+  // A Pressable's render-function children, drawn at rest.
+  const children = element.props.children;
+  return [element, ...elements(typeof children === "function" ? children({ pressed: false }) : children)];
 }
 
 const find = (node: unknown, test: (element: Element) => boolean) => elements(node).find(test);
@@ -746,6 +748,9 @@ describe("Conversation", () => {
     const text = byType(h.tree.button, "Text")[0]!;
     expect(text.props.children).toBe("Scroll to end");
     expect(flatten(text.props.style)).toMatchObject({ fontSize: 14, lineHeight: 20 });
+    // A plain object: NativeWind drops a function `style` on a native Pressable.
+    const pill = find(h.tree.button, (element) => element.type === "Pressable")!;
+    expect(pill.props.style).toMatchObject({ flexDirection: "row", borderWidth: 1 });
   });
 
   it("jumps instead of animating with Reduce Motion", async () => {

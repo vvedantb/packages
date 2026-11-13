@@ -47,8 +47,15 @@ const elements = (node: unknown): Element[] => {
   if (Array.isArray(node)) return node.flatMap(elements);
   if (!node || typeof node !== "object" || !("props" in node)) return [];
   const element = node as Element;
-  return [element, ...elements(element.props.children)];
+  const children = element.props.children;
+  return [element, ...elements(typeof children === "function" ? children({ pressed: false }) : children)];
 };
+
+/** A menu row's press highlight: the background layer its `pressed` render state draws. */
+const pressLayer = (row: Element, pressed: boolean) =>
+  elements((row.props.children as (state: { pressed: boolean }) => unknown)({ pressed })).find(
+    (element) => element.props.pointerEvents === "none",
+  );
 
 /** Calls function components down the tree, as a renderer would, so host elements show. */
 const render = (node: unknown): unknown => {
@@ -179,10 +186,12 @@ describe("DropdownMenu parts", () => {
     const tree = render(DropdownMenuItem({ children: "Rename", onSelect, icon: "IconPencil" as never })) as Element;
     expect(tree.type).toBe("Pressable");
     expect(tree.props.accessibilityRole).toBe("menuitem");
-    const style = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
-    expect(style).toMatchObject({ minHeight: 48, paddingLeft: 10, paddingRight: 10, paddingVertical: 12, borderRadius: 8, gap: 8, backgroundColor: "transparent" });
-    const pressed = (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: true });
-    expect(pressed.backgroundColor).toBe(palette.default.light);
+    // A plain object, not a function: NativeWind drops a function `style` on a
+    // native Pressable, and the row then stacked the icon above the label.
+    expect(typeof tree.props.style).toBe("object");
+    expect(tree.props.style).toMatchObject({ flexDirection: "row", minHeight: 48, paddingLeft: 10, paddingRight: 10, paddingVertical: 12, borderRadius: 8, gap: 8 });
+    expect(pressLayer(tree, false)).toBeUndefined();
+    expect((pressLayer(tree, true)!.props.style as unknown[])[1]).toEqual({ borderRadius: 8, backgroundColor: palette.default.light });
     const icon = elements(tree).find((element) => element.type === "IconPencil")!;
     expect(icon.props).toEqual({ size: 16, color: palette.overlayForeground.light });
     const label = elements(tree).find((element) => element.type === "Text")!;
@@ -202,10 +211,8 @@ describe("DropdownMenu parts", () => {
     expect(label.props.style).toEqual([{ fontSize: 14, lineHeight: 20 }, { color: palette.danger.light }]);
     expect(tree.props.disabled).toBe(true);
     expect(tree.props.accessibilityState).toEqual({ disabled: true });
-    expect((tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: true })).toMatchObject({
-      opacity: 0.5,
-      backgroundColor: "transparent",
-    });
+    expect(tree.props.style).toMatchObject({ opacity: 0.5 });
+    expect(pressLayer(tree, true)).toBeUndefined();
     (tree.props.onPress as () => void)();
     expect(value.setOpen).not.toHaveBeenCalled();
   });
@@ -224,7 +231,7 @@ describe("DropdownMenu parts", () => {
     context(true);
     const on = render(DropdownMenuRadioItem({ children: "Newest", checked: true })) as Element;
     expect(on.props).toMatchObject({ accessibilityRole: "radio", accessibilityState: { disabled: false, checked: true } });
-    expect((on.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: false }).paddingLeft).toBe(32);
+    expect((on.props.style as Record<string, number>).paddingLeft).toBe(32);
     const check = elements(on).find((element) => element.type === "IconCheck")!;
     expect(check.props).toEqual({ size: 16, color: palette.overlayForeground.light });
     const off = render(DropdownMenuRadioItem({ children: "Oldest", checked: false })) as Element;
@@ -248,7 +255,7 @@ describe("DropdownMenu parts", () => {
         render(DropdownMenuItem({ children: "Rename" })) as Element,
         render(DropdownMenuRadioItem({ children: "Newest", checked: false })) as Element,
       ]) {
-        const style = (row.props.style as (state: { pressed: boolean }) => Record<string, number>)({ pressed: false });
+        const style = (row.props.style as Record<string, number>);
         expect(style.minHeight).toBe(larger ? 56 : 48);
         expect(style.paddingVertical).toBe(DROPDOWN_MENU.itemPaddingY);
         // The row height is the larger of `minHeight` and padding plus one line.
@@ -263,7 +270,7 @@ describe("DropdownMenu parts", () => {
     context(true);
     menu.larger = true;
     const tree = render(DropdownMenuItem({ children: "Rename", icon: "IconPencil" as never })) as Element;
-    expect((tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed: false }).minHeight).toBe(56);
+    expect((tree.props.style as Record<string, number>).minHeight).toBe(56);
     expect(elements(tree).find((element) => element.type === "IconPencil")!.props.size).toBe(22);
     expect((elements(tree).find((element) => element.type === "Text")!.props.style as unknown[])[0]).toEqual({ fontSize: 18, lineHeight: 28 });
     const label = DropdownMenuLabel({ children: "Sort" }) as unknown as Element;
