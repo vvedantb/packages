@@ -25,18 +25,38 @@ export function expoBabelConfig(api: BabelApi): ExpoBabelConfig {
   };
 }
 
+/** A Metro resolver context: the part the singleton resolver reads and forwards. */
+export interface MetroResolveContext {
+  resolveRequest: (
+    context: MetroResolveContext,
+    moduleName: string,
+    platform: string | null,
+  ) => unknown;
+  originModulePath?: string;
+}
+
+/** A Metro `resolver.resolveRequest` function. */
+export type MetroResolveRequest = (
+  context: MetroResolveContext,
+  moduleName: string,
+  platform: string | null,
+) => unknown;
+
 /** The part of Metro's config the preset sets. */
 export interface MetroConfigLike {
   watchFolders?: readonly string[];
   resolver?: {
     nodeModulesPaths?: readonly string[];
     unstable_enablePackageExports?: boolean;
+    resolveRequest?: MetroResolveRequest;
   };
 }
 
 export interface NativeWindMetroOptions {
   input: string;
   inlineRem?: number;
+  /** NativeWind `configPath` (the Tailwind config). Not passed when unset. */
+  configPath?: string;
 }
 
 export interface ExpoMetroOptions<Config extends MetroConfigLike> {
@@ -50,10 +70,43 @@ export interface ExpoMetroOptions<Config extends MetroConfigLike> {
   input?: string;
   /** NativeWind `inlineRem`. Not passed when unset, so NativeWind keeps its default. */
   inlineRem?: number;
+  /** NativeWind `configPath` (the Tailwind config), relative to `projectRoot` or absolute. Not passed when unset. */
+  nativeWindConfig?: string;
+  /**
+   * Module names to resolve from the app, not a nested copy, such as
+   * `["react", "react-dom"]`. Sets `resolver.resolveRequest` before
+   * `withNativeWind`, so a single React instance is used across the monorepo.
+   */
+  singletons?: readonly string[];
   /** Monorepo root relative to `projectRoot`, such as `"../.."`. Watches it and resolves from both node_modules folders. */
   monorepoRoot?: string;
   /** Sets `resolver.unstable_enablePackageExports: true`. */
   packageExports?: boolean;
+}
+
+/**
+ * Sets `resolver.resolveRequest` so the given module names resolve from the
+ * app root (`package.json`), not from a nested copy. Mutates `config` in place,
+ * before `withNativeWind` wraps it (NativeWind chains to this resolver).
+ */
+function installSingletonResolver(
+  config: MetroConfigLike,
+  projectRoot: string,
+  singletons: readonly string[],
+): void {
+  const resolver = config.resolver;
+  if (resolver === undefined) return;
+  const appOrigin = resolve(projectRoot, "package.json");
+  const names = new Set(singletons);
+  const base = resolver.resolveRequest;
+  resolver.resolveRequest = (context, moduleName, platform) => {
+    const head = moduleName.split("/")[0];
+    const forward = base ?? context.resolveRequest;
+    if (head !== undefined && names.has(head)) {
+      return forward({ ...context, originModulePath: appOrigin }, moduleName, platform);
+    }
+    return forward(context, moduleName, platform);
+  };
 }
 
 /**
@@ -66,7 +119,14 @@ export function defineExpoMetroConfig<Config extends MetroConfigLike>(
 ): Config {
   const nativeWind: NativeWindMetroOptions = { input: options.input ?? "./global.css" };
   if (options.inlineRem !== undefined) nativeWind.inlineRem = options.inlineRem;
-  const config = options.withNativeWind(options.getDefaultConfig(options.projectRoot), nativeWind);
+  if (options.nativeWindConfig !== undefined) {
+    nativeWind.configPath = resolve(options.projectRoot, options.nativeWindConfig);
+  }
+  const base = options.getDefaultConfig(options.projectRoot);
+  if (options.singletons !== undefined && options.singletons.length > 0) {
+    installSingletonResolver(base, options.projectRoot, options.singletons);
+  }
+  const config = options.withNativeWind(base, nativeWind);
   if (options.monorepoRoot === undefined && !options.packageExports) return config;
 
   const resolver = { ...config.resolver };
