@@ -19,7 +19,7 @@
 // The compiler skips a component that breaks the Rules of React; it still
 // runs, unmemoised. `compiler-baseline.json` in the package lists the
 // accepted skips, and a new one fails the build. `--update` rewrites it.
-import { transformFileAsync } from "@babel/core";
+import { transformAsync, transformFileAsync } from "@babel/core";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
@@ -79,8 +79,15 @@ export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensi
           [resolved("@babel/preset-typescript"), { isTSX: isTsx, allExtensions: true, onlyRemoveTypeImports: false }],
         ],
       });
+      const inlined = await transformAsync(result.code, {
+        babelrc: false,
+        configFile: false,
+        sourceMaps: false,
+        parserOpts: { plugins: ["jsx"] },
+        plugins: [keepWorkletHelpersInline],
+      });
       const ext = isTsx && jsx === "preserve" ? ".jsx" : ".js";
-      writeFileSync(out.replace(/\.tsx?$/, ext), `${result.code}\n`);
+      writeFileSync(out.replace(/\.tsx?$/, ext), `${inlined.code}\n`);
       compiled++;
     }
   }
@@ -105,6 +112,54 @@ export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensi
     process.exit(1);
   }
   console.log(`${name} build-dist: ${compiled} files compiled; ${unique.length} known compiler skips, none new.`);
+}
+
+// Worklet callbacks, as react-native-worklets' Babel plugin finds them: the
+// callee name and which arguments it workletizes.
+const WORKLET_ARGS = new Map([
+  ["useFrameCallback", [0]], ["useAnimatedStyle", [0]], ["useAnimatedProps", [0]], ["createAnimatedPropAdapter", [0]],
+  ["useDerivedValue", [0]], ["useAnimatedScrollHandler", [0]], ["useAnimatedReaction", [0, 1]],
+  ["withTiming", [2]], ["withSpring", [2]], ["withDecay", [1]], ["withRepeat", [3]],
+  ["runOnUI", [0]], ["scheduleOnUI", [0]], ["runOnUISync", [0]], ["runOnUIAsync", [0]],
+  ...["onBegin", "onStart", "onEnd", "onFinalize", "onUpdate", "onChange", "onTouchesDown", "onTouchesMove", "onTouchesUp", "onTouchesCancelled"].map((name) => [name, [0]]),
+]);
+
+/**
+ * React Compiler hoists a function that captures nothing to a module-level
+ * `_temp` function, also from inside a worklet (`boxes.map((box) => box.x)` in
+ * `useAnimatedStyle`). The app's worklets plugin then sees a plain JS function,
+ * and calling it on the UI thread crashes the app ("Tried to synchronously
+ * call a Remote Function", Eva 0.1.59). This pass puts each hoisted function
+ * back inline where a worklet uses it, as the source wrote it.
+ */
+function keepWorkletHelpersInline({ types: t }) {
+  const calleeName = (callee) =>
+    t.isIdentifier(callee) ? callee.name : t.isMemberExpression(callee) && t.isIdentifier(callee.property) ? callee.property.name : null;
+  const inline = (fn) =>
+    fn.traverse({
+      Identifier(path) {
+        if (!/^_temp\d*$/.test(path.node.name) || !path.isReferencedIdentifier()) return;
+        const declaration = path.scope.getBinding(path.node.name)?.path;
+        if (!declaration?.isFunctionDeclaration() || !declaration.parentPath.isProgram()) return;
+        const { params, body, async, generator } = t.cloneNode(declaration.node, true);
+        path.replaceWith(t.functionExpression(null, params, body, generator, async));
+      },
+    });
+  return {
+    visitor: {
+      CallExpression(path) {
+        const args = WORKLET_ARGS.get(calleeName(path.node.callee));
+        const passed = path.get("arguments");
+        for (const index of args ?? []) {
+          const arg = passed[index];
+          if (arg?.isFunction()) inline(arg);
+        }
+      },
+      Function(path) {
+        if (t.isBlockStatement(path.node.body) && path.node.body.directives.some((d) => d.value.value === "worklet")) inline(path);
+      },
+    },
+  };
 }
 
 const isFile = (path) => existsSync(path) && statSync(path).isFile();
