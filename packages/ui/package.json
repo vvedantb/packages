@@ -29,6 +29,7 @@
     "./tokens/css/tabs-pills.css": "./tokens/src/css/tabs-pills.css",
     "./tokens/css/utilities.css": "./tokens/src/css/utilities.css",
     "./tokens/css/scrollbar-thin.css": "./tokens/src/css/scrollbar-thin.css",
+    "./tokens/css/scroll-fade.css": "./tokens/src/css/scroll-fade.css",
     "./tokens/css/clear-input.css": "./tokens/src/css/clear-input.css",
     "./tokens/css/motion.css": "./tokens/src/css/motion.css",
     "./tokens/css/animations.css": "./tokens/src/css/animations.css",
