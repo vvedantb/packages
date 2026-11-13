@@ -63,7 +63,5 @@ jobs:
       release_on: always
       version: ${{ inputs.version }}
       dry_run: ${{ inputs.dry_run == true }}
-      # A boat.dev runner (8 vCPU). The shared workflow installs the Android SDK.
-      runs_on: boat-large
       upload_dry_run_artifact: true # artifact native-gallery-android-dry-run
     secrets: inherit
