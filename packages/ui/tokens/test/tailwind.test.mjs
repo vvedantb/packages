@@ -30,6 +30,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "tabs-pills.css": [".t-tabs--segmented", "--tabs-pill-active-bg"],
     "utilities.css": [".hit-target:after", ".reveal-on-hover", ".motion-press", ".motion-base", ".motion-emphasized", ".scrollbar-none::-webkit-scrollbar"],
     "scrollbar-thin.css": [".scrollbar-thin:hover::-webkit-scrollbar-thumb", "--scrollbar-thin-rest: 40%", "--scrollbar-thin-hover: 80%"],
+    "scrollbar.css": [".scrollbar::-webkit-scrollbar-thumb:hover", "var(--scrollbar-base, var(--muted-foreground)) 35%", "border-radius: 999px"],
     "clear-input.css": [".t-clear-glow", ".t-clear-clip", ".t-clear.is-clearing > input::placeholder", ".t-clear.has-value > input", "--clear-dur: 1s"],
     "motion.css": ["@keyframes ui-enter-up", '[data-page-motion="off"] .t-tabs-pill'],
     "animations.css": ["@keyframes aurora", ".animate-indeterminate"],
@@ -37,7 +38,7 @@ test("each shared CSS file compiles and emits its rules", { skip }, async () => 
     "index.css": ["::selection", ".hit-target", ".scrollbar-thin", ".t-modal.is-open", ".t-tabs--pills", "@keyframes fade-in-up", "@keyframes vv-icon-gear-spin"],
   };
   for (const [file, needles] of Object.entries(expect)) {
-    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "motion-press", "motion-base", "motion-emphasized", "scrollbar-none", "rounded-surface", "rounded-t-surface", "rounded-b-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
+    const out = await build(`${head} @import "./src/css/${file}";`, ["hit-target", "reveal-on-hover", "motion-press", "motion-base", "motion-emphasized", "scrollbar-none", "scrollbar", "rounded-surface", "rounded-t-surface", "rounded-b-surface", "animate-aurora", "animate-indeterminate", "animate-fade-in-up"]);
     for (const n of needles) assert.ok(out.includes(n), `${file}: missing ${n}`);
   }
 });
