@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens dropdown composer sheets select pager)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets select pager)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -114,6 +114,32 @@ const scenarios = {
       await press(link);
       await see(marker);
       if (name === "layering") await see("Home");
+      shot(name);
+      await goBack();
+      await see("home");
+    }
+  },
+  // The sections Eva's Sessions and Projects tabs draw from: list rows, the
+  // running LoadingState grid (a Reanimated frame callback), skeletons, the
+  // search field, empty states and markdown. Each is scrolled through so every
+  // part mounts and animates; the app must still be alive after each one.
+  async sections() {
+    await fresh();
+    for (const [link, marker, name] of [
+      ["link-layout", "section-layout", "section-layout"],
+      ["link-forms", "section-forms", "section-forms"],
+      ["link-parity", "screen-parity", "screen-parity"],
+      ["link-ai-cards", "section-ai-cards", "section-ai-cards"],
+    ]) {
+      await press(link);
+      await see(marker);
+      for (let i = 0; i < 6; i++) {
+        const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+        swipe(w / 2, Math.round(h * 0.8), w / 2, Math.round(h * 0.25), 300);
+        await settle();
+        await sleep(400);
+      }
+      await see(marker);
       shot(name);
       await goBack();
       await see("home");
