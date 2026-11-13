@@ -28,6 +28,7 @@ test("client has the pieces extension pages use", () => {
     "AppWordmark", "AppMark", "APP_ICONS", "IconVibot", "IconVmem", "IconVerve", "IconEva", "IconBee",
     "createThemeProvider", "applyThemeClass", "getSystemTheme", "cn", "tokens",
     "startUpdateAvailableWatcher", "showUpdateAvailableToast",
+    "isChunkLoadError", "installStaleDeployReload", "claimStaleDeployReload", "reloadForStaleDeploy", "stripStaleDeployReloadParam",
   ]) {
     expect(client, name).toHaveProperty(name);
   }

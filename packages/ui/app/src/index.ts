@@ -23,6 +23,17 @@ export {
   type UpdateAvailableWatcherOptions,
   type UpdateToastOptions,
 } from "./update/updateWatcher.js";
+export {
+  isChunkLoadError,
+  claimStaleDeployReload,
+  reloadForStaleDeploy,
+  stripStaleDeployReloadParam,
+  installStaleDeployReload,
+  STALE_DEPLOY_RELOAD_KEY,
+  STALE_DEPLOY_RELOAD_PARAM,
+  type StaleDeployReloadConfig,
+  type InstallStaleDeployReloadOptions,
+} from "./update/staleDeployReload.js";
 
 export {
   SettingsSection,
