@@ -2,6 +2,7 @@
 import { Text, View } from "react-native";
 import { IconHome, IconPlus, IconSettings } from "@tabler/icons-react-native";
 import { FloatingFAB, FloatingSurface, FloatingTabBar, GlassBlurProvider, GlassBlurTarget, GlassSheetBackground, LiquidGlass } from "@vvedantb/native-ui";
+import { TabScreen } from "@vvedantb/native-ui/expo-router";
 import { Block, GText } from "../ui";
 
 const ROUTES = [
@@ -41,6 +42,17 @@ export function GlassSection() {
             <LiquidGlass style={{ flex: 1, borderRadius: 28, justifyContent: "center", alignItems: "center" }}>
               <GText>Liquid glass</GText>
             </LiquidGlass>
+          </View>
+        </GlassBlurProvider>
+      </Block>
+      <Block title="TabScreen">
+        <GlassBlurProvider>
+          <View style={{ height: 120 }}>
+            <TabScreen>
+              <View testID="tab-screen" style={{ flex: 1, backgroundColor: "#db2777", borderRadius: 16, justifyContent: "center" }}>
+                <Text style={{ color: "white", textAlign: "center" }}>Focused tab: blur target active</Text>
+              </View>
+            </TabScreen>
           </View>
         </GlassBlurProvider>
       </Block>

@@ -1,12 +1,30 @@
-# The layout and AI cards sections mount the list rows, pager, media, video,
-# HTML view, diff and prompt menu parts. Opening each section proves they render
-# on a device; the taps prove the pager and the prompt menu respond.
+# The glass, layout and AI cards sections mount the blur target, list rows,
+# pager, media, video, HTML view, diff and prompt menu parts. Opening each
+# section proves they render on a device; the taps prove the pager and the
+# prompt menu respond. The glass stop proves TabScreen renders its focus-gated
+# blur target.
 appId: dev.vvedantb.nativegallery
 ---
 - launchApp:
     clearState: true
 - assertVisible:
     id: home
+
+- scrollUntilVisible:
+    element:
+      id: link-glass
+- tapOn:
+    id: link-glass
+- assertVisible:
+    id: section-glass
+- scrollUntilVisible:
+    element:
+      id: tab-screen
+    timeout: 60000
+- assertVisible:
+    id: tab-screen
+- takeScreenshot: screenshots/glass-tab-screen
+- pressKey: back
 
 - scrollUntilVisible:
     element:
