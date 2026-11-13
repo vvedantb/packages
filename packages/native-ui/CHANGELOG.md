@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.1
+
+### Patch Changes
+
+- [#213](https://github.com/vvedantb/packages/pull/213) [`338c232`](https://github.com/vvedantb/packages/commit/338c232eabd1f2e2b210dfb54528ee6e01262aaa) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `TabBarItem` drops its hand-written `memo`: the React Compiler build memoises it. The build script moved to the repo root, shared with `@vvedantb/ui`.
+
 ## 0.18.0
 
 ### Minor Changes

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.41.0
+
+### Minor Changes
+
+- [#215](https://github.com/vvedantb/packages/pull/215) [`cb3be86`](https://github.com/vvedantb/packages/commit/cb3be86a38621b2953b3e502a3959febcddc99e6) Thanks [@vvedantb](https://github.com/vvedantb)! - Add the chat and page pieces that vibot and eva each kept a copy of: `ChatLastTurn`, `ChatDayDivider` (with `formatChatDayLabel` and `formatChatClockTime`), `CollapsibleUserMessageBody`, `PageHeaderBar`, `PageWrapper`, and the `.scroll-fade` / `.scroll-fade-x` edge-fade masks (`@vvedantb/ui/tokens/css/scroll-fade.css`, also part of `tokens/css/index.css`). Set `--scroll-fade-max` to cap how far a fade reaches.
+
+- [#213](https://github.com/vvedantb/packages/pull/213) [`338c232`](https://github.com/vvedantb/packages/commit/338c232eabd1f2e2b210dfb54528ee6e01262aaa) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Ships compiled code: `dist/` is built with React Compiler (target 19) and plain JavaScript (JSX compiled to `react/jsx-runtime`), so apps get memoised components without compiling `node_modules`. It covers `src` and the `app`, `shell` and `tokens` sources it imports, at the same paths. Types still come from `src`, and Tailwind `@source` still scans `src`, `app/src` and `shell/src`. A `source` export condition points at `src`. All `"use client"` directives are removed: no consumer uses React Server Components. 21 components the compiler skips (Rules of React breaks) ship unmemoised, as before; `compiler-baseline.json` lists them and a new skip fails the build.
+
+### Patch Changes
+
+- [#216](https://github.com/vvedantb/packages/pull/216) [`914acb0`](https://github.com/vvedantb/packages/commit/914acb085a6c1f5d37e8b9c50759fe9051cb79b6) Thanks [@vvedantb](https://github.com/vvedantb)! - `PageWrapper` no longer takes a `useSyncTitle` prop (a hook passed as a prop breaks the Rules of React). Call the app's `usePageTitleSync(title)` next to it.
+
 ## 0.40.0
 
 ### Minor Changes
