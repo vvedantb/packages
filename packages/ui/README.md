@@ -967,7 +967,7 @@ Actions are pill `Button`s. The only motion `ProductHero` adds is the `userCount
   tagline="Each bot has its own ongoing chat and its own memory. vibot is your default bot. It sends each message to the bot that should answer."
   primaryCta={{ label: "Try vibot free", href: "/sign-up" }}
   signIn={{ href: "/sign-in" }}
-  visual={<OrbitRings />}
+  visual={<ProductHeroOrbit />}
   visualLabel="Rings orbiting a bot"
   userCount={userCount} // undefined while loading
 />
@@ -983,9 +983,22 @@ const V_STORE_DOWNLOAD_URL = "https://projectv.uk/download/v-store";
   tagline="..."
   primaryCta={{ label: "Try the demo", href: "#demo" }}
   secondaryCta={{ label: "Download on V Store", href: V_STORE_DOWNLOAD_URL, rel: "nofollow" }}
-  visual={<OrbitRings />}
+  visual={<ProductHeroOrbit accent="oklch(0.75 0.15 165)" />}
 />
 ```
+
+#### `ProductHeroOrbit`
+
+The default `visual`: a glowing core with three orbit rings. Use it so a product sets a colour and does not draw its own visual.
+Motion is CSS only and stops under `prefers-reduced-motion: reduce`.
+
+| Prop | |
+| --- | --- |
+| `accent` | Any CSS colour. It tints the glow, rings and dots. Default: the foreground colour. |
+| `children` | Optional mark in the core, for example the product logo. |
+| `className` | Default size is `w-full max-w-sm`, square. |
+
+`showProductOf` is `true` by default. Products that are not part of Project V set `showProductOf={false}`.
 
 #### Feeding `userCount`
 
