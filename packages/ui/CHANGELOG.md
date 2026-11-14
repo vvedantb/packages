@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 0.47.0
+
+### Minor Changes
+
+- [#236](https://github.com/vvedantb/packages/pull/236) [`7db4f19`](https://github.com/vvedantb/packages/commit/7db4f194aeaa25b5352ce5524cd236d6f386f404) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Generative UI in the kits: agent-composed panels from one shared catalog.
+  
+  - `@vvedantb/server/generative-ui`: the 16 component definitions (zod props), the `reply` and `open_url` actions, tones and styles, `parseGenerativeUiSpec` and `isHttpUrl`. No json-render runtime: pass `generativeUiCatalogDefinition` to json-render's `defineCatalog`.
+  - `@vvedantb/ui/generative-ui`: `GenerativeUiPanel` (stored spec, `onReply`, `onOpenUrl`), `GenerativeUiRenderer` and `generativeUiCatalog` on `@json-render/react`.
+  - `@vvedantb/native-ui/generative-ui`: `GenerativeUiPanel` (plus `onCopy` and `renderUnsupported`) and `generativeUiNativeCatalog` on `@json-render/react-native`, drawn as the web panel on the native tokens.
+  
+  New optional peers: `@json-render/core`, `@json-render/react` (ui), `@json-render/react-native` (native-ui), `>=0.21.0`.
+
+### Patch Changes
+
+- [#241](https://github.com/vvedantb/packages/pull/241) [`2deb3b1`](https://github.com/vvedantb/packages/commit/2deb3b1b15212dc08e4669931c1e1ab705fafffd) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix two `SiteHeader` faults. The wordmark sat about 3px above the centre of the bar; it is now centred. In `LandingPageLayout` the hero's grid background started below the bar and left a plain band at the top; it now runs to the top of the page, behind the bar. The second fix is in `@vvedantb/ui/landing.css`.
+- Updated dependencies [[`7db4f19`](https://github.com/vvedantb/packages/commit/7db4f194aeaa25b5352ce5524cd236d6f386f404), [`bf81bce`](https://github.com/vvedantb/packages/commit/bf81bced5e91f69f5d21944d31afc4004a7c73ce)]:
+  - @vvedantb/server@0.16.0
+
 ## 0.46.0
 
 ### Minor Changes
