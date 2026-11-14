@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Gallery e2e on an Android emulator, driven by scripts/agent/adb.mjs and the test clock.
 // Needs the agent build (`pnpm --filter native-gallery build:android:agent`) installed.
-// Covers the five flows that used to live in .maestro/. Each step prints one JSON line;
-// a failure saves screenshots/FAIL-<scenario>.png and exits 1.
+// Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
+// prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens dropdown composer sheets select)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens dropdown composer sheets select pager)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -159,6 +159,27 @@ const scenarios = {
     shot("layering-bottom-sheet-open");
     await press("bottom-sheet-close");
     await gone("bottom-sheet-body");
+  },
+  // Tabs linked to a Pager's progress run the sliding indicator's worklet on the
+  // UI thread. A worklet that calls a plain JS function closes the app here.
+  async pager() {
+    await fresh();
+    await press("link-layout");
+    await press("pager-tab-0");
+    await see("Page 1 of 3: Chats");
+    for (const [tab, text] of [["pager-tab-2", "Page 3 of 3: Settings"], ["pager-tab-1", "Page 2 of 3: Files"]]) {
+      await press(tab);
+      await see(text);
+    }
+    // A swipe drives `progress` frame by frame, as a finger does.
+    const nodes = dumpNodes({ retries: 2 });
+    const page = nodes.find((n) => n.text === "Page 2 of 3: Files");
+    if (!page?.center) throw new AgentError("pager page not found");
+    const width = nodes[0].bounds[2];
+    swipe(Math.round(width * 0.85), page.center[1], Math.round(width * 0.15), page.center[1], 300);
+    await settle();
+    await see("Page 3 of 3: Settings");
+    shot("layout-pager-tabs");
   },
   async select() {
     await fresh();

@@ -19,6 +19,7 @@ import {
   LoadingState,
   MediaCard,
   Pager,
+  PillTabs,
   PinnedBotTile,
   SafeAreaContainer,
   ScreenContainer,
@@ -122,6 +123,14 @@ export function LayoutSection() {
         </GestureHandlerProvider>
       </Block>
       <Block title="Pager">
+        {/* Tabs linked to the pager's `progress`, as an app's paged screen uses them: the
+            sliding indicator's worklet runs only with `progress` (e2e "pager"). */}
+        <PillTabs<string>
+          options={PAGES.map((label, index) => ({ id: label, label, testID: `pager-tab-${index}` }))}
+          value={PAGES[page] ?? "Chats"}
+          onChange={(id) => setPage(PAGES.indexOf(id))}
+          progress={pagerProgress}
+        />
         <GestureHandlerProvider>
           <View style={{ height: 96 }}>
             <Pager

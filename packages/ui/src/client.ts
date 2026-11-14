@@ -371,6 +371,17 @@ export {
   type UpdateAvailableWatcherOptions,
   type UpdateToastOptions,
 } from "../app/src/update/updateWatcher";
+export {
+  isChunkLoadError,
+  claimStaleDeployReload,
+  reloadForStaleDeploy,
+  stripStaleDeployReloadParam,
+  installStaleDeployReload,
+  STALE_DEPLOY_RELOAD_KEY,
+  STALE_DEPLOY_RELOAD_PARAM,
+  type StaleDeployReloadConfig,
+  type InstallStaleDeployReloadOptions,
+} from "../app/src/update/staleDeployReload";
 export { SettingsSection, type SettingsSectionConfig } from "../app/src/settings/SettingsSection";
 export { SettingsField } from "../app/src/settings/SettingsField";
 export { SettingsStack } from "../app/src/settings/SettingsStack";

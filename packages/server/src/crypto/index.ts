@@ -17,6 +17,13 @@ export {
   type Base64DecodeOptions,
   type Base64UrlEncodeOptions,
 } from "./encoding.js";
+export {
+  githubStyleSignature,
+  hmacSha256,
+  hmacSha256Hex,
+  verifyGithubStyleSignature,
+  type HmacMessage,
+} from "./hmac.js";
 export { randomBytes, randomToken, type RandomTokenEncoding } from "./random.js";
 export { sha256Hex } from "./sha256.js";
 export { timingSafeEqual } from "./timingSafeEqual.js";

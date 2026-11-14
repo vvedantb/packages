@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- [#225](https://github.com/vvedantb/packages/pull/225) [`4eada13`](https://github.com/vvedantb/packages/commit/4eada137e0ff7871dd1003c9b92e92fa29c1b892) Thanks [@vvedantb](https://github.com/vvedantb)! - Add four shared tooling items used across the apps:
+  
+  - `withReleaseSigning`: an Expo config plugin that signs the Android `release` build type from a keystore (environment, else `keystore.properties`), failing a release when a value is missing. `expo/config-plugins` is an optional, lazily resolved peer. Marker is configurable and defaults to a value containing `plugins/withReleaseSigning.js` so build-script greps pass.
+  - `singletons` (and `nativeWindConfig`) on `defineExpoMetroConfig`: rewrites `originModulePath` to the app's `package.json` for the given module heads so a single copy resolves. Backward compatible for apps that omit it.
+  - `vvedantb-android-release`: a config-driven Android release build bin that merges the per-app build scripts into one and keeps the reusable-workflow `GITHUB_OUTPUT` interface (`apk`, `release_json`, `version_name`, `version_code`, `sha256`). Runs on Linux CI.
+  - A shared oxlint JS plugin at `@vvedantb/config/oxlint/plugin.mjs` with `no-value-block-in-try`, `no-source-text-in-tests`, `no-double-cast` and `no-json-parse`.
+
 ## 0.4.0
 
 - New subpath `@vvedantb/config/extension` for Chrome extensions built with WXT. Like the Vite presets, it never imports WXT, Vite or a plugin; the app passes its plugin factories in. WXT is not a peer.
