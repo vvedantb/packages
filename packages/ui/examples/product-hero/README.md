@@ -1,6 +1,6 @@
 # product hero fixture
 
-Renders `ProductHero` from `@vvedantb/ui/client` with the live headline and tagline of each product site (see `docs/audits/v-apps-hero-audit.md` at the repository root). The visual is a placeholder: a CSS pulse and orbit rings, as a stand-in for the Project V concept visual. It is not an app replica. The rings stop under `prefers-reduced-motion: reduce`.
+Renders `ProductHero` from `@vvedantb/ui/client` with the live headline and tagline of each product site (see `docs/audits/v-apps-hero-audit.md` at the repository root). The visual is `ProductHeroOrbit`, the shared concept visual: a glowing core and orbit rings. Each example sets an example `accent`, except `vibot`, which shows the default foreground colour. It is not an app replica. The rings stop under `prefers-reduced-motion: reduce`.
 
 Choose the example with `?app=`: `vibot` (default), `verve`, `velth`, `vmem` or `vhub`. The playground loads Instrument Sans from `fonts/instrument-sans.css`, so titles render in the real font. The component source names no app; only `Fixture.tsx` does.
 

@@ -335,6 +335,8 @@ export type {
 } from "./marketing/SiteFooter";
 export { ProductHero } from "./marketing/ProductHero";
 export type { ProductHeroAction, ProductHeroProps } from "./marketing/ProductHero";
+export { ProductHeroOrbit } from "./marketing/ProductHeroOrbit";
+export type { ProductHeroOrbitProps } from "./marketing/ProductHeroOrbit";
 export { PROJECT_V_HOME_URL } from "./marketing/projectV";
 export { PricingModal, V_PRO_APP_BENEFITS } from "./marketing/PricingModal";
 export type {
