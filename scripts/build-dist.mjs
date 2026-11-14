@@ -35,6 +35,35 @@ const walk = (dir) =>
 
 const isTest = (rel) => /\.test\.tsx?$/.test(rel) || /(^|\/)__snapshots__\//.test(rel);
 
+/**
+ * One `.ts` / `.tsx` file as it ships in `dist`: React Compiler output with
+ * TypeScript stripped, and compiler-hoisted helpers put back into worklets.
+ */
+export async function compileFile(file, { jsx, logger }) {
+  const isTsx = file.endsWith(".tsx");
+  const presets = [];
+  if (jsx === "automatic") presets.push([resolved("@babel/preset-react"), { runtime: "automatic" }]);
+  const compiled = await transformFileAsync(file, {
+    babelrc: false,
+    configFile: false,
+    sourceMaps: false,
+    // The compiler runs first, on the typed source, as Expo orders it.
+    plugins: [[resolved("babel-plugin-react-compiler"), { target: "19", logger }]],
+    presets: [
+      ...presets,
+      [resolved("@babel/preset-typescript"), { isTSX: isTsx, allExtensions: true, onlyRemoveTypeImports: false }],
+    ],
+  });
+  const inlined = await transformAsync(compiled.code, {
+    babelrc: false,
+    configFile: false,
+    sourceMaps: false,
+    parserOpts: { plugins: ["jsx"] },
+    plugins: [keepWorkletHelpersInline],
+  });
+  return inlined.code;
+}
+
 export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensions = false, update = process.argv.includes("--update") }) {
   const name = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).name;
   const dist = join(root, "dist");
@@ -50,9 +79,6 @@ export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensi
       skips.push(`${file} :: ${reason}`);
     },
   };
-  const presets = [];
-  if (jsx === "automatic") presets.push([resolved("@babel/preset-react"), { runtime: "automatic" }]);
-
   rmSync(dist, { recursive: true, force: true });
   let compiled = 0;
   for (const dir of dirs) {
@@ -68,26 +94,9 @@ export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensi
         continue;
       }
       const isTsx = rel.endsWith(".tsx");
-      const result = await transformFileAsync(file, {
-        babelrc: false,
-        configFile: false,
-        sourceMaps: false,
-        // The compiler runs first, on the typed source, as Expo orders it.
-        plugins: [[resolved("babel-plugin-react-compiler"), { target: "19", logger }]],
-        presets: [
-          ...presets,
-          [resolved("@babel/preset-typescript"), { isTSX: isTsx, allExtensions: true, onlyRemoveTypeImports: false }],
-        ],
-      });
-      const inlined = await transformAsync(result.code, {
-        babelrc: false,
-        configFile: false,
-        sourceMaps: false,
-        parserOpts: { plugins: ["jsx"] },
-        plugins: [keepWorkletHelpersInline],
-      });
+      const code = await compileFile(file, { jsx, logger });
       const ext = isTsx && jsx === "preserve" ? ".jsx" : ".js";
-      writeFileSync(out.replace(/\.tsx?$/, ext), `${inlined.code}\n`);
+      writeFileSync(out.replace(/\.tsx?$/, ext), `${code}\n`);
       compiled++;
     }
   }

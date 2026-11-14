@@ -16,6 +16,7 @@ on:
       - "packages/native-ui/**"
       - "apps/native-gallery/**"
       - "scripts/agent.mjs"
+      - "scripts/build-dist.mjs"
       - "scripts/agent/**"
       - ".github/workflows/native-ui-gallery.yml"
 
