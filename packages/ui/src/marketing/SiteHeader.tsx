@@ -107,7 +107,7 @@ export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, git
       <a
         href={homeHref}
         className={cn(
-          "group min-w-0 shrink-0 rounded-lg max-md:absolute max-md:left-1/2 max-md:-translate-x-1/2",
+          "group flex min-w-0 shrink-0 items-center rounded-lg max-md:absolute max-md:left-1/2 max-md:-translate-x-1/2",
           focusRing,
         )}
         aria-label={homeLabel}
