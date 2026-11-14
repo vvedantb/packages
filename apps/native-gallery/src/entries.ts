@@ -14,6 +14,7 @@ import * as dateTime from "@vvedantb/native-ui/date-time";
 import * as expoRouter from "@vvedantb/native-ui/expo-router";
 import * as expoWebRoot from "@vvedantb/native-ui/expo-web-root";
 import * as floating from "@vvedantb/native-ui/floating";
+import * as generativeUi from "@vvedantb/native-ui/generative-ui";
 import * as gestureHandler from "@vvedantb/native-ui/gesture-handler";
 import * as gallery from "@vvedantb/native-ui/gallery";
 import * as haptics from "@vvedantb/native-ui/haptics";
@@ -47,6 +48,7 @@ export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   "/expo-web-root": expoWebRoot,
   "/floating": floating,
   "/gallery": gallery,
+  "/generative-ui": generativeUi,
   "/gesture-handler": gestureHandler,
   "/haptics": haptics,
   "/keyboard-controller": keyboardController,

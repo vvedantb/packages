@@ -17,6 +17,7 @@ on:
       - "!apps/native-gallery/tests/**"
       - "packages/native-ui/src/**"
       - "packages/native-ui/package.json"
+      - "packages/server/src/generative-ui/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/release-gallery-android.yml"
   workflow_dispatch:

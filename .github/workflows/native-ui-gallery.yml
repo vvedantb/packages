@@ -14,6 +14,7 @@ on:
   pull_request:
     paths:
       - "packages/native-ui/**"
+      - "packages/server/src/generative-ui/**"
       - "apps/native-gallery/**"
       - "scripts/agent.mjs"
       - "scripts/build-dist.mjs"
@@ -60,6 +61,7 @@ jobs:
           pnpm --filter @vvedantb/native-ui typecheck
           pnpm --filter @vvedantb/native-ui test
           pnpm --filter @vvedantb/native-ui build
+          pnpm --filter @vvedantb/server build
 
       - name: Typecheck the gallery
         run: pnpm --filter native-gallery typecheck

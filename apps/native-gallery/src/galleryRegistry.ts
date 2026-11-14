@@ -127,6 +127,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   FloatingSurface: "glass",
   FloatingTabBar: "glass",
   FromProjectV: "parity",
+  GenerativeUiPanel: "ai-cards",
   GestureHandlerProvider: "layout",
   GlassBlurProvider: "glass",
   GlassBlurTarget: "glass",

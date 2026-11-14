@@ -3,6 +3,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import { IconTrash } from "@tabler/icons-react-native";
 import { ProviderIcon } from "@vvedantb/native-ui/brand";
+import { GenerativeUiPanel } from "@vvedantb/native-ui/generative-ui";
 import { Markdown } from "@vvedantb/native-ui/markdown";
 import {
   ActivityStepDetail,
@@ -57,6 +58,34 @@ const DIFF_LINES: UnifiedDiffLine[] = [
   { kind: "context", text: "}", oldLine: 3, newLine: 4 },
 ];
 
+/** A generative UI panel with every catalog component, plus one type the catalog does not know. */
+const GENERATIVE_UI_SPEC = JSON.stringify({
+  root: "root",
+  elements: {
+    root: { type: "Stack", props: { direction: "vertical", gap: "md", align: "stretch" }, children: ["panel", "grid", "callout", "progress", "checklist", "table", "kv", "code", "image", "sep", "buttons", "future"] },
+    panel: { type: "Panel", props: { title: "Deploy summary", description: LONG_TEXT }, children: ["heading", "text", "badge"] },
+    heading: { type: "Heading", props: { text: "Production", level: "h3" } },
+    text: { type: "Text", props: { text: "All checks passed on the release branch.", variant: "body" } },
+    badge: { type: "Badge", props: { text: "Healthy", tone: "positive" } },
+    grid: { type: "Grid", props: { columns: 3, gap: "sm" }, children: ["m1", "m2", "m3"] },
+    m1: { type: "Metric", props: { label: "Tests", value: "1,705", delta: "+12", tone: "positive" } },
+    m2: { type: "Metric", props: { label: "Warnings", value: "3", delta: null, tone: "warning" } },
+    m3: { type: "Metric", props: { label: "Errors", value: "0", delta: null, tone: "neutral" } },
+    callout: { type: "Callout", props: { title: "Heads up", text: "One migration runs on deploy.", tone: "warning" } },
+    progress: { type: "Progress", props: { label: "Rollout", value: 64 } },
+    checklist: { type: "Checklist", props: { items: [{ text: "Build", done: true }, { text: "Smoke test", done: false }] } },
+    table: { type: "Table", props: { columns: ["Region", "Status", "Latency"], rows: [["eu-west", "OK", "41 ms"], ["us-east", "OK", "58 ms"]] } },
+    kv: { type: "KeyValue", props: { items: [{ label: "Branch", value: "main" }, { label: "Commit", value: LONG_TEXT }] } },
+    code: { type: "Code", props: { code: "pnpm deploy --prod", language: "shell" } },
+    image: { type: "Image", props: { url: "https://picsum.photos/seed/native-gallery-gen-ui/800/450", alt: "Deploy graph" } },
+    sep: { type: "Separator", props: {} },
+    buttons: { type: "Stack", props: { direction: "horizontal", gap: "sm", align: "center" }, children: ["reply", "open"] },
+    reply: { type: "Button", props: { label: "Roll back", variant: "secondary" }, on: { press: { action: "reply", params: { message: "Roll back the deploy" } } } },
+    open: { type: "Button", props: { label: "Open logs", variant: "ghost" }, on: { press: { action: "open_url", params: { url: "https://example.com/logs" } } } },
+    future: { type: "FutureChart", props: {} },
+  },
+});
+
 const MARKED_LINES = new Set([3]);
 
 const THREAD = [
@@ -80,8 +109,21 @@ export function AiCardsSection() {
   const [jumped, setJumped] = useState("none");
   const [answers, setAnswers] = useState("none");
   const [open, setOpen] = useState(false);
+  const [genUi, setGenUi] = useState("none");
   return (
     <>
+      <Block title="GenerativeUiPanel" id="generative-ui">
+        <GenerativeUiPanel
+          spec={GENERATIVE_UI_SPEC}
+          onReply={(message) => setGenUi(`reply ${message}`)}
+          onOpenUrl={(url) => setGenUi(`open ${url}`)}
+          onCopy={() => setGenUi("copy")}
+          renderUnsupported={(type) => <GText>{`Not drawn here: ${type}`}</GText>}
+          testID="generative-ui-panel"
+        />
+        <GText testID="generative-ui-result">{`Panel action: ${genUi}`}</GText>
+        <GenerativeUiPanel spec="not a spec" />
+      </Block>
       <Block title="UnifiedDiff and DiffStat">
         <DiffStat additions={2} deletions={1} />
         <DiffStat additions={0} deletions={0} hideZero />

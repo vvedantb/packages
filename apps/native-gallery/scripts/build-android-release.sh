@@ -69,6 +69,7 @@ export PATH="$(dirname "$SDKMANAGER"):$PATH"
 # compiled `dist` (React Compiler), as apps get it from npm. Build it first.
 pnpm install --frozen-lockfile
 pnpm --filter @vvedantb/native-ui build
+pnpm --filter @vvedantb/server build
 
 cd "$MOBILE"
 

@@ -6,6 +6,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
+      "@vvedantb/server/generative-ui": [
+        "../../packages/server/src/generative-ui/index.ts"
+      ],
       "*": [
         "./node_modules/@types/*",
         "./node_modules/*"
