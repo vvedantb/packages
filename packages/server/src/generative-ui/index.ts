@@ -7,6 +7,7 @@ export {
   generativeUiComponents,
   type GenerativeUiButtonVariant,
   type GenerativeUiComponentName,
+  type GenerativeUiPropsMap,
   type GenerativeUiProps,
   type GenerativeUiTextStyle,
   type GenerativeUiTone,

@@ -10,7 +10,7 @@
  *
  * The definitions are plain zod objects, so this module has no json-render
  * runtime: pass them to json-render's `defineCatalog` with the renderer's
- * schema (`defineGenerativeUiCatalog` in each renderer package).
+ * schema (each renderer package exports the catalog it builds).
  *
  * The prop schemas are closed sets of strings: the agent supplies every value
  * as a content block, and the composer never invents copy.
@@ -112,13 +112,62 @@ export const generativeUiComponents = {
   },
 };
 
+/**
+ * The props of each component, as plain types. Declared, not inferred from the
+ * zod schemas: an app resolves `zod` itself, and inferring through another
+ * zod install made enums `unknown` there. `PropsMatchSchemas` below fails this
+ * package's build when a schema and its declared props drift apart.
+ */
+export interface GenerativeUiPropsMap {
+  Stack: { direction: "vertical" | "horizontal"; gap: "sm" | "md" | "lg"; align: "start" | "center" | "stretch" };
+  Grid: { columns: number; gap: "sm" | "md" };
+  Panel: { title: string | null; description: string | null };
+  Heading: { text: string; level: "h2" | "h3" };
+  Text: { text: string; variant: GenerativeUiTextStyle };
+  Metric: { label: string; value: string; delta: string | null; tone: GenerativeUiTone };
+  Badge: { text: string; tone: GenerativeUiTone };
+  Callout: { title: string | null; text: string; tone: GenerativeUiTone };
+  Progress: { label: string | null; value: number };
+  Checklist: { items: { text: string; done: boolean }[] };
+  Table: { columns: string[]; rows: string[][] };
+  KeyValue: { items: { label: string; value: string }[] };
+  Code: { code: string; language: string | null };
+  Image: { url: string; alt: string | null };
+  Button: { label: string; variant: GenerativeUiButtonVariant };
+  Separator: Record<string, never>;
+}
+
 /** Every component type a spec may name. */
-export type GenerativeUiComponentName = keyof typeof generativeUiComponents;
+export type GenerativeUiComponentName = keyof GenerativeUiPropsMap;
 
 /** Props of component `T`, as the renderer receives them. */
-export type GenerativeUiProps<T extends GenerativeUiComponentName> = z.infer<
-  (typeof generativeUiComponents)[T]["props"]
->;
+export type GenerativeUiProps<T extends GenerativeUiComponentName> = GenerativeUiPropsMap[T];
+
+type Inferred = { [K in keyof typeof generativeUiComponents]: z.infer<(typeof generativeUiComponents)[K]["props"]> };
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type PropsMatchSchemas = {
+  [K in GenerativeUiComponentName]: K extends keyof Inferred ? Same<Inferred[K], GenerativeUiPropsMap[K]> : false;
+};
+/** Compile-time only: every entry must be `true`, or this assignment fails the build. */
+const propsMatchSchemas: PropsMatchSchemas = {
+  Stack: true,
+  Grid: true,
+  Panel: true,
+  Heading: true,
+  Text: true,
+  Metric: true,
+  Badge: true,
+  Callout: true,
+  Progress: true,
+  Checklist: true,
+  Table: true,
+  KeyValue: true,
+  Code: true,
+  Image: true,
+  Button: true,
+  Separator: true,
+};
+void propsMatchSchemas;
 
 /** Actions a Button can trigger; the app handles both (`onReply`, `onOpenUrl`). */
 export const generativeUiActions = {
