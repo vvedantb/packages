@@ -81,6 +81,30 @@ describe("SiteHeader", () => {
     expect(document.body.querySelector('a[aria-label$="on GitHub"]')).toBeNull();
   });
 
+  it("renders a site's own brand and actions in place of the app wordmark", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    await act(async () =>
+      createRoot(host).render(
+        <SiteHeader
+          brand={<span data-testid="brand">Bee</span>}
+          githubLabel="Bee on GitHub"
+          githubUrl="https://github.com/x/bee"
+          homeLabel="Bee home"
+          links={links(2)}
+          cta={<button type="button">Download</button>}
+          actions={<button type="button">Theme</button>}
+        />,
+      ),
+    );
+    const home = document.body.querySelector('a[aria-label="Bee home"]')!;
+    expect(home.querySelector('[data-testid="brand"]')?.textContent).toBe("Bee");
+    expect(home.querySelector("svg")).toBeNull();
+    expect(document.body.querySelector('a[aria-label="Bee on GitHub"]')).not.toBeNull();
+    const bar = document.body.querySelector("[data-floating-bar]")!;
+    expect([...bar.querySelectorAll("button")].map((b) => b.textContent)).toContain("Theme");
+  });
+
   it("opens the mobile menu in order: links, CTA, GitHub", async () => {
     await mount({ githubUrl: "https://github.com/x/y" });
     const trigger = document.body.querySelector<HTMLButtonElement>('button[aria-label="Open menu"]')!;
