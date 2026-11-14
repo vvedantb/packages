@@ -16,3 +16,4 @@ export type { ThemeConfig, ThemeColors, ThemePalette } from "../configureTheme";
 export { fontClass, fontFamily } from "../typography";
 export type { ThemeFonts } from "../typography";
 export { PINK_50, PINK_100, PINK_600, PINK_700, NEUTRAL_100, NEUTRAL_500, NEUTRAL_900, Colors } from "../colors";
+export { useScheme } from "../useScheme";

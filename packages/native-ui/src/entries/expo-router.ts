@@ -3,3 +3,5 @@
 // never import it.
 export { RouterStackPageHeader, goBackOrReplace } from "../router/RouterStackPageHeader";
 export type { RouterStackPageHeaderProps } from "../router/RouterStackPageHeader";
+export { TabScreen } from "../router/TabScreen";
+export type { TabScreenProps } from "../router/TabScreen";

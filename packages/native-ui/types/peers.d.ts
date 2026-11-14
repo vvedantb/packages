@@ -859,6 +859,9 @@ declare module "expo-router" {
     back(): void;
     canGoBack(): boolean;
   };
+  // Re-exported from `@react-navigation/native`: true while the nearest route
+  // is the focused one. `TabScreen` reads it to gate its blur target.
+  export function useIsFocused(): boolean;
 }
 
 declare module "expo-router/html" {

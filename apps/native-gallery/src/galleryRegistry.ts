@@ -235,6 +235,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   SurfaceRow: "layout",
   SwipeableRow: "layout",
   Switch: "layout",
+  TabScreen: "glass",
   Tabs: "glass",
   TabsContent: "parity",
   TabsList: "parity",
