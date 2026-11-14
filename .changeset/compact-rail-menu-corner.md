@@ -1,7 +1,0 @@
----
-"@vvedantb/ui": minor
----
-
-Visual change. The sidebar rail is more compact: `AppShell` `railWidth` defaults to `3.5rem` (was `4rem`) and `sidebarWidth` to `19.5rem` (was `20rem`, so the panel keeps its 16rem), rail tiles and the account trigger are 40px from `md` up (44px below, as before), the gap between tiles is `gap-1` (was `gap-1.5`) and `SIDEBAR_RAIL_APP_ICON_SIZE` is 24 (was 26). An app that passes its own `railWidth` or `sidebarWidth` keeps them.
-
-Menu surfaces (`DropdownMenu`, `ContextMenu`, `Select`, `RadixSelect`) use the new `rounded-menu` utility (12px at the default radius, was `rounded-lg`, 16px): the item radius plus the surface inset, so the gap between a highlighted item and the surface edge is the same round the corner. Menus are also more compact: the surface inset is `p-1` (was `p-1.5`), items are `py-1.5` (32px, was `py-2`, 36px; `max-sm:min-h-10` as before) and separators are `-mx-1`. `Command` matches: the root and, from `sm`, the `CommandDialog` content use `rounded-menu`, `CommandGroup` is `p-1`, `CommandItem` is `py-1.5`, `CommandSeparator` is `-mx-1` and `CommandList` drops `pb-2`. `ComposerSlashMenu` (was `rounded-surface`, 16px) and the model picker (`modelPickerSurfaceClass` and `ModelPickerContent`, was `rounded-lg`, 16px) use `rounded-menu` too; the model picker list inset is `p-1` (was `px-1.5 py-1.5`) and its rows and rail tiles use `rounded-menu-item` (was `rounded-md`, 14px). `rounded-menu` comes with `tokens.css` and `compat-shadcn-rgb.css`, and the root `cn` treats it as a radius class.
