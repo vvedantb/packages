@@ -288,13 +288,18 @@ export function CodeElement({ element }: ComponentRenderProps<GenerativeUiProps<
   return <CodeBlock code={code} language={language ?? undefined} onCopy={onCopy} />;
 }
 
-/** The web `max-h-80 w-full object-contain`: full width at the image's own shape, at most 320 high. */
+/**
+ * The web `max-h-80 w-full object-contain`: full width at the image's own
+ * shape, at most 320 high. An image that fails to load (an expired link)
+ * takes no space, not an empty 4:3 box.
+ */
 export function ImageElement({ element }: ComponentRenderProps<GenerativeUiProps<"Image">>) {
   const { url, alt } = element.props;
   const [aspect, setAspect] = useState(4 / 3);
   const [width, setWidth] = useState(0);
+  const [failed, setFailed] = useState(false);
   // A stored spec is data: only a hosted http(s) image loads, never `file:` or `content:`.
-  if (!isHttpUrl(url)) return null;
+  if (!isHttpUrl(url) || failed) return null;
   const height = width > 0 ? Math.min(320, width / aspect) : 0;
   return (
     <View className="w-full" onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
@@ -313,6 +318,7 @@ export function ImageElement({ element }: ComponentRenderProps<GenerativeUiProps
           const { width: w, height: h } = event.nativeEvent.source;
           if (w > 0 && h > 0) setAspect(w / h);
         }}
+        onError={() => setFailed(true)}
       />
     </View>
   );
