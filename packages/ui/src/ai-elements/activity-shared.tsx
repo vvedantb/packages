@@ -25,12 +25,14 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { quantizedSnapshot, subscribeQuantized } from "../utils/sharedClock";
 
 /** Props the activity timeline passes to its Markdown renderer. */
-export interface ActivityMarkdownProps {
+// A type alias, not an interface: streamdown 2.7.1 gave its props a
+// `data-*` index signature, and only an alias is assignable to that.
+export type ActivityMarkdownProps = {
   className?: string;
   /** `streaming` while the text is still arriving. */
   mode?: "static" | "streaming";
   children: string;
-}
+};
 
 /**
  * `UiConfig.ActivityTasks`: defaults for the agent activity timeline
