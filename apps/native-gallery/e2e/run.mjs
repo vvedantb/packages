@@ -142,7 +142,7 @@ const scenarios = {
       await see("home");
     }
   },
-  // The sections Eva's Sessions and Projects tabs draw from: list rows, the
+  // The sections an app's list screens draw from: list rows, the
   // running LoadingState grid (a Reanimated frame callback), skeletons, the
   // search field, empty states and markdown. Each is scrolled through so every
   // part mounts and animates; the app must still be alive after each one.
