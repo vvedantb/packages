@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.19.0
+
+### Minor Changes
+
+- [#221](https://github.com/vvedantb/packages/pull/221) [`ee759db`](https://github.com/vvedantb/packages/commit/ee759db259713612a79822dab69465df3c9c3bff) Thanks [@vvedantb](https://github.com/vvedantb)! - Export `useScheme` from `@vvedantb/native-ui/theme` and add `TabScreen` to `@vvedantb/native-ui/expo-router`.
+  
+  `useScheme` returns the active NativeWind colour scheme as a `"light" | "dark"` key and redraws the caller after each `configureTheme`. `TabScreen` wraps its children in a `GlassBlurTarget` that is active only while the tab is focused, so the focused tab owns the floating tab bar's Android blur target.
+
+### Patch Changes
+
+- [#226](https://github.com/vvedantb/packages/pull/226) [`10a55be`](https://github.com/vvedantb/packages/commit/10a55be0703d6a66ad3dc6b3f24c6d66cbdcb9df) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Fix an Android crash on tab change: React Compiler hoisted small functions out of worklets (the tab indicator's `useAnimatedStyle`), and the UI thread cannot call them. The dist build now puts them back inline.
+
 ## 0.18.1
 
 ### Patch Changes
