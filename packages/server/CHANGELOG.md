@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.16.0
+
+### Minor Changes
+
+- [#236](https://github.com/vvedantb/packages/pull/236) [`7db4f19`](https://github.com/vvedantb/packages/commit/7db4f194aeaa25b5352ce5524cd236d6f386f404) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Generative UI in the kits: agent-composed panels from one shared catalog.
+  
+  - `@vvedantb/server/generative-ui`: the 16 component definitions (zod props), the `reply` and `open_url` actions, tones and styles, `parseGenerativeUiSpec` and `isHttpUrl`. No json-render runtime: pass `generativeUiCatalogDefinition` to json-render's `defineCatalog`.
+  - `@vvedantb/ui/generative-ui`: `GenerativeUiPanel` (stored spec, `onReply`, `onOpenUrl`), `GenerativeUiRenderer` and `generativeUiCatalog` on `@json-render/react`.
+  - `@vvedantb/native-ui/generative-ui`: `GenerativeUiPanel` (plus `onCopy` and `renderUnsupported`) and `generativeUiNativeCatalog` on `@json-render/react-native`, drawn as the web panel on the native tokens.
+  
+  New optional peers: `@json-render/core`, `@json-render/react` (ui), `@json-render/react-native` (native-ui), `>=0.21.0`.
+
+### Patch Changes
+
+- [#240](https://github.com/vvedantb/packages/pull/240) [`bf81bce`](https://github.com/vvedantb/packages/commit/bf81bced5e91f69f5d21944d31afc4004a7c73ce) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `GenerativeUiProps` are declared types (`GenerativeUiPropsMap`), not inferred from the zod schemas. An app that resolved another zod install saw enum props as `unknown`. A compile-time check fails this package's build when a schema and its declared props drift apart.
+
 ## 0.15.0
 
 ### Minor Changes
