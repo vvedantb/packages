@@ -341,7 +341,7 @@ import {
 ```
 
 - Widths: `AppShell` sets `--app-shell-rail-width` (default `3.5rem`; `4rem` before 0.49.0), `--app-shell-sidebar-width` (rail plus panel, default `19.5rem`; `20rem` before 0.49.0) and `--app-shell-mobile-header-height` (default `calc(3.5rem + env(safe-area-inset-top, 0px))`) as inline style. Change them with `railWidth`, `sidebarWidth` and `mobileHeaderHeight`. The other pieces read these variables. Outside `AppShell`, set the variables yourself or pass a width class with `className`.
-- `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`.
+- `AppShell`: `sidebar`, `children`, `panelHidden` (main offsets by the rail width instead of the sidebar width), `skipLinkLabel` (`"Skip to main content"`), `mainId` (`"main-content"`), `className`, `mainClassName`, `contentClassName`, `scroll` (`"contained"`: the shell is one screen high and the content card scrolls; `"document"`: the page scrolls, with no card, gutter or margin animation).
 - `AppSidebar`: legacy (still supported) `rail`, `panel` and `mobile*` props; compose `Sidebar.*` instead. `rail`, `panel` (not rendered while `panelHidden`), `collapsed`, `panelHidden`, `isDesktop`, `mobileOpen`, `onMobileOpenChange`, `id` (default from `useId`), `asideProps` (`data-*` attributes for the `<aside>`), `className`, `mobileTitle`, `mobileHeaderActions` (0.5.2; trailing actions such as icon buttons, in place of the end spacer), `mobileMenuIcon` (`(open) => node`, default a menu icon), `mobileMenuLabel` (`"Open navigation menu"`), `closeLabel` (`"Close navigation"`). Swipe left or Escape closes the drawer. The drawer is `inert` while closed on mobile, and closes when `isDesktop` becomes `true`. Close it on route change in the app. The mobile header is a three-column grid, so the title and trailing actions stay on one row and a long title truncates (0.5.4).
 - `SidebarRail`: legacy (still supported) `top`, `footer`, `bodyAsChild`, `tabs` and `*ClassName` props; compose `Sidebar.Rail` parts instead. `top`, `children` (scroll body), `footer`, `showDivider`, `bodyAsChild` (the single child, for example a tabs list, becomes the body), `className`, `topClassName`, `bodyClassName`, `footerClassName`. Other HTML attributes (`id`, `data-*`, `aria-*`) go to the root `<div>`. The top and footer wrappers render only when their slot is set.
 - `RailTile`: `label` (`aria-label` and tooltip), `active`, `tooltip`, `showTooltip` (default `true`), `badge` (inside the tile, after the children; style it with `railBadgeClass`), `asChild`, `app`, `className`. Without `asChild` it is a native `<button type="button">` (0.5.3), so icons keep their authored size; other props go to it. With `asChild` the child (for example a router link) gets the tile classes and `aria-current="page"` when active.
@@ -459,10 +459,10 @@ Convention: compound parts are static members of a namespace object, `<Namespace
 
 | Part | Purpose |
 | --- | --- |
-| `Root` | Frame `<div>`. Sets the `--app-shell-*` variables (`railWidth`, `sidebarWidth`, `mobileHeaderHeight`), owns the `resizable` state, and passes `panelHidden` and `mainId` to the parts. `style` merges over the variables. |
+| `Root` | Frame `<div>`. Sets the `--app-shell-*` variables (`railWidth`, `sidebarWidth`, `mobileHeaderHeight`), owns the `resizable` state, and passes `panelHidden`, `scroll` and `mainId` to the parts. `style` merges over the variables. |
 | `SkipLink` | Visually hidden link to `<main>`. `label` (`"Skip to main content"`), `targetId` (default the Root `mainId`). |
 | `Main` | The `<main>`. Offsets by the sidebar width, or the rail width while `panelHidden`. `id` defaults to the Root `mainId` (`"main-content"`). |
-| `Content` | The content card inside `<main>`. |
+| `Content` | The content card inside `<main>`. A plain column while the Root `scroll` is `"document"`. |
 
 ### `Sidebar.*`
 

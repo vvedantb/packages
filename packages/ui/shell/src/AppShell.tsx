@@ -27,6 +27,12 @@ export type AppShellProps = {
    * the state with `AppSidebar`, `SidebarResizeHandle` and `useAppShellResize`.
    */
   resizable?: SidebarResizeOptions;
+  /**
+   * `"contained"` (default): the shell is one screen high and the content card
+   * scrolls. `"document"`: the page scrolls. The frame grows with the content,
+   * and there is no card, gutter or margin animation.
+   */
+  scroll?: AppShellScroll;
   /** Sets `--app-shell-mobile-header-height`. Default `"calc(3.5rem + env(safe-area-inset-top, 0px))"`. */
   mobileHeaderHeight?: string;
   /** Default `"Skip to main content"`. */
@@ -39,17 +45,20 @@ export type AppShellProps = {
   contentClassName?: string;
 };
 
+export type AppShellScroll = "contained" | "document";
+
 type ShellVars = CSSProperties & Record<`--app-shell-${string}`, string>;
 
-type AppShellContextValue = { mainId: string; panelHidden: boolean };
+type AppShellContextValue = { mainId: string; panelHidden: boolean; scroll: AppShellScroll };
 
 const AppShellContext = createContext<AppShellContextValue>({
   mainId: "main-content",
   panelHidden: false,
+  scroll: "contained",
 });
 
 export type AppShellRootProps = ComponentProps<"div"> &
-  Pick<AppShellProps, "panelHidden" | "railWidth" | "sidebarWidth" | "resizable" | "mobileHeaderHeight" | "mainId">;
+  Pick<AppShellProps, "panelHidden" | "railWidth" | "sidebarWidth" | "resizable" | "scroll" | "mobileHeaderHeight" | "mainId">;
 
 /** Frame `<div>`: sets the `--app-shell-*` variables and owns the resize state. `style` merges over the variables. */
 function Root({
@@ -57,6 +66,7 @@ function Root({
   railWidth = "3.5rem",
   sidebarWidth = "19.5rem",
   resizable,
+  scroll = "contained",
   mobileHeaderHeight = "calc(3.5rem + env(safe-area-inset-top, 0px))",
   mainId = "main-content",
   className,
@@ -70,11 +80,16 @@ function Root({
     "--app-shell-mobile-header-height": mobileHeaderHeight,
   };
   return (
-    <AppShellContext.Provider value={{ mainId, panelHidden }}>
+    <AppShellContext.Provider value={{ mainId, panelHidden, scroll }}>
       <SidebarResizeProvider value={resize}>
         <div
           {...props}
-          className={cn("relative h-dvh overflow-hidden bg-background", className)}
+          className={cn(
+            scroll === "document"
+              ? "relative min-h-dvh bg-background"
+              : "relative h-dvh overflow-hidden bg-background",
+            className,
+          )}
           style={{ ...vars, ...style }}
         />
       </SidebarResizeProvider>
@@ -110,7 +125,8 @@ export type AppShellMainProps = ComponentProps<"main">;
 
 /** `<main>`, offset by the sidebar (or rail while the Root `panelHidden`). `id` defaults to the Root `mainId`. */
 function Main({ id, className, ...props }: AppShellMainProps) {
-  const { mainId, panelHidden } = useContext(AppShellContext);
+  const { mainId, panelHidden, scroll } = useContext(AppShellContext);
+  const pageScrolls = scroll === "document";
   const resize = useSidebarResizeContext();
   return (
     <main
@@ -118,9 +134,12 @@ function Main({ id, className, ...props }: AppShellMainProps) {
       tabIndex={-1}
       {...props}
       className={cn(
-        "relative z-10 flex h-full min-h-0 outline-none md:p-2",
+        pageScrolls
+          ? "relative z-10 flex min-h-dvh outline-none"
+          : "relative z-10 flex h-full min-h-0 outline-none md:p-2",
         panelHidden ? "md:ml-[var(--app-shell-rail-width)]" : "md:ml-[var(--app-shell-sidebar-width)]",
-        !resize?.isResizing &&
+        !pageScrolls &&
+          !resize?.isResizing &&
           "md:transition-[margin-left] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
         className,
       )}
@@ -130,13 +149,16 @@ function Main({ id, className, ...props }: AppShellMainProps) {
 
 export type AppShellContentProps = ComponentProps<"div">;
 
-/** Content card inside `<main>`. Pads for the mobile header below `md`. */
+/** Content card inside `<main>` (a plain column while the Root `scroll` is `"document"`). Pads for the mobile header below `md`. */
 function Content({ className, ...props }: AppShellContentProps) {
+  const { scroll } = useContext(AppShellContext);
   return (
     <div
       {...props}
       className={cn(
-        "flex min-h-0 flex-1 flex-col overflow-hidden bg-surface pt-[var(--app-shell-mobile-header-height)] md:rounded-lg md:pt-0",
+        scroll === "document"
+          ? "flex min-w-0 flex-1 flex-col pt-[var(--app-shell-mobile-header-height)] md:pt-0"
+          : "flex min-h-0 flex-1 flex-col overflow-hidden bg-surface pt-[var(--app-shell-mobile-header-height)] md:rounded-lg md:pt-0",
         className,
       )}
     />
@@ -155,6 +177,7 @@ function LegacyAppShell({
   railWidth,
   sidebarWidth,
   resizable,
+  scroll,
   mobileHeaderHeight,
   skipLinkLabel,
   mainId = "main-content",
@@ -168,6 +191,7 @@ function LegacyAppShell({
       railWidth={railWidth}
       sidebarWidth={sidebarWidth}
       resizable={resizable}
+      scroll={scroll}
       mobileHeaderHeight={mobileHeaderHeight}
       mainId={mainId}
       className={className}
