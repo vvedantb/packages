@@ -134,6 +134,9 @@ jobs:
           script: |
             adb install -r android/app/build/outputs/apk/release/app-release.apk
             adb logcat -c -b all
+            # The emulator's launcher sometimes stops responding, and its "isn't responding" dialog covers the app.
+            # Hide system error dialogs: an app crash still fails the scenario and lands in crash.txt.
+            adb shell settings put global hide_error_dialogs 1
             # The runner starts a new shell for each line, so the exit code is kept on one line.
             node e2e/run.mjs > e2e-log.jsonl; status=$?; cat e2e-log.jsonl; adb logcat -d -t 2000 > logcat.txt; adb logcat -d -b crash > crash.txt; exit $status
 
