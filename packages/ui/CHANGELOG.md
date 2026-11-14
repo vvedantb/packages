@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.48.0
+
+### Minor Changes
+
+- [#243](https://github.com/vvedantb/packages/pull/243) [`92137e6`](https://github.com/vvedantb/packages/commit/92137e69471aa2480cf36e724f714ae786a62d3f) Thanks [@vvedantb](https://github.com/vvedantb)! - `SiteHeader` takes `brand` in place of `app`, so a site that is not a product app (Eva, Bee, Redline, flowtape) can use the same floating header with its own wordmark. `githubLabel` names its GitHub button. New optional `actions` slot before the CTA, shown at every width, for a small control such as a theme toggle.
+
 ## 0.47.0
 
 ### Minor Changes
