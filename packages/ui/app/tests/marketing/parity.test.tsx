@@ -28,8 +28,6 @@ import { LandingNav as ANav } from "./fixtures/app-a/LandingNav";
 import { LandingNav as ENav } from "./fixtures/app-e/LandingNav";
 import { LandingNavMenu as ANavMenu } from "./fixtures/app-a/LandingNavMenu";
 import { LandingNavMenu as ENavMenu } from "./fixtures/app-e/LandingNavMenu";
-import { LandingHero as AHero } from "./fixtures/app-a/LandingHero";
-import { LandingHero as EHero } from "./fixtures/app-e/LandingHero";
 import { LandingCta as ACta } from "./fixtures/app-a/LandingCta";
 import { LandingCta as ECta } from "./fixtures/app-e/LandingCta";
 import { LandingFooter as AFooter } from "./fixtures/app-a/LandingFooter";
@@ -155,7 +153,6 @@ describe("landing kit (app-a, app-e)", () => {
   const sections = [
     ["nav", ANav, adoptedA.LandingNav, ENav, adoptedE.LandingNav],
     ["nav menu (closed)", ANavMenu, adoptedA.LandingNavMenu, ENavMenu, adoptedE.LandingNavMenu],
-    ["hero", AHero, adoptedA.LandingHero, EHero, adoptedE.LandingHero],
     ["cta", ACta, adoptedA.LandingCta, ECta, adoptedE.LandingCta],
     ["footer", AFooter, adoptedA.LandingFooter, EFooter, adoptedE.LandingFooter],
     ["page", APage, adoptedA.LandingPage, EPage, adoptedE.LandingPage],

@@ -869,7 +869,7 @@ the animated parts. Call it once at module scope.
 import { motion } from "motion/react";
 import { createLandingKit } from "@vvedantb/ui";
 
-export const { LandingReveal, LandingRevealItem, LandingHero, LandingNav, LandingCta } =
+export const { LandingReveal, LandingRevealItem, LandingNav, LandingCta } =
   createLandingKit({ motion });
 ```
 
@@ -877,7 +877,6 @@ export const { LandingReveal, LandingRevealItem, LandingHero, LandingNav, Landin
 | --- | --- |
 | `LandingReveal` | `className`, `delay` (seconds, default `0`). Staggers its children in once, when 20% is in view. |
 | `LandingRevealItem` | `className`. One revealed child (`landingItemVariants`). |
-| `LandingHero` | `eyebrow`, `title`, `description` (nodes), `actions` (the button row; it renders even when empty), `capabilities` (strings). |
 | `LandingNav` | `brand`, `homeLabel` (home link `aria-label`), `links`, `github` (`href`, `label`, `icon`), `actions`, `menu`. |
 | `LandingCta` | `title`, `description`, `action`. |
 
