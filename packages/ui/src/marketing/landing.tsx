@@ -233,10 +233,7 @@ export function LandingPageLayout({ nav, heroBackdrop, hero, children, footer }:
     <div id="top" className="relative min-h-[100dvh] bg-background text-foreground">
       {nav}
       <main>
-        <div
-          data-landing-hero=""
-          className="landing-atmosphere landing-grain relative overflow-hidden border-b border-separator"
-        >
+        <div className="landing-atmosphere landing-grain relative overflow-hidden border-b border-separator">
           {heroBackdrop}
           {hero}
         </div>
