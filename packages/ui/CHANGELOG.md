@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.45.0
+
+### Minor Changes
+
+- [#233](https://github.com/vvedantb/packages/pull/233) [`90cf3bd`](https://github.com/vvedantb/packages/commit/90cf3bd20f939c0270302c8834680eafe202c1da) Thanks [@vvedantb](https://github.com/vvedantb)! - Remove the centred `LandingHero` from `createLandingKit`, along with `LandingHeroProps` and the `heroEyebrow`, `heroDescription` and `heroCapability` entries of `landingClasses`. Use `ProductHero` with `ProductHeroOrbit` for the landing hero. `LandingMotion` now only needs `div` and `header`.
+
+### Patch Changes
+
+- [#235](https://github.com/vvedantb/packages/pull/235) [`2862953`](https://github.com/vvedantb/packages/commit/2862953b5233bda7d33a109cff8402bccaddb777) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix a type error in `ActivityTasks` when the app installs `streamdown` 2.7.1. Apps no longer need to pin `streamdown` to 2.7.0.
+
 ## 0.44.0
 
 ### Minor Changes
