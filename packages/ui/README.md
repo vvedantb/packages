@@ -899,8 +899,9 @@ for the footer's `actions` slot `landingFooterLinkClass` (a text link) and
 ### `SiteHeader`
 
 Marketing header (0.38.0): `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE` (20px, icon 28px; no size prop), up to four
-links from `md`, one CTA and an optional GitHub button. Below `md` the links, the CTA and GitHub sit in one full-width
-dropdown menu, in that order. It is plain markup with no motion and needs no `createLandingKit`.
+links from `md`, one CTA and an optional GitHub button, in a `FloatingBar`. Below `md` the menu button sits on the
+left, the wordmark is centred, and the links, the CTA and GitHub sit in one full-width dropdown menu, in that order.
+It is plain markup with no motion and needs no `createLandingKit`.
 
 ```tsx
 <SiteHeader
@@ -921,7 +922,28 @@ dropdown menu, in that order. It is plain markup with no motion and needs no `cr
 | `cta` | One node. Use `Button` (default variant) with `size="sm"` and `className="rounded-full"`. Shows in the bar from `md` and full width in the menu below. No second slot. |
 | `githubUrl` | Optional. Ghost icon button from `sm`, labelled "{app} on GitHub", and the last menu item. |
 
-The bar is `sticky top-0 z-50`, `h-14 sm:h-16`, `bg-background/80 backdrop-blur-md` with a `border-separator` bottom border.
+`className` goes on the fixed `<header>` wrapper.
+
+### `FloatingBar`
+
+The floating pill that `SiteHeader` sits in: a transparent `fixed top-0 z-50` `<header>` with a `rounded-full`,
+`h-14`, `max-w-4xl` bar on `floatingSurfaceClass`. A spacer of the same height holds its place, so the page needs no
+top padding. It is fixed, not sticky, because `sticky` stops working inside a wrapper that sets `overflow-x-hidden`.
+Only the pill takes pointer events. Use it directly when the header needs its own navigation, such as a menu with panels.
+
+```tsx
+<FloatingBar barClassName="justify-between pl-5">
+  <Logo />
+  <MyNavigation />
+</FloatingBar>
+```
+
+| Prop | |
+| --- | --- |
+| `children` | The bar's content, laid out in one flex row. |
+| `className` | Classes for the `<header>` wrapper, for example an entrance animation. |
+| `barClassName` | Classes for the pill, for example another `max-w-*`. |
+
 `createLandingKit().LandingNav` and `LandingNavMenu` are deprecated in favour of `SiteHeader`.
 
 ### `SiteFooter`

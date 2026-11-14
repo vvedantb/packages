@@ -40,12 +40,16 @@ describe("SiteHeader", () => {
     expect((home.firstElementChild as HTMLElement).style.fontSize).toBe("20px");
   });
 
-  it("uses the sticky bar chrome", async () => {
+  it("sits in a fixed floating bar with a spacer", async () => {
     await mount();
     const header = document.body.querySelector("header")!;
-    for (const c of ["sticky", "top-0", "z-50", "backdrop-blur-md", "border-b", "border-separator"]) {
+    for (const c of ["fixed", "top-0", "z-50"]) {
       expect(header.classList.contains(c)).toBe(true);
     }
+    expect(header.previousElementSibling?.hasAttribute("data-floating-bar-spacer")).toBe(true);
+    const bar = header.querySelector("[data-floating-bar]")!;
+    expect(bar.classList.contains("rounded-full")).toBe(true);
+    expect(bar.querySelector('a[aria-label="velth home"]')).not.toBeNull();
   });
 
   it("warns above four links and not at four", async () => {

@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { cn } from "../utils/cn";
-import { landingClasses, landingShellClass } from "./marketing-classes";
+import { FloatingBar } from "./FloatingBar";
+import { landingClasses } from "./marketing-classes";
 
 /** Wordmark text size in px. The icon is `Math.round(20 * 1.4)` = 28px. There is no size prop. */
 export const SITE_HEADER_WORDMARK_SIZE = 20;
@@ -37,6 +38,7 @@ export type SiteHeaderProps = {
   cta: ReactNode;
   /** Optional GitHub URL. An icon button from `sm`, and the last item in the mobile menu. */
   githubUrl?: string;
+  /** Classes for the fixed `<header>` wrapper. */
   className?: string;
 };
 
@@ -49,12 +51,13 @@ function SiteHeaderMenu({ links, cta, githubUrl }: Pick<SiteHeaderProps, "links"
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={open ? "Close menu" : "Open menu"} className="md:hidden">
+        <Button variant="ghost" size="icon-sm" aria-label={open ? "Close menu" : "Open menu"} className="rounded-full md:hidden">
           <Icon size={20} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        align="end"
+        align="start"
+        sideOffset={12}
         className="max-h-[70dvh] w-[calc(100vw-2.5rem)] max-w-none overflow-y-auto sm:w-[calc(100vw-4rem)]"
       >
         {links.slice(0, MAX_LINKS).map((link) => (
@@ -82,9 +85,10 @@ function SiteHeaderMenu({ links, cta, githubUrl }: Pick<SiteHeaderProps, "links"
 }
 
 /**
- * Marketing header for the Project V apps: sticky, blurred, `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE`, up to four
- * links, one `cta` and an optional GitHub button. Below `md` the links, the CTA and GitHub move into one dropdown menu.
- * Plain markup with no motion, so any app can use it.
+ * Marketing header for the Project V apps: a `FloatingBar` with `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE`, up to
+ * four links, one `cta` and an optional GitHub button. Below `md` the menu button sits on the left, the wordmark is
+ * centred, and the links, the CTA and GitHub move into one dropdown menu. Plain markup with no motion, so any app can
+ * use it.
  */
 export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, githubUrl, className }: SiteHeaderProps) {
   const tooMany = links.length > MAX_LINKS;
@@ -97,32 +101,38 @@ export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, git
 
   const shown = links.slice(0, MAX_LINKS);
   return (
-    <header className={cn("sticky top-0 z-50 border-b border-separator bg-background/80 backdrop-blur-md", className)}>
-      <div className={cn(landingShellClass, "flex h-14 items-center justify-between gap-3 sm:h-16")}>
-        <a href={homeHref} className={cn("group min-w-0 shrink-0 rounded-lg", focusRing)} aria-label={homeLabel}>
-          <AppWordmark app={app} size={SITE_HEADER_WORDMARK_SIZE} />
-        </a>
+    <FloatingBar className={className} barClassName="justify-between gap-3 md:pl-5">
+      <SiteHeaderMenu links={shown} cta={cta} githubUrl={githubUrl} />
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Page">
-          {shown.map((link) => (
-            <a key={link.href} href={link.href} className={landingClasses.navLink}>
-              {link.label}
+      <a
+        href={homeHref}
+        className={cn(
+          "group min-w-0 shrink-0 rounded-lg max-md:absolute max-md:left-1/2 max-md:-translate-x-1/2",
+          focusRing,
+        )}
+        aria-label={homeLabel}
+      >
+        <AppWordmark app={app} size={SITE_HEADER_WORDMARK_SIZE} />
+      </a>
+
+      <nav className="hidden items-center gap-1 md:flex" aria-label="Page">
+        {shown.map((link) => (
+          <a key={link.href} href={link.href} className={cn(landingClasses.navLink, "rounded-full")}>
+            {link.label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="flex items-center gap-1.5">
+        {githubUrl ? (
+          <Button asChild variant="ghost" size="icon-sm" className="hidden rounded-full sm:inline-flex">
+            <a href={githubUrl} target="_blank" rel="noreferrer" aria-label={`${app} on GitHub`}>
+              <GitHubIcon size={18} />
             </a>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-1.5">
-          {githubUrl ? (
-            <Button asChild variant="ghost" size="icon-sm" className="hidden sm:inline-flex">
-              <a href={githubUrl} target="_blank" rel="noreferrer" aria-label={`${app} on GitHub`}>
-                <GitHubIcon size={18} />
-              </a>
-            </Button>
-          ) : null}
-          <div className="hidden md:flex">{cta}</div>
-          <SiteHeaderMenu links={shown} cta={cta} githubUrl={githubUrl} />
-        </div>
+          </Button>
+        ) : null}
+        <div className="hidden md:flex">{cta}</div>
       </div>
-    </header>
+    </FloatingBar>
   );
 }
