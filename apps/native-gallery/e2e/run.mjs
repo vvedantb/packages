@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens dropdown composer sheets select pager)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets select pager)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -67,10 +67,24 @@ async function goBack() {
 
 const shot = (name) => log({ screenshot: screenshot(resolve(shots, `${name}.png`)).path });
 
+/**
+ * The CI emulator's own apps (the launcher) sometimes stop responding, and the
+ * system "… isn't responding" dialog then covers the app for the whole run.
+ * Tap its Wait. An ANR of the gallery itself is not dismissed: that is a bug.
+ */
+function dismissSystemAnr() {
+  const nodes = dumpNodes({ retries: 2 });
+  const anr = nodes.find((n) => /isn.t responding/i.test(n.text ?? ""));
+  if (!anr || /gallery/i.test(anr.text)) return false;
+  log({ dismissed: anr.text });
+  tap("text=Wait", nodes);
+  return true;
+}
+
 /** Fresh app state, home screen showing, clock frozen. */
 async function fresh() {
   launch({ clear: true });
-  await until("home screen", () => visible("home"), 60_000);
+  await until("home screen", () => visible("home") || (dismissSystemAnr() && false), 60_000);
   await until("agent bridge", async () => {
     try {
       await clock("freeze", { timeout: 4000 });
@@ -101,6 +115,31 @@ async function growComposer(layout, lines) {
   log({ composer: { layout: layout ?? "inline", before, after } });
 }
 
+async function sectionsWithAnimations() {
+  await fresh();
+  // Real time, not the frozen test clock: the skeleton pulse and LoadingState
+  // loop forever, so `settle` (run to idle) can never finish inside a section.
+  await clock("resume");
+  for (const [link, marker, name] of [
+    ["link-layout", "section-layout", "section-layout"],
+    ["link-forms", "section-forms", "section-forms"],
+    ["link-parity", "screen-parity", "screen-parity"],
+    ["link-ai-cards", "section-ai-cards", "section-ai-cards"],
+  ]) {
+    await press(link);
+    await see(marker);
+    for (let i = 0; i < 6; i++) {
+      const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+      swipe(w / 2, Math.round(h * 0.8), w / 2, Math.round(h * 0.25), 300);
+      await sleep(600);
+    }
+    await see(marker);
+    shot(name);
+    back();
+    await see("home");
+  }
+}
+
 const scenarios = {
   async screens() {
     await fresh();
@@ -117,6 +156,23 @@ const scenarios = {
       shot(name);
       await goBack();
       await see("home");
+    }
+  },
+  // The sections an app's list screens draw from: list rows, the
+  // running LoadingState grid (a Reanimated frame callback), skeletons, the
+  // search field, empty states and markdown. Each is scrolled through so every
+  // part mounts and animates; the app must still be alive after each one.
+  async sections() {
+    // CI boots the emulator with animations off, which Android reports as
+    // Reduce Motion: the skeleton pulse and the LoadingState frame callback
+    // would take their still paths. Turn animations on so the UI-thread
+    // animation code runs, then restore the CI default.
+    const scales = ["animator_duration_scale", "transition_animation_scale", "window_animation_scale"];
+    for (const key of scales) adb(["shell", "settings", "put", "global", key, "1"]);
+    try {
+      await sectionsWithAnimations();
+    } finally {
+      for (const key of scales) adb(["shell", "settings", "put", "global", key, "0"], { allowFail: true });
     }
   },
   async dropdown() {
