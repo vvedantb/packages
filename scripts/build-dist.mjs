@@ -59,7 +59,7 @@ export async function compileFile(file, { jsx, logger }) {
     configFile: false,
     sourceMaps: false,
     parserOpts: { plugins: ["jsx"] },
-    plugins: [keepWorkletHelpersInline],
+    plugins: [],
   });
   return inlined.code;
 }

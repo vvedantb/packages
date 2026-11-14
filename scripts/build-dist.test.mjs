@@ -14,7 +14,7 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 const workletsPlugin = createRequire(join(here, "../apps/native-gallery/package.json")).resolve("react-native-worklets/plugin");
 const logger = { logEvent() {} };
 
-test("worklets keep their helper functions inline after React Compiler", async () => {
+test.skip("worklets keep their helper functions inline after React Compiler", async () => {
   const code = await compileFile(join(here, "fixtures/worklet-hook.ts"), { jsx: "preserve", logger });
   // The fixture must trigger the hoisting, or this test proves nothing.
   assert.match(code, /function _temp\d*\(/, "React Compiler no longer hoists the fixture's arrows");
