@@ -681,7 +681,7 @@ The radius utilities now come with `tokens.css` (and `compat-shadcn-rgb.css`), s
 | --- | --- | --- |
 | `rounded-surface` | `clamp(0.75rem, var(--radius), 1rem)` (16px) | Opt-in surfaces (Toaster `toastRadius="surface"`, `SessionsHoverCard`). Was in `utilities.css`. |
 | `rounded-menu-item` | `min(var(--radius), 0.5rem)` (8px) | Menu items and sidebar nav rows. |
-| `rounded-menu` | `min(var(--radius), calc(min(var(--radius), 0.5rem) + var(--spacing) * 1.5))` (14px) | Menu surfaces, from 0.49.0: the item radius plus the `p-1.5` inset, so the gap between a highlighted item and the surface edge is the same round the corner. |
+| `rounded-menu` | `min(var(--radius), calc(min(var(--radius), 0.5rem) + var(--spacing)))` (12px) | Menu surfaces, from 0.49.0: the item radius plus the `p-1` inset, so the gap between a highlighted item and the surface edge is the same round the corner. |
 | `rounded-control` | `min(var(--radius), 0.625rem)` (10px) | Apps. |
 
 The root `cn` knows these are radius classes, so `cn("rounded-lg", "rounded-menu-item")` keeps only the last one.
@@ -693,7 +693,7 @@ The root `cn` knows these are radius classes, so `cn("rounded-lg", "rounded-menu
 | `DropdownMenu` and `ContextMenu` item, sub-trigger, checkbox item and radio item | `rounded-md`, `calc(var(--radius) - 2px)` (14px) | `rounded-menu-item` (8px) |
 | Menu surface | `rounded-lg` (16px) | unchanged |
 
-From 0.49.0 the `DropdownMenu`, `ContextMenu`, `Select` and `RadixSelect` surfaces use `rounded-menu` (14px) in place of `rounded-lg` (16px). `Popover`, `HoverCard` and `FloatingBar` keep `floatingSurfaceClass` (`rounded-lg`).
+From 0.49.0 the `DropdownMenu`, `ContextMenu`, `Select` and `RadixSelect` surfaces use `rounded-menu` (12px) in place of `rounded-lg` (16px), and menus are more compact: the surface inset is `p-1` (was `p-1.5`), items, sub-triggers, checkbox, radio and select items are `py-1.5` (32px, was `py-2`, 36px; still `max-sm:min-h-10`), and separators are `-mx-1`. `Command` matches: the root and, from `sm`, the `CommandDialog` content use `rounded-menu`, `CommandGroup` is `p-1`, `CommandItem` is `py-1.5`, `CommandSeparator` is `-mx-1` and `CommandList` no longer has `pb-2`. `Popover`, `HoverCard` and `FloatingBar` keep `floatingSurfaceClass` (`rounded-lg`).
 
 From 0.16.2, `Select` and `RadixSelect` items (`rounded-lg`, 16px), `CommandItem` (`rounded-md`, 14px) and `ComposerSlashMenu` rows (`rounded-lg`, 16px) also use `rounded-menu-item` (8px).
 

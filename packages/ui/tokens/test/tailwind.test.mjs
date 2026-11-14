@@ -113,7 +113,7 @@ test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { s
     const out = await build(`@import "tailwindcss"; @import "${file}";`, candidates);
     assert.match(out, /\.rounded-surface\s*\{\s*border-radius: clamp\(\.75rem, var\(--radius\), 1rem\)/, file);
     assert.match(out, /\.rounded-menu-item\s*\{\s*border-radius: min\(var\(--radius\), \.5rem\)/, file);
-    assert.match(out, /\.rounded-menu\s*\{\s*border-radius: min\(var\(--radius\), calc\(min\(var\(--radius\), \.5rem\) \+ var\(--spacing\) \* 1\.5\)\)/, file);
+    assert.match(out, /\.rounded-menu\s*\{\s*border-radius: min\(var\(--radius\), calc\(min\(var\(--radius\), \.5rem\) \+ var\(--spacing\)\)\)/, file);
     assert.match(out, /\.rounded-control\s*\{\s*border-radius: min\(var\(--radius\), \.625rem\)/, file);
   }
 });
