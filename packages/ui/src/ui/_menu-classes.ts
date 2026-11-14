@@ -1,6 +1,12 @@
 // floating overlay: tone + smooth-shadow-ring, never border+shadow
-export const floatingSurfaceClass =
-  "rounded-lg bg-overlay text-overlay-foreground smooth-shadow-ring-lg max-sm:max-w-[calc(100vw-2rem)]";
+const floatingSurfaceToneClass =
+  "bg-overlay text-overlay-foreground smooth-shadow-ring-lg max-sm:max-w-[calc(100vw-2rem)]";
+
+export const floatingSurfaceClass = `rounded-lg ${floatingSurfaceToneClass}`;
+
+// Menu surface: the corner is the item radius plus the `p-1.5` inset, so a
+// highlighted item keeps the same gap to the edge round the corner.
+export const menuSurfaceClass = `rounded-menu ${floatingSurfaceToneClass}`;
 
 export const floatingSurfaceAnimateClass = [
   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
@@ -9,7 +15,7 @@ export const floatingSurfaceAnimateClass = [
 // shared floating menu surfaces: popover tone + smooth-shadow-ring-lg
 export const menuContentClass = [
   "z-50 min-w-[12rem] overflow-hidden p-1.5 outline-none max-sm:max-h-[85dvh] max-sm:overflow-y-auto",
-  floatingSurfaceClass,
+  menuSurfaceClass,
   floatingSurfaceAnimateClass,
 ].join(" ");
 

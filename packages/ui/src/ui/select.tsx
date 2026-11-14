@@ -5,7 +5,7 @@ import { cn } from "../utils/cn";
 import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
-  floatingSurfaceClass,
+  menuSurfaceClass,
 } from "./_menu-classes";
 import { useCn, useUiConfig } from "./ui-config";
 
@@ -131,7 +131,7 @@ const SelectContent = React.forwardRef<
         className={merge(
           classes?.content ?? [
             "relative z-50 max-h-96 max-sm:max-h-[85dvh] min-w-32 overflow-hidden outline-none",
-            floatingSurfaceClass,
+            menuSurfaceClass,
             floatingSurfaceAnimateClass,
           ],
           position === "popper" &&

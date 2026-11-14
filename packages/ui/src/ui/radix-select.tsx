@@ -6,7 +6,7 @@ import { cn } from "../utils/cn";
 import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
-  floatingSurfaceClass,
+  menuSurfaceClass,
   menuItemClass,
 } from "./_menu-classes";
 
@@ -68,7 +68,7 @@ function SelectContent({
         data-slot="select-content"
         className={cn(
           "relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto",
-          floatingSurfaceClass,
+          menuSurfaceClass,
           floatingSurfaceAnimateClass,
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",

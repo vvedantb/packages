@@ -95,6 +95,13 @@
   border-radius: min(var(--radius), 0.5rem);
 }
 
+@utility rounded-menu {
+  border-radius: min(
+    var(--radius),
+    calc(min(var(--radius), 0.5rem) + var(--spacing) * 1.5)
+  );
+}
+
 @utility rounded-control {
   border-radius: min(var(--radius), 0.625rem);
 }

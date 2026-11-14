@@ -108,11 +108,12 @@ test("tokens.css alone emits the app CSS moved in 0.15.0", { skip }, async () =>
 });
 
 test("radius utilities come with tokens.css and with compat-shadcn-rgb.css", { skip }, async () => {
-  const candidates = ["rounded-surface", "rounded-menu-item", "rounded-control"];
+  const candidates = ["rounded-surface", "rounded-menu", "rounded-menu-item", "rounded-control"];
   for (const file of ["./src/tokens.css", "./src/css/compat-shadcn-rgb.css"]) {
     const out = await build(`@import "tailwindcss"; @import "${file}";`, candidates);
     assert.match(out, /\.rounded-surface\s*\{\s*border-radius: clamp\(\.75rem, var\(--radius\), 1rem\)/, file);
     assert.match(out, /\.rounded-menu-item\s*\{\s*border-radius: min\(var\(--radius\), \.5rem\)/, file);
+    assert.match(out, /\.rounded-menu\s*\{\s*border-radius: min\(var\(--radius\), calc\(min\(var\(--radius\), \.5rem\) \+ var\(--spacing\) \* 1\.5\)\)/, file);
     assert.match(out, /\.rounded-control\s*\{\s*border-radius: min\(var\(--radius\), \.625rem\)/, file);
   }
 });

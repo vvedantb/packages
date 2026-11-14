@@ -17,9 +17,9 @@ export type AppShellProps = {
    * instead of the sidebar width.
    */
   panelHidden?: boolean;
-  /** Sets `--app-shell-rail-width`. Default `"4rem"`. */
+  /** Sets `--app-shell-rail-width`. Default `"3.5rem"`. */
   railWidth?: string;
-  /** Sets `--app-shell-sidebar-width` (rail plus panel). Default `"20rem"`. Ignored with `resizable`. */
+  /** Sets `--app-shell-sidebar-width` (rail plus panel). Default `"19.5rem"`. Ignored with `resizable`. */
   sidebarWidth?: string;
   /**
    * Opt-in resizable panel. The shell owns the persisted panel width, sets
@@ -54,8 +54,8 @@ export type AppShellRootProps = ComponentProps<"div"> &
 /** Frame `<div>`: sets the `--app-shell-*` variables and owns the resize state. `style` merges over the variables. */
 function Root({
   panelHidden = false,
-  railWidth = "4rem",
-  sidebarWidth = "20rem",
+  railWidth = "3.5rem",
+  sidebarWidth = "19.5rem",
   resizable,
   mobileHeaderHeight = "calc(3.5rem + env(safe-area-inset-top, 0px))",
   mainId = "main-content",
