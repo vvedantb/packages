@@ -21,9 +21,22 @@ const MAX_LINKS = 4;
 
 export type SiteHeaderLink = { label: string; href: string };
 
-export type SiteHeaderProps = {
-  /** Product app id for `AppWordmark`. */
-  app: ProductAppName;
+type SiteHeaderIdentity =
+  | {
+      /** Product app id for `AppWordmark`. */
+      app: ProductAppName;
+      brand?: undefined;
+      githubLabel?: undefined;
+    }
+  | {
+      app?: undefined;
+      /** The site's own wordmark, for a site that is not a product app. It replaces `AppWordmark`. */
+      brand: ReactNode;
+      /** `aria-label` of the GitHub button, for example "Bee on GitHub". Default "GitHub". */
+      githubLabel?: string;
+    };
+
+export type SiteHeaderProps = SiteHeaderIdentity & {
   /** Home link `href`. Default `#home`. */
   homeHref?: string;
   /** `aria-label` of the home wordmark link. */
@@ -38,6 +51,8 @@ export type SiteHeaderProps = {
   cta: ReactNode;
   /** Optional GitHub URL. An icon button from `sm`, and the last item in the mobile menu. */
   githubUrl?: string;
+  /** Optional small control before the CTA, shown at every width, for example a theme toggle. */
+  actions?: ReactNode;
   /** Classes for the fixed `<header>` wrapper. */
   className?: string;
 };
@@ -88,9 +103,20 @@ function SiteHeaderMenu({ links, cta, githubUrl }: Pick<SiteHeaderProps, "links"
  * Marketing header for the Project V apps: a `FloatingBar` with `AppWordmark` at `SITE_HEADER_WORDMARK_SIZE`, up to
  * four links, one `cta` and an optional GitHub button. Below `md` the menu button sits on the left, the wordmark is
  * centred, and the links, the CTA and GitHub move into one dropdown menu. Plain markup with no motion, so any app can
- * use it.
+ * use it. A site that is not a product app passes `brand` in place of `app`.
  */
-export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, githubUrl, className }: SiteHeaderProps) {
+export function SiteHeader({
+  app,
+  brand,
+  githubLabel,
+  homeHref = "#home",
+  homeLabel,
+  links,
+  cta,
+  githubUrl,
+  actions,
+  className,
+}: SiteHeaderProps) {
   const tooMany = links.length > MAX_LINKS;
   useEffect(() => {
     if (!tooMany) return;
@@ -112,7 +138,7 @@ export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, git
         )}
         aria-label={homeLabel}
       >
-        <AppWordmark app={app} size={SITE_HEADER_WORDMARK_SIZE} />
+        {app ? <AppWordmark app={app} size={SITE_HEADER_WORDMARK_SIZE} /> : brand}
       </a>
 
       <nav className="hidden items-center gap-1 md:flex" aria-label="Page">
@@ -126,11 +152,12 @@ export function SiteHeader({ app, homeHref = "#home", homeLabel, links, cta, git
       <div className="flex items-center gap-1.5">
         {githubUrl ? (
           <Button asChild variant="ghost" size="icon-sm" className="hidden rounded-full sm:inline-flex">
-            <a href={githubUrl} target="_blank" rel="noreferrer" aria-label={`${app} on GitHub`}>
+            <a href={githubUrl} target="_blank" rel="noreferrer" aria-label={app ? `${app} on GitHub` : (githubLabel ?? "GitHub")}>
               <GitHubIcon size={18} />
             </a>
           </Button>
         ) : null}
+        {actions}
         <div className="hidden md:flex">{cta}</div>
       </div>
     </FloatingBar>

@@ -916,6 +916,8 @@ It is plain markup with no motion and needs no `createLandingKit`.
 | Prop | |
 | --- | --- |
 | `app` | `vibot`, `vmem`, `verve`, `velth` or `vhub`. |
+| `brand` | In place of `app`, for a site that is not a product app (0.48.0): the site's own wordmark node. Set `githubLabel` for the GitHub button's `aria-label`. |
+| `actions` | Optional small control before the CTA, shown at every width, for example a theme toggle (0.48.0). |
 | `homeLabel` | `aria-label` of the home wordmark link. |
 | `homeHref` | Default `#home`. |
 | `links` | `{ label, href }[]`, at most 4. More logs a development warning and only the first 4 render. |
