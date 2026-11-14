@@ -45,14 +45,14 @@ await assert.rejects(import("@clerk/clerk-react"), /Cannot find package/);
 
 // A Motion stand-in: plain elements that drop the animation props.
 const plain = (tag) => ({ initial, animate, whileInView, viewport, variants, transition, ...props }) => h(tag, props);
-const motion = { div: plain("div"), p: plain("p"), h1: plain("h1"), ul: plain("ul"), header: plain("header") };
-const { LandingHero, LandingCta } = createLandingKit({ motion });
+const motion = { div: plain("div"), header: plain("header") };
+const { LandingCta } = createLandingKit({ motion });
 
 const Icon = () => h("svg");
 const page = renderToStaticMarkup(
   h(LandingPageLayout, {
     nav: h("nav"),
-    hero: h(LandingHero, { eyebrow: "E", title: "T", description: "D", capabilities: ["MCP"] }),
+    hero: h("h1", null, "T"),
     footer: h(SiteFooter, { brand: "B", tagline: "T", socials: [], columns: [], name: "N", year: 2026, legalLinks: [] }),
   }, h(LandingFeatureCard, { icon: Icon, title: "F", description: "D" }), h(LandingCta, { title: "C", description: "D" })),
 );

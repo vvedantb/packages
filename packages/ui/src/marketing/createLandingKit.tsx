@@ -7,7 +7,7 @@ import { landingItemVariants, type LandingLink } from "./landing";
 import { landingClasses, landingShellClass } from "./marketing-classes";
 
 /** The `motion` export of `motion/react`. Only these elements are used. */
-export type LandingMotion = Pick<typeof motionNamespace, "div" | "p" | "h1" | "ul" | "header">;
+export type LandingMotion = Pick<typeof motionNamespace, "div" | "header">;
 
 export type LandingKitOptions = {
   /** Pass `motion` from `motion/react`. The package does not import Motion itself. */
@@ -22,17 +22,6 @@ export type LandingRevealProps = {
 };
 
 export type LandingRevealItemProps = { children: ReactNode; className?: string };
-
-export type LandingHeroProps = {
-  /** Pill above the title, after a pulsing dot. */
-  eyebrow: ReactNode;
-  title: ReactNode;
-  description: ReactNode;
-  /** Inside the button row, for example Get started and Sign in. The row renders even when empty. */
-  actions?: ReactNode;
-  /** Mono pills under the buttons. */
-  capabilities: readonly string[];
-};
 
 export type LandingNavProps = {
   /** Wordmark inside the `#top` home link. */
@@ -59,21 +48,13 @@ export type LandingCtaProps = {
 export type LandingKit = {
   LandingReveal: (props: LandingRevealProps) => ReactNode;
   LandingRevealItem: (props: LandingRevealItemProps) => ReactNode;
-  LandingHero: (props: LandingHeroProps) => ReactNode;
   LandingNav: (props: LandingNavProps) => ReactNode;
   LandingCta: (props: LandingCtaProps) => ReactNode;
 };
 
-const heroContainer = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.1, delayChildren: 0.08 },
-  },
-};
-
 /**
  * Builds the animated landing parts on the app's Motion. Call it once at
- * module scope: `export const { LandingHero, ... } = createLandingKit({ motion })`.
+ * module scope: `export const { LandingReveal, ... } = createLandingKit({ motion })`.
  */
 export function createLandingKit({ motion }: LandingKitOptions): LandingKit {
   /** Staggers its `LandingRevealItem` children in once, when 20% is in view. */
@@ -101,55 +82,6 @@ export function createLandingKit({ motion }: LandingKitOptions): LandingKit {
       <motion.div className={cn(className)} variants={landingItemVariants}>
         {children}
       </motion.div>
-    );
-  }
-
-  /** Centred hero: eyebrow pill, title, description, actions and capability pills, revealed on mount. */
-  function LandingHero({ eyebrow, title, description, actions, capabilities }: LandingHeroProps) {
-    return (
-      <section className={`${landingShellClass} pb-16 pt-12 sm:pb-20 sm:pt-20 lg:pb-24 lg:pt-24`}>
-        <motion.div
-          className="mx-auto max-w-3xl text-center"
-          initial="hidden"
-          animate="show"
-          variants={heroContainer}
-        >
-          <motion.p className={landingClasses.heroEyebrow} variants={landingItemVariants}>
-            <span className="landing-pulse-dot size-1.5 rounded-full bg-foreground" aria-hidden />
-            {eyebrow}
-          </motion.p>
-
-          <motion.h1
-            className="text-balance font-semibold text-[2.35rem] leading-[1] tracking-[-0.035em] text-foreground min-[400px]:text-[2.85rem] sm:text-6xl lg:text-[4.85rem]"
-            variants={landingItemVariants}
-            transition={{ duration: motionDuration.slow, ease: motionEase }}
-          >
-            {title}
-          </motion.h1>
-
-          <motion.p className={landingClasses.heroDescription} variants={landingItemVariants}>
-            {description}
-          </motion.p>
-
-          <motion.div
-            className="mt-7 flex flex-col items-stretch justify-center gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3"
-            variants={landingItemVariants}
-          >
-            {actions}
-          </motion.div>
-
-          <motion.ul
-            className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:mt-10"
-            variants={landingItemVariants}
-          >
-            {capabilities.map((label) => (
-              <li key={label} className={landingClasses.heroCapability}>
-                {label}
-              </li>
-            ))}
-          </motion.ul>
-        </motion.div>
-      </section>
     );
   }
 
@@ -210,5 +142,5 @@ export function createLandingKit({ motion }: LandingKitOptions): LandingKit {
     );
   }
 
-  return { LandingReveal, LandingRevealItem, LandingHero, LandingNav, LandingCta };
+  return { LandingReveal, LandingRevealItem, LandingNav, LandingCta };
 }

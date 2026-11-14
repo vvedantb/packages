@@ -24,12 +24,12 @@ import {
 } from "../fixtures/stubs";
 import {
   APP_E_GITHUB_URL,
-  LANDING_HERO_CAPABILITIES,
   LANDING_NAV_LINKS,
 } from "../fixtures/app-e/landingContent";
+import { LandingHero } from "../fixtures/app-e/LandingHero";
 
 // --- LandingReveal.tsx ---
-export const { LandingReveal, LandingRevealItem, LandingHero: KitLandingHero, LandingNav: KitLandingNav, LandingCta: KitLandingCta } =
+export const { LandingReveal, LandingRevealItem, LandingNav: KitLandingNav, LandingCta: KitLandingCta } =
   createLandingKit({ motion });
 
 // --- LandingNavMenu.tsx ---
@@ -75,48 +75,6 @@ export function LandingNav() {
         )
       }
       menu={<LandingNavMenu />}
-    />
-  );
-}
-
-// --- LandingHero.tsx ---
-export function LandingHero() {
-  return (
-    <KitLandingHero
-      eyebrow="Your own hub for MCP connections and agent secrets"
-      title={
-        <>
-          Every agent. One{" "}
-          <span className="italic text-foreground/85">hub</span>.
-        </>
-      }
-      description={
-        <>
-          Sign in, connect your MCP servers once (app-a, App C, app-b, App D, or
-          any streamable-HTTP MCP) and keep agent API keys in an encrypted
-          vault. Your agents get a single{" "}
-          <code className="text-foreground">/mcp</code> endpoint with only your
-          tools. Everything is private to your account.
-        </>
-      }
-      actions={
-        clerkConfigured() ? (
-          <>
-            <SignUpButton mode="modal">
-              <Button size="lg" className="w-full sm:w-auto sm:min-w-40">
-                Get started
-                <IconArrowRight size={16} aria-hidden />
-              </Button>
-            </SignUpButton>
-            <SignInButton mode="modal">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Sign in
-              </Button>
-            </SignInButton>
-          </>
-        ) : null
-      }
-      capabilities={LANDING_HERO_CAPABILITIES}
     />
   );
 }

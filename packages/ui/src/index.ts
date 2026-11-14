@@ -307,7 +307,6 @@ export type {
 export { createLandingKit } from "./marketing/createLandingKit";
 export type {
   LandingCtaProps,
-  LandingHeroProps,
   LandingKit,
   LandingKitOptions,
   LandingMotion,

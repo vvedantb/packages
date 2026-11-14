@@ -25,12 +25,6 @@ export const landingClasses = {
     "mt-1 text-pretty text-xs leading-relaxed text-muted sm:text-[0.8125rem]", // check-tokens-allow: text-muted
   navLink:
     "inline-flex h-10 items-center rounded-lg px-3 text-sm text-muted transition-[color,background-color] duration-150 hover:bg-surface-tertiary hover:text-foreground", // check-tokens-allow: text-muted
-  heroEyebrow:
-    "mb-6 inline-flex items-center gap-2 rounded-full border border-separator bg-surface/70 px-3 py-1 text-xs text-muted", // check-tokens-allow: text-muted
-  heroDescription:
-    "mx-auto mt-5 max-w-xl text-pretty text-[0.9375rem] leading-relaxed text-muted sm:mt-6 sm:text-lg", // check-tokens-allow: text-muted
-  heroCapability:
-    "rounded-full border border-separator bg-surface/60 px-3 py-1 font-mono text-[11px] text-muted", // check-tokens-allow: text-muted
   ctaDescription:
     "mt-4 max-w-xl text-pretty text-sm leading-relaxed text-muted sm:text-base", // check-tokens-allow: text-muted
   footerTagline:
