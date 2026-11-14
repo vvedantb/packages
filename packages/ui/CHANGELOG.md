@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.50.0
+
+### Minor Changes
+
+- [#248](https://github.com/vvedantb/packages/pull/248) [`e6e460d`](https://github.com/vvedantb/packages/commit/e6e460d1e8ec550b3394522cc30d9a8a17650450) Thanks [@vvedantb](https://github.com/vvedantb)! - `AppShell` (and `AppShell.Root`) takes `scroll="document"` for apps whose pages scroll the document. The frame grows with the content (`min-h-dvh`), and `Main` and `Content` drop the gutter, the card and the margin animation. The default, `"contained"`, does not change.
+
 ## 0.49.0
 
 ### Minor Changes
