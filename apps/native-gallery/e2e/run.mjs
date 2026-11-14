@@ -117,6 +117,9 @@ async function growComposer(layout, lines) {
 
 async function sectionsWithAnimations() {
   await fresh();
+  // Real time, not the frozen test clock: the skeleton pulse and LoadingState
+  // loop forever, so `settle` (run to idle) can never finish inside a section.
+  await clock("resume");
   for (const [link, marker, name] of [
     ["link-layout", "section-layout", "section-layout"],
     ["link-forms", "section-forms", "section-forms"],
@@ -128,12 +131,11 @@ async function sectionsWithAnimations() {
     for (let i = 0; i < 6; i++) {
       const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
       swipe(w / 2, Math.round(h * 0.8), w / 2, Math.round(h * 0.25), 300);
-      await settle();
-      await sleep(400);
+      await sleep(600);
     }
     await see(marker);
     shot(name);
-    await goBack();
+    back();
     await see("home");
   }
 }
