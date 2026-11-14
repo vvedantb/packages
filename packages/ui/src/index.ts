@@ -227,6 +227,7 @@ export type {
   AppShellMainProps,
   AppShellProps,
   AppShellRootProps,
+  AppShellScroll,
   AppShellSkipLinkProps,
 } from "../shell/src/AppShell";
 export { AppSidebar } from "../shell/src/AppSidebar";

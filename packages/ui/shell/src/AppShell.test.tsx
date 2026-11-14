@@ -98,6 +98,19 @@ describe("AppShell", () => {
     expect(main.className).not.toContain("md:ml-[var(--app-shell-sidebar-width)]");
     expect(q("a", shell).getAttribute("href")).toBe("#content");
   });
+
+  it("lets the page scroll with scroll=\"document\": no fixed height, card or margin animation", async () => {
+    await mount(<AppShell scroll="document">Page</AppShell>);
+    const shell = first();
+    expect(shell.className).toBe("relative min-h-dvh bg-background");
+    const main = q("main", shell);
+    expect(main.className).toBe(
+      "relative z-10 flex min-h-dvh outline-none md:ml-[var(--app-shell-sidebar-width)]",
+    );
+    expect(first(main).className).toBe(
+      "flex min-w-0 flex-1 flex-col pt-[var(--app-shell-mobile-header-height)] md:pt-0",
+    );
+  });
 });
 
 describe("SidebarRail", () => {

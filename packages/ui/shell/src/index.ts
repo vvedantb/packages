@@ -18,6 +18,7 @@ export type {
   AppShellMainProps,
   AppShellProps,
   AppShellRootProps,
+  AppShellScroll,
   AppShellSkipLinkProps,
 } from "./AppShell.js";
 export { AppSidebar } from "./AppSidebar.js";
