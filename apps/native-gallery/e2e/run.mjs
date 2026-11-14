@@ -67,10 +67,24 @@ async function goBack() {
 
 const shot = (name) => log({ screenshot: screenshot(resolve(shots, `${name}.png`)).path });
 
+/**
+ * The CI emulator's own apps (the launcher) sometimes stop responding, and the
+ * system "… isn't responding" dialog then covers the app for the whole run.
+ * Tap its Wait. An ANR of the gallery itself is not dismissed: that is a bug.
+ */
+function dismissSystemAnr() {
+  const nodes = dumpNodes({ retries: 2 });
+  const anr = nodes.find((n) => /isn.t responding/i.test(n.text ?? ""));
+  if (!anr || /gallery/i.test(anr.text)) return false;
+  log({ dismissed: anr.text });
+  tap("text=Wait", nodes);
+  return true;
+}
+
 /** Fresh app state, home screen showing, clock frozen. */
 async function fresh() {
   launch({ clear: true });
-  await until("home screen", () => visible("home"), 60_000);
+  await until("home screen", () => visible("home") || (dismissSystemAnr() && false), 60_000);
   await until("agent bridge", async () => {
     try {
       await clock("freeze", { timeout: 4000 });
