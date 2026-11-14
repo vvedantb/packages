@@ -56,6 +56,22 @@
   background-size: 128px 128px;
 }
 
+/*
+ * Under a FloatingBar the hero's atmosphere runs to the top of the page, behind the bar. The bar's spacer would
+ * otherwise leave a plain band above it. The two lengths match the spacer's heights in FloatingBar.tsx.
+ */
+[data-floating-bar-spacer] ~ main > [data-landing-hero] {
+  margin-top: -4.25rem;
+  padding-top: 4.25rem;
+}
+
+@media (min-width: 640px) {
+  [data-floating-bar-spacer] ~ main > [data-landing-hero] {
+    margin-top: -4.5rem;
+    padding-top: 4.5rem;
+  }
+}
+
 .landing-atmosphere {
   background-color: var(--background);
   background-image:
