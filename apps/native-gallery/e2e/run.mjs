@@ -207,7 +207,15 @@ let failed = false;
 for (const name of names) {
   const t0 = Date.now();
   try {
-    await scenarios[name]();
+    try {
+      await scenarios[name]();
+    } catch (e) {
+      // The emulator's uiautomator sometimes returns nothing; that is the device, not
+      // the app. Run the scenario once more from a fresh start. Any other error fails.
+      if (e.message !== "uiautomator dump failed") throw e;
+      log({ scenario: name, retry: e.message });
+      await scenarios[name]();
+    }
     report.push({ scenario: name, ok: true, ms: Date.now() - t0 });
     log({ scenario: name, ok: true, ms: Date.now() - t0 });
   } catch (e) {
@@ -216,7 +224,10 @@ for (const name of names) {
     log({ scenario: name, ok: false, error: e.message, ...(e.extra ?? {}) });
     try {
       screenshot(resolve(shots, `FAIL-${name}.png`));
-      log({ logs: logs({ grep: "NATIVE_UI_AGENT|ReactNativeJS|AndroidRuntime", lines: 300 }).slice(-40) });
+      log({ logs: logs({ grep: "NATIVE_UI_AGENT|ReactNativeJS|AndroidRuntime|Worklets|FATAL", lines: 300 }).slice(-40) });
+      // An app crash stays in the crash buffer after the main log rolls over.
+      const crash = String(adb(["logcat", "-d", "-b", "crash"], { allowFail: true })).trim();
+      if (crash) log({ crash: crash.split("\n").slice(0, 30) });
     } catch {
       // The device may be gone. The failure is already logged.
     }

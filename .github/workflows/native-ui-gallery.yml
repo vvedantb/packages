@@ -131,11 +131,9 @@ jobs:
           working-directory: apps/native-gallery
           script: |
             adb install -r android/app/build/outputs/apk/release/app-release.apk
-            adb logcat -c
-            status=0
-            node e2e/run.mjs | tee e2e-log.jsonl || status=$?
-            adb logcat -d -t 2000 > logcat.txt || true
-            exit $status
+            adb logcat -c -b all
+            # The runner starts a new shell for each line, so the exit code is kept on one line.
+            node e2e/run.mjs > e2e-log.jsonl; status=$?; cat e2e-log.jsonl; adb logcat -d -t 2000 > logcat.txt; adb logcat -d -b crash > crash.txt; exit $status
 
       - name: Upload screenshots and reports
         if: always()
@@ -146,5 +144,6 @@ jobs:
             apps/native-gallery/screenshots
             apps/native-gallery/e2e-log.jsonl
             apps/native-gallery/logcat.txt
+            apps/native-gallery/crash.txt
           if-no-files-found: warn
           retention-days: 14
