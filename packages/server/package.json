@@ -22,6 +22,10 @@
       "types": "./dist/ai/index.d.ts",
       "import": "./dist/ai/index.js"
     },
+    "./generative-ui": {
+      "types": "./dist/generative-ui/index.d.ts",
+      "import": "./dist/generative-ui/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -52,6 +56,7 @@
     "@ai-sdk/gateway": ">=1",
     "@clerk/backend": ">=1",
     "@jitl/quickjs-singlefile-cjs-release-sync": "^0.32.0",
+    "@json-render/core": ">=0.21.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "ai": ">=5",
     "convex": "^1.24.0",
@@ -67,6 +72,9 @@
       "optional": true
     },
     "@jitl/quickjs-singlefile-cjs-release-sync": {
+      "optional": true
+    },
+    "@json-render/core": {
       "optional": true
     },
     "@modelcontextprotocol/sdk": {
@@ -91,6 +99,7 @@
   "devDependencies": {
     "@ai-sdk/gateway": "^4.0.135",
     "@jitl/quickjs-singlefile-cjs-release-sync": "^0.32.0",
+    "@json-render/core": "0.21.0",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@types/node": "^22.0.0",
     "ai": "^7.0.162",

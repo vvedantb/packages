@@ -230,6 +230,8 @@ declare module "react-native" {
     bounces?: boolean;
     alwaysBounceVertical?: boolean;
     scrollEnabled?: boolean;
+    /** Android: lets this scroller scroll inside another one (a sideways table in a list). */
+    nestedScrollEnabled?: boolean;
     onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle?: number;
@@ -1083,6 +1085,7 @@ declare module "@tabler/icons-react-native" {
   export const IconChevronLeft: Icon;
   export const IconChevronRight: Icon;
   export const IconChevronUp: Icon;
+  export const IconCircle: Icon;
   export const IconCircleCheck: Icon;
   export const IconCircleX: Icon;
   export const IconCopy: Icon;
@@ -1240,4 +1243,70 @@ declare module "class-variance-authority" {
     Exclude<Parameters<Component>[0], undefined>,
     "class" | "className"
   >;
+}
+
+// `src/generative-ui/` (the `./generative-ui` entry): json-render and the
+// shared catalog from `@vvedantb/server/generative-ui`, both optional peers.
+// Only what the renderer uses; the consuming app checks the real types.
+declare module "@json-render/core" {
+  export interface Spec {
+    root: string;
+    elements: Record<string, { type: string; props: Record<string, unknown>; children?: string[] }>;
+    state?: Record<string, unknown>;
+  }
+  export interface Catalog {
+    readonly components: Record<string, unknown>;
+  }
+  export function defineCatalog(
+    schema: unknown,
+    definition: { components: Record<string, unknown>; actions?: Record<string, unknown> },
+  ): Catalog;
+}
+declare module "@json-render/react-native" {
+  import type { ComponentType, ReactNode } from "react";
+  import type { Catalog, Spec } from "@json-render/core";
+  export const schema: unknown;
+  export interface ComponentRenderProps<P = Record<string, unknown>> {
+    element: { type: string; props: P };
+    children?: ReactNode;
+    emit: (event: string) => void;
+  }
+  export function createRenderer(
+    catalog: Catalog,
+    components: Record<string, ComponentType<ComponentRenderProps<never>>>,
+  ): ComponentType<{
+    spec: Spec | null;
+    onAction?: (actionName: string, params?: Record<string, unknown>) => void;
+    fallback?: ComponentType<ComponentRenderProps>;
+  }>;
+}
+declare module "@vvedantb/server/generative-ui" {
+  import type { Spec } from "@json-render/core";
+  export type GenerativeUiTone = "neutral" | "positive" | "warning" | "danger";
+  interface GenerativeUiPropsMap {
+    Stack: { direction: "vertical" | "horizontal"; gap: "sm" | "md" | "lg"; align: "start" | "center" | "stretch" };
+    Grid: { columns: number; gap: "sm" | "md" };
+    Panel: { title: string | null; description: string | null };
+    Heading: { text: string; level: "h2" | "h3" };
+    Text: { text: string; variant: "body" | "muted" | "lead" };
+    Metric: { label: string; value: string; delta: string | null; tone: GenerativeUiTone };
+    Badge: { text: string; tone: GenerativeUiTone };
+    Callout: { title: string | null; text: string; tone: GenerativeUiTone };
+    Progress: { label: string | null; value: number };
+    Checklist: { items: { text: string; done: boolean }[] };
+    Table: { columns: string[]; rows: string[][] };
+    KeyValue: { items: { label: string; value: string }[] };
+    Code: { code: string; language: string | null };
+    Image: { url: string; alt: string | null };
+    Button: { label: string; variant: "primary" | "secondary" | "ghost" };
+    Separator: Record<string, never>;
+  }
+  export type GenerativeUiComponentName = keyof GenerativeUiPropsMap;
+  export type GenerativeUiProps<T extends GenerativeUiComponentName> = GenerativeUiPropsMap[T];
+  export const generativeUiCatalogDefinition: {
+    components: Record<string, unknown>;
+    actions: Record<string, unknown>;
+  };
+  export function isHttpUrl(value: string): boolean;
+  export function parseGenerativeUiSpec(serialized: string): Spec | null;
 }

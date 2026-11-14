@@ -37,6 +37,12 @@ importers:
       '@gorhom/bottom-sheet':
         specifier: ^5.2.0
         version: 5.2.14(@types/react@19.3.0)(react-native-gesture-handler@2.32.0(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3))(react-native-reanimated@4.5.1(react-native-worklets@0.10.1(@babel/core@7.29.13)(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3)
+      '@json-render/core':
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.6.6)
+      '@json-render/react-native':
+        specifier: 0.21.0
+        version: 0.21.0(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3)(zod@4.6.6)
       '@react-native-community/datetimepicker':
         specifier: 9.1.0
         version: 9.1.0(expo@57.0.32)(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3)
@@ -58,6 +64,9 @@ importers:
       '@vvedantb/native-ui':
         specifier: workspace:*
         version: link:../../packages/native-ui
+      '@vvedantb/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -172,6 +181,9 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(yaml@2.9.1)
+      zod:
+        specifier: ^4.0.0
+        version: 4.6.6
     devDependencies:
       '@types/react':
         specifier: ^19.1.0
@@ -233,6 +245,9 @@ importers:
       '@jitl/quickjs-singlefile-cjs-release-sync':
         specifier: ^0.32.0
         version: 0.32.0
+      '@json-render/core':
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.6.6)
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.6)
@@ -297,6 +312,12 @@ importers:
       '@clerk/clerk-react':
         specifier: ^5.0.0
         version: 5.61.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@json-render/core':
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.6.6)
+      '@json-render/react':
+        specifier: 0.21.0
+        version: 0.21.0(react@19.3.0)(zod@4.6.6)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.20(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1749,6 +1770,23 @@ packages:
       '@jsamr/counter-style': ^1.0.0 || ^2.0.0
       react: '*'
       react-native: '*'
+
+  '@json-render/core@0.21.0':
+    resolution: {integrity: sha512-vysEbTjO1y8mEgAsp0tztRyaWCkNsBrG8MhAqbndGK3qmMXjMRdCNtk21+AQRNKdRelFGVAwBgtUNW8tfjQlsw==}
+    peerDependencies:
+      zod: ^4.0.0
+
+  '@json-render/react-native@0.21.0':
+    resolution: {integrity: sha512-eNmwGSG5Gy9P71TifcFLQeTd6LeVH8RKMA/wwERCmakqG4reIEKBcjTuVjen7zJzMhvXrU5mxUZwylphXlP92A==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-native: '>=0.71.0'
+      zod: ^4.0.0
+
+  '@json-render/react@0.21.0':
+    resolution: {integrity: sha512-z/fZg0L8fJe2dnnQjWkmMw409iBclSWcOqdjoBy8eLHeBr/7F7VipzkY1CfgA2Fa5uW+zxZ54OvWMtdDcsp/yg==}
+    peerDependencies:
+      react: ^19.2.3
 
   '@manypkg/find-root@3.1.0':
     resolution: {integrity: sha512-BcSqCyKhBVZ5YkSzOiheMCV41kqAFptW6xGqYSTjkVTl9XQpr+pqHhwgGCOHQtjDCv7Is6EFyA14Sm5GVbVABA==}
@@ -9761,6 +9799,24 @@ snapshots:
       '@jsamr/counter-style': 2.0.2
       react: 19.2.3
       react-native: 0.86.3(@types/react@19.3.0)(react@19.2.3)
+
+  '@json-render/core@0.21.0(zod@4.6.6)':
+    dependencies:
+      zod: 4.6.6
+
+  '@json-render/react-native@0.21.0(react-native@0.86.3(@types/react@19.3.0)(react@19.2.3))(react@19.2.3)(zod@4.6.6)':
+    dependencies:
+      '@json-render/core': 0.21.0(zod@4.6.6)
+      react: 19.2.3
+      react-native: 0.86.3(@types/react@19.3.0)(react@19.2.3)
+      zod: 4.6.6
+
+  '@json-render/react@0.21.0(react@19.3.0)(zod@4.6.6)':
+    dependencies:
+      '@json-render/core': 0.21.0(zod@4.6.6)
+      react: 19.3.0
+    transitivePeerDependencies:
+      - zod
 
   '@manypkg/find-root@3.1.0':
     dependencies:

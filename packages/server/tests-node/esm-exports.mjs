@@ -26,10 +26,11 @@ function runIn(dir, name, source) {
   return spawnSync(process.execPath, [file], { cwd: dir, encoding: "utf8" });
 }
 
-test("exports map has the root, ./ai and package.json", () => {
-  assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./ai", "./package.json"]);
+test("exports map has the root, ./ai, ./generative-ui and package.json", () => {
+  assert.deepEqual(Object.keys(pkg.exports).sort(), [".", "./ai", "./generative-ui", "./package.json"]);
   assert.deepEqual(pkg.exports["."], { types: "./dist/index.d.ts", import: "./dist/index.js" });
   assert.deepEqual(pkg.exports["./ai"], { types: "./dist/ai/index.d.ts", import: "./dist/ai/index.js" });
+  assert.deepEqual(pkg.exports["./generative-ui"], { types: "./dist/generative-ui/index.d.ts", import: "./dist/generative-ui/index.js" });
 });
 
 test(`plain Node ESM can import ${pkg.name} with no peer installed`, () => {
