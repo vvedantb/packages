@@ -5,7 +5,7 @@ import { cn } from "../utils/cn";
 import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
-  floatingSurfaceClass,
+  menuSurfaceClass,
 } from "./_menu-classes";
 import { useCn, useUiConfig } from "./ui-config";
 
@@ -131,7 +131,7 @@ const SelectContent = React.forwardRef<
         className={merge(
           classes?.content ?? [
             "relative z-50 max-h-96 max-sm:max-h-[85dvh] min-w-32 overflow-hidden outline-none",
-            floatingSurfaceClass,
+            menuSurfaceClass,
             floatingSurfaceAnimateClass,
           ],
           position === "popper" &&
@@ -144,7 +144,7 @@ const SelectContent = React.forwardRef<
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
-            classes?.viewport ?? "p-1.5",
+            classes?.viewport ?? "p-1",
             position === "popper" &&
               (classes?.popperViewport ??
                 "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"),
@@ -190,7 +190,7 @@ const SelectItem = React.forwardRef<
       ref={ref}
       className={merge(
         config?.classes?.item ??
-          "relative flex w-full cursor-pointer select-none items-center rounded-menu-item py-2 max-sm:min-h-10 pl-2.5 pr-8 text-sm outline-none transition-[background-color,color] focus:bg-default focus:text-foreground data-[highlighted]:bg-default data-[highlighted]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+          "relative flex w-full cursor-pointer select-none items-center rounded-menu-item py-1.5 max-sm:min-h-10 pl-2.5 pr-8 text-sm outline-none transition-[background-color,color] focus:bg-default focus:text-foreground data-[highlighted]:bg-default data-[highlighted]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
         className,
       )}
       {...props}
@@ -215,7 +215,7 @@ const SelectSeparator = React.forwardRef<
   return (
     <SelectPrimitive.Separator
       ref={ref}
-      className={merge(separator ?? "-mx-1.5 my-1 h-px bg-separator", className)}
+      className={merge(separator ?? "-mx-1 my-1 h-px bg-separator", className)}
       {...props}
     />
   );

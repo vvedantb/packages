@@ -47,7 +47,7 @@ const TRIGGER_CLASS =
  * sync so trigger vs embed surfaces cannot drift.
  */
 export const modelPickerSurfaceClass =
-  "w-100 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border-0 bg-transparent p-0 shadow-none";
+  "w-100 max-w-[calc(100vw-1rem)] overflow-hidden rounded-menu border-0 bg-transparent p-0 shadow-none";
 
 export interface ModelPickerProps<TModel extends string = string> {
   value: TModel;

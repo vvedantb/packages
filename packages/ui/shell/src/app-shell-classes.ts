@@ -6,11 +6,11 @@ import { cn } from "../../src/utils/cn";
 // on the marked lines only.
 
 /** App icon size in px for the home `RailTile`. Fixed across the apps. `RailTile` applies it when you pass `app`. */
-export const SIDEBAR_RAIL_APP_ICON_SIZE = 26;
+export const SIDEBAR_RAIL_APP_ICON_SIZE = 24;
 
-/** Rail tile: size-11, rounded-lg, press scale. */
+/** Rail tile: 44px on touch layouts, 40px from `md`, rounded-lg, press scale. */
 export const railTileClass =
-  "relative flex size-11 items-center justify-center rounded-lg border active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring";
+  "relative flex size-11 md:size-10 items-center justify-center rounded-lg border active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring";
 
 const railTileActiveClass = "border-transparent bg-surface-tertiary text-foreground";
 const railTileIdleClass = "border-transparent text-muted opacity-75 hover:bg-surface-tertiary/50 hover:opacity-100 hover:text-foreground"; // check-tokens-allow: text-muted

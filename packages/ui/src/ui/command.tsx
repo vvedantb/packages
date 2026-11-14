@@ -48,7 +48,7 @@ const Command = React.forwardRef<
       ref={ref}
       className={merge(
         root ??
-          "flex h-full w-full flex-col overflow-hidden rounded-lg bg-overlay text-overlay-foreground",
+          "flex h-full w-full flex-col overflow-hidden rounded-menu bg-overlay text-overlay-foreground",
         className,
       )}
       {...props}
@@ -92,7 +92,7 @@ function CommandDialog({
   const merge = useCn();
   return (
     <Dialog {...props}>
-      <DialogContent className={merge(classes?.dialogContent ?? "overflow-hidden p-0 sm:max-w-xl", className)}>
+      <DialogContent className={merge(classes?.dialogContent ?? "overflow-hidden p-0 sm:max-w-xl sm:rounded-menu", className)}>
         {title !== undefined || description !== undefined ? (
           <DialogHeader className="sr-only">
             <DialogTitle>{title}</DialogTitle>
@@ -150,7 +150,7 @@ const CommandList = React.forwardRef<
   return (
     <CommandPrimitive.List
       ref={ref}
-      className={merge(list ?? "max-h-80 max-sm:max-h-[60dvh] overflow-y-auto overflow-x-hidden pb-2", className)}
+      className={merge(list ?? "max-h-80 max-sm:max-h-[60dvh] overflow-y-auto overflow-x-hidden", className)}
       {...props}
     />
   );
@@ -189,7 +189,7 @@ const CommandGroup = React.forwardRef<
       ref={ref}
       className={merge(
         group ??
-          "overflow-hidden p-1.5 text-foreground [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground",
+          "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground",
         className,
       )}
       {...props}
@@ -207,7 +207,7 @@ const CommandSeparator = React.forwardRef<
   return (
     <CommandPrimitive.Separator
       ref={ref}
-      className={merge(separator ?? "-mx-1.5 h-px bg-separator", className)}
+      className={merge(separator ?? "-mx-1 h-px bg-separator", className)}
       {...props}
     />
   );
@@ -225,7 +225,7 @@ const CommandItem = React.forwardRef<
       ref={ref}
       className={merge(
         item ??
-          "relative flex cursor-default gap-2 select-none items-center rounded-menu-item px-2.5 py-2 max-sm:min-h-10 text-sm outline-none transition-colors data-[disabled=true]:pointer-events-none data-[selected=true]:bg-surface-tertiary/80 data-[selected=true]:text-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+          "relative flex cursor-default gap-2 select-none items-center rounded-menu-item px-2.5 py-1.5 max-sm:min-h-10 text-sm outline-none transition-colors data-[disabled=true]:pointer-events-none data-[selected=true]:bg-surface-tertiary/80 data-[selected=true]:text-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className,
       )}
       {...props}

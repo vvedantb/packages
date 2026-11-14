@@ -85,7 +85,7 @@ export type SidebarRailHeaderProps = ComponentPropsWithoutRef<"div">;
 
 /** Block pinned at the top of the rail, above the scroll body. */
 export function RailHeader({ className, ...props }: SidebarRailHeaderProps) {
-  return <div {...props} className={cn("flex w-full flex-col items-center gap-1.5 px-0 pt-3", className)} />;
+  return <div {...props} className={cn("flex w-full flex-col items-center gap-1 px-0 pt-3", className)} />;
 }
 
 export type SidebarRailBodyProps = ComponentPropsWithoutRef<"div"> & {
@@ -100,7 +100,7 @@ export type SidebarRailBodyProps = ComponentPropsWithoutRef<"div"> & {
 
 /** Scroll body of the rail. */
 export function RailBody({ asChild = false, tabs = false, className, ...props }: SidebarRailBodyProps) {
-  const bodyClass = cn("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2", className);
+  const bodyClass = cn("flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto py-2", className);
   if (tabs) return <TabsPrimitive.List {...props} asChild={asChild} className={bodyClass} />;
   const Body = asChild ? Slot : "div";
   return <Body {...props} className={bodyClass} />;
@@ -110,7 +110,7 @@ export type SidebarRailFooterProps = ComponentPropsWithoutRef<"div">;
 
 /** Block pinned at the bottom of the rail. */
 export function RailFooter({ className, ...props }: SidebarRailFooterProps) {
-  return <div {...props} className={cn("flex w-full flex-col items-center gap-1.5 py-3", className)} />;
+  return <div {...props} className={cn("flex w-full flex-col items-center gap-1 py-3", className)} />;
 }
 
 type SidebarRailItemBaseProps = Omit<ComponentPropsWithoutRef<"button">, "children"> & {
@@ -138,7 +138,7 @@ export type SidebarRailItemProps = SidebarRailItemBaseProps &
     | {
         /**
          * Product app id for the home tile. The tile renders `APP_ICONS[app]` at
-         * `SIDEBAR_RAIL_APP_ICON_SIZE` (26px), so apps cannot drift. With `asChild` the
+         * `SIDEBAR_RAIL_APP_ICON_SIZE` (24px), so apps cannot drift. With `asChild` the
          * icon goes inside the child element (for example `<Link to="/" />`). Without
          * `asChild`, `children` are ignored.
          */

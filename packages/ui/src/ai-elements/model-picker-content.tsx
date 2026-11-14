@@ -286,7 +286,7 @@ export function ModelPickerContent<TModel extends string>({
   return (
     <TooltipProvider>
       <div
-        className="flex h-96 max-h-[min(24rem,var(--radix-popover-content-available-height))] w-full flex-col overflow-hidden rounded-lg bg-popover smooth-shadow-ring-lg"
+        className="flex h-96 max-h-[min(24rem,var(--radix-popover-content-available-height))] w-full flex-col overflow-hidden rounded-menu bg-popover smooth-shadow-ring-lg"
         data-model-picker-content
       >
         {header ? (
@@ -335,7 +335,7 @@ export function ModelPickerContent<TModel extends string>({
                         data-model-picker-instance={instance.key}
                         disabled={isLockedTeam}
                         className={merge(
-                          "relative isolate flex aspect-square w-full items-center justify-center rounded-md transition-colors",
+                          "relative isolate flex aspect-square w-full items-center justify-center rounded-menu-item transition-colors",
                           isPersonalTeamVariant
                             ? "opacity-40"
                             : "hover:bg-surface-secondary",
@@ -412,7 +412,7 @@ export function ModelPickerContent<TModel extends string>({
             ) : null}
 
             <CommandList
-              className="max-h-none h-full flex-1 overflow-y-auto overscroll-contain px-1.5 py-1.5"
+              className="max-h-none h-full flex-1 overflow-y-auto overscroll-contain p-1"
               onScroll={(event) => updateScrollFades(event.currentTarget)}
               ref={(node) => {
                 if (node) updateScrollFades(node);
@@ -455,7 +455,7 @@ export function ModelPickerContent<TModel extends string>({
                       onSelect(option.id, row.instance.accountId);
                     }}
                     className={merge(
-                      "flex flex-col items-stretch gap-1 rounded-md px-2 py-2.5 data-[selected=true]:bg-surface-secondary",
+                      "flex flex-col items-stretch gap-1 rounded-menu-item px-2 py-2.5 data-[selected=true]:bg-surface-secondary",
                       isPersonalTeamVariant && "opacity-50",
                       isLockedTeamRow ? "cursor-not-allowed" : "cursor-pointer",
                     )}

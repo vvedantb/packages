@@ -65,8 +65,8 @@ describe("AppShell", () => {
     await mount(<AppShell sidebar={<nav data-testid="sb" />}>Page</AppShell>);
     const shell = first();
     expect(shell.className).toBe("relative h-dvh overflow-hidden bg-background");
-    expect(shell.style.getPropertyValue("--app-shell-rail-width")).toBe("4rem");
-    expect(shell.style.getPropertyValue("--app-shell-sidebar-width")).toBe("20rem");
+    expect(shell.style.getPropertyValue("--app-shell-rail-width")).toBe("3.5rem");
+    expect(shell.style.getPropertyValue("--app-shell-sidebar-width")).toBe("19.5rem");
     expect(shell.style.getPropertyValue("--app-shell-mobile-header-height")).toBe(
       "calc(3.5rem + env(safe-area-inset-top, 0px))",
     );
@@ -119,12 +119,12 @@ describe("SidebarRail", () => {
       "flex h-full shrink-0 flex-col items-center bg-background border-r border-separator w-14",
     );
     const [top, body, footer] = Array.from(rail.children);
-    expect(top?.className).toBe("flex w-full flex-col items-center gap-1.5 px-0 pt-3");
+    expect(top?.className).toBe("flex w-full flex-col items-center gap-1 px-0 pt-3");
     expect(body?.className).toBe(
-      "flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2 scrollbar-thin",
+      "flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto py-2 scrollbar-thin",
     );
     expect(footer?.className).toBe(
-      "flex w-full flex-col items-center gap-1.5 py-3 border-t border-separator",
+      "flex w-full flex-col items-center gap-1 py-3 border-t border-separator",
     );
     expect(body?.textContent).toBe("body");
   });
@@ -142,7 +142,7 @@ describe("SidebarRail", () => {
     expect(rail.children).toHaveLength(1);
     const list = first(rail);
     expect(list.tagName).toBe("UL");
-    expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2");
+    expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto py-2");
   });
 
   it("spreads extra HTML attributes onto the root div", async () => {
@@ -162,7 +162,7 @@ describe("SidebarRail", () => {
 });
 
 describe("RailTile", () => {
-  it("bakes a 26px app icon inside an asChild link", async () => {
+  it("bakes a 24px app icon inside an asChild link", async () => {
     await mount(
       <RailTile asChild app="vmem" label="Home" badge={<span data-testid="badge" />}>
         <a href="/" />
@@ -172,12 +172,12 @@ describe("RailTile", () => {
     expect(link.className).toBe(cn(railTileClass, "group", railTileStateClass(false)));
     const svg = link.querySelector("svg");
     expect(svg?.getAttribute("data-app")).toBe("vmem");
-    expect(svg?.getAttribute("width")).toBe("26");
-    expect(svg?.getAttribute("height")).toBe("26");
+    expect(svg?.getAttribute("width")).toBe("24");
+    expect(svg?.getAttribute("height")).toBe("24");
     expect(link.querySelector("[data-testid=badge]")).not.toBeNull();
   });
 
-  it("ignores children and forces 26px for a button tile with app", async () => {
+  it("ignores children and forces 24px for a button tile with app", async () => {
     await mount(
       <RailTile app="velth" label="Home">
         <svg data-testid="wrong" width="22" height="22" />
@@ -187,8 +187,8 @@ describe("RailTile", () => {
     expect(button.querySelector("[data-testid=wrong]")).toBeNull();
     const svg = button.querySelector("svg");
     expect(svg?.getAttribute("data-app")).toBe("velth");
-    expect(svg?.getAttribute("width")).toBe("26");
-    expect(svg?.getAttribute("height")).toBe("26");
+    expect(svg?.getAttribute("width")).toBe("24");
+    expect(svg?.getAttribute("height")).toBe("24");
   });
 
   it("renders its child with tile classes, aria-current and the badge inside", async () => {
@@ -460,7 +460,7 @@ describe("SidebarAccountMenu", () => {
 });
 
 describe("SidebarAccountMenu opt-in props", () => {
-  const TRIGGER = cn(railTileClass, "h-11 w-11 p-0", railTileStateClass(false));
+  const TRIGGER = cn(railTileClass, "h-11 w-11 p-0 md:h-10 md:w-10", railTileStateClass(false));
 
   /** The 0.5.1 trigger classes: a ghost `Button` with the tile classes. */
   async function referenceTriggerClass(extra?: string) {
@@ -600,7 +600,7 @@ describe("opt-in defaults", () => {
     );
     expect(host?.querySelector('[role="separator"]')).toBeNull();
     expect(host?.querySelector('[role="tablist"], [role="tab"]')).toBeNull();
-    expect(first().style.getPropertyValue("--app-shell-sidebar-width")).toBe("20rem");
+    expect(first().style.getPropertyValue("--app-shell-sidebar-width")).toBe("19.5rem");
     expect(q("main").className).toContain(MAIN_TRANSITION);
     expect(q("aside").className).toContain(
       "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
@@ -656,7 +656,7 @@ describe("AppShell resizable", () => {
     expect(separator.getAttribute("aria-valuemax")).toBe("400");
     expect(separator.getAttribute("aria-valuenow")).toBe("256");
     expect(separator.tabIndex).toBe(0);
-    expect(sidebarWidth()).toBe("calc(4rem + 256px)");
+    expect(sidebarWidth()).toBe("calc(3.5rem + 256px)");
     expect(q('[data-testid="probe"]').textContent).toBe("256");
   });
 
@@ -666,7 +666,7 @@ describe("AppShell resizable", () => {
       handle().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
     expect(handle().getAttribute("aria-valuenow")).toBe("272");
-    expect(sidebarWidth()).toBe("calc(4rem + 272px)");
+    expect(sidebarWidth()).toBe("calc(3.5rem + 272px)");
     expect(localStorage.getItem("test-sidebar-width")).toBe("272");
 
     await act(async () => {
@@ -689,7 +689,7 @@ describe("AppShell resizable", () => {
     localStorage.setItem("test-sidebar-width", "320");
     await mount(shell());
     expect(handle().getAttribute("aria-valuenow")).toBe("320");
-    expect(sidebarWidth()).toBe("calc(4rem + 320px)");
+    expect(sidebarWidth()).toBe("calc(3.5rem + 320px)");
 
     await act(async () => root?.unmount());
     localStorage.setItem("test-sidebar-width", '"wide"');
@@ -735,7 +735,7 @@ describe("SidebarRail tabs", () => {
     await mountTabs();
     const list = q('[role="tablist"]');
     expect(list.getAttribute("aria-orientation")).toBe("vertical");
-    expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto py-2");
+    expect(list.className).toBe("flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto py-2");
     const [files, search] = tabs();
     expect(files?.className).toBe(cn(railTileClass, "group relative", railTileStateClass(true)));
     expect(search?.className).toBe(cn(railTileClass, "group relative", railTileStateClass(false)));

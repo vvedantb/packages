@@ -258,7 +258,7 @@ export function AccountTrigger({ userName, imageUrl, className, children, ...pro
         title={userName}
         aria-label={`Account menu for ${userName}`}
         {...props}
-        className={cn(railTileClass, "h-11 w-11 p-0", railTileStateClass(false), className)}
+        className={cn(railTileClass, "h-11 w-11 p-0 md:h-10 md:w-10", railTileStateClass(false), className)}
       >
         {children ?? <AccountAvatar imageUrl={imageUrl} userName={userName} className="h-7 w-7" />}
       </Button>
@@ -327,5 +327,5 @@ export type SidebarAccountMenuPlaceholderProps = { className?: string };
 
 /** Tile-sized placeholder while the account loads. */
 export function SidebarAccountMenuPlaceholder({ className }: SidebarAccountMenuPlaceholderProps) {
-  return <div className={cn("size-11 rounded-lg bg-surface-tertiary", className)} />;
+  return <div className={cn("size-11 rounded-lg bg-surface-tertiary md:size-10", className)} />;
 }

@@ -918,7 +918,7 @@ describe("useAppShellResize behaviour", () => {
     await act(async () => latest?.setWidth(300));
     expect(latest?.width).toBe(300);
     expect(localStorage.getItem(resizable.storageKey)).toBe("300");
-    expect(q("div", host ?? document.body).style.getPropertyValue("--app-shell-sidebar-width")).toBe("calc(4rem + 300px)");
+    expect(q("div", host ?? document.body).style.getPropertyValue("--app-shell-sidebar-width")).toBe("calc(3.5rem + 300px)");
     await act(async () => latest?.setWidth((w) => w + 10));
     expect(latest?.width).toBe(310);
   });

@@ -6,7 +6,7 @@ import { cn } from "../utils/cn";
 import { fieldFocusClass } from "./_field-classes";
 import {
   floatingSurfaceAnimateClass,
-  floatingSurfaceClass,
+  menuSurfaceClass,
   menuItemClass,
 } from "./_menu-classes";
 
@@ -68,7 +68,7 @@ function SelectContent({
         data-slot="select-content"
         className={cn(
           "relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto",
-          floatingSurfaceClass,
+          menuSurfaceClass,
           floatingSurfaceAnimateClass,
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
@@ -81,7 +81,7 @@ function SelectContent({
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
-            "p-1.5",
+            "p-1",
             position === "popper" &&
               "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width) scroll-my-1",
           )}
@@ -119,7 +119,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-pointer select-none items-center gap-2 rounded-menu-item py-2 pl-2.5 pr-8 text-sm outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 last:[span]:*:flex last:[span]:*:items-center last:[span]:*:gap-2",
+        "[&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-pointer select-none items-center gap-2 rounded-menu-item py-1.5 pl-2.5 pr-8 text-sm outline-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 last:[span]:*:flex last:[span]:*:items-center last:[span]:*:gap-2",
         menuItemClass,
         className,
       )}
@@ -146,7 +146,7 @@ function SelectSeparator({
     <SelectPrimitive.Separator
       data-slot="select-separator"
       className={cn(
-        "bg-separator pointer-events-none -mx-1.5 my-1 h-px",
+        "bg-separator pointer-events-none -mx-1 my-1 h-px",
         className,
       )}
       {...props}

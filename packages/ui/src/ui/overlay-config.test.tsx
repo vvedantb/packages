@@ -493,13 +493,13 @@ describe("UiConfig.cn", () => {
 
   it("Command merges a caller className with the app merger", async () => {
     const tree = <UI.Command className="rounded-none">x</UI.Command>;
-    // the built-in cn treats `rounded-lg` and `rounded-none` as one group
+    // the built-in cn treats `rounded-menu` and `rounded-none` as one group
     await mount(tree);
-    expect(el("[cmdk-root]").classList.contains("rounded-lg")).toBe(false);
+    expect(el("[cmdk-root]").classList.contains("rounded-menu")).toBe(false);
     await act(async () => root?.unmount());
     document.body.innerHTML = "";
     await mount(tree, config);
-    expect(el("[cmdk-root]").classList.contains("rounded-lg")).toBe(true);
+    expect(el("[cmdk-root]").classList.contains("rounded-menu")).toBe(true);
     expect(el("[cmdk-root]").classList.contains("merged")).toBe(true);
   });
 

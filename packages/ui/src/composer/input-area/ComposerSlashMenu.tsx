@@ -62,7 +62,7 @@ export function ComposerSlashMenu({
         transition={motionFast}
         style={{ maxHeight: placement.maxHeight }}
         className={
-          "flex flex-col overflow-hidden rounded-surface " +
+          "flex flex-col overflow-hidden rounded-menu " +
           "bg-popover/95 text-popover-foreground backdrop-blur-md smooth-shadow-ring-lg " +
           (isAbove ? "origin-bottom" : "origin-top")
         }
