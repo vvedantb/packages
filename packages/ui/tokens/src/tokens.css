@@ -272,6 +272,11 @@
     --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --tabs-dur: 200ms;
     --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-fast: 150ms;
+    --motion-base: 220ms;
+    --motion-slow: 320ms;
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
     --sidebar-section-label-mix: 55%;
     --sidebar-section-label-hover-mix: 80%;
   }

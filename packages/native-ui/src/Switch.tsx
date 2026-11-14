@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Switch as PrimitiveSwitch } from "./primitives/switch";
 import { cn } from "./cn";
+import { selectionHaptic } from "./haptics";
 import { switchColors, switchSize, touchSlop, type SwitchSize } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -30,6 +31,7 @@ const Switch = React.forwardRef<
   const size = switchSize(useLargerText(), sizeName);
 
   const handleCheckedChange = (nextValue: boolean) => {
+    selectionHaptic();
     onCheckedChange?.(nextValue);
     onValueChange?.(nextValue);
   };

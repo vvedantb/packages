@@ -1,6 +1,6 @@
 # 001: Scale menus, popovers and tooltips from their trigger
 
-- **Status:** Not started
+- **Status:** Implemented on 14 November 2026
 - **Commit:** `76eb8a0` (audit baseline on `main`)
 - **Severity:** MEDIUM
 - **Category:** Physicality and origin

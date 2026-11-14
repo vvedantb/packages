@@ -1,6 +1,8 @@
 # 005: Native Reduce Motion keeps a fade, drops the movement
 
-- **Status:** Not started. Needs a yes from the maintainer first (see Problem).
+- **Status:** Rejected on 14 November 2026. Do not execute. The maintainer
+  confirmed that dropping all animation under Reduce Motion is intended: each
+  app has its own setting to turn animations on or off.
 - **Commit:** `76eb8a0` (audit baseline on `main`)
 - **Severity:** MEDIUM
 - **Category:** Accessibility

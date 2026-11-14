@@ -7,6 +7,13 @@ appId: dev.vvedantb.nativegallery
     id: home
 - takeScreenshot: screenshots/home
 
+# Toggle a Switch, then toggle it back, so the toggle path runs on device and
+# the home state is unchanged for the screenshots that follow.
+- tapOn:
+    id: toggle-larger-text
+- tapOn:
+    id: toggle-larger-text
+
 - scrollUntilVisible:
     element:
       id: link-layering

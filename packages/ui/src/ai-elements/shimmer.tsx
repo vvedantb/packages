@@ -1,5 +1,5 @@
 import { type CSSProperties, type ElementType } from "react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { cn } from "../utils/cn";
 import { useAnimOffscreenRef } from "../utils/runtimeVisibility";
 import { useCn, useUiConfig } from "../ui/ui-config";
@@ -48,6 +48,23 @@ function Shimmer({ mode, as, ...props }: ShimmerProps) {
     <GradientShimmer as={Component} {...props} />
   );
 }
+/**
+ * One motion component per `as` element, created once and reused. `m.create`
+ * returns a new component type on each call; React treats a new type as a
+ * different element and remounts the node, which restarts the sweep on every
+ * parent re-render. Caching by element keeps the node stable.
+ */
+const createMotion = (Component: ElementType) => m.create(Component);
+const motionComponents = new Map<ElementType, ReturnType<typeof createMotion>>();
+
+function motionComponentFor(Component: ElementType) {
+  let cached = motionComponents.get(Component);
+  if (!cached) {
+    cached = createMotion(Component);
+    motionComponents.set(Component, cached);
+  }
+  return cached;
+}
 function GradientShimmer({
   children,
   as: Component = "span",
@@ -55,7 +72,7 @@ function GradientShimmer({
   duration = 2,
   spread = 2,
 }: ShimmerProps) {
-  const MotionComponent = motion.create(Component);
+  const MotionComponent = motionComponentFor(Component);
   const totalSpread = spread * children.length;
   const style = {
     "--spread": `${totalSpread}px`,

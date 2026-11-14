@@ -88,6 +88,8 @@ const DialogContent = React.forwardRef<
      * centred dialog at every size and leaves the viewport and body alone.
      */
     viewportAware?: boolean;
+    /** Merged onto the `DialogOverlay`, for example to drop its fade. */
+    overlayClassName?: string;
   }
 >(
   (
@@ -96,6 +98,7 @@ const DialogContent = React.forwardRef<
       children,
       hideCloseButton,
       viewportAware: viewportAwareProp,
+      overlayClassName,
       role,
       onOpenAutoFocus,
       "aria-describedby": ariaDescribedBy,
@@ -179,7 +182,7 @@ const DialogContent = React.forwardRef<
 
     return (
       <DialogPortal>
-        <DialogOverlay />
+        <DialogOverlay className={overlayClassName} />
         <DialogPrimitive.Content
           ref={mergedRef}
           {...(role ? { role } : {})}

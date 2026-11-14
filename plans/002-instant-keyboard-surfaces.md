@@ -1,6 +1,6 @@
 # 002: Open the command palette and slash menu with no animation
 
-- **Status:** Not started
+- **Status:** Implemented on 14 November 2026
 - **Commit:** `76eb8a0` (audit baseline on `main`)
 - **Severity:** HIGH
 - **Category:** Purpose and frequency

@@ -62,6 +62,19 @@ Command.displayName = CommandPrimitive.displayName;
 const commandDialogPinnedClass =
   "[&_[cmdk-list]]:h-80 [&_[cmdk-list]]:max-h-[60dvh] [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-1.5 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-11 [&_[cmdk-item]]:rounded-menu-item [&_[cmdk-item]]:px-2.5 [&_[cmdk-item]]:py-2 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4";
 
+// Keyboard surface: the palette opens and closes in the same frame. Override
+// the `t-modal` timing variables on the content element (do not fork the CSS).
+// `--modal-close-dur` is 1ms, not 0ms, so the `t-modal-presence-wait` animation
+// still fires `animationend` and Radix Presence unmounts the palette; a 0ms
+// animation is not guaranteed to fire that event in every browser.
+const commandDialogInstantClass =
+  "[--modal-open-dur:0ms] [--modal-close-dur:1ms] [--modal-scale:1] [--modal-scale-close:1]";
+
+// Drop the overlay fade so no backdrop is left behind on close. `animation:none`
+// means Radix Presence sees no animation and unmounts the overlay at once;
+// `!important` wins over the data-state motion classes without a specificity war.
+const commandOverlayInstantClass = "[animation:none!important]";
+
 // The list sizes itself and items keep the caller's styling.
 const commandDialogAutoClass =
   "[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-1.5 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-11 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4"; // check-tokens-allow: text-muted
@@ -92,7 +105,14 @@ function CommandDialog({
   const merge = useCn();
   return (
     <Dialog {...props}>
-      <DialogContent className={merge(classes?.dialogContent ?? "overflow-hidden p-0 sm:max-w-xl sm:rounded-menu", className)}>
+      <DialogContent
+        overlayClassName={commandOverlayInstantClass}
+        className={merge(
+          classes?.dialogContent ??
+            `overflow-hidden p-0 sm:max-w-xl sm:rounded-menu ${commandDialogInstantClass}`,
+          className,
+        )}
+      >
         {title !== undefined || description !== undefined ? (
           <DialogHeader className="sr-only">
             <DialogTitle>{title}</DialogTitle>

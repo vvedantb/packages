@@ -14,7 +14,7 @@ Each plan is self-contained. An executor needs only the plan file.
 | 002 | [Command palette and slash menu open with no animation](002-instant-keyboard-surfaces.md) | ui | HIGH | 2 to 3 files |
 | 003 | [Define the `--motion-*` tokens](003-define-motion-tokens.md) | ui | MEDIUM | 1 file |
 | 004 | [Shimmer stops remounting on every render](004-shimmer-stable-component.md) | ui | HIGH | 1 file |
-| 005 | [Native Reduce Motion keeps a fade](005-native-reduce-motion-keeps-fade.md) | native-ui | MEDIUM | 4 files |
+| 005 | [Native Reduce Motion keeps a fade](005-native-reduce-motion-keeps-fade.md) (rejected) | native-ui | MEDIUM | 4 files |
 | 006 | [Native Switch haptic](006-native-switch-haptic.md) | native-ui | LOW | 1 file |
 
 ## Order
@@ -23,7 +23,10 @@ Ordered by leverage (effect per changed line), not by severity.
 
 1. 001, 003 and 006 are small and independent. Do them first.
 2. 004 and 002 next.
-3. 005 last. It reverses a documented choice and needs the maintainer's yes.
+3. 005 is rejected. Dropping all animation under Reduce Motion is intended:
+   each app has its own setting to turn animations on or off.
+
+Status on 14 November 2026: 001, 002, 003, 004 and 006 are implemented.
 
 ## Dependencies
 
