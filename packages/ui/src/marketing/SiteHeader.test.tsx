@@ -15,7 +15,7 @@ const base: SiteHeaderProps = {
   cta: <button type="button">Get the app</button>,
 };
 
-async function mount(props: Partial<SiteHeaderProps> = {}) {
+async function mount(props: Partial<Omit<SiteHeaderProps, "app" | "brand" | "githubLabel">> = {}) {
   const host = document.createElement("div");
   document.body.appendChild(host);
   const root = createRoot(host);
