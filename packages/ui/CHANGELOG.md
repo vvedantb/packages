@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.44.0
+
+### Minor Changes
+
+- [#231](https://github.com/vvedantb/packages/pull/231) [`9e9e35b`](https://github.com/vvedantb/packages/commit/9e9e35b5494456e25dd80db3c4c1ec5068488b4a) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ProductHeroOrbit`, the default concept visual for `ProductHero`: a glowing core with three orbit rings. Pass it as `visual` and set `accent` to tint it for a product. `children` puts a mark (for example the logo) in the core. Its motion is CSS only and stops under `prefers-reduced-motion: reduce`. Exported from `@vvedantb/ui` and `@vvedantb/ui/client`.
+
 ## 0.43.0
 
 ### Minor Changes
