@@ -25,7 +25,7 @@ test("root exposes former subpath APIs", () => {
     "createLandingKit", "LandingPageLayout", "LandingSection", "LandingSectionHeading", "LandingLattice",
     "LandingFeatureCard", "LandingNavMenu", "LandingFooter", "landingShellClass", "landingPanelClass",
     "landingItemVariants", "landingFooterLinkClass", "landingFooterButtonClass",
-    "SiteFooter", "SiteHeader", "SITE_HEADER_WORDMARK_SIZE", "PROJECT_V_SOCIALS", "PROJECT_V_LEGAL_LINKS", "SITE_FOOTER_WORDMARK_SIZE", "PROJECT_V_PRODUCT_APPS", "projectVAppsColumn", "PageTitle", "PageHeader", "PricingModal", "RailCollapseTile",
+    "SiteFooter", "FloatingBar", "SiteHeader", "SITE_HEADER_WORDMARK_SIZE", "PROJECT_V_SOCIALS", "PROJECT_V_LEGAL_LINKS", "SITE_FOOTER_WORDMARK_SIZE", "PROJECT_V_PRODUCT_APPS", "projectVAppsColumn", "PageTitle", "PageHeader", "PricingModal", "RailCollapseTile",
     "ConvexClerkProvider", "parseClientEnv", "VITE_ENV_NAMES", "useEnsureUser",
     "Slider", "LabeledSliderRow", "SearchInput", "fieldFocusClass", "fieldFocusWithinClass",
     "ModelPicker", "AgentTrace", "AgentPlan", "TestResult", "TestResultErrorStack", "ContextUsage",

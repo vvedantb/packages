@@ -320,6 +320,8 @@ export {
   landingPanelClass,
   landingShellClass,
 } from "./marketing/marketing-classes";
+export { FloatingBar } from "./marketing/FloatingBar";
+export type { FloatingBarProps } from "./marketing/FloatingBar";
 export { SITE_HEADER_WORDMARK_SIZE, SiteHeader } from "./marketing/SiteHeader";
 export type { SiteHeaderLink, SiteHeaderProps } from "./marketing/SiteHeader";
 export type { PricingModalTone, SiteFooterVariant } from "./marketing/marketing-classes";

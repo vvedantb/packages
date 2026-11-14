@@ -24,7 +24,7 @@ test("client has the pieces extension pages use", () => {
   for (const name of [
     "Button", "Card", "CardHeader", "Tabs", "TabsList", "TabsTrigger", "TabsContent", "Spinner",
     "Dialog", "DialogContent", "Select", "Input", "Switch", "Tooltip", "SonnerToaster", "toast",
-    "SiteFooter", "SiteHeader", "SITE_HEADER_WORDMARK_SIZE", "PROJECT_V_SOCIALS", "PROJECT_V_LEGAL_LINKS", "PROJECT_V_PRODUCT_APPS", "PageTitle", "PageHeader",
+    "SiteFooter", "FloatingBar", "SiteHeader", "SITE_HEADER_WORDMARK_SIZE", "PROJECT_V_SOCIALS", "PROJECT_V_LEGAL_LINKS", "PROJECT_V_PRODUCT_APPS", "PageTitle", "PageHeader",
     "AppWordmark", "AppMark", "APP_ICONS", "IconVibot", "IconVmem", "IconVerve", "IconEva", "IconBee",
     "createThemeProvider", "applyThemeClass", "getSystemTheme", "cn", "tokens",
     "startUpdateAvailableWatcher", "showUpdateAvailableToast",
