@@ -2,8 +2,8 @@
  * @vvedantb/ui/tokens/css/utilities.css: Tailwind `@utility` helpers. Generated
  * only when used, and they take variants (e.g. `max-sm:hit-target`).
  *
- * The motion utilities read these variables. Set them on :root to change
- * (defaults shown):
+ * The motion utilities read these variables. Their defaults are set on :root
+ * in tokens.css; set them on the app :root to change (defaults shown):
  *   --motion-fast: 150ms (press feedback)
  *   --motion-base: 220ms (colour, shadow, opacity)
  *   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1)

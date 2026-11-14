@@ -1,6 +1,6 @@
 # 004: Stop the gradient shimmer remounting on every render
 
-- **Status:** Not started
+- **Status:** Implemented on 14 November 2026
 - **Commit:** `76eb8a0` (audit baseline on `main`)
 - **Severity:** HIGH
 - **Category:** Performance

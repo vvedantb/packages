@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { m } from "motion/react";
-import { motionFast } from "./motion";
 import type { ComposerSlashPlacement } from "./composerSlashPosition";
 import type { ComposerSlashItem } from "./composerSlashItems";
 import { filterAndGroupSlashItems } from "./composerSlashItems";
@@ -55,11 +53,7 @@ export function ComposerSlashMenu({
         transform: isAbove ? "translateY(-100%)" : undefined,
       }}
     >
-      <m.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={motionFast}
+      <div
         style={{ maxHeight: placement.maxHeight }}
         className={
           "flex flex-col overflow-hidden rounded-menu " +
@@ -131,7 +125,7 @@ export function ComposerSlashMenu({
             No matches.
           </div>
         )}
-      </m.div>
+      </div>
     </div>
   );
 }

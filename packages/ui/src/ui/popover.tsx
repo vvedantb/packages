@@ -61,7 +61,7 @@ const PopoverContent = React.forwardRef<
             floatingSurfaceAnimateClass,
           ],
           fitViewport &&
-            `origin-[var(--radix-popper-transform-origin)] max-sm:max-w-[calc(100vw-1.5rem)] ${fitViewportClass}`,
+            `max-sm:max-w-[calc(100vw-1.5rem)] ${fitViewportClass}`,
           className,
         )}
         {...props}

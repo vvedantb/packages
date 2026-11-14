@@ -1,6 +1,6 @@
 # 003: Define the `--motion-*` tokens that the CSS already reads
 
-- **Status:** Not started
+- **Status:** Implemented on 14 November 2026
 - **Commit:** `76eb8a0` (audit baseline on `main`)
 - **Severity:** MEDIUM
 - **Category:** Cohesion and tokens
