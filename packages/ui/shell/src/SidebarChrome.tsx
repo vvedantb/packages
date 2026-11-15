@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { AnimatePresence, motion, type HTMLMotionProps, type PanInfo } from "motion/react";
+import { AnimatePresence, domMax, LazyMotion, m, type HTMLMotionProps, type PanInfo } from "motion/react";
 import { IconMenu2 } from "@tabler/icons-react";
 import { Button, type ButtonProps } from "../../src/ui/button";
 import { motionEase, motionTiming } from "../../src/motion/presets";
@@ -192,24 +192,28 @@ export type SidebarBackdropProps = Omit<HTMLMotionProps<"button">, "children"> &
 function Backdrop({ label = "Close navigation", className, onClick, ...props }: SidebarBackdropProps) {
   const sidebar = useSidebar("Backdrop");
   return (
-    <AnimatePresence initial={false}>
-      {sidebar.mobileOpen && !sidebar.isDesktop ? (
-        <motion.button
-          type="button"
-          aria-label={label}
-          {...props}
-          className={cn("fixed inset-0 z-40 bg-backdrop/80 md:hidden", className)}
-          onClick={(event) => {
-            onClick?.(event);
-            sidebar.onMobileOpenChange(false);
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: motionTiming.sidebar, ease: motionEase }}
-        />
-      ) : null}
-    </AnimatePresence>
+    // `m.*` in its own `LazyMotion`, as every shell part: an app's strict
+    // `LazyMotion` throws on a full `motion.*` component.
+    <LazyMotion features={domMax}>
+      <AnimatePresence initial={false}>
+        {sidebar.mobileOpen && !sidebar.isDesktop ? (
+          <m.button
+            type="button"
+            aria-label={label}
+            {...props}
+            className={cn("fixed inset-0 z-40 bg-backdrop/80 md:hidden", className)}
+            onClick={(event) => {
+              onClick?.(event);
+              sidebar.onMobileOpenChange(false);
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: motionTiming.sidebar, ease: motionEase }}
+          />
+        ) : null}
+      </AnimatePresence>
+    </LazyMotion>
   );
 }
 
@@ -233,38 +237,41 @@ function Aside({ id, className, onKeyDown, children, ...props }: SidebarAsidePro
   };
 
   return (
-    <motion.aside
-      id={id ?? sidebar.drawerId}
-      data-sidebar-layout={isDesktop ? "desktop" : "drawer"}
-      {...props}
-      inert={!isDesktop && !mobileOpen}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        closeOnEscape(sidebar, event);
-      }}
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 flex bg-background pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] md:py-0",
-        panelHidden
-          ? "w-[var(--app-shell-rail-width)]"
-          : "w-[min(var(--app-shell-sidebar-width),calc(100vw-1.5rem))]",
-        collapsed || panelHidden
-          ? "md:w-[var(--app-shell-rail-width)]"
-          : "md:w-[var(--app-shell-sidebar-width)]",
-        !resize?.isResizing &&
-          "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
-        className,
-      )}
-      initial={false}
-      animate={{ x: isDesktop || mobileOpen ? 0 : "-100%" }}
-      transition={{ duration: motionTiming.sidebar, ease: motionEase }}
-      drag={!isDesktop && mobileOpen ? "x" : false}
-      dragDirectionLock
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={{ left: 0.45, right: 0.08 }}
-      onDragEnd={handleDrawerDragEnd}
-    >
-      {children}
-    </motion.aside>
+    // `domMax`: the drawer drags to close.
+    <LazyMotion features={domMax}>
+      <m.aside
+        id={id ?? sidebar.drawerId}
+        data-sidebar-layout={isDesktop ? "desktop" : "drawer"}
+        {...props}
+        inert={!isDesktop && !mobileOpen}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          closeOnEscape(sidebar, event);
+        }}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex bg-background pb-[env(safe-area-inset-bottom,0px)] pt-[env(safe-area-inset-top,0px)] md:py-0",
+          panelHidden
+            ? "w-[var(--app-shell-rail-width)]"
+            : "w-[min(var(--app-shell-sidebar-width),calc(100vw-1.5rem))]",
+          collapsed || panelHidden
+            ? "md:w-[var(--app-shell-rail-width)]"
+            : "md:w-[var(--app-shell-sidebar-width)]",
+          !resize?.isResizing &&
+            "md:transition-[width] md:[transition-duration:280ms] md:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+          className,
+        )}
+        initial={false}
+        animate={{ x: isDesktop || mobileOpen ? 0 : "-100%" }}
+        transition={{ duration: motionTiming.sidebar, ease: motionEase }}
+        drag={!isDesktop && mobileOpen ? "x" : false}
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.45, right: 0.08 }}
+        onDragEnd={handleDrawerDragEnd}
+      >
+        {children}
+      </m.aside>
+    </LazyMotion>
   );
 }
 

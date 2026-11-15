@@ -2,6 +2,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
+import { domMax, LazyMotion } from "motion/react";
 import { IconHome, IconSearch } from "@tabler/icons-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../src/ui/dropdown-menu";
 import { TooltipProvider } from "../../src/ui/tooltip";
@@ -460,5 +461,20 @@ describe("Sidebar nav rows", () => {
     const more = host?.querySelector('button[aria-label="More"]');
     expect(more?.className).toBe(sidebarNavItemActionsClass);
     expect(more?.className).toContain("data-[state=open]:opacity-100");
+  });
+});
+
+describe("under an app's strict LazyMotion", () => {
+  it("renders the drawer and its backdrop (no full motion.* components)", async () => {
+    await mount(
+      <LazyMotion features={domMax} strict>
+        <Sidebar.Root isDesktop={false} mobileOpen onMobileOpenChange={() => undefined}>
+          <Sidebar.Backdrop />
+          <Sidebar.Aside data-testid="aside">nav</Sidebar.Aside>
+        </Sidebar.Root>
+      </LazyMotion>,
+    );
+    expect(host?.querySelector('[data-testid="aside"]')?.textContent).toBe("nav");
+    expect(host?.querySelector('button[aria-label="Close navigation"]')).not.toBeNull();
   });
 });
