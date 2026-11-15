@@ -9,8 +9,12 @@ Run `pnpm changeset` in any PR that changes a published package for users. Pick 
 ## Release flow
 
 1. The PR merges to `main`.
-2. The `Release` workflow opens or updates a **Version Packages** PR. It bumps versions and writes changelogs.
-3. Merge that PR. The workflow then builds, typechecks, tests and publishes. It creates tags such as `@vvedantb/ui@0.39.0` and GitHub releases.
+2. The `Release` workflow runs. If a changeset is pending it bumps versions, writes changelogs and commits that to `main` as "Version Packages".
+3. The same run builds, typechecks, tests and publishes under the npm `latest` tag. It creates tags such as `@vvedantb/ui@0.39.0` and GitHub releases.
+
+Every merge with a changeset is a release. There is no Version Packages PR and no `next` pre-release tag.
+
+If a run fails after the version commit, the versions on `main` are ahead of npm. The next run on `main` publishes them. To retry without a new merge, run the `Release` workflow by hand with `dry_run` unticked.
 
 ## Dry run
 
