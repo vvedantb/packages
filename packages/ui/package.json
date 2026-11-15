@@ -149,7 +149,7 @@
     "@streamdown/mermaid": "*",
     "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-hotkeys": "*",
-    "@vvedantb/server": ">=0.17.0",
+    "@vvedantb/server": ">=0.17.1",
     "ai": ">=5.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

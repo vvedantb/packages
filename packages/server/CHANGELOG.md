@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.1
+
+### Patch Changes
+
+- [#265](https://github.com/vvedantb/packages/pull/265) [`11c33d9`](https://github.com/vvedantb/packages/commit/11c33d9952f313a6ae2ccb7f7a9b62bf7bc7e6b5) Thanks [@vvedantb](https://github.com/vvedantb)! - Re-release with no code change so the npm `latest` tag points at the current version. 0.21.0 (native-ui) and 0.17.0 (server) were published under `next` by mistake.
+
 ## 0.17.0
 
 ### Minor Changes
