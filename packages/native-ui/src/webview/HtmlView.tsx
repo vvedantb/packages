@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { View } from "react-native";
 import { WebView } from "react-native-webview";
 import { HTML_VIEW_HEIGHT_SCRIPT, htmlViewNavigation, htmlViewPostScript, parseHtmlViewHeight } from "./htmlView";
@@ -21,8 +21,19 @@ export type HtmlViewProps = {
    * loaded and again whenever it changes (a theme switch, say), without a reload.
    */
   hostMessage?: string;
+  /**
+   * Any other message the page posts (`window.ReactNativeWebView.postMessage`
+   * here, `parent.postMessage` in the web iframe), as a string. Not the height
+   * reports, which go to `onContentHeight`.
+   */
+  onPageMessage?: (data: string) => void;
+  /** `postMessage` sends the page one JSON message now, for a request and reply bridge. */
+  ref?: Ref<HtmlViewHandle>;
   testID?: string;
 };
+
+/** Sends the page a JSON message at once, as a `message` event (the iframe's `postMessage`). */
+export type HtmlViewHandle = { postMessage: (message: string) => void };
 
 /**
  * An HTML page in a sandboxed `react-native-webview`, as the web's sandboxed
@@ -37,8 +48,22 @@ export type HtmlViewProps = {
  * `react-native-webview` (an optional peer). On web, `HtmlView.web.tsx` draws a
  * sandboxed iframe instead.
  */
-export function HtmlView({ html, title, height, javaScriptEnabled = true, onOpenLink, onContentHeight, hostMessage, testID }: HtmlViewProps) {
+export function HtmlView({
+  html,
+  title,
+  height,
+  javaScriptEnabled = true,
+  onOpenLink,
+  onContentHeight,
+  hostMessage,
+  onPageMessage,
+  ref: handle,
+  testID,
+}: HtmlViewProps) {
   const ref = useRef<WebView>(null);
+  useImperativeHandle(handle, () => ({
+    postMessage: (message: string) => ref.current?.injectJavaScript(htmlViewPostScript(message)),
+  }));
   const [loaded, setLoaded] = useState(false);
 
   // The page is an external system: push each host message into it once it can listen.
@@ -65,6 +90,7 @@ export function HtmlView({ html, title, height, javaScriptEnabled = true, onOpen
         onMessage={(event) => {
           const reported = parseHtmlViewHeight(event.nativeEvent.data);
           if (reported !== null) onContentHeight?.(reported);
+          else onPageMessage?.(event.nativeEvent.data);
         }}
         onShouldStartLoadWithRequest={(request) => {
           const action = htmlViewNavigation(request.url, request.isTopFrame);
