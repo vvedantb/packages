@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+### Patch Changes
+
+- [#267](https://github.com/vvedantb/packages/pull/267) [`07fed85`](https://github.com/vvedantb/packages/commit/07fed85331622de21f1c8240263f96f30030a525) Thanks [@vvedantb](https://github.com/vvedantb)! - Register the seven oxlint rules that `@vvedantb/config/oxlint/plugin.mjs` shipped but did not expose: `no-conditional-tests`, `no-inline-object-type-assertion`, `no-inline-zod-schema`, `no-is-record`, `no-ts-nocheck`, `no-unknown-shape-probing` and `prefer-schema-inferred-types`. Configuring them under `vvedantb/*` no longer fails with "Rule not found".
+
 ## 0.7.0
 
 ### Minor Changes
