@@ -400,7 +400,7 @@ All four build scripts grep `android/app/build.gradle` for `plugins/withReleaseS
 
 ## Android release build (`vvedantb-android-release`)
 
-`vvedantb-android-release` builds a signed Android release APK in CI. It merges the three app build scripts (vibot, vmem, eva) into one bin driven by a config file, and keeps the reusable-workflow interface: it writes `apk`, `release_json`, `version_name`, `version_code` and `sha256` to `GITHUB_OUTPUT`. It runs on Linux CI with the Android SDK; it is **not** runnable on Windows.
+`vvedantb-android-release` builds a signed Android release APK in CI. It replaces the per-app build scripts (vibot, vmem, eva, verve, velth) with one bin driven by a config file, and keeps the reusable-workflow interface: it writes `apk`, `release_json`, `version_name`, `version_code` and `sha256` to `GITHUB_OUTPUT`. It runs on Linux CI with the Android SDK; it is **not** runnable on Windows.
 
 ```sh
 VERSION_NAME=1.0.1 VERSION_CODE=1000 \
@@ -415,15 +415,67 @@ The config (parsed by `parseAndroidReleaseConfig`) covers the differences betwee
 | `apkPrefix` | _(required)_ | Output name `<prefix>-<version>-android.apk`. |
 | `appDir` | `apps/mobile` | Expo app directory. |
 | `publicEnv` | `[]` | `EXPO_PUBLIC_*` names resolved from env, then `publicEnvSources`. |
-| `publicEnvSources` | `[]` | `{ kind: "eas-profile", profile? }` or `{ kind: "config-literal", file, operators? }` (`??`/`\|\|`). |
+| `publicEnvSources` | `[]` | `{ kind: "eas-profile", profile?, authoritative?, exportAll? }` or `{ kind: "config-literal", file, operators? }` (`??`/`\|\|`). `authoritative`: the `eas.json` profile wins over the environment and a name it lacks is empty. `exportAll`: also export every other string entry of the profile `env`. |
 | `pnpmFilters` | `["{.}"]` | `pnpm install --filter` targets. |
 | `prebuildNoInstall` | `true` | Adds `--no-install` to `expo prebuild --clean`. |
 | `extraEnv` / `optionalEnv` | `{}` / — | Extra and pass-through env for the build. |
+| `unsetEnv` | `[]` | Names removed from the build environment (before `extraEnv`). |
 | `preChecks` / `preBuildSteps` | — | bash steps run in the repo root / app dir before the build. |
+| `postPrebuildSteps` | `[]` | bash steps run in the app dir after prebuild, before Gradle. |
 | `gradleWrapperPin` | — | `{ ifContains, distributionUrl }` to pin the Gradle wrapper. |
 | `summary` | — | `{ label, envVar }` echoed at the end. |
 
-Pure helpers (`validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
+Replace an app's `scripts/build-android-release.sh` with this command (the reusable release workflow runs `bash <build_script>`, so keep a one-line wrapper at that path):
+
+```sh
+exec pnpm exec vvedantb-android-release --config scripts/android-release.config.json
+```
+
+### Per-app configs
+
+Paths and filters are as read from each app's current script. Check them against the app before you switch.
+
+```jsonc
+// vmem
+{ "packageId": "com.projectvdotuk.vmem", "apkPrefix": "vmem",
+  "publicEnv": ["EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY", "EXPO_PUBLIC_VMEM_BASE_URL"],
+  "publicEnvSources": [{ "kind": "config-literal", "file": "src/config.ts", "operators": ["||", "??"] }],
+  "pnpmFilters": ["@vmem/mobile...", "{.}"] }
+
+// vibot
+{ "packageId": "com.projectvdotuk.vibot", "apkPrefix": "vibot",
+  "publicEnv": ["EXPO_PUBLIC_CONVEX_URL", "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY", "EXPO_PUBLIC_VMEM_CONVEX_URL"],
+  "publicEnvSources": [{ "kind": "eas-profile" }, { "kind": "config-literal", "file": "app.config.ts", "operators": ["??"] }],
+  "extraEnv": { "APP_VARIANT": "production" },
+  "pnpmFilters": ["mobile...", "{.}"], "prebuildNoInstall": false,
+  "gradleWrapperPin": { "ifContains": "gradle-9", "distributionUrl": "<the 8.14.3 -bin.zip URL in vibot's script>" } }
+
+// eva (values come from the environment only)
+{ "packageId": "com.projectvdotuk.eva", "apkPrefix": "eva",
+  "publicEnv": ["EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY", "EXPO_PUBLIC_CONVEX_URL", "EXPO_PUBLIC_WEB_URL"],
+  "optionalEnv": ["EAS_PROJECT_ID"], "preBuildSteps": ["pnpm run test:babel"],
+  "pnpmFilters": ["@eva/mobile...", "{.}"] }
+
+// verve
+{ "packageId": "com.projectvdotuk.verve", "apkPrefix": "verve",
+  "publicEnv": ["EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY", "EXPO_PUBLIC_CONVEX_URL", "EXPO_PUBLIC_WEB_URL"],
+  "publicEnvSources": [{ "kind": "eas-profile", "authoritative": true }],
+  "unsetEnv": ["APP_VARIANT", "EAS_BUILD"],
+  "pnpmFilters": ["mobile..."], "prebuildNoInstall": false }
+
+// velth
+{ "packageId": "com.projectvdotuk.velth", "apkPrefix": "velth",
+  "publicEnv": ["EXPO_PUBLIC_CONVEX_URL", "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY", "STRICT_PUBLIC_ENV"],
+  "publicEnvSources": [{ "kind": "eas-profile", "authoritative": true, "exportAll": true }],
+  "unsetEnv": ["APP_VARIANT", "EAS_BUILD", "EXPO_PUBLIC_E2E"],
+  "extraEnv": { "EXPO_NO_DOTENV": "1" },
+  "pnpmFilters": ["mobile..."], "prebuildNoInstall": false,
+  "postPrebuildSteps": ["grep -q 'gradle-8.14.3-bin.zip' android/gradle/wrapper/gradle-wrapper.properties"] }
+```
+
+Not covered, so it stays local: the keystore location (a `withReleaseSigning` plugin option), velth's own signing-completeness pre-check (the Gradle plugin enforces it), and eva's Clerk native-API check (use the workflow's `pre_build_command`).
+
+Pure helpers (`validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `easProfileEntries`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
 
 ## Versions
 

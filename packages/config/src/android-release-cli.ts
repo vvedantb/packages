@@ -28,6 +28,7 @@ import {
 import { dirname, join, resolve } from "node:path";
 import {
   apkFileName,
+  easProfileEntries,
   formatGithubOutput,
   formatReleaseJson,
   gradlePropertiesEdits,
@@ -162,8 +163,16 @@ for (const name of config.publicEnv) {
   }
   env[name] = value;
 }
+// An eas-profile source with exportAll also exports the profile's other entries.
+for (const source of config.publicEnvSources) {
+  if (source.kind !== "eas-profile" || source.exportAll !== true) continue;
+  const contents = readAppFile("eas.json");
+  if (contents === undefined) fail(`${config.appDir}/eas.json is missing, so its env cannot be exported.`);
+  Object.assign(env, easProfileEntries(contents, source.profile ?? "production"));
+}
 // optionalEnv names are passed through from the environment when present; the
 // copied `env` already carries them, so nothing extra is needed here.
+for (const name of config.unsetEnv) delete env[name];
 for (const [key, value] of Object.entries(config.extraEnv)) env[key] = value;
 
 // Our own signing (EAS_BUILD would switch it off in Expo tooling).
@@ -207,6 +216,11 @@ if (!skipPrebuild) {
   const prebuildArgs = ["expo", "prebuild", "--platform", "android", "--clean"];
   if (config.prebuildNoInstall) prebuildArgs.push("--no-install");
   run("npx", prebuildArgs, { cwd: appDir, env });
+}
+
+// App-folder steps after prebuild, before Gradle (such as a check of a generated file).
+for (const step of config.postPrebuildSteps) {
+  run("bash", ["-lc", step], { cwd: appDir, env });
 }
 
 // app.config reads VERSION_CODE at prebuild time, so a SKIP_PREBUILD run keeps

@@ -87,6 +87,7 @@ export {
 export {
   DEFAULT_GRADLE_PROPERTY_EDITS,
   apkFileName,
+  easProfileEntries,
   formatGithubOutput,
   formatReleaseJson,
   gradlePropertiesEdits,

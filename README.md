@@ -127,7 +127,7 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ## Android APK release workflow
 
-`.github/workflows/release-android-apk.yml` is a reusable workflow (`on: workflow_call` only) for the five Expo apps: velth, verve, vmem, vibot and v-store. It never runs in this repo. It is a port of vmem's `.github/workflows/release-android.yml`. Each app keeps a thin caller.
+`.github/workflows/release-android-apk.yml` is a reusable workflow (`on: workflow_call` only) for the Expo apps: velth, verve, vmem, vibot, eva and v-store. It never runs in this repo. It is a port of vmem's `.github/workflows/release-android.yml`. Each app keeps a thin caller.
 
 ### What it does
 
@@ -170,13 +170,26 @@ The asset names and the `release.json` shape `{"versionName","versionCode","sha2
 
 ### Build script contract
 
-The workflow runs `bash <build_script>` from the repo root. vmem's `scripts/build-android-release.sh` already meets this contract. The script:
+The workflow runs `bash <build_script>` from the repo root. An app can keep its own script, or use the shared build bin (next section). The script:
 
 - reads `VERSION_NAME`, `VERSION_CODE`, `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` from the environment;
 - writes `apk`, `release_json`, `version_name`, `version_code` and `sha256` to `$GITHUB_OUTPUT`;
 - names the APK `<apk_basename>-<versionName>-android.apk` and the manifest `release.json`.
 
 The "Check build outputs" step fails the run if a value is missing or does not match the chosen version or the APK on disk.
+
+### Shared build bin (`vvedantb-android-release`)
+
+`@vvedantb/config` ships one parametrised build, `vvedantb-android-release`. It replaces the per-app `scripts/build-android-release.sh` for vmem, vibot, eva, verve and velth. It does the Expo prebuild, release signing check, Gradle `assembleRelease`, APK verification with `aapt2` and `apksigner`, and writes the `GITHUB_OUTPUT` values the workflow needs. The per-app differences sit in a JSON config (`scripts/android-release.config.json`). The field table and a config for each app are in [`packages/config/README.md`](packages/config/README.md#android-release-build-vvedantb-android-release).
+
+The workflow runs `bash <build_script>`, so an app that drops its shell script keeps a one-line wrapper at the same path:
+
+```sh
+#!/usr/bin/env bash
+exec pnpm exec vvedantb-android-release --config scripts/android-release.config.json
+```
+
+Run locally on Linux with the Android SDK: `VERSION_NAME=1.0.1 VERSION_CODE=1000 pnpm exec vvedantb-android-release --config scripts/android-release.config.json`, plus the four `ANDROID_*` signing variables. It does not run on Windows.
 
 ### Secrets
 
@@ -454,6 +467,146 @@ jobs:
         fi
     secrets: inherit
 ```
+
+## Reusable app CI workflow
+
+`.github/workflows/ci-app.yml` is a reusable workflow (`on: workflow_call` only) for the install, lint, typecheck and test job that every app repeats. It needs no secrets, and the caller needs `contents: read`. It runs on `boat` by default.
+
+It does this:
+
+1. Checks out the repo, sets up Node, and sets up pnpm (version from `packageManager`) or npm.
+2. For pnpm, restores a pnpm store cache with a fallback key, and prunes the store on a cache miss. For npm, uses the `setup-node` npm cache.
+3. Installs (`pnpm install --frozen-lockfile`, or `npm ci`), with `HUSKY=0`.
+4. Runs each line of `commands` as its own check. A failure does not stop the next line (set `keep_going: false` to stop at the first). The job fails at the end and lists every failed command.
+5. Optionally installs Playwright browsers and runs `e2e_command`, then uploads `failure_artifact_paths` if the job failed.
+
+The caller keeps `on:` triggers, `concurrency` and the job `name`.
+
+### Inputs
+
+| Input | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `commands` | string | required | Checks to run after install, one per line. Blank lines and `#` lines are skipped |
+| `package_manager` | string | `pnpm` | `pnpm` or `npm`. Other values fail |
+| `node_version` | string | `22` | `actions/setup-node` version |
+| `runs_on` | string | `boat` | One runner label |
+| `timeout_minutes` | number | `30` | Job timeout |
+| `working_directory` | string | `.` | Folder with `package.json` |
+| `fetch_depth` | number | `1` | Checkout depth. Use `0` for a step that diffs against the merge base (eva) |
+| `install_command` | string | empty | Replaces the default install |
+| `env` | string | empty | Non-secret `NAME=value` lines for every step |
+| `keep_going` | boolean | `true` | Run every command, or stop at the first failure |
+| `playwright_browsers` | string | empty | Such as `chromium`. Runs `npx playwright install --with-deps` before `e2e_command` |
+| `e2e_command` | string | empty | End-to-end commands, one per line, after `commands` |
+| `failure_artifact_paths` | string | empty | Paths uploaded as an artifact (7 days) when the job fails |
+
+### Secrets and `secrets: inherit`
+
+`ci-app.yml` declares no secrets, so pass none. The release workflow reads four signing secrets, so a caller passes them with `secrets: inherit`, which hands the caller's secrets and organisation secrets to the called workflow. The alternative is to list each secret by name under `secrets:`. Name them when the repo has other secrets that the release should not see. Both work because the release workflow declares every secret as `required: false`. A called workflow never gets more permissions than the caller grants, and `github`, `vars` and the event belong to the caller.
+
+### Callers
+
+Use `uses: vvedantb/packages/.github/workflows/ci-app.yml@main`. Pin a tag or SHA to control when changes reach the apps.
+
+```yaml
+# verve (the same shape serves velth, with timeout_minutes: 20)
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  check:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      commands: |
+        pnpm lint
+        pnpm typecheck
+        pnpm test
+```
+
+```yaml
+# eva: history for the schema gate, Node 24, extra checks
+jobs:
+  check:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      node_version: "24"
+      fetch_depth: 0
+      env: |
+        BASE_REF=origin/${{ github.base_ref || 'main' }}
+      commands: |
+        pnpm typecheck
+        pnpm lint
+        pnpm test
+        node scripts/check-shared-backend.mjs
+        ./scripts/check-apk-compat.sh
+        node scripts/compiler-check.mjs
+        node scripts/design-check.mjs
+```
+
+```yaml
+# bee: the ubuntu job only. The windows and macos jobs stay in bee's own ci.yml.
+jobs:
+  ubuntu:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      package_manager: npm
+      commands: |
+        npm run typecheck
+        npm run lint
+        npm test
+```
+
+```yaml
+# redline (npm, Playwright e2e)
+jobs:
+  test:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      package_manager: npm
+      runs_on: ubuntu-latest
+      env: |
+        CI=1
+      commands: |
+        npm test
+      playwright_browsers: chromium
+      e2e_command: |
+        npm run test:e2e
+        npm run test:compare
+        npm run build
+      failure_artifact_paths: |
+        playwright-report/
+        test-results/
+```
+
+```yaml
+# flowtape (no workflows today): add .github/workflows/ci.yml with this
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      package_manager: npm
+      commands: |
+        npm run typecheck
+        npm test
+```
+
+Replace the `commands` lines with each repo's real scripts.
+
+This repo's own `ci.yml` stays as it is: it builds the packages before it checks them.
 
 ## Develop
 

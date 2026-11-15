@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_GRADLE_PROPERTY_EDITS,
   apkFileName,
+  easProfileEntries,
   formatGithubOutput,
   formatReleaseJson,
   gradlePropertiesEdits,
@@ -44,6 +45,29 @@ describe("validateVersionCode", () => {
 
 describe("publicEnvDefault", () => {
   const noFiles: ReadAppFile = () => undefined;
+  const easFile: ReadAppFile = (path) =>
+    path === "eas.json"
+      ? JSON.stringify({ build: { production: { env: { EXPO_PUBLIC_X: "from-eas", STRICT: "1" } } } })
+      : undefined;
+
+  it("lets an authoritative eas.json profile win over the environment", () => {
+    const sources = [{ kind: "eas-profile", authoritative: true }] as const;
+    expect(
+      publicEnvDefault("EXPO_PUBLIC_X", { env: { EXPO_PUBLIC_X: "from-shell" }, readAppFile: easFile, sources }),
+    ).toBe("from-eas");
+  });
+
+  it("returns empty when an authoritative profile lacks the name, even if the environment has it", () => {
+    const sources = [{ kind: "eas-profile", authoritative: true }] as const;
+    expect(
+      publicEnvDefault("EXPO_PUBLIC_Y", { env: { EXPO_PUBLIC_Y: "from-shell" }, readAppFile: easFile, sources }),
+    ).toBe("");
+  });
+
+  it("lists the string entries of a profile env", () => {
+    expect(easProfileEntries(easFile("eas.json") ?? "")).toStrictEqual({ EXPO_PUBLIC_X: "from-eas", STRICT: "1" });
+    expect(easProfileEntries("{}")).toStrictEqual({});
+  });
 
   it("prefers a non-empty environment value", () => {
     const value = publicEnvDefault("EXPO_PUBLIC_X", {
@@ -190,6 +214,26 @@ describe("parseAndroidReleaseConfig", () => {
     expect(config.publicEnvSources[0]).toStrictEqual({ kind: "eas-profile", profile: "production" });
     expect(config.gradleWrapperPin?.ifContains).toBe("gradle-9");
     expect(config.summary?.label).toBe("Convex");
+  });
+
+  it("parses unsetEnv, postPrebuildSteps and the eas-profile flags", () => {
+    const config = parseAndroidReleaseConfig({
+      packageId: "com.x.app",
+      apkPrefix: "app",
+      unsetEnv: ["APP_VARIANT"],
+      postPrebuildSteps: ["test -f android/build.gradle"],
+      publicEnvSources: [{ kind: "eas-profile", authoritative: true, exportAll: true }],
+    });
+    expect(config.unsetEnv).toStrictEqual(["APP_VARIANT"]);
+    expect(config.postPrebuildSteps).toStrictEqual(["test -f android/build.gradle"]);
+    expect(config.publicEnvSources[0]).toStrictEqual({ kind: "eas-profile", authoritative: true, exportAll: true });
+    expect(() =>
+      parseAndroidReleaseConfig({
+        packageId: "x",
+        apkPrefix: "x",
+        publicEnvSources: [{ kind: "eas-profile", authoritative: "yes" }],
+      }),
+    ).toThrow();
   });
 
   it("throws on a missing required field or a bad shape", () => {
