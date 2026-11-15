@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.17.0
+
+### Minor Changes
+
+- [#255](https://github.com/vvedantb/packages/pull/255) [`c7f99a2`](https://github.com/vvedantb/packages/commit/c7f99a2b2818ed5c0d0b2aba256e6d6b8e0033c2) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `requireCurrentUser` to `createClerkUserAuth`. It resolves the caller's row from the Clerk identity and throws `new Error(message)` (default the config's `unauthenticatedMessage`) where `getCurrentUser` would return `null`, returning the row itself rather than its id. This is the row-returning counterpart to the existing `requireCurrentUserId`, for handlers that need the user document and otherwise hand-write the identity lookup and null check.
+
 ## 0.16.0
 
 ### Minor Changes

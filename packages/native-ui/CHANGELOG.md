@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.1
+
+### Patch Changes
+
+- [#252](https://github.com/vvedantb/packages/pull/252) [`087d13f`](https://github.com/vvedantb/packages/commit/087d13f7287a4717536dbcf3d549e46330cbee86) Thanks [@vvedantb](https://github.com/vvedantb)! - Switch gives a selection haptic on toggle.
+- Updated dependencies [[`c7f99a2`](https://github.com/vvedantb/packages/commit/c7f99a2b2818ed5c0d0b2aba256e6d6b8e0033c2)]:
+  - @vvedantb/server@0.17.0
+
 ## 0.20.0
 
 ### Minor Changes
