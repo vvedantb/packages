@@ -33,9 +33,16 @@ import noValueBlockInTry from "./rules/no-value-block-in-try.mjs";
 export default {
   meta: { name: "vvedantb" },
   rules: {
+    "no-conditional-tests": noConditionalTests,
     "no-double-cast": noDoubleCast,
+    "no-inline-object-type-assertion": noInlineObjectTypeAssertion,
+    "no-inline-zod-schema": noInlineZodSchema,
+    "no-is-record": noIsRecord,
     "no-json-parse": noJsonParse,
     "no-source-text-in-tests": noSourceTextInTests,
+    "no-ts-nocheck": noTsNocheck,
+    "no-unknown-shape-probing": noUnknownShapeProbing,
     "no-value-block-in-try": noValueBlockInTry,
+    "prefer-schema-inferred-types": preferSchemaInferredTypes,
   },
 };
