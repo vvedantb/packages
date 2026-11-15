@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.21.0
+
+### Minor Changes
+
+- [#258](https://github.com/vvedantb/packages/pull/258) [`90c9e82`](https://github.com/vvedantb/packages/commit/90c9e82619627a37726c0e2115cd6bbacfd21bcb) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `HtmlView` can run a request and reply bridge with its page: `onPageMessage` receives every message the page posts that is not a height report (`window.ReactNativeWebView.postMessage` on native, `parent.postMessage` in the web iframe), and a `ref` (`HtmlViewHandle`) has `postMessage(json)` to send the page a message at once. The web build now delivers both.
+
+- [#260](https://github.com/vvedantb/packages/pull/260) [`c9211cd`](https://github.com/vvedantb/packages/commit/c9211cdd267e038f4a6ca5f18fbbe952b8c83d51) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ImageViewer` zooms under `GestureHandlerProvider`: pinch up to 5x about the fingers, double tap to 2.5x on the tapped point (and back to fit), and a drag pans the zoomed image instead of turning the page. Without the provider it shows each image fitted, as before.
+
 ## 0.20.1
 
 ### Patch Changes
