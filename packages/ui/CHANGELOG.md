@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 0.50.1
+
+### Patch Changes
+
+- [#252](https://github.com/vvedantb/packages/pull/252) [`087d13f`](https://github.com/vvedantb/packages/commit/087d13f7287a4717536dbcf3d549e46330cbee86) Thanks [@vvedantb](https://github.com/vvedantb)! - Command palette and composer slash menu now open and close with no animation. The palette uses a 1ms modal close duration so Radix Presence still unmounts it.
+
+- [#252](https://github.com/vvedantb/packages/pull/252) [`087d13f`](https://github.com/vvedantb/packages/commit/087d13f7287a4717536dbcf3d549e46330cbee86) Thanks [@vvedantb](https://github.com/vvedantb)! - Define `--motion-fast`, `--motion-base`, `--motion-slow`, `--motion-ease-out` and `--motion-ease-emphasized` on `:root`.
+
+- [#252](https://github.com/vvedantb/packages/pull/252) [`087d13f`](https://github.com/vvedantb/packages/commit/087d13f7287a4717536dbcf3d549e46330cbee86) Thanks [@vvedantb](https://github.com/vvedantb)! - Menus, popovers, hover cards, select and tooltips now scale from their trigger.
+
+- [#252](https://github.com/vvedantb/packages/pull/252) [`087d13f`](https://github.com/vvedantb/packages/commit/087d13f7287a4717536dbcf3d549e46330cbee86) Thanks [@vvedantb](https://github.com/vvedantb)! - Shimmer no longer restarts its sweep when the parent re-renders.
+- Updated dependencies [[`c7f99a2`](https://github.com/vvedantb/packages/commit/c7f99a2b2818ed5c0d0b2aba256e6d6b8e0033c2)]:
+  - @vvedantb/server@0.17.0
+
 ## 0.50.0
 
 ### Minor Changes
