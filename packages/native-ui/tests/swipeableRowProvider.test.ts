@@ -66,12 +66,14 @@ describe("SwipeableRow", () => {
     expect(row.props.children).toBe("row");
   });
 
-  it("turns on the Pager swipe and the toast drag under GestureHandlerProvider", async () => {
+  it("turns on the Pager swipe, the toast drag and the image zoom under GestureHandlerProvider", async () => {
     const { GestureHandlerProvider } = await import("../src/entries/gesture-handler");
     const { PagerGestureContext } = await import("../src/Pager");
     const { ToastDragContext } = await import("../src/toastDrag");
     const { GesturePager } = await import("../src/primitives/pager-gesture");
     const { GestureToastDrag } = await import("../src/primitives/toast-drag-gesture");
+    const { ZoomImageContext } = await import("../src/media/zoomImage");
+    const { ZOOM_IMAGE_PARTS } = await import("../src/media/zoom-image-gesture");
     const provider: Element = GestureHandlerProvider({ children: "app" });
     const pager = (provider.props.children as Element).props.children as Element;
     expect(pager.type).toBe(PagerGestureContext.Provider);
@@ -79,6 +81,9 @@ describe("SwipeableRow", () => {
     const toastDrag = pager.props.children as Element;
     expect(toastDrag.type).toBe(ToastDragContext.Provider);
     expect(toastDrag.props.value).toBe(GestureToastDrag);
-    expect(toastDrag.props.children).toBe("app");
+    const zoom = toastDrag.props.children as Element;
+    expect(zoom.type).toBe(ZoomImageContext.Provider);
+    expect(zoom.props.value).toBe(ZOOM_IMAGE_PARTS);
+    expect(zoom.props.children).toBe("app");
   });
 });
