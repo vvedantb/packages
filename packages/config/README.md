@@ -1,6 +1,6 @@
 # @vvedantb/config
 
-Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a `sync` CLI, a packaged Electron `app.asar` module check (`vvedantb-check-asar`) and a CLI that adds an extension to Clerk's allowed origins (`vvedantb-clerk-allow`).
+Shared tooling for vvedantb apps: tsconfig bases, an oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a `sync` CLI, a packaged Electron `app.asar` module check (`vvedantb-check-asar`), a shared header and footer check (`vvedantb-check-shared-ui`), a no-source-text-in-tests check (`vvedantb-check-no-source-text`), two oxlint JS plugins and a CLI that adds an extension to Clerk's allowed origins (`vvedantb-clerk-allow`).
 
 ## Install
 
@@ -15,6 +15,7 @@ There are two JS entries: the root (`@vvedantb/config`) and `@vvedantb/config/ex
 
 - `@vvedantb/config/tsconfig/base.json`, `web.json`, `convex.json` and `react-native.json`
 - `@vvedantb/config/oxlint/base.json`
+- `@vvedantb/config/oxlint/plugin.mjs` and `@vvedantb/config/oxlint/anti-slop.js` (oxlint JS plugins)
 - `@vvedantb/config/package.json`
 
 ## tsconfig bases
@@ -50,9 +51,13 @@ Generic rules only: plugins `typescript`, `import`, `unicorn`, `react`; `suspici
 
 The severity of `no-console` and `no-unused-vars` is set to `error` here. It was not copied from the source app file, which was not in the extract. Check it against the app.
 
-### Custom oxlint rules (JS plugin)
+### Custom oxlint rules (JS plugins)
 
-The package ships one oxlint JS plugin at `@vvedantb/config/oxlint/plugin.mjs`. It holds four rules, with no app prefix:
+The package ships two oxlint JS plugins. Both load with oxlint 1.79 or later (the `jsPlugins` option; oxlint marks JS plugins alpha, so pin oxlint). They are ESLint-compatible rule modules that oxlint runs. Neither enables a rule by itself: name each rule you want under `rules`.
+
+#### `vvedantb` plugin: `@vvedantb/config/oxlint/plugin.mjs`
+
+Eleven rules, with no app prefix:
 
 | Rule | Flags |
 | --- | --- |
@@ -60,22 +65,118 @@ The package ships one oxlint JS plugin at `@vvedantb/config/oxlint/plugin.mjs`. 
 | `no-source-text-in-tests` | A source file name (`.ts`, `.tsx`, `.mts`, `.css`, `.html`) passed to a file read (`readFileSync`, `readSource`, …) in a `*.test.*` / `*.spec.*` file. Plain path strings used as data stay allowed. |
 | `no-double-cast` | A double cast such as `x as A as B` or `x as unknown as T`. |
 | `no-json-parse` | A bare `JSON.parse(...)` result that flows unchecked. `schema.parse(JSON.parse(x))` / `schema.safeParse(...)` are always allowed. With `{ "allowUnknownEscapeHatch": true }`, a `: unknown` annotation or `as unknown` cast is also allowed. |
+| `no-is-record` | Any identifier named `isRecord`. An `unknown` leaked in; type the data at its entry point instead. |
+| `no-ts-nocheck` | `@ts-nocheck` and `@ts-ignore` comments. `@ts-expect-error` with a reason stays allowed. |
+| `no-conditional-tests` | An `expect(...)` call inside an `if`, `?:`, `&&`/`\|\|` or `switch` case in a test file. |
+| `no-inline-object-type-assertion` | `x as { … }` and `x as Record<string, unknown>`. |
+| `no-unknown-shape-probing` | `Reflect.get(...)`. Narrow a typed value or parse with a schema. |
+| `no-inline-zod-schema` | A `z.*` schema builder inside a function, method or block. Declare schemas at module scope. |
+| `prefer-schema-inferred-types` | A hand-written object type that duplicates a nearby `fooSchema`. Use `z.infer`. |
 
-Wire it into the app's `.oxlintrc.json` (or `oxlint.jsonc`):
+Wire the plugin into the app's `.oxlintrc.json` (or `oxlint.jsonc`):
 
 ```json
 {
+  "extends": ["./node_modules/@vvedantb/config/oxlint/base.json"],
   "jsPlugins": [{ "name": "vvedantb", "specifier": "@vvedantb/config/oxlint/plugin.mjs" }],
   "rules": {
     "vvedantb/no-value-block-in-try": "error",
     "vvedantb/no-source-text-in-tests": "error",
     "vvedantb/no-double-cast": "error",
-    "vvedantb/no-json-parse": "error"
+    "vvedantb/no-json-parse": "error",
+    "vvedantb/no-is-record": "error",
+    "vvedantb/no-ts-nocheck": "error",
+    "vvedantb/no-conditional-tests": "error"
   }
 }
 ```
 
-oxlint reports each as `vvedantb(<rule>)`. For vmem's original `no-json-parse` behaviour, set `"vvedantb/no-json-parse": ["error", { "allowUnknownEscapeHatch": true }]`; the default (eva's) is strict, where `unknown` is not an escape.
+oxlint reports each as `vvedantb(<rule>)`. For vmem's original `no-json-parse` behaviour, set `"vvedantb/no-json-parse": ["error", { "allowUnknownEscapeHatch": true }]`; the default is strict, where `unknown` is not an escape.
+
+An app that keeps a local plugin can re-export shared rules under its own name:
+
+```js
+import shared from "@vvedantb/config/oxlint/plugin.mjs";
+
+export default {
+  meta: { name: "local" },
+  rules: { "no-double-cast": shared.rules["no-double-cast"] /* , local rules */ },
+};
+```
+
+#### `anti-slop` plugin: `@vvedantb/config/oxlint/anti-slop.js`
+
+Ten rules that reject low-evidence code patterns. The plugin is compiled into `dist/`. It adds no runtime dependency (`@oxlint/plugins` is a dev dependency, for types only).
+
+| Rule | Flags |
+| --- | --- |
+| `no-chained-type-assertions` | `x as A as B`, including through parentheses. |
+| `no-conditional-empty-object-spread` | `...(cond ? { a } : {})` and `...(cond && { a })`. |
+| `no-known-value-widening` | A value of a known type widened to a wider declared type. |
+| `no-object-parameters` | A function parameter typed as an object literal. |
+| `no-runtime-typeof` | Any `typeof x` expression. Decode at the boundary instead. |
+| `no-shape-in-symbol-names` | Names that carry a forbidden term (such as `shape`). |
+| `no-unknown-parameters` | A parameter typed `unknown`. |
+| `no-unknown-type-aliases` | A type alias for `unknown`. |
+| `no-unsafe-dictionary-type` | Loose dictionary types such as `Record<string, any>`. |
+| `no-widen-then-assert` | A variable widened on declaration, then asserted back to a narrow type. |
+
+```json
+{
+  "jsPlugins": [{ "name": "anti-slop", "specifier": "@vvedantb/config/oxlint/anti-slop.js" }],
+  "rules": {
+    "anti-slop/no-chained-type-assertions": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-widen-then-assert": "error"
+  }
+}
+```
+
+## vvedantb-check-shared-ui
+
+`vvedantb-check-shared-ui` checks that an app uses the shared site header and footer from `@vvedantb/ui`. It is plain Node, so it runs the same on Windows, macOS and Linux. It replaces the per-app footer and site-header shell scripts.
+
+Footer checks run on every `*Footer*.tsx` or `*Footer*.jsx` file (test files excluded):
+
+- no bare social root link, such as `"https://x.com/"` or `"https://linkedin.com"` (a link with a path is fine);
+- no `size` prop on `<AppWordmark>`;
+- files under a `--footer-dir` must render `<SiteFooter>` or `<LandingFooter>` and import from the package.
+
+Header checks run on each `--header-page`: it must render `<SiteHeader>` imported from the package, and no file whose name starts with `LandingNav` may exist under `--nav-dir`.
+
+```sh
+pnpm exec vvedantb-check-shared-ui \
+  --footer-dir apps/web --footer-exclude sidebar \
+  --header-page apps/web/src/routes/index.tsx
+```
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--root <dir>` | current directory | Repo root. Other paths are relative to it. |
+| `--package <name>` | `@vvedantb/ui` | Package that exports the components. |
+| `--footer-component <name>` | `SiteFooter`, `LandingFooter` | Accepted footer components. Repeat to add. |
+| `--footer-dir <dir>` | `apps/web` | Footer files here must render a shared footer. Repeat to add. |
+| `--footer-scan-dir <dir>` | none | Footer files here get the banned-pattern checks only (for example a mobile app). |
+| `--footer-exclude <segment>` | none | Skip footer files under this path segment, for example `sidebar`. |
+| `--social-host <host>` | `twitter.com`, `x.com`, `linkedin.com`, `github.com` | Hosts whose bare root URL is a placeholder. |
+| `--header-page <file>` | none | Page that must render the header. With none, the header checks are skipped. |
+| `--header-component <name>` | `SiteHeader` | The shared header component. |
+| `--nav-dir <dir>` | `apps` | Where to look for local landing nav files. |
+| `--local-nav-name <prefix>` | `LandingNav` | Forbidden file name prefix. |
+| `--skip <name>` | see `--help` | Extra directory name to skip. |
+
+The first use of a repeatable flag replaces its default. Exit code: 0 clean, 1 findings, 2 bad usage. In `package.json`: `"check:shared-ui": "vvedantb-check-shared-ui --header-page apps/web/src/routes/index.tsx"`.
+
+## vvedantb-check-no-source-text
+
+`vvedantb-check-no-source-text` fails when a `*.test.*` or `*.spec.*` file reads source, CSS or markdown text (`readFileSync` and friends with a `src` path or a source extension, `?raw` imports, `import.meta.glob` with raw). A test must import and call the code. Use the `vvedantb/no-source-text-in-tests` oxlint rule when the repo already runs oxlint; use this bin when it does not.
+
+```sh
+pnpm exec vvedantb-check-no-source-text            # scan the current directory
+pnpm exec vvedantb-check-no-source-text apps/web --skip landing --skip-file no-source-text.test.mjs
+```
+
+Put `allow-source-read: <reason>` in a comment on the same or the previous line to allow one read that feeds code under test. The directories `node_modules`, `dist`, `build`, `.git`, `.expo`, `.next`, `android`, `ios`, `out` and `release` are skipped; `--skip <dir>` adds more and `--skip-file <name>` skips one test file by name. Exit code: 0 clean, 1 findings, 2 bad usage.
 
 ## Vite and Vitest presets
 

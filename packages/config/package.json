@@ -2,7 +2,7 @@
   "name": "@vvedantb/config",
   "version": "0.5.0",
   "license": "MIT",
-  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, a packaged Electron app.asar module check and a CLI that adds an extension to Clerk's allowed origins.",
+  "description": "Shared tsconfig bases, oxlint base, Vite, Vitest, Babel and Metro presets, a WXT preset and host-permission helper for Chrome extensions, pinned tool versions, a sync CLI for Claude commands, CLAUDE.md, Cursor environment and Convex tsconfig, a packaged Electron app.asar module check, a shared header and footer check, a no-source-text-in-tests check, shared oxlint JS plugins and a CLI that adds an extension to Clerk's allowed origins.",
   "type": "module",
   "publishConfig": {
     "access": "public",
@@ -17,7 +17,9 @@
     "vvedantb-config": "./dist/cli.js",
     "vvedantb-check-asar": "./dist/check-asar-cli.js",
     "vvedantb-clerk-allow": "./dist/clerk-allow-cli.js",
-    "vvedantb-android-release": "./dist/android-release-cli.js"
+    "vvedantb-android-release": "./dist/android-release-cli.js",
+    "vvedantb-check-shared-ui": "./dist/check-shared-ui-cli.js",
+    "vvedantb-check-no-source-text": "./dist/check-no-source-text-cli.js"
   },
   "exports": {
     ".": {
@@ -34,7 +36,11 @@
     "./tsconfig/react-native.json": "./tsconfig/react-native.json",
     "./oxlint/base.json": "./oxlint/base.json",
     "./oxlint/plugin.mjs": "./oxlint/plugin.mjs",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./oxlint/anti-slop.js": {
+      "types": "./dist/oxlint-anti-slop/index.d.ts",
+      "default": "./dist/oxlint-anti-slop/index.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "files": [
@@ -65,6 +71,7 @@
   },
   "devDependencies": {
     "@electron/asar": "^4.3.1",
+    "@oxlint/plugins": "^1.79.0",
     "@types/node": "^22.0.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.80.0",

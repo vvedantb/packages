@@ -21,6 +21,19 @@ export {
   type CheckAsarIo,
 } from "./check-asar.js";
 export {
+  DEFAULT_SKIP_DIRS,
+  findSourceTextReads,
+  runCheckNoSourceText,
+  type CheckNoSourceTextIo,
+  type SourceTextViolation,
+} from "./check-no-source-text.js";
+export {
+  checkSharedUi,
+  runCheckSharedUi,
+  type CheckSharedUiIo,
+  type CheckSharedUiOptions,
+} from "./check-shared-ui.js";
+export {
   runClerkAllow,
   type ClerkAllowFetch,
   type ClerkAllowIo,
