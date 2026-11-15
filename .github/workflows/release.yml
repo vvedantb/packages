@@ -24,12 +24,19 @@ env:
 
 jobs:
   release:
-    name: Version PR and publish
+    # Every push to main that has a pending changeset is a release. The job
+    # bumps the versions, commits that to main and publishes in the same run.
+    # There is no Version Packages PR and no pre-release tag: one path, and
+    # every publish goes out under `latest`.
+    name: Version and publish
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
+          # The tip of main, not the pushed commit: a queued run must version
+          # on top of the release commit of the run before it.
+          ref: main
           fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
@@ -50,82 +57,34 @@ jobs:
             fi
           done
       - run: pnpm install --frozen-lockfile
-      - name: Version PR or publish
-        uses: changesets/action@v2
-        with:
-          version-script: pnpm version-packages
-          publish-script: pnpm ci:publish
-          pr-title: Version Packages
-          commit-message: Version Packages
-          create-github-releases: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  next:
-    # A pre-release of every package with pending changesets, on each push to
-    # main, under the npm `next` tag (version `<next>-next-<commit>`). Apps pin
-    # it to use a change right after merge, before the Version Packages PR
-    # ships the real version. Here, not in its own workflow file: npm trusted
-    # publishing is bound to this file. Skips when no changeset is pending, so
-    # it does not pre-release an already released version. It also skips when a
-    # real version on main is not on npm yet (see the step below).
-    name: Pre-release (next tag)
-    needs: release
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: pnpm
-          registry-url: https://registry.npmjs.org
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npm install -g npm@^11.5.1
-      - name: Remove empty npm auth tokens
-        # As in the release job: an empty token breaks the OIDC exchange.
-        run: |
-          for f in "$HOME/.npmrc" "${NPM_CONFIG_USERCONFIG:-}" "$RUNNER_TEMP/.npmrc" "$GITHUB_WORKSPACE/.npmrc"; do
-            if [ -n "$f" ] && [ -f "$f" ]; then
-              sed -i '/_authToken=/d' "$f" || true
-            fi
-          done
-      - run: pnpm install --frozen-lockfile
-      - name: Publish the next pre-release
+      - name: Version packages and commit to main
+        # The push uses GITHUB_TOKEN, so it does not start another workflow
+        # run. If main moved during this run the push fails and the run stops
+        # before publishing; the run queued for the newer push releases both.
         env:
           # `@changesets/changelog-github` reads PR links while versioning.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! ls .changeset/*.md | grep -qv '/README.md$'; then
-            echo "No pending changesets: nothing to pre-release."
+            echo "No pending changesets: nothing to version."
             exit 0
           fi
-          # A real version can be on main and not yet on npm: the run that
-          # should have published it was replaced in the queue by a newer
-          # push. `changeset publish --tag next` would publish that real
-          # version under `next` and leave `latest` behind. Skip instead. The
-          # release job publishes it under `latest` on the next run that has
-          # no pending changeset.
-          unpublished=""
-          for f in packages/*/package.json; do
-            spec=$(node -e "const p=require('./$f'); if(!p.private) console.log(p.name+'@'+p.version)")
-            [ -z "$spec" ] && continue
-            if [ -z "$(npm view "$spec" version 2>/dev/null)" ]; then
-              unpublished="$unpublished $spec"
-            fi
-          done
-          if [ -n "$unpublished" ]; then
-            echo "::warning::Pre-release skipped. Not yet on npm:$unpublished"
-            exit 0
-          fi
-          pnpm ci:publish:next
-          {
-            echo '## Pre-release (npm tag `next`)'
-            for f in packages/*/package.json; do node -e "const p=require('./$f'); if(!p.private) console.log('- '+p.name+'@'+p.version)"; done
-          } >> "$GITHUB_STEP_SUMMARY"
+          pnpm version-packages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Version Packages"
+          git push origin HEAD:main
+      - name: Publish
+        # No changeset is pending at this point, so the action only publishes:
+        # every public package version that is not on npm yet, under `latest`.
+        # It also pushes the git tags and creates the GitHub releases.
+        uses: changesets/action@v2
+        with:
+          publish-script: pnpm ci:publish
+          create-github-releases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dry-run:
     name: Dry-run pack check

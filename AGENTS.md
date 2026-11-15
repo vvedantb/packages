@@ -3,7 +3,7 @@
 ## Releases
 
 - Every user-facing change to a published package (`@vvedantb/ui`, `native-ui`, `server`, `config`) needs a changeset. Run `pnpm changeset`.
-- Do not bump package versions by hand. The Release workflow opens a Version Packages PR and publishes with OIDC trusted publishing only. Do not run `npm publish` or `pnpm publish`, and do not add `NPM_TOKEN` or any npm token. See [RELEASING.md](RELEASING.md).
+- Do not bump package versions by hand. The Release workflow bumps versions on `main` and publishes on every merge that has a changeset, with OIDC trusted publishing only. Do not run `npm publish` or `pnpm publish`, and do not add `NPM_TOKEN` or any npm token. See [RELEASING.md](RELEASING.md).
 - Gallery and app workspaces must be `"private": true`. Add them to `ignore` in `.changeset/config.json` when they should stay out of the version graph.
 - Before you finish, run `pnpm build`, `pnpm typecheck` and `pnpm test`.
 
