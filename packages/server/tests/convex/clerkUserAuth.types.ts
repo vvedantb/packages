@@ -59,6 +59,7 @@ export function clerkUserAuthTypeChecks(): void {
     expectTypeOf(userAuth.getCurrentUserId(eitherCtx)).resolves.toEqualTypeOf<GenericId<"users"> | null>();
     expectTypeOf(userAuth.requireCurrentUserId(eitherCtx)).resolves.toEqualTypeOf<GenericId<"users">>();
     expectTypeOf(userAuth.getCurrentUser(queryCtx)).resolves.toEqualTypeOf<UserDoc | null>();
+    expectTypeOf(userAuth.requireCurrentUser(eitherCtx)).resolves.toEqualTypeOf<UserDoc>();
     expectTypeOf(userAuth.getUserByClerkId(queryCtx, "user_1")).resolves.toEqualTypeOf<UserDoc | null>();
     expectTypeOf(userAuth.isCurrentUserAdmin(queryCtx)).resolves.toEqualTypeOf<boolean>();
     expectTypeOf(accountAuth.getCurrentUserId(queryCtx)).resolves.toEqualTypeOf<GenericId<"accounts"> | null>();

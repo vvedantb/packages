@@ -70,7 +70,7 @@ expectMcpToolCount(toolNames, 2);
 | `jsonResponse(data, status, extraHeaders?)` | `JSON.stringify(data)` with `Content-Type: application/json`; `extraHeaders` spread after it. |
 | `createOriginAllowlistCors(allowedOrigins)` | `{ headers(origin), preflightHeaders(origin) }` for credentialed browser CORS on a fixed origin list. |
 | `verifyClerkAccessToken(clerk, token, options?)`, `consoleClerkVerifyLogger` | Clerk bearer verification core: `{ userId, tokenType, auth }` or `null`. See below. |
-| `createClerkUserAuth<DataModel>()(config)` | Clerk-user lookups for queries and mutations: `getCurrentUserId`, `requireCurrentUserId`, `getCurrentUser`, `isCurrentUserAdmin`, `getUserByClerkId`, `ensureUser`. See below. |
+| `createClerkUserAuth<DataModel>()(config)` | Clerk-user lookups for queries and mutations: `getCurrentUserId`, `requireCurrentUserId`, `getCurrentUser`, `requireCurrentUser`, `isCurrentUserAdmin`, `getUserByClerkId`, `ensureUser`. See below. |
 | `hasVPlan`, `hasVPro`, `parseVProCompUserIds` | V Pro checks: the session `pla` claim, stored plan slugs and a complimentary id list. See [V Pro plan check](#v-pro-plan-check). |
 | `verifyClerkWebhook`, `parseClerkBillingEvent`, `createVProModule<DataModel>()(config)` | Clerk Billing webhook: verify, read the plan change, write it to the users row. See [Clerk Billing webhook](#clerk-billing-webhook-v-pro). |
 | `createAuthFunctions<DataModel, UserId>(config)` | `authQuery`/`authMutation`/`authAction` on convex-helpers, with `ctx.userId` and an optional maintenance gate. See [Auth function builders](#auth-function-builders). |
@@ -218,6 +218,7 @@ export const ensureUserExists = mutation({
 | `getCurrentUser(ctx)` | `null` when there is no identity or `subject` is empty; otherwise `getUserByClerkId(ctx, identity.subject)`. |
 | `getCurrentUserId(ctx)` | `(await getCurrentUser(ctx))?._id ?? null`. |
 | `requireCurrentUserId(ctx, message?)` | `getCurrentUserId`, but throws `new Error(message)` instead of returning `null`. `message` defaults to the config's `unauthenticatedMessage`, default `"Not authenticated"` (the message in about 120 throw sites across the apps). |
+| `requireCurrentUser(ctx, message?)` | `getCurrentUser`, but throws `new Error(message)` instead of returning `null`, and returns the row (not the id). `message` defaults like `requireCurrentUserId`. Use it where a handler needs the row itself, not just its `_id`. |
 | `isCurrentUserAdmin(ctx)` | `user[adminField] === true`; `false` with no identity or no row. Throws if `adminField` is not set. |
 | `ensureUser(ctx, buildFields, options?)` | No identity: throws `options.unauthenticatedMessage` (default the config's). Empty `subject`: throws `options.missingSubjectMessage` (default `"Clerk user ID is required"`). Existing row: `ctx.db.patch(row._id, fields)` when `options.patch(row, identity)` returns fields, then `{ userId, wasCreated: false }`. No row: `ctx.db.insert(table, buildFields(identity))` and `{ userId, wasCreated: true }`. `buildFields` must set the Clerk id field itself. `identity` is your ctx's identity type (Convex `UserIdentity`). |
 
@@ -236,7 +237,7 @@ Stays in the apps: legacy email lookups, migration-table lookups, API-key actors
 ### Differences between the copies
 
 - **Lookup end.** app-a to app-d use `.first()`; app-e uses `.unique()`.
-- **Missing identity.** app-a's `getCurrentUserId` throws `"Not authenticated"` for no identity, empty `subject` and no row; app-b, app-c, app-d and app-e return `null`. The kit has both (`requireCurrentUserId`, `getCurrentUserId`).
+- **Missing identity.** app-a's `getCurrentUserId` throws `"Not authenticated"` for no identity, empty `subject` and no row; app-b, app-c, app-d and app-e return `null`. The kit has both (`requireCurrentUserId`, `getCurrentUserId`), and `requireCurrentUser` for the throwing variant that returns the row.
 - **Empty `subject`.** app-b still tries its email lookup; app-d and app-e return `null`; app-a throws. Convex always sets `subject`, so this is unreachable; the kit returns `null`.
 - **Email fallback.** app-b and app-d look up `by_email` when the Clerk id finds nothing (app-c looks up by email only). Legacy, so it stays in the apps; compose it after `getCurrentUserId`.
 - **Admin flag.** app-b `admin === true`, app-d `isAdmin === true`, app-c `user?.isAdmin || false` (the same for a `boolean | undefined` field). A non-boolean truthy value is not admin in the kit.

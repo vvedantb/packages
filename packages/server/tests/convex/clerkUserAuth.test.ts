@@ -338,6 +338,27 @@ describe("createClerkUserAuth: index lookups", () => {
     await expect(custom.requireCurrentUserId(ctx())).rejects.toThrow(new Error("Sign in to continue"));
     expect(await custom.requireCurrentUserId(usersCtx({ subject: "user_1" }, seedUsers()))).toBe("users_a");
   });
+
+  it("requireCurrentUser returns the row, and throws the default, config and per-call message", async () => {
+    const row = await kitA.requireCurrentUser(usersCtx({ subject: "user_1" }, seedUsers()));
+    expect(row._id).toBe("users_a");
+    expect(row).toEqual(await kitA.getCurrentUser(usersCtx({ subject: "user_1" }, seedUsers())));
+    await expect(kitA.requireCurrentUser(usersCtx(null, seedUsers()))).rejects.toThrow(
+      new Error("Not authenticated"),
+    );
+    await expect(
+      kitA.requireCurrentUser(usersCtx({ subject: "user_9" }, seedUsers()), "User not found"),
+    ).rejects.toThrow(new Error("User not found"));
+    const custom = createClerkUserAuth<DataModel>()({
+      table: "users",
+      index: "by_clerk_id",
+      field: "clerkId",
+      unauthenticatedMessage: "Sign in to continue",
+    });
+    await expect(custom.requireCurrentUser(usersCtx(null, seedUsers()))).rejects.toThrow(
+      new Error("Sign in to continue"),
+    );
+  });
 });
 
 describe("createClerkUserAuth: isCurrentUserAdmin", () => {
