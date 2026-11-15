@@ -14,6 +14,13 @@ export const pkgDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
 export const tsc = createRequire(join(pkgDir, "package.json")).resolve("typescript/bin/tsc");
 
+/**
+ * Rebuilds dist. Every node test file calls it in `before`, so the package
+ * test script runs the files one at a time (`--test-concurrency=1`): run side
+ * by side, one file's tsc rewrites dist while the other copies it into a
+ * fixture, and the bundle test then sees a half-written package (a release run
+ * failed on 15 Nov 2026 with "one empty chunk per QuickJS package": 0 !== 2).
+ */
 export function build() {
   const run = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json"], { cwd: pkgDir, encoding: "utf8" });
   assert.equal(run.status, 0, `tsc failed:\n${run.stdout}${run.stderr}`);
