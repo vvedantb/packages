@@ -431,6 +431,13 @@ Replace an app's `scripts/build-android-release.sh` with this command (the reusa
 exec pnpm exec vvedantb-android-release --config scripts/android-release.config.json
 ```
 
+The reusable workflow does not install dependencies, and `pnpm exec` cannot find the bin before an install. If the workflow's `pre_build_command` does not install, do it in the wrapper first, with the same filters as `pnpmFilters` plus `{.}` when the root holds `@vvedantb/config`:
+
+```sh
+pnpm install --frozen-lockfile --filter "{.}" --filter "mobile..."
+exec pnpm exec vvedantb-android-release --config scripts/android-release.config.json
+```
+
 ### Per-app configs
 
 Paths and filters are as read from each app's current script. Check them against the app before you switch.
