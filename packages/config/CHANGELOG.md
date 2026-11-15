@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.2
+
+### Patch Changes
+
+- [#269](https://github.com/vvedantb/packages/pull/269) [`f3667c6`](https://github.com/vvedantb/packages/commit/f3667c67a64b4f3fc74e5bda0fc08461981668f6) Thanks [@vvedantb](https://github.com/vvedantb)! - No code change. First release through the publish-on-merge Release workflow.
+
 ## 0.7.1
 
 ### Patch Changes
