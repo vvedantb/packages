@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { FlatList, Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconExternalLink, IconX } from "@tabler/icons-react-native";
@@ -8,6 +8,7 @@ import { withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
+import { ZoomImageContext } from "./zoomImage";
 import { imageAspect, imageGridTiles, imageViewerPage, MEDIA, type GalleryImage, type ImageGridTile } from "./imageGrid";
 
 export type ImageGalleryProps = {
@@ -148,21 +149,35 @@ export type ImageViewerProps = {
  * The web `ImageLightbox` on a phone: the images full screen on black, one
  * page each, swiped sideways (TalkBack and VoiceOver step with the adjustable
  * actions). Close (X, or Android back) and "Open in browser" sit at the top,
- * "2 / 5" at the bottom when there is more than one. No pinch zoom. It fades
- * in, or appears at once with Reduce Motion.
+ * "2 / 5" at the bottom when there is more than one. Under
+ * `GestureHandlerProvider` each image zooms: pinch (up to 5x, about the
+ * fingers), double tap (2.5x on the tapped point, again to fit), and a drag
+ * pans it while zoomed instead of turning the page. It fades in, or appears
+ * at once with Reduce Motion.
  */
 export function ImageViewer({ images, index, onIndexChange, onClose, onOpenImage }: ImageViewerProps) {
   const reduceMotion = useReduceMotion();
   if (index === null) return null;
   return (
     <Modal visible transparent statusBarTranslucent animationType={reduceMotion ? "none" : "fade"} onRequestClose={onClose}>
-      <ViewerPages images={images} index={index} onIndexChange={onIndexChange} onClose={onClose} onOpenImage={onOpenImage} />
+      <ViewerRoot>
+        <ViewerPages images={images} index={index} onIndexChange={onIndexChange} onClose={onClose} onOpenImage={onOpenImage} />
+      </ViewerRoot>
     </Modal>
   );
 }
 
+/** The zoom parts' gesture root, when there are zoom parts. */
+function ViewerRoot({ children }: { children: ReactNode }) {
+  const zoom = useContext(ZoomImageContext);
+  return zoom ? <zoom.Root>{children}</zoom.Root> : children;
+}
+
 function ViewerPages({ images, index, onIndexChange, onClose, onOpenImage }: Omit<ImageViewerProps, "index"> & { index: number }) {
   const { width, height } = useWindowDimensions();
+  const zoom = useContext(ZoomImageContext);
+  // While the image on screen is zoomed, a drag pans it: the pages hold still.
+  const [zoomed, setZoomed] = useState(false);
   const insets = useSafeAreaInsets();
   const count = images.length;
   const current = images[index];
@@ -173,16 +188,21 @@ function ViewerPages({ images, index, onIndexChange, onClose, onOpenImage }: Omi
         data={images}
         horizontal
         pagingEnabled
+        scrollEnabled={!zoomed}
         showsHorizontalScrollIndicator={false}
         initialScrollIndex={index}
         getItemLayout={(_, item) => ({ length: width, offset: width * item, index: item })}
         keyExtractor={(image, item) => `${item}:${image.url}`}
         onMomentumScrollEnd={(event) => onIndexChange(imageViewerPage(event.nativeEvent.contentOffset.x, width, count))}
-        renderItem={({ item }) => (
-          <View style={{ width, height }} className="items-center justify-center">
-            <Image source={{ uri: item.url }} resizeMode="contain" style={{ width: "100%", height: "100%" }} accessibilityLabel={item.alt ?? "Image"} />
-          </View>
-        )}
+        renderItem={({ item }) =>
+          zoom ? (
+            <zoom.Image image={item} width={width} height={height} onZoomChange={setZoomed} />
+          ) : (
+            <View style={{ width, height }} className="items-center justify-center">
+              <Image source={{ uri: item.url }} resizeMode="contain" style={{ width: "100%", height: "100%" }} accessibilityLabel={item.alt ?? "Image"} />
+            </View>
+          )
+        }
         accessibilityRole="adjustable"
         accessibilityLabel={current?.alt ?? "Image"}
         accessibilityValue={count > 1 ? { text: `${index + 1} of ${count}` } : undefined}

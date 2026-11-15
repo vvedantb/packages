@@ -155,12 +155,15 @@ export function LayoutSection() {
       <Block title="MediaCard, ImageGallery and ImageViewer">
         <MediaCard icon={IconFileText} title="Summary.pdf" description="Two pages" onPress={() => setOpened("summary")} testID="media-card" />
         <MediaCard icon={IconFileText} title={LONG_TEXT} description={LONG_TEXT} />
-        <ImageGallery images={IMAGES.slice(0, 1)} />
-        <ImageGallery images={IMAGES} onOpenImage={setOpened} testID="image-gallery" />
-        <Button variant="outline" onPress={() => setViewerIndex(0)} testID="image-viewer-open">
-          Open ImageViewer
-        </Button>
-        <ImageViewer images={IMAGES} index={viewerIndex} onIndexChange={setViewerIndex} onClose={() => setViewerIndex(null)} />
+        {/* Under `GestureHandlerProvider` the viewer zooms: pinch, double tap, pan while zoomed. */}
+        <GestureHandlerProvider>
+          <ImageGallery images={IMAGES.slice(0, 1)} />
+          <ImageGallery images={IMAGES} onOpenImage={setOpened} testID="image-gallery" />
+          <Button variant="outline" onPress={() => setViewerIndex(0)} testID="image-viewer-open">
+            Open ImageViewer
+          </Button>
+          <ImageViewer images={IMAGES} index={viewerIndex} onIndexChange={setViewerIndex} onClose={() => setViewerIndex(null)} />
+        </GestureHandlerProvider>
       </Block>
       <Block title="InlineVideo and HtmlView">
         <InlineVideo url="https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4" accessibilityLabel="Play the sample video" testID="inline-video" />

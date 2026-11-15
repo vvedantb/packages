@@ -598,11 +598,41 @@ declare module "react-native-gesture-handler" {
     onUpdate(handler: (event: PanGestureEvent) => void): PanGesture;
     onEnd(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
     onFinalize(handler: (event: PanGestureEvent, success: boolean) => void): PanGesture;
+    averageTouches(average: boolean): PanGesture;
   }
-  export type GestureType = PanGesture | NativeGesture;
+  export interface PinchGestureEvent {
+    scale: number;
+    focalX: number;
+    focalY: number;
+    velocity: number;
+  }
+  export interface PinchGesture {
+    enabled(enabled: boolean): PinchGesture;
+    onStart(handler: (event: PinchGestureEvent) => void): PinchGesture;
+    onUpdate(handler: (event: PinchGestureEvent) => void): PinchGesture;
+    onEnd(handler: (event: PinchGestureEvent, success: boolean) => void): PinchGesture;
+  }
+  export interface TapGestureEvent {
+    x: number;
+    y: number;
+    absoluteX: number;
+    absoluteY: number;
+  }
+  export interface TapGesture {
+    enabled(enabled: boolean): TapGesture;
+    numberOfTaps(count: number): TapGesture;
+    onEnd(handler: (event: TapGestureEvent, success: boolean) => void): TapGesture;
+  }
+  export interface ComposedGesture {
+    readonly composed: true;
+  }
+  export type GestureType = PanGesture | NativeGesture | PinchGesture | TapGesture | ComposedGesture;
   export const Gesture: {
     Pan(): PanGesture;
     Native(): NativeGesture;
+    Pinch(): PinchGesture;
+    Tap(): TapGesture;
+    Simultaneous(...gestures: GestureType[]): ComposedGesture;
   };
   export const GestureDetector: React.ComponentType<{ gesture: GestureType; children?: React.ReactNode }>;
   export const GestureHandlerRootView: React.ComponentType<{
