@@ -168,6 +168,16 @@ export function createClerkUserAuth<DataModel extends ClerkUserDataModelLike>() 
       return userId;
     }
 
+    /** `getCurrentUser`, throwing `new Error(message)` where that returns `null`. */
+    async function requireCurrentUser<Range>(
+      ctx: ClerkUserQueryCtx<Table, Index, Field, Doc, Range>,
+      message: string = unauthenticatedMessage,
+    ): Promise<Doc> {
+      const user = await getCurrentUser(ctx);
+      if (user === null) throw new Error(message);
+      return user;
+    }
+
     async function isCurrentUserAdmin<Range>(
       ctx: ClerkUserQueryCtx<Table, Index, Field, Doc, Range>,
     ): Promise<boolean> {
@@ -211,6 +221,7 @@ export function createClerkUserAuth<DataModel extends ClerkUserDataModelLike>() 
       getCurrentUser,
       getCurrentUserId,
       requireCurrentUserId,
+      requireCurrentUser,
       isCurrentUserAdmin,
       ensureUser,
     };
