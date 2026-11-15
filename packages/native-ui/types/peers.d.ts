@@ -1310,3 +1310,17 @@ declare module "@vvedantb/server/generative-ui" {
   export function isHttpUrl(value: string): boolean;
   export function parseGenerativeUiSpec(serialized: string): Spec | null;
 }
+
+// `src/webview/HtmlView.web.tsx` (the web build): the iframe's message bridge.
+// This package type-checks without the DOM lib; only what that file uses.
+interface HTMLIFrameElement {
+  readonly contentWindow: { postMessage(message: unknown, targetOrigin: string): void } | null;
+}
+interface MessageEvent {
+  readonly data: unknown;
+  readonly source: unknown;
+}
+declare const window: {
+  addEventListener(type: "message", listener: (event: MessageEvent) => void): void;
+  removeEventListener(type: "message", listener: (event: MessageEvent) => void): void;
+};
