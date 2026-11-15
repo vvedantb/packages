@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.50.2
+
+### Patch Changes
+
+- [#261](https://github.com/vvedantb/packages/pull/261) [`e9d8233`](https://github.com/vvedantb/packages/commit/e9d82336244ba1f5446e04d3cc643057177e6e5b) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - The app shell drawer (`Sidebar.Aside`) and its backdrop (`Sidebar.Backdrop`) render `m.*` components in their own `LazyMotion`, so the shell works inside an app's strict `LazyMotion`. Before, every page threw "You have rendered a `motion` component within a `LazyMotion` component".
+
 ## 0.50.1
 
 ### Patch Changes
