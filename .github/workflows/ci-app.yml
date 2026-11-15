@@ -1,0 +1,220 @@
+name: App CI (reusable)
+
+# Shared CI job for the apps. A caller passes the commands to run; this
+# workflow owns the checkout, Node, package manager, caching and install, and
+# runs every command even after an earlier one fails, so one run shows every
+# failure. It needs no secrets. Callers need only `contents: read`.
+#
+# Call it with:
+#   uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+# See the README ("Reusable app CI workflow") for caller examples.
+
+on:
+  workflow_call:
+    inputs:
+      commands:
+        description: "Commands to run after install, one per line (blank lines and lines starting with # are skipped). Each runs with bash in the working directory. All run even if one fails, unless keep_going is false."
+        type: string
+        required: true
+      package_manager:
+        description: "pnpm or npm. pnpm uses the packageManager field of package.json (pnpm/action-setup) and a pnpm store cache. npm uses npm ci and the setup-node npm cache."
+        type: string
+        default: pnpm
+      node_version:
+        description: "Node.js version for actions/setup-node."
+        type: string
+        default: "22"
+      runs_on:
+        description: "Runner label (a single label)."
+        type: string
+        default: boat
+      timeout_minutes:
+        description: "Job timeout in minutes."
+        type: number
+        default: 30
+      working_directory:
+        description: "Folder that holds package.json, relative to the repo root."
+        type: string
+        default: "."
+      fetch_depth:
+        description: "actions/checkout fetch-depth. Use 0 when a step diffs against the merge base."
+        type: number
+        default: 1
+      install_command:
+        description: "Replaces the default install (pnpm install --frozen-lockfile, or npm ci)."
+        type: string
+        default: ""
+      env:
+        description: "Non-secret environment for every step, as NAME=value lines. HUSKY=0 is always set."
+        type: string
+        default: ""
+      keep_going:
+        description: "Run every command and fail at the end (true), or stop at the first failure (false)."
+        type: boolean
+        default: true
+      playwright_browsers:
+        description: "Browsers to install before e2e_command, such as chromium (runs npx playwright install --with-deps). Empty skips the install."
+        type: string
+        default: ""
+      e2e_command:
+        description: "Optional end-to-end commands, one per line, run after commands (and after the Playwright install). Same rules as commands."
+        type: string
+        default: ""
+      failure_artifact_paths:
+        description: "Paths to upload as an artifact when the job fails, one per line, such as playwright-report/. Empty uploads nothing."
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    runs-on: ${{ inputs.runs_on }}
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+    env:
+      HUSKY: "0"
+    steps:
+      - name: Validate inputs
+        env:
+          PACKAGE_MANAGER: ${{ inputs.package_manager }}
+        run: |
+          case "$PACKAGE_MANAGER" in
+            pnpm|npm) ;;
+            *) echo "::error::package_manager must be pnpm or npm, got '$PACKAGE_MANAGER'"; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: ${{ inputs.fetch_depth }}
+
+      - name: Set the environment
+        if: ${{ inputs.env != '' }}
+        env:
+          CALLER_ENV: ${{ inputs.env }}
+        run: |
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            case "$line" in \#*) continue ;; esac
+            if ! [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+              echo "::error::env line is not NAME=value: ${line%%=*}"; exit 1
+            fi
+            echo "$line" >> "$GITHUB_ENV"
+          done <<< "$CALLER_ENV"
+
+      # pnpm reads the version from the packageManager field of package.json.
+      - uses: pnpm/action-setup@v6
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        with:
+          package_json_file: ${{ inputs.working_directory }}/package.json
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: ${{ inputs.package_manager == 'npm' && 'npm' || '' }}
+          cache-dependency-path: ${{ inputs.package_manager == 'npm' && format('{0}/package-lock.json', inputs.working_directory) || '' }}
+
+      # The pnpm store, with a fallback key: after a lockfile change the last
+      # store is restored and only the changed packages are downloaded.
+      - name: Find the pnpm store
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        if: ${{ inputs.package_manager == 'pnpm' }}
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Install
+        env:
+          PACKAGE_MANAGER: ${{ inputs.package_manager }}
+          INSTALL_COMMAND: ${{ inputs.install_command }}
+        run: |
+          if [ -n "$INSTALL_COMMAND" ]; then
+            bash -e -o pipefail -c "$INSTALL_COMMAND"
+          elif [ "$PACKAGE_MANAGER" = "pnpm" ]; then
+            pnpm install --frozen-lockfile
+          else
+            npm ci
+          fi
+
+      # A store restored from the fallback key still holds packages the new
+      # lockfile dropped: remove them before the store is saved.
+      - name: Prune the pnpm store
+        if: ${{ inputs.package_manager == 'pnpm' && steps.pnpm-cache.outputs.cache-hit != 'true' }}
+        run: pnpm store prune
+
+      - name: Checks
+        env:
+          COMMANDS: ${{ inputs.commands }}
+          KEEP_GOING: ${{ inputs.keep_going }}
+        run: |
+          failed=()
+          while IFS= read -r line; do
+            [ -z "${line//[[:space:]]/}" ] && continue
+            case "$line" in \#*) continue ;; esac
+            echo "::group::$line"
+            if bash -e -o pipefail -c "$line"; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error::Failed: $line"
+              failed+=("$line")
+              [ "$KEEP_GOING" = "true" ] || break
+            fi
+          done <<< "$COMMANDS"
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "Failed commands:"
+            printf '  %s\n' "${failed[@]}"
+            exit 1
+          fi
+
+      - name: Install Playwright browsers
+        if: ${{ inputs.playwright_browsers != '' && inputs.e2e_command != '' && !cancelled() }}
+        env:
+          PLAYWRIGHT_BROWSERS: ${{ inputs.playwright_browsers }}
+        run: npx playwright install --with-deps $PLAYWRIGHT_BROWSERS
+
+      - name: End-to-end
+        if: ${{ inputs.e2e_command != '' && !cancelled() }}
+        env:
+          COMMANDS: ${{ inputs.e2e_command }}
+          KEEP_GOING: ${{ inputs.keep_going }}
+        run: |
+          failed=()
+          while IFS= read -r line; do
+            [ -z "${line//[[:space:]]/}" ] && continue
+            case "$line" in \#*) continue ;; esac
+            echo "::group::$line"
+            if bash -e -o pipefail -c "$line"; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error::Failed: $line"
+              failed+=("$line")
+              [ "$KEEP_GOING" = "true" ] || break
+            fi
+          done <<< "$COMMANDS"
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "Failed commands:"
+            printf '  %s\n' "${failed[@]}"
+            exit 1
+          fi
+
+      - name: Upload failure artifacts
+        if: ${{ failure() && inputs.failure_artifact_paths != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-failure-${{ github.run_id }}
+          path: ${{ inputs.failure_artifact_paths }}
+          retention-days: 7

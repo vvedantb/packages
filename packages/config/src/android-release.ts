@@ -41,6 +41,18 @@ export type PublicEnvSource =
       kind: "eas-profile";
       /** Profile name. Default `"production"`. */
       profile?: string;
+      /**
+       * The profile wins over the environment, and a name the profile lacks is
+       * an error (no fallback to the environment or a later source). Use it when
+       * a release must bake the same values as the EAS profile, whatever the
+       * shell or a local `.env` says. Default `false`.
+       */
+      authoritative?: boolean;
+      /**
+       * Also export every entry of the profile `env` (not only `publicEnv`
+       * names) to the build, such as a strict-mode flag. Default `false`.
+       */
+      exportAll?: boolean;
     }
   | {
       /** A `process.env.NAME <op> "literal"` default in a config file. */
@@ -68,11 +80,7 @@ function literalFromConfig(
   return re.exec(contents)?.[1];
 }
 
-function easProfileEnv(
-  easContents: string,
-  profile: string,
-  name: string,
-): string | undefined {
+function easProfileEnvNode(easContents: string, profile: string): Record<string, unknown> | undefined {
   const parsed: unknown = JSON.parse(easContents);
   if (typeof parsed !== "object" || parsed === null) return undefined;
   const build = (parsed as { build?: unknown }).build;
@@ -81,13 +89,33 @@ function easProfileEnv(
   if (typeof profileNode !== "object" || profileNode === null) return undefined;
   const env = (profileNode as { env?: unknown }).env;
   if (typeof env !== "object" || env === null) return undefined;
-  const value = (env as Record<string, unknown>)[name];
+  return env as Record<string, unknown>;
+}
+
+function easProfileEnv(
+  easContents: string,
+  profile: string,
+  name: string,
+): string | undefined {
+  const value = easProfileEnvNode(easContents, profile)?.[name];
   return typeof value === "string" ? value : undefined;
 }
 
+/** The string entries of `build.<profile>.env` in `eas.json` (empty when absent). */
+export function easProfileEntries(
+  easContents: string,
+  profile = "production",
+): Record<string, string> {
+  const env = easProfileEnvNode(easContents, profile) ?? {};
+  return Object.fromEntries(
+    Object.entries(env).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+  );
+}
+
 /**
- * Resolves an `EXPO_PUBLIC_*` value: the environment first, then each source in
- * turn (an `eas.json` profile, or a `process.env.NAME ?? "literal"` default in a
+ * Resolves an `EXPO_PUBLIC_*` value: an `authoritative` `eas.json` source first
+ * (it wins, and a name it lacks resolves to `""`), else the environment, then
+ * each source in turn (an `eas.json` profile, or a `process.env.NAME ?? "literal"` default in a
  * config file). Returns `""` when nothing supplies it, so callers decide whether
  * a missing value is an error.
  */
@@ -99,6 +127,12 @@ export function publicEnvDefault(
     sources?: readonly PublicEnvSource[];
   },
 ): string {
+  for (const source of options.sources ?? []) {
+    if (source.kind !== "eas-profile" || source.authoritative !== true) continue;
+    const contents = options.readAppFile("eas.json");
+    if (contents === undefined) return "";
+    return easProfileEnv(contents, source.profile ?? "production", name) ?? "";
+  }
   const fromEnv = options.env[name];
   if (fromEnv !== undefined && fromEnv !== "") return fromEnv;
   for (const source of options.sources ?? []) {
@@ -231,12 +265,16 @@ export interface AndroidReleaseConfig {
   prebuildNoInstall: boolean;
   /** Extra environment set for the whole build, such as `{ APP_VARIANT: "production" }`. */
   extraEnv: Readonly<Record<string, string>>;
+  /** Names removed from the build environment before `extraEnv` is applied, such as `["APP_VARIANT"]`. */
+  unsetEnv: readonly string[];
   /** Optional `EXPO_PUBLIC_*` names (set from env when present, never required). */
   optionalEnv: readonly string[];
   /** Shell commands run in the repo root before the build, such as a Clerk check. */
   preChecks: readonly string[];
   /** Commands run in the app folder after install, before prebuild, such as `pnpm run test:babel`. */
   preBuildSteps: readonly string[];
+  /** Commands run in the app folder after prebuild, before Gradle, such as a check of a generated file. */
+  postPrebuildSteps: readonly string[];
   /** Pin the Gradle wrapper: replace `distributionUrl` when it contains `ifContains`. */
   gradleWrapperPin?: { ifContains: string; distributionUrl: string };
   /** Label and env var for the final summary line, such as `{ label: "Convex", envVar: "EXPO_PUBLIC_CONVEX_URL" }`. */
@@ -249,9 +287,11 @@ const DEFAULT_CONFIG: Omit<AndroidReleaseConfig, "packageId" | "apkPrefix" | "pu
   pnpmFilters: ["{.}"],
   prebuildNoInstall: true,
   extraEnv: {},
+  unsetEnv: [],
   optionalEnv: [],
   preChecks: [],
   preBuildSteps: [],
+  postPrebuildSteps: [],
 };
 
 function asStringArray(value: unknown, field: string): string[] {
@@ -303,9 +343,13 @@ export function parseAndroidReleaseConfig(input: unknown): AndroidReleaseConfig 
     config.prebuildNoInstall = raw.prebuildNoInstall;
   }
   if (raw.extraEnv !== undefined) config.extraEnv = parseStringRecord(raw.extraEnv, "extraEnv");
+  if (raw.unsetEnv !== undefined) config.unsetEnv = asStringArray(raw.unsetEnv, "unsetEnv");
   if (raw.optionalEnv !== undefined) config.optionalEnv = asStringArray(raw.optionalEnv, "optionalEnv");
   if (raw.preChecks !== undefined) config.preChecks = asStringArray(raw.preChecks, "preChecks");
   if (raw.preBuildSteps !== undefined) config.preBuildSteps = asStringArray(raw.preBuildSteps, "preBuildSteps");
+  if (raw.postPrebuildSteps !== undefined) {
+    config.postPrebuildSteps = asStringArray(raw.postPrebuildSteps, "postPrebuildSteps");
+  }
   if (raw.gradleWrapperPin !== undefined) config.gradleWrapperPin = parseWrapperPin(raw.gradleWrapperPin);
   if (raw.summary !== undefined) config.summary = parseSummary(raw.summary);
   return config;
@@ -321,6 +365,11 @@ function parsePublicEnvSource(input: unknown): PublicEnvSource {
     if (raw.profile !== undefined) {
       if (typeof raw.profile !== "string") throw new Error('android-release config: "profile" must be a string.');
       source.profile = raw.profile;
+    }
+    for (const key of ["authoritative", "exportAll"] as const) {
+      if (raw[key] === undefined) continue;
+      if (typeof raw[key] !== "boolean") throw new Error(`android-release config: "${key}" must be a boolean.`);
+      source[key] = raw[key];
     }
     return source;
   }
