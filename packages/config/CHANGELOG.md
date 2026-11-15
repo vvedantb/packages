@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- [#256](https://github.com/vvedantb/packages/pull/256) [`313fff7`](https://github.com/vvedantb/packages/commit/313fff7cd8a4d63ed9b7ae0017c00ed933a51fdc) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-android-release` now covers verve and velth: the config gains `unsetEnv`, `postPrebuildSteps` and the `authoritative` and `exportAll` options on the `eas-profile` source, and `easProfileEntries` is exported. The repo also adds the reusable `ci-app.yml` workflow and documents both reusable workflows with caller examples.
+
 ## 0.6.0
 
 ### Minor Changes
