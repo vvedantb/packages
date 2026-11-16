@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.23.0
+
+### Minor Changes
+
+- [#271](https://github.com/vvedantb/packages/pull/271) [`63953b8`](https://github.com/vvedantb/packages/commit/63953b8b8cc9a92bdb709baba85dd91cb91ec17f) Thanks [@vvedantb](https://github.com/vvedantb)! - Add an experimental `native-bottom-sheet` entry. It exports `NativeBottomSheetContainer`, a trial of Software Mansion's native `@swmansion/react-native-bottom-sheet`, next to the gorhom `bottom-sheet` entry. The library is an optional peer dependency. Nothing in the existing `bottom-sheet` entry changes.
+
 ## 0.22.0
 
 ### Minor Changes
