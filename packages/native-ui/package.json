@@ -208,7 +208,7 @@
     "@rn-primitives/select": "*",
     "@rn-primitives/slot": "*",
     "@rn-primitives/switch": "*",
-    "@swmansion/react-native-bottom-sheet": ">=1",
+    "@swmansion/react-native-bottom-sheet": ">=1.1.0",
     "@tabler/icons-react-native": "*",
     "@vvedantb/server": ">=0.17.1",
     "class-variance-authority": ">=0.7.0",

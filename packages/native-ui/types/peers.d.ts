@@ -1063,16 +1063,18 @@ declare module "@swmansion/react-native-bottom-sheet" {
   import type * as React from "react";
   import type { ViewProps } from "react-native";
   /** A detent is a height: 0 is the closed detent, a number is a point height, a `"40%"` string is a share of the screen. */
-  export type ModalDetent = number | `${number}%`;
+  export type ModalDetent = number | `${number}%` | "content";
   interface ModalBottomSheetProps {
     children?: React.ReactNode;
-    index?: number;
+    index: number;
+    /** Unmount the content once the sheet settles at the closed detent. */
+    lazy?: boolean;
     detents?: ModalDetent[];
     windowOverlay?: boolean;
     scrimColor?: string;
     scrimAccessibilityLabel?: string;
     surface?: React.ReactNode;
-    surfaceStyle?: ViewProps["style"];
+    surfaceStyle?: { borderRadius?: number; borderTopLeftRadius?: number; borderTopRightRadius?: number };
     onIndexChange?: (index: number) => void;
     onCloseRequest?: () => void;
   }

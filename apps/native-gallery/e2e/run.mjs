@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets select pager)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -215,6 +215,22 @@ const scenarios = {
     shot("layering-bottom-sheet-open");
     await press("bottom-sheet-close");
     await gone("bottom-sheet-body");
+  },
+  // The Software Mansion native sheet next to the gorhom one, on the comparison screen.
+  async nativeSheet() {
+    await fresh();
+    await press("link-native-bottom-sheet");
+    await press("gorhom-sheet-open");
+    await see("gorhom-sheet-body");
+    shot("native-bottom-sheet-gorhom");
+    await press("gorhom-sheet-close");
+    await gone("gorhom-sheet-body");
+    await press("native-sheet-open");
+    await see("native-sheet-body");
+    await see("native-sheet-row-0");
+    shot("native-bottom-sheet-swm");
+    await press("native-sheet-close");
+    await gone("native-sheet-body");
   },
   // Tabs linked to a Pager's progress run the sliding indicator's worklet on the
   // UI thread. A worklet that calls a plain JS function closes the app here.

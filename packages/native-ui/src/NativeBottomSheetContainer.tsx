@@ -90,6 +90,8 @@ export function NativeBottomSheetContainer({
     <ModalBottomSheet
       index={index}
       detents={detentList}
+      // Unmount the content once the sheet settles closed, as the gorhom container does.
+      lazy
       windowOverlay
       scrimColor={SCRIM_COLOR}
       scrimAccessibilityLabel="Close"
