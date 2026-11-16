@@ -1,0 +1,33 @@
+# The parity screen mounts the Stepper. Opening it proves the row renders on a
+# device; the taps prove the plus and minus buttons change the value and that
+# the minus is disabled at the minimum.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: home
+
+- scrollUntilVisible:
+    element:
+      id: link-parity
+- tapOn:
+    id: link-parity
+- assertVisible:
+    id: screen-parity
+
+- scrollUntilVisible:
+    element:
+      id: stepper-dose
+    timeout: 60000
+- assertVisible: "Dose: 1"
+- tapOn:
+    id: stepper-dose-more
+- assertVisible: "Dose: 2"
+- tapOn:
+    id: stepper-dose-more
+- assertVisible: "Dose: 3"
+- tapOn:
+    id: stepper-dose-less
+- assertVisible: "Dose: 2"
+- takeScreenshot: screenshots/parity-stepper

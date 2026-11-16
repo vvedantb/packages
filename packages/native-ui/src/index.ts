@@ -76,6 +76,8 @@ export { PageIndicator } from "./PageIndicator";
 export type { PageIndicatorProps } from "./PageIndicator";
 export { IconButton } from "./IconButton";
 export type { IconButtonProps, IconButtonSize, IconButtonVariant } from "./IconButton";
+export { Stepper } from "./Stepper";
+export type { StepperProps } from "./Stepper";
 export { CaptureButton } from "./CaptureButton";
 export type { CaptureButtonProps } from "./CaptureButton";
 export { Separator } from "./Separator";

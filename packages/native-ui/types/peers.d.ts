@@ -1133,6 +1133,7 @@ declare module "@tabler/icons-react-native" {
   export const IconPencil: Icon;
   export const IconPhoto: Icon;
   export const IconPlayerStopFilled: Icon;
+  export const IconPlus: Icon;
   export const IconPointFilled: Icon;
   export const IconRefresh: Icon;
   export const IconSearch: Icon;

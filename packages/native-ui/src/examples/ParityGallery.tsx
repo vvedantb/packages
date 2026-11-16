@@ -96,6 +96,7 @@ import {
   StackPageHeader,
   StatGrid,
   StatusDot,
+  Stepper,
   Switch,
   Tabs,
   TabsContent,
@@ -238,6 +239,7 @@ function GalleryScreen() {
   const [page, setPage] = useState(0);
   const [menuSort, setMenuSort] = useState<"newest" | "oldest">("newest");
   const [picked, setPicked] = useState(2);
+  const [dose, setDose] = useState(1);
   const scheme = useScheme();
 
   return (
@@ -768,6 +770,24 @@ function GalleryScreen() {
             <IconButton icon={IconCopy} label="Copy" size="lg" onPress={() => toast("Copied")} />
             <IconButton icon={IconTrash} label="Delete" disabled />
           </View>
+        </Section>
+
+        <Section title="Stepper">
+          {/* Minus is disabled at `min` (1 here), plus at `max` (6). */}
+          <View className="flex-row items-center justify-between rounded-lg bg-surface px-4 py-3">
+            <GalleryText>Tablets</GalleryText>
+            <Stepper
+              testID="stepper-dose"
+              value={dose}
+              onChange={setDose}
+              min={1}
+              max={6}
+              decrementLabel="Take one fewer"
+              incrementLabel="Take one more"
+              valueLabel={`${dose} tablets`}
+            />
+          </View>
+          <GalleryText testID="stepper-dose-value">{`Dose: ${dose}`}</GalleryText>
         </Section>
 
         {/* The full chat screen, with the composer and keyboard, is `AiChatGallery` (`@vvedantb/native-ui/ai-gallery`). */}
