@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.0
+
+### Minor Changes
+
+- [#270](https://github.com/vvedantb/packages/pull/270) [`a83db93`](https://github.com/vvedantb/packages/commit/a83db93739d5021ca905d0670534f1729c49198e) Thanks [@vvedantb](https://github.com/vvedantb)! - Add a `Stepper` primitive, exported from `@vvedantb/native-ui/primitives`. It is a controlled minus / value / plus row built from `IconButton`, with `min` (default 1), `max`, `step` (default 1), clamping, per-button accessibility labels and a `testID` that derives `-less` and `-more` for the two buttons.
+
 ## 0.21.1
 
 ### Patch Changes
