@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- [#272](https://github.com/vvedantb/packages/pull/272) [`712a66e`](https://github.com/vvedantb/packages/commit/712a66eb2f9567df914ef2f34da5db5433333650) Thanks [@vvedantb](https://github.com/vvedantb)! - Add the `vvedantb/no-settings-description` oxlint rule, which flags a `description` prop on `SettingsSection`, `SettingsToggleRow` and `LabeledSwitchRow` (option `components` adds names). `vvedantb-config sync` now adds a `## UI copy` section to `CLAUDE.md` when it is missing.
+
 ## 0.7.2
 
 ### Patch Changes
