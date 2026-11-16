@@ -1059,6 +1059,26 @@ declare module "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdr
   }
 }
 
+declare module "@swmansion/react-native-bottom-sheet" {
+  import type * as React from "react";
+  import type { ViewProps } from "react-native";
+  /** A detent is a height: 0 is the closed detent, a number is a point height, a `"40%"` string is a share of the screen. */
+  export type ModalDetent = number | `${number}%`;
+  interface ModalBottomSheetProps {
+    children?: React.ReactNode;
+    index?: number;
+    detents?: ModalDetent[];
+    windowOverlay?: boolean;
+    scrimColor?: string;
+    scrimAccessibilityLabel?: string;
+    surface?: React.ReactNode;
+    surfaceStyle?: ViewProps["style"];
+    onIndexChange?: (index: number) => void;
+    onCloseRequest?: () => void;
+  }
+  export const ModalBottomSheet: React.ComponentType<ModalBottomSheetProps>;
+}
+
 declare module "@react-native-community/datetimepicker" {
   import type * as React from "react";
   export interface DateTimePickerEvent {
