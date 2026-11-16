@@ -88,6 +88,45 @@ describe("no-double-cast", () => {
   });
 });
 
+describe("no-settings-description", () => {
+  it("flags a description on a settings section", () => {
+    const result = runRule(
+      "no-settings-description",
+      'const a = <SettingsSection title="Theme" description="Choose how the app looks." />;\n',
+      { filename: "sample.tsx" },
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.output).toMatch(ruleTag("no-settings-description"));
+  });
+
+  it("flags a description on a settings row", () => {
+    const result = runRule(
+      "no-settings-description",
+      'const a = <SettingsToggleRow title="Dark mode" description={hint} />;\n',
+      { filename: "sample.tsx" },
+    );
+    expect(result.status).not.toBe(0);
+  });
+
+  it("allows a title-only section and a description on other components", () => {
+    const result = runRule(
+      "no-settings-description",
+      'const a = <SettingsSection title="Theme" />;\nconst b = <EmptyState description="Nothing here." />;\n',
+      { filename: "sample.tsx" },
+    );
+    expect(result.status).toBe(0);
+  });
+
+  it("flags extra components named in the options", () => {
+    const result = runRule(
+      "no-settings-description",
+      'const a = <ProfileCard description="Signed in here." />;\n',
+      { filename: "sample.tsx", ruleOptions: { components: ["ProfileCard"] } },
+    );
+    expect(result.status).not.toBe(0);
+  });
+});
+
 describe("no-value-block-in-try", () => {
   const invalid = [
     "function Widget() {",

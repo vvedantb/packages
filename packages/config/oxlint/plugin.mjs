@@ -15,7 +15,7 @@
 //     }
 //   }
 //
-// Eleven rules ship; see the package README for the full list.
+// Twelve rules ship; see the package README for the full list.
 // oxlint reports each as `vvedantb(<rule>)`.
 
 import noDoubleCast from "./rules/no-double-cast.mjs";
@@ -24,6 +24,7 @@ import noConditionalTests from "./rules/no-conditional-tests.mjs";
 import noInlineObjectTypeAssertion from "./rules/no-inline-object-type-assertion.mjs";
 import noInlineZodSchema from "./rules/no-inline-zod-schema.mjs";
 import noIsRecord from "./rules/no-is-record.mjs";
+import noSettingsDescription from "./rules/no-settings-description.mjs";
 import noTsNocheck from "./rules/no-ts-nocheck.mjs";
 import noUnknownShapeProbing from "./rules/no-unknown-shape-probing.mjs";
 import preferSchemaInferredTypes from "./rules/prefer-schema-inferred-types.mjs";
@@ -39,6 +40,7 @@ export default {
     "no-inline-zod-schema": noInlineZodSchema,
     "no-is-record": noIsRecord,
     "no-json-parse": noJsonParse,
+    "no-settings-description": noSettingsDescription,
     "no-source-text-in-tests": noSourceTextInTests,
     "no-ts-nocheck": noTsNocheck,
     "no-unknown-shape-probing": noUnknownShapeProbing,

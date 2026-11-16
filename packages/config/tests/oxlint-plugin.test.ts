@@ -11,6 +11,7 @@ it("registers every shared rule under the vvedantb plugin", () => {
     "no-inline-zod-schema",
     "no-is-record",
     "no-json-parse",
+    "no-settings-description",
     "no-source-text-in-tests",
     "no-ts-nocheck",
     "no-unknown-shape-probing",

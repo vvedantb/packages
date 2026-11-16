@@ -57,7 +57,7 @@ The package ships two oxlint JS plugins. Both load with oxlint 1.79 or later (th
 
 #### `vvedantb` plugin: `@vvedantb/config/oxlint/plugin.mjs`
 
-Eleven rules, with no app prefix:
+Twelve rules, with no app prefix:
 
 | Rule | Flags |
 | --- | --- |
@@ -66,6 +66,7 @@ Eleven rules, with no app prefix:
 | `no-double-cast` | A double cast such as `x as A as B` or `x as unknown as T`. |
 | `no-json-parse` | A bare `JSON.parse(...)` result that flows unchecked. `schema.parse(JSON.parse(x))` / `schema.safeParse(...)` are always allowed. With `{ "allowUnknownEscapeHatch": true }`, a `: unknown` annotation or `as unknown` cast is also allowed. |
 | `no-is-record` | Any identifier named `isRecord`. An `unknown` leaked in; type the data at its entry point instead. |
+| `no-settings-description` | A `description` prop on `SettingsSection`, `SettingsToggleRow` or `LabeledSwitchRow`. A section or row shows a title only. `{ "components": ["ProfileCard"] }` adds component names. |
 | `no-ts-nocheck` | `@ts-nocheck` and `@ts-ignore` comments. `@ts-expect-error` with a reason stays allowed. |
 | `no-conditional-tests` | An `expect(...)` call inside an `if`, `?:`, `&&`/`\|\|` or `switch` case in a test file. |
 | `no-inline-object-type-assertion` | `x as { … }` and `x as Record<string, unknown>`. |
@@ -515,7 +516,7 @@ In `package.json` scripts, call `vvedantb-config sync --check` directly. Without
 | Target | Behaviour |
 | --- | --- |
 | `.claude/commands/{stage,changelog,push,ship}.md` | Managed. Overwritten on every sync. |
-| `CLAUDE.md` | Created from a skeleton if missing. If present, the four headings (`## Git / ship`, `## Always`, `## Domain docs (read when relevant)`, `## Product facts`) are appended when absent. Existing bodies, including Product facts, are never changed. Drift means a missing heading only. |
+| `CLAUDE.md` | Created from a skeleton if missing. If present, the five headings (`## Git / ship`, `## Always`, `## UI copy`, `## Domain docs (read when relevant)`, `## Product facts`) are appended when absent. Existing bodies, including Product facts, are never changed. Drift means a missing heading only. |
 | `.cursor/environment.json` | Created if missing. If present, other keys are kept. `install` gains the Claude Code CLI step (sudo, then `~/.local` fallback) and `pnpm install` when either is absent. |
 | `convex/tsconfig.json` or `packages/backend/convex/tsconfig.json` | Only when that folder exists. Created if missing. If present, `extends` is set to `@vvedantb/config/tsconfig/convex.json`; other keys are kept. Comments in an existing file are lost on rewrite. |
 
