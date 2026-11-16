@@ -52,9 +52,9 @@ const CLAUDE_SECTIONS: readonly ClaudeSection[] = [
   {
     heading: "## UI copy",
     body: [
-      "- A section, card or row shows a title only. Do not add a description, subtitle or helper text under it unless the user asks.",
-      "- Keep user-visible text short: say each thing once, in plain words.",
-      "- Lint rule `vvedantb/no-settings-description` enforces this for the settings components.",
+      "- Subtext is the exception, not the default. Most sections, cards and rows show a title only.",
+      "- Add a description only when the user needs it to act and the title, value or badge does not already say it (a price, a limit, a warning).",
+      "- Never repeat the title, the value, a badge or a nearby row. Say each thing once, in plain words.",
     ].join("\n"),
   },
   {
