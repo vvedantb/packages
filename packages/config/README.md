@@ -66,7 +66,7 @@ Twelve rules, with no app prefix:
 | `no-double-cast` | A double cast such as `x as A as B` or `x as unknown as T`. |
 | `no-json-parse` | A bare `JSON.parse(...)` result that flows unchecked. `schema.parse(JSON.parse(x))` / `schema.safeParse(...)` are always allowed. With `{ "allowUnknownEscapeHatch": true }`, a `: unknown` annotation or `as unknown` cast is also allowed. |
 | `no-is-record` | Any identifier named `isRecord`. An `unknown` leaked in; type the data at its entry point instead. |
-| `no-settings-description` | A `description` prop on `SettingsSection`, `SettingsToggleRow` or `LabeledSwitchRow`. A section or row shows a title only. `{ "components": ["ProfileCard"] }` adds component names. |
+| `no-settings-description` | A `description` prop on `SettingsSection`, `SettingsToggleRow` or `LabeledSwitchRow`. Opt in only where an app wants a hard ban; the default guidance is the `## UI copy` section, which allows a description where the user needs one. `{ "components": ["ProfileCard"] }` adds component names. |
 | `no-ts-nocheck` | `@ts-nocheck` and `@ts-ignore` comments. `@ts-expect-error` with a reason stays allowed. |
 | `no-conditional-tests` | An `expect(...)` call inside an `if`, `?:`, `&&`/`\|\|` or `switch` case in a test file. |
 | `no-inline-object-type-assertion` | `x as { … }` and `x as Record<string, unknown>`. |
