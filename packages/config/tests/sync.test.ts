@@ -90,6 +90,8 @@ describe("sync", () => {
     expect(text).toContain("- mine");
     expect(text).toContain("## Git / ship");
     expect(text).toContain("## Domain docs (read when relevant)");
+    expect(text).toContain("## UI copy");
+    expect(text).toContain("vvedantb/no-settings-description");
     expect(text.match(/## Product facts/g)).toHaveLength(1);
     expect(text.match(/## Always/g)).toHaveLength(1);
     expect(cli("sync", "--check").code).toBe(0);
@@ -99,7 +101,7 @@ describe("sync", () => {
     cli("sync");
     write(
       "CLAUDE.md",
-      "x\n## Git / ship\n## Always\n## Domain docs (read when relevant)\n## Product facts\ncustom",
+      "x\n## Git / ship\n## Always\n## UI copy\n## Domain docs (read when relevant)\n## Product facts\ncustom",
     );
     expect(cli("sync", "--check").code).toBe(0);
   });

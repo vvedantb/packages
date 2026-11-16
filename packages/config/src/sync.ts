@@ -50,6 +50,14 @@ const CLAUDE_SECTIONS: readonly ClaudeSection[] = [
     ].join("\n"),
   },
   {
+    heading: "## UI copy",
+    body: [
+      "- A section, card or row shows a title only. Do not add a description, subtitle or helper text under it unless the user asks.",
+      "- Keep user-visible text short: say each thing once, in plain words.",
+      "- Lint rule `vvedantb/no-settings-description` enforces this for the settings components.",
+    ].join("\n"),
+  },
+  {
     heading: "## Domain docs (read when relevant)",
     body: "- (add pointers to this app's docs)",
   },
