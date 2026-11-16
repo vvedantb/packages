@@ -229,6 +229,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   StackPageHeader: "parity",
   StatGrid: "parity",
   StatusDot: "parity",
+  Stepper: "parity",
   SubagentResultCard: "ai-cards",
   SubagentRunCard: "ai-cards",
   Suggestion: "parity",
