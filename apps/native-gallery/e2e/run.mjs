@@ -216,19 +216,19 @@ const scenarios = {
     await press("bottom-sheet-close");
     await gone("bottom-sheet-body");
   },
-  // The Software Mansion native sheet next to the gorhom one, on the comparison screen.
+  // The default and the multi-detent bottom sheets, on the bottom sheet screen.
   async nativeSheet() {
     await fresh();
-    await press("link-native-bottom-sheet");
-    await press("gorhom-sheet-open");
-    await see("gorhom-sheet-body");
-    shot("native-bottom-sheet-gorhom");
-    await press("gorhom-sheet-close");
-    await gone("gorhom-sheet-body");
+    await press("link-bottom-sheet");
+    await press("default-sheet-open");
+    await see("default-sheet-body");
+    shot("bottom-sheet-default");
+    await press("default-sheet-close");
+    await gone("default-sheet-body");
     await press("native-sheet-open");
     await see("native-sheet-body");
     await see("native-sheet-row-0");
-    shot("native-bottom-sheet-swm");
+    shot("bottom-sheet-multi-detent");
     await press("native-sheet-close");
     await gone("native-sheet-body");
   },

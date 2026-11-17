@@ -22,7 +22,7 @@ Peers the app must already have (Expo SDK 57 / RN 0.76+):
 Optional, only if you import those components:
 
 - `@rn-primitives/portal` — `Select`. Mount one `<PortalHost />` from this package at the app root (for example in the root layout), outside any `Modal`. The package does not re-export it, so install it with `@rn-primitives/select`.
-- `@gorhom/bottom-sheet` — `BottomSheetContainer`
+- `@swmansion/react-native-bottom-sheet` — `BottomSheetContainer`. It needs the New Architecture, React Native 0.82 or later and a native build (no Expo Go), and no root provider.
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
 - `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
 - `react-native-gesture-handler` (`>=2.0.0`) — `@vvedantb/native-ui/gesture-handler` (Unreleased). Wrap the app in `GestureHandlerRootView`, and put `GestureHandlerProvider` from that entry inside it: the sheet drags (`SheetContent`, the compact `DialogContent`) then run on Gesture Handler, on the UI thread, and each overlay's `Modal` gets its own root view (Android needs one in every `Modal`). It also turns on the `SwipeableRow` swipe. Without the provider, the sheets drag with `PanResponder`, with the same rules, and a `SwipeableRow` does not swipe. Only that entry imports the peer, so an app without it bundles as before. In a Metro monorepo, resolve the peer from the app (one copy), as for `react`.
@@ -75,7 +75,7 @@ The `Select` note stays: mount one `<PortalHost />` from `@rn-primitives/portal`
 
 ## Entry points
 
-The root entry exports everything. It still imports `BottomSheetContainer` and `DateTimeField`, so Metro resolves `@gorhom/bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs` for any import from it. Apps without those peers, such as V Store, should import from the smaller entries below. Between them, they export every name the root exports.
+The root entry exports everything. It still imports `BottomSheetContainer` and `DateTimeField`, so Metro resolves `@swmansion/react-native-bottom-sheet`, `@react-native-community/datetimepicker` and `dayjs` for any import from it. Apps without those peers, such as V Store, should import from the smaller entries below. Between them, they export every name the root exports.
 
 | Entry | Exports | Optional peers it reaches |
 | --- | --- | --- |
@@ -94,7 +94,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/ambient` | `AmbientBackground` | `expo-linear-gradient` (loader) |
 | `@vvedantb/native-ui/blur`, `/haptics` | the loaders | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/push` | `useExpoPushRegistration`, `getExpoPushToken`, `showPushesInForeground`, the three loaders and the types (0.9.0). Pass `register` from your backend (for `@vvedantb/server`: `useMutation(api.push.register)`) and route taps in `onNotificationTap` | `expo-notifications`, `expo-constants`, `expo-device` (loaders) |
-| `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@gorhom/bottom-sheet` (import), `expo-blur` (loader) |
+| `@vvedantb/native-ui/bottom-sheet` | `BottomSheetContainer` | `@swmansion/react-native-bottom-sheet` (import) |
 | `@vvedantb/native-ui/gesture-handler` | `GestureHandlerProvider` (Unreleased): the sheet drags on Gesture Handler, and the `SwipeableRow` swipe | `react-native-gesture-handler` (import) |
 | `@vvedantb/native-ui/keyboard-controller` | `KeyboardControllerProvider` (Unreleased): the composer, transcript and forms follow the keyboard | `react-native-keyboard-controller` (import) |
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
@@ -348,7 +348,7 @@ configureTheme({ font: { regular: "Inter_400Regular", medium: "Inter_500Medium",
 | Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger` (`minHeight` from 0.14.0), `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
-| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names; a `SheetContent` or compact `DialogContent` drags down to close), `SheetRow` (0.5.0), `BottomSheetContainer` (`@gorhom/bottom-sheet`), `DropdownMenu` (Unreleased; see below) |
+| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names; a `SheetContent` or compact `DialogContent` drags down to close), `SheetRow` (0.5.0), `BottomSheetContainer` (`@swmansion/react-native-bottom-sheet`; optional `detents`), `DropdownMenu` (Unreleased; see below) |
 | Selection | `BulkActionBar` (Unreleased; see below) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
@@ -614,7 +614,7 @@ import {
 ```
 
 - `Message`: `onLongPress`, `actions` (`{ key, label, icon?, destructive?, onPress }[]`), `actionSheetTitle`, `highlighted`. With neither `onLongPress` nor `actions` it is the same `View` as before. With either it is a `Pressable` with the same layout and view props, and it stays a non-accessible container so inner buttons keep focus: also offer Reply in a `MessageActionsBar` for screen reader users. `highlighted` draws a primary wash that fades over 1.4 seconds (`MESSAGE_HIGHLIGHT_MS`) and a ring while true; with Reduce Motion it holds still. Set it back to `false` after the scroll.
-- `MessageActionSheet` (`open`, `onClose`, `actions`, `title`, `cancelLabel`, `testID`): an RN `Modal` bottom sheet, no `@gorhom/bottom-sheet`. Closes on the backdrop, Cancel, Android back and after an action. Destructive rows use the danger colour. Rows are 48 high (56 with larger text).
+- `MessageActionSheet` (`open`, `onClose`, `actions`, `title`, `cancelLabel`, `testID`): an RN `Modal` bottom sheet that needs no bottom-sheet library. Closes on the backdrop, Cancel, Android back and after an action. Destructive rows use the danger colour. Rows are 48 high (56 with larger text).
 - `ReplyQuoteChip` (`author`, `text`, `onDismiss`, `dismissLabel`, `accessibilityLabel`, `testID`): author and up to two lines of text, with an X (44 point target, "Dismiss reply quote"). Labelled "Replying to {author}". `PromptInput` `replyTo` draws it above `header`; passing it as `header` works too.
 - `MessageQuote` (`author`, `text`, `onPress`, `accessibilityLabel`, `testID`): a left border, the author and up to two lines. With `onPress` it is a button.
 - Bot label in a group chat (0.13.0): `<Message from="assistant" bot={{ name: "Planner", avatar: <Avatar size="xs" /> }}>`. Or leave `Message` alone and render `<MessageBotLabel name="Planner" />` above `MessageContent` in `ChatThread` `renderMessage`. `ChatThread` needs no change.

@@ -1,7 +1,6 @@
 import "../global.css";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PortalHost } from "@rn-primitives/portal";
@@ -54,9 +53,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <GalleryProvider>
-          <BottomSheetModalProvider>
-            <Shell />
-          </BottomSheetModalProvider>
+          <Shell />
         </GalleryProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

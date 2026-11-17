@@ -22,7 +22,6 @@ import * as keyboardController from "@vvedantb/native-ui/keyboard-controller";
 import * as layout from "@vvedantb/native-ui/layout";
 import * as markdown from "@vvedantb/native-ui/markdown";
 import * as marketing from "@vvedantb/native-ui/marketing";
-import * as nativeBottomSheet from "@vvedantb/native-ui/native-bottom-sheet";
 import * as pageTitle from "@vvedantb/native-ui/page-title";
 import * as passwordInput from "@vvedantb/native-ui/password-input";
 import * as primitives from "@vvedantb/native-ui/primitives";
@@ -56,7 +55,6 @@ export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   "/layout": layout,
   "/markdown": markdown,
   "/marketing": marketing,
-  "/native-bottom-sheet": nativeBottomSheet,
   "/page-title": pageTitle,
   "/password-input": passwordInput,
   "/primitives": primitives,

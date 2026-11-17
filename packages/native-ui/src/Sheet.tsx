@@ -21,7 +21,7 @@ const SHEET_RADIUS = tokens.radius.card;
 export type SheetProps = OverlayRootProps;
 
 /**
- * Bottom sheet in an RN `Modal`, with no `@gorhom/bottom-sheet`. Same open
+ * Bottom sheet in an RN `Modal`, with no bottom-sheet library. Same open
  * state API as `Dialog`.
  */
 export function Sheet(props: SheetProps) {

@@ -1003,62 +1003,6 @@ declare module "prism-react-renderer" {
   export const themes: Record<string, PrismTheme>;
 }
 
-declare module "@gorhom/bottom-sheet" {
-  import type * as React from "react";
-  import type { ViewProps } from "react-native";
-  import type { BottomSheetDefaultBackdropProps } from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types";
-
-  export const BottomSheetBackdrop: React.ComponentType<
-    BottomSheetDefaultBackdropProps & {
-      appearsOnIndex?: number;
-      disappearsOnIndex?: number;
-      opacity?: number;
-    }
-  >;
-  interface BottomSheetBaseProps {
-    children?: React.ReactNode;
-    snapPoints?: Array<string | number>;
-    enableDynamicSizing?: boolean;
-    backdropComponent?: (props: BottomSheetDefaultBackdropProps) => React.ReactNode;
-    backgroundComponent?: React.ComponentType<{
-      style?: ViewProps["style"];
-      pointerEvents?: ViewProps["pointerEvents"];
-    }>;
-    handleIndicatorStyle?: ViewProps["style"];
-    enableContentPanningGesture?: boolean;
-    enableHandlePanningGesture?: boolean;
-    keyboardBehavior?: "extend" | "fillParent" | "interactive";
-  }
-  export class BottomSheetModal extends React.Component<
-    BottomSheetBaseProps & { onDismiss?: () => void }
-  > {
-    present(): void;
-    dismiss(): void;
-  }
-  /** The default export is the controlled sheet. There is no named `BottomSheet` export at runtime. */
-  declare class BottomSheet extends React.Component<
-    BottomSheetBaseProps & {
-      index?: number;
-      onClose?: () => void;
-      enablePanDownToClose?: boolean;
-    }
-  > {
-    snapToIndex(index: number): void;
-    close(): void;
-  }
-  export default BottomSheet;
-  export const BottomSheetView: React.ComponentType<ViewProps>;
-}
-
-declare module "@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types" {
-  import type { ViewProps } from "react-native";
-  export interface BottomSheetDefaultBackdropProps {
-    animatedIndex: unknown;
-    animatedPosition: unknown;
-    style?: ViewProps["style"];
-  }
-}
-
 declare module "@swmansion/react-native-bottom-sheet" {
   import type * as React from "react";
   import type { ViewProps } from "react-native";

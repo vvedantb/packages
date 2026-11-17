@@ -24,14 +24,14 @@ export const SECTIONS: SectionDef[] = [
   { id: "ai-cards", title: "AI cards, sheets and Markdown", Component: AiCardsSection },
 ];
 
-/** Full-screen routes: `/parity`, `/ai`, `/auth`, `/layering`, `/keyboard`, `/native-bottom-sheet`. */
+/** Full-screen routes: `/parity`, `/ai`, `/auth`, `/layering`, `/keyboard`, `/bottom-sheet`. */
 export const SCREENS = [
   { id: "parity", title: "Parity gallery (ParityGallery)" },
   { id: "ai", title: "AI chat (AiChatGallery)" },
   { id: "auth", title: "Auth on mocked Clerk" },
   { id: "layering", title: "Layering stress" },
   { id: "keyboard", title: "Keyboard and composer" },
-  { id: "native-bottom-sheet", title: "Bottom sheet comparison (SWM)" },
+  { id: "bottom-sheet", title: "Bottom sheet" },
 ] as const;
 
 export { AiChatGallery, ParityGallery };
