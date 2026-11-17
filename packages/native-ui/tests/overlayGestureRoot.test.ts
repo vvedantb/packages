@@ -46,6 +46,7 @@ vi.mock("react-native-reanimated", () => ({
   useScrollOffset: () => {},
   useSharedValue: <T>(value: T) => ({ get: () => value, set: () => {} }),
   withSpring: () => 0,
+  withTiming: () => 0,
 }));
 vi.mock("react-native-gesture-handler", () => ({
   Gesture: {},

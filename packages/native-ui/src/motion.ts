@@ -31,3 +31,18 @@ export const SHEET_SNAP_SPRING = {
 export function usePressFeedback(): string {
   return useReduceMotion() ? "active:opacity-80" : "active:scale-[0.97]";
 }
+
+/** Start scale of a popover or dialog panel as it opens: never from 0, as the `animate-expo` rules say. */
+export const PANEL_SCALE_FROM = 0.96;
+
+/** A menu panel opening from its trigger: opacity and scale together. */
+export const POPOVER_ENTER = { duration: 150, easing: EASE_OUT, reduceMotion: ReduceMotion.System } as const;
+
+/** A menu panel leaving: a quick fade only. */
+export const POPOVER_EXIT = { duration: 100, easing: EASE_OUT, reduceMotion: ReduceMotion.System } as const;
+
+/** A centred dialog opening: the backdrop fades while the panel scales and fades in. */
+export const DIALOG_ENTER = { duration: 200, easing: EASE_OUT, reduceMotion: ReduceMotion.System } as const;
+
+/** A centred dialog closing. */
+export const DIALOG_EXIT = { duration: 150, easing: EASE_OUT, reduceMotion: ReduceMotion.System } as const;

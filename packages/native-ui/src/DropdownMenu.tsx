@@ -1,5 +1,5 @@
 import * as Slot from "@rn-primitives/slot";
-import { createContext, useContext, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
   Modal,
   Pressable,
@@ -12,12 +12,14 @@ import {
   type PressableProps,
   type ViewProps,
 } from "react-native";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconCheck, type IconProps } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
 import { sizeStyle, typeStyle } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
+import { PANEL_SCALE_FROM, POPOVER_ENTER, POPOVER_EXIT } from "./motion";
 import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
@@ -195,7 +197,9 @@ export type DropdownMenuContentProps = ViewProps & {
  * `Dialog` and `Sheet` (`FloatingSurface` without blur, with the floating
  * shadow) at radius 16, at least 192 wide, `p-1.5`, scrolling when taller than
  * the room. A tap outside, Android back and the VoiceOver escape gesture close
- * it. With Reduce Motion on, the fade is off.
+ * it. The panel (not the backdrop) fades in and scales from 0.96 over 150 ms
+ * once it is measured, from the corner nearest the trigger, and fades out in
+ * 100 ms. With Reduce Motion on, it appears and leaves at once.
  */
 export function DropdownMenuContent({
   align = "start",
@@ -212,13 +216,60 @@ export function DropdownMenuContent({
   // `null` until the content is measured: only then is it known whether the
   // menu fits below the trigger or flips above, so it stays hidden till then.
   const [contentHeight, setContentHeight] = useState<number | null>(null);
+  // Up while open, and after a close until the panel has faded out.
+  const [shown, setShown] = useState(open);
+  if (open && !shown) setShown(true);
+  if (!open && shown && reduceMotion) setShown(false);
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+  // The panel's motion, on the UI thread. At rest (1, 1) under Reduce Motion.
+  const opacity = useSharedValue(reduceMotion ? 1 : 0);
+  const scale = useSharedValue(reduceMotion ? 1 : PANEL_SCALE_FROM);
+  const measured = contentHeight !== null;
+  const hide = () => {
+    // Opened again in the moment the fade ended: stay up.
+    if (openRef.current) return;
+    setShown(false);
+    setContentHeight(null);
+    scale.set(PANEL_SCALE_FROM);
+  };
+  useEffect(() => {
+    if (reduceMotion) {
+      opacity.set(1);
+      scale.set(1);
+      return;
+    }
+    if (open) {
+      if (!measured) return;
+      opacity.set(withTiming(1, POPOVER_ENTER));
+      scale.set(withTiming(1, POPOVER_ENTER));
+    } else if (shown) {
+      // A fade only: the scale stays where it is.
+      opacity.set(
+        withTiming(0, POPOVER_EXIT, (finished) => {
+          "worklet";
+          if (finished) runOnJS(hide)();
+        }),
+      );
+    }
+    // Only opening, measuring and closing start the motion.
+  }, [open, measured, reduceMotion]);
+  const panelStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    transform: [{ scale: scale.get() }],
+  }));
   const close = () => setOpen(false);
   const position = dropdownMenuPosition({ trigger, window, insets, align, sideOffset, contentHeight: contentHeight ?? 0 });
+  // The scale grows from the corner nearest the trigger: its edge on the
+  // trigger's (`align`), and the top, or the bottom when the menu flipped above.
+  const transformOrigin = `${align === "end" ? 100 : 0}% ${position.bottom === undefined ? 0 : 100}%`;
   return (
     <Modal
-      visible={open}
+      visible={shown}
       transparent
-      animationType={reduceMotion ? "none" : "fade"}
+      animationType="none"
       statusBarTranslucent
       onRequestClose={close}
     >
@@ -237,6 +288,8 @@ export function DropdownMenuContent({
           accessibilityRole="menu"
           accessibilityViewIsModal
           onAccessibilityEscape={close}
+          // Leaving: a late tap on a row must not select twice.
+          pointerEvents={open ? "auto" : "none"}
           style={{
             position: "absolute",
             ...position,
@@ -245,18 +298,20 @@ export function DropdownMenuContent({
             opacity: contentHeight === null ? 0 : 1,
           }}
         >
-          <FloatingSurface blur={false} radius={DROPDOWN_MENU.radius} style={{ maxHeight: position.maxHeight }}>
-            <ScrollView
-              bounces={false}
-              showsVerticalScrollIndicator={false}
-              onContentSizeChange={(_width, height) => setContentHeight(height)}
-              contentContainerStyle={{ padding: DROPDOWN_MENU.padding }}
-            >
-              <View className={cn(className)} style={style} {...props}>
-                {children}
-              </View>
-            </ScrollView>
-          </FloatingSurface>
+          <Animated.View style={[{ transformOrigin }, panelStyle]}>
+            <FloatingSurface blur={false} radius={DROPDOWN_MENU.radius} style={{ maxHeight: position.maxHeight }}>
+              <ScrollView
+                bounces={false}
+                showsVerticalScrollIndicator={false}
+                onContentSizeChange={(_width, height) => setContentHeight(height)}
+                contentContainerStyle={{ padding: DROPDOWN_MENU.padding }}
+              >
+                <View className={cn(className)} style={style} {...props}>
+                  {children}
+                </View>
+              </ScrollView>
+            </FloatingSurface>
+          </Animated.View>
         </View>
       </View>
     </Modal>

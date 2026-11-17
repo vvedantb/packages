@@ -1,0 +1,22 @@
+# The message action sheet opens, shows its rows and closes on Cancel.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-ai-cards
+- tapOn:
+    id: link-ai-cards
+- scrollUntilVisible:
+    element:
+      id: open-message-sheet
+- tapOn:
+    id: open-message-sheet
+- assertVisible:
+    id: message-action-sheet-action-copy
+- takeScreenshot: screenshots/ai-cards-message-action-sheet-open
+- tapOn:
+    id: message-action-sheet-cancel
+- assertNotVisible:
+    id: message-action-sheet-action-copy
