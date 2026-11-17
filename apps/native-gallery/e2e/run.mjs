@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -308,6 +308,37 @@ const scenarios = {
     back();
     await settle();
     await gone("message-context-menu-action-copy");
+  },
+  // A long inverted chat under the keyboard providers: scrolled up, an older
+  // message held, the finger lifted, then a swipe on the backdrop. The menu
+  // closes and the list stays where the reader left it (it once jumped to the
+  // newest message on Android).
+  async chatHold() {
+    await fresh();
+    await press("link-chat-hold");
+    await see("Chat message 40:");
+    const target = "Chat message 20:";
+    const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+    // Inverted: older messages are above, so the finger drags down.
+    for (let i = 0; i < 12 && !visible(target); i++) {
+      swipe(w / 2, Math.round(h * 0.3), w / 2, Math.round(h * 0.6), 300);
+      await settle();
+    }
+    await see(target);
+    const before = resolveTarget(dumpNodes({ retries: 2 }), target).y;
+    await hold(target);
+    const card = resolveTarget(dumpNodes({ retries: 2 }), "message-context-menu-action-copy");
+    if (!card.ok) throw new AgentError("the hold menu did not open");
+    shot("chat-hold-menu-open");
+    // A swipe that starts on the backdrop, away from the card.
+    const start = card.y > h / 2 ? Math.round(h * 0.15) : Math.round(h * 0.55);
+    swipe(Math.round(w * 0.2), start, Math.round(w * 0.2), start + Math.round(h * 0.3), 300);
+    await settle();
+    await gone("message-context-menu-action-copy");
+    shot("chat-hold-after-swipe");
+    const after = resolveTarget(dumpNodes({ retries: 2 }), target);
+    log({ chatHold: { before, after: after.ok ? after.y : null, newestVisible: visible("Chat message 40:") } });
+    if (!after.ok || visible("Chat message 40:")) throw new AgentError("the list moved after the hold menu closed");
   },
   async messageSheet() {
     await fresh();
