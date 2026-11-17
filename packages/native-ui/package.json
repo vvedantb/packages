@@ -89,11 +89,6 @@
       "source": "./src/entries/bottom-sheet.ts",
       "default": "./dist/entries/bottom-sheet.js"
     },
-    "./native-bottom-sheet": {
-      "types": "./src/entries/native-bottom-sheet.ts",
-      "source": "./src/entries/native-bottom-sheet.ts",
-      "default": "./dist/entries/native-bottom-sheet.js"
-    },
     "./gesture-handler": {
       "types": "./src/entries/gesture-handler.ts",
       "source": "./src/entries/gesture-handler.ts",
@@ -201,7 +196,6 @@
   "peerDependencies": {
     "@clerk/clerk-expo": "*",
     "@expo/vector-icons": "*",
-    "@gorhom/bottom-sheet": ">=5",
     "@json-render/core": ">=0.21.0",
     "@json-render/react-native": ">=0.21.0",
     "@react-native-community/datetimepicker": "*",
@@ -242,9 +236,6 @@
   },
   "peerDependenciesMeta": {
     "@clerk/clerk-expo": {
-      "optional": true
-    },
-    "@gorhom/bottom-sheet": {
       "optional": true
     },
     "@swmansion/react-native-bottom-sheet": {

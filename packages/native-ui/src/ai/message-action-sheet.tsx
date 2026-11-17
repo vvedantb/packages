@@ -39,7 +39,7 @@ export type MessageActionSheetProps = {
 
 /**
  * The sheet that opens on a long press of a chat message: a bottom sheet in
- * an RN `Modal` (no `@gorhom/bottom-sheet`) with one pressable row per action
+ * an RN `Modal` (no bottom-sheet library) with one pressable row per action
  * and a Cancel row. It closes on the backdrop, Cancel, Android back and after
  * an action. A `selectionHaptic()` fires when it opens (`expo-haptics` is an
  * optional peer). Row testIDs are `{testID}-action-{key}`.

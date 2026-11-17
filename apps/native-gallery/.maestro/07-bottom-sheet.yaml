@@ -1,0 +1,35 @@
+# Open the default and the multi-detent bottom sheets, check the content is
+# visible, and dismiss each. The sheet needs a native build.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-bottom-sheet
+- tapOn:
+    id: link-bottom-sheet
+# Default sheet.
+- tapOn:
+    id: default-sheet-open
+- assertVisible:
+    id: default-sheet-body
+- assertVisible:
+    id: default-sheet-row-0
+- takeScreenshot: screenshots/bottom-sheet-default
+- tapOn:
+    id: default-sheet-close
+- assertNotVisible:
+    id: default-sheet-body
+# Multi-detent sheet.
+- tapOn:
+    id: native-sheet-open
+- assertVisible:
+    id: native-sheet-body
+- assertVisible:
+    id: native-sheet-row-0
+- takeScreenshot: screenshots/bottom-sheet-multi-detent
+- tapOn:
+    id: native-sheet-close
+- assertNotVisible:
+    id: native-sheet-body

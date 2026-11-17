@@ -177,7 +177,7 @@ export function LayeringSection() {
         <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
           <BottomSheetContainer visible={bottomSheet} onClose={() => setBottomSheet(false)} title="Bottom sheet" closeTestID="bottom-sheet-close">
             <Text testID="bottom-sheet-body" style={{ color: tokens.color.foreground[scheme] }}>
-              Gorhom sheet over the tab bar
+              Bottom sheet over the tab bar
             </Text>
           </BottomSheetContainer>
         </View>

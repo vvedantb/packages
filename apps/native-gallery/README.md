@@ -96,7 +96,7 @@ node scripts/agent.mjs wait sheet-body --gone --timeout 5000
 
 Limits:
 
-- `useNativeDriver: true` animations and Reanimated worklet animations run on the UI thread. The JS clock cannot step them. Agent builds mount `ReducedMotionConfig` (`src/agent/AgentMotion.tsx`) so Reanimated skips most of them. Animations that ignore it (possibly parts of `@gorhom/bottom-sheet`) still run in real time, so the e2e script polls the UI tree for the result after each action. The clock does not replace that polling.
+- `useNativeDriver: true` animations and Reanimated worklet animations run on the UI thread. The JS clock cannot step them. Agent builds mount `ReducedMotionConfig` (`src/agent/AgentMotion.tsx`) so Reanimated skips most of them. Animations that ignore it (possibly parts of `@swmansion/react-native-bottom-sheet`) still run in real time, so the e2e script polls the UI tree for the result after each action. The clock does not replace that polling.
 - React rendering stays in real time. Only app timers and frames are virtual.
 - Native modules and the system keyboard keep their own time.
 
