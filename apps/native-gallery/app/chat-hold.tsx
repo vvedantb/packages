@@ -8,7 +8,8 @@ import {
   PromptInput,
 } from "@vvedantb/native-ui/ai";
 import { KeyboardControllerProvider } from "@vvedantb/native-ui/keyboard-controller";
-import { useState } from "react";
+import { Button } from "@vvedantb/native-ui/button";
+import { useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,14 +31,32 @@ const THREAD: Row[] = Array.from({ length: 40 }, (_, index) => ({
 const NEWEST_FIRST = [...THREAD].reverse();
 
 export default function ChatHold() {
+  // The chat with and without the keyboard providers, to tell which part moves the list.
+  const [keyboard, setKeyboard] = useState(true);
+  const toggle = (
+    <Button testID="chat-hold-keyboard" size="sm" variant="outline" onPress={() => setKeyboard(!keyboard)}>
+      {`Keyboard providers: ${keyboard ? "on" : "off"}`}
+    </Button>
+  );
+  return keyboard ? (
+    <KeyboardProvider>
+      <KeyboardControllerProvider>
+        <Chat toggle={toggle} />
+      </KeyboardControllerProvider>
+    </KeyboardProvider>
+  ) : (
+    <Chat toggle={toggle} />
+  );
+}
+
+function Chat({ toggle }: { toggle: ReactNode }) {
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState("");
   const [chosen, setChosen] = useState("none");
 
   return (
-    <KeyboardProvider>
-      <KeyboardControllerProvider>
         <View style={{ flex: 1, paddingTop: insets.top }} testID="screen-chat-hold">
+          {toggle}
           <GText testID="chat-hold-result">{`Chose: ${chosen}`}</GText>
           <Conversation>
             <ConversationList
@@ -63,7 +82,5 @@ export default function ChatHold() {
             </ConversationDock>
           </Conversation>
         </View>
-      </KeyboardControllerProvider>
-    </KeyboardProvider>
   );
 }
