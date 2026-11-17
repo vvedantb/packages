@@ -60,13 +60,19 @@ async function press(target) {
   throw new AgentError(`could not scroll "${target}" into view`);
 }
 
-/** A press and hold on a target (scrolled into view as `press` does): a swipe that stays put for 800 ms. */
+/**
+ * A press and hold on a target (scrolled into view as `press` does): a swipe
+ * that stays put for 800 ms. The long press is a JS timer, which the frozen
+ * clock would never fire, so the clock runs for the hold and freezes again.
+ */
 async function hold(target) {
   for (let i = 0; i < 8; i++) {
     const nodes = dumpNodes({ retries: 2 });
     const r = resolveTarget(nodes, target);
     if (r.ok) {
+      await clock("resume");
       swipe(r.x, r.y, r.x, r.y, 800);
+      await clock("freeze");
       await settle();
       return;
     }
