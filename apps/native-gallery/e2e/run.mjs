@@ -302,9 +302,11 @@ const scenarios = {
     await hold("Hold this message");
     await press("message-context-menu-action-copy");
     await see("Menu: copy · reaction 👍");
-    // A tap outside closes it.
+    // Android back closes it (a tap on the backdrop's centre would land on the pill).
     await hold("Hold this message");
-    await press("message-context-menu-backdrop");
+    await see("message-context-menu-action-copy");
+    back();
+    await settle();
     await gone("message-context-menu-action-copy");
   },
   async messageSheet() {

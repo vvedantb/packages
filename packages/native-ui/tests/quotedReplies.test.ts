@@ -468,12 +468,16 @@ describe("Message: long press, actions and highlight", () => {
     const pressable = find(h.tree, (el) => el.type === "Pressable")!;
     expect(pressable.props).toMatchObject({ accessible: false, testID: "m" });
     expect(pressable.props.className).toContain("w-full max-w-[95%] gap-2 x");
-    // The style follows the press: the layout at rest, and a little smaller and dimmer while held.
-    expect(flatten(pressable.props.style({ pressed: false }))).toMatchObject({ alignSelf: "flex-end", alignItems: "flex-end" });
-    expect(flatten(pressable.props.style({ pressed: true }))).toMatchObject({ alignSelf: "flex-end", opacity: 0.9 });
+    // The layout at rest, and a little smaller and dimmer while held (a static style: NativeWind drops a style function).
+    expect(flatten(pressable.props.style)).toMatchObject({ alignSelf: "flex-end", alignItems: "flex-end" });
+    expect(flatten(pressable.props.style).opacity).toBeUndefined();
+    press(pressable, "onPressIn");
+    const held = find(h.tree, (el) => el.type === "Pressable")!;
+    expect(flatten(held.props.style)).toMatchObject({ alignSelf: "flex-end", opacity: 0.9 });
+    press(held, "onPressOut");
     expect(pressable.props.delayLongPress).toBe(350);
     impact.mockClear();
-    press(pressable, "onLongPress");
+    press(find(h.tree, (el) => el.type === "Pressable")!, "onLongPress");
     expect(onLongPress).toHaveBeenCalledTimes(1);
     expect(impact).toHaveBeenCalledWith("medium");
     expect(byType(h.tree, "Modal")).toHaveLength(0);

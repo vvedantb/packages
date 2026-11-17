@@ -158,10 +158,10 @@ export function MessageContextMenu({
                 accessibilityState={{ disabled: action.disabled === true }}
                 disabled={action.disabled === true}
                 onPress={() => run(action.onPress)}
-                className="flex-row items-center gap-3 px-4"
-                style={({ pressed }) => [
+                // A static style: with a `className`, NativeWind drops a style function.
+                className="flex-row items-center gap-3 px-4 active:opacity-70"
+                style={[
                   { minHeight: rowHeight, opacity: action.disabled ? 0.5 : 1 },
-                  pressed && { backgroundColor: palette.default[scheme] },
                   index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.color.separator[scheme] },
                 ]}
               >
