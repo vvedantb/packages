@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react-native";
+import { IconDots, IconMoodSmile, IconPencil, IconSortDescending, IconThumbUp, IconThumbUpFilled, IconTrash } from "@tabler/icons-react-native";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   FloatingTabBar,
+  MenuDivider,
+  MenuSheet,
+  ReactionRow,
+  SheetRow,
+  SubmenuRow,
   GlassBlurProvider,
   GlassBlurTarget,
   Select,
@@ -60,6 +65,13 @@ export function LayeringSection() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bottomSheet, setBottomSheet] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [menu, setMenu] = useState<"closed" | "root" | "sort">("closed");
+  const [reaction, setReaction] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
+  const closeMenu = (next: string) => {
+    setMenu("closed");
+    setResult(next);
+  };
   return (
     <View style={{ flex: 1, backgroundColor: tokens.color.background[scheme] }}>
       <GlassBlurProvider>
@@ -154,11 +166,72 @@ export function LayeringSection() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              <Button testID="menu-sheet-open" size="sm" fullWidth={false} variant="secondary" onPress={() => setMenu("root")}>
+                Menu
+              </Button>
               <Button testID="toast-open" size="sm" fullWidth={false} variant="secondary" onPress={() => toast.success("Saved over the tab bar")}>
                 Toast
               </Button>
             </View>
             </View>
+            {/* A hold menu: a reaction row (emoji tinted, the thumb solid), a submenu page with a back button, a divider and a long-titled row. */}
+            <MenuSheet
+              testID="menu-sheet"
+              open={menu !== "closed"}
+              onOpenChange={(open) => {
+                if (!open) setMenu("closed");
+              }}
+              title={menu === "sort" ? "Sort" : "Message"}
+              onBack={menu === "sort" ? () => setMenu("root") : undefined}
+            >
+              {menu === "sort" ? (
+                (["newest", "oldest"] satisfies string[]).map((order) => (
+                  <SheetRow
+                    key={order}
+                    testID={`menu-sort-${order}`}
+                    title={order === "newest" ? "Newest first" : "Oldest first"}
+                    active={sort === order}
+                    onPress={() => setSort(order)}
+                  />
+                ))
+              ) : (
+                <>
+                  <ReactionRow
+                    items={["👍", "❤️", "😂", "🎉", "👀"].map((emoji) => ({
+                      key: emoji,
+                      label: `React ${emoji}`,
+                      selected: reaction === emoji,
+                      render: () => <Text style={{ fontSize: 20 }}>{emoji}</Text>,
+                    }))}
+                    onPress={(key) => setReaction(reaction === key ? null : key)}
+                    trailing={{ label: "More reactions", icon: <IconMoodSmile size={20} color={tokens.color.muted[scheme]} />, onPress: () => closeMenu("more reactions") }}
+                  />
+                  <ReactionRow
+                    selectedStyle="solid"
+                    layout="start"
+                    items={[
+                      {
+                        key: "like",
+                        label: "Good response",
+                        selected: liked,
+                        render: (selected) =>
+                          selected ? (
+                            <IconThumbUpFilled size={20} color={tokens.color.background[scheme]} />
+                          ) : (
+                            <IconThumbUp size={20} color={tokens.color.foreground[scheme]} />
+                          ),
+                      },
+                    ]}
+                    onPress={() => setLiked(!liked)}
+                  />
+                  <MenuDivider />
+                  <SubmenuRow testID="menu-sort" icon={IconSortDescending} title="Sort" detail={sort === "newest" ? "Newest first" : "Oldest first"} onPress={() => setMenu("sort")} />
+                  <SheetRow testID="menu-rename" icon={IconPencil} title="Rename this message to something far too long to fit on one line" onPress={() => closeMenu("menu rename")} />
+                  <MenuDivider />
+                  <SheetRow testID="menu-delete" icon={IconTrash} title="Delete" danger onPress={() => closeMenu("menu delete")} />
+                </>
+              )}
+            </MenuSheet>
             <ConfirmDialog
               open={confirm}
               onOpenChange={setConfirm}

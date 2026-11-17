@@ -10,6 +10,7 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
+import { impactHaptic } from "../haptics";
 import { sizeStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
@@ -99,11 +100,17 @@ function MessageHighlight() {
  * at the start, its parts full width.
  *
  * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
- * `className`, `style` and view props) and a long press opens the
+ * `className`, `style` and view props): a 350 ms hold shrinks it a little,
+ * fires a medium haptic, runs `onLongPress` and opens the
  * `MessageActionSheet`; TalkBack reaches it as the `longpress` action. It stays
  * a non-accessible container so its buttons and links keep their own focus:
  * also offer the actions in a `MessageActionsBar` for screen reader users. `highlighted` draws the quote-jump highlight.
  */
+/** How long a hold takes, in ms: shorter than React Native's 500, as iMessage. */
+const HOLD_DELAY_MS = 350;
+/** A held message: a little smaller and dimmer. */
+const HELD_STYLE = { transform: [{ scale: 0.98 }], opacity: 0.9 };
+
 export function Message({
   from,
   className,
@@ -121,6 +128,8 @@ export function Message({
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions;
   const longPress = () => {
+    // A medium tap on a hold, as iMessage; the sheet adds its own selection tick.
+    impactHaptic("medium");
     onLongPress?.();
     if (hasActions) setSheetOpen(true);
   };
@@ -143,8 +152,10 @@ export function Message({
           <Pressable
             accessible={false}
             className={merged}
-            style={layout}
+            // While held it shrinks a little and dims: the feedback before the menu opens.
+            style={({ pressed }) => [layout, pressed ? HELD_STYLE : null]}
             onLongPress={longPress}
+            delayLongPress={HOLD_DELAY_MS}
             // TalkBack's actions menu reaches the same sheet as a long press.
             accessibilityActions={[{ name: "longpress", label: actionSheetTitle ?? MESSAGE_ACTIONS_TITLE }]}
             onAccessibilityAction={(event) => {

@@ -124,6 +124,7 @@ const larger = vi.hoisted(() => ({ value: false }));
 const reduceMotion = vi.hoisted(() => ({ value: false }));
 const insets = vi.hoisted(() => ({ top: 47, bottom: 34, left: 0, right: 0 }));
 const haptic = vi.hoisted(() => vi.fn());
+const impact = vi.hoisted(() => vi.fn());
 const openURL = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const animation = vi.hoisted(() => ({
   withTiming: vi.fn((to: number, config?: { duration?: number }) => ({ to, config })),
@@ -194,7 +195,7 @@ vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Bool
 vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => reduceMotion.value }));
 vi.mock("../src/Button", () => ({ Button: "Button" }));
-vi.mock("../src/haptics", () => ({ selectionHaptic: haptic }));
+vi.mock("../src/haptics", () => ({ selectionHaptic: haptic, impactHaptic: impact }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
 vi.mock("../src/primitives/overlay", () => ({ OverlayRoot: "OverlayRoot", OverlayModal: "OverlayModal" }));
 vi.mock("../src/primitives/sheet-drag", () => ({ SheetDragView: "SheetDragView" }));
@@ -467,9 +468,14 @@ describe("Message: long press, actions and highlight", () => {
     const pressable = find(h.tree, (el) => el.type === "Pressable")!;
     expect(pressable.props).toMatchObject({ accessible: false, testID: "m" });
     expect(pressable.props.className).toContain("w-full max-w-[95%] gap-2 x");
-    expect(flatten(pressable.props.style)).toMatchObject({ alignSelf: "flex-end", alignItems: "flex-end" });
+    // The style follows the press: the layout at rest, and a little smaller and dimmer while held.
+    expect(flatten(pressable.props.style({ pressed: false }))).toMatchObject({ alignSelf: "flex-end", alignItems: "flex-end" });
+    expect(flatten(pressable.props.style({ pressed: true }))).toMatchObject({ alignSelf: "flex-end", opacity: 0.9 });
+    expect(pressable.props.delayLongPress).toBe(350);
+    impact.mockClear();
     press(pressable, "onLongPress");
     expect(onLongPress).toHaveBeenCalledTimes(1);
+    expect(impact).toHaveBeenCalledWith("medium");
     expect(byType(h.tree, "Modal")).toHaveLength(0);
   });
 

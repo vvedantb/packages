@@ -162,6 +162,8 @@ declare module "react-native" {
       | ((state: PressableStateCallbackType) => StyleProp<ViewStyle>);
     onPress?: (event: GestureResponderEvent) => void;
     onLongPress?: (event: GestureResponderEvent) => void;
+    /** Hold time before `onLongPress`, in ms (React Native's default is 500). */
+    delayLongPress?: null | number;
     onPressIn?: (event: GestureResponderEvent) => void;
     onPressOut?: (event: GestureResponderEvent) => void;
     disabled?: boolean | null;
