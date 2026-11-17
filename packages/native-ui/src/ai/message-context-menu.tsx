@@ -1,25 +1,22 @@
 import type { ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cn } from "../cn";
 import { sizeStyle, typeStyle } from "../controlStyles";
-import { EASE_OUT } from "../motion";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
+import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageMenuRect } from "./message-menu-layout";
-
-const ENTER = { duration: 180, easing: EASE_OUT };
 
 /**
  * The iMessage hold menu for a chat message: the chat fades under a frosted
  * wash of the screen colour, the held message stays in place,
  * lifted, with the quick reactions in a pill above it and the actions in a
- * card below it, label first and icon last. The wash, the pill and the card
- * fade in over 180 ms (with Reduce Motion on, they appear at once). A tap outside, Android back
+ * card below it, label first and icon last. It fades in and out as one (the
+ * Modal's own fade; with Reduce Motion on, it appears at once). A tap outside, Android back
  * or the VoiceOver escape closes it; an action or a reaction closes it, then
  * runs. `Message` opens it with `menu`.
  */
@@ -47,6 +44,7 @@ export function MessageContextMenu({
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
+  const reduceMotion = useReduceMotion();
   const rowHeight = largerText ? 56 : 48;
   const body = chatTextSize("body", largerText);
   if (!open || anchor === null) return null;
@@ -69,14 +67,13 @@ export function MessageContextMenu({
       : { left: Math.max(MESSAGE_MENU.edge, Math.min(anchor.x, window.width - MESSAGE_MENU.edge - width)) };
   const surface = tokens.color.surface[scheme];
   const shadow = { shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8 };
-  // Reanimated's layout animations follow the system Reduce Motion by default.
-  const enter = FadeIn.duration(ENTER.duration).easing(ENTER.easing);
   const pillWidth = Math.min(window.width - 2 * MESSAGE_MENU.edge, (menu.reactions?.items.length ?? 0) * 48 + 16);
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
+    // The Modal's own fade: Reanimated entering animations do not run inside a Modal on Android.
+    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose}>
       <View style={{ flex: 1 }} testID={testID} accessibilityViewIsModal onAccessibilityEscape={onClose}>
-        <Animated.View entering={enter} style={StyleSheet.absoluteFill}>
+        <View style={StyleSheet.absoluteFill}>
           <Pressable
             testID={`${testID}-backdrop`}
             accessibilityRole="button"
@@ -86,7 +83,7 @@ export function MessageContextMenu({
             // entry reaches no optional peer, so it draws no `expo-blur`.
             style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(tokens.color.background[scheme], 0.85) }]}
           />
-        </Animated.View>
+        </View>
         {/* The held message, lifted: in place, a shadow under it, clipped when it is taller than the room. */}
         <View
           pointerEvents="none"
@@ -103,8 +100,7 @@ export function MessageContextMenu({
           {preview}
         </View>
         {menu.reactions ? (
-          <Animated.View
-            entering={enter}
+          <View
             accessibilityRole="toolbar"
             style={{
               position: "absolute",
@@ -134,10 +130,9 @@ export function MessageContextMenu({
                 </Pressable>
               );
             })}
-          </Animated.View>
+          </View>
         ) : null}
-        <Animated.View
-          entering={enter}
+        <View
           accessibilityRole="menu"
           style={{
             position: "absolute",
@@ -181,7 +176,7 @@ export function MessageContextMenu({
               </Pressable>
             );
           })}
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
