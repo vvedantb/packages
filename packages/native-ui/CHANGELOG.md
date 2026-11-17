@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.0
+
+### Minor Changes
+
+- [#274](https://github.com/vvedantb/packages/pull/274) [`77b0d8f`](https://github.com/vvedantb/packages/commit/77b0d8f7b0a91eb97bfbad99e4112d8ab4da9e2f) Thanks [@vvedantb](https://github.com/vvedantb)! - `BottomSheetContainer` now uses `@swmansion/react-native-bottom-sheet` in place of `@gorhom/bottom-sheet`. Apps must install the new library, remove `@gorhom/bottom-sheet` and remove `BottomSheetModalProvider`, which the sheet no longer needs. It needs React Native 0.82 or later and the New Architecture. A new optional `detents` prop sets the open detents (default `["40%"]`). The `@vvedantb/native-ui/native-bottom-sheet` subpath is removed: import from `@vvedantb/native-ui/bottom-sheet`.
+
 ## 0.23.0
 
 ### Minor Changes
