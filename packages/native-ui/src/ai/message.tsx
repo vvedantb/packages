@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import {
@@ -10,6 +10,7 @@ import {
   type IconProps,
 } from "@tabler/icons-react-native";
 import { cn } from "../cn";
+import { impactHaptic } from "../haptics";
 import { sizeStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
@@ -19,6 +20,8 @@ import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
 import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
+import { MessageContextMenu } from "./message-context-menu";
+import type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -33,6 +36,11 @@ export type MessageProps = ViewProps & {
    * the message is a plain `View`, as before.
    */
   onLongPress?: () => void;
+  /**
+   * The iMessage hold menu (`MessageContextMenu`): built when the message is
+   * held, so a long list builds none up front. Takes over from `actions`.
+   */
+  menu?: () => MessageMenu;
   /**
    * Actions for a `MessageActionSheet` that opens on a long press, such as
    * Reply and Copy. `onLongPress` also runs, before the sheet opens.
@@ -99,16 +107,23 @@ function MessageHighlight() {
  * at the start, its parts full width.
  *
  * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
- * `className`, `style` and view props) and a long press opens the
+ * `className`, `style` and view props): a 350 ms hold shrinks it a little,
+ * fires a medium haptic, runs `onLongPress` and opens the
  * `MessageActionSheet`; TalkBack reaches it as the `longpress` action. It stays
  * a non-accessible container so its buttons and links keep their own focus:
  * also offer the actions in a `MessageActionsBar` for screen reader users. `highlighted` draws the quote-jump highlight.
  */
+/** How long a hold takes, in ms: shorter than React Native's 500, as iMessage. */
+const HOLD_DELAY_MS = 350;
+/** A held message: a little smaller and dimmer. */
+const HELD_STYLE = { transform: [{ scale: 0.98 }], opacity: 0.9 };
+
 export function Message({
   from,
   className,
   style,
   onLongPress,
+  menu,
   actions,
   actionSheetTitle,
   highlighted = false,
@@ -118,11 +133,21 @@ export function Message({
 }: MessageProps) {
   const user = from === "user";
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pressing, setPressing] = useState(false);
+  // The open context menu: where the message was and what it offers, read at the hold.
+  const [held, setHeld] = useState<{ anchor: MessageMenuRect; menu: MessageMenu } | null>(null);
+  // Measured at the hold: the menu draws the message again where it is on screen.
+  const pressable = useRef<View>(null);
   const hasActions = actions != null && actions.length > 0;
-  const longPressable = onLongPress != null || hasActions;
+  const longPressable = onLongPress != null || hasActions || menu != null;
   const longPress = () => {
+    // A medium tap on a hold, as iMessage; the sheet adds its own selection tick.
+    impactHaptic("medium");
     onLongPress?.();
-    if (hasActions) setSheetOpen(true);
+    if (menu) {
+      const built = menu();
+      pressable.current?.measureInWindow((x, y, width, height) => setHeld({ anchor: { x, y, width, height }, menu: built }));
+    } else if (hasActions) setSheetOpen(true);
   };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
@@ -141,10 +166,16 @@ export function Message({
       {longPressable ? (
         <>
           <Pressable
+            ref={pressable}
             accessible={false}
             className={merged}
-            style={layout}
+            // While held it shrinks a little and dims: the feedback before the menu opens. A state, not a
+            // style function: with a `className`, NativeWind drops a style function, layout and all.
+            style={[layout, pressing ? HELD_STYLE : null]}
+            onPressIn={() => setPressing(true)}
+            onPressOut={() => setPressing(false)}
             onLongPress={longPress}
+            delayLongPress={HOLD_DELAY_MS}
             // TalkBack's actions menu reaches the same sheet as a long press.
             accessibilityActions={[{ name: "longpress", label: actionSheetTitle ?? MESSAGE_ACTIONS_TITLE }]}
             onAccessibilityAction={(event) => {
@@ -154,7 +185,22 @@ export function Message({
           >
             {parts}
           </Pressable>
-          {hasActions ? (
+          {menu ? (
+            <MessageContextMenu
+              open={held !== null}
+              onClose={() => setHeld(null)}
+              anchor={held?.anchor ?? null}
+              align={user ? "end" : "start"}
+              preview={
+                <MessageContext.Provider value={from}>
+                  <View className={merged} style={[layout, { maxWidth: "100%", width: "100%" }]}>
+                    {parts}
+                  </View>
+                </MessageContext.Provider>
+              }
+              menu={held?.menu ?? { actions: [] }}
+            />
+          ) : hasActions ? (
             <MessageActionSheet
               open={sheetOpen}
               onClose={() => setSheetOpen(false)}

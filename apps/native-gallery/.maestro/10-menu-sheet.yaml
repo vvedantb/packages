@@ -1,0 +1,36 @@
+# The menu sheet: its reaction row, a submenu page and back, and a row that closes it.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- tapOn:
+    id: menu-sheet-open
+- assertVisible:
+    id: menu-sort
+- assertVisible: "React 👍"
+- takeScreenshot: screenshots/layering-menu-sheet-open
+# A reaction stays in the sheet; the submenu swaps the page and Back returns.
+- tapOn: "Good response"
+- assertVisible:
+    id: menu-sort
+- tapOn:
+    id: menu-sort
+- assertVisible:
+    id: menu-sort-oldest
+- tapOn:
+    id: menu-sort-oldest
+- tapOn: "Back"
+- assertVisible:
+    id: menu-sort
+- assertVisible: "Oldest first"
+# A row closes the sheet and runs.
+- tapOn:
+    id: menu-delete
+- assertVisible: "Result: menu delete"
+- assertNotVisible:
+    id: menu-sort

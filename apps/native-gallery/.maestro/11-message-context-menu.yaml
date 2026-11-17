@@ -1,0 +1,25 @@
+# Holding a message opens the iMessage-style menu: the reaction pill above, the actions below.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-ai-cards
+- tapOn:
+    id: link-ai-cards
+- scrollUntilVisible:
+    element: "Hold this message"
+- longPressOn: "Hold this message"
+- assertVisible:
+    id: message-context-menu-action-copy
+- assertVisible: "React 👍"
+- takeScreenshot: screenshots/ai-cards-message-context-menu-open
+- tapOn: "React 👍"
+- assertNotVisible:
+    id: message-context-menu-action-copy
+- assertVisible: "Menu: none · reaction 👍"
+- longPressOn: "Hold this message"
+- tapOn:
+    id: message-context-menu-action-copy
+- assertVisible: "Menu: copy · reaction 👍"

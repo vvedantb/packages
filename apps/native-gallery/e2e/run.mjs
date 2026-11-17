@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -50,6 +50,29 @@ async function press(target) {
     const nodes = dumpNodes({ retries: 2 });
     if (resolveTarget(nodes, target).ok) {
       tap(target, nodes);
+      await settle();
+      return;
+    }
+    const [, , w, h] = nodes[0].bounds;
+    swipe(w / 2, Math.round(h * 0.75), w / 2, Math.round(h * 0.3), 300);
+    await settle();
+  }
+  throw new AgentError(`could not scroll "${target}" into view`);
+}
+
+/**
+ * A press and hold on a target (scrolled into view as `press` does): a swipe
+ * that stays put for 800 ms. The long press is a JS timer, which the frozen
+ * clock would never fire, so the clock runs for the hold and freezes again.
+ */
+async function hold(target) {
+  for (let i = 0; i < 8; i++) {
+    const nodes = dumpNodes({ retries: 2 });
+    const r = resolveTarget(nodes, target);
+    if (r.ok) {
+      await clock("resume");
+      swipe(r.x, r.y, r.x, r.y, 800);
+      await clock("freeze");
       await settle();
       return;
     }
@@ -243,6 +266,49 @@ const scenarios = {
     await gone("alert-cancel");
   },
   // The message action sheet slides up like a sheet and is gone once closed.
+  async menuSheet() {
+    await fresh();
+    await press("link-layering");
+    await see("layering-tab-bar");
+    await press("menu-sheet-open");
+    await see("menu-sort");
+    await see("React 👍");
+    shot("layering-menu-sheet-open");
+    // A reaction stays in the sheet; the submenu swaps the page and Back returns to the root.
+    await press("Good response");
+    await see("menu-sort");
+    await press("menu-sort");
+    await see("menu-sort-oldest");
+    await press("menu-sort-oldest");
+    await press("Back");
+    await see("menu-sort");
+    await see("Oldest first");
+    // A row closes the sheet and runs.
+    await press("menu-delete");
+    await see("Result: menu delete");
+    await gone("menu-sort");
+  },
+  async contextMenu() {
+    await fresh();
+    await press("link-ai-cards");
+    await hold("Hold this message");
+    await see("message-context-menu-action-copy");
+    await see("React 👍");
+    shot("ai-cards-message-context-menu-open");
+    // A reaction closes the menu and is kept; an action closes it and runs.
+    await press("React 👍");
+    await gone("message-context-menu-action-copy");
+    await see("Menu: none · reaction 👍");
+    await hold("Hold this message");
+    await press("message-context-menu-action-copy");
+    await see("Menu: copy · reaction 👍");
+    // Android back closes it (a tap on the backdrop's centre would land on the pill).
+    await hold("Hold this message");
+    await see("message-context-menu-action-copy");
+    back();
+    await settle();
+    await gone("message-context-menu-action-copy");
+  },
   async messageSheet() {
     await fresh();
     await press("link-ai-cards");
