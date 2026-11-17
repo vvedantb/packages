@@ -81,6 +81,13 @@ type ConversationContextValue = {
   /** The height of the `ConversationDock` under the thread, 0 without one. */
   dockHeight: number;
   setDockHeight: (height: number) => void;
+  /**
+   * True while a message's hold menu is open. Its window takes the focus on
+   * Android, and the keyboard handler of `ConversationList` would scroll the
+   * thread to its end; frozen, the list stays where the reader left it.
+   */
+  overlayOpen: boolean;
+  setOverlayOpen: (open: boolean) => void;
 };
 
 const ConversationContext = createContext<ConversationContextValue | null>(null);
@@ -90,6 +97,11 @@ export function useConversation() {
   const context = useContext(ConversationContext);
   if (!context) throw new Error("Conversation parts must be used within Conversation");
   return context;
+}
+
+/** The enclosing `Conversation`, or null for a message drawn outside one. */
+export function useOptionalConversation() {
+  return useContext(ConversationContext);
 }
 
 export type ConversationProps = ViewProps & { className?: string };
@@ -108,6 +120,7 @@ export function Conversation({ className, ...props }: ConversationProps) {
   const autoScrolling = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [dockHeight, setDockHeight] = useState(0);
+  const [overlayOpen, setOverlayOpen] = useState(false);
 
   const update = (next: boolean) => {
     atBottom.current = next;
@@ -137,6 +150,8 @@ export function Conversation({ className, ...props }: ConversationProps) {
     },
     dockHeight,
     setDockHeight,
+    overlayOpen,
+    setOverlayOpen,
   };
 
   return (
@@ -346,6 +361,7 @@ export function ConversationList<T>({
               <keyboard.ChatScrollView
                 {...scrollProps}
                 inverted={inverted}
+                freeze={conversation.overlayOpen}
                 // The composer pads the bottom inset, which the keyboard covers: the content rises by the rest.
                 bottomOffset={insets.bottom}
                 onInsetChange={(inset) => {

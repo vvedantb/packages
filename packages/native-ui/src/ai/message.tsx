@@ -20,6 +20,7 @@ import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
 import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
+import { useOptionalConversation } from "./conversation";
 import { MessageContextMenu } from "./message-context-menu";
 import type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 import { ChatTextColorContext, ResponseText } from "./response-text";
@@ -144,14 +145,21 @@ export function Message({
   const pressable = useRef<View>(null);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions || menu != null;
+  // In a thread, the open menu freezes the list's keyboard handling (see `overlayOpen`).
+  const conversation = useOptionalConversation();
   const longPress = () => {
     // A medium tap on a hold, as iMessage; the sheet adds its own selection tick.
     impactHaptic("medium");
     onLongPress?.();
     if (menu) {
       const built = menu();
+      conversation?.setOverlayOpen(true);
       pressable.current?.measureInWindow((x, y, width, height) => setHeld({ anchor: { x, y, width, height }, menu: built }));
     } else if (hasActions) setSheetOpen(true);
+  };
+  const closeMenu = () => {
+    setHeld(null);
+    conversation?.setOverlayOpen(false);
   };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
@@ -192,7 +200,7 @@ export function Message({
           {menu ? (
             <MessageContextMenu
               open={held !== null}
-              onClose={() => setHeld(null)}
+              onClose={closeMenu}
               anchor={held?.anchor ?? null}
               align={user ? "end" : "start"}
               preview={

@@ -31,12 +31,14 @@ export type KeyboardParts = {
    * gets that extra space as the scroll offset sees it, which `onScroll` does
    * not report: past the content's end, or when `inverted` before offset 0.
    * `onKeyboardMove` is true from the start to the end of each keyboard
-   * move, while the keyboard, not the reader, scrolls the list.
+   * move, while the keyboard, not the reader, scrolls the list. With
+   * `freeze`, keyboard events change nothing (an overlay window is open).
    */
   ChatScrollView: ComponentType<
     ScrollViewProps & {
       bottomOffset: number;
       inverted?: boolean;
+      freeze?: boolean;
       onInsetChange: (inset: number) => void;
       onKeyboardMove: (moving: boolean) => void;
     }

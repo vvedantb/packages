@@ -43,6 +43,7 @@ function StickyView({ bottomOffset, ...props }: ComponentProps<KeyboardParts["St
 function ChatScrollView({
   bottomOffset,
   inverted = false,
+  freeze = false,
   onInsetChange,
   onKeyboardMove,
   ...props
@@ -64,6 +65,8 @@ function ChatScrollView({
     <KeyboardChatScrollView
       {...props}
       inverted={inverted}
+      // An overlay window (a hold menu) takes the focus on Android: its keyboard events must not scroll the list.
+      freeze={freeze}
       offset={bottomOffset}
       keyboardLiftBehavior="always"
       onContentInsetChange={(insets) =>
