@@ -107,7 +107,7 @@ function MessageHighlight() {
  * at the start, its parts full width.
  *
  * With `onLongPress` or `actions` the message is a `Pressable` (same layout,
- * `className`, `style` and view props): a 350 ms hold shrinks it a little,
+ * `className`, `style` and view props): a 350 ms hold dims it a little,
  * fires a medium haptic, runs `onLongPress` and opens the
  * `MessageActionSheet`; TalkBack reaches it as the `longpress` action. It stays
  * a non-accessible container so its buttons and links keep their own focus:
@@ -115,8 +115,12 @@ function MessageHighlight() {
  */
 /** How long a hold takes, in ms: shorter than React Native's 500, as iMessage. */
 const HOLD_DELAY_MS = 350;
-/** A held message: a little smaller and dimmer. */
-const HELD_STYLE = { transform: [{ scale: 0.98 }], opacity: 0.9 };
+/**
+ * A held message dims a little. It does not shrink: the hold menu measures the
+ * message while it is held, and a scaled box would draw the lifted copy smaller
+ * (and could wrap its text differently).
+ */
+const HELD_STYLE = { opacity: 0.9 };
 
 export function Message({
   from,
@@ -169,7 +173,7 @@ export function Message({
             ref={pressable}
             accessible={false}
             className={merged}
-            // While held it shrinks a little and dims: the feedback before the menu opens. A state, not a
+            // While held it dims a little: the feedback before the menu opens. A state, not a
             // style function: with a `className`, NativeWind drops a style function, layout and all.
             style={[layout, pressing ? HELD_STYLE : null]}
             onPressIn={() => setPressing(true)}
