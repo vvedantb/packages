@@ -10,6 +10,7 @@ import { tokens } from "../src/tokens";
 // `bulk-action-bar.tsx`.
 
 const env = vi.hoisted(() => ({ width: 390, larger: false }));
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react-native", () => ({
   Platform: { OS: "android", select: (specifics: Record<string, unknown>) => specifics.android ?? specifics.default },
   Pressable: "Pressable",

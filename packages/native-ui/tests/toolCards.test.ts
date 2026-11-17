@@ -104,6 +104,7 @@ const hooks = vi.hoisted(() => {
   return { state, mount, useState, useRef, useEffect, useContext };
 });
 
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useState: hooks.useState,

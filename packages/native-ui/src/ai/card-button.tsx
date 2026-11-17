@@ -1,6 +1,7 @@
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
 import { cn } from "../cn";
 import { buttonColors, MIN_TOUCH_TARGET, sizeStyle, touchSlop, typeStyle, type ButtonVariant } from "../controlStyles";
+import { AnimatedPressable, usePressScale } from "../pressScale";
 import { useLargerText } from "../theme";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
@@ -23,8 +24,9 @@ export function CardButton({ label, variant, onPress, disabled, accessibilityLab
   const largerText = useLargerText();
   const size = chatTextSize("small", largerText);
   const colors = buttonColors(variant, scheme)!;
+  const press = usePressScale({ restOpacity: disabled ? 0.5 : 1, disabled: !!disabled });
   return (
-    <Pressable
+    <AnimatedPressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
@@ -32,18 +34,22 @@ export function CardButton({ label, variant, onPress, disabled, accessibilityLab
       disabled={disabled}
       onPress={onPress}
       hitSlop={touchSlop(MIN_TOUCH_TARGET)}
-      className={cn("items-center justify-center rounded-full border px-4 active:opacity-70")}
-      style={{
-        minHeight: MIN_TOUCH_TARGET,
-        minWidth: MIN_TOUCH_TARGET,
-        backgroundColor: colors.backgroundColor,
-        borderColor: colors.borderColor,
-        opacity: disabled ? 0.5 : 1,
-      }}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      className="items-center justify-center rounded-full border px-4"
+      style={[
+        {
+          minHeight: MIN_TOUCH_TARGET,
+          minWidth: MIN_TOUCH_TARGET,
+          backgroundColor: colors.backgroundColor,
+          borderColor: colors.borderColor,
+        },
+        press.style,
+      ]}
     >
       <Text className={cn(size, "font-instrument-sans-semibold")} style={[sizeStyle(size), typeStyle("semibold"), { color: colors.color }]}>
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }

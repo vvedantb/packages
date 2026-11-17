@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { IconSearch, IconX } from "@tabler/icons-react-native";
 import { Input as PrimitiveInput } from "./primitives/input";
 import { cn } from "./cn";
@@ -13,6 +13,7 @@ import {
   typeStyle,
   type SearchInputSize,
 } from "./controlStyles";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { palette } from "./palette";
 import { tokens } from "./tokens";
 import { useLargerText } from "./theme";
@@ -138,18 +139,13 @@ const SearchInput = React.forwardRef<
             className="absolute bottom-0 top-0 justify-center"
             style={{ right: metrics.clearRight }}
           >
-            <Pressable
-              testID="search-input-clear"
-              accessibilityRole="button"
-              accessibilityLabel={clearLabel}
-              hitSlop={touchSlop(metrics.clear)}
+            <ClearButton
+              label={clearLabel}
+              size={metrics.clear}
+              iconSize={metrics.clearIcon}
+              color={muted}
               onPress={() => change("")}
-              className="items-center justify-center rounded-md active:opacity-70"
-              style={{ width: metrics.clear, height: metrics.clear }}
-            >
-              {/* `strokeWidth`, not the web `stroke`: here `stroke` is the colour. */}
-              <IconX size={metrics.clearIcon} color={muted} strokeWidth={1.75} />
-            </Pressable>
+            />
           </View>
         ) : null}
       </View>
@@ -158,6 +154,38 @@ const SearchInput = React.forwardRef<
 );
 
 SearchInput.displayName = "SearchInput";
+
+function ClearButton({
+  label,
+  size,
+  iconSize,
+  color,
+  onPress,
+}: {
+  label: string;
+  size: number;
+  iconSize: number;
+  color: string;
+  onPress: () => void;
+}) {
+  const press = usePressScale();
+  return (
+    <AnimatedPressable
+      testID="search-input-clear"
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={touchSlop(size)}
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      className="items-center justify-center rounded-md"
+      style={[{ width: size, height: size }, press.style]}
+    >
+      {/* `strokeWidth`, not the web `stroke`: here `stroke` is the colour. */}
+      <IconX size={iconSize} color={color} strokeWidth={1.75} />
+    </AnimatedPressable>
+  );
+}
 
 export { SearchInput };
 export type { SearchInputProps };

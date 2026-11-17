@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Platform, Pressable, View } from "react-native";
+import { Platform, View } from "react-native";
 import { cn } from "./cn";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FloatingSurface } from "./FloatingSurface";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { useAccentColor, useLargerText } from "./theme";
 import {
   FLOATING_INSET,
@@ -24,6 +25,7 @@ export function FloatingFAB({
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
   const accentColor = useAccentColor();
+  const press = usePressScale({ scale: 0.95 });
   const size = largerText ? 64 : 56;
   const tabBar = largerText
     ? FLOATING_TAB_BAR_HEIGHT_LARGE
@@ -39,24 +41,29 @@ export function FloatingFAB({
       }}
     >
       <FloatingSurface radius={size / 2} blur={false}>
-        <Pressable
+        <AnimatedPressable
           testID={testID}
           accessibilityRole="button"
           accessibilityLabel={label}
           onPress={onPress}
-          // Layout in the function style and no `className`: NativeWind drops a
-          // function `style` next to a `className`.
-          style={({ pressed }) => ({
-            alignItems: "center",
-            justifyContent: "center",
-            width: size,
-            height: size,
-            backgroundColor: accentColor,
-            opacity: pressed ? 0.7 : 1,
-          })}
+          onPressIn={press.onPressIn}
+          onPressOut={press.onPressOut}
+          // Layout in `style` and no `className`: NativeWind drops a function
+          // `style` next to a `className`, and the press scale and dim come
+          // from the animated style, not a function style.
+          style={[
+            {
+              alignItems: "center",
+              justifyContent: "center",
+              width: size,
+              height: size,
+              backgroundColor: accentColor,
+            },
+            press.style,
+          ]}
         >
           {children}
-        </Pressable>
+        </AnimatedPressable>
       </FloatingSurface>
     </View>
   );
