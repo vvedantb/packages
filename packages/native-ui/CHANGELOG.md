@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.1
+
+### Patch Changes
+
+- [#278](https://github.com/vvedantb/packages/pull/278) [`859c35f`](https://github.com/vvedantb/packages/commit/859c35f7a81322aa448d1d97649bc0bfd3705fdd) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - The hold menu's lifted message sits on the screen colour with rounded corners, so a reply without a bubble no longer shows the dimmed original through it. A held `Message` now dims without shrinking, so the menu measures its real size and the lifted copy lines up with it.
+
 ## 0.25.0
 
 ### Minor Changes
