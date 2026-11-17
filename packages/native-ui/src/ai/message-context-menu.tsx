@@ -84,7 +84,7 @@ export function MessageContextMenu({
             style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(tokens.color.background[scheme], 0.85) }]}
           />
         </View>
-        {/* The held message, lifted: in place, a shadow under it, clipped when it is taller than the room. */}
+        {/* The held message, lifted: in place, on the screen colour with a shadow, clipped when it is taller than the room. */}
         <View
           pointerEvents="none"
           style={{
@@ -94,6 +94,9 @@ export function MessageContextMenu({
             width: anchor.width,
             height: layout.previewHeight,
             overflow: "hidden",
+            // The screen colour behind the copy: a reply without a bubble would show the dimmed original through it.
+            backgroundColor: tokens.color.background[scheme],
+            borderRadius: tokens.radius.card,
             ...shadow,
           }}
         >
