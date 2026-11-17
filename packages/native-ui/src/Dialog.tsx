@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconX } from "@tabler/icons-react-native";
 import { FloatingSurface } from "./FloatingSurface";
 import { cn } from "./cn";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { isCompactOverlay, textStyle, typeStyle } from "./controlStyles";
 import { DialogLayoutContext, useDialogLayout, type DialogLayout } from "./dialogLayout";
 import { palette } from "./palette";
@@ -162,14 +163,22 @@ function DialogHandle() {
 function DialogCloseButton() {
   const largerText = useLargerText();
   const scheme = useScheme();
+  const press = usePressScale();
+  // `asChild`: the close press goes into this animated `Pressable`, so the
+  // button scales while `overlay.tsx` stays as it is.
   return (
-    <DialogClose
-      testID="dialog-close"
-      accessibilityLabel="Close"
-      hitSlop={8}
-      className="absolute right-2 top-2 h-11 w-11 items-center justify-center rounded-lg active:opacity-70"
-    >
-      <IconX size={largerText ? 26 : 16} color={tokens.color.muted[scheme]} />
+    <DialogClose asChild>
+      <AnimatedPressable
+        testID="dialog-close"
+        accessibilityLabel="Close"
+        hitSlop={8}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={press.style}
+        className="absolute right-2 top-2 h-11 w-11 items-center justify-center rounded-lg"
+      >
+        <IconX size={largerText ? 26 : 16} color={tokens.color.muted[scheme]} />
+      </AnimatedPressable>
     </DialogClose>
   );
 }

@@ -1,8 +1,7 @@
 import type { ComponentType } from "react";
-import { Pressable } from "react-native";
 import type { IconProps } from "@tabler/icons-react-native";
-import { cn } from "./cn";
 import { touchSlop } from "./controlStyles";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { withAlpha } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
@@ -69,8 +68,9 @@ export function IconButton({
   const largerText = useLargerText();
   const [diameter, iconSize] = METRICS[largerText ? "larger" : "regular"][size];
   const { color, ...frame } = iconButtonColors(variant, scheme);
+  const press = usePressScale({ restOpacity: disabled ? 0.5 : 1, disabled });
   return (
-    <Pressable
+    <AnimatedPressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -78,10 +78,12 @@ export function IconButton({
       hitSlop={touchSlop(diameter)}
       disabled={disabled}
       onPress={onPress}
-      className={cn("items-center justify-center active:opacity-70", disabled && "opacity-50")}
-      style={{ width: diameter, height: diameter, borderRadius: diameter / 2, borderWidth: 1, ...frame }}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      className="items-center justify-center"
+      style={[{ width: diameter, height: diameter, borderRadius: diameter / 2, borderWidth: 1, ...frame }, press.style]}
     >
       <Icon size={iconSize} color={iconColor ?? color} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }

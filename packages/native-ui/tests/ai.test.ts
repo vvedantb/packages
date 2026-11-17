@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, buttonColors, touchSlop } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { expand } from "./pressScaleStub";
 
 // The AI chat parts (`@vvedantb/native-ui/ai`). There is no React renderer in
 // this package, so a small hook harness stands in for one: `mount` calls a
@@ -108,6 +109,7 @@ const hooks = vi.hoisted(() => {
   return { state, mount, useState, useRef, useEffect, useContext };
 });
 
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useState: hooks.useState,
@@ -1472,7 +1474,7 @@ describe("Suggestion, Source, FileChip and Attachment", () => {
     const { FileChip } = await import("../src/ai/file-chip");
     expect((FileChip({ name: "a.md" }) as unknown as Element).type).not.toBe("Pressable");
     const onOpenFile = vi.fn();
-    const chip = FileChip({ name: "a.md", path: "/docs/a.md", onOpenFile }) as unknown as Element;
+    const chip = expand(FileChip({ name: "a.md", path: "/docs/a.md", onOpenFile }) as unknown as Element);
     expect(chip.props).toMatchObject({ accessibilityRole: "button", accessibilityLabel: "a.md" });
     expect(chip.props.hitSlop).toEqual(touchSlop(MIN_TOUCH_TARGET, 22));
     (chip.props.onPress as () => void)();

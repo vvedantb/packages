@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, PAGE_HEADER_HEIGHT, cardStyle, touchSlop } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { expand, usePressScale } from "./pressScaleStub";
 
 // The 0.5.0 pieces for Verve, vibot and Velth: `ColorSwatches`, the
 // `DateTimeField` date mode, null value and clear button, the `ListRow`
@@ -38,6 +39,7 @@ const hooks = vi.hoisted(() => {
   return { useState, render, reset };
 });
 
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
@@ -53,6 +55,7 @@ vi.mock("react-native", () => ({
   TouchableOpacity: "TouchableOpacity",
 }));
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
+vi.mock("react-native-reanimated", () => ({ default: { View: "Animated.View" } }));
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
 }));
@@ -137,7 +140,7 @@ describe("ColorSwatches", () => {
       testID: "accent",
       ...props,
     } as Parameters<typeof ColorSwatches>[0]) as unknown as Element;
-    return { group, swatches: children(group), onChange };
+    return { group, swatches: children(group).map(expand), onChange };
   }
 
   it("is a labelled radio group of swatches, named by labels or their colour", async () => {
@@ -695,7 +698,8 @@ describe("IconButton", () => {
     expect(ofType(await button({ iconColor: "#ff0000" }), TestIcon)[0]!.props.color).toBe("#ff0000");
     const disabled = await button({ disabled: true });
     expect(disabled.props.disabled).toBe(true);
-    expect(disabled.props.className).toMatch(/opacity-50/);
+    expect(flatten(disabled.props.style).opacity).toBe(0.5);
+    expect(flatten(tree.props.style).opacity).toBe(1);
   });
 });
 
@@ -704,8 +708,7 @@ describe("CaptureButton", () => {
     const { CaptureButton } = await import("../src/CaptureButton");
     return CaptureButton(props as Parameters<typeof CaptureButton>[0]) as unknown as Element;
   }
-  const disc = (tree: Element, pressed: boolean) =>
-    flatten(((tree.props.children as (state: { pressed: boolean }) => Element)({ pressed })).props.style);
+  const disc = (tree: Element) => flatten((tree.props.children as Element).props.style);
 
   it("is a 76 white ring and disc named 'Take photo' by default", async () => {
     const tree = await shutter({ testID: "shutter" });
@@ -719,16 +722,18 @@ describe("CaptureButton", () => {
     expect(ring).toMatchObject({ width: 76, height: 76, borderColor: tokens.color.white });
     expect(ring.width as number).toBeGreaterThanOrEqual(72);
     expect(tree.props.hitSlop).toBeUndefined();
-    expect(disc(tree, false)).toMatchObject({ width: 60, backgroundColor: tokens.color.white, transform: [{ scale: 1 }] });
+    expect(disc(tree)).toMatchObject({ width: 60, backgroundColor: tokens.color.white });
     expect((await shutter({ accessibilityLabel: "Record" })).props.accessibilityLabel).toBe("Record");
   });
 
-  it("shrinks the disc while pressed, and not when disabled", async () => {
-    expect(disc(await shutter(), true).transform).toEqual([{ scale: 0.9 }]);
+  it("eases the disc to 0.9 in 100 ms while pressed, and not when disabled", async () => {
+    usePressScale.mockClear();
+    await shutter();
+    expect(usePressScale).toHaveBeenLastCalledWith(expect.objectContaining({ scale: 0.9, pressInMs: 100, disabled: false }));
     const disabled = await shutter({ disabled: true });
     expect(disabled.props.disabled).toBe(true);
     expect(disabled.props.className).toMatch(/opacity-50/);
-    expect(disc(disabled, true).transform).toEqual([{ scale: 1 }]);
+    expect(usePressScale).toHaveBeenLastCalledWith(expect.objectContaining({ disabled: true }));
   });
 });
 

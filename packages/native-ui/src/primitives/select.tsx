@@ -5,6 +5,7 @@ import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react-n
 import * as React from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
+import { EASE_OUT } from "../motion";
 import { NativeOnlyAnimatedView } from "./native-only-animated-view";
 import { SelectHost } from "./select-host";
 import { TextClassContext } from "./text";
@@ -80,6 +81,10 @@ type SelectContentProps = React.ComponentPropsWithoutRef<
   portalHost?: string;
 };
 
+/** The popover fades in and out on the strong ease-out. */
+const SELECT_ENTER = FadeIn.duration(150).easing(EASE_OUT);
+const SELECT_EXIT = FadeOut.duration(100).easing(EASE_OUT);
+
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   SelectContentProps
@@ -89,8 +94,8 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Overlay style={overlayFill}>
       <TextClassContext.Provider value="text-popover-foreground">
         <NativeOnlyAnimatedView
-          entering={FadeIn}
-          exiting={FadeOut}
+          entering={SELECT_ENTER}
+          exiting={SELECT_EXIT}
           className="z-50"
           // Content is absolutely positioned, so a bare wrapper has zero height
           // and UI tests drop its children as invisible. Fill the overlay and

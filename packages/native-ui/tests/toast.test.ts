@@ -17,6 +17,7 @@ import { tokens } from "../src/tokens";
 
 const scheme = vi.hoisted(() => ({ colorScheme: "light" as "light" | "dark" }));
 const larger = vi.hoisted(() => ({ value: false }));
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useEffect: () => {},

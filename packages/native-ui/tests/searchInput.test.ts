@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { scaledFieldHeight, searchInputSize, touchSlop } from "../src/controlStyles";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { expand } from "./pressScaleStub";
 
 // `SearchInput` against the web `search-input.tsx` and `clear-input.tsx`. The
 // behaviour checks call the component's render function with React Native,
@@ -12,6 +13,7 @@ import { tokens } from "../src/tokens";
 
 const larger = vi.hoisted(() => ({ value: false }));
 const fontScale = vi.hoisted(() => ({ value: 1 }));
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react-native", () => ({
   Platform: { OS: "ios", select: (specifics: Record<string, unknown>) => specifics.ios ?? specifics.default },
   View: "View",
@@ -116,7 +118,9 @@ async function render(props: Props, ref: unknown = null) {
   const input = all.find((element) => element.type === Input)!;
   const icon = all.find((element) => element.type === "IconSearch")!;
   const iconBox = all.find((element) => [element.props.children].flat().includes(icon))!;
-  const clear = all.find((element) => element.type === "Pressable");
+  // The clear button is its own component (it holds the press hook): call it once.
+  const clearElement = all.find((element) => typeof element.type === "function" && element.type.name === "ClearButton");
+  const clear = clearElement ? expand(clearElement) : undefined;
   return { input, icon, iconBox, clear, style: flatten(input.props.style) };
 }
 

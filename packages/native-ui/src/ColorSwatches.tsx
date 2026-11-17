@@ -1,8 +1,9 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { IconCheck } from "@tabler/icons-react-native";
 import { cn } from "./cn";
 import { touchSlop } from "./controlStyles";
 import { selectionHaptic } from "./haptics";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { withAlpha } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
@@ -91,43 +92,87 @@ export function ColorSwatches({
         const isSelected = color.toLowerCase() === selected;
         const check = isSelected ? swatchCheckColor(color) : null;
         return (
-          <Pressable
+          <Swatch
             key={`${color}-${index}`}
             testID={testID ? `${testID}-${index}` : undefined}
-            accessibilityRole="radio"
-            accessibilityLabel={labels?.[index] ?? color}
-            accessibilityState={{ checked: isSelected, disabled }}
-            hitSlop={touchSlop(outer)}
+            label={labels?.[index] ?? color}
+            color={color}
+            selected={isSelected}
+            check={check}
             disabled={disabled}
+            diameter={diameter}
+            outer={outer}
             onPress={() => {
               selectionHaptic();
               onChange(color);
             }}
-            className="items-center justify-center active:opacity-70"
-            style={{
-              width: outer,
-              height: outer,
-              borderRadius: outer / 2,
-              borderWidth: RING,
-              borderColor: isSelected ? tokens.color.foreground[scheme] : "transparent",
-            }}
-          >
-            <View
-              className="items-center justify-center"
-              style={{
-                width: diameter,
-                height: diameter,
-                borderRadius: diameter / 2,
-                backgroundColor: color,
-                borderWidth: 1,
-                borderColor: withAlpha(tokens.color.foreground[scheme], 0.12),
-              }}
-            >
-              {check ? <IconCheck size={Math.round(diameter / 2)} color={check} strokeWidth={2} /> : null}
-            </View>
-          </Pressable>
+          />
         );
       })}
     </View>
+  );
+}
+
+/** One swatch: a radio that scales a little on press. The slop does not scale. */
+function Swatch({
+  testID,
+  label,
+  color,
+  selected,
+  check,
+  disabled,
+  diameter,
+  outer,
+  onPress,
+}: {
+  testID?: string;
+  label: string;
+  color: string;
+  selected: boolean;
+  check: string | null;
+  disabled: boolean;
+  diameter: number;
+  outer: number;
+  onPress: () => void;
+}) {
+  const scheme = useScheme();
+  const press = usePressScale({ disabled });
+  return (
+    <AnimatedPressable
+      testID={testID}
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: selected, disabled }}
+      hitSlop={touchSlop(outer)}
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      className="items-center justify-center"
+      style={[
+        {
+          width: outer,
+          height: outer,
+          borderRadius: outer / 2,
+          borderWidth: RING,
+          borderColor: selected ? tokens.color.foreground[scheme] : "transparent",
+        },
+        press.style,
+      ]}
+    >
+      <View
+        className="items-center justify-center"
+        style={{
+          width: diameter,
+          height: diameter,
+          borderRadius: diameter / 2,
+          backgroundColor: color,
+          borderWidth: 1,
+          borderColor: withAlpha(tokens.color.foreground[scheme], 0.12),
+        }}
+      >
+        {check ? <IconCheck size={Math.round(diameter / 2)} color={check} strokeWidth={2} /> : null}
+      </View>
+    </AnimatedPressable>
   );
 }

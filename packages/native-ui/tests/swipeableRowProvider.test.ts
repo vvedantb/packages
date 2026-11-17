@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 type Element = ReactElement<{ children?: unknown; value?: unknown; enabled?: boolean }>;
 
 const contexts = vi.hoisted(() => ({ values: new Map<unknown, unknown>() }));
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
   return {

@@ -1,7 +1,8 @@
 import { Children, type ReactNode } from "react";
-import { Pressable, Text, View, type ViewProps } from "react-native";
+import { Text, View, type ViewProps } from "react-native";
 import { cn } from "./cn";
 import { cardStyle, textStyle, typeStyle } from "./controlStyles";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { StatusDot } from "./StatusDot";
 import { Spinner } from "./Spinner";
 import { useLargerText } from "./theme";
@@ -31,16 +32,19 @@ export type PinnedBotTileProps = {
 export function PinnedBotTile({ title, leading, unread = false, generating = false, onPress, onLongPress, testID }: PinnedBotTileProps) {
   const scheme = useScheme();
   const largerText = useLargerText();
+  const press = usePressScale();
   const state = [unread ? "unread" : null, generating ? "generating" : null].filter(Boolean).join(", ");
   return (
-    <Pressable
+    <AnimatedPressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={state ? `${title}, ${state}` : title}
       onPress={onPress}
       onLongPress={onLongPress}
-      className={cn("min-w-0 items-center justify-center gap-2 px-3 py-4 active:opacity-70", largerText ? "min-h-36" : "min-h-28")}
-      style={cardStyle(scheme)}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      className={cn("min-w-0 items-center justify-center gap-2 px-3 py-4", largerText ? "min-h-36" : "min-h-28")}
+      style={[cardStyle(scheme), press.style]}
     >
       {leading}
       <Text
@@ -60,7 +64,7 @@ export function PinnedBotTile({ title, leading, unread = false, generating = fal
           <Spinner size="sm" decorative />
         </View>
       ) : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

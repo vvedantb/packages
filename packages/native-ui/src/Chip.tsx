@@ -1,4 +1,5 @@
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
+import { AnimatedPressable, usePressScale } from "./pressScale";
 import { textStyle, typeStyle } from "./controlStyles";
 import { useLargerText } from "./theme";
 import { useScheme } from "./useScheme";
@@ -18,6 +19,7 @@ export function Chip({
 }) {
   const largerText = useLargerText();
   const scheme = useScheme();
+  const press = usePressScale();
   const size = round
     ? largerText
       ? "h-14 w-14"
@@ -26,13 +28,16 @@ export function Chip({
       ? "min-h-14 px-5 py-3"
       : "min-h-12 px-4 py-2";
   return (
-    <Pressable
+    <AnimatedPressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`items-center justify-center rounded-full border border-white/40 active:opacity-70 dark:border-white/10 ${
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={press.style}
+      className={`items-center justify-center rounded-full border border-white/40 dark:border-white/10 ${
         size
       } ${selected ? "bg-pink-100 dark:bg-pink-900/40" : "bg-secondary"}`}
     >
@@ -46,6 +51,6 @@ export function Chip({
       >
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }

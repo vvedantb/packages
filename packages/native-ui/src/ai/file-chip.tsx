@@ -1,7 +1,8 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { IconFile } from "@tabler/icons-react-native";
 import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop } from "../controlStyles";
+import { AnimatedPressable, usePressScale } from "../pressScale";
 import { palette } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -51,16 +52,24 @@ export type FileChipProps = {
  */
 export function FileChip({ name, path, onOpenFile }: FileChipProps) {
   if (!path || !onOpenFile) return <FileChipLabel name={name} />;
+  return <FileChipButton name={name} path={path} onOpenFile={onOpenFile} />;
+}
+
+function FileChipButton({ name, path, onOpenFile }: { name: string; path: string; onOpenFile: (path: string) => void }) {
+  const press = usePressScale();
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={name}
       accessibilityHint={path}
       hitSlop={touchSlop(MIN_TOUCH_TARGET, CHIP_HEIGHT)}
       onPress={() => onOpenFile(path)}
-      className="min-w-0 max-w-full active:opacity-70"
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={press.style}
+      className="min-w-0 max-w-full"
     >
       <FileChipLabel name={name} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }

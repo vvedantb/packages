@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const larger = vi.hoisted(() => ({ value: false }));
 const router = vi.hoisted(() => ({ canGoBack: vi.fn(), back: vi.fn(), replace: vi.fn(), push: vi.fn() }));
 
+vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useContext: () => "inline",

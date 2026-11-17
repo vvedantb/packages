@@ -541,6 +541,10 @@ declare module "react-native-reanimated" {
     View: React.ComponentType<AnimatedProps<ViewProps>>;
     Text: React.ComponentType<Omit<TextProps, "style"> & { style?: StyleProp<TextStyle> }>;
     ScrollView: typeof AnimatedScrollView;
+    /** Wraps a component so its `style` takes animated styles (`Pressable` in `src/motion.ts`). */
+    createAnimatedComponent<P extends object>(
+      component: React.ComponentType<P>,
+    ): React.ComponentType<Omit<P, "style"> & { style?: StyleProp<ViewStyle> }>;
   };
   declare namespace Animated {
     type ScrollView = AnimatedScrollView;
