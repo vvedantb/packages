@@ -23,6 +23,7 @@ import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageM
 export function MessageContextMenu({
   open,
   onClose,
+  onDismissed,
   anchor,
   align,
   preview,
@@ -31,6 +32,8 @@ export function MessageContextMenu({
 }: {
   open: boolean;
   onClose: () => void;
+  /** After the menu has gone from the screen (iOS; Android gives no such callback for a `Modal`). */
+  onDismissed?: () => void;
   /** The held message's box; the menu stays shut without one. */
   anchor: MessageMenuRect | null;
   /** Which side the pill and the card line up with: the message's (`end` for the user's). */
@@ -71,7 +74,7 @@ export function MessageContextMenu({
 
   return (
     // The Modal's own fade: Reanimated entering animations do not run inside a Modal on Android.
-    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose} onDismiss={onDismissed}>
       <View style={{ flex: 1 }} testID={testID} accessibilityViewIsModal onAccessibilityEscape={onClose}>
         <View style={StyleSheet.absoluteFill}>
           <Pressable

@@ -69,7 +69,7 @@ export function Conversation({ className, ...props }: ConversationProps) {
   const autoScrolling = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [dockHeight, setDockHeight] = useState(0);
-  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [overlay, setOverlay] = useState<ConversationContextValue["overlay"]>("none");
 
   const update = (next: boolean) => {
     atBottom.current = next;
@@ -99,8 +99,10 @@ export function Conversation({ className, ...props }: ConversationProps) {
     },
     dockHeight,
     setDockHeight,
-    overlayOpen,
-    setOverlayOpen,
+    overlay,
+    openOverlay: () => setOverlay("open"),
+    closeOverlay: () => setOverlay("closing"),
+    settleOverlay: () => setOverlay((current) => (current === "closing" ? "none" : current)),
   };
 
   return (
@@ -165,6 +167,7 @@ function useConversationScroll<P extends ConversationScrollHandlers>(
     },
     onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       conversation.onUserScroll();
+      conversation.settleOverlay();
       onScrollBeginDrag?.(event);
     },
     // The app's handler first, so a scroller that measures itself (`ConversationList`) has the new size to follow.
@@ -310,7 +313,7 @@ export function ConversationList<T>({
               <keyboard.ChatScrollView
                 {...scrollProps}
                 inverted={inverted}
-                freeze={conversation.overlayOpen}
+                freeze={conversation.overlay !== "none"}
                 // The composer pads the bottom inset, which the keyboard covers: the content rises by the rest.
                 bottomOffset={insets.bottom}
                 onInsetChange={(inset) => {
@@ -318,6 +321,8 @@ export function ConversationList<T>({
                 }}
                 onKeyboardMove={(moving) => {
                   size.current.keyboardMoving = moving;
+                  // The closing menu's window hands the focus back with a keyboard event: frozen until it ends.
+                  if (!moving) conversation.settleOverlay();
                 }}
               />
             )

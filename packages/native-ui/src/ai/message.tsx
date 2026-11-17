@@ -145,7 +145,7 @@ export function Message({
   const pressable = useRef<View>(null);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions || menu != null;
-  // In a thread, the open menu freezes the list's keyboard handling (see `overlayOpen`).
+  // In a thread, the menu freezes the list's keyboard handling until its close settles (see `overlay`).
   const conversation = useOptionalConversation();
   const longPress = () => {
     // A medium tap on a hold, as iMessage; the sheet adds its own selection tick.
@@ -153,13 +153,13 @@ export function Message({
     onLongPress?.();
     if (menu) {
       const built = menu();
-      conversation?.setOverlayOpen(true);
+      conversation?.openOverlay();
       pressable.current?.measureInWindow((x, y, width, height) => setHeld({ anchor: { x, y, width, height }, menu: built }));
     } else if (hasActions) setSheetOpen(true);
   };
   const closeMenu = () => {
     setHeld(null);
-    conversation?.setOverlayOpen(false);
+    conversation?.closeOverlay();
   };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
@@ -201,6 +201,7 @@ export function Message({
             <MessageContextMenu
               open={held !== null}
               onClose={closeMenu}
+              onDismissed={conversation?.settleOverlay}
               anchor={held?.anchor ?? null}
               align={user ? "end" : "start"}
               preview={
