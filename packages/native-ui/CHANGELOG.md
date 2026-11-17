@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.2
+
+### Patch Changes
+
+- [#276](https://github.com/vvedantb/packages/pull/276) [`5931aa1`](https://github.com/vvedantb/packages/commit/5931aa173f568529ffbc2c7c52bacdeacb1e7bed) Thanks [@vvedantb](https://github.com/vvedantb)! - Add motion to three overlays. The dropdown menu now fades and scales in from the corner nearest its trigger, then fades out. The message action sheet now slides up and down like `Sheet`, and a drag down closes it. Centred dialogs (`Dialog`, `AlertDialog` and `ConfirmDialog`) now scale in from 0.96 with a fade. With Reduce Motion on, all three appear and leave in place.
+
 ## 0.24.1
 
 ### Patch Changes
