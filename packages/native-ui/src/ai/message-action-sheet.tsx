@@ -20,6 +20,8 @@ export type MessageSheetAction = {
   icon?: ComponentType<IconProps>;
   /** Draws the row in the danger colour, such as Delete. */
   destructive?: boolean;
+  /** Dims the row and ignores presses (the context menu's rows; the sheet leaves a disabled action out). */
+  disabled?: boolean;
   onPress: () => void;
 };
 

@@ -1,7 +1,7 @@
 // AI parts that AiChatGallery does not show: tool and subagent cards, quotes, sheets, folds and Markdown.
 import { useState } from "react";
 import { View } from "react-native";
-import { IconTrash } from "@tabler/icons-react-native";
+import { IconArrowBackUp, IconCopy, IconTrash } from "@tabler/icons-react-native";
 import { ProviderIcon } from "@vvedantb/native-ui/brand";
 import { GenerativeUiPanel } from "@vvedantb/native-ui/generative-ui";
 import { Markdown } from "@vvedantb/native-ui/markdown";
@@ -101,6 +101,8 @@ const COMMANDS = [
 
 export function AiCardsSection() {
   const [command, setCommand] = useState("none");
+  const [menuResult, setMenuResult] = useState("none");
+  const [menuReaction, setMenuReaction] = useState("none");
   const [chip, setChip] = useState(false);
   const [diffLine, setDiffLine] = useState("none");
   const [decision, setDecision] = useState("none");
@@ -201,6 +203,33 @@ export function AiCardsSection() {
             { key: "delete", label: "Delete", icon: IconTrash, destructive: true, onPress: () => setSheetResult("delete") },
           ]}
         />
+      </Block>
+      <Block title="MessageContextMenu (hold a message)">
+        <Message
+          from="user"
+          menu={() => ({
+            reactions: {
+              items: ["❤️", "👍", "👎", "😂", "‼️", "❓"].map((emoji) => ({
+                key: emoji,
+                label: `React ${emoji}`,
+                selected: menuReaction === emoji,
+                render: () => <GText style={{ fontSize: 22 }}>{emoji}</GText>,
+              })),
+              onPress: (key) => setMenuReaction(menuReaction === key ? "none" : key),
+            },
+            actions: [
+              { key: "reply", label: "Reply", icon: IconArrowBackUp, onPress: () => setMenuResult("reply") },
+              { key: "copy", label: "Copy", icon: IconCopy, onPress: () => setMenuResult("copy") },
+              { key: "forward", label: "Forward to a very long named place that does not fit", disabled: true, onPress: () => setMenuResult("forward") },
+              { key: "delete", label: "Delete", icon: IconTrash, destructive: true, onPress: () => setMenuResult("delete") },
+            ],
+          })}
+        >
+          <MessageContent>
+            <ResponseText>Hold this message</ResponseText>
+          </MessageContent>
+        </Message>
+        <GText testID="context-menu-result">{`Menu: ${menuResult} · reaction ${menuReaction}`}</GText>
       </Block>
       <Block title="ChoiceQuestion">
         <ChoiceQuestion

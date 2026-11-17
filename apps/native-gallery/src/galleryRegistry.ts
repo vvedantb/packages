@@ -162,6 +162,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   Message: "ai-cards",
   MessageAction: "ai-chat",
   MessageActionSheet: "ai-cards",
+  MessageContextMenu: "ai-cards",
   MessageActionsBar: "ai-chat",
   MessageBotLabel: "ai-cards",
   MessageContent: "ai-cards",

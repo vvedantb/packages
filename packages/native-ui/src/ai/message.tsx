@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import {
@@ -20,6 +20,8 @@ import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
 import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
+import { MessageContextMenu } from "./message-context-menu";
+import type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 import { ChatTextColorContext, ResponseText } from "./response-text";
 
 export type MessageRole = "user" | "assistant" | "system";
@@ -34,6 +36,11 @@ export type MessageProps = ViewProps & {
    * the message is a plain `View`, as before.
    */
   onLongPress?: () => void;
+  /**
+   * The iMessage hold menu (`MessageContextMenu`): built when the message is
+   * held, so a long list builds none up front. Takes over from `actions`.
+   */
+  menu?: () => MessageMenu;
   /**
    * Actions for a `MessageActionSheet` that opens on a long press, such as
    * Reply and Copy. `onLongPress` also runs, before the sheet opens.
@@ -116,6 +123,7 @@ export function Message({
   className,
   style,
   onLongPress,
+  menu,
   actions,
   actionSheetTitle,
   highlighted = false,
@@ -125,13 +133,20 @@ export function Message({
 }: MessageProps) {
   const user = from === "user";
   const [sheetOpen, setSheetOpen] = useState(false);
+  // The open context menu: where the message was and what it offers, read at the hold.
+  const [held, setHeld] = useState<{ anchor: MessageMenuRect; menu: MessageMenu } | null>(null);
+  // Measured at the hold: the menu draws the message again where it is on screen.
+  const pressable = useRef<View>(null);
   const hasActions = actions != null && actions.length > 0;
-  const longPressable = onLongPress != null || hasActions;
+  const longPressable = onLongPress != null || hasActions || menu != null;
   const longPress = () => {
     // A medium tap on a hold, as iMessage; the sheet adds its own selection tick.
     impactHaptic("medium");
     onLongPress?.();
-    if (hasActions) setSheetOpen(true);
+    if (menu) {
+      const built = menu();
+      pressable.current?.measureInWindow((x, y, width, height) => setHeld({ anchor: { x, y, width, height }, menu: built }));
+    } else if (hasActions) setSheetOpen(true);
   };
   const layout: ViewProps["style"] = [
     { alignSelf: user ? "flex-end" : "flex-start", alignItems: user ? "flex-end" : "stretch" },
@@ -150,6 +165,7 @@ export function Message({
       {longPressable ? (
         <>
           <Pressable
+            ref={pressable}
             accessible={false}
             className={merged}
             // While held it shrinks a little and dims: the feedback before the menu opens.
@@ -165,7 +181,22 @@ export function Message({
           >
             {parts}
           </Pressable>
-          {hasActions ? (
+          {menu ? (
+            <MessageContextMenu
+              open={held !== null}
+              onClose={() => setHeld(null)}
+              anchor={held?.anchor ?? null}
+              align={user ? "end" : "start"}
+              preview={
+                <MessageContext.Provider value={from}>
+                  <View className={merged} style={[layout, { maxWidth: "100%", width: "100%" }]}>
+                    {parts}
+                  </View>
+                </MessageContext.Provider>
+              }
+              menu={held?.menu ?? { actions: [] }}
+            />
+          ) : hasActions ? (
             <MessageActionSheet
               open={sheetOpen}
               onClose={() => setSheetOpen(false)}

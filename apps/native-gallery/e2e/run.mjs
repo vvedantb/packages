@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -50,6 +50,23 @@ async function press(target) {
     const nodes = dumpNodes({ retries: 2 });
     if (resolveTarget(nodes, target).ok) {
       tap(target, nodes);
+      await settle();
+      return;
+    }
+    const [, , w, h] = nodes[0].bounds;
+    swipe(w / 2, Math.round(h * 0.75), w / 2, Math.round(h * 0.3), 300);
+    await settle();
+  }
+  throw new AgentError(`could not scroll "${target}" into view`);
+}
+
+/** A press and hold on a target (scrolled into view as `press` does): a swipe that stays put for 800 ms. */
+async function hold(target) {
+  for (let i = 0; i < 8; i++) {
+    const nodes = dumpNodes({ retries: 2 });
+    const r = resolveTarget(nodes, target);
+    if (r.ok) {
+      swipe(r.x, r.y, r.x, r.y, 800);
       await settle();
       return;
     }
@@ -264,6 +281,25 @@ const scenarios = {
     await press("menu-delete");
     await see("Result: menu delete");
     await gone("menu-sort");
+  },
+  async contextMenu() {
+    await fresh();
+    await press("link-ai-cards");
+    await hold("Hold this message");
+    await see("message-context-menu-action-copy");
+    await see("React 👍");
+    shot("ai-cards-message-context-menu-open");
+    // A reaction closes the menu and is kept; an action closes it and runs.
+    await press("React 👍");
+    await gone("message-context-menu-action-copy");
+    await see("Menu: none · reaction 👍");
+    await hold("Hold this message");
+    await press("message-context-menu-action-copy");
+    await see("Menu: copy · reaction 👍");
+    // A tap outside closes it.
+    await hold("Hold this message");
+    await press("message-context-menu-backdrop");
+    await gone("message-context-menu-action-copy");
   },
   async messageSheet() {
     await fresh();

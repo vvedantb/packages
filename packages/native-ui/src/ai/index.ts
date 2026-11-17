@@ -60,6 +60,9 @@ export type {
 } from "./message";
 export { MessageActionSheet } from "./message-action-sheet";
 export type { MessageActionSheetProps, MessageSheetAction } from "./message-action-sheet";
+export { MessageContextMenu } from "./message-context-menu";
+export { messageContextMenuLayout, MESSAGE_MENU } from "./message-menu-layout";
+export type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 export { ReplyQuoteChip } from "./reply-quote-chip";
 export type { ReplyQuoteChipProps } from "./reply-quote-chip";
 export { MessageQuote, QUOTE_MAX_LINES } from "./message-quote";
