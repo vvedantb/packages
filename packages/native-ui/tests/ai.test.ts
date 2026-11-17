@@ -233,6 +233,8 @@ vi.mock("../src/theme", () => ({ useLargerText: () => larger.value }));
 vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => reduceMotion.value }));
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
+vi.mock("../src/primitives/overlay", () => ({ OverlayRoot: "OverlayRoot", OverlayModal: "OverlayModal" }));
+vi.mock("../src/primitives/sheet-drag", () => ({ SheetDragView: "SheetDragView" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 

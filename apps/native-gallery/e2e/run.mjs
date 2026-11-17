@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -231,6 +231,26 @@ const scenarios = {
     shot("bottom-sheet-multi-detent");
     await press("native-sheet-close");
     await gone("native-sheet-body");
+  },
+  // A centred dialog scales in over a fading backdrop and is gone once closed.
+  async dialog() {
+    await fresh();
+    await press("link-layering");
+    await press("alert-open");
+    await see("alert-cancel");
+    shot("layering-alert-dialog-open");
+    await press("alert-cancel");
+    await gone("alert-cancel");
+  },
+  // The message action sheet slides up like a sheet and is gone once closed.
+  async messageSheet() {
+    await fresh();
+    await press("link-ai-cards");
+    await press("open-message-sheet");
+    await see("message-action-sheet-action-copy");
+    shot("ai-cards-message-action-sheet-open");
+    await press("message-action-sheet-cancel");
+    await gone("message-action-sheet-action-copy");
   },
   // Tabs linked to a Pager's progress run the sliding indicator's worklet on the
   // UI thread. A worklet that calls a plain JS function closes the app here.

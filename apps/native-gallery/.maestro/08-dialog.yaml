@@ -1,0 +1,22 @@
+# A centred dialog opens over the tab bar and closes again.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layering
+- tapOn:
+    id: link-layering
+- scrollUntilVisible:
+    element:
+      id: alert-open
+- tapOn:
+    id: alert-open
+- assertVisible:
+    id: alert-cancel
+- takeScreenshot: screenshots/layering-alert-dialog-open
+- tapOn:
+    id: alert-cancel
+- assertNotVisible:
+    id: alert-cancel

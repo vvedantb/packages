@@ -18,6 +18,7 @@ vi.mock("react", async (importOriginal) => ({
   useContext: () => menu.value,
   useState: <T>(initial: T) => [initial, vi.fn()],
   useRef: () => menu.ref,
+  useEffect: () => {},
 }));
 vi.mock("react-native", () => ({
   Modal: "Modal",
@@ -27,6 +28,15 @@ vi.mock("react-native", () => ({
   View: "View",
   StyleSheet: { absoluteFill: { position: "absolute" } },
   useWindowDimensions: () => ({ width: 390, height: 844, scale: 3, fontScale: 1 }),
+}));
+vi.mock("react-native-reanimated", () => ({
+  default: { View: "Animated.View" },
+  Easing: { bezier: () => "ease-out" },
+  ReduceMotion: { System: "system" },
+  runOnJS: () => () => {},
+  useAnimatedStyle: () => ({}),
+  useSharedValue: <T>(value: T) => ({ get: () => value, set: () => {} }),
+  withTiming: () => 0,
 }));
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
@@ -153,7 +163,7 @@ describe("DropdownMenu parts", () => {
     const value = context(true);
     const modal = DropdownMenuContent({ align: "end", children: "items" }) as unknown as Element;
     expect(modal.type).toBe("Modal");
-    expect(modal.props).toMatchObject({ visible: true, transparent: true, animationType: "fade", statusBarTranslucent: true });
+    expect(modal.props).toMatchObject({ visible: true, transparent: true, animationType: "none", statusBarTranslucent: true });
     (modal.props.onRequestClose as () => void)();
     // A full-size host under the Modal (as `OverlayModal` has), holding the backdrop and the menu.
     const host = modal.props.children as Element;

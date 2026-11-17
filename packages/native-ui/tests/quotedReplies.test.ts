@@ -196,6 +196,8 @@ vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => reduceMotion.v
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/haptics", () => ({ selectionHaptic: haptic }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
+vi.mock("../src/primitives/overlay", () => ({ OverlayRoot: "OverlayRoot", OverlayModal: "OverlayModal" }));
+vi.mock("../src/primitives/sheet-drag", () => ({ SheetDragView: "SheetDragView" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 
@@ -236,6 +238,8 @@ afterEach(() => {
 });
 
 const press = (element: Element | undefined, name: string) => (element!.props[name] as (...args: unknown[]) => void)();
+const press2 = (element: Element | undefined, name: string, ...args: unknown[]) =>
+  (element!.props[name] as (...args: unknown[]) => void)(...args);
 
 describe("MessageActionSheet", () => {
   async function sheet(props: Record<string, unknown> = {}) {
@@ -256,14 +260,18 @@ describe("MessageActionSheet", () => {
   }
   const row = (tree: Element, key: string) => find(tree, (el) => el.props.testID === `message-action-sheet-action-${key}`);
 
-  it("is a transparent Modal that closes on Android back and fades, or not with Reduce Motion", async () => {
+  it("is a bottom sheet in the kit's overlay that closes on Android back, a backdrop tap and a drag", async () => {
     const { h, onClose } = await sheet();
-    expect(h.tree.type).toBe("Modal");
-    expect(h.tree.props).toMatchObject({ visible: true, transparent: true, animationType: "fade" });
-    press(h.tree, "onRequestClose");
+    expect(h.tree.type).toBe("OverlayRoot");
+    expect(h.tree.props.open).toBe(true);
+    const modal = find(h.tree, (el) => el.type === "OverlayModal")!;
+    expect(modal.props).toMatchObject({ part: "message-action-sheet", placement: "bottom", dismissible: true });
+    // The overlay reports every way of closing through `onOpenChange`.
+    press2(h.tree, "onOpenChange", true);
+    expect(onClose).not.toHaveBeenCalled();
+    press2(h.tree, "onOpenChange", false);
     expect(onClose).toHaveBeenCalledTimes(1);
-    reduceMotion.value = true;
-    expect((await sheet()).h.tree.props.animationType).toBe("none");
+    expect(find(h.tree, (el) => el.type === "SheetDragView")!.props.enabled).toBe(true);
   });
 
   it("lists the actions in order, Reply first, each a labelled button", async () => {
@@ -297,7 +305,7 @@ describe("MessageActionSheet", () => {
 
   it("closes on the backdrop and on Cancel without running an action", async () => {
     const { h, onClose, reply, copy, remove } = await sheet();
-    press(find(h.tree, (el) => el.props.testID === "message-action-sheet-backdrop"), "onPress");
+    press2(h.tree, "onOpenChange", false);
     press(find(h.tree, (el) => el.props.testID === "message-action-sheet-cancel"), "onPress");
     expect(onClose).toHaveBeenCalledTimes(2);
     for (const fn of [reply, copy, remove]) expect(fn).not.toHaveBeenCalled();

@@ -194,6 +194,8 @@ vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => reduceMotion.v
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/haptics", () => ({ selectionHaptic: haptic }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
+vi.mock("../src/primitives/overlay", () => ({ OverlayRoot: "OverlayRoot", OverlayModal: "OverlayModal" }));
+vi.mock("../src/primitives/sheet-drag", () => ({ SheetDragView: "SheetDragView" }));
 vi.mock("../src/primitives/input", () => ({ Input: "FieldInput" }));
 vi.mock("../src/Input", () => ({ Input: "DraftInput" }));
 vi.mock("../src/Textarea", () => ({ Textarea: "DraftTextarea" }));

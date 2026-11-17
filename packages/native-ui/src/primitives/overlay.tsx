@@ -15,10 +15,16 @@ import {
   View,
   type GestureResponderEvent,
 } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette } from "../palette";
 import { KeyboardAvoidingView, KeyboardLiftContext } from "./keyboard-parts";
+import { DIALOG_ENTER, DIALOG_EXIT, PANEL_SCALE_FROM } from "../motion";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import {
@@ -113,7 +119,9 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
  * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance
  * (`KeyboardAvoidingView`: frame by frame with `KeyboardControllerProvider`).
  * `placement="center"` centres the child (dialogs) inside the insets on every
- * side, and the `Modal` fades in and out. `"bottom"` pins it to the bottom
+ * side: the backdrop fades while the panel scales from 0.96 and fades in (200
+ * ms on open, 150 ms on close), and the `Modal` stays up until it is out of
+ * sight. `"bottom"` pins it to the bottom
  * edge (sheets), which pad their own bottom inset: the sheet slides up on
  * open and back down on close, however it closes, and may be dragged down to
  * close (`SheetDragView`); the backdrop fades with the sheet's position. The
@@ -142,10 +150,11 @@ export function OverlayModal({
   const { open, setOpen } = useOverlay(part);
   const reduceMotion = useReduceMotion();
   const slides = placement === "bottom" && !reduceMotion;
-  // Up while open, and after a close until a sliding sheet is out of sight.
+  const scales = placement === "center" && !reduceMotion;
+  // Up while open, and after a close until a sliding sheet or a scaling dialog is out of sight.
   const [shown, setShown] = useState(open);
   if (open && !shown) setShown(true);
-  if (!open && shown && !slides) setShown(false);
+  if (!open && shown && !slides && !scales) setShown(false);
   const close = () => setOpen(false);
   const ModalRoot = useContext(SheetGestureContext)?.ModalRoot ?? Fragment;
 
@@ -153,7 +162,7 @@ export function OverlayModal({
     <Modal
       visible={shown}
       transparent
-      animationType={slides || reduceMotion ? "none" : "fade"}
+      animationType="none"
       statusBarTranslucent
       onRequestClose={close}
       onShow={onShow}
@@ -164,6 +173,7 @@ export function OverlayModal({
           dismissible={dismissible}
           open={open}
           slides={slides}
+          scales={scales}
           close={close}
           onHidden={() => setShown(false)}
           part={part}
@@ -182,6 +192,7 @@ function OverlayModalBody({
   dismissible,
   open,
   slides,
+  scales,
   close,
   onHidden,
   children,
@@ -191,6 +202,7 @@ function OverlayModalBody({
   dismissible: boolean;
   open: boolean;
   slides: boolean;
+  scales: boolean;
   close: () => void;
   onHidden: () => void;
   children: ReactNode;
@@ -198,7 +210,17 @@ function OverlayModalBody({
   const scheme = useScheme();
   const insets = useSafeAreaInsets();
   const drag = useSheetDragState(close, slides);
-  const backdropStyle = useSheetBackdropStyle(drag);
+  const sheetBackdropStyle = useSheetBackdropStyle(drag);
+  // A centred dialog: one 0 to 1 `progress` drives the backdrop fade and the
+  // panel's scale and opacity. It mounts at 0 with each opening, and at 1
+  // under Reduce Motion, so there the dialog simply appears.
+  const progress = useSharedValue(scales ? 0 : 1);
+  const centreBackdropStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
+  const centrePanelStyle = useAnimatedStyle(() => ({
+    opacity: progress.get(),
+    transform: [{ scale: PANEL_SCALE_FROM + (1 - PANEL_SCALE_FROM) * progress.get() }],
+  }));
+  const backdropStyle = placement === "center" ? centreBackdropStyle : sheetBackdropStyle;
   // The open state lives in React, the sheet's position on the UI thread:
   // each change of `open` starts the slide that matches it. The slide in on
   // opening starts from the sheet's first layout (`SheetDragView`).
@@ -208,6 +230,23 @@ function OverlayModalBody({
     else slideSheetOut(drag, onHidden);
     // Only a change of `open` starts a slide; `drag` and `onHidden` keep their meaning.
   }, [open, slides]);
+  // The same for a centred dialog, from wherever `progress` is. Opened again
+  // while it leaves, it turns back at once, and the exit callback reports
+  // `finished` false, so the `Modal` stays up.
+  useEffect(() => {
+    if (!scales) return;
+    if (open) {
+      progress.set(withTiming(1, DIALOG_ENTER));
+    } else {
+      progress.set(
+        withTiming(0, DIALOG_EXIT, (finished) => {
+          "worklet";
+          if (finished) runOnJS(onHidden)();
+        }),
+      );
+    }
+    // As the slide: only a change of `open` starts it.
+  }, [open, scales]);
   return (
     <SheetDragProvider value={drag}>
       {/* Android too: a modal window with `statusBarTranslucent` may not
@@ -231,7 +270,7 @@ function OverlayModalBody({
               style={StyleSheet.absoluteFill}
             />
           </Animated.View>
-          <View
+          <Animated.View
             pointerEvents="box-none"
             onAccessibilityEscape={close}
             style={[
@@ -250,10 +289,11 @@ function OverlayModalBody({
                     paddingLeft: insets.left + 16,
                     paddingRight: insets.right + 16,
                   },
+              placement === "center" ? centrePanelStyle : null,
             ]}
           >
             {children}
-          </View>
+          </Animated.View>
         </KeyboardLiftContext.Provider>
       </KeyboardAvoidingView>
     </SheetDragProvider>

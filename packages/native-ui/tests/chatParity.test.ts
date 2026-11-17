@@ -39,6 +39,8 @@ vi.mock("../src/Sheet", () => ({ Sheet: "Sheet", SheetBody: "SheetBody", SheetCo
 vi.mock("../src/SheetRow", () => ({ SheetRow: "SheetRow" }));
 vi.mock("../src/Button", () => ({ Button: "Button" }));
 vi.mock("../src/Spinner", () => ({ Spinner: "Spinner" }));
+vi.mock("../src/primitives/overlay", () => ({ OverlayRoot: "OverlayRoot", OverlayModal: "OverlayModal" }));
+vi.mock("../src/primitives/sheet-drag", () => ({ SheetDragView: "SheetDragView" }));
 vi.mock("../src/useReduceMotion", () => ({ useReduceMotion: () => false }));
 vi.mock("../src/primitives/native-only-animated-view", () => ({ NativeOnlyAnimatedView: "NativeOnlyAnimatedView" }));
 vi.mock("../src/ai/response-text", () => ({ ChatTextColorContext: { Provider: "Provider" }, ResponseText: "ResponseText" }));
