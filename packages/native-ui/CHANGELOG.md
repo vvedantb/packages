@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.1
+
+### Patch Changes
+
+- [#275](https://github.com/vvedantb/packages/pull/275) [`9a77eb6`](https://github.com/vvedantb/packages/commit/9a77eb69243cadf447d3c5f83de2f62daf9d5200) Thanks [@vvedantb](https://github.com/vvedantb)! - Small controls (icon buttons, chips, pinned bot tiles, colour swatches, card buttons, file chips, the search clear button, the dialog close button and the floating action button) now scale slightly on press and keep a light dim. The camera shutter disc eases down on press, and the `Select` popover fades with set timing. With Reduce Motion on, nothing animates.
+
 ## 0.24.0
 
 ### Minor Changes
