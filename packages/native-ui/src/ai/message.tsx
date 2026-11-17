@@ -20,7 +20,7 @@ import { useScheme } from "../useScheme";
 import { META_TEXT_STYLE, chatTextSize } from "./chat-text";
 import { ChatIconButton, type ChatIconButtonSize } from "./icon-button";
 import { MESSAGE_ACTIONS_TITLE, MessageActionSheet, type MessageSheetAction } from "./message-action-sheet";
-import { useOptionalConversation } from "./conversation";
+import { useOptionalConversation } from "./conversation-context";
 import { MessageContextMenu } from "./message-context-menu";
 import type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 import { ChatTextColorContext, ResponseText } from "./response-text";
