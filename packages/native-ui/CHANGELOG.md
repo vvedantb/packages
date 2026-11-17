@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.0
+
+### Minor Changes
+
+- [#277](https://github.com/vvedantb/packages/pull/277) [`bfa9006`](https://github.com/vvedantb/packages/commit/bfa90069022ab7e80dbe3f99cc7548007a4bf22a) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Add `MessageContextMenu` and `Message`'s `menu` prop: holding a message opens an iMessage-style menu, with the chat under a frosted wash, the message lifted in place, its quick reactions in a pill above and its actions in a card below (label first, icon last; `disabled` actions dim). The parts move to stay on screen (`messageContextMenuLayout`). Add `MenuSheet`, `SubmenuRow` and `MenuDivider` (a menu as one bottom sheet, with submenu pages and a back button) and `ReactionRow` (round reaction toggles, tinted for emoji or solid for icons). A `Message` hold now takes 350 ms, shrinks it a little while held and gives a medium haptic. `MessageSheetAction` gains `disabled`.
+
 ## 0.24.2
 
 ### Patch Changes
