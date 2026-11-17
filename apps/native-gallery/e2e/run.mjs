@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -243,6 +243,28 @@ const scenarios = {
     await gone("alert-cancel");
   },
   // The message action sheet slides up like a sheet and is gone once closed.
+  async menuSheet() {
+    await fresh();
+    await press("link-layering");
+    await see("layering-tab-bar");
+    await press("menu-sheet-open");
+    await see("menu-sort");
+    await see("React 👍");
+    shot("layering-menu-sheet-open");
+    // A reaction stays in the sheet; the submenu swaps the page and Back returns to the root.
+    await press("Good response");
+    await see("menu-sort");
+    await press("menu-sort");
+    await see("menu-sort-oldest");
+    await press("menu-sort-oldest");
+    await press("Back");
+    await see("menu-sort");
+    await see("Oldest first");
+    // A row closes the sheet and runs.
+    await press("menu-delete");
+    await see("Result: menu delete");
+    await gone("menu-sort");
+  },
   async messageSheet() {
     await fresh();
     await press("link-ai-cards");
