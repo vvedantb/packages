@@ -26,6 +26,6 @@
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "babel-plugin-react-compiler": "1.0.0",
-    "tsc-rs": "0.1.0"
+    "tsrs": "7.1.0-beta.tsrs2"
   }
 }

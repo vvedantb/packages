@@ -188,8 +188,8 @@
     "check:exports": "node scripts/check-exports.mjs",
     "check:hermes": "node scripts/check-hermes-compat.mjs",
     "test": "vitest run",
-    "typecheck": "tsc-rs --noEmit -p tsconfig.typecheck.json && pnpm run typecheck:consumer",
-    "typecheck:consumer": "tsc-rs --noEmit -p tsconfig.consumer.json",
+    "typecheck": "tsrs --noEmit --fast -p tsconfig.typecheck.json && pnpm run typecheck:consumer",
+    "typecheck:consumer": "tsrs --noEmit --fast -p tsconfig.consumer.json",
     "prepack": "node -e \"require('node:fs').accessSync('dist/index.js')\"",
     "build:baseline": "node scripts/build-dist.mjs --update"
   },

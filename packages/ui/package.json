@@ -99,7 +99,7 @@
     "check:client-graph": "node scripts/check-client-graph.mjs",
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
     "build": "node scripts/build-dist.mjs && node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
-    "typecheck": "tsc-rs --noEmit -p tsconfig.json && tsc-rs --noEmit -p tsconfig.consumer.json && tsc-rs --noEmit -p tsconfig.consumer-speech.json && tsc-rs --noEmit -p tokens/tsconfig.json",
+    "typecheck": "tsrs --noEmit --fast -p tsconfig.json && tsrs --noEmit --fast -p tsconfig.consumer.json && tsrs --noEmit --fast -p tsconfig.consumer-speech.json && tsrs --noEmit --fast -p tokens/tsconfig.json",
     "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
     "analyze": "node tokens/verify/analyze.mjs",
