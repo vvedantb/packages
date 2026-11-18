@@ -1774,3 +1774,40 @@ describe("AI parts (package contract)", () => {
     });
   });
 });
+
+describe("MessageContextMenu", () => {
+  it("opens with the pill and card a little small and the message unlifted, then times all three in on the menu's layout", async () => {
+    const { MessageContextMenu } = await import("../src/ai/message-context-menu");
+    const { POPOVER_ENTER } = await import("../src/motion");
+    const h = hooks.mount(
+      () =>
+        MessageContextMenu({
+          open: true,
+          onClose: () => {},
+          anchor: { x: 20, y: 300, width: 300, height: 80 },
+          align: "end",
+          preview: "MESSAGE",
+          menu: {
+            reactions: { items: [{ key: "up", label: "Good", render: () => "UP" }], onPress: () => {} },
+            actions: [{ key: "copy", label: "Copy", onPress: () => {} }],
+          },
+        }) as unknown as Element,
+    );
+    const scale = (element: Element) => (flatten(element.props.style).transform as Array<{ scale: number }>)[0]!.scale;
+    const pill = find(h.tree, (element) => element.props.accessibilityRole === "toolbar")!;
+    const card = find(h.tree, (element) => element.props.accessibilityRole === "menu")!;
+    const lifted = find(h.tree, (element) => element.props.pointerEvents === "none")!;
+    expect([pill.type, card.type, lifted.type]).toEqual(["Animated.View", "Animated.View", "Animated.View"]);
+    // Before the menu lays out: the panels at 0.96, growing from the corner next to the message.
+    expect(scale(pill)).toBeCloseTo(0.96);
+    expect(scale(card)).toBeCloseTo(0.96);
+    expect(scale(lifted)).toBe(1);
+    expect(flatten(pill.props.style).transformOrigin).toBe("right bottom");
+    expect(flatten(card.props.style).transformOrigin).toBe("right top");
+    // The first layout times them in with the popover's 150 ms, which Reduce Motion skips.
+    animation.withTiming.mockClear();
+    const root = find(h.tree, (element) => element.props.accessibilityViewIsModal === true)!;
+    (root.props.onLayout as () => void)();
+    expect(animation.withTiming).toHaveBeenCalledExactlyOnceWith(1, POPOVER_ENTER);
+  });
+});
