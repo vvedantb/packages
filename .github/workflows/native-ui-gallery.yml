@@ -34,7 +34,7 @@ env:
 jobs:
   native-ui-gallery-android:
     name: native-ui-gallery-android
-    runs-on: ubuntu-latest
+    runs-on: boat-large
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
