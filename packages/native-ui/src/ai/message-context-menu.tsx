@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cn } from "../cn";
+import { WindowLayer } from "../primitives/window-layer";
 import { PANEL_SCALE_FROM, POPOVER_ENTER } from "../motion";
 import { sizeStyle, typeStyle } from "../controlStyles";
 import { palette, withAlpha } from "../palette";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
-import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageMenuRect } from "./message-menu-layout";
@@ -21,8 +21,9 @@ const LIFT_SCALE = 1.02;
  * The iMessage hold menu for a chat message: the chat fades under a frosted
  * wash of the screen colour, the held message stays in place,
  * lifted, with the quick reactions in a pill above it and the actions in a
- * card below it, label first and icon last. It fades in and out as one (the
- * Modal's own fade; with Reduce Motion on, it appears at once). As it fades
+ * card below it, label first and icon last. It draws in the app's window
+ * (`WindowLayer`) and fades in and out as one; with Reduce Motion on, it
+ * appears at once. As it fades
  * in, the pill and the card grow into place from the message's side (0.96 to
  * 1) and the held message lifts a little (to 1.02), in 150 ms; with Reduce
  * Motion they are in place at once. A tap outside, Android back
@@ -56,11 +57,10 @@ export function MessageContextMenu({
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
-  const reduceMotion = useReduceMotion();
   const rowHeight = largerText ? 56 : 48;
   const body = chatTextSize("body", largerText);
-  // 0 to 1 as the menu opens. Started from the menu's first layout: Reanimated's
-  // entering animations do not run inside a Modal on Android, a shared value does.
+  // 0 to 1 as the menu opens, started from the menu's first layout: a shared value runs in a
+  // layer and in the fallback Modal alike (Reanimated's entering does not run inside a Modal on Android).
   const shown = useSharedValue(0);
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: PANEL_SCALE_FROM + (1 - PANEL_SCALE_FROM) * shown.get() }] }));
   const liftStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + (LIFT_SCALE - 1) * shown.get() }] }));
@@ -92,8 +92,9 @@ export function MessageContextMenu({
   const pillWidth = Math.min(window.width - 2 * MESSAGE_MENU.edge, (menu.reactions?.items.length ?? 0) * 48 + 16);
 
   return (
-    // The Modal's own fade: Reanimated entering animations do not run inside a Modal on Android.
-    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose} onDismiss={onDismissed}>
+    // In the app's window (`WindowLayer`): a Modal's own window moved the focus on Android, and the chat
+    // list's keyboard handling scrolled to the newest message as it opened and closed.
+    <WindowLayer onRequestClose={onClose} onDismiss={onDismissed}>
       <View style={{ flex: 1 }} testID={testID} accessibilityViewIsModal onAccessibilityEscape={onClose} onLayout={appear}>
         <View style={StyleSheet.absoluteFill}>
           <Pressable
@@ -191,7 +192,7 @@ export function MessageContextMenu({
           ))}
         </Animated.View>
       </View>
-    </Modal>
+    </WindowLayer>
   );
 }
 

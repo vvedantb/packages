@@ -269,4 +269,6 @@ export const NON_VISUAL_COMPONENTS: Record<string, string> = {
   KeyboardControllerProvider:
     "A context provider with no view of its own. It needs the app-wide KeyboardProvider of react-native-keyboard-controller, which would change every keyboard flow in the gallery. The entry is imported in src/entries.ts.",
   ExpoWebRoot: "Renders <html>, <head> and <body>, so it is web only. Covered by tests/expoWebRoot.test.ts.",
+  WindowLayerHost:
+    "A host with no view of its own: it wraps the navigator in app/_layout.tsx, and the hold menu (AI cards, chat-hold) and the image viewer (layout, chat-hold) draw into it.",
 };

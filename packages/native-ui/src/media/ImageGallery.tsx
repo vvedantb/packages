@@ -1,12 +1,12 @@
 import { useContext, useState, type ReactNode } from "react";
-import { FlatList, Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { FlatList, Image, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconExternalLink, IconX } from "@tabler/icons-react-native";
 import { typeStyle } from "../controlStyles";
+import { WindowLayer } from "../primitives/window-layer";
 import { IconButton } from "../IconButton";
 import { withAlpha } from "../palette";
 import { tokens } from "../tokens";
-import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { ZoomImageContext } from "./zoomImage";
 import { imageAspect, imageGridTiles, imageViewerPage, MEDIA, type GalleryImage, type ImageGridTile } from "./imageGrid";
@@ -156,14 +156,15 @@ export type ImageViewerProps = {
  * at once with Reduce Motion.
  */
 export function ImageViewer({ images, index, onIndexChange, onClose, onOpenImage }: ImageViewerProps) {
-  const reduceMotion = useReduceMotion();
   if (index === null) return null;
   return (
-    <Modal visible transparent statusBarTranslucent animationType={reduceMotion ? "none" : "fade"} onRequestClose={onClose}>
+    // In the app's window (`WindowLayer`): a Modal's own window moved the focus on Android, and a chat
+    // list under the viewer scrolled to its newest message as it opened and closed.
+    <WindowLayer onRequestClose={onClose}>
       <ViewerRoot>
         <ViewerPages images={images} index={index} onIndexChange={onIndexChange} onClose={onClose} onOpenImage={onOpenImage} />
       </ViewerRoot>
-    </Modal>
+    </WindowLayer>
   );
 }
 

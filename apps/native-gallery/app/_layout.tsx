@@ -9,6 +9,7 @@ import { Toaster } from "@vvedantb/native-ui/toast";
 import { tokens } from "@vvedantb/native-ui/theme";
 import { GalleryProvider } from "../src/GalleryContext";
 import { useEffect } from "react";
+import { WindowLayerHost } from "@vvedantb/native-ui/primitives";
 
 // Agent builds only (EXPO_PUBLIC_NATIVE_UI_AGENT=1): a test clock, a deep-link bridge
 // and reduced motion. Metro inlines the flag and folds each branch away, so the default
@@ -34,12 +35,15 @@ function Shell() {
     <>
       {AgentMotion ? <AgentMotion /> : null}
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: tokens.color.background[scheme] },
-        }}
-      />
+      {/* The hold menu and the image viewer draw over the screens here, in the app's window. */}
+      <WindowLayerHost>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: tokens.color.background[scheme] },
+          }}
+        />
+      </WindowLayerHost>
       {/* One PortalHost at the root, outside any Modal: `Select` renders into it. */}
       <PortalHost />
       {/* ParityGallery mounts its own Toaster; a second one would draw every toast twice. */}

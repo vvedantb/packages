@@ -430,6 +430,7 @@ declare module "react-native-reanimated" {
     delay(ms: number): LayoutAnimationBuilder;
     easing(easing: EasingFunction): LayoutAnimationBuilder;
     springify(): LayoutAnimationBuilder;
+    reduceMotion(reduceMotion: ReduceMotion): LayoutAnimationBuilder;
   }
   export const FadeIn: LayoutAnimationBuilder;
   export const FadeOut: LayoutAnimationBuilder;
