@@ -24,7 +24,7 @@ export const SECTIONS: SectionDef[] = [
   { id: "ai-cards", title: "AI cards, sheets and Markdown", Component: AiCardsSection },
 ];
 
-/** Full-screen routes: `/parity`, `/ai`, `/auth`, `/layering`, `/keyboard`, `/bottom-sheet`. */
+/** Full-screen routes: `/parity`, `/ai`, `/auth`, `/layering`, `/keyboard`, `/bottom-sheet`, `/chat-hold`. */
 export const SCREENS = [
   { id: "parity", title: "Parity gallery (ParityGallery)" },
   { id: "ai", title: "AI chat (AiChatGallery)" },
@@ -32,6 +32,7 @@ export const SCREENS = [
   { id: "layering", title: "Layering stress" },
   { id: "keyboard", title: "Keyboard and composer" },
   { id: "bottom-sheet", title: "Bottom sheet" },
+  { id: "chat-hold", title: "Long chat with hold menus" },
 ] as const;
 
 export { AiChatGallery, ParityGallery };

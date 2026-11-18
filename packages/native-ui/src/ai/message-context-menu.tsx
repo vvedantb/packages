@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cn } from "../cn";
@@ -23,6 +23,7 @@ import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageM
 export function MessageContextMenu({
   open,
   onClose,
+  onDismissed,
   anchor,
   align,
   preview,
@@ -31,6 +32,8 @@ export function MessageContextMenu({
 }: {
   open: boolean;
   onClose: () => void;
+  /** After the menu has gone from the screen (iOS; Android gives no such callback for a `Modal`). */
+  onDismissed?: () => void;
   /** The held message's box; the menu stays shut without one. */
   anchor: MessageMenuRect | null;
   /** Which side the pill and the card line up with: the message's (`end` for the user's). */
@@ -71,7 +74,7 @@ export function MessageContextMenu({
 
   return (
     // The Modal's own fade: Reanimated entering animations do not run inside a Modal on Android.
-    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible transparent animationType={reduceMotion ? "none" : "fade"} statusBarTranslucent onRequestClose={onClose} onDismiss={onDismissed}>
       <View style={{ flex: 1 }} testID={testID} accessibilityViewIsModal onAccessibilityEscape={onClose}>
         <View style={StyleSheet.absoluteFill}>
           <Pressable
@@ -149,38 +152,79 @@ export function MessageContextMenu({
             ...shadow,
           }}
         >
-          {menu.actions.map((action, index) => {
-            const Icon = action.icon;
-            const color = action.destructive ? palette.danger[scheme] : tokens.color.foreground[scheme];
-            return (
-              <Pressable
-                key={action.key}
-                testID={`${testID}-action-${action.key}`}
-                accessibilityRole="menuitem"
-                accessibilityLabel={action.label}
-                accessibilityState={{ disabled: action.disabled === true }}
-                disabled={action.disabled === true}
-                onPress={() => run(action.onPress)}
-                // A static style: with a `className`, NativeWind drops a style function.
-                className="flex-row items-center gap-3 px-4 active:opacity-70"
-                style={[
-                  { minHeight: rowHeight, opacity: action.disabled ? 0.5 : 1 },
-                  index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.color.separator[scheme] },
-                ]}
-              >
-                <Text
-                  numberOfLines={1}
-                  className={cn(body, "min-w-0 flex-1 font-instrument-sans")}
-                  style={[sizeStyle(body), typeStyle("medium"), { color }]}
-                >
-                  {action.label}
-                </Text>
-                {Icon ? <Icon size={largerText ? 22 : 20} color={color} /> : null}
-              </Pressable>
-            );
-          })}
+          {menu.actions.map((action, index) => (
+            <MenuCardRow
+              key={action.key}
+              testID={`${testID}-action-${action.key}`}
+              action={action}
+              first={index === 0}
+              rowHeight={rowHeight}
+              body={body}
+              iconSize={largerText ? 22 : 20}
+              onPress={() => run(action.onPress)}
+            />
+          ))}
         </View>
       </View>
     </Modal>
+  );
+}
+
+/**
+ * One card row: label first, icon last. While pressed it takes the
+ * `SheetRow` pressed fill, so the finger sees which row it is on.
+ */
+function MenuCardRow({
+  testID,
+  action,
+  first,
+  rowHeight,
+  body,
+  iconSize,
+  onPress,
+}: {
+  testID: string;
+  action: MessageMenu["actions"][number];
+  first: boolean;
+  rowHeight: number;
+  body: ReturnType<typeof chatTextSize>;
+  iconSize: number;
+  onPress: () => void;
+}) {
+  const scheme = useScheme();
+  // A state, not a style function: with a `className`, NativeWind drops a style function.
+  const [pressed, setPressed] = useState(false);
+  const disabled = action.disabled === true;
+  const Icon = action.icon;
+  const color = action.destructive ? palette.danger[scheme] : tokens.color.foreground[scheme];
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="menuitem"
+      accessibilityLabel={action.label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      className="flex-row items-center gap-3 px-4"
+      style={[
+        {
+          minHeight: rowHeight,
+          opacity: disabled ? 0.5 : 1,
+          backgroundColor: pressed && !disabled ? palette.default[scheme] : "transparent",
+        },
+        !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.color.separator[scheme] },
+      ]}
+    >
+      <Text
+        numberOfLines={1}
+        className={cn(body, "min-w-0 flex-1 font-instrument-sans")}
+        style={[sizeStyle(body), typeStyle("medium"), { color }]}
+      >
+        {action.label}
+      </Text>
+      {Icon ? <Icon size={iconSize} color={color} /> : null}
+    </Pressable>
   );
 }

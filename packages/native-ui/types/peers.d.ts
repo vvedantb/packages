@@ -668,6 +668,7 @@ declare module "react-native-keyboard-controller" {
       inverted?: boolean;
       offset?: number;
       keyboardLiftBehavior?: "always" | "whenAtEnd" | "persistent" | "never";
+      freeze?: boolean;
       onContentInsetChange?: (insets: ScrollViewContentInsets) => void;
       children?: React.ReactNode;
     }

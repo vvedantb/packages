@@ -1,13 +1,4 @@
-import {
-  createContext,
-  isValidElement,
-  useContext,
-  useRef,
-  useState,
-  type ComponentType,
-  type ReactNode,
-  type RefObject,
-} from "react";
+import { isValidElement, useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
   FlatList,
   Platform,
@@ -38,6 +29,7 @@ import { tokens } from "../tokens";
 import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
+import { ConversationContext, useConversation, type ConversationContextValue, type ConversationScroller } from "./conversation-context";
 
 /** Within this many points of the end, the thread counts as at the bottom and keeps following new content. */
 export const AT_BOTTOM_THRESHOLD = 70;
@@ -59,38 +51,7 @@ export function isScrolledToBottom(
   return contentSize.height + bottomInset - layoutMeasurement.height - contentOffset.y <= AT_BOTTOM_THRESHOLD;
 }
 
-/**
- * What the thread scrolls with: the `ScrollView` of `ConversationContent` or
- * the `FlatList` of `ConversationList`. `scrollToEnd` goes to the newest
- * message, which is offset 0 in an inverted list. `scrollTo` goes to an
- * offset; only the `ScrollView` has it, so call it as `scrollTo?.(...)`.
- */
-export type ConversationScroller = {
-  scrollToEnd: (options?: { animated?: boolean }) => void;
-  scrollTo?: (options: { y: number; animated?: boolean }) => void;
-};
-
-type ConversationContextValue = {
-  isAtBottom: boolean;
-  scrollToBottom: () => void;
-  scrollRef: RefObject<ConversationScroller | null>;
-  /** `bottomInset` and `inverted`, as `isScrolledToBottom`. */
-  onScroll: (event: NativeScrollEvent, bottomInset?: number, inverted?: boolean) => void;
-  onUserScroll: () => void;
-  followContent: () => void;
-  /** The height of the `ConversationDock` under the thread, 0 without one. */
-  dockHeight: number;
-  setDockHeight: (height: number) => void;
-};
-
-const ConversationContext = createContext<ConversationContextValue | null>(null);
-
-/** `isAtBottom` and `scrollToBottom` of the enclosing `Conversation`, for a custom scroll button. */
-export function useConversation() {
-  const context = useContext(ConversationContext);
-  if (!context) throw new Error("Conversation parts must be used within Conversation");
-  return context;
-}
+export { useConversation, useOptionalConversation, type ConversationScroller } from "./conversation-context";
 
 export type ConversationProps = ViewProps & { className?: string };
 
@@ -108,6 +69,7 @@ export function Conversation({ className, ...props }: ConversationProps) {
   const autoScrolling = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [dockHeight, setDockHeight] = useState(0);
+  const [overlay, setOverlay] = useState<ConversationContextValue["overlay"]>("none");
 
   const update = (next: boolean) => {
     atBottom.current = next;
@@ -137,6 +99,10 @@ export function Conversation({ className, ...props }: ConversationProps) {
     },
     dockHeight,
     setDockHeight,
+    overlay,
+    openOverlay: () => setOverlay("open"),
+    closeOverlay: () => setOverlay("closing"),
+    settleOverlay: () => setOverlay((current) => (current === "closing" ? "none" : current)),
   };
 
   return (
@@ -201,6 +167,7 @@ function useConversationScroll<P extends ConversationScrollHandlers>(
     },
     onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       conversation.onUserScroll();
+      conversation.settleOverlay();
       onScrollBeginDrag?.(event);
     },
     // The app's handler first, so a scroller that measures itself (`ConversationList`) has the new size to follow.
@@ -346,6 +313,7 @@ export function ConversationList<T>({
               <keyboard.ChatScrollView
                 {...scrollProps}
                 inverted={inverted}
+                freeze={conversation.overlay !== "none"}
                 // The composer pads the bottom inset, which the keyboard covers: the content rises by the rest.
                 bottomOffset={insets.bottom}
                 onInsetChange={(inset) => {
@@ -353,6 +321,8 @@ export function ConversationList<T>({
                 }}
                 onKeyboardMove={(moving) => {
                   size.current.keyboardMoving = moving;
+                  // The closing menu's window hands the focus back with a keyboard event: frozen until it ends.
+                  if (!moving) conversation.settleOverlay();
                 }}
               />
             )

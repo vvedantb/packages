@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -89,6 +89,41 @@ async function goBack() {
 }
 
 const shot = (name) => log({ screenshot: screenshot(resolve(shots, `${name}.png`)).path });
+
+/**
+ * On the chat-hold screen: scroll up to an older message, hold it, then (if
+ * the menu opened) swipe the backdrop. Says whether the menu opened and
+ * whether the list jumped to the newest message at either step.
+ */
+async function holdOlderMessage(name) {
+  const target = "Chat message 20:";
+  const newest = "Chat message 40:";
+  await see(newest);
+  const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+  // Inverted: older messages are above, so the finger drags down.
+  for (let i = 0; i < 12 && !visible(target); i++) {
+    swipe(w / 2, Math.round(h * 0.35), w / 2, Math.round(h * 0.6), 300);
+    await settle();
+  }
+  await see(target);
+  shot(`${name}-before-hold`);
+  await hold(target);
+  const card = await until("the hold menu", () => {
+    const r = resolveTarget(dumpNodes({ retries: 2 }), "message-context-menu-action-copy");
+    return r.ok ? r : null;
+  }, 4000).catch(() => null);
+  shot(`${name}-after-hold`);
+  const afterHold = { menuOpen: card !== null, newestVisible: visible(newest), targetVisible: visible(target) };
+  if (!card) return { afterHold, jumped: afterHold.newestVisible };
+  // A swipe that starts on the backdrop, away from the card.
+  const start = card.y > h / 2 ? Math.round(h * 0.15) : Math.round(h * 0.55);
+  swipe(Math.round(w * 0.2), start, Math.round(w * 0.2), start + Math.round(h * 0.3), 300);
+  await settle();
+  await gone("message-context-menu-action-copy");
+  shot(`${name}-after-swipe`);
+  const afterSwipe = { newestVisible: visible(newest), targetVisible: visible(target) };
+  return { afterHold, afterSwipe, jumped: afterHold.newestVisible || afterSwipe.newestVisible };
+}
 
 /**
  * The CI emulator's own apps (the launcher) sometimes stop responding, and the
@@ -308,6 +343,24 @@ const scenarios = {
     back();
     await settle();
     await gone("message-context-menu-action-copy");
+  },
+  // A long inverted chat under the keyboard providers: scrolled up, an older
+  // message held, the finger lifted, then a swipe on the backdrop. The menu
+  // closes and the list stays where the reader left it (it once jumped to the
+  // newest message on Android).
+  // Run with and without the keyboard providers, so a failure names the part that moves the list.
+  async chatHold() {
+    await fresh();
+    await press("link-chat-hold");
+    const results = [];
+    for (const providers of ["on", "off"]) {
+      await see(`Keyboard providers: ${providers}`);
+      results.push({ providers, ...(await holdOlderMessage(`chat-hold-${providers}`)) });
+      if (providers === "on") await press("chat-hold-keyboard");
+    }
+    log({ chatHold: results });
+    const moved = results.filter((r) => r.jumped);
+    if (moved.length) throw new AgentError(`the list jumped to the newest message (providers ${moved.map((r) => r.providers).join(", ")})`);
   },
   async messageSheet() {
     await fresh();
