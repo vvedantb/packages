@@ -25,6 +25,7 @@
     "@babel/preset-typescript": "^7.29.7",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
-    "babel-plugin-react-compiler": "1.0.0"
+    "babel-plugin-react-compiler": "1.0.0",
+    "tsc-rs": "0.1.0"
   }
 }

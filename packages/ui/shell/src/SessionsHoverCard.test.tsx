@@ -162,7 +162,11 @@ describe("SessionsHoverCard", () => {
   describe("focus and pointer", () => {
     function setFocusVisible(el: HTMLElement, value: boolean) {
       const orig = el.matches.bind(el);
-      el.matches = (sel: string) => (sel === ":focus-visible" ? value : orig(sel));
+      // A plain function: `matches` is typed as overloads with type predicates.
+      Object.defineProperty(el, "matches", {
+        configurable: true,
+        value: (sel: string) => (sel === ":focus-visible" ? value : orig(sel)),
+      });
     }
 
     it("does not open on pointer-driven focus after a context menu", async () => {

@@ -48,7 +48,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.test.json",
+    "typecheck": "tsc-rs --noEmit -p tsconfig.test.json",
     "test": "vitest run && node --test --test-concurrency=1 tests-node/esm-exports.mjs tests-node/bundle.mjs",
     "prepack": "tsc -p tsconfig.json"
   },

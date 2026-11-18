@@ -4,7 +4,6 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "@vvedantb/server/generative-ui": [
         "../../packages/server/src/generative-ui/index.ts"
