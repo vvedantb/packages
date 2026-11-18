@@ -40,6 +40,38 @@ export {
   type ClerkAllowResponse,
 } from "./clerk-allow.js";
 export {
+  SHARED_WORKER_SETUP,
+  sharedWorkerVitestConfig,
+  type SharedWorkerOptions,
+  type SharedWorkerTestConfig,
+  type SharedWorkerVitestConfig,
+} from "./vitest-shared.js";
+export {
+  CHECK_IDS,
+  checkCiReusableWorkflow,
+  checkConfigVersion,
+  checkNoEslint,
+  checkNoPlainTsc,
+  checkNoPrettier,
+  checkOxlintDep,
+  checkOxlintScript,
+  checkTsrsPresent,
+  isOlderMinor,
+  loadRepo,
+  loadWaivers,
+  rangeMinorFloor,
+  runDoctor,
+  runDoctorChecks,
+  type CheckId,
+  type CheckResult,
+  type CheckStatus,
+  type DoctorCheckOptions,
+  type DoctorIo,
+  type LoadedWaivers,
+  type PackageEntry,
+  type RepoModel,
+} from "./doctor.js";
+export {
   REACT_DEDUPE,
   defineWebViteConfig,
   defineWebVitestConfig,
