@@ -6,8 +6,7 @@ describe("sharedWorkerVitestConfig", () => {
   it("sets the shared-worker fields and the reset setup", () => {
     const { test } = sharedWorkerVitestConfig();
     expect(test.isolate).toBe(false);
-    expect(test.poolOptions.forks.singleFork).toBe(true);
-    expect(test.poolOptions.threads.singleThread).toBe(true);
+    expect("poolOptions" in test).toBe(false);
     expect(test.sequence.shuffle).toEqual({ files: true, tests: false });
     expect(test.restoreMocks).toBe(true);
     expect(test.unstubEnvs).toBe(true);

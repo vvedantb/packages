@@ -256,7 +256,7 @@ Keys that are not asked for are left out, so `resolve` and `build` appear only w
 
 ### Shared-worker Vitest preset (opt-in, faster)
 
-`sharedWorkerVitestConfig` is an opt-in wrapper that trades per-file isolation for speed: every test file runs in one shared worker instead of a fresh one, so a run starts up once rather than once per file. It is a named export, so a repo adopts it only where it wants the trade-off.
+`sharedWorkerVitestConfig` is an opt-in wrapper that trades per-file isolation for speed: test files that land on the same worker share its loaded modules instead of each starting fresh. Vitest still uses every core. It is a named export, so a repo adopts it only where it wants the trade-off.
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -271,8 +271,7 @@ It takes a base config (any `defineWebVitestConfig` result, or none) and an opti
 
 | Field | Value | Why |
 | --- | --- | --- |
-| `test.isolate` | `false` | Share one worker across files. This is the speed win and the reason the cleanup rules below matter. |
-| `test.poolOptions.forks.singleFork` / `threads.singleThread` | `true` | Keep everything in one worker whether the repo's `pool` is `forks` or `threads`. |
+| `test.isolate` | `false` | Files on a worker share its modules. This is the speed win and the reason the cleanup rules below matter. |
 | `test.sequence.shuffle` | `{ files: true, tests: options.shuffleTests ?? false }` | Randomise file order so hidden cross-file order dependencies surface. Test order within a file stays stable unless you pass `shuffleTests: true`. |
 | `test.restoreMocks` / `unstubEnvs` / `unstubGlobals` | `true` | Reset mocks, `vi.stubEnv` and `vi.stubGlobal` after each test so state does not leak between files. |
 | `test.setupFiles` | `[SHARED_WORKER_SETUP, ...(options.setupFiles ?? [])]` | `SHARED_WORKER_SETUP` runs `vi.useRealTimers()` after each test (fake timers have no config flag). Your own setup files are appended. |
@@ -281,7 +280,7 @@ The base config's `test.environment`, `include`, `server`, and its `plugins` / `
 
 **Cleanup rules.** With isolation off, module-level state is shared for the whole run. The config flags reset mocks, env stubs, global stubs and fake timers for you, but they do **not** reset a module's own top-level variables, caches or singletons created on import. A test file that mutates that state must restore it itself (`afterEach` / `afterAll`). If a file cannot be made independent, keep it on the default (isolated) Vitest config instead of this preset.
 
-**Supported Vitest range.** Verified against the installed Vitest 3. The options used (`isolate`, `poolOptions.forks`/`threads`, `sequence.shuffle`, `restoreMocks`, `unstubEnvs`, `unstubGlobals`, `setupFiles`) are present in Vitest 3, 4 and 5. The preset does not set `pool` (left to the repo) and does not support the `vmThreads` / `vmForks` pools, where `isolate` behaves differently.
+**Supported Vitest range.** Tested with Vitest 3. It sets top-level `test` fields only and does not use `poolOptions`, which Vitest 4 removed. Check a run when you adopt it on Vitest 4 or 5. `vitest` is an optional peer (the setup file imports it). The preset does not set `pool` or the worker count (left to the repo) and does not support the `vmThreads` / `vmForks` pools, where `isolate` behaves differently.
 
 ## Chrome extensions (WXT)
 

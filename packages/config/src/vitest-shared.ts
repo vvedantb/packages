@@ -2,21 +2,20 @@ import { fileURLToPath } from "node:url";
 import type { WebVitestConfig } from "./vite.js";
 
 // An opt-in Vitest preset that trades isolation for speed. Vitest normally reloads
-// every test file in a fresh environment; this runs them all in one worker, in a
-// shuffled order, and resets the common state sinks between tests so a leak surfaces
-// as a failure instead of hiding.
+// every test file in a fresh environment; with this preset the files that land on a
+// worker share its module graph. Files run in a shuffled order and the common state
+// sinks are reset between tests, so a leak surfaces as a failure instead of hiding.
+// The number of workers is left alone: Vitest still uses every core.
 //
 // Turning isolation off is a real behaviour change, so this is a named export a repo
 // opts into, not part of `defineWebVitestConfig`. See the README section
 // "Shared-worker Vitest preset" for the adoption snippet and the cleanup rules a test
 // file must follow when isolation is off.
 //
-// Vitest option support: the fields below (`isolate`, `poolOptions.forks.singleFork`,
-// `poolOptions.threads.singleThread`, `sequence.shuffle.{files,tests}`, `restoreMocks`,
-// `unstubEnvs`, `unstubGlobals`, `setupFiles`) are stable across Vitest 3, 4 and 5.
-// `pool` is left to the repo: `singleFork` applies under the default `forks` pool and
-// `singleThread` under `threads`, so whichever pool is active collapses to one worker.
-// The preset does not support the `vmThreads` / `vmForks` pools.
+// Only top-level `test` fields are set (`isolate`, `sequence.shuffle`, `restoreMocks`,
+// `unstubEnvs`, `unstubGlobals`, `setupFiles`). `poolOptions` is not used: Vitest 4
+// removed it. `pool` and the worker count are left to the repo. The preset does not
+// support the `vmThreads` / `vmForks` pools, where `isolate` behaves differently.
 
 /** Absolute path to the setup file that resets per-test state. Added to `setupFiles`. */
 export const SHARED_WORKER_SETUP = fileURLToPath(
@@ -25,13 +24,8 @@ export const SHARED_WORKER_SETUP = fileURLToPath(
 
 /** The `test` fields the shared-worker preset sets. */
 export interface SharedWorkerTestConfig {
-  /** Reuse one environment across all test files instead of reloading per file. */
+  /** Files on the same worker share one environment instead of reloading per file. */
   isolate: false;
-  /** One worker for every file, under whichever of the two supported pools is active. */
-  poolOptions: {
-    forks: { singleFork: true };
-    threads: { singleThread: true };
-  };
   /** Random file order so cross-file state leaks surface. `tests` stays stable by default. */
   sequence: { shuffle: { files: boolean; tests: boolean } };
   /** Restore spied/mocked implementations after each test. */
@@ -73,10 +67,6 @@ export function sharedWorkerVitestConfig(
 ): SharedWorkerVitestConfig {
   const test: SharedWorkerTestConfig = {
     isolate: false,
-    poolOptions: {
-      forks: { singleFork: true },
-      threads: { singleThread: true },
-    },
     sequence: { shuffle: { files: true, tests: options.shuffleTests ?? false } },
     restoreMocks: true,
     unstubEnvs: true,

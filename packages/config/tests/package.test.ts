@@ -60,9 +60,10 @@ describe("package.json", () => {
     expect(root).not.toHaveProperty("extensionHostPermissions");
   });
 
-  it("adds no runtime dependency; peers are @electron/asar and the optional @expo/config-plugins", () => {
+  it("adds no runtime dependency; peers are @electron/asar and the optional @expo/config-plugins and vitest", () => {
     expect(pkg).not.toHaveProperty("dependencies");
-    expect(Object.keys(pkg.peerDependencies ?? {})).toEqual(["@electron/asar", "@expo/config-plugins"]);
+    expect(Object.keys(pkg.peerDependencies ?? {})).toEqual(["@electron/asar", "@expo/config-plugins", "vitest"]);
+    expect(pkg.peerDependenciesMeta?.vitest?.optional).toBe(true);
     expect(pkg.peerDependenciesMeta?.["@expo/config-plugins"]?.optional).toBe(true);
   });
 });
