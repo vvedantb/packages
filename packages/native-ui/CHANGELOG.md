@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.26.0
+
+### Minor Changes
+
+- [#284](https://github.com/vvedantb/packages/pull/284) [`fae0812`](https://github.com/vvedantb/packages/commit/fae08124e40a9d8e0b92acc328d56fa65c1658e7) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Image paste for `PromptInput`: a new `@vvedantb/native-ui/paste-input` entry with `PasteInputProvider`, on the optional peer `expo-paste-input` (native code, so a native build). With it, `PromptInput` takes `onPasteImages(uris)`: the long-press Paste and the keyboard's image insert (Gboard's clipboard, stickers) hand the images over as `file://` URIs, where React Native's `TextInput` took no image at all. Without the provider, or without `onPasteImages`, the field is unchanged.
+
 ## 0.25.3
 
 ### Patch Changes
