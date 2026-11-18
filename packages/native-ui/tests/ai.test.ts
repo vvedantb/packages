@@ -210,6 +210,7 @@ vi.mock("@tabler/icons-react-native", () =>
       "IconArrowLeft",
       "IconArrowRight",
       "IconPencil",
+      "IconMessageQuestion",
       "IconChevronDown",
       "IconChevronRight",
       "IconCopy",
@@ -1809,5 +1810,44 @@ describe("MessageContextMenu", () => {
     const root = find(h.tree, (element) => element.props.accessibilityViewIsModal === true)!;
     (root.props.onLayout as () => void)();
     expect(animation.withTiming).toHaveBeenCalledExactlyOnceWith(1, POPOVER_ENTER);
+  });
+});
+
+describe("ActivityQuestionCard", () => {
+  const question = {
+    question: "Which export format?",
+    header: "Export",
+    multiSelect: false,
+    options: [
+      { label: "CSV", description: "A spreadsheet" },
+      { label: "JSON, pretty", description: "For scripts" },
+    ],
+  };
+
+  it("reads a single answer whole (a label with a comma stays one pick), and splits only multi-select answers", async () => {
+    const { selectedLabels, freeTextAnswer } = await import("../src/ai/activity-question");
+    expect(selectedLabels("JSON, pretty", question)).toEqual(["JSON, pretty"]);
+    expect(selectedLabels("CSV, JSON", question)).toEqual([]);
+    expect(selectedLabels("CSV, JSON, pretty", { ...question, multiSelect: true })).toEqual(["CSV"]);
+    expect(selectedLabels(undefined, question)).toEqual([]);
+    expect(freeTextAnswer("Excel please", [])).toBe("Excel please");
+    expect(freeTextAnswer("CSV", ["CSV"])).toBeNull();
+    expect(freeTextAnswer("  ", [])).toBeNull();
+  });
+
+  it("marks the picked option, keeps free text as Other, and says when the answer came as the next message", async () => {
+    const { ActivityQuestionCard } = await import("../src/ai/activity-question");
+    const picked = hooks.mount(() => ActivityQuestionCard({ questions: [question], answers: { "Which export format?": "CSV" } }) as unknown as Element);
+    // The option rows, as the card hands them their props.
+    const row = (tree: unknown, label: string) => find(tree, (element) => element.props.label === label && "selected" in element.props)!;
+    expect(row(picked.tree, "CSV").props).toMatchObject({ selected: true, mark: "check" });
+    expect(row(picked.tree, "JSON, pretty").props).toMatchObject({ selected: false, mark: "B" });
+    expect(find(picked.tree, (element) => element.props.children === "Answered in the next message")).toBeUndefined();
+    const other = hooks.mount(() => ActivityQuestionCard({ questions: [question], answers: { "Which export format?": "Excel please" } }) as unknown as Element);
+    expect(row(other.tree, "Other").props).toMatchObject({ selected: true, mark: "other", description: "Excel please" });
+    expect(row(other.tree, "CSV").props.selected).toBe(false);
+    const unanswered = hooks.mount(() => ActivityQuestionCard({ questions: [question] }) as unknown as Element);
+    expect(find(unanswered.tree, (element) => element.props.children === "Answered in the next message")).toBeDefined();
+    expect(hooks.mount(() => ActivityQuestionCard({ questions: [] })).tree).toBeNull();
   });
 });

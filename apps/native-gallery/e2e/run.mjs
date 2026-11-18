@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -363,6 +363,15 @@ const scenarios = {
     log({ chatHold: results });
     const moved = results.filter((r) => r.jumped);
     if (moved.length) throw new AgentError(`the list jumped to the newest message (providers ${moved.map((r) => r.providers).join(", ")})`);
+  },
+  // An answered question's record: the picked option checked, free text as "Other", and the fallback line.
+  async questionRecord() {
+    await fresh();
+    await press("link-ai-cards");
+    await see("Which export format should the report use?");
+    await see("Weekly to the leads");
+    await see("Answered in the next message");
+    shot("ai-cards-question-record");
   },
   async messageSheet() {
     await fresh();

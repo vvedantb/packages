@@ -6,6 +6,7 @@ import { ProviderIcon } from "@vvedantb/native-ui/brand";
 import { GenerativeUiPanel } from "@vvedantb/native-ui/generative-ui";
 import { Markdown } from "@vvedantb/native-ui/markdown";
 import {
+  ActivityQuestionCard,
   ActivityStepDetail,
   AgentTraceFold,
   AgentTraceLine,
@@ -189,6 +190,30 @@ export function AiCardsSection() {
           </MessageContent>
           <MessageMeta>10:42</MessageMeta>
         </Message>
+      </Block>
+      <Block title="ActivityQuestionCard (an answered question)">
+        <View testID="question-record">
+          <ActivityQuestionCard
+            questions={[
+              {
+                question: "Which export format should the report use?",
+                header: "Export",
+                options: [
+                  { label: "CSV", description: "Opens in any spreadsheet app." },
+                  { label: "JSON", description: "Best for scripts." },
+                ],
+              },
+              {
+                question: "Who should get the report?",
+                header: "Audience",
+                multiSelect: true,
+                options: [{ label: "The team" }, { label: "Only me" }],
+              },
+            ]}
+            answers={{ "Which export format should the report use?": "CSV", "Who should get the report?": "Weekly to the leads" }}
+          />
+          <ActivityQuestionCard questions={[{ question: "Answered in a message?", options: [{ label: "Yes" }, { label: "No" }] }]} />
+        </View>
       </Block>
       <Block title="MessageActionSheet">
         <Button testID="open-message-sheet" onPress={() => setSheet(true)}>

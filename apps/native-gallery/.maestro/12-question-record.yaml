@@ -1,0 +1,17 @@
+# ActivityQuestionCard: an answered question's read-only record, in the AI cards section.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-ai-cards
+- tapOn:
+    id: link-ai-cards
+- scrollUntilVisible:
+    element:
+      text: "Which export format should the report use?"
+- assertVisible:
+    text: "Weekly to the leads"
+- assertVisible:
+    text: "Answered in the next message"
