@@ -255,8 +255,9 @@ describe("resolve mode", () => {
 
   describe("built CLI", () => {
     beforeAll(() => {
-      const tsc = createRequire(join(pkgDir, "package.json")).resolve("typescript/bin/tsc");
-      const build = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json"], { cwd: pkgDir, encoding: "utf8" });
+      // The same compiler as the package's build script (tsrs).
+      const tsrs = join(dirname(createRequire(join(pkgDir, "package.json")).resolve("tsrs/package.json")), "bin", "tsrs");
+      const build = spawnSync(process.execPath, [tsrs, "-p", "tsconfig.json"], { cwd: pkgDir, encoding: "utf8" });
       expect(build.status, `${build.stdout}${build.stderr}`).toBe(0);
     });
 

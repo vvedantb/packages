@@ -53,7 +53,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsrs -p tsconfig.json",
     "typecheck": "tsrs --noEmit --fast -p tsconfig.test.json",
     "test": "vitest run",
     "prepack": "tsc -p tsconfig.json"
