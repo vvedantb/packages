@@ -498,9 +498,9 @@ The caller keeps `on:` triggers, `concurrency` and the job `name`.
 | `install_command` | string | empty | Replaces the default install |
 | `env` | string | empty | Non-secret `NAME=value` lines for every step |
 | `keep_going` | boolean | `true` | Run every command, or stop at the first failure. Must be `true` when `parallel` is `true` |
-| `parallel` | boolean | `false` | Run every `commands` line at once in the background, then report each in order and fail if any failed. Needs `keep_going: true` |
+| `parallel` | boolean | `false` | Run every `commands` line at once in the background, print each command's log as it finishes and fail if any failed. If the job is cancelled or times out, the partial logs of unfinished commands are printed. Needs `keep_going: true` |
 | `max_parallel` | number | `0` | Cap on commands running at once when `parallel` is `true`. `0` runs them all at once |
-| `cache_node_modules` | boolean | `false` | Cache `**/node_modules` on an exact key (os, arch, package manager, node version, lockfile hash). On a hit, skip the pnpm store restore and (for npm) `npm ci` |
+| `cache_node_modules` | boolean | `false` | Cache `**/node_modules` on an exact key (os, arch, package manager, node version, lockfile hash). On a hit, skip the pnpm store restore and (for npm) `npm ci`. For npm callers. Leave it off for pnpm: with a warm store pnpm installs in about 1 s, and on vhub (18 November 2026) a node_modules hit cost a 10 s restore plus a 12 s install |
 | `budget_seconds` | number | `0` | Fail the job if setup plus Checks wall time is over this many seconds. `0` is off; it never kills a command |
 | `playwright_browsers` | string | empty | Such as `chromium`. Runs `npx playwright install --with-deps` before `e2e_command` |
 | `e2e_command` | string | empty | End-to-end commands, one per line, after `commands` |
@@ -615,13 +615,12 @@ Replace the `commands` lines with each repo's real scripts.
 To opt into the speed inputs, add them to any caller. The commands below have no order between them, so they run at once; the `node_modules` cache is seeded by the push-to-main run:
 
 ```yaml
-# a faster caller: run the checks at once and cache node_modules
+# a faster caller: run the checks at once (add cache_node_modules: true only for npm)
 jobs:
   check:
     uses: vvedantb/packages/.github/workflows/ci-app.yml@main
     with:
       parallel: true
-      cache_node_modules: true
       budget_seconds: 180
       commands: |
         pnpm lint

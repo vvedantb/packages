@@ -58,7 +58,7 @@ on:
         type: boolean
         default: true
       parallel:
-        description: "Run every command line at once in the background, then report each in order and fail if any failed. Requires keep_going: true. Default false keeps the serial behaviour."
+        description: "Run every command line at once in the background, then report each as it finishes and fail if any failed. Requires keep_going: true. Default false keeps the serial behaviour."
         type: boolean
         default: false
       max_parallel:
@@ -66,7 +66,7 @@ on:
         type: number
         default: 0
       cache_node_modules:
-        description: "Cache **/node_modules on an exact key (os, arch, package manager, node version, lockfile hash). On an exact hit the pnpm store restore is skipped and, for npm, npm ci is skipped (it would delete node_modules). Default false."
+        description: "Cache **/node_modules on an exact key (os, arch, package manager, node version, lockfile hash). On an exact hit the pnpm store restore is skipped and, for npm, npm ci is skipped (it would delete node_modules). Use it for npm callers. Leave it off for pnpm: a warm pnpm store already installs in about 1 second, and restoring node_modules took longer than that when measured. Default false."
         type: boolean
         default: false
       budget_seconds:
@@ -285,6 +285,39 @@ jobs:
               printf '%s' "$((e - s))" > "$workdir/$i.dur"
             }
 
+            # Print a finished command's log in its own group, once. Called as each
+            # command ends, so a job that is cancelled or times out has already
+            # shown every command that finished.
+            printed=()
+            flush_done() {
+              local i
+              for i in $(seq 0 $((n - 1))); do
+                [ -n "${printed[$i]:-}" ] && continue
+                [ -f "$workdir/$i.dur" ] || continue
+                printed[$i]=1
+                echo "::group::${cmds[$i]}"
+                cat "$workdir/$i.log" 2>/dev/null || true
+                echo "::endgroup::"
+                record "$i" "$(cat "$workdir/$i.dur")" "$(cat "$workdir/$i.rc" 2>/dev/null || echo 1)"
+              done
+            }
+
+            # On cancel or job timeout, show what the unfinished commands had
+            # printed so far, then exit non-zero.
+            on_stop() {
+              local i
+              flush_done
+              for i in $(seq 0 $((next - 1))); do
+                [ -n "${printed[$i]:-}" ] && continue
+                echo "::group::${cmds[$i]} (stopped before it finished)"
+                cat "$workdir/$i.log" 2>/dev/null || true
+                echo "::endgroup::"
+                echo "::error::Stopped before it finished: ${cmds[$i]}"
+              done
+              exit 1
+            }
+            trap on_stop INT TERM
+
             next=0
             inflight=0
             while [ "$next" -lt "$n" ] || [ "$inflight" -gt 0 ]; do
@@ -296,19 +329,12 @@ jobs:
               if [ "$inflight" -gt 0 ]; then
                 wait -n 2>/dev/null || true
                 inflight=$((inflight - 1))
+                flush_done
               fi
             done
             wait
-
-            # Print each command's log in the original order, inside its own group.
-            for i in $(seq 0 $((n - 1))); do
-              rc=$(cat "$workdir/$i.rc" 2>/dev/null || echo 1)
-              dur=$(cat "$workdir/$i.dur" 2>/dev/null || echo 0)
-              echo "::group::${cmds[$i]}"
-              cat "$workdir/$i.log" 2>/dev/null || true
-              echo "::endgroup::"
-              record "$i" "$dur" "$rc"
-            done
+            flush_done
+            trap - INT TERM
           else
             # Serial: run in order, streaming each command's output live inside its group.
             for i in $(seq 0 $((n - 1))); do
