@@ -275,10 +275,13 @@ declare module "react-native" {
     initialScrollIndex?: number;
     getItemLayout?: (data: ArrayLike<T> | null | undefined, index: number) => { length: number; offset: number; index: number };
     onMomentumScrollEnd?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    // `ConversationList`'s `scrollToIndex` to a row not drawn yet.
+    onScrollToIndexFailed?: (info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => void;
   }
   export class FlatList<T> extends React.Component<FlatListProps<T>> {
     scrollToEnd(options?: { animated?: boolean }): void;
     scrollToOffset(params: { offset: number; animated?: boolean }): void;
+    scrollToIndex(params: { index: number; animated?: boolean; viewPosition?: number }): void;
   }
 
   export interface ModalProps {
