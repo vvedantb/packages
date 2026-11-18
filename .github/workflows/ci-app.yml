@@ -5,6 +5,11 @@ name: App CI (reusable)
 # runs every command even after an earlier one fails, so one run shows every
 # failure. It needs no secrets. Callers need only `contents: read`.
 #
+# It runs as one job on one runner: splitting it would mean another runner
+# pickup and another setup. Speed comes from inside the job instead -- optional
+# parallel commands, a node_modules cache and a blobless checkout -- all opt-in,
+# so callers keep today's behaviour until they turn them on.
+#
 # Call it with:
 #   uses: vvedantb/packages/.github/workflows/ci-app.yml@main
 # See the README ("Reusable app CI workflow") for caller examples.
@@ -37,7 +42,7 @@ on:
         type: string
         default: "."
       fetch_depth:
-        description: "actions/checkout fetch-depth. Use 0 when a step diffs against the merge base."
+        description: "actions/checkout fetch-depth. Use 0 when a step diffs against the merge base; the checkout is then blobless (filter: blob:none), which fetches blobs on demand."
         type: number
         default: 1
       install_command:
@@ -49,15 +54,31 @@ on:
         type: string
         default: ""
       keep_going:
-        description: "Run every command and fail at the end (true), or stop at the first failure (false)."
+        description: "Run every command and fail at the end (true), or stop at the first failure (false). Must be true when parallel is true."
         type: boolean
         default: true
+      parallel:
+        description: "Run every command line at once in the background, then report each in order and fail if any failed. Requires keep_going: true. Default false keeps the serial behaviour."
+        type: boolean
+        default: false
+      max_parallel:
+        description: "Cap on commands running at once when parallel is true. 0 (default) runs them all at once."
+        type: number
+        default: 0
+      cache_node_modules:
+        description: "Cache **/node_modules on an exact key (os, arch, package manager, node version, lockfile hash). On an exact hit the pnpm store restore is skipped and, for npm, npm ci is skipped (it would delete node_modules). Default false."
+        type: boolean
+        default: false
+      budget_seconds:
+        description: "Fail the job if setup plus Checks wall time (first step to end of Checks) is over this many seconds. 0 (default) is off. It never kills or shortens a command."
+        type: number
+        default: 0
       playwright_browsers:
         description: "Browsers to install before e2e_command, such as chromium (runs npx playwright install --with-deps). Empty skips the install."
         type: string
         default: ""
       e2e_command:
-        description: "Optional end-to-end commands, one per line, run after commands (and after the Playwright install). Same rules as commands."
+        description: "Optional end-to-end commands, one per line, run after commands (and after the Playwright install). Same rules as commands; always run serially."
         type: string
         default: ""
       failure_artifact_paths:
@@ -83,15 +104,29 @@ jobs:
       - name: Validate inputs
         env:
           PACKAGE_MANAGER: ${{ inputs.package_manager }}
+          PARALLEL: ${{ inputs.parallel }}
+          KEEP_GOING: ${{ inputs.keep_going }}
         run: |
+          # Record the job start so the budget step can measure wall time.
+          echo "CI_JOB_START=$(date +%s)" >> "$GITHUB_ENV"
           case "$PACKAGE_MANAGER" in
             pnpm|npm) ;;
             *) echo "::error::package_manager must be pnpm or npm, got '$PACKAGE_MANAGER'"; exit 1 ;;
           esac
+          # parallel always runs every command, so keep_going: false makes no
+          # sense with it. Reject the combination rather than silently ignore it.
+          if [ "$PARALLEL" = "true" ] && [ "$KEEP_GOING" != "true" ]; then
+            echo "::error::keep_going: false cannot be used with parallel: true (parallel runs every command)"; exit 1
+          fi
 
       - uses: actions/checkout@v6
         with:
           fetch-depth: ${{ inputs.fetch_depth }}
+          # A full-history checkout (fetch-depth: 0, for a merge-base diff) is
+          # blobless: it skips blob download and fetches blobs on demand, so a
+          # git diff against the merge base still works. Shallow checkouts keep
+          # no filter.
+          filter: ${{ inputs.fetch_depth == 0 && 'blob:none' || '' }}
 
       - name: Set the environment
         if: ${{ inputs.env != '' }}
@@ -119,14 +154,28 @@ jobs:
           cache: ${{ inputs.package_manager == 'npm' && 'npm' || '' }}
           cache-dependency-path: ${{ inputs.package_manager == 'npm' && format('{0}/package-lock.json', inputs.working_directory) || '' }}
 
+      # node_modules itself, on an exact key only (no restore-keys): a partial
+      # node_modules is not safe to reuse. An exact hit means the lockfile is
+      # unchanged and a full, matching node_modules is already in place, so the
+      # pnpm store restore below is skipped. On a miss nothing is restored and
+      # actions/cache saves node_modules after a successful install.
+      - name: Restore node_modules
+        if: ${{ inputs.cache_node_modules }}
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: "**/node_modules"
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ inputs.package_manager }}-node${{ inputs.node_version }}-${{ hashFiles('**/pnpm-lock.yaml', '**/package-lock.json') }}
+
       # The pnpm store, with a fallback key: after a lockfile change the last
-      # store is restored and only the changed packages are downloaded.
+      # store is restored and only the changed packages are downloaded. Skipped
+      # when node_modules was restored on an exact hit (nothing to download).
       - name: Find the pnpm store
-        if: ${{ inputs.package_manager == 'pnpm' }}
+        if: ${{ inputs.package_manager == 'pnpm' && steps.node-modules-cache.outputs.cache-hit != 'true' }}
         id: pnpm-store
         run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
       - name: Restore the pnpm store
-        if: ${{ inputs.package_manager == 'pnpm' }}
+        if: ${{ inputs.package_manager == 'pnpm' && steps.node-modules-cache.outputs.cache-hit != 'true' }}
         id: pnpm-cache
         uses: actions/cache@v4
         with:
@@ -139,45 +188,178 @@ jobs:
         env:
           PACKAGE_MANAGER: ${{ inputs.package_manager }}
           INSTALL_COMMAND: ${{ inputs.install_command }}
+          NODE_MODULES_HIT: ${{ steps.node-modules-cache.outputs.cache-hit }}
         run: |
           if [ -n "$INSTALL_COMMAND" ]; then
             bash -e -o pipefail -c "$INSTALL_COMMAND"
           elif [ "$PACKAGE_MANAGER" = "pnpm" ]; then
+            # Near-instant when node_modules already matches the frozen lockfile;
+            # a normal install otherwise.
             pnpm install --frozen-lockfile
+          elif [ "$NODE_MODULES_HIT" = "true" ]; then
+            echo "node_modules restored on an exact cache hit; skipping 'npm ci' (it deletes node_modules and would discard the cache)."
           else
             npm ci
           fi
 
       # A store restored from the fallback key still holds packages the new
-      # lockfile dropped: remove them before the store is saved.
+      # lockfile dropped: remove them before the store is saved. Skipped on an
+      # exact store hit (nothing dropped) and when node_modules was restored
+      # (the store was not touched).
       - name: Prune the pnpm store
-        if: ${{ inputs.package_manager == 'pnpm' && steps.pnpm-cache.outputs.cache-hit != 'true' }}
+        if: ${{ inputs.package_manager == 'pnpm' && steps.node-modules-cache.outputs.cache-hit != 'true' && steps.pnpm-cache.outputs.cache-hit != 'true' }}
         run: pnpm store prune
+
+      # Write the shared command runner once; the Checks and End-to-end
+      # steps both run it. It lives here (not as a repo file) because the
+      # checkout is the caller's repo, not this one.
+      - name: Write the command runner
+        run: |
+          cat > "$RUNNER_TEMP/run-commands.sh" <<'RUNNER_EOF'
+          #!/usr/bin/env bash
+          # run-commands.sh - run the caller's command lines with per-command timing.
+          #
+          # Reads these environment variables:
+          #   COMMANDS      newline-separated command lines; blank lines and lines whose
+          #                 first character is '#' are skipped (same rule as before).
+          #   PARALLEL      "true" runs every line at once; anything else runs in order.
+          #   MAX_PARALLEL  cap on concurrent lines when PARALLEL=true (0/empty = no cap).
+          #   KEEP_GOING    serial only: "true" runs every line and fails at the end;
+          #                 anything else stops at the first failure.
+          #   SECTION       label for the log lines and the step-summary section.
+          #   GITHUB_STEP_SUMMARY  file for the Markdown table (optional).
+          #
+          # Each line runs with `bash -e -o pipefail -c "<line>"`, as before. The script
+          # exits 1 if any line failed, 0 otherwise. It never retries or skips a line and
+          # never hides a failure.
+
+          section="${SECTION:-Checks}"
+          parallel="${PARALLEL:-false}"
+          keep_going="${KEEP_GOING:-true}"
+
+          # Split COMMANDS into lines, keeping order and the original skip rule:
+          # drop whitespace-only lines and lines whose first character is '#'.
+          cmds=()
+          while IFS= read -r line; do
+            [ -z "${line//[[:space:]]/}" ] && continue
+            case "$line" in \#*) continue ;; esac
+            cmds+=("$line")
+          done <<< "$COMMANDS"
+          n=${#cmds[@]}
+
+          res_cmd=()
+          res_dur=()
+          res_ok=()
+          failed=()
+
+          record() { # $1 index  $2 seconds  $3 rc
+            res_cmd+=("${cmds[$1]}")
+            res_dur+=("$2")
+            if [ "$3" = "0" ]; then
+              res_ok+=("ok")
+              echo "[$section] ${cmds[$1]} - ${2}s - ok"
+            else
+              res_ok+=("failed")
+              failed+=("${cmds[$1]}")
+              echo "::error::Failed: ${cmds[$1]}"
+              echo "[$section] ${cmds[$1]} - ${2}s - FAILED"
+            fi
+          }
+
+          if [ "$n" -eq 0 ]; then
+            echo "No commands to run in $section."
+          elif [ "$parallel" = "true" ]; then
+            workdir=$(mktemp -d)
+            cap="${MAX_PARALLEL:-0}"
+            case "$cap" in ''|*[!0-9]*) cap=0 ;; esac
+            [ "$cap" -le 0 ] && cap="$n"
+            [ "$cap" -gt "$n" ] && cap="$n"
+            echo "Running $n command(s) in parallel in $section (up to $cap at once)."
+
+            run_bg() { # $1 index -> writes <i>.log, <i>.rc, <i>.dur under $workdir
+              local i="$1" s e rc=0
+              s=$(date +%s)
+              bash -e -o pipefail -c "${cmds[$i]}" > "$workdir/$i.log" 2>&1 || rc=$?
+              e=$(date +%s)
+              printf '%s' "$rc" > "$workdir/$i.rc"
+              printf '%s' "$((e - s))" > "$workdir/$i.dur"
+            }
+
+            next=0
+            inflight=0
+            while [ "$next" -lt "$n" ] || [ "$inflight" -gt 0 ]; do
+              while [ "$next" -lt "$n" ] && [ "$inflight" -lt "$cap" ]; do
+                run_bg "$next" &
+                next=$((next + 1))
+                inflight=$((inflight + 1))
+              done
+              if [ "$inflight" -gt 0 ]; then
+                wait -n 2>/dev/null || true
+                inflight=$((inflight - 1))
+              fi
+            done
+            wait
+
+            # Print each command's log in the original order, inside its own group.
+            for i in $(seq 0 $((n - 1))); do
+              rc=$(cat "$workdir/$i.rc" 2>/dev/null || echo 1)
+              dur=$(cat "$workdir/$i.dur" 2>/dev/null || echo 0)
+              echo "::group::${cmds[$i]}"
+              cat "$workdir/$i.log" 2>/dev/null || true
+              echo "::endgroup::"
+              record "$i" "$dur" "$rc"
+            done
+          else
+            # Serial: run in order, streaming each command's output live inside its group.
+            for i in $(seq 0 $((n - 1))); do
+              echo "::group::${cmds[$i]}"
+              s=$(date +%s)
+              rc=0
+              bash -e -o pipefail -c "${cmds[$i]}" || rc=$?
+              e=$(date +%s)
+              echo "::endgroup::"
+              record "$i" "$((e - s))" "$rc"
+              if [ "$rc" != "0" ] && [ "$keep_going" != "true" ]; then
+                break
+              fi
+            done
+          fi
+
+          # Markdown step-summary table (both modes), one row per command that ran.
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ "${#res_cmd[@]}" -gt 0 ]; then
+            {
+              echo "### $section"
+              echo
+              echo "| Command | Seconds | Result |"
+              echo "| --- | ---: | --- |"
+              for j in $(seq 0 $((${#res_cmd[@]} - 1))); do
+                c=${res_cmd[$j]//|/\\|}
+                if [ "${res_ok[$j]}" = "ok" ]; then icon="ok"; else icon="**FAIL**"; fi
+                echo "| \`$c\` | ${res_dur[$j]} | $icon |"
+              done
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "Failed commands in $section:"
+            printf '  %s\n' "${failed[@]}"
+            exit 1
+          fi
+          RUNNER_EOF
 
       - name: Checks
         env:
           COMMANDS: ${{ inputs.commands }}
           KEEP_GOING: ${{ inputs.keep_going }}
+          PARALLEL: ${{ inputs.parallel }}
+          MAX_PARALLEL: ${{ inputs.max_parallel }}
+          SECTION: Checks
         run: |
-          failed=()
-          while IFS= read -r line; do
-            [ -z "${line//[[:space:]]/}" ] && continue
-            case "$line" in \#*) continue ;; esac
-            echo "::group::$line"
-            if bash -e -o pipefail -c "$line"; then
-              echo "::endgroup::"
-            else
-              echo "::endgroup::"
-              echo "::error::Failed: $line"
-              failed+=("$line")
-              [ "$KEEP_GOING" = "true" ] || break
-            fi
-          done <<< "$COMMANDS"
-          if [ "${#failed[@]}" -gt 0 ]; then
-            echo "Failed commands:"
-            printf '  %s\n' "${failed[@]}"
-            exit 1
-          fi
+          bash "$RUNNER_TEMP/run-commands.sh"
+          # Mark the end of Checks for the budget step (not reached if a command
+          # failed, which already fails the job).
+          echo "CHECKS_END=$(date +%s)" >> "$GITHUB_ENV"
 
       - name: Install Playwright browsers
         if: ${{ inputs.playwright_browsers != '' && inputs.e2e_command != '' && !cancelled() }}
@@ -190,26 +372,30 @@ jobs:
         env:
           COMMANDS: ${{ inputs.e2e_command }}
           KEEP_GOING: ${{ inputs.keep_going }}
+          # e2e commands often depend on order, so they always run serially.
+          PARALLEL: "false"
+          SECTION: End-to-end
+        run: bash "$RUNNER_TEMP/run-commands.sh"
+
+      # Fail the job if setup plus Checks ran over budget. Runs even after an
+      # earlier failure so it never masks one; it only reads timestamps, so it
+      # kills nothing. If Checks did not finish there is nothing to judge.
+      - name: Check the time budget
+        if: ${{ inputs.budget_seconds != 0 && !cancelled() }}
+        env:
+          BUDGET: ${{ inputs.budget_seconds }}
         run: |
-          failed=()
-          while IFS= read -r line; do
-            [ -z "${line//[[:space:]]/}" ] && continue
-            case "$line" in \#*) continue ;; esac
-            echo "::group::$line"
-            if bash -e -o pipefail -c "$line"; then
-              echo "::endgroup::"
-            else
-              echo "::endgroup::"
-              echo "::error::Failed: $line"
-              failed+=("$line")
-              [ "$KEEP_GOING" = "true" ] || break
-            fi
-          done <<< "$COMMANDS"
-          if [ "${#failed[@]}" -gt 0 ]; then
-            echo "Failed commands:"
-            printf '  %s\n' "${failed[@]}"
+          if [ -z "${CHECKS_END:-}" ] || [ -z "${CI_JOB_START:-}" ]; then
+            echo "Checks did not complete; nothing to measure against the budget."
+            exit 0
+          fi
+          elapsed=$((CHECKS_END - CI_JOB_START))
+          echo "Setup + Checks wall time: ${elapsed}s (budget ${BUDGET}s)."
+          if [ "$elapsed" -gt "$BUDGET" ]; then
+            echo "::error::Time budget exceeded: setup + Checks took ${elapsed}s, budget is ${BUDGET}s."
             exit 1
           fi
+          echo "Within budget."
 
       - name: Upload failure artifacts
         if: ${{ failure() && inputs.failure_artifact_paths != '' }}

@@ -474,11 +474,13 @@ jobs:
 
 It does this:
 
-1. Checks out the repo, sets up Node, and sets up pnpm (version from `packageManager`) or npm.
-2. For pnpm, restores a pnpm store cache with a fallback key, and prunes the store on a cache miss. For npm, uses the `setup-node` npm cache.
+1. Checks out the repo, sets up Node, and sets up pnpm (version from `packageManager`) or npm. A full-history checkout (`fetch_depth: 0`) is blobless, so it fetches blobs on demand instead of up front.
+2. For pnpm, restores a pnpm store cache with a fallback key, and prunes the store on a cache miss. For npm, uses the `setup-node` npm cache. With `cache_node_modules: true` it also caches `**/node_modules` on an exact key and skips the store work on a hit.
 3. Installs (`pnpm install --frozen-lockfile`, or `npm ci`), with `HUSKY=0`.
-4. Runs each line of `commands` as its own check. A failure does not stop the next line (set `keep_going: false` to stop at the first). The job fails at the end and lists every failed command.
-5. Optionally installs Playwright browsers and runs `e2e_command`, then uploads `failure_artifact_paths` if the job failed.
+4. Runs each line of `commands` as its own check. A failure does not stop the next line (set `keep_going: false` to stop at the first). With `parallel: true` the lines run at once instead of in order. Either way it records each command's wall time, writes a table to the job summary, and fails at the end listing every failed command.
+5. Optionally installs Playwright browsers and runs `e2e_command` (always serial), then uploads `failure_artifact_paths` if the job failed.
+
+The whole thing is one job on one runner: splitting it would add another runner pickup and another setup. The speed inputs (`parallel`, `cache_node_modules`, blobless checkout) are opt-in, so a caller keeps today's behaviour until it turns them on. None of them hides a failure: no command is retried, skipped or allowed to pass.
 
 The caller keeps `on:` triggers, `concurrency` and the job `name`.
 
@@ -492,10 +494,14 @@ The caller keeps `on:` triggers, `concurrency` and the job `name`.
 | `runs_on` | string | `boat` | One runner label |
 | `timeout_minutes` | number | `30` | Job timeout |
 | `working_directory` | string | `.` | Folder with `package.json` |
-| `fetch_depth` | number | `1` | Checkout depth. Use `0` for a step that diffs against the merge base (eva) |
+| `fetch_depth` | number | `1` | Checkout depth. Use `0` for a step that diffs against the merge base (eva); `0` is a blobless checkout (`filter: blob:none`) |
 | `install_command` | string | empty | Replaces the default install |
 | `env` | string | empty | Non-secret `NAME=value` lines for every step |
-| `keep_going` | boolean | `true` | Run every command, or stop at the first failure |
+| `keep_going` | boolean | `true` | Run every command, or stop at the first failure. Must be `true` when `parallel` is `true` |
+| `parallel` | boolean | `false` | Run every `commands` line at once in the background, then report each in order and fail if any failed. Needs `keep_going: true` |
+| `max_parallel` | number | `0` | Cap on commands running at once when `parallel` is `true`. `0` runs them all at once |
+| `cache_node_modules` | boolean | `false` | Cache `**/node_modules` on an exact key (os, arch, package manager, node version, lockfile hash). On a hit, skip the pnpm store restore and (for npm) `npm ci` |
+| `budget_seconds` | number | `0` | Fail the job if setup plus Checks wall time is over this many seconds. `0` is off; it never kills a command |
 | `playwright_browsers` | string | empty | Such as `chromium`. Runs `npx playwright install --with-deps` before `e2e_command` |
 | `e2e_command` | string | empty | End-to-end commands, one per line, after `commands` |
 | `failure_artifact_paths` | string | empty | Paths uploaded as an artifact (7 days) when the job fails |
@@ -605,6 +611,25 @@ jobs:
 ```
 
 Replace the `commands` lines with each repo's real scripts.
+
+To opt into the speed inputs, add them to any caller. The commands below have no order between them, so they run at once; the `node_modules` cache is seeded by the push-to-main run:
+
+```yaml
+# a faster caller: run the checks at once and cache node_modules
+jobs:
+  check:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      parallel: true
+      cache_node_modules: true
+      budget_seconds: 180
+      commands: |
+        pnpm lint
+        pnpm typecheck
+        pnpm test
+```
+
+Turn on `parallel` only when the lines do not depend on each other (a build that a later line imports must stay serial, as in the `redline` and `flowtape` callers, which set `keep_going: false`). The `node_modules` cache needs the workflow to run on push to `main`, so `main` seeds the cache the pull requests read; every caller here already does.
 
 This repo's own `ci.yml` stays as it is: it builds the packages before it checks them.
 
