@@ -168,3 +168,6 @@ export type { SheetProps, SheetContentProps } from "../Sheet";
 export { Toaster } from "../Toast";
 export { toast } from "../toastStore";
 export type { ToastOptions, ToastVariant } from "../toastStore";
+
+// Overlays in the app's window (the hold menu, the image viewer): wrap the navigator once.
+export { WindowLayerHost } from "../primitives/window-layer";

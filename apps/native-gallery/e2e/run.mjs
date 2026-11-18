@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -45,6 +45,19 @@ async function gone(target) {
 }
 
 /** Tap a target, scrolling the page up to a few times if it is off screen. */
+/**
+ * After an overlay closes: let real time pass with the app's clock running.
+ * The window's focus comes back on the native side in real time, while a
+ * frozen JS clock would run the app's own timers (the overlay freeze's
+ * release) at once, so a check right away would not be what a phone sees.
+ */
+async function afterOverlayCloses() {
+  await clock("resume");
+  await sleep(2500);
+  await clock("freeze");
+  await settle();
+}
+
 /** Scrolls until `target` is on screen, without tapping it. */
 async function reveal(target) {
   for (let i = 0; i < 12; i++) {
@@ -130,11 +143,38 @@ async function holdOlderMessage(name) {
   // A swipe that starts on the backdrop, away from the card.
   const start = card.y > h / 2 ? Math.round(h * 0.15) : Math.round(h * 0.55);
   swipe(Math.round(w * 0.2), start, Math.round(w * 0.2), start + Math.round(h * 0.3), 300);
-  await settle();
+  await afterOverlayCloses();
   await gone("message-context-menu-action-copy");
   shot(`${name}-after-swipe`);
   const afterSwipe = { newestVisible: visible(newest), targetVisible: visible(target) };
   return { afterHold, afterSwipe, jumped: afterHold.newestVisible || afterSwipe.newestVisible };
+}
+
+/**
+ * On the chat-hold screen: scroll up to an older message, open an image over
+ * the chat (a Modal, as a message's attachment opens), close it with back, and
+ * say whether the list jumped to the newest message.
+ */
+async function openImageOverOlderMessage(name) {
+  const target = "Chat message 20:";
+  const newest = "Chat message 40:";
+  await see(newest);
+  const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+  for (let i = 0; i < 12 && !visible(target); i++) {
+    swipe(w / 2, Math.round(h * 0.35), w / 2, Math.round(h * 0.6), 300);
+    await settle();
+  }
+  await see(target);
+  await press("chat-hold-open-image");
+  await see("Mock viewer image");
+  shot(`${name}-image-open`);
+  back();
+  await afterOverlayCloses();
+  await gone("Mock viewer image");
+  shot(`${name}-image-closed`);
+  const newestVisible = visible(newest);
+  const targetVisible = visible(target);
+  return { newestVisible, targetVisible, jumped: newestVisible || !targetVisible };
 }
 
 /**
@@ -375,6 +415,20 @@ const scenarios = {
     log({ chatHold: results });
     const moved = results.filter((r) => r.jumped);
     if (moved.length) throw new AgentError(`the list jumped to the newest message (providers ${moved.map((r) => r.providers).join(", ")})`);
+  },
+  // An image opened and closed over a scrolled-up chat: the list stays (it jumped to the newest message on Android).
+  async chatImage() {
+    await fresh();
+    await press("link-chat-hold");
+    const results = [];
+    for (const providers of ["on", "off"]) {
+      await see(`Keyboard providers: ${providers}`);
+      results.push({ providers, ...(await openImageOverOlderMessage(`chat-image-${providers}`)) });
+      if (providers === "on") await press("chat-hold-keyboard");
+    }
+    log({ chatImage: results });
+    const moved = results.filter((r) => r.jumped);
+    if (moved.length) throw new AgentError(`the list jumped after the image closed (providers ${moved.map((r) => r.providers).join(", ")})`);
   },
   // An answered question's record: the picked option checked, free text as "Other", and the fallback line.
   async questionRecord() {
