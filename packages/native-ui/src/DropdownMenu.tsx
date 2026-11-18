@@ -1,7 +1,6 @@
 import * as Slot from "@rn-primitives/slot";
 import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,6 +25,7 @@ import { tokens } from "./tokens";
 import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
 import { useControllableState } from "./primitives/use-controllable-state";
+import { WindowLayer } from "./primitives/window-layer";
 
 /**
  * Sizes from the web menu classes (`_menu-classes.ts`): content `min-w-[12rem]
@@ -193,7 +193,8 @@ export type DropdownMenuContentProps = ViewProps & {
 };
 
 /**
- * The menu in a transparent RN `Modal`: the opaque overlay surface of
+ * The menu in a `WindowLayer` (in the app's window under `WindowLayerHost`, so
+ * a chat under it keeps its place; else a transparent `Modal`): the opaque overlay surface of
  * `Dialog` and `Sheet` (`FloatingSurface` without blur, with the floating
  * shadow) at radius 16, at least 192 wide, `p-1.5`, scrolling when taller than
  * the room. A tap outside, Android back and the VoiceOver escape gesture close
@@ -209,7 +210,8 @@ export function DropdownMenuContent({
   children,
   ...props
 }: DropdownMenuContentProps) {
-  const { open, setOpen, trigger } = useMenu("DropdownMenuContent");
+  const menu = useMenu("DropdownMenuContent");
+  const { open, setOpen, trigger } = menu;
   const window = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
@@ -265,16 +267,14 @@ export function DropdownMenuContent({
   // The scale grows from the corner nearest the trigger: its edge on the
   // trigger's (`align`), and the top, or the bottom when the menu flipped above.
   const transformOrigin = `${align === "end" ? 100 : 0}% ${position.bottom === undefined ? 0 : 100}%`;
+  if (!shown) return null;
   return (
-    <Modal
-      visible={shown}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={close}
-    >
+    // The panel runs its own motion, so no fade; the items need the menu's
+    // context, which a layer loses, so it is provided again.
+    <WindowLayer onRequestClose={close} fade={false}>
+      <MenuContext.Provider value={menu}>
       {/* A full-size host, as `OverlayModal` has: without it the backdrop and the
-          menu are bare Modal children with no box to size or hit-test against,
+          menu are bare layer children with no box to size or hit-test against,
           and the menu can stack under tab bars and glass layers. */}
       <View style={{ flex: 1 }} pointerEvents="box-none">
         <Pressable
@@ -314,7 +314,8 @@ export function DropdownMenuContent({
           </Animated.View>
         </View>
       </View>
-    </Modal>
+      </MenuContext.Provider>
+    </WindowLayer>
   );
 }
 

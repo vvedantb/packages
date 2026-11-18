@@ -348,7 +348,7 @@ configureTheme({ font: { regular: "Inter_400Regular", medium: "Inter_500Medium",
 | Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger` (`minHeight` from 0.14.0), `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
-| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (RN `Modal`, each with the web part names; a `SheetContent` or compact `DialogContent` drags down to close), `SheetRow` (0.5.0), `BottomSheetContainer` (`@swmansion/react-native-bottom-sheet`; optional `detents`), `DropdownMenu` (Unreleased; see below) |
+| Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (a `WindowLayer` from 0.29.0: in the app's window under `WindowLayerHost`, else an RN `Modal`; each with the web part names; a `SheetContent` or compact `DialogContent` drags down to close), `SheetRow` (0.5.0), `BottomSheetContainer` (`@swmansion/react-native-bottom-sheet`; optional `detents`), `DropdownMenu` (Unreleased; see below) |
 | Selection | `BulkActionBar` (Unreleased; see below) |
 | Feedback | `toast()` and `<Toaster />` |
 | Brand and upgrade | `APP_ICONS`, `IconVibot` and the other `Icon*`, `AppMark`, `AppWordmark`, `GoogleMark` (0.3.15), `FAMILY_APPS`, `V_PRO_APP_BENEFITS`, `UpgradeToProCard`, `PricingModal` |
@@ -621,7 +621,7 @@ import {
 
 ## DropdownMenu (Unreleased)
 
-A small menu anchored to its trigger, the native counterpart of the web `DropdownMenu`. On `/primitives` and the root. From 0.12.1 the backdrop and menu sit in a full-size `View` inside the `Modal`, so the menu stays above tab bars and glass layers.
+A small menu anchored to its trigger, the native counterpart of the web `DropdownMenu`. On `/primitives` and the root. From 0.12.1 the backdrop and menu sit in a full-size `View` inside the overlay, so the menu stays above tab bars and glass layers. From 0.29.0 the overlay is a `WindowLayer`: in the app's window under `WindowLayerHost`, so a chat under it keeps its place, else an RN `Modal`.
 
 ```tsx
 <DropdownMenu>
@@ -643,7 +643,7 @@ A small menu anchored to its trigger, the native counterpart of the web `Dropdow
 | --- | --- |
 | `DropdownMenu` | `open`, `defaultOpen`, `onOpenChange`. Holds the open state; renders no view. |
 | `DropdownMenuTrigger` | `Pressable` props and `asChild`. On press it measures itself (`measureInWindow`) and opens the menu; pressed again it closes it. Reports `expanded`. With `asChild` the child must pass `ref` on to its native view (`Button` and `IconButton` do). |
-| `DropdownMenuContent` | `align` (`"start"`, default, or `"end"`), `sideOffset` (default 4), `View` props. A transparent RN `Modal`; the menu sits under the trigger and flips above it when it does not fit below. |
+| `DropdownMenuContent` | `align` (`"start"`, default, or `"end"`), `sideOffset` (default 4), `View` props. A `WindowLayer` (a transparent RN `Modal` without `WindowLayerHost`); the menu sits under the trigger and flips above it when it does not fit below. |
 | `DropdownMenuLabel` | `children`. |
 | `DropdownMenuItem` | `children`, `onSelect`, `icon` (a Tabler icon), `destructive`, `disabled`, `closeOnSelect` (default `true`). |
 | `DropdownMenuRadioItem` | The same without `icon` and `destructive`, plus `checked`. |

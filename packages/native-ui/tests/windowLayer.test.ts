@@ -80,4 +80,26 @@ describe("WindowLayer", () => {
     unmountHost?.();
     expect(env.back).toBeNull();
   });
+
+  it("calls onShow once the layer is laid out, once per opening, and leaves the fade to an overlay that moves itself", async () => {
+    const { WindowLayer, WindowLayerHost } = await import("../src/primitives/window-layer");
+    const host = WindowLayerHost({ children: "APP" }) as unknown as Element;
+    (host.props.ref as (view: object | null) => (() => void) | undefined)({});
+    const onShow = vi.fn();
+    WindowLayer({ onRequestClose: () => {}, onShow, fade: false, children: "SHEET" });
+    const drawn = WindowLayerHost({ children: "APP" }) as unknown as Element;
+    const [, layers] = drawn.props.children as [Element, Element[]];
+    const [layer] = layers;
+    expect(layer.props).toMatchObject({ entering: undefined, exiting: undefined });
+    (layer.props.onLayout as () => void)();
+    (layer.props.onLayout as () => void)();
+    expect(onShow).toHaveBeenCalledOnce();
+  });
+
+  it("passes onShow to the fallback Modal, with no fade for an overlay that moves itself", async () => {
+    const { WindowLayer } = await import("../src/primitives/window-layer");
+    const onShow = vi.fn();
+    const modal = WindowLayer({ onRequestClose: () => {}, onShow, fade: false, children: "SHEET" }) as unknown as Element;
+    expect(modal.props).toMatchObject({ animationType: "none", onShow });
+  });
 });

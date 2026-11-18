@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage chatOverlays)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -172,6 +172,32 @@ async function openImageOverOlderMessage(name) {
   await afterOverlayCloses();
   await gone("Mock viewer image");
   shot(`${name}-image-closed`);
+  const newestVisible = visible(newest);
+  const targetVisible = visible(target);
+  return { newestVisible, targetVisible, jumped: newestVisible || !targetVisible };
+}
+
+/**
+ * On the chat-hold screen: scroll up to an older message, open an overlay with
+ * its trigger, see `marker`, close it with back, let real time pass, and say
+ * whether the list jumped to the newest message.
+ */
+async function overlayOverOlderMessage(trigger, marker, name) {
+  const target = "Chat message 20:";
+  const newest = "Chat message 40:";
+  const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+  for (let i = 0; i < 12 && !visible(target); i++) {
+    swipe(w / 2, Math.round(h * 0.35), w / 2, Math.round(h * 0.6), 300);
+    await settle();
+  }
+  await see(target);
+  await press(trigger);
+  await see(marker);
+  shot(`${name}-open`);
+  back();
+  await afterOverlayCloses();
+  await gone(marker);
+  shot(`${name}-closed`);
   const newestVisible = visible(newest);
   const targetVisible = visible(target);
   return { newestVisible, targetVisible, jumped: newestVisible || !targetVisible };
@@ -429,6 +455,24 @@ const scenarios = {
     log({ chatImage: results });
     const moved = results.filter((r) => r.jumped);
     if (moved.length) throw new AgentError(`the list jumped after the image closed (providers ${moved.map((r) => r.providers).join(", ")})`);
+  },
+  // A sheet, a confirm dialog and a dropdown over a scrolled-up chat (keyboard providers on): does any move the list?
+  async chatOverlays() {
+    await fresh();
+    await press("link-chat-hold");
+    await see("Keyboard providers: on");
+    await see("Chat message 40:");
+    const results = [];
+    for (const [trigger, marker, kind] of [
+      ["chat-hold-open-sheet", "Check sheet", "sheet"],
+      ["chat-hold-open-dialog", "Check dialog", "dialog"],
+      ["chat-hold-open-dropdown", "Check item", "dropdown"],
+    ]) {
+      results.push({ kind, ...(await overlayOverOlderMessage(trigger, marker, `chat-overlay-${kind}`)) });
+    }
+    log({ chatOverlays: results });
+    const moved = results.filter((r) => r.jumped);
+    if (moved.length) throw new AgentError(`the list jumped after: ${moved.map((r) => r.kind).join(", ")}`);
   },
   // An answered question's record: the picked option checked, free text as "Other", and the fallback line.
   async questionRecord() {
