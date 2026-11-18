@@ -13,6 +13,9 @@ appId: dev.vvedantb.nativegallery
     id: link-keyboard
 - assertVisible:
     id: composer-height
+# The composer is wrapped for image paste (`PasteInputProvider`); the screen still loads.
+- assertVisible:
+    id: kb-pasted-count
 - tapOn:
     id: composer-input
 - assertVisible:

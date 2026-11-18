@@ -194,6 +194,8 @@ vi.mock("react-native-keyboard-controller", () => ({
   KeyboardChatScrollView: "KC.KeyboardChatScrollView",
   KeyboardGestureArea: "KC.KeyboardGestureArea",
 }));
+// Not installed in this repository: the optional peer of `/paste-input`.
+vi.mock("expo-paste-input", () => ({ TextInputWrapper: "EPI.TextInputWrapper" }));
 vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
 vi.mock("@tabler/icons-react-native", () =>
   Object.fromEntries(
@@ -1158,6 +1160,38 @@ describe("PromptInput", () => {
     const submit = () => byType(h.tree, PromptInputSubmit)[0]!;
     return { h, onSubmit, field, submit };
   }
+
+  it("takes pasted images through PasteInputProvider, and keeps the bare field without it or without onPasteImages", async () => {
+    const { PasteInputProvider } = await import("../src/entries/paste-input");
+    const provider = PasteInputProvider({ children: null }) as unknown as Element;
+    const parts = provider.props.value as import("../src/primitives/paste-parts").PasteParts;
+    const onPasteImages = vi.fn();
+    // The field's slot: the field alone, or the field inside the app's paste target.
+    const slot = (tree: Element) => render(find(tree, (element) => "target" in element.props)!) as Element;
+    for (const layout of ["stacked", "inline"]) {
+      hooks.state.contexts.clear();
+      expect(slot((await composer({ layout, onPasteImages })).h.tree).type).toBe("FieldInput");
+      provide(provider);
+      expect(slot((await composer({ layout })).h.tree).type).toBe("FieldInput");
+      const { h, field } = await composer({ layout, onPasteImages });
+      const target = slot(h.tree);
+      expect(target.type).toBe(parts.Target);
+      expect(byType(target, "FieldInput")).toHaveLength(1);
+      if (layout === "inline") {
+        // The target grows across the row in the field's place, and the field fills it.
+        expect(target.props.style).toEqual({ flex: 1, minWidth: 0 });
+        expect(field().props.className).not.toMatch(/flex-1/);
+      }
+    }
+    // Images reach the composer; text paste stays the field's own, and an empty paste is ignored.
+    const wrapper = render({ type: parts.Target, props: { onPasteImages, children: "FIELD" } } as unknown as Element) as Element;
+    expect(wrapper.type).toBe("EPI.TextInputWrapper");
+    const onPaste = wrapper.props.onPaste as (payload: unknown) => void;
+    onPaste({ type: "text", value: "hi" });
+    onPaste({ type: "images", uris: [] });
+    onPaste({ type: "images", uris: ["file:///cache/a.png"] });
+    expect(onPasteImages).toHaveBeenCalledExactlyOnceWith(["file:///cache/a.png"]);
+  });
 
   it("names the field `<testID>-input` for UI tests, in both layouts, and sets no id without a testID", async () => {
     for (const layout of ["stacked", "inline"]) {

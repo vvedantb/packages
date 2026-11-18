@@ -253,6 +253,8 @@ const scenarios = {
     await fresh();
     await press("link-keyboard");
     await see("composer-height");
+    // The composer sits in the paste target (`PasteInputProvider`): the native module links and the field still grows.
+    await see("Pasted images: 0");
     await growComposer(null, ["line one", "line two", "line three", "line four"]);
     shot("keyboard-composer-inline-grown");
     back(); // closes the keyboard

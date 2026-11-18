@@ -8,6 +8,7 @@ import { withAlpha } from "../palette";
 import { tokens } from "../tokens";
 import { Input as FieldInput } from "../primitives/input";
 import { COMPOSER_INPUT_ID, KeyboardAvoidingView, KeyboardLiftContext } from "../primitives/keyboard-parts";
+import { usePasteParts, type PasteParts } from "../primitives/paste-parts";
 import { usePressFeedback } from "../motion";
 import { useControllableState } from "../primitives/use-controllable-state";
 import { useLargerText } from "../theme";
@@ -255,6 +256,12 @@ export type PromptInputProps = {
    */
   menu?: ReactNode;
   /**
+   * Images pasted into the field (long-press Paste, or the keyboard's image
+   * insert), as `file://` URIs. Needs `PasteInputProvider` from
+   * `@vvedantb/native-ui/paste-input`; without it a field takes text only.
+   */
+  onPasteImages?: (uris: string[]) => void;
+  /**
    * `stacked` (default): the field over a footer of tools and send, the web
    * `PromptInput`. `inline`: one row, as the web `Composer layout="inline"`
    * (Eva's chat): `leading`, the field, `toolbar`, then send, in a 20-radius
@@ -324,6 +331,7 @@ export function PromptInput({
   toolbar,
   footer,
   menu,
+  onPasteImages,
   layout = "stacked",
   shape = "rounded",
   leading,
@@ -337,6 +345,9 @@ export function PromptInput({
   const largerText = useLargerText();
   const insets = useSafeAreaInsets();
   const lifted = useContext(KeyboardLiftContext);
+  const paste = usePasteParts();
+  // The field inside the paste target when an app takes pasted images; it then fills the target.
+  const pasteTarget = paste && onPasteImages ? paste.Target : null;
   const [text, setText] = useControllableState({ value, defaultValue, onChange: onChangeText });
   const message = text.trim();
   const canSubmit = message.length > 0 && !disabled && !isGenerating(status);
@@ -393,36 +404,39 @@ export function PromptInput({
                 {leading}
               </View>
             ) : null}
-            <FieldInput
-              testID={testID ? `${testID}-input` : undefined}
-              nativeID={COMPOSER_INPUT_ID}
-              multiline
-              numberOfLines={ONE_ROW}
-              value={text}
-              onChangeText={changeText}
-              placeholder={placeholder}
-              placeholderTextColor={pill ? withAlpha(tokens.color.muted[scheme], PILL.placeholderAlpha) : undefined}
-              accessibilityLabel={accessibilityLabel}
-              editable={!disabled}
-              textAlignVertical="center"
-              scrollEnabled={scrollEnabled}
-              onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
-              className={cn(
-                "flex-1 border-0 text-sm font-instrument-sans",
-                pill ? "min-h-9 px-1 py-2" : "min-h-8 px-2 py-1",
-                largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
-              )}
-              style={[
-                fieldTextStyle(scheme),
-                fieldText,
-                largerText ? typeStyle("medium") : null,
-                {
-                  backgroundColor: "transparent",
-                  maxHeight,
-                  ...growStyle,
-                },
-              ]}
-            />
+            <PasteTarget target={pasteTarget} onPasteImages={onPasteImages} style={PASTE_TARGET_INLINE}>
+              <FieldInput
+                testID={testID ? `${testID}-input` : undefined}
+                nativeID={COMPOSER_INPUT_ID}
+                multiline
+                numberOfLines={ONE_ROW}
+                value={text}
+                onChangeText={changeText}
+                placeholder={placeholder}
+                placeholderTextColor={pill ? withAlpha(tokens.color.muted[scheme], PILL.placeholderAlpha) : undefined}
+                accessibilityLabel={accessibilityLabel}
+                editable={!disabled}
+                textAlignVertical="center"
+                scrollEnabled={scrollEnabled}
+                onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
+                className={cn(
+                  // In the row the field grows across; in a paste target, the target does and the field fills it.
+                  pasteTarget ? "border-0 text-sm font-instrument-sans" : "flex-1 border-0 text-sm font-instrument-sans",
+                  pill ? "min-h-9 px-1 py-2" : "min-h-8 px-2 py-1",
+                  largerText && "min-h-11 py-2 text-xl font-instrument-sans-medium",
+                )}
+                style={[
+                  fieldTextStyle(scheme),
+                  fieldText,
+                  largerText ? typeStyle("medium") : null,
+                  {
+                    backgroundColor: "transparent",
+                    maxHeight,
+                    ...growStyle,
+                  },
+                ]}
+              />
+            </PasteTarget>
             <View className="shrink-0 flex-row items-center gap-1" style={pill ? { minHeight: PILL.lineHeight } : null}>
               {toolbar}
               <PromptInputSubmit
@@ -440,34 +454,36 @@ export function PromptInput({
           {replyTo ? <View className="px-2 pt-2">{replyTo}</View> : null}
           {header ? <View className="flex-row flex-wrap gap-1 px-2 pt-2">{header}</View> : null}
           {/* The `Textarea` field without its `numberOfLines` (default 4), which on Android sets the line count: this one starts at one line and grows. */}
-          <FieldInput
-            testID={testID ? `${testID}-input` : undefined}
-            nativeID={COMPOSER_INPUT_ID}
-            multiline
-            numberOfLines={ONE_ROW}
-            value={text}
-            onChangeText={changeText}
-            placeholder={placeholder}
-            accessibilityLabel={accessibilityLabel}
-            editable={!disabled}
-            textAlignVertical="top"
-            scrollEnabled={scrollEnabled}
-            onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
-            className={cn(
-              "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
-              largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
-            )}
-            style={[
-              fieldTextStyle(scheme),
-              fieldText,
-              largerText ? typeStyle("medium") : null,
-              {
-                backgroundColor: "transparent",
-                maxHeight,
-                ...growStyle,
-              },
-            ]}
-          />
+          <PasteTarget target={pasteTarget} onPasteImages={onPasteImages}>
+            <FieldInput
+              testID={testID ? `${testID}-input` : undefined}
+              nativeID={COMPOSER_INPUT_ID}
+              multiline
+              numberOfLines={ONE_ROW}
+              value={text}
+              onChangeText={changeText}
+              placeholder={placeholder}
+              accessibilityLabel={accessibilityLabel}
+              editable={!disabled}
+              textAlignVertical="top"
+              scrollEnabled={scrollEnabled}
+              onContentSizeChange={(e) => setContentHeight(e.nativeEvent.contentSize.height)}
+              className={cn(
+                "min-h-11 border-0 px-3.5 py-2.5 text-base font-instrument-sans",
+                largerText && "min-h-14 px-4 py-3 text-xl font-instrument-sans-medium",
+              )}
+              style={[
+                fieldTextStyle(scheme),
+                fieldText,
+                largerText ? typeStyle("medium") : null,
+                {
+                  backgroundColor: "transparent",
+                  maxHeight,
+                  ...growStyle,
+                },
+              ]}
+            />
+          </PasteTarget>
           <View className="flex-row items-center justify-between gap-1 px-2 pb-2">
             <View className="min-w-0 shrink flex-row items-center gap-1">{toolbar}</View>
             <PromptInputSubmit status={status} onSubmit={submit} onStop={onStop} canSubmit={canSubmit} />
@@ -486,5 +502,28 @@ export function PromptInput({
     >
       {composer}
     </KeyboardAvoidingView>
+  );
+}
+
+/** In the inline row the paste target takes the field's place: it grows across, and the field fills it. */
+const PASTE_TARGET_INLINE = { flex: 1, minWidth: 0 };
+
+/** The field inside the app's paste target (`PasteInputProvider`), or the field alone. */
+function PasteTarget({
+  target: Target,
+  onPasteImages,
+  style,
+  children,
+}: {
+  target: PasteParts["Target"] | null;
+  onPasteImages: ((uris: string[]) => void) | undefined;
+  style?: { flex: number; minWidth: number };
+  children: ReactNode;
+}) {
+  if (!Target || !onPasteImages) return children;
+  return (
+    <Target onPasteImages={onPasteImages} style={style}>
+      {children}
+    </Target>
   );
 }
