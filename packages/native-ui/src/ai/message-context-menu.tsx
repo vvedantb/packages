@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cn } from "../cn";
@@ -10,6 +10,7 @@ import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageMenuRect } from "./message-menu-layout";
+import { usePressed } from "../usePressed";
 
 /**
  * The iMessage hold menu for a chat message: the chat fades under a frosted
@@ -193,7 +194,7 @@ function MenuCardRow({
 }) {
   const scheme = useScheme();
   // A state, not a style function: with a `className`, NativeWind drops a style function.
-  const [pressed, setPressed] = useState(false);
+  const press = usePressed();
   const disabled = action.disabled === true;
   const Icon = action.icon;
   const color = action.destructive ? palette.danger[scheme] : tokens.color.foreground[scheme];
@@ -205,14 +206,14 @@ function MenuCardRow({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       className="flex-row items-center gap-3 px-4"
       style={[
         {
           minHeight: rowHeight,
           opacity: disabled ? 0.5 : 1,
-          backgroundColor: pressed && !disabled ? palette.default[scheme] : "transparent",
+          backgroundColor: press.pressed && !disabled ? palette.default[scheme] : "transparent",
         },
         !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.color.separator[scheme] },
       ]}

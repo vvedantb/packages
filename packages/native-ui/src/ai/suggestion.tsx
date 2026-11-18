@@ -7,6 +7,7 @@ import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
 import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
+import { usePressed } from "../usePressed";
 
 export type SuggestionsProps = {
   /** `horizontal` (default) scrolls one row of chips; `vertical` stacks them full width. */
@@ -61,6 +62,7 @@ const CHIP_HEIGHT = 32;
  * it takes the web hover (`bg-surface-tertiary text-foreground`).
  */
 export function Suggestion({ suggestion, onPress, children, disabled, testID }: SuggestionProps) {
+  const press = usePressed();
   const scheme = useScheme();
   const largerText = useLargerText();
   const size = chatTextSize("small", largerText);
@@ -74,11 +76,13 @@ export function Suggestion({ suggestion, onPress, children, disabled, testID }: 
       hitSlop={touchSlop(MIN_TOUCH_TARGET, CHIP_HEIGHT)}
       onPress={() => onPress?.(suggestion)}
       className={cn("justify-center border", largerText ? "min-h-12 px-4 py-2" : "min-h-8 px-3 py-1.5", disabled && "opacity-45")}
-      style={({ pressed }) => ({
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={{
         borderRadius: tokens.radius.pill,
         borderColor: tokens.color.border[scheme],
-        backgroundColor: pressed ? palette.surfaceTertiary[scheme] : tokens.color.surfaceSecondary[scheme],
-      })}
+        backgroundColor: press.pressed ? palette.surfaceTertiary[scheme] : tokens.color.surfaceSecondary[scheme],
+      }}
     >
       {({ pressed }) => (
         <Text
