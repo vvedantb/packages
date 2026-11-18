@@ -533,13 +533,24 @@ describe("SectionLabel", () => {
 describe("SheetRow", () => {
   async function sheetRow(props: Record<string, unknown> = {}) {
     const { SheetRow } = await import("../src/SheetRow");
-    return SheetRow({ title: "Delete", ...props } as Parameters<typeof SheetRow>[0]) as unknown as Element;
+    hooks.reset();
+    return hooks.render(() => SheetRow({ title: "Delete", ...props } as Parameters<typeof SheetRow>[0]) as unknown as Element);
   }
   function TestIcon() {
     return null;
   }
-  const pressedFill = (tree: Element, pressed: boolean) =>
-    (tree.props.style as (state: { pressed: boolean }) => Record<string, unknown>)({ pressed }).backgroundColor;
+  /** The row's fill, pressed (a press in, then the next render) or not. */
+  async function pressedFill(props: Record<string, unknown>, pressed: boolean) {
+    const { SheetRow } = await import("../src/SheetRow");
+    hooks.reset();
+    const render = () => hooks.render(() => SheetRow({ title: "Delete", ...props } as Parameters<typeof SheetRow>[0]) as unknown as Element);
+    let tree = render();
+    if (pressed) {
+      (tree.props.onPressIn as () => void)();
+      tree = render();
+    }
+    return flatten(tree.props.style).backgroundColor;
+  }
 
   it("is a labelled button at least 56 high, with the web menu highlight while pressed", async () => {
     const onPress = vi.fn();
@@ -554,8 +565,8 @@ describe("SheetRow", () => {
       onPress,
     });
     expect(tree.props.className).toMatch(/min-h-14/);
-    expect(pressedFill(tree, true)).toBe(palette.default.light);
-    expect(pressedFill(tree, false)).toBe("transparent");
+    expect(await pressedFill({ onPress }, true)).toBe(palette.default.light);
+    expect(await pressedFill({ onPress }, false)).toBe("transparent");
   });
 
   it("draws a leading mark in place of the icon", async () => {
@@ -596,7 +607,7 @@ describe("SheetRow", () => {
     expect(disabled.props.disabled).toBe(true);
     expect(disabled.props.accessibilityState).toMatchObject({ disabled: true });
     expect(disabled.props.className).toMatch(/opacity-50/);
-    expect(pressedFill(disabled, true)).toBe("transparent");
+    expect(await pressedFill({ disabled: true, onPress: () => {} }, true)).toBe("transparent");
   });
 });
 

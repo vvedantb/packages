@@ -1439,17 +1439,20 @@ describe("Suggestion, Source, FileChip and Attachment", () => {
   it("Suggestion is a labelled round chip that passes its text and reaches 44", async () => {
     const { Suggestion } = await import("../src/ai/suggestion");
     const onPress = vi.fn();
-    const chip = Suggestion({ suggestion: "Draft a reply", onPress }) as unknown as Element;
+    const h = hooks.mount(() => Suggestion({ suggestion: "Draft a reply", onPress }) as unknown as Element);
+    const chip = h.tree;
     expect(chip.type).toBe("Pressable");
     expect(chip.props).toMatchObject({ accessibilityRole: "button", accessibilityLabel: "Draft a reply" });
     expect(chip.props.hitSlop).toEqual(touchSlop(MIN_TOUCH_TARGET, 32));
-    const style = chip.props.style as (state: { pressed: boolean }) => Record<string, unknown>;
-    expect(style({ pressed: false })).toEqual({
+    // A plain style: with a className, NativeWind drops a style function.
+    expect(chip.props.style).toEqual({
       borderRadius: tokens.radius.pill,
       borderColor: tokens.color.border.light,
       backgroundColor: tokens.color.surfaceSecondary.light,
     });
-    expect(style({ pressed: true }).backgroundColor).toBe(palette.surfaceTertiary.light);
+    // A press in renders again with the pressed fill.
+    (chip.props.onPressIn as () => void)();
+    expect(flatten(h.tree.props.style).backgroundColor).toBe(palette.surfaceTertiary.light);
     const label = (chip.props.children as (state: { pressed: boolean }) => Element)({ pressed: false });
     expect(label.props.children).toBe("Draft a reply");
     expect(flatten(label.props.style).color).toBe(tokens.color.muted.light);

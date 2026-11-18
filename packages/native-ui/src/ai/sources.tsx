@@ -15,6 +15,7 @@ import {
   type CollapsibleTriggerProps,
 } from "./collapsible";
 import { ResponseText } from "./response-text";
+import { usePressed } from "../usePressed";
 
 /** The sources a reply used, folded (default closed). */
 export function Sources({ className, ...props }: CollapsibleProps) {
@@ -75,6 +76,7 @@ const ROW_HEIGHT = 36;
  * Pressed, it takes the web hover fill (`bg-surface-secondary`).
  */
 export function Source({ href, title, onPress, testID }: SourceProps) {
+  const press = usePressed();
   const scheme = useScheme();
   const largerText = useLargerText();
   const label = title ?? href;
@@ -85,11 +87,13 @@ export function Source({ href, title, onPress, testID }: SourceProps) {
       accessibilityLabel={label}
       hitSlop={touchSlop(MIN_TOUCH_TARGET, ROW_HEIGHT)}
       onPress={() => (onPress ? onPress(href) : void Linking.openURL(href))}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       className="flex-row items-center justify-between gap-2 px-3 py-2"
-      style={({ pressed }) => ({
+      style={{
         borderRadius: tokens.radius.md,
-        backgroundColor: pressed ? tokens.color.surfaceSecondary[scheme] : "transparent",
-      })}
+        backgroundColor: press.pressed ? tokens.color.surfaceSecondary[scheme] : "transparent",
+      }}
     >
       <ResponseText size="small" tone="muted" selectable={false} numberOfLines={1} className="shrink">
         {label}

@@ -24,6 +24,7 @@ import { useOptionalConversation } from "./conversation-context";
 import { MessageContextMenu } from "./message-context-menu";
 import type { MessageMenu, MessageMenuRect } from "./message-menu-layout";
 import { ChatTextColorContext, ResponseText } from "./response-text";
+import { usePressed } from "../usePressed";
 
 export type MessageRole = "user" | "assistant" | "system";
 
@@ -138,7 +139,7 @@ export function Message({
 }: MessageProps) {
   const user = from === "user";
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [pressing, setPressing] = useState(false);
+  const press = usePressed();
   // The open context menu: where the message was and what it offers, read at the hold.
   const [held, setHeld] = useState<{ anchor: MessageMenuRect; menu: MessageMenu } | null>(null);
   // Measured at the hold: the menu draws the message again where it is on screen.
@@ -183,9 +184,9 @@ export function Message({
             className={merged}
             // While held it dims a little: the feedback before the menu opens. A state, not a
             // style function: with a `className`, NativeWind drops a style function, layout and all.
-            style={[layout, pressing ? HELD_STYLE : null]}
-            onPressIn={() => setPressing(true)}
-            onPressOut={() => setPressing(false)}
+            style={[layout, press.pressed ? HELD_STYLE : null]}
+            onPressIn={press.onPressIn}
+            onPressOut={press.onPressOut}
             onLongPress={longPress}
             delayLongPress={HOLD_DELAY_MS}
             // TalkBack's actions menu reaches the same sheet as a long press.

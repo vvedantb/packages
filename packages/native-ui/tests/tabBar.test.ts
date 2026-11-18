@@ -28,6 +28,8 @@ vi.mock("react", async (importOriginal) => ({
   // `useScheme` reads the theme version context; outside a renderer it gets its default, 0.
   useContext: () => 0,
   useEffect: (effect: () => void) => effect(),
+  // A tab's pressed look (`usePressed`) starts unpressed; no renderer re-runs it.
+  useState: <T,>(initial: T) => [initial, () => {}],
 }));
 vi.mock("react-native-reanimated", () => ({
   default: { View: "Animated.View" },

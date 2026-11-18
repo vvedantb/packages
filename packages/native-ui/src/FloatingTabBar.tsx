@@ -15,6 +15,7 @@ import { useLargerText } from "./theme";
 import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
 import { FLOATING_PILL_RADIUS, tabBarHeight, tabBarSlotStyle } from "./floating";
+import { usePressed } from "./usePressed";
 
 /**
  * Space between the bar edge and the tabs, on every side of the active pill,
@@ -158,6 +159,7 @@ function TabBarItem({
   testID,
   accessibilityLabel,
 }: TabBarItemProps) {
+  const press = usePressed();
   const onPress = () => {
     const event = navigation.emit({
       type: "tabPress",
@@ -177,8 +179,10 @@ function TabBarItem({
       accessibilityState={{ selected: focused }}
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       className="min-h-12 min-w-12 flex-1 items-center justify-center gap-1"
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      style={{ opacity: press.pressed ? 0.7 : 1 }}
     >
       {renderIcon ? renderIcon({ focused, color, size: largerText ? 28 : 24 }) : null}
       <Text

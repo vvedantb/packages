@@ -7,6 +7,7 @@ import { palette } from "./palette";
 import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
+import { usePressed } from "./usePressed";
 
 export type SheetRowProps = {
   /** A Tabler icon at the start. */
@@ -55,6 +56,7 @@ export function SheetRow({
   onPress,
   testID,
 }: SheetRowProps) {
+  const press = usePressed();
   const scheme = useScheme();
   const largerText = useLargerText();
   const color = danger
@@ -79,10 +81,12 @@ export function SheetRow({
         largerText ? "min-h-16" : "min-h-14",
         disabled && "opacity-50",
       )}
-      style={({ pressed }) => ({
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={{
         borderRadius: tokens.radius.sm,
-        backgroundColor: pressed && !disabled ? palette.default[scheme] : "transparent",
-      })}
+        backgroundColor: press.pressed && !disabled ? palette.default[scheme] : "transparent",
+      }}
     >
       {leading ?? (Icon ? <Icon size={iconSize} color={color} /> : null)}
       <View className="min-w-0 flex-1">
