@@ -10,7 +10,7 @@ import { useReduceMotion } from "../useReduceMotion";
 // the app instead, so the focus never moves. Without a host, `WindowLayer`
 // falls back to a `Modal`, so an app that mounts none keeps working.
 
-type Layer = { id: string; node: ReactNode; onRequestClose: () => void };
+type Layer = { id: string; node: ReactNode; onRequestClose: () => void; onShow?: () => void; fade: boolean };
 
 const EMPTY: readonly Layer[] = [];
 let layers: readonly Layer[] = EMPTY;
@@ -34,7 +34,17 @@ const upsert = (layer: Layer) => {
   emit();
 };
 
+// Layers that have called `onShow` once, as a Modal does once per opening.
+const announced = new Set<string>();
+
+const showOnce = (layer: Layer) => {
+  if (announced.has(layer.id)) return;
+  announced.add(layer.id);
+  layer.onShow?.();
+};
+
 const remove = (id: string) => {
+  announced.delete(id);
   if (!layers.some((item) => item.id === id)) return;
   layers = layers.filter((item) => item.id !== id);
   emit();
@@ -68,7 +78,8 @@ const hostRef = (view: View | null) => {
  */
 export function WindowLayerHost({ children }: { children: ReactNode }) {
   const shown = useSyncExternalStore(subscribe, () => layers, () => EMPTY);
-  // The layers fade in and out as a Modal's `fade`; with Reduce Motion they appear at once.
+  // The layers fade in and out as a Modal's `fade`, unless they move on their
+  // own (`fade={false}`); with Reduce Motion they appear at once.
   const enter = FadeIn.duration(200).reduceMotion(ReduceMotion.System);
   const exit = FadeOut.duration(150).reduceMotion(ReduceMotion.System);
   return (
@@ -81,7 +92,14 @@ export function WindowLayerHost({ children }: { children: ReactNode }) {
         {children}
       </View>
       {shown.map((layer) => (
-        <Animated.View key={layer.id} entering={enter} exiting={exit} style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <Animated.View
+          key={layer.id}
+          entering={layer.fade ? enter : undefined}
+          exiting={layer.fade ? exit : undefined}
+          onLayout={() => showOnce(layer)}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="box-none"
+        >
           {layer.node}
         </Animated.View>
       ))}
@@ -94,16 +112,23 @@ export function WindowLayerHost({ children }: { children: ReactNode }) {
  * `WindowLayerHost` when the app has one, else a transparent `Modal` (with
  * `onDismiss` there). Render it only while the overlay shows. Android back
  * calls `onRequestClose`. Its children keep the providers above the host, not
- * those between the host and this element.
+ * those between the host and this element: an overlay with its own context
+ * (a Dialog's open state, a menu's) provides it again inside.
  */
 export function WindowLayer({
   onRequestClose,
   onDismiss,
+  onShow,
+  fade = true,
   children,
 }: {
   onRequestClose: () => void;
   /** The fallback Modal's dismiss (iOS); a layer is gone as it unmounts. */
   onDismiss?: () => void;
+  /** Once the layer is on screen, as a Modal's `onShow`. */
+  onShow?: () => void;
+  /** Fade in and out. `false` for an overlay that runs its own motion. Default `true`. */
+  fade?: boolean;
   children: ReactNode;
 }) {
   const id = useId();
@@ -112,8 +137,8 @@ export function WindowLayer({
   // A portal has to hand the host its children after each render: an external
   // store fed from an effect, the one sync React offers for it.
   useLayoutEffect(() => {
-    if (hosted) upsert({ id, node: children, onRequestClose });
-  }, [hosted, id, children, onRequestClose]);
+    if (hosted) upsert({ id, node: children, onRequestClose, onShow, fade });
+  }, [hosted, id, children, onRequestClose, onShow, fade]);
   useLayoutEffect(() => () => remove(id), [id]);
   if (hosted) return null;
   return (
@@ -121,9 +146,10 @@ export function WindowLayer({
       visible
       transparent
       statusBarTranslucent
-      animationType={reduceMotion ? "none" : "fade"}
+      animationType={fade && !reduceMotion ? "fade" : "none"}
       onRequestClose={onRequestClose}
       onDismiss={onDismiss}
+      onShow={onShow}
     >
       {children}
     </Modal>

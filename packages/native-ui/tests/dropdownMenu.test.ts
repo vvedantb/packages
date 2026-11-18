@@ -13,6 +13,7 @@ const menu = vi.hoisted(() => ({
   larger: false,
 }));
 
+vi.mock("../src/primitives/window-layer", () => ({ WindowLayer: "WindowLayer" }));
 vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useContext: () => menu.value,
@@ -158,15 +159,19 @@ describe("DropdownMenu parts", () => {
     expect(open.setTrigger).not.toHaveBeenCalled();
   });
 
-  it("the content is a transparent modal with the overlay surface at radius 16, closed by an outside tap or Android back", async () => {
+  it("the content is a window layer with the overlay surface at radius 16, closed by an outside tap or Android back", async () => {
     const { DropdownMenuContent } = await import("../src/DropdownMenu");
     const value = context(true);
     const modal = DropdownMenuContent({ align: "end", children: "items" }) as unknown as Element;
-    expect(modal.type).toBe("Modal");
-    expect(modal.props).toMatchObject({ visible: true, transparent: true, animationType: "none", statusBarTranslucent: true });
+    // In the app's window (a chat under it keeps its place), with no fade of its own: the panel moves.
+    expect(modal.type).toBe("WindowLayer");
+    expect(modal.props.fade).toBe(false);
     (modal.props.onRequestClose as () => void)();
-    // A full-size host under the Modal (as `OverlayModal` has), holding the backdrop and the menu.
-    const host = modal.props.children as Element;
+    // The items' menu context, given again inside the layer, which loses it.
+    const provider = modal.props.children as Element;
+    expect(provider.props).toMatchObject({ value });
+    // A full-size host in the layer (as `OverlayModal` has), holding the backdrop and the menu.
+    const host = provider.props.children as Element;
     expect(host.type).toBe("View");
     expect(host.props.style).toEqual({ flex: 1 });
     expect(host.props.pointerEvents).toBe("box-none");
@@ -184,9 +189,9 @@ describe("DropdownMenu parts", () => {
     const surface = elements(modal).find((element) => element.type === "FloatingSurface")!;
     expect(surface.props).toMatchObject({ blur: false, radius: tokens.radius.lg });
     expect(elements(modal).find((element) => element.type === "ScrollView")!.props.contentContainerStyle).toEqual({ padding: 6 });
-    expect(DropdownMenuContent({ children: null }).props.visible).toBe(true);
+    expect(DropdownMenuContent({ children: null })).not.toBeNull();
     context(false);
-    expect((DropdownMenuContent({ children: null }) as unknown as Element).props.visible).toBe(false);
+    expect(DropdownMenuContent({ children: null })).toBeNull();
   });
 
   it("an item is a 48-high menuitem with a 16 icon that selects, then closes, with no haptic", async () => {

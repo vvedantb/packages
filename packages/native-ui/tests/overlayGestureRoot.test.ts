@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 type Element = ReactElement<{ children?: unknown; style?: unknown }>;
 
 const contexts = vi.hoisted(() => ({ values: new Map<unknown, unknown>() }));
+vi.mock("../src/primitives/window-layer", () => ({ WindowLayer: "WindowLayer" }));
 vi.mock("../src/pressScale", () => import("./pressScaleStub"));
 vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
@@ -67,8 +68,9 @@ afterEach(() => {
 async function modalContent(): Promise<Element> {
   const { OverlayModal } = await import("../src/primitives/overlay");
   const modal = OverlayModal({ part: "SheetContent", placement: "bottom", dismissible: true, children: "content" });
-  expect(modal.type).toBe("Modal");
-  return modal.props.children;
+  // A layer in the app's window, with the overlay's open state given again inside it.
+  expect(modal?.type).toBe("WindowLayer");
+  return modal?.props.children.props.children;
 }
 
 describe("overlay Modal root view", () => {

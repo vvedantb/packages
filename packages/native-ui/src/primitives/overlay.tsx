@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  Modal,
   Pressable,
   StyleSheet,
   View,
@@ -36,6 +35,7 @@ import {
   useSheetDragState,
 } from "./sheet-drag";
 import { useControllableState } from "./use-controllable-state";
+import { WindowLayer } from "./window-layer";
 
 type OverlayContextValue = {
   open: boolean;
@@ -116,22 +116,23 @@ export function OverlayClose(props: OverlayPressableProps & { part: string }) {
 }
 
 /**
- * RN `Modal` with a tinted backdrop, safe-area padding and keyboard avoidance
+ * A `WindowLayer` (in the app's window under `WindowLayerHost`, so a chat
+ * under it keeps its place; else a `Modal`) with a tinted backdrop, safe-area padding and keyboard avoidance
  * (`KeyboardAvoidingView`: frame by frame with `KeyboardControllerProvider`).
  * `placement="center"` centres the child (dialogs) inside the insets on every
  * side: the backdrop fades while the panel scales from 0.96 and fades in (200
- * ms on open, 150 ms on close), and the `Modal` stays up until it is out of
+ * ms on open, 150 ms on close), and the layer stays up until it is out of
  * sight. `"bottom"` pins it to the bottom
  * edge (sheets), which pad their own bottom inset: the sheet slides up on
  * open and back down on close, however it closes, and may be dragged down to
  * close (`SheetDragView`); the backdrop fades with the sheet's position. The
- * `Modal` stays up until the sheet is out of sight. The backdrop closes the
+ * layer stays up until the sheet is out of sight. The backdrop closes the
  * overlay only when `dismissible`; Android back and the VoiceOver escape
  * gesture always close it, as Escape does on the web. With Reduce Motion on,
  * overlays appear and leave in place. With the Gesture Handler parts
  * (`GestureHandlerProvider`), the content sits in its own root view: on
  * Android a `Modal` is a separate root, and without one there every gesture
- * in it silently does nothing.
+ * in it silently does nothing (the fallback `Modal`).
  */
 export function OverlayModal({
   part,
@@ -147,7 +148,8 @@ export function OverlayModal({
   onShow?: () => void;
   children: ReactNode;
 }) {
-  const { open, setOpen } = useOverlay(part);
+  const overlay = useOverlay(part);
+  const { open, setOpen } = overlay;
   const reduceMotion = useReduceMotion();
   const slides = placement === "bottom" && !reduceMotion;
   const scales = placement === "center" && !reduceMotion;
@@ -158,15 +160,12 @@ export function OverlayModal({
   const close = () => setOpen(false);
   const ModalRoot = useContext(SheetGestureContext)?.ModalRoot ?? Fragment;
 
+  if (!shown) return null;
   return (
-    <Modal
-      visible={shown}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={close}
-      onShow={onShow}
-    >
+    // The layer runs its own motion, so no fade; a layer loses the context
+    // between it and the host, so the open state is provided again.
+    <WindowLayer onRequestClose={close} onShow={onShow} fade={false}>
+      <OverlayContext.Provider value={overlay}>
       <ModalRoot>
         <OverlayModalBody
           placement={placement}
@@ -181,11 +180,12 @@ export function OverlayModal({
           {children}
         </OverlayModalBody>
       </ModalRoot>
-    </Modal>
+      </OverlayContext.Provider>
+    </WindowLayer>
   );
 }
 
-/** The `Modal`'s content: mounted with each opening, so a sheet starts below the screen (or at rest). */
+/** The layer's content: mounted with each opening, so a sheet starts below the screen (or at rest). */
 function OverlayModalBody({
   part,
   placement,
@@ -232,7 +232,7 @@ function OverlayModalBody({
   }, [open, slides]);
   // The same for a centred dialog, from wherever `progress` is. Opened again
   // while it leaves, it turns back at once, and the exit callback reports
-  // `finished` false, so the `Modal` stays up.
+  // `finished` false, so the layer stays up.
   useEffect(() => {
     if (!scales) return;
     if (open) {
@@ -254,7 +254,7 @@ function OverlayModalBody({
           is the measured overlap, so it drops to 0 where the window does
           resize. Frame by frame with `KeyboardControllerProvider`. */}
       <KeyboardAvoidingView style={styles.fill}>
-        {/* A `Modal` is its own window: a dock it opened from does not lift what is in it. */}
+        {/* Over the app, not in the dock it opened from: the dock's lift is not for it. */}
         <KeyboardLiftContext.Provider value={false}>
           <Animated.View
             pointerEvents="box-none"
