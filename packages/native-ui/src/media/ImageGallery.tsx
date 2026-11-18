@@ -10,6 +10,7 @@ import { useReduceMotion } from "../useReduceMotion";
 import { useScheme } from "../useScheme";
 import { ZoomImageContext } from "./zoomImage";
 import { imageAspect, imageGridTiles, imageViewerPage, MEDIA, type GalleryImage, type ImageGridTile } from "./imageGrid";
+import { OverlayFreezeMark } from "../primitives/overlay-freeze";
 
 export type ImageGalleryProps = {
   images: GalleryImage[];
@@ -163,6 +164,7 @@ export function ImageViewer({ images, index, onIndexChange, onClose, onOpenImage
       <ViewerRoot>
         <ViewerPages images={images} index={index} onIndexChange={onIndexChange} onClose={onClose} onOpenImage={onOpenImage} />
       </ViewerRoot>
+      <OverlayFreezeMark />
     </Modal>
   );
 }

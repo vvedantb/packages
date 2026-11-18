@@ -116,6 +116,8 @@ vi.mock("react", async (importOriginal) => ({
   useRef: hooks.useRef,
   useEffect: hooks.useEffect,
   useContext: hooks.useContext,
+  // The overlay store (`useOverlayFrozen`): its snapshot, as no renderer subscribes here.
+  useSyncExternalStore: <T>(_subscribe: unknown, getSnapshot: () => T) => getSnapshot(),
   useCallback: <T>(callback: T) => callback,
   useMemo: <T>(factory: () => T) => factory(),
 }));

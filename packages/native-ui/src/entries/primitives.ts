@@ -168,3 +168,6 @@ export type { SheetProps, SheetContentProps } from "../Sheet";
 export { Toaster } from "../Toast";
 export { toast } from "../toastStore";
 export type { ToastOptions, ToastVariant } from "../toastStore";
+
+// Chat lists stop following the keyboard while a Modal shows (Android moves the window focus).
+export { overlayFreezeRef } from "../primitives/overlay-freeze";

@@ -26,6 +26,7 @@ import { tokens } from "./tokens";
 import { useReduceMotion } from "./useReduceMotion";
 import { useScheme } from "./useScheme";
 import { useControllableState } from "./primitives/use-controllable-state";
+import { OverlayFreezeMark } from "./primitives/overlay-freeze";
 
 /**
  * Sizes from the web menu classes (`_menu-classes.ts`): content `min-w-[12rem]
@@ -314,6 +315,7 @@ export function DropdownMenuContent({
           </Animated.View>
         </View>
       </View>
+      <OverlayFreezeMark />
     </Modal>
   );
 }

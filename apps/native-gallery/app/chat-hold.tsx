@@ -9,6 +9,7 @@ import {
 } from "@vvedantb/native-ui/ai";
 import { KeyboardControllerProvider } from "@vvedantb/native-ui/keyboard-controller";
 import { Button } from "@vvedantb/native-ui/button";
+import { ImageViewer } from "@vvedantb/native-ui/primitives";
 import { useState, type ReactNode } from "react";
 import { View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -27,6 +28,8 @@ const THREAD: Row[] = Array.from({ length: 40 }, (_, index) => ({
   from: index % 2 === 0 ? "user" : "assistant",
   text: `Chat message ${index + 1}: ${"a line of text that wraps over two rows on a phone. ".repeat(2)}`,
 }));
+const VIEWER_IMAGES = [{ url: "https://picsum.photos/seed/chat-hold/800/600", alt: "Mock viewer image" }];
+
 // Newest first, as the inverted list draws row 0 at the bottom.
 const NEWEST_FIRST = [...THREAD].reverse();
 
@@ -53,10 +56,21 @@ function Chat({ toggle }: { toggle: ReactNode }) {
   const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState("");
   const [chosen, setChosen] = useState("none");
+  // An image opened over the chat, as a phone opens a message's attachment: the viewer is a Modal too.
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   return (
         <View style={{ flex: 1, paddingTop: insets.top }} testID="screen-chat-hold">
           {toggle}
+          <Button testID="chat-hold-open-image" size="sm" variant="outline" onPress={() => setViewerIndex(0)}>
+            Open image
+          </Button>
+          <ImageViewer
+            images={VIEWER_IMAGES}
+            index={viewerIndex}
+            onIndexChange={setViewerIndex}
+            onClose={() => setViewerIndex(null)}
+          />
           <GText testID="chat-hold-result">{`Chose: ${chosen}`}</GText>
           <Conversation>
             <ConversationList

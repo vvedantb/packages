@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -135,6 +135,33 @@ async function holdOlderMessage(name) {
   shot(`${name}-after-swipe`);
   const afterSwipe = { newestVisible: visible(newest), targetVisible: visible(target) };
   return { afterHold, afterSwipe, jumped: afterHold.newestVisible || afterSwipe.newestVisible };
+}
+
+/**
+ * On the chat-hold screen: scroll up to an older message, open an image over
+ * the chat (a Modal, as a message's attachment opens), close it with back, and
+ * say whether the list jumped to the newest message.
+ */
+async function openImageOverOlderMessage(name) {
+  const target = "Chat message 20:";
+  const newest = "Chat message 40:";
+  await see(newest);
+  const [, , w, h] = dumpNodes({ retries: 2 })[0].bounds;
+  for (let i = 0; i < 12 && !visible(target); i++) {
+    swipe(w / 2, Math.round(h * 0.35), w / 2, Math.round(h * 0.6), 300);
+    await settle();
+  }
+  await see(target);
+  await press("chat-hold-open-image");
+  await see("Mock viewer image");
+  shot(`${name}-image-open`);
+  back();
+  await settle();
+  await gone("Mock viewer image");
+  shot(`${name}-image-closed`);
+  const newestVisible = visible(newest);
+  const targetVisible = visible(target);
+  return { newestVisible, targetVisible, jumped: newestVisible || !targetVisible };
 }
 
 /**
@@ -375,6 +402,20 @@ const scenarios = {
     log({ chatHold: results });
     const moved = results.filter((r) => r.jumped);
     if (moved.length) throw new AgentError(`the list jumped to the newest message (providers ${moved.map((r) => r.providers).join(", ")})`);
+  },
+  // An image opened and closed over a scrolled-up chat: the list stays (it jumped to the newest message on Android).
+  async chatImage() {
+    await fresh();
+    await press("link-chat-hold");
+    const results = [];
+    for (const providers of ["on", "off"]) {
+      await see(`Keyboard providers: ${providers}`);
+      results.push({ providers, ...(await openImageOverOlderMessage(`chat-image-${providers}`)) });
+      if (providers === "on") await press("chat-hold-keyboard");
+    }
+    log({ chatImage: results });
+    const moved = results.filter((r) => r.jumped);
+    if (moved.length) throw new AgentError(`the list jumped after the image closed (providers ${moved.map((r) => r.providers).join(", ")})`);
   },
   // An answered question's record: the picked option checked, free text as "Other", and the fallback line.
   async questionRecord() {

@@ -2,7 +2,7 @@ import { createContext, useContext, type RefObject } from "react";
 import type { NativeScrollEvent } from "react-native";
 
 // The `Conversation` context on its own, so a message can reach it without the
-// thread's components (`message.tsx` sets `overlay`).
+// thread's components.
 
 /**
  * What the thread scrolls with: the `ScrollView` of `ConversationContent` or
@@ -26,19 +26,6 @@ export type ConversationContextValue = {
   /** The height of the `ConversationDock` under the thread, 0 without one. */
   dockHeight: number;
   setDockHeight: (height: number) => void;
-  /**
-   * A message's hold menu over the thread. Its window takes the focus on
-   * Android, as it opens and again as it closes, and the keyboard handler of
-   * `ConversationList` would scroll the thread to its end each time. The list
-   * ignores the keyboard from `openOverlay` until the close has settled:
-   * `closeOverlay` marks it `closing`, and `settleOverlay` ends that on the
-   * close's last keyboard event (Android), the menu's dismiss (iOS) or the
-   * reader's next drag. Android gives no dismiss callback for a `Modal`.
-   */
-  overlay: "none" | "open" | "closing";
-  openOverlay: () => void;
-  closeOverlay: () => void;
-  settleOverlay: () => void;
 };
 
 export const ConversationContext = createContext<ConversationContextValue | null>(null);

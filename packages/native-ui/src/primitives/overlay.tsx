@@ -36,6 +36,7 @@ import {
   useSheetDragState,
 } from "./sheet-drag";
 import { useControllableState } from "./use-controllable-state";
+import { OverlayFreezeMark } from "./overlay-freeze";
 
 type OverlayContextValue = {
   open: boolean;
@@ -181,6 +182,7 @@ export function OverlayModal({
           {children}
         </OverlayModalBody>
       </ModalRoot>
+      <OverlayFreezeMark />
     </Modal>
   );
 }

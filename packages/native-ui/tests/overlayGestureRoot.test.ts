@@ -68,7 +68,10 @@ async function modalContent(): Promise<Element> {
   const { OverlayModal } = await import("../src/primitives/overlay");
   const modal = OverlayModal({ part: "SheetContent", placement: "bottom", dismissible: true, children: "content" });
   expect(modal.type).toBe("Modal");
-  return modal.props.children;
+  // The content first, then the mark that holds chat lists still while the Modal shows.
+  const [content, mark] = modal.props.children as Element[];
+  expect((mark!.type as { name?: string }).name).toBe("OverlayFreezeMark");
+  return content!;
 }
 
 describe("overlay Modal root view", () => {

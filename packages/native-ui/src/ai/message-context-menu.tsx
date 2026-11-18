@@ -13,6 +13,7 @@ import { useScheme } from "../useScheme";
 import { chatTextSize } from "./chat-text";
 import { MESSAGE_MENU, messageContextMenuLayout, type MessageMenu, type MessageMenuRect } from "./message-menu-layout";
 import { usePressed } from "../usePressed";
+import { OverlayFreezeMark } from "../primitives/overlay-freeze";
 
 /** How far the held message lifts as the menu opens: a little, so a tall one stays in its room. */
 const LIFT_SCALE = 1.02;
@@ -191,6 +192,7 @@ export function MessageContextMenu({
           ))}
         </Animated.View>
       </View>
+      <OverlayFreezeMark />
     </Modal>
   );
 }

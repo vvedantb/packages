@@ -166,7 +166,9 @@ describe("DropdownMenu parts", () => {
     expect(modal.props).toMatchObject({ visible: true, transparent: true, animationType: "none", statusBarTranslucent: true });
     (modal.props.onRequestClose as () => void)();
     // A full-size host under the Modal (as `OverlayModal` has), holding the backdrop and the menu.
-    const host = modal.props.children as Element;
+    const [host, mark] = modal.props.children as Element[];
+    // The mark after the host holds chat lists still while the menu shows.
+    expect((mark!.type as { name?: string }).name).toBe("OverlayFreezeMark");
     expect(host.type).toBe("View");
     expect(host.props.style).toEqual({ flex: 1 });
     expect(host.props.pointerEvents).toBe("box-none");

@@ -15,6 +15,7 @@ import {
   type MarkdownTableData,
   type MarkdownTableFormat,
 } from "./tableText";
+import { OverlayFreezeMark } from "../primitives/overlay-freeze";
 
 /**
  * Web `.markdown table` and its Streamdown wrapper: text at 0.93em with
@@ -182,6 +183,7 @@ export function MarkdownTable({ header, rows, data, color, onCopy }: MarkdownTab
             </ScrollView>
           </ScrollView>
         </View>
+        <OverlayFreezeMark />
       </Modal>
     </View>
   );

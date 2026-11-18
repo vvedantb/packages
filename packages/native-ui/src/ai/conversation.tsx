@@ -23,6 +23,7 @@ import { cn } from "../cn";
 import { MIN_TOUCH_TARGET, sizeStyle, textStyle, touchSlop, typeStyle } from "../controlStyles";
 import { withAlpha } from "../palette";
 import { KeyboardLiftContext, useKeyboardParts } from "../primitives/keyboard-parts";
+import { settleOverlays, useOverlayFrozen } from "../primitives/overlay-freeze";
 import { NativeOnlyAnimatedView } from "../primitives/native-only-animated-view";
 import { useLargerText } from "../theme";
 import { tokens } from "../tokens";
@@ -69,7 +70,6 @@ export function Conversation({ className, ...props }: ConversationProps) {
   const autoScrolling = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [dockHeight, setDockHeight] = useState(0);
-  const [overlay, setOverlay] = useState<ConversationContextValue["overlay"]>("none");
 
   const update = (next: boolean) => {
     atBottom.current = next;
@@ -99,10 +99,6 @@ export function Conversation({ className, ...props }: ConversationProps) {
     },
     dockHeight,
     setDockHeight,
-    overlay,
-    openOverlay: () => setOverlay("open"),
-    closeOverlay: () => setOverlay("closing"),
-    settleOverlay: () => setOverlay((current) => (current === "closing" ? "none" : current)),
   };
 
   return (
@@ -167,7 +163,8 @@ function useConversationScroll<P extends ConversationScrollHandlers>(
     },
     onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       conversation.onUserScroll();
-      conversation.settleOverlay();
+      // A drag means any overlay has closed: follow the keyboard again at once.
+      settleOverlays();
       onScrollBeginDrag?.(event);
     },
     // The app's handler first, so a scroller that measures itself (`ConversationList`) has the new size to follow.
@@ -248,6 +245,7 @@ export function ConversationList<T>({
 }: ConversationListProps<T>) {
   const conversation = useConversation();
   const keyboard = useKeyboardParts();
+  const overlayFrozen = useOverlayFrozen();
   const insets = useSafeAreaInsets();
   const inverted = props.inverted === true;
   // Sizes from the list's own events, for the scroll offset; no render reads
@@ -313,7 +311,8 @@ export function ConversationList<T>({
               <keyboard.ChatScrollView
                 {...scrollProps}
                 inverted={inverted}
-                freeze={conversation.overlay !== "none"}
+                // A Modal over the app (a hold menu, an image) moves the window focus on Android: ignore the keyboard meanwhile.
+                freeze={overlayFrozen}
                 // The composer pads the bottom inset, which the keyboard covers: the content rises by the rest.
                 bottomOffset={insets.bottom}
                 onInsetChange={(inset) => {
@@ -321,8 +320,6 @@ export function ConversationList<T>({
                 }}
                 onKeyboardMove={(moving) => {
                   size.current.keyboardMoving = moving;
-                  // The closing menu's window hands the focus back with a keyboard event: frozen until it ends.
-                  if (!moving) conversation.settleOverlay();
                 }}
               />
             )

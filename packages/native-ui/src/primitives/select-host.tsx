@@ -3,6 +3,7 @@ import * as React from "react";
 import { Modal, Platform, View } from "react-native";
 import { FullWindowOverlay } from "react-native-screens";
 import { useReduceMotion } from "../useReduceMotion";
+import { OverlayFreezeMark } from "./overlay-freeze";
 
 /**
  * Where `SelectContent` draws its options.
@@ -50,6 +51,7 @@ export function SelectHost({ children }: { children: React.ReactNode }) {
       <View style={{ flex: 1 }} pointerEvents="box-none" testID="SelectContent-host">
         {children}
       </View>
+      <OverlayFreezeMark />
     </Modal>
   );
 }
