@@ -62,7 +62,10 @@ describe("plain Node, no optional peers installed", () => {
 
   it("never imports vite, WXT or a plugin from dist", () => {
     for (const file of readdirSync(distDir).filter((name) => name.endsWith(".js"))) {
-      expect(readFileSync(join(distDir, file), "utf8")).not.toMatch(/from "(vite|@vitejs|@tanstack|@tailwindcss|expo|nativewind|wxt|@wxt-dev)/);
+      // `vite(?!st)` so the guard still catches the Vite bundler and its plugins but
+      // allows `vitest`: the shared-worker setup file imports it, and it only ever runs
+      // inside Vitest, never in the plain-Node import graph.
+      expect(readFileSync(join(distDir, file), "utf8")).not.toMatch(/from "(vite(?!st)|@vitejs|@tanstack|@tailwindcss|expo|nativewind|wxt|@wxt-dev)/);
     }
   });
 

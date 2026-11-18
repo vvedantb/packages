@@ -179,6 +179,40 @@ pnpm exec vvedantb-check-no-source-text apps/web --skip landing --skip-file no-s
 
 Put `allow-source-read: <reason>` in a comment on the same or the previous line to allow one read that feeds code under test. The directories `node_modules`, `dist`, `build`, `.git`, `.expo`, `.next`, `android`, `ios`, `out` and `release` are skipped; `--skip <dir>` adds more and `--skip-file <name>` skips one test file by name. Exit code: 0 clean, 1 findings, 2 bad usage.
 
+## vvedantb-doctor
+
+`vvedantb-doctor` inspects a repo for drift from the shared CI and tooling house rules and exits non-zero with a list of what to fix. It reads the root `package.json`, walks the workspace packages (from `pnpm-workspace.yaml` and npm `workspaces`), and reads `.github/workflows/*`. It makes no network requests.
+
+```sh
+pnpm exec vvedantb-doctor            # inspect the current directory
+pnpm exec vvedantb-doctor path/to/repo --json
+```
+
+Exit code: 0 clean (waived checks still count as clean), 1 drift, 2 bad usage.
+
+Each check has a stable id:
+
+| Id | Fails when |
+| --- | --- |
+| `no-eslint` | An `eslint`, `eslint-*`, `@eslint/*` or `@typescript-eslint/*` dependency, or an ESLint config file, is present. |
+| `no-prettier` | A `prettier` dependency, a Prettier config file, or a `prettier` key in a `package.json` is present. |
+| `no-plain-tsc` | A `typecheck` or `lint` script calls plain `tsc` (use `tsrs`). Only `typecheck`/`lint` scripts are checked, not `build`. |
+| `tsrs-present` | The repo has TypeScript but no `tsrs` dependency. |
+| `oxlint-dep` | No `oxlint` dependency. |
+| `oxlint-script` | No `lint` script that runs `oxlint`. |
+| `config-version` | The `@vvedantb/config` range floor is an older minor than the running `vvedantb-doctor` version. |
+| `ci-reusable-workflow` | No workflow calls `vvedantb/packages/.github/workflows/ci-app.yml`. |
+
+`--json` prints `{ root, runningVersion, ok, warnings, results }`, where each result is `{ id, title, status, details }` (plus `waiver` when waived) and `status` is `pass`, `fail` or `waived`.
+
+**Waivers.** A repo can waive a named check, with a written reason, in `.vvedantb-doctor.json`:
+
+```json
+{ "waivers": { "no-eslint": "legacy config, migration tracked in TICKET-123" } }
+```
+
+or under a `vvedantbDoctor.waivers` key in the root `package.json` (the file wins over `package.json`). A waiver needs a non-empty reason; an unknown id or an empty reason is dropped with a warning. A waived check prints as `waived` (with its reason), never silently.
+
 ## Vite and Vitest presets
 
 The root never imports Vite or a plugin. The app imports its plugins and passes the factories in, so the versions stay the app's own. The functions return plain objects; spread them into Vite's `defineConfig` and add `server`, `base` or `root` there.
@@ -219,6 +253,35 @@ export default defineConfig({
 Keys that are not asked for are left out, so `resolve` and `build` appear only when set. `reactPlugins(setup)` and `vendorChunkBuild(tests?)` are exported on their own.
 
 `defineWebVitestConfig` takes `plugins`, `tsconfigPaths`, `alias`, `automaticJsx` (`esbuild: { jsx: "automatic" }`), `include` (default `["src/**/*.test.ts"]`) and `inline` (`test.server.deps.inline`). It always sets `test.environment: "node"`. Pass the result to `defineConfig` from `vitest/config`.
+
+### Shared-worker Vitest preset (opt-in, faster)
+
+`sharedWorkerVitestConfig` is an opt-in wrapper that trades per-file isolation for speed: every test file runs in one shared worker instead of a fresh one, so a run starts up once rather than once per file. It is a named export, so a repo adopts it only where it wants the trade-off.
+
+```ts
+import { defineConfig } from "vitest/config";
+import { defineWebVitestConfig, sharedWorkerVitestConfig } from "@vvedantb/config";
+
+export default defineConfig(
+  sharedWorkerVitestConfig(defineWebVitestConfig({ include: ["src/**/*.test.ts"] })),
+);
+```
+
+It takes a base config (any `defineWebVitestConfig` result, or none) and an options object, and sets:
+
+| Field | Value | Why |
+| --- | --- | --- |
+| `test.isolate` | `false` | Share one worker across files. This is the speed win and the reason the cleanup rules below matter. |
+| `test.poolOptions.forks.singleFork` / `threads.singleThread` | `true` | Keep everything in one worker whether the repo's `pool` is `forks` or `threads`. |
+| `test.sequence.shuffle` | `{ files: true, tests: options.shuffleTests ?? false }` | Randomise file order so hidden cross-file order dependencies surface. Test order within a file stays stable unless you pass `shuffleTests: true`. |
+| `test.restoreMocks` / `unstubEnvs` / `unstubGlobals` | `true` | Reset mocks, `vi.stubEnv` and `vi.stubGlobal` after each test so state does not leak between files. |
+| `test.setupFiles` | `[SHARED_WORKER_SETUP, ...(options.setupFiles ?? [])]` | `SHARED_WORKER_SETUP` runs `vi.useRealTimers()` after each test (fake timers have no config flag). Your own setup files are appended. |
+
+The base config's `test.environment`, `include`, `server`, and its `plugins` / `esbuild` / `resolve` are carried through.
+
+**Cleanup rules.** With isolation off, module-level state is shared for the whole run. The config flags reset mocks, env stubs, global stubs and fake timers for you, but they do **not** reset a module's own top-level variables, caches or singletons created on import. A test file that mutates that state must restore it itself (`afterEach` / `afterAll`). If a file cannot be made independent, keep it on the default (isolated) Vitest config instead of this preset.
+
+**Supported Vitest range.** Verified against the installed Vitest 3. The options used (`isolate`, `poolOptions.forks`/`threads`, `sequence.shuffle`, `restoreMocks`, `unstubEnvs`, `unstubGlobals`, `setupFiles`) are present in Vitest 3, 4 and 5. The preset does not set `pool` (left to the repo) and does not support the `vmThreads` / `vmForks` pools, where `isolate` behaves differently.
 
 ## Chrome extensions (WXT)
 

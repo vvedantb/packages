@@ -39,6 +39,7 @@ describe("package.json", () => {
       "vvedantb-android-release": "./dist/android-release-cli.js",
       "vvedantb-check-shared-ui": "./dist/check-shared-ui-cli.js",
       "vvedantb-check-no-source-text": "./dist/check-no-source-text-cli.js",
+      "vvedantb-doctor": "./dist/doctor-cli.js",
     });
   });
 
