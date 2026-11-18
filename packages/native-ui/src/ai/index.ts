@@ -181,6 +181,8 @@ export type { CodeBlockProps, CodeBlockCopyButtonProps } from "./code-block";
 export { ResponseText, ChatTextColorContext } from "./response-text";
 export type { ResponseTextProps } from "./response-text";
 export { ChoiceQuestion, choiceAnswers } from "./choice-question";
+export { ActivityQuestionCard, freeTextAnswer, selectedLabels } from "./activity-question";
+export type { ActivityQuestionCardProps } from "./activity-question";
 export type { ChoiceQuestionProps, ChoiceQuestionItem } from "./choice-question";
 export { ActivityStepDetail } from "./activity-step-detail";
 export type { ActivityStepDetailProps, ActivityStepDetailStep } from "./activity-step-detail";

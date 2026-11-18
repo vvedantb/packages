@@ -26,6 +26,7 @@ export type GallerySectionId = keyof typeof GALLERY_SECTIONS;
 
 /** Component export name → section id. */
 export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
+  ActivityQuestionCard: "ai-cards",
   ActivityStep: "ai-chat",
   ActivityStepDetail: "ai-cards",
   AgentTrace: "ai-chat",

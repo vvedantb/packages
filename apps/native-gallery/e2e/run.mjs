@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -45,6 +45,18 @@ async function gone(target) {
 }
 
 /** Tap a target, scrolling the page up to a few times if it is off screen. */
+/** Scrolls until `target` is on screen, without tapping it. */
+async function reveal(target) {
+  for (let i = 0; i < 12; i++) {
+    const nodes = dumpNodes({ retries: 2 });
+    if (resolveTarget(nodes, target).ok) return;
+    const [, , w, h] = nodes[0].bounds;
+    swipe(w / 2, Math.round(h * 0.75), w / 2, Math.round(h * 0.3), 300);
+    await settle();
+  }
+  throw new AgentError(`could not scroll "${target}" into view`);
+}
+
 async function press(target) {
   for (let i = 0; i < 8; i++) {
     const nodes = dumpNodes({ retries: 2 });
@@ -363,6 +375,15 @@ const scenarios = {
     log({ chatHold: results });
     const moved = results.filter((r) => r.jumped);
     if (moved.length) throw new AgentError(`the list jumped to the newest message (providers ${moved.map((r) => r.providers).join(", ")})`);
+  },
+  // An answered question's record: the picked option checked, free text as "Other", and the fallback line.
+  async questionRecord() {
+    await fresh();
+    await press("link-ai-cards");
+    await reveal("Which export format should the report use?");
+    await reveal("Weekly to the leads");
+    await reveal("Answered in the next message");
+    shot("ai-cards-question-record");
   },
   async messageSheet() {
     await fresh();

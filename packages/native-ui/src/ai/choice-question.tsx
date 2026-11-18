@@ -232,7 +232,7 @@ export function ChoiceQuestion({
  * `text-3xs font-semibold` (10 / 14, 600) in a `px-2.5 py-0.5` pill. Drawn here
  * because `Badge` sets its own size and weight.
  */
-function TopicBadge({ children }: { children: string }) {
+export function TopicBadge({ children }: { children: string }) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const fontSize = largerText ? 14 : 10;
