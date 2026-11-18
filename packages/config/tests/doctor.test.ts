@@ -157,4 +157,15 @@ describe("runDoctor CLI", () => {
     expect(run([]).code).toBe(1);
     expect(run(["--nope"]).code).toBe(2);
   });
+
+  it("resolves an absolute root argument against a different cwd", () => {
+    writeJson("package.json", { name: "clean", devDependencies: { oxlint: "^1.80.0" }, scripts: { lint: "oxlint ." } });
+    write(".github/workflows/ci.yml", WORKFLOW);
+    // cwd is tmpdir (not the clean repo); the absolute path argument must be used as-is.
+    const out: string[] = [];
+    const code = runDoctor([dir, "--json"], { log: (m) => out.push(m), error: () => {}, cwd: () => tmpdir() });
+    const report = JSON.parse(out.join("\n"));
+    expect(report.root).toBe(dir);
+    expect(code).toBe(0);
+  });
 });

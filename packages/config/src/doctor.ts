@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 
 // `vvedantb-doctor` inspects a repo for drift from the shared CI/tooling house rules and
 // exits non-zero with a clear list when it finds any. It walks the workspace packages
@@ -490,7 +490,7 @@ export function runDoctor(argv: readonly string[], io: DoctorIo): number {
       io.error(`Unknown option: ${arg}\n${USAGE}`);
       return 2;
     } else if (!gotRoot) {
-      root = join(io.cwd(), arg);
+      root = resolve(io.cwd(), arg);
       gotRoot = true;
     } else {
       io.error(`Unexpected argument: ${arg}\n${USAGE}`);
