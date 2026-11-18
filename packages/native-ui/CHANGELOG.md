@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.29.0
+
+### Minor Changes
+
+- [#291](https://github.com/vvedantb/packages/pull/291) [`5a0dc4e`](https://github.com/vvedantb/packages/commit/5a0dc4e4f3939bbec337330e85beb07670862ed9) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ConversationList` gives the `Conversation` scroller a `scrollToIndex`, so an app can bring one row into view (a find in the thread). A row the list has not drawn yet is reached through its estimated offset.
+
+- [#290](https://github.com/vvedantb/packages/pull/290) [`a23516d`](https://github.com/vvedantb/packages/commit/a23516da2124a74c1ec3e02ad04d46d1da1fc4be) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (and so `MenuSheet`) and `DropdownMenu` now draw in a `WindowLayer`. Under `WindowLayerHost` they sit in the app's window, so opening or closing one over a scrolled-up `KeyboardChatScrollView` chat no longer throws the chat to its newest message (an Android `Modal` is its own window, and its focus change scrolled the chat). Without a host they stay a `Modal`. `WindowLayer` gains `onShow` (once the layer is on screen, as a Modal's) and `fade` (`false` for an overlay that runs its own motion). Each overlay gives its own context (the open state, the menu) to its content again, because a layer does not keep the context between the host and the overlay; app context from above the host is kept.
+
 ## 0.28.0
 
 ### Minor Changes
