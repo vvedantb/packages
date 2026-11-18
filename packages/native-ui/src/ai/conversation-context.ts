@@ -9,10 +9,13 @@ import type { NativeScrollEvent } from "react-native";
  * the `FlatList` of `ConversationList`. `scrollToEnd` goes to the newest
  * message, which is offset 0 in an inverted list. `scrollTo` goes to an
  * offset; only the `ScrollView` has it, so call it as `scrollTo?.(...)`.
+ * `scrollToIndex` brings one row of the list's `data` into view (a find in
+ * the thread); only the `FlatList` has it. `viewPosition` 0.5 centres it.
  */
 export type ConversationScroller = {
   scrollToEnd: (options?: { animated?: boolean }) => void;
   scrollTo?: (options: { y: number; animated?: boolean }) => void;
+  scrollToIndex?: (options: { index: number; animated?: boolean; viewPosition?: number }) => void;
 };
 
 export type ConversationContextValue = {

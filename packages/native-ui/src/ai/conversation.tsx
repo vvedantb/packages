@@ -255,6 +255,9 @@ export function ConversationList<T>({
   // when inverted); `keyboardMoving` is true while the keyboard scrolls the
   // list, which is not the reader leaving the bottom.
   const size = useRef({ content: 0, view: 0, inset: 0, keyboardMoving: false });
+  // The list, and the row `scrollToIndex` last asked for, for its retry when that row was not drawn.
+  const listRef = useRef<FlatList<T> | null>(null);
+  const indexTarget = useRef<{ index: number; animated?: boolean; viewPosition?: number; tries: number } | null>(null);
   // Not inverted: hidden until the first jump to the end (see above). An
   // empty list (a spinner, an empty state) shows at once.
   const hasRows = (props.data?.length ?? 0) > 0;
@@ -328,9 +331,27 @@ export function ConversationList<T>({
             )
           : props.renderScrollComponent
       }
+      // A row the list has not drawn yet (it draws only those near the view):
+      // go to its estimated offset, which draws it, then to the row itself.
+      onScrollToIndexFailed={
+        props.onScrollToIndexFailed ??
+        ((info) => {
+          const list = listRef.current;
+          const target = indexTarget.current;
+          if (!list || !target || target.index !== info.index || target.tries >= 3) return;
+          target.tries += 1;
+          list.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
+          requestAnimationFrame(() => list.scrollToIndex(target));
+        })
+      }
       ref={(list: FlatList<T> | null) => {
+        listRef.current = list;
         conversation.scrollRef.current = list && {
           scrollToEnd: (options) => list.scrollToOffset({ offset: end(), animated: options?.animated }),
+          scrollToIndex: (options) => {
+            indexTarget.current = { ...options, tries: 0 };
+            list.scrollToIndex(options);
+          },
         };
       }}
     />
