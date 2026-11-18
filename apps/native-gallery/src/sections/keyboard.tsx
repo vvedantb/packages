@@ -10,6 +10,7 @@ import { Input, Textarea, tokens } from "@vvedantb/native-ui";
 import { useScheme } from "../useScheme";
 import { PromptInput, PromptInputButton, ReplyQuoteChip } from "@vvedantb/native-ui/ai";
 import { Button } from "@vvedantb/native-ui/button";
+import { PasteInputProvider } from "@vvedantb/native-ui/paste-input";
 import { GText } from "../ui";
 
 /**
@@ -28,6 +29,7 @@ export function KeyboardSection() {
   const [layout, setLayout] = useState<"inline" | "stacked">("inline");
   const [sent, setSent] = useState<string[]>([]);
   const [reply, setReply] = useState(true);
+  const [pasted, setPasted] = useState(0);
   const composer = useMeasured();
   return (
     <View style={{ flex: 1, backgroundColor: tokens.color.background[scheme] }}>
@@ -35,6 +37,7 @@ export function KeyboardSection() {
       <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16 }}>
         <GText testID="composer-height" style={{ fontSize: 12 }}>{`composer height: ${composer.height}`}</GText>
         <GText testID="kb-sent-count">{`Sent: ${sent.length}`}</GText>
+        <GText testID="kb-pasted-count">{`Pasted images: ${pasted}`}</GText>
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, padding: 16, paddingTop: 8 }}>
         <GText style={{ fontSize: 18, fontWeight: "600" }}>Keyboard</GText>
@@ -53,17 +56,21 @@ export function KeyboardSection() {
           <GText key={index} testID={`kb-sent-${index}`}>{text}</GText>
         ))}
       </ScrollView>
+      {/* Image paste (long-press Paste, the keyboard's image insert) through `expo-paste-input`. */}
+      <PasteInputProvider>
       <View onLayout={composer.onLayout}>
         <PromptInput
           key={layout}
           testID="composer"
           layout={layout}
           onSubmit={(text) => setSent((items) => [...items, text])}
+          onPasteImages={(uris) => setPasted((count) => count + uris.length)}
           replyTo={reply ? <ReplyQuoteChip author="Sam" text="An earlier message to answer" onDismiss={() => setReply(false)} /> : undefined}
           leading={layout === "inline" ? <PromptInputButton icon={IconPaperclip} label="Attach" onPress={() => undefined} /> : undefined}
           toolbar={layout === "stacked" ? <PromptInputButton icon={IconPaperclip} label="Attach" onPress={() => undefined} /> : undefined}
         />
       </View>
+      </PasteInputProvider>
     </View>
   );
 }

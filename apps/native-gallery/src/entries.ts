@@ -23,6 +23,7 @@ import * as layout from "@vvedantb/native-ui/layout";
 import * as markdown from "@vvedantb/native-ui/markdown";
 import * as marketing from "@vvedantb/native-ui/marketing";
 import * as pageTitle from "@vvedantb/native-ui/page-title";
+import * as pasteInput from "@vvedantb/native-ui/paste-input";
 import * as passwordInput from "@vvedantb/native-ui/password-input";
 import * as primitives from "@vvedantb/native-ui/primitives";
 import * as push from "@vvedantb/native-ui/push";
@@ -56,6 +57,7 @@ export const ENTRY_MODULES: Record<string, Record<string, unknown>> = {
   "/markdown": markdown,
   "/marketing": marketing,
   "/page-title": pageTitle,
+  "/paste-input": pasteInput,
   "/password-input": passwordInput,
   "/primitives": primitives,
   "/push": push,

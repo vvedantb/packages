@@ -99,6 +99,11 @@
       "source": "./src/entries/keyboard-controller.ts",
       "default": "./dist/entries/keyboard-controller.js"
     },
+    "./paste-input": {
+      "types": "./src/entries/paste-input.ts",
+      "source": "./src/entries/paste-input.ts",
+      "default": "./dist/entries/paste-input.js"
+    },
     "./video": {
       "types": "./src/entries/video.ts",
       "source": "./src/entries/video.ts",
@@ -194,6 +199,7 @@
     "build:baseline": "node scripts/build-dist.mjs --update"
   },
   "peerDependencies": {
+    "expo-paste-input": ">=0.2.0",
     "@clerk/clerk-expo": "*",
     "@expo/vector-icons": "*",
     "@json-render/core": ">=0.21.0",
@@ -235,6 +241,9 @@
     "tailwind-merge": ">=2.0.0"
   },
   "peerDependenciesMeta": {
+    "expo-paste-input": {
+      "optional": true
+    },
     "@clerk/clerk-expo": {
       "optional": true
     },

@@ -647,6 +647,18 @@ declare module "react-native-gesture-handler" {
   }>;
 }
 
+declare module "expo-paste-input" {
+  import type { ComponentType, ReactNode } from "react";
+  import type { ViewProps } from "react-native";
+  export type PasteEventPayload =
+    | { type: "text"; value: string }
+    | { type: "images"; uris: string[] }
+    | { type: "unsupported" };
+  export const TextInputWrapper: ComponentType<
+    ViewProps & { onPaste?: (payload: PasteEventPayload) => void; children?: ReactNode }
+  >;
+}
+
 declare module "react-native-keyboard-controller" {
   import type * as React from "react";
   import type { ScrollViewProps, StyleProp, ViewProps, ViewStyle } from "react-native";

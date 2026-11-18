@@ -177,6 +177,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   Pager: "layout",
   ParityGallery: "forms",
   PasswordInput: "forms",
+  PasteInputProvider: "keyboard",
   PillTabs: "forms",
   PinnedBotTile: "layout",
   PricingModal: "parity",
