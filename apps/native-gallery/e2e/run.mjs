@@ -45,6 +45,18 @@ async function gone(target) {
 }
 
 /** Tap a target, scrolling the page up to a few times if it is off screen. */
+/** Scrolls until `target` is on screen, without tapping it. */
+async function reveal(target) {
+  for (let i = 0; i < 12; i++) {
+    const nodes = dumpNodes({ retries: 2 });
+    if (resolveTarget(nodes, target).ok) return;
+    const [, , w, h] = nodes[0].bounds;
+    swipe(w / 2, Math.round(h * 0.75), w / 2, Math.round(h * 0.3), 300);
+    await settle();
+  }
+  throw new AgentError(`could not scroll "${target}" into view`);
+}
+
 async function press(target) {
   for (let i = 0; i < 8; i++) {
     const nodes = dumpNodes({ retries: 2 });
@@ -368,9 +380,9 @@ const scenarios = {
   async questionRecord() {
     await fresh();
     await press("link-ai-cards");
-    await see("Which export format should the report use?");
-    await see("Weekly to the leads");
-    await see("Answered in the next message");
+    await reveal("Which export format should the report use?");
+    await reveal("Weekly to the leads");
+    await reveal("Answered in the next message");
     shot("ai-cards-question-record");
   },
   async messageSheet() {
