@@ -17,6 +17,7 @@
     "noUnusedParameters": true
   },
   "files": [
+    "src/css.d.ts",
     "consumer/window-speech-global.d.ts",
     "src/index.ts"
   ]
