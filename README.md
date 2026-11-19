@@ -470,7 +470,7 @@ jobs:
 
 ## Reusable app CI workflow
 
-`.github/workflows/ci-app.yml` is a reusable workflow (`on: workflow_call` only) for the install, lint, typecheck and test job that every app repeats. It needs no secrets, and the caller needs `contents: read`. It runs on `boat` by default.
+`.github/workflows/ci-app.yml` is a reusable workflow (`on: workflow_call` only) for the install, lint, typecheck and test job that every app repeats. It needs no secrets, and the caller needs `contents: read`. It runs on `boat-large` by default.
 
 It does this:
 
@@ -491,7 +491,7 @@ The caller keeps `on:` triggers, `concurrency` and the job `name`.
 | `commands` | string | required | Checks to run after install, one per line. Blank lines and `#` lines are skipped |
 | `package_manager` | string | `pnpm` | `pnpm` or `npm`. Other values fail |
 | `node_version` | string | `22` | `actions/setup-node` version |
-| `runs_on` | string | `boat` | One runner label |
+| `runs_on` | string | `boat-large` | One runner label |
 | `timeout_minutes` | number | `30` | Job timeout |
 | `working_directory` | string | `.` | Folder with `package.json` |
 | `fetch_depth` | number | `1` | Checkout depth. Use `0` for a step that diffs against the merge base (eva); `0` is a blobless checkout (`filter: blob:none`) |

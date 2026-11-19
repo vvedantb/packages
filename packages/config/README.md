@@ -202,6 +202,16 @@ Each check has a stable id:
 | `oxlint-script` | No `lint` script that runs `oxlint`. |
 | `config-version` | The `@vvedantb/config` range floor is an older minor than the running `vvedantb-doctor` version. |
 | `ci-reusable-workflow` | No workflow calls `vvedantb/packages/.github/workflows/ci-app.yml`. |
+| `ci-runner` | A workflow has `runs-on: boat` or `runs_on: boat`. Every boat.dev job runs on `boat-large`. GitHub-hosted labels pass. |
+| `ci-commands` | A line in the `commands` input of the shared workflow is not `lint`, `typecheck` or `test` and has no written reason, or a reason names a command that CI does not run. |
+
+**CI commands.** The standard commands are `pnpm lint`, `pnpm typecheck` and `pnpm test` (`npm run` or `bun run` also pass, and so does `--filter <package>`). Every other line needs a reason, keyed by the exact command, in `.vvedantb-doctor.json` or under `vvedantbDoctor.ciCommands` in the root `package.json`:
+
+```json
+{ "ciCommands": { "pnpm --filter web build": "the web app deploys from this build" } }
+```
+
+A repo cannot add a check that the other repos do not have, or keep one after its reason has gone, without a line in this file.
 
 `--json` prints `{ root, runningVersion, ok, warnings, results }`, where each result is `{ id, title, status, details }` (plus `waiver` when waived) and `status` is `pass`, `fail` or `waived`.
 
