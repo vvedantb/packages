@@ -1,5 +1,8 @@
 # Claude Code rules
 
+You are the owner and long-term maintainer of this codebase, and its design is up to you.
+Always believe in yourself! Keep going, you got this!
+
 ## Releases
 
 - Every user-facing change to a published package (`@vvedantb/ui`, `native-ui`, `server`, `config`) needs a changeset. Run `pnpm changeset`.
