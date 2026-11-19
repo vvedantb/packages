@@ -8,10 +8,12 @@ name: Release Android APK (reusable)
 # release.json, so the asset and release.json formats are not inputs. On a
 # tag push the caller's tag is the release tag. dry_run builds and signs the
 # APK but publishes nothing. The sideload key is not a Google Play key.
-# With release_on: feat (the default), a branch push releases only for a
-# feature merge (feat: PR title or commit subject) or a message with
-# [release]; any other branch push skips cleanly before checkout. A tag
-# push and workflow_dispatch always release.
+# With release_on: always (the default), every push that reaches this
+# workflow releases, so the caller's paths gate is the only gate and the
+# commit message is not read. With release_on: feat (opt-in), a branch push
+# releases only for a feature merge (feat: PR title or commit subject) or a
+# message with [release]; any other branch push skips cleanly before
+# checkout. A tag push and workflow_dispatch always release.
 #
 # Ported from vmem .github/workflows/release-android.yml. This repo only
 # defines the workflow; it never runs a release itself, so the only trigger
@@ -125,10 +127,10 @@ on:
         type: string
         default: ""
       release_on:
-        description: "Which push events release. feat (default): only a branch push whose PR title (for a 'Merge pull request' commit) or commit subject starts with feat:, feat(scope):, feat!: or feat(scope)!: (any case), or whose commit message contains [release]. always: every push, as before. A tag push (refs/tags/...) and workflow_dispatch always release."
+        description: "Which push events release. always (default): every push that reaches this workflow, so the caller's paths gate decides and the commit message is not read. feat (opt-in): only a branch push whose PR title (for a 'Merge pull request' commit) or commit subject starts with feat:, feat(scope):, feat!: or feat(scope)!: (any case), or whose commit message contains [release]. A tag push (refs/tags/...) and workflow_dispatch always release."
         required: false
         type: string
-        default: feat
+        default: always
       dry_run:
         description: "Build and sign the APK, but skip gh release create and post-publish (no tag, no release)."
         required: false
@@ -241,7 +243,8 @@ jobs:
         shell: bash
     steps:
       # First, before checkout and anything slow: on a branch push with
-      # release_on: feat, release only for a feature merge. A tag push
+      # release_on: feat (opt-in; the default is always, which releases every
+      # push), release only for a feature merge. A tag push
       # always releases, because the tag is the release. The github
       # context is the caller's, so head_commit is the pushed commit. Every
       # later step runs only when should_release is true.

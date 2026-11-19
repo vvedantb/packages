@@ -131,7 +131,7 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ### What it does
 
-1. Decides whether to release, before checkout or any setup (see "Feature-only releases"). On a skip it logs `Not a feature merge, skipping release` and every later step is skipped, so the run passes with no version bump, tag or release.
+1. Decides whether to release, before checkout or any setup. By default every push that reaches the workflow releases; the skip applies only with `release_on: feat` (see "Feature-only releases"). On a skip it logs `Not a feature merge, skipping release` and every later step is skipped, so the run passes with no version bump, tag or release.
 2. Checks the inputs, then runs the optional `pre_setup_command` (velth uses it to free runner disk space) before any toolchain setup.
 3. Picks versionName, versionCode and the tag. With no `version`, it bumps the patch of the highest semver `versionName` in published `<tag_prefix>*` (`mobile-apk-*`) `release.json` files, with `DEFAULT_VERSION_NAME` in `app.config.ts` as the floor. With `version_name_source: app_json`, it follows v-store's rules instead: the floor is `expo.version` in `app_json_path`, which wins if it is higher than the bumped patch, and the versionName must be higher than every published one. versionCode is the highest published versionCode plus 1, and at least `version_code_floor` (1000). `version_code` can set a higher one. A release with no `release.json` counts as versionCode 1. The run stops if the tag or release already exists.
 4. On a tag push (`GITHUB_REF_TYPE=tag`), the pushed tag is the release tag. The versionName is the tag without `tag_prefix`, and `version`, if set, must match it. The tag may exist already, but the release must not.
@@ -144,7 +144,9 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ### Feature-only releases
 
-On a branch `push`, with the default `release_on: feat`, a release runs only for a feature merge. The workflow reads `github.event.head_commit.message` (the caller's pushed commit):
+The default is `release_on: always`: every push that reaches the workflow releases, and the commit message is not read. The caller decides which pushes reach it, with a paths gate. No app needs a `feat:` title or `[release]` to release.
+
+This section describes the opt-in `release_on: feat`. On a branch `push`, with `release_on: feat`, a release runs only for a feature merge. The workflow reads `github.event.head_commit.message` (the caller's pushed commit):
 
 - For a merge commit, `Merge pull request #N from <branch>`, it reads the PR title, which is the first non-empty line after the subject. For any other commit, such as a squash merge or a direct push, it reads the commit subject.
 - It releases if that line starts with `feat:`, `feat(scope):`, `feat!:` or `feat(scope)!:`, in any case, followed by whitespace or the end of the line.
@@ -154,7 +156,7 @@ Anything else, such as `fix:` or `chore:`, skips the release. To release a chang
 
 `workflow_dispatch` always releases, `dry_run` included; the rule never applies to it. A tag push (`refs/tags/…`) always releases, because the tag is the release; the rule never applies to it either. The rule applies only to branch `push` events; other events release as before.
 
-Set `release_on: always` to release on every push, as before this rule. Other values are refused.
+Values other than `always` and `feat` are refused.
 
 On a skip, the job passes and all outputs are empty.
 
@@ -226,7 +228,7 @@ The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inheri
 | `version_code` | string | empty | versionCode to release, a whole number of at least the highest published versionCode plus 1 and `version_code_floor`. Empty: that minimum |
 | `mark_as_latest` | boolean | `false` | Mark the release as the repo's latest release |
 | `version` | string | empty | versionName to release, like `1.0.1`. Must match the tag on a tag push. Empty: the tag's version on a tag push, else the next patch |
-| `release_on` | string | `feat` | Which pushes release. `feat`: only feature merges or messages with `[release]` (see "Feature-only releases"). `always`: every push. Tag pushes and `workflow_dispatch` always release |
+| `release_on` | string | `always` | Which pushes release. `always`: every push that reaches the workflow. `feat` (opt-in): only feature merges or messages with `[release]` (see "Feature-only releases"). Tag pushes and `workflow_dispatch` always release |
 | `dry_run` | boolean | `false` | Build and sign, publish nothing |
 | `upload_dry_run_artifact` | boolean | `false` | With `dry_run`, upload the APK and `release.json` as the artifact `<app_name>-android-dry-run` |
 | `pre_setup_command` | string | empty | Inline bash run from the repo root before the Node, pnpm and Java setup, like freeing disk space. Does not get `build_env` |
