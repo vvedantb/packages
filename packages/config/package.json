@@ -37,6 +37,7 @@
     "./tsconfig/react-native.json": "./tsconfig/react-native.json",
     "./oxlint/base.json": "./oxlint/base.json",
     "./oxlint/plugin.mjs": "./oxlint/plugin.mjs",
+    "./oxlint/no-effect.mjs": "./oxlint/no-effect.mjs",
     "./package.json": "./package.json",
     "./oxlint/anti-slop.js": {
       "types": "./dist/oxlint-anti-slop/index.d.ts",
@@ -56,7 +57,8 @@
     "build": "tsrs -p tsconfig.json",
     "typecheck": "tsrs --noEmit --fast -p tsconfig.test.json",
     "test": "vitest run",
-    "prepack": "tsc -p tsconfig.json"
+    "prepack": "tsc -p tsconfig.json",
+    "vendor:no-effect": "node scripts/vendor-no-effect.mjs"
   },
   "peerDependencies": {
     "@electron/asar": "^3.2.0 || ^4.0.0",
@@ -78,6 +80,8 @@
     "@electron/asar": "^4.3.1",
     "@oxlint/plugins": "^1.79.0",
     "@types/node": "^22.0.0",
+    "esbuild": "0.28.2",
+    "eslint-plugin-react-you-might-not-need-an-effect": "1.0.2",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.80.0",
     "typescript": "^5.9.0",
