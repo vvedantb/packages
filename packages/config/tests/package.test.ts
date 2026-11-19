@@ -61,9 +61,24 @@ describe("package.json", () => {
     expect(root).not.toHaveProperty("extensionHostPermissions");
   });
 
-  it("has one runtime dependency, the oxlint no-effect plugin; peers are @electron/asar and the optional @expo/config-plugins and vitest", () => {
-    // oxlint/base.json loads the plugin through oxlint/no-effect.mjs, so each app gets it with no install of its own.
-    expect(pkg.dependencies).toEqual({ "eslint-plugin-react-you-might-not-need-an-effect": "1.0.2" });
+  it("ships the no-effect plugin as one bundled file with its 9 rules", async () => {
+    const plugin = await import("../oxlint/no-effect.mjs");
+    expect(Object.keys(plugin.default.rules).sort()).toEqual([
+      "no-adjust-state-on-prop-change",
+      "no-chain-state-updates",
+      "no-derived-state",
+      "no-event-handler",
+      "no-external-store-subscription",
+      "no-initialize-state",
+      "no-pass-data-to-parent",
+      "no-pass-live-state-to-parent",
+      "no-reset-all-state-on-prop-change",
+    ]);
+  });
+
+  it("adds no runtime dependency; peers are @electron/asar and the optional @expo/config-plugins and vitest", () => {
+    // The no-effect plugin is bundled into oxlint/no-effect.mjs: as a dependency it would make each app install ESLint.
+    expect(pkg).not.toHaveProperty("dependencies");
     expect(Object.keys(pkg.peerDependencies ?? {})).toEqual(["@electron/asar", "@expo/config-plugins", "vitest"]);
     expect(pkg.peerDependenciesMeta?.vitest?.optional).toBe(true);
     expect(pkg.peerDependenciesMeta?.["@expo/config-plugins"]?.optional).toBe(true);
