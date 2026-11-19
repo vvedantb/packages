@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- [#296](https://github.com/vvedantb/packages/pull/296) [`5a84fe6`](https://github.com/vvedantb/packages/commit/5a84fe67f326782ed533f7247b63c58b653eb887) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-doctor` has two new checks. `ci-runner` fails on a job that runs on the small `boat` runner (use `boat-large`). `ci-commands` fails on a CI command that is not `lint`, `typecheck` or `test` and has no written reason under `ciCommands` in `.vvedantb-doctor.json`.
+
 ## 0.9.0
 
 ### Minor Changes
