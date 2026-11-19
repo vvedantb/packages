@@ -1,11 +1,11 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { createContext, use, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpandFilled } from "@tabler/icons-react";
 import { cn } from "../../src/utils/cn";
 import { APP_ICONS } from "../../src/brand/AppIcons";
 import type { ProductAppName } from "../../src/brand/AppWordmark";
-import { SIDEBAR_RAIL_APP_ICON_SIZE, railTileClass, railTileStateClass } from "./app-shell-classes";
+import { SIDEBAR_RAIL_APP_ICON_SIZE, railGroupClass, railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
 
 export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
@@ -106,6 +106,31 @@ export function RailBody({ asChild = false, tabs = false, className, ...props }:
   return <Body {...props} className={bodyClass} />;
 }
 
+/** True inside a `RailGroup`: its tiles take the segmented fills. */
+const RailGroupContext = createContext(false);
+
+/** Whether the caller sits in a `Sidebar.RailGroup`. Custom rail tiles pass it to `railTileStateClass`. */
+export function useInRailGroup(): boolean {
+  return use(RailGroupContext);
+}
+
+export type SidebarRailGroupProps = ComponentPropsWithoutRef<"div">;
+
+/**
+ * A group of rail tiles on one shared trough, like segmented tabs: the active
+ * tile is the lighter pill on it. Put groups in `RailHeader`, `RailBody` and
+ * `RailFooter`; the space between troughs divides them, so drop
+ * `RailSeparator` and `showDivider`. Centre a body group with
+ * `className="justify-center-safe"` on `RailBody`.
+ */
+export function RailGroup({ className, ...props }: SidebarRailGroupProps) {
+  return (
+    <RailGroupContext value>
+      <div {...props} role="group" className={cn(railGroupClass, className)} />
+    </RailGroupContext>
+  );
+}
+
 export type SidebarRailFooterProps = ComponentPropsWithoutRef<"div">;
 
 /** Block pinned at the bottom of the rail. */
@@ -166,6 +191,7 @@ export function RailItem({
   children,
   ...props
 }: SidebarRailItemProps) {
+  const stateClass = railTileStateClass(active, use(RailGroupContext));
   const AppIcon = app ? APP_ICONS[app] : null;
   const appIcon = AppIcon ? <AppIcon size={SIDEBAR_RAIL_APP_ICON_SIZE} /> : null;
   const content = appIcon ?? children;
@@ -175,7 +201,7 @@ export function RailItem({
         <TabsPrimitive.Trigger
           {...props}
           value={tabValue}
-          className={cn(railTileClass, "group relative", railTileStateClass(active), className)}
+          className={cn(railTileClass, "group relative", stateClass, className)}
         >
           {content}
           <span className="sr-only">{label}</span>
@@ -186,7 +212,7 @@ export function RailItem({
           {...props}
           aria-label={label}
           aria-current={active ? "page" : undefined}
-          className={cn(railTileClass, "group", railTileStateClass(active), className)}
+          className={cn(railTileClass, "group", stateClass, className)}
         >
           {appIcon}
           <Slottable>{children}</Slottable>
@@ -197,7 +223,7 @@ export function RailItem({
           type="button"
           {...props}
           aria-label={label}
-          className={cn(railTileClass, "group", railTileStateClass(active), className)}
+          className={cn(railTileClass, "group", stateClass, className)}
         >
           {content}
           {badge}

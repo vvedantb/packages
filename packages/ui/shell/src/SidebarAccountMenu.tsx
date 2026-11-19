@@ -13,6 +13,7 @@ import {
 } from "../../src/ui/dropdown-menu";
 import { cn } from "../../src/utils/cn";
 import { accountEmailClass, railTileClass, railTileStateClass } from "./app-shell-classes";
+import { useInRailGroup } from "./SidebarRail";
 import { SignOutDialog } from "./SignOutDialog";
 
 type ContentProps = ComponentPropsWithoutRef<typeof DropdownMenuContent>;
@@ -249,6 +250,7 @@ export type SidebarAccountTriggerProps = Omit<ButtonProps, "asChild" | "shape"> 
  * A rail tile (`rounded-lg`), so `shape="rounded"`; change the radius with `className`.
  */
 export function AccountTrigger({ userName, imageUrl, className, children, ...props }: SidebarAccountTriggerProps) {
+  const grouped = useInRailGroup();
   return (
     <DropdownMenuTrigger asChild>
       <Button
@@ -258,7 +260,7 @@ export function AccountTrigger({ userName, imageUrl, className, children, ...pro
         title={userName}
         aria-label={`Account menu for ${userName}`}
         {...props}
-        className={cn(railTileClass, "h-11 w-11 p-0 md:h-10 md:w-10", railTileStateClass(false), className)}
+        className={cn(railTileClass, "h-11 w-11 p-0 md:h-10 md:w-10", railTileStateClass(false, grouped), className)}
       >
         {children ?? <AccountAvatar imageUrl={imageUrl} userName={userName} className="h-7 w-7" />}
       </Button>

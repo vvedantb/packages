@@ -6,7 +6,7 @@ import { TooltipProvider } from "../../src/ui/tooltip";
 import { Tabs, TabsContent } from "../../src/ui/tabs";
 import { AppShell } from "./AppShell";
 import { AppSidebar } from "./AppSidebar";
-import { RailDivider, RailTile, SidebarRail } from "./SidebarRail";
+import { RailDivider, RailGroup, RailTile, SidebarRail } from "./SidebarRail";
 import { SidebarPanel } from "./SidebarPanel";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
 import { useAppShellResize, type SidebarResizeOptions } from "./SidebarResize";
@@ -217,6 +217,23 @@ describe("RailTile", () => {
     expect(link.getAttribute("aria-current")).toBe("page");
     expect(link.className).toBe(cn(railTileClass, "group", railTileStateClass(true)));
     expect(Array.from(link.children).map((c) => c.getAttribute("data-testid"))).toEqual(["icon", "badge"]);
+  });
+
+  it("gives tiles in a RailGroup the segmented fills", async () => {
+    await mount(
+      <RailGroup>
+        <RailTile label="Inbox" active>
+          <svg />
+        </RailTile>
+        <RailTile label="Search">
+          <svg />
+        </RailTile>
+      </RailGroup>,
+    );
+    const [inbox, search] = Array.from(document.querySelectorAll("[role=group] button"));
+    expect(inbox?.className).toContain("bg-segment");
+    expect(inbox?.className).not.toContain("bg-surface-tertiary");
+    expect(search?.className).toBe(cn(railTileClass, "group", railTileStateClass(false, true)));
   });
 
   it("renders a native button tile without aria-current when inactive", async () => {

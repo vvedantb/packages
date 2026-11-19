@@ -15,9 +15,23 @@ export const railTileClass =
 const railTileActiveClass = "border-transparent bg-surface-tertiary text-foreground";
 const railTileIdleClass = "border-transparent text-muted opacity-75 hover:bg-surface-tertiary/50 hover:opacity-100 hover:text-foreground"; // check-tokens-allow: text-muted
 
-export function railTileStateClass(active: boolean): string {
+// Inside a `RailGroup` the tiles read as segmented tabs: the trough is
+// `--default` (the segmented bar) and the active tile is the `--segment` pill.
+// Hover is the pill at half strength, as on `.t-tabs--pills`.
+const railTileGroupActiveClass = "border-transparent bg-segment text-segment-foreground";
+const railTileGroupIdleClass = "border-transparent text-muted opacity-75 hover:bg-segment/50 hover:opacity-100 hover:text-foreground"; // check-tokens-allow: text-muted
+
+/** Tile fill for its state. `grouped`: the tile sits in a `Sidebar.RailGroup` trough. */
+export function railTileStateClass(active: boolean, grouped = false): string {
+  if (grouped) return active ? railTileGroupActiveClass : railTileGroupIdleClass;
   return active ? railTileActiveClass : railTileIdleClass;
 }
+
+/**
+ * `Sidebar.RailGroup` trough: the segmented tabs bar (`bg-default`) as a column.
+ * 4px padding and a 12px radius sit concentric with the 8px tile corners.
+ */
+export const railGroupClass = "flex flex-col items-center gap-1 rounded-xl bg-default p-1";
 
 /** Count badge pinned to the bottom-right of a rail tile. */
 export const railBadgeClass = "absolute -bottom-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-accent-foreground"; // check-tokens-allow: accent
