@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0
+
+### Minor Changes
+
+- [#300](https://github.com/vvedantb/packages/pull/300) [`45a64a3`](https://github.com/vvedantb/packages/commit/45a64a3ff5140e29218302865b2fdbaeac0e5cb3) Thanks [@vvedantb](https://github.com/vvedantb)! - The oxlint base now loads the 9 rules of `eslint-plugin-react-you-might-not-need-an-effect` 1.0.2 as the `no-effect` JS plugin and sets them to `error`. A repo that extends `oxlint/base.json` gets the rules with no change of its own. The plugin is bundled into `@vvedantb/config/oxlint/no-effect.mjs`, so the package adds no dependency and no app installs ESLint. A repo that does not extend the base can name that file as its `jsPlugins` specifier.
+
 ## 0.10.1
 
 ### Patch Changes
