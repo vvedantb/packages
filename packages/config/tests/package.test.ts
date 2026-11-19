@@ -9,6 +9,7 @@ const pkg: {
   exports: Record<string, string | Record<string, string>>;
   bin: Record<string, string>;
   private?: boolean;
+  dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, { optional?: boolean }>;
 } = JSON.parse(
@@ -60,8 +61,9 @@ describe("package.json", () => {
     expect(root).not.toHaveProperty("extensionHostPermissions");
   });
 
-  it("adds no runtime dependency; peers are @electron/asar and the optional @expo/config-plugins and vitest", () => {
-    expect(pkg).not.toHaveProperty("dependencies");
+  it("has one runtime dependency, the oxlint no-effect plugin; peers are @electron/asar and the optional @expo/config-plugins and vitest", () => {
+    // oxlint/base.json loads the plugin through oxlint/no-effect.mjs, so each app gets it with no install of its own.
+    expect(pkg.dependencies).toEqual({ "eslint-plugin-react-you-might-not-need-an-effect": "1.0.2" });
     expect(Object.keys(pkg.peerDependencies ?? {})).toEqual(["@electron/asar", "@expo/config-plugins", "vitest"]);
     expect(pkg.peerDependenciesMeta?.vitest?.optional).toBe(true);
     expect(pkg.peerDependenciesMeta?.["@expo/config-plugins"]?.optional).toBe(true);

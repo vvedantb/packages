@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "plugins": ["typescript", "import", "unicorn", "react"],
+  "jsPlugins": [{ "name": "no-effect", "specifier": "./no-effect.mjs" }],
   "categories": {
     "suspicious": "error"
   },
@@ -25,6 +26,15 @@
     "import/no-cycle": "error",
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
+    "no-effect/no-derived-state": "error",
+    "no-effect/no-chain-state-updates": "error",
+    "no-effect/no-event-handler": "error",
+    "no-effect/no-adjust-state-on-prop-change": "error",
+    "no-effect/no-reset-all-state-on-prop-change": "error",
+    "no-effect/no-pass-live-state-to-parent": "error",
+    "no-effect/no-pass-data-to-parent": "error",
+    "no-effect/no-external-store-subscription": "error",
+    "no-effect/no-initialize-state": "error",
     "no-console": ["error", { "allow": ["warn", "error", "info"] }],
     "no-unused-vars": [
       "error",
