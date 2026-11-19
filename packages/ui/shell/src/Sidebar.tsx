@@ -21,7 +21,7 @@ import {
   PanelHeader,
   PanelTitle,
 } from "./SidebarPanel";
-import { Rail, RailBody, RailFooter, RailHeader, RailItem, RailSeparator } from "./SidebarRail";
+import { Rail, RailBody, RailFooter, RailGroup, RailHeader, RailItem, RailSeparator } from "./SidebarRail";
 
 export type {
   SidebarAsideProps,
@@ -36,6 +36,7 @@ export type {
 export type {
   SidebarRailBodyProps,
   SidebarRailFooterProps,
+  SidebarRailGroupProps,
   SidebarRailHeaderProps,
   SidebarRailItemProps,
   SidebarRailRootProps,
@@ -74,6 +75,7 @@ export const Sidebar = {
   /** Alias of `RailFooter`. */
   Footer: RailFooter,
   RailItem,
+  RailGroup,
   RailSeparator,
   Tooltip: SidebarIconTooltip,
   Panel,

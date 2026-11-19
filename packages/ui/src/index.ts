@@ -234,7 +234,7 @@ export { AppSidebar } from "../shell/src/AppSidebar";
 export type { AppSidebarProps } from "../shell/src/AppSidebar";
 // Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
 export * from "../shell/src/Sidebar";
-export { SidebarRail, RailTile, RailDivider, RailCollapseTile } from "../shell/src/SidebarRail";
+export { SidebarRail, RailTile, RailDivider, RailCollapseTile, useInRailGroup } from "../shell/src/SidebarRail";
 export type {
   SidebarRailProps,
   RailTileProps,
@@ -267,6 +267,7 @@ export {
   railTileClass,
   SIDEBAR_RAIL_APP_ICON_SIZE,
   railTileStateClass,
+  railGroupClass,
   sidebarNavIconClass,
   sidebarNavItemActionsClass,
   sidebarNavItemClass,
