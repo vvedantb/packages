@@ -39,6 +39,8 @@ export const CHECK_IDS = [
   "oxlint-script",
   "config-version",
   "ci-reusable-workflow",
+  "ci-runner",
+  "ci-commands",
 ] as const;
 
 export type CheckId = (typeof CHECK_IDS)[number];
@@ -59,7 +61,7 @@ interface PackageJson {
   scripts?: Record<string, string>;
   workspaces?: string[] | { packages?: string[] };
   prettier?: unknown;
-  vvedantbDoctor?: { waivers?: Record<string, string> };
+  vvedantbDoctor?: { waivers?: Record<string, unknown>; ciCommands?: Record<string, unknown> };
 }
 
 export interface PackageEntry {
@@ -383,9 +385,111 @@ export function checkCiReusableWorkflow(repo: RepoModel): CheckResult {
   return result("ci-reusable-workflow", "CI calls the shared ci-app.yml workflow", details);
 }
 
+function workflowFiles(root: string): { name: string; text: string }[] {
+  const dir = join(root, ".github", "workflows");
+  if (!existsSync(dir)) return [];
+  const files: { name: string; text: string }[] = [];
+  for (const name of readdirSync(dir).sort()) {
+    if (!/\.ya?ml$/.test(name)) continue;
+    try {
+      files.push({ name, text: readFileSync(join(dir, name), "utf8") });
+    } catch {
+      // Unreadable workflow file: ignore and keep scanning.
+    }
+  }
+  return files;
+}
+
+/** The plain `boat` runner label. Every boat.dev job runs on `boat-large` (8 cores, 15 GB). */
+const SMALL_RUNNER = "boat";
+
+/**
+ * Fails on a job that names the small `boat` runner, as `runs-on: boat` or as the `runs_on: boat`
+ * input of a reusable workflow. GitHub-hosted labels and `boat-large` pass.
+ */
+export function checkCiRunner(repo: RepoModel): CheckResult {
+  const details: string[] = [];
+  for (const file of workflowFiles(repo.root)) {
+    file.text.split(/\r?\n/).forEach((line, index) => {
+      const match = line.match(/^\s*(?:-\s+)?(runs[-_]on)\s*:\s*(.+?)\s*(?:#.*)?$/);
+      if (!match?.[1] || match[2] === undefined) return;
+      const labels = match[2]
+        .replace(/^\[|\]$/g, "")
+        .split(",")
+        .map((label) => stripQuotes(label));
+      if (labels.includes(SMALL_RUNNER)) {
+        details.push(`.github/workflows/${file.name}:${index + 1} ${match[1]} is ${SMALL_RUNNER}; use boat-large`);
+      }
+    });
+  }
+  return result("ci-runner", "No job runs on the small boat runner", details);
+}
+
+/** The lines of every `commands: |` block in the workflows that call the shared ci-app.yml. */
+export function ciCommands(repo: RepoModel): { file: string; command: string }[] {
+  const found: { file: string; command: string }[] = [];
+  for (const file of workflowFiles(repo.root)) {
+    if (!file.text.includes(CI_WORKFLOW_REF)) continue;
+    let blockIndent = -1;
+    for (const line of file.text.split(/\r?\n/)) {
+      const indent = line.length - line.trimStart().length;
+      if (blockIndent >= 0) {
+        if (line.trim() === "") continue;
+        if (indent > blockIndent) {
+          const command = line.trim();
+          if (!command.startsWith("#")) found.push({ file: file.name, command });
+          continue;
+        }
+        blockIndent = -1;
+      }
+      if (/^\s*commands\s*:\s*[|>][-+]?\s*$/.test(line)) blockIndent = indent;
+    }
+  }
+  return found;
+}
+
+const STANDARD_SCRIPTS = new Set(["lint", "typecheck", "test"]);
+
+/**
+ * True for the commands every repo runs: `pnpm lint`, `pnpm typecheck` and `pnpm test`, with
+ * `npm run` or `bun run` in place of `pnpm`, and with an optional `--filter <package>`.
+ * Anything else (a script with a suffix, a `node` script, a build) is an extra.
+ */
+export function isStandardCiCommand(command: string): boolean {
+  const words = command.trim().split(/\s+/);
+  const runner = words.shift();
+  if (runner !== "pnpm" && runner !== "npm" && runner !== "bun") return false;
+  if (words[0] === "--filter" || words[0] === "-F") words.splice(0, 2);
+  else if (words[0]?.startsWith("--filter=")) words.shift();
+  if (words[0] === "run") words.shift();
+  const [script] = words;
+  return words.length === 1 && script !== undefined && STANDARD_SCRIPTS.has(script);
+}
+
+/**
+ * Fails on a CI command that is not one of the standard three and has no written reason, and on
+ * a reason for a command that CI no longer runs. This stops one repo from carrying a check that
+ * no other repo has without a record of why.
+ */
+export function checkCiCommands(repo: RepoModel, reasons: Record<string, string>): CheckResult {
+  const details: string[] = [];
+  const seen = new Set<string>();
+  for (const { file, command } of ciCommands(repo)) {
+    seen.add(command);
+    if (isStandardCiCommand(command) || reasons[command] !== undefined) continue;
+    details.push(`.github/workflows/${file} runs "${command}" with no reason in ciCommands`);
+  }
+  for (const command of Object.keys(reasons)) {
+    if (!seen.has(command)) details.push(`ciCommands has a reason for "${command}", which CI does not run; remove it`);
+  }
+  return result("ci-commands", "Every CI command beyond lint, typecheck and test has a written reason", details);
+}
+
 export interface DoctorCheckOptions {
   runningVersion: string;
   waivers?: Record<string, string>;
+  /** Written reasons for CI commands beyond the standard three, keyed by the exact command. */
+  ciCommandReasons?: Record<string, string>;
 }
 
 /** Run every check against the repo at `root`, applying waivers. */
@@ -401,6 +505,8 @@ export function runDoctorChecks(root: string, options: DoctorCheckOptions): Chec
     checkOxlintScript(repo),
     checkConfigVersion(repo, options.runningVersion),
     checkCiReusableWorkflow(repo),
+    checkCiRunner(repo),
+    checkCiCommands(repo, options.ciCommandReasons ?? {}),
   ];
   return results.map((r) => {
     const reason = waivers[r.id];
@@ -410,28 +516,37 @@ export function runDoctorChecks(root: string, options: DoctorCheckOptions): Chec
 
 export interface LoadedWaivers {
   waivers: Record<string, string>;
+  /** Written reasons for extra CI commands, keyed by the exact command. */
+  ciCommands: Record<string, string>;
   warnings: string[];
 }
 
 const KNOWN_IDS: ReadonlySet<string> = new Set(CHECK_IDS);
 
 /**
- * Waivers from `.vvedantb-doctor.json` (`{ "waivers": { "<id>": "<reason>" } }`) or the root
+ * Waivers and CI command reasons from `.vvedantb-doctor.json`
+ * (`{ "waivers": { "<id>": "<reason>" }, "ciCommands": { "<command>": "<reason>" } }`) or the root
  * package.json `vvedantbDoctor.waivers`. The file wins over package.json. A waiver needs a
  * non-empty reason and a known id; one that does not is dropped with a warning.
  */
 export function loadWaivers(root: string): LoadedWaivers {
   const warnings: string[] = [];
   const raw: Record<string, unknown> = {};
+  const rawCommands: Record<string, unknown> = {};
 
   const pkg = readJson(join(root, "package.json"));
   Object.assign(raw, pkg?.vvedantbDoctor?.waivers ?? {});
+  Object.assign(rawCommands, pkg?.vvedantbDoctor?.ciCommands ?? {});
 
   const file = join(root, ".vvedantb-doctor.json");
   if (existsSync(file)) {
     try {
-      const parsed = JSON.parse(readFileSync(file, "utf8")) as { waivers?: Record<string, unknown> };
+      const parsed = JSON.parse(readFileSync(file, "utf8")) as {
+        waivers?: Record<string, unknown>;
+        ciCommands?: Record<string, unknown>;
+      };
       Object.assign(raw, parsed.waivers ?? {});
+      Object.assign(rawCommands, parsed.ciCommands ?? {});
     } catch {
       warnings.push(".vvedantb-doctor.json is not valid JSON; ignoring it");
     }
@@ -449,7 +564,15 @@ export function loadWaivers(root: string): LoadedWaivers {
     }
     waivers[id] = reason.trim();
   }
-  return { waivers, warnings };
+  const ciCommands: Record<string, string> = {};
+  for (const [command, reason] of Object.entries(rawCommands)) {
+    if (typeof reason !== "string" || reason.trim() === "") {
+      warnings.push(`ciCommands entry "${command}" has no written reason; not applied`);
+      continue;
+    }
+    ciCommands[command.trim()] = reason.trim();
+  }
+  return { waivers, ciCommands, warnings };
 }
 
 function readRunningVersion(): string {
@@ -471,6 +594,8 @@ const USAGE = `Usage: vvedantb-doctor [root] [--json]
 Checks (each has a stable id): ${CHECK_IDS.join(", ")}.
 Waive a check in .vvedantb-doctor.json ({ "waivers": { "<id>": "<reason>" } }) or the
 root package.json "vvedantbDoctor".waivers. A waived check prints as waived.
+Give each CI command beyond lint, typecheck and test a reason in the same file:
+{ "ciCommands": { "<command>": "<reason>" } }.
 
 Exit code: 0 no drift, 1 drift found, 2 bad usage.`;
 
@@ -499,8 +624,8 @@ export function runDoctor(argv: readonly string[], io: DoctorIo): number {
   }
 
   const runningVersion = readRunningVersion();
-  const { waivers, warnings } = loadWaivers(root);
-  const results = runDoctorChecks(root, { runningVersion, waivers });
+  const { waivers, ciCommands: ciCommandReasons, warnings } = loadWaivers(root);
+  const results = runDoctorChecks(root, { runningVersion, waivers, ciCommandReasons });
   const failed = results.filter((r) => r.status === "fail");
 
   if (json) {

@@ -112,6 +112,54 @@ describe("runDoctorChecks", () => {
   });
 });
 
+describe("CI checks", () => {
+  function ciWorkflow(runner: string, commands: string[]): string {
+    return [
+      "jobs:",
+      "  check:",
+      "    uses: vvedantb/packages/.github/workflows/ci-app.yml@main",
+      "    with:",
+      `      runs_on: ${runner}`,
+      "      # A comment between inputs.",
+      "      commands: |",
+      ...commands.map((command) => `        ${command}`),
+      "  other:",
+      "    runs-on: ubuntu-latest",
+      "",
+    ].join("\n");
+  }
+
+  it("fails on the small boat runner and passes boat-large", () => {
+    writeJson("package.json", { name: "x" });
+    write(".github/workflows/ci.yml", ciWorkflow("boat", ["pnpm lint"]));
+    const small = byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-runner");
+    expect(small.status).toBe("fail");
+    expect(small.details.join("\n")).toContain("ci.yml:5");
+
+    write(".github/workflows/ci.yml", ciWorkflow("boat-large", ["pnpm lint"]));
+    expect(byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-runner").status).toBe("pass");
+  });
+
+  it("fails on an extra CI command until it has a reason, and on a reason CI no longer needs", () => {
+    writeJson("package.json", { name: "x" });
+    const commands = ["pnpm lint", "pnpm --filter web typecheck", "pnpm test", "# note", "pnpm --filter web build"];
+    write(".github/workflows/ci.yml", ciWorkflow("boat-large", commands));
+
+    const bare = byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-commands");
+    expect(bare.status).toBe("fail");
+    expect(bare.details).toHaveLength(1);
+    expect(bare.details[0]).toContain("pnpm --filter web build");
+
+    writeJson(".vvedantb-doctor.json", { ciCommands: { "pnpm --filter web build": "the web app deploys from this build" } });
+    const reasons = loadWaivers(dir).ciCommands;
+    expect(byId(runDoctorChecks(dir, { runningVersion: "0.10.0", ciCommandReasons: reasons }), "ci-commands").status).toBe("pass");
+
+    const stale = { ...reasons, "npx expo export": "old" };
+    const result = byId(runDoctorChecks(dir, { runningVersion: "0.10.0", ciCommandReasons: stale }), "ci-commands");
+    expect(result.details.join("\n")).toContain("npx expo export");
+  });
+});
+
 describe("loadWaivers", () => {
   it("reads the file, drops an unknown id and a reasonless waiver", () => {
     writeJson("package.json", { name: "x", vvedantbDoctor: { waivers: { "oxlint-dep": "root runs it" } } });
