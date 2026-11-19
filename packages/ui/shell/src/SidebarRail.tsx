@@ -1,11 +1,12 @@
-import { createContext, use, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { createContext, use, useLayoutEffect, useRef, type ComponentPropsWithoutRef, type ReactNode, type RefObject } from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpandFilled } from "@tabler/icons-react";
 import { cn } from "../../src/utils/cn";
 import { APP_ICONS } from "../../src/brand/AppIcons";
 import type { ProductAppName } from "../../src/brand/AppWordmark";
-import { SIDEBAR_RAIL_APP_ICON_SIZE, railGroupClass, railTileClass, railTileStateClass } from "./app-shell-classes";
+import { moveTabsPillXY } from "../../src/ui/tabsSliding";
+import { SIDEBAR_RAIL_APP_ICON_SIZE, railGroupClass, railGroupPillClass, railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
 
 export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
@@ -116,17 +117,61 @@ export function useInRailGroup(): boolean {
 
 export type SidebarRailGroupProps = ComponentPropsWithoutRef<"div">;
 
+/** Marks the active `RailItem`, so its group's pill can find it. */
+const ACTIVE_TILE_SELECTOR = "[data-rail-tile][data-active]";
+
 /**
- * A group of rail tiles on one shared trough, like segmented tabs: the active
- * tile is the lighter pill on it. Put groups in `RailHeader`, `RailBody` and
+ * Keeps the group's pill under its active tile. The first placement and any
+ * resize snap; a change of active tile slides, as `TabsList` does. With no
+ * active tile the pill hides, and the next one snaps in rather than sliding
+ * from where the pill was last.
+ */
+function useRailGroupPill(groupRef: RefObject<HTMLDivElement | null>, pillRef: RefObject<HTMLSpanElement | null>) {
+  useLayoutEffect(() => {
+    const group = groupRef.current;
+    const pill = pillRef.current;
+    if (!group || !pill) return;
+    let shown = false;
+    const sync = (animate: boolean) => {
+      const tile = group.querySelector<HTMLElement>(ACTIVE_TILE_SELECTOR);
+      if (!tile) {
+        pill.style.opacity = "0";
+        shown = false;
+        return;
+      }
+      moveTabsPillXY(pill, tile, animate && shown);
+      pill.style.opacity = "1";
+      shown = true;
+    };
+    sync(false);
+    const resizeObserver = new ResizeObserver(() => sync(false));
+    resizeObserver.observe(group);
+    const mutationObserver = new MutationObserver(() => sync(true));
+    mutationObserver.observe(group, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-active"] });
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [groupRef, pillRef]);
+}
+
+/**
+ * A group of rail tiles on one shared trough, like segmented tabs: one pill
+ * slides to the active tile. Put groups in `RailHeader`, `RailBody` and
  * `RailFooter`; the space between troughs divides them, so drop
  * `RailSeparator` and `showDivider`. Centre a body group with
  * `className="justify-center-safe"` on `RailBody`.
  */
-export function RailGroup({ className, ...props }: SidebarRailGroupProps) {
+export function RailGroup({ className, children, ...props }: SidebarRailGroupProps) {
+  const groupRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLSpanElement>(null);
+  useRailGroupPill(groupRef, pillRef);
   return (
     <RailGroupContext value>
-      <div {...props} role="group" className={cn(railGroupClass, className)} />
+      <div {...props} ref={groupRef} role="group" className={cn(railGroupClass, className)}>
+        <span ref={pillRef} aria-hidden className={railGroupPillClass} />
+        {children}
+      </div>
     </RailGroupContext>
   );
 }
@@ -191,7 +236,10 @@ export function RailItem({
   children,
   ...props
 }: SidebarRailItemProps) {
-  const stateClass = railTileStateClass(active, use(RailGroupContext));
+  const grouped = use(RailGroupContext);
+  const stateClass = railTileStateClass(active, grouped);
+  // Markers for the group's pill; ungrouped tiles keep their old DOM.
+  const groupMarks = grouped ? { "data-rail-tile": "", "data-active": active ? "" : undefined } : undefined;
   const AppIcon = app ? APP_ICONS[app] : null;
   const appIcon = AppIcon ? <AppIcon size={SIDEBAR_RAIL_APP_ICON_SIZE} /> : null;
   const content = appIcon ?? children;
@@ -201,6 +249,7 @@ export function RailItem({
         <TabsPrimitive.Trigger
           {...props}
           value={tabValue}
+          {...groupMarks}
           className={cn(railTileClass, "group relative", stateClass, className)}
         >
           {content}
@@ -212,6 +261,7 @@ export function RailItem({
           {...props}
           aria-label={label}
           aria-current={active ? "page" : undefined}
+          {...groupMarks}
           className={cn(railTileClass, "group", stateClass, className)}
         >
           {appIcon}
@@ -223,6 +273,7 @@ export function RailItem({
           type="button"
           {...props}
           aria-label={label}
+          {...groupMarks}
           className={cn(railTileClass, "group", stateClass, className)}
         >
           {content}

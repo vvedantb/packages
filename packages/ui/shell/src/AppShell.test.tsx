@@ -231,9 +231,24 @@ describe("RailTile", () => {
       </RailGroup>,
     );
     const [inbox, search] = Array.from(document.querySelectorAll("[role=group] button"));
-    expect(inbox?.className).toContain("bg-segment");
+    // The group's pill is the active fill, so the tile itself has none.
     expect(inbox?.className).not.toContain("bg-surface-tertiary");
+    expect(inbox?.hasAttribute("data-active")).toBe(true);
     expect(search?.className).toBe(cn(railTileClass, "group", railTileStateClass(false, true)));
+    const pill = document.querySelector<HTMLElement>("[role=group] > span[aria-hidden]");
+    expect(pill?.style.opacity).toBe("1");
+  });
+
+  it("hides the RailGroup pill when no tile is active", async () => {
+    await mount(
+      <RailGroup>
+        <RailTile label="Search">
+          <svg />
+        </RailTile>
+      </RailGroup>,
+    );
+    const pill = document.querySelector<HTMLElement>("[role=group] > span[aria-hidden]");
+    expect(pill?.style.opacity).toBe("0");
   });
 
   it("renders a native button tile without aria-current when inactive", async () => {

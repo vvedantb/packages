@@ -18,7 +18,8 @@ function findActiveTab(list: HTMLElement): HTMLElement | null {
 
 // `xy`: both axes on transform (top pinned to 0), so a column list slides the
 // same way a row does; `top` is a layout property and does not tween.
-function moveTabsPillXY(
+// Exported for other sliding pills (`Sidebar.RailGroup`).
+export function moveTabsPillXY(
   pill: HTMLElement,
   tab: HTMLElement,
   animate: boolean,
