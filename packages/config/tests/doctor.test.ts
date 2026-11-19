@@ -95,6 +95,20 @@ describe("runDoctorChecks", () => {
     expect(byId(results, "no-prettier").details.join("\n")).toContain("apps/web");
   });
 
+  it("walks workspace packages when pnpm-workspace.yaml starts with a byte-order mark", () => {
+    writeJson("package.json", {
+      name: "root",
+      devDependencies: { oxlint: "^1.80.0" },
+      scripts: { lint: "oxlint ." },
+    });
+    write("pnpm-workspace.yaml", "﻿packages:\n  - apps/*\n");
+    write(".github/workflows/ci.yml", WORKFLOW);
+    writeJson("apps/web/package.json", { name: "web", devDependencies: { prettier: "^3.0.0" } });
+
+    const results = runDoctorChecks(dir, { runningVersion: "0.9.0" });
+    expect(byId(results, "no-prettier").status).toBe("fail");
+  });
+
   it("reports a waived check as waived and does not count it as drift", () => {
     writeJson("package.json", {
       name: "waived-app",

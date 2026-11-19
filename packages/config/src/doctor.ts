@@ -111,7 +111,9 @@ function parsePnpmWorkspace(root: string): string[] {
   if (!existsSync(file)) return [];
   const globs: string[] = [];
   let inPackages = false;
-  for (const raw of readFileSync(file, "utf8").split(/\r?\n/)) {
+  // A leading byte-order mark would hide `packages:` on the first line.
+  const text = readFileSync(file, "utf8").replace(/^﻿/, "");
+  for (const raw of text.split(/\r?\n/)) {
     if (/^packages\s*:/.test(raw)) {
       inPackages = true;
       continue;
