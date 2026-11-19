@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+### Patch Changes
+
+- [#298](https://github.com/vvedantb/packages/pull/298) [`708736a`](https://github.com/vvedantb/packages/commit/708736a0659a909e8683256d87965b6a62529fee) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-doctor` now reads a `pnpm-workspace.yaml` that starts with a byte-order mark. Before, it found no workspace packages in such a file and checked only the root `package.json`, so drift in the workspaces passed.
+
 ## 0.10.0
 
 ### Minor Changes
