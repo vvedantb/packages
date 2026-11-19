@@ -185,6 +185,7 @@ jobs:
             pnpm-store-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install
+        id: install
         env:
           PACKAGE_MANAGER: ${{ inputs.package_manager }}
           INSTALL_COMMAND: ${{ inputs.install_command }}
@@ -386,6 +387,21 @@ jobs:
           # Mark the end of Checks for the budget step (not reached if a command
           # failed, which already fails the job).
           echo "CHECKS_END=$(date +%s)" >> "$GITHUB_ENV"
+
+      # The drift check. vvedantb-doctor comes from the @vvedantb/config version
+      # the caller has installed, so a new doctor rule reaches a repo only when
+      # that repo moves to the new config version. There is no input to turn
+      # this off: a repo records an exception as a waiver with a written reason
+      # in .vvedantb-doctor.json. It runs after Checks, even when a check
+      # failed, so one run shows every failure.
+      - name: Doctor
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          if [ ! -e node_modules/.bin/vvedantb-doctor ]; then
+            echo "::error::vvedantb-doctor is not installed. Add @vvedantb/config (0.10.0 or newer) as a devDependency of the root package.json."
+            exit 1
+          fi
+          ./node_modules/.bin/vvedantb-doctor
 
       - name: Install Playwright browsers
         if: ${{ inputs.playwright_browsers != '' && inputs.e2e_command != '' && !cancelled() }}

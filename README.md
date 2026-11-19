@@ -478,7 +478,8 @@ It does this:
 2. For pnpm, restores a pnpm store cache with a fallback key, and prunes the store on a cache miss. For npm, uses the `setup-node` npm cache. With `cache_node_modules: true` it also caches `**/node_modules` on an exact key and skips the store work on a hit.
 3. Installs (`pnpm install --frozen-lockfile`, or `npm ci`), with `HUSKY=0`.
 4. Runs each line of `commands` as its own check. A failure does not stop the next line (set `keep_going: false` to stop at the first). With `parallel: true` the lines run at once instead of in order. Either way it records each command's wall time, writes a table to the job summary, and fails at the end listing every failed command.
-5. Optionally installs Playwright browsers and runs `e2e_command` (always serial), then uploads `failure_artifact_paths` if the job failed.
+5. Runs `vvedantb-doctor` from the caller's installed `@vvedantb/config`, even when a check failed. Drift fails the job. No input turns it off: record an exception as a waiver with a reason in `.vvedantb-doctor.json`. A caller without `@vvedantb/config` fails with a message that says to add it.
+6. Optionally installs Playwright browsers and runs `e2e_command` (always serial), then uploads `failure_artifact_paths` if the job failed.
 
 The whole thing is one job on one runner: splitting it would add another runner pickup and another setup. The speed inputs (`parallel`, `cache_node_modules`, blobless checkout) are opt-in, so a caller keeps today's behaviour until it turns them on. None of them hides a failure: no command is retried, skipped or allowed to pass.
 
