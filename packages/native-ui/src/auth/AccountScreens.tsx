@@ -9,7 +9,6 @@ import { AuthScreen, FieldError } from "./AuthScreen";
 import {
   authErrorMessage,
   DEFAULT_STAGE_TIMEOUT_MS,
-  isAuthTimeoutError,
   logAuthFailure,
   withAuthTimeout,
 } from "./authErrors";
@@ -104,27 +103,29 @@ export function ChangePasswordScreen({
     if (next !== confirm) return setError(ACCOUNT_MESSAGES.passwordMismatch);
     setSubmitting(true);
     setError("");
+    // React Compiler memoises a component only when its `try` has no branch and
+    // no `finally`, so the branches sit before and after it.
+    const params = hasPassword
+      ? { newPassword: next, signOutOfOtherSessions, currentPassword: current }
+      : { newPassword: next, signOutOfOtherSessions };
+    let failed = false;
+    let failure: unknown;
     try {
-      await withAuthTimeout(
-        user.updatePassword({
-          newPassword: next,
-          signOutOfOtherSessions,
-          ...(hasPassword ? { currentPassword: current } : {}),
-        }),
-        "update-password",
-        stageTimeoutMs,
-      );
-      setCurrent("");
-      setNext("");
-      setConfirm("");
-      if (onSuccess) onSuccess();
-      else router.back();
+      await withAuthTimeout(user.updatePassword(params), "update-password", stageTimeoutMs);
     } catch (caught) {
-      logAuthFailure("update-password", caught);
-      setError(authErrorMessage(caught, ACCOUNT_MESSAGES.changePasswordFailed));
+      failed = true;
+      failure = caught;
     }
-    // No `finally`: React Compiler does not memoise a component with one.
     setSubmitting(false);
+    if (failed) {
+      logAuthFailure("update-password", failure);
+      return setError(authErrorMessage(failure, ACCOUNT_MESSAGES.changePasswordFailed));
+    }
+    setCurrent("");
+    setNext("");
+    setConfirm("");
+    if (onSuccess) onSuccess();
+    else router.back();
   };
 
   return (
@@ -233,16 +234,22 @@ export function DeleteAccountScreen({
     if (!isLoaded || !user) return setError(ACCOUNT_MESSAGES.notReady);
     setSubmitting(true);
     setError("");
+    // No branch inside the `try`: see `ChangePasswordScreen`.
+    let failed = false;
+    let failure: unknown;
     try {
       await withAuthTimeout(user.delete(), "delete-account", stageTimeoutMs);
-      if (onDeleted) onDeleted();
-      else router.replace(afterDeleteHref);
     } catch (caught) {
-      if (isAuthTimeoutError(caught)) logAuthFailure("delete-account", caught);
-      setError(authErrorMessage(caught, ACCOUNT_MESSAGES.deleteFailed));
+      failed = true;
+      failure = caught;
     }
-    // No `finally`: React Compiler does not memoise a component with one.
     setSubmitting(false);
+    if (failed) {
+      logAuthFailure("delete-account", failure);
+      return setError(authErrorMessage(failure, ACCOUNT_MESSAGES.deleteFailed));
+    }
+    if (onDeleted) onDeleted();
+    else router.replace(afterDeleteHref);
   };
 
   const label = `Type ${confirmWord} to confirm`;
