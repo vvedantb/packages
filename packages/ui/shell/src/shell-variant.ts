@@ -7,6 +7,9 @@ import { createContext, use } from "react";
  */
 export type AppShellVariant = "floating" | "rail";
 
+/** How the sidebar panel hides and shows in the `"rail"` variant. */
+export type AppShellPanelMotion = "dock" | "none";
+
 /**
  * The `variant` input of `AppShell` and `AppShell.Root`, as a union keyed on
  * `variant`. An input that only one variant takes goes on that arm, with
@@ -16,12 +19,28 @@ export type AppShellVariantProps =
   | {
       /** Default `"floating"`. */
       variant?: "floating";
+      panelMotion?: never;
     }
-  | { variant: "rail" };
+  | {
+      variant: "rail";
+      /**
+       * Rail only. `"dock"` (default): `RailCollapseTile` shrinks the panel
+       * into the tile on hide and grows it back out on show. `"none"`: the
+       * panel shows and hides at once.
+       */
+      panelMotion?: AppShellPanelMotion;
+    };
 
 export const AppShellVariantContext = createContext<AppShellVariant>("floating");
 
 /** The `variant` of the nearest `AppShell`; `"floating"` outside one. */
 export function useAppShellVariant(): AppShellVariant {
   return use(AppShellVariantContext);
+}
+
+export const AppShellPanelDockContext = createContext(false);
+
+/** True inside an `AppShell variant="rail"` whose `panelMotion` is `"dock"`. */
+export function useAppShellPanelDock(): boolean {
+  return use(AppShellPanelDockContext);
 }

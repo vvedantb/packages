@@ -38,6 +38,17 @@ export type { BulkActionBarConfig, BulkActionBarProps, BulkBarAction, BulkBarLab
 export { CopyLinkMenuItem } from "./ui/copy-link-menu-item";
 export { ToggleSearch } from "./ui/toggle-search";
 export type { ToggleSearchProps, ToggleSearchVariant } from "./ui/toggle-search";
+export {
+  DOCK_MOTION_EVENT,
+  DockMotionEvent,
+  dockMotionOff,
+  dockNudge,
+  dockPopIn,
+  dockPopOut,
+  slideNextResize,
+  slideWith,
+} from "./motion/dock-motion";
+export type { DockEdge } from "./motion/dock-motion";
 export { MotionProvider } from "./motion/motion-provider";
 export { useReducedMotionSetting, type ReducedMotion } from "./motion/reduced-motion";
 export { MarqueeOnHover } from "./ui/marquee-on-hover";
@@ -231,11 +242,29 @@ export type {
   AppShellScroll,
   AppShellSkipLinkProps,
 } from "../shell/src/AppShell";
+export { useAppShellVariant } from "../shell/src/shell-variant";
+export type { AppShellPanelMotion, AppShellVariant } from "../shell/src/shell-variant";
+export { popInShellPanelNextFrame, popOutShellPanel, toggleShellPanel } from "../shell/src/shell-panel-motion";
+export { ButtonTrack, buttonTrackClass } from "../shell/src/ButtonTrack";
+export type { ButtonTrackProps } from "../shell/src/ButtonTrack";
+export {
+  SidePanelTabs,
+  popOutSidePanel,
+  SIDE_PANEL_RAIL_WIDTH_PX,
+  SIDE_PANEL_RAIL_LABELLED_WIDTH_PX,
+} from "../shell/src/SidePanelTabs";
+export type {
+  SidePanelTabLayout,
+  SidePanelTabsFrameProps,
+  SidePanelTabsListProps,
+  SidePanelTabsRailProps,
+  SidePanelTabsTabProps,
+} from "../shell/src/SidePanelTabs";
 export { AppSidebar } from "../shell/src/AppSidebar";
 export type { AppSidebarProps } from "../shell/src/AppSidebar";
 // Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.
 export * from "../shell/src/Sidebar";
-export { SidebarRail, RailTile, RailDivider, RailCollapseTile, useInRailGroup } from "../shell/src/SidebarRail";
+export { SidebarRail, RailTile, RailDivider, RailCollapseTile, shellDockTileProps, useInRailGroup } from "../shell/src/SidebarRail";
 export type {
   SidebarRailProps,
   RailTileProps,

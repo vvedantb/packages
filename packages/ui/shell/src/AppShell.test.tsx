@@ -6,7 +6,7 @@ import { TooltipProvider } from "../../src/ui/tooltip";
 import { Tabs, TabsContent } from "../../src/ui/tabs";
 import { AppShell } from "./AppShell";
 import { AppSidebar } from "./AppSidebar";
-import { RailDivider, RailGroup, RailTile, SidebarRail } from "./SidebarRail";
+import { RailCollapseTile, RailDivider, RailGroup, RailTile, SidebarRail } from "./SidebarRail";
 import { SidebarPanel } from "./SidebarPanel";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
 import { useAppShellResize, type SidebarResizeOptions } from "./SidebarResize";
@@ -147,6 +147,32 @@ describe("AppShell", () => {
     expect(first().querySelector("[role=group]")).toBeNull();
     expect(first().querySelector(".bg-separator")).not.toBeNull();
     expect(first().querySelector(".border-r")).not.toBeNull();
+  });
+
+  it("variant=\"rail\" marks the collapse tile and the panel for the dock motion; floating does not", async () => {
+    const onToggle = vi.fn();
+    const sidebar = (
+      <>
+        <SidebarRail footer={<RailCollapseTile collapsed={false} onToggle={onToggle} />} />
+        <SidebarPanel title="Chats" />
+      </>
+    );
+    await mount(<AppShell variant="rail" sidebar={sidebar} />);
+    const tile = q("[aria-label='Hide sidebar']");
+    expect(tile.hasAttribute("data-shell-dock-tile")).toBe(true);
+    expect(first().querySelectorAll("[data-shell-dock-panel]")).toHaveLength(1);
+    // No Web Animations here: the hide runs at once, as it does with motion off.
+    await act(async () => tile.click());
+    expect(onToggle).toHaveBeenCalledTimes(1);
+
+    await rerender(<AppShell variant="rail" panelMotion="none" sidebar={sidebar} />);
+    expect(first().querySelector("[data-shell-dock-tile], [data-shell-dock-panel]")).toBeNull();
+
+    // @ts-expect-error `panelMotion` is a rail-only input.
+    await rerender(<AppShell panelMotion="none" sidebar={sidebar} />);
+    expect(first().querySelector("[data-shell-dock-tile], [data-shell-dock-panel]")).toBeNull();
+    await act(async () => q("[aria-label='Hide sidebar']").click());
+    expect(onToggle).toHaveBeenCalledTimes(2);
   });
 });
 
