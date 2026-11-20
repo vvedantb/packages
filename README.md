@@ -132,19 +132,16 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 ### What it does
 
 1. Decides whether to release, before checkout or any setup. By default every push that reaches the workflow releases; the skip applies only with `release_on: feat` (see "Feature-only releases"). On a skip it logs `Not a feature merge, skipping release` and every later step is skipped, so the run passes with no version bump, tag or release.
-2. Checks the inputs, then runs the optional `pre_setup_command` (velth uses it to free runner disk space) before any toolchain setup.
+2. Checks out the repo (full history only when `pathspecs` is set on a branch push), then resolves `should_release`: with `pathspecs`, a branch push that changes no matching file skips here (see "Path filter and waiting for Check"). Checks the inputs, then runs the optional `pre_setup_command` (velth uses it to free runner disk space) before any toolchain setup.
 3. Picks versionName, versionCode and the tag. With no `version`, it bumps the patch of the highest semver `versionName` among the published `<tag_prefix>*` (`mobile-apk-*`) tags, read from the tag suffixes, with `DEFAULT_VERSION_NAME` in `app.config.ts` as the floor. With `version_name_source: app_json`, it follows v-store's rules instead: the floor is `expo.version` in `app_json_path`, which wins if it is higher than the bumped patch, and the versionName must be higher than every published one. The run downloads `release.json` only for the highest semver tag, and versionCode is that release's versionCode plus 1, and at least `version_code_floor` (1000). `version_code` can set a higher one. A release with no `release.json` counts as versionCode 1. The run stops if the tag or release already exists.
 4. On a tag push (`GITHUB_REF_TYPE=tag`), the pushed tag is the release tag. The versionName is the tag without `tag_prefix`, and `version`, if set, must match it. The tag may exist already, but the release must not.
 5. Decodes the keystore into `$RUNNER_TEMP/<keystore_filename>` and sets `ANDROID_KEYSTORE_PATH`. It stops if any of the four signing secrets is missing, so a release never falls back to the debug key.
 6. Sets up pnpm (version from `packageManager`), Node with the pnpm cache, Temurin Java and Gradle, then installs the Android SDK packages with the runner's own `sdkmanager`. It does not use `android-actions/setup-android`.
 7. Runs the optional pre-build hook, then the app's build script (Expo prebuild and a signed Gradle `assembleRelease`). Next it checks the outputs: the APK name, the SHA-256, the `release.json` values, and, with `package_id`, the APK badging.
 8. With `dry_run` and `upload_dry_run_artifact`, uploads the APK and `release.json` as the Actions artifact `<app_name>-android-dry-run`.
-9. Publishes the tag with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), with `--target $GITHUB_SHA`, or `--verify-tag` on a tag push. The notes are the template and the generated "What's changed" notes since the release with the highest semver versionName. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
-10. Removes the keystore (`if: always()`, unless step 1 skipped the release).
-
-### Path filter and waiting for Check
-
-Two opt-in inputs let a caller start this job in parallel with its Check job. `pathspecs` is a list of git pathspecs, one per line (blank lines and `#` comments ignored). On a branch push, after the `release_on` gate, the workflow checks out full history and releases only if a file changed between `github.event.before` and `github.sha` matches. No match logs `No release paths changed.` and skips every later step, so the run passes. A missing or all-zero `before` counts as changed. Tag pushes, `workflow_dispatch` and an empty input skip the check. `wait_for_check_job` names a job in the caller's run, such as `Check`. After the build outputs pass, and before publish, the workflow polls every 15 seconds for up to 45 minutes until that job succeeds. It matches the job name, or a name ending in ` / <input>`. A failed or cancelled job fails the run with no release. It also waits on `dry_run`.
+9. With `wait_for_check_job`, polls until that job in the same run succeeds, and fails the run if it does not. This runs before publish, `dry_run` included.
+10. Publishes the tag with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), with `--target $GITHUB_SHA`, or `--verify-tag` on a tag push. The notes are the template and the generated "What's changed" notes since the release with the highest semver versionName. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
+11. Removes the keystore (`if: always()`, unless step 1 or the path filter skipped the release).
 
 ### Feature-only releases
 
@@ -166,11 +163,27 @@ On a skip, the job passes and all outputs are empty.
 
 The asset names and the `release.json` shape `{"versionName","versionCode","sha256"}` are fixed, not inputs. The tag is `<tag_prefix><versionName>`; keep the default `tag_prefix`, `mobile-apk-`, for any app V Store lists. V Store's catalog sync depends on all three.
 
+### Path filter and waiting for Check
+
+Two opt-in inputs help an app run its release in parallel with its own CI.
+
+`pathspecs` is a soft skip. It applies only to a branch `push`, after the `release_on` gate says to release. Give git pathspecs, one per line; blank lines and `#` comments are ignored:
+
+```yaml
+pathspecs: |
+  :(glob)apps/mobile/**
+  :(exclude,glob)apps/mobile/e2e/**
+```
+
+After checkout (full history), the workflow runs `git diff --name-only <before> <sha> -- <pathspecs>`. With no matching file it logs `No release paths changed.`, and every later step is skipped, so the job passes with no release. A missing, all-zero or unknown `before` commit counts as changed and releases. Tag pushes and `workflow_dispatch` ignore `pathspecs`. Empty (the default) means no path filter.
+
+`wait_for_check_job` names a job in the same run, such as `Check`. Before "Publish GitHub Release" (and on `dry_run`), the workflow polls the run's jobs every 15 seconds, for up to 45 minutes, until that job succeeds. A job matches when its name is the input or ends with ` / <input>` (nested reusable workflow names). If the job fails, is cancelled, times out or is skipped, the step fails and nothing is published. The caller needs `actions: read` as well as `contents: write`.
+
 ### What stays in the caller
 
 - The `push` trigger and its `paths` filter, and the `workflow_dispatch` inputs.
 - `concurrency` (vmem: `group: release-android`, `cancel-in-progress: false`). The version is chosen inside the job, so runs must not overlap.
-- `permissions: contents: write`. A called workflow cannot get more than the caller grants, and publishing needs `contents: write`.
+- `permissions: contents: write`, plus `actions: read` when `wait_for_check_job` is set. A called workflow cannot get more than the caller grants, and publishing needs `contents: write`.
 - The secrets, passed with `secrets: inherit` (or by name).
 - The build script, the notes template and `app.config.ts`. The workflow changes no app code. If an app needs a patch before the build, such as the Groovy `${}` escape that vmem's `withReleaseSigning.js` has as `\${...}`, use `pre_build_script` or `pre_build_command`.
 
@@ -233,6 +246,8 @@ The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inheri
 | `mark_as_latest` | boolean | `false` | Mark the release as the repo's latest release |
 | `version` | string | empty | versionName to release, like `1.0.1`. Must match the tag on a tag push. Empty: the tag's version on a tag push, else the next patch |
 | `release_on` | string | `always` | Which pushes release. `always`: every push that reaches the workflow. `feat` (opt-in): only feature merges or messages with `[release]` (see "Feature-only releases"). Tag pushes and `workflow_dispatch` always release |
+| `pathspecs` | string | empty | Git pathspecs, one per line (`#` comments and blank lines ignored). On a branch push that passes the `release_on` gate, skips the release when no matching file changed between `github.event.before` and `github.sha`. Tag pushes and `workflow_dispatch` ignore it. Empty: no path filter (see "Path filter and waiting for Check") |
+| `wait_for_check_job` | string | empty | Job in the same run, like `Check`, that must succeed before publish (and `dry_run`). Matches the exact name or a name ending in ` / <input>`. Polls every 15 seconds for up to 45 minutes. Empty: no wait |
 | `dry_run` | boolean | `false` | Build and sign, publish nothing |
 | `upload_dry_run_artifact` | boolean | `false` | With `dry_run`, upload the APK and `release.json` as the artifact `<app_name>-android-dry-run` |
 | `pre_setup_command` | string | empty | Inline bash run from the repo root before the Node, pnpm and Java setup, like freeing disk space. Does not get `build_env` |
