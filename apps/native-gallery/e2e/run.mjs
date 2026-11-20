@@ -324,12 +324,14 @@ const scenarios = {
     await see("reset-password-email-code-code");
     shot("auth-reset-code");
     await fill("reset-password-email-code-code", "111111");
+    await press("reset-password-email-code-verify");
     await see("reset-password-email-code-error");
     await press("reset-password-email-code-back");
     await see("reset-password-submit");
     await press("reset-password-submit");
     await see("reset-password-resend");
     await fill("reset-password-email-code-code", "424242");
+    await press("reset-password-email-code-verify");
 
     // New password: a mismatch blocks, a match finishes.
     await see("reset-password-new-password");
