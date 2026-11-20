@@ -3,7 +3,7 @@
 export { cn } from "./utils/cn";
 export { UiConfigProvider, useUiConfig } from "./ui/ui-config";
 export type { UiConfig, UiConfigProviderProps } from "./ui/ui-config";
-export { floatingSurfaceClass } from "./ui/_menu-classes";
+export { floatingSurfaceClass, triggerZoomAnimateClass } from "./ui/_menu-classes";
 export { fieldFocusClass, fieldFocusWithinClass } from "./ui/_field-classes";
 export * from "./ui/surface-classes";
 export * from "./motion/presets";
