@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.56.0
+
+### Minor Changes
+
+- [#316](https://github.com/vvedantb/packages/pull/316) [`759a38f`](https://github.com/vvedantb/packages/commit/759a38f1d3a61644d2bf33027dc22ca4a3c8fd6b) Thanks [@vvedantb](https://github.com/vvedantb)! - `AppShell` and `AppShell.Root` take `variant`: `"floating"` (default, no change) or `"rail"`. Both variants take the same inputs, so an app switches layout with one prop. `"rail"` has no content card or gutter, puts each `SidebarRail` slot on a `RailGroup` trough with a sliding pill, and draws no `showDivider` border or `RailDivider`. New exports: `useAppShellVariant` and the `AppShellVariant` type.
+
 ## 0.55.0
 
 ### Minor Changes
