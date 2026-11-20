@@ -10,6 +10,7 @@ import {
 } from "./dropdown-menu";
 import { Separator } from "./separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
+import { useUiConfig } from "./ui-config";
 import { IconDots, IconX } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 
@@ -22,13 +23,26 @@ export interface BulkBarAction {
   key: string;
   /** Full label used in the More menu and for accessibility. */
   label: string;
-  /** Shorter label shown inline in the bar (defaults to `label`). */
+  /** Shorter label shown inline in the bar (defaults to `label`). Unused with `labels="tooltip"`. */
   shortLabel?: string;
   icon: ComponentType<{ size: number; className?: string }>;
   destructive?: boolean;
   /** Shows the Alt-to-skip hint; the caller still owns the skip itself. */
   showSkipHint?: boolean;
   onClick: () => void;
+}
+
+/**
+ * How a bar button shows its label:
+ * - `"inline"` (default): icon and label; the label hides below `sm`
+ *   (HeroUI "responsive labels").
+ * - `"tooltip"`: icon-only at every width; the label shows in a tooltip.
+ */
+export type BulkBarLabels = "inline" | "tooltip";
+
+export interface BulkActionBarConfig {
+  /** Default `labels` for every bar in the app. A `labels` prop wins. */
+  labels?: BulkBarLabels;
 }
 
 export interface BulkActionBarProps {
@@ -43,6 +57,51 @@ export interface BulkActionBarProps {
   destructiveAction?: BulkBarAction;
   /** Motion key for the presence animation, e.g. "quick-tasks-bulk-bar". */
   barKey: string;
+  /** Label style for the action buttons (see `BulkBarLabels`). */
+  labels?: BulkBarLabels;
+}
+
+const barButtonToneClass = (action: BulkBarAction) =>
+  action.destructive
+    ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+    : "text-muted-foreground hover:bg-surface-secondary hover:text-foreground";
+
+/**
+ * An icon-only button with its label in a tooltip. The tooltip trigger is a
+ * wrapper span, so the tooltip still shows while the button is disabled (a
+ * disabled button gets no pointer events).
+ */
+function TooltipBarButton({
+  action,
+  disabled,
+}: {
+  action: BulkBarAction;
+  disabled: boolean;
+}) {
+  const Icon = action.icon;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex shrink-0">
+          <button
+            type="button"
+            aria-label={action.label}
+            onClick={action.onClick}
+            disabled={disabled}
+            className={`motion-press relative inline-flex size-9 items-center justify-center rounded-lg active:scale-[0.96] disabled:pointer-events-none disabled:opacity-30 ${barButtonToneClass(action)}`}
+          >
+            <Icon size={17} />
+            {action.showSkipHint ? (
+              <ConfirmSkipHint className="absolute -right-1 -top-1" />
+            ) : null}
+          </button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs" sideOffset={8}>
+        {action.showSkipHint ? skipConfirmTitle(action.label) : action.label}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 /**
@@ -52,10 +111,15 @@ export interface BulkActionBarProps {
 function BarButton({
   action,
   disabled,
+  labels,
 }: {
   action: BulkBarAction;
   disabled: boolean;
+  labels: BulkBarLabels;
 }) {
+  if (labels === "tooltip") {
+    return <TooltipBarButton action={action} disabled={disabled} />;
+  }
   const Icon = action.icon;
   return (
     <button
@@ -69,11 +133,7 @@ function BarButton({
       // `motion-press`, not `transition-colors`: the destructive Delete takes
       // this same branch, so the highest-consequence control in the bar was the
       // one with no acknowledgement at all before its confirm dialog appeared.
-      className={`motion-press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium active:scale-[0.96] disabled:pointer-events-none disabled:opacity-30 ${
-        action.destructive
-          ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
-          : "text-muted-foreground hover:bg-surface-secondary hover:text-foreground"
-      }`}
+      className={`motion-press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium active:scale-[0.96] disabled:pointer-events-none disabled:opacity-30 ${barButtonToneClass(action)}`}
     >
       <Icon size={17} />
       <span className="hidden sm:inline">
@@ -101,7 +161,10 @@ export function BulkActionBar({
   moreActions,
   destructiveAction,
   barKey,
+  labels: labelsProp,
 }: BulkActionBarProps) {
+  const configLabels = useUiConfig("BulkActionBar")?.labels;
+  const labels = labelsProp ?? configLabels ?? "inline";
   const hasSelection = selectedCount > 0;
   const allSelected = totalCount > 0 && selectedCount >= totalCount;
 
@@ -150,6 +213,7 @@ export function BulkActionBar({
               {/* Content: primary actions + More dropdown */}
               {primaryActions.map((action) => (
                 <BarButton
+                  labels={labels}
                   key={action.key}
                   action={action}
                   disabled={!hasSelection}
@@ -193,6 +257,7 @@ export function BulkActionBar({
                     className="mx-1.5 h-5 shrink-0 bg-border"
                   />
                   <BarButton
+                  labels={labels}
                     action={destructiveAction}
                     disabled={!hasSelection}
                   />

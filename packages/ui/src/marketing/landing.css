@@ -265,23 +265,22 @@ html:has(#top) {
   }
 }
 
+/* Reduced motion follows the root `MotionProvider reducedMotion` setting
+   (`html[data-reduced-motion]`), as in motion.css. */
 @media (prefers-reduced-motion: reduce) {
-  html:has(#top) {
+  html:not([data-reduced-motion="never"]):has(#top) {
     scroll-behavior: auto;
   }
 
-  .landing-graph-dash,
-  .landing-preview-pulse,
-  .landing-pulse-dot,
-  .landing-ambient-drift,
-  .landing-ambient-node-a,
-  .landing-ambient-node-b,
-  .landing-ambient-node-c,
-  .landing-ambient-node-d,
-  .landing-ambient-node-e,
-  .landing-ambient-node-f,
-  .landing-ambient-node-g,
-  .landing-ambient-node-h {
+  html:not([data-reduced-motion="never"]) :is(.landing-graph-dash, .landing-preview-pulse, .landing-pulse-dot, .landing-ambient-drift, .landing-ambient-node-a, .landing-ambient-node-b, .landing-ambient-node-c, .landing-ambient-node-d, .landing-ambient-node-e, .landing-ambient-node-f, .landing-ambient-node-g, .landing-ambient-node-h) {
     animation: none !important;
   }
+}
+
+html[data-reduced-motion="always"]:has(#top) {
+  scroll-behavior: auto;
+}
+
+html[data-reduced-motion="always"] :is(.landing-graph-dash, .landing-preview-pulse, .landing-pulse-dot, .landing-ambient-drift, .landing-ambient-node-a, .landing-ambient-node-b, .landing-ambient-node-c, .landing-ambient-node-d, .landing-ambient-node-e, .landing-ambient-node-f, .landing-ambient-node-g, .landing-ambient-node-h) {
+  animation: none !important;
 }

@@ -44,14 +44,22 @@ declare module "@clerk/clerk-expo" {
     | {
         isLoaded: true;
         signIn: {
-          create(params: { identifier: string; password?: string }): Promise<Attempt>;
+          create(
+            params:
+              | { identifier: string; password?: string }
+              | { strategy: "reset_password_email_code"; identifier: string },
+          ): Promise<Attempt>;
           supportedFirstFactors: SecondFactorInfo[] | null;
           prepareFirstFactor(params: {
             strategy: "phone_code" | "email_code";
             phoneNumberId?: string;
             emailAddressId?: string;
           }): Promise<Attempt>;
-          attemptFirstFactor(params: { strategy: "phone_code" | "email_code"; code: string }): Promise<Attempt>;
+          attemptFirstFactor(
+            params:
+              | { strategy: "phone_code" | "email_code"; code: string }
+              | { strategy: "reset_password_email_code"; code: string; password?: string },
+          ): Promise<Attempt>;
           supportedSecondFactors: SecondFactorInfo[] | null;
           prepareSecondFactor(params: {
             strategy: "phone_code" | "email_code";

@@ -33,7 +33,7 @@ npx expo run:android
 | `/section/entries` | Every entry point, its exports and the section that renders each component. |
 | `/layering` | The layering stress screen: a tab bar over glass, with a dropdown, select, sheet, bottom sheet, confirm and alert dialogs and a toast opened over it. |
 | `/keyboard` | Inputs and the `PromptInput` composer, inline and stacked, with a live height read-out. |
-| `/auth` | `SignInScreen`, `SignUpScreen`, `SecondFactorScreen` and the frame parts, on a mocked Clerk. |
+| `/auth` | `SignInScreen`, `SignUpScreen`, `ResetPasswordScreen`, `SecondFactorScreen` and the frame parts, on a mocked Clerk. The mocked reset takes any email and the code `424242`. |
 
 Larger text and dark mode apply to every screen except `/parity`, which always draws the default sizes, as the web gallery does.
 

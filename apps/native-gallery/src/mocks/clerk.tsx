@@ -1,6 +1,8 @@
 // A stand-in for `@clerk/clerk-expo`, wired in by `metro.config.js`. The gallery
 // has no Clerk keys and makes no network call. The hooks return enough for the
 // native-ui auth screens to render and to take input. Nothing signs in.
+// The password reset runs end to end: any email gets a "code", `424242` is the
+// right one, and the new password is accepted.
 import type { ReactNode } from "react";
 
 export const ClerkProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
@@ -12,10 +14,31 @@ const reject = async () => {
   throw new Error("Mock Clerk: sign-in is not available in the gallery");
 };
 
+const RESET_STRATEGY = "reset_password_email_code";
+export const MOCK_RESET_CODE = "424242";
+
+type MockParams = { strategy?: string; code?: string };
+
+const create = async (params: MockParams) => {
+  if (params.strategy !== RESET_STRATEGY) return reject();
+  return { status: "needs_first_factor", createdSessionId: null };
+};
+
+const attemptFirstFactor = async (params: MockParams) => {
+  if (params.strategy !== RESET_STRATEGY) return reject();
+  if (params.code !== MOCK_RESET_CODE) {
+    // The shape of an API error, which `authErrorMessage` reads.
+    throw { errors: [{ code: "form_code_incorrect", message: "Incorrect code" }] };
+  }
+  return { status: "needs_new_password", createdSessionId: null };
+};
+
+const resetPassword = async () => ({ status: "complete", createdSessionId: "sess_mock" });
+
 export const useSignIn = () => ({
   isLoaded: true,
   setActive: async () => undefined,
-  signIn: { create: reject, prepareFirstFactor: reject, attemptFirstFactor: reject, prepareSecondFactor: reject, attemptSecondFactor: reject, resetPassword: reject },
+  signIn: { create, prepareFirstFactor: reject, attemptFirstFactor, prepareSecondFactor: reject, attemptSecondFactor: reject, resetPassword },
 });
 
 export const useSignUp = () => ({

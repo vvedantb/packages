@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.54.0
+
+### Minor Changes
+
+- [#307](https://github.com/vvedantb/packages/pull/307) [`e7ad2ec`](https://github.com/vvedantb/packages/commit/e7ad2ec6839f372f8ef24bbea9a9903af898d666) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `BulkActionBar` gains `labels`: `"inline"` (default, icon plus label, label hidden below `sm`) or `"tooltip"` (icon-only at every width, label in a tooltip, skip-confirm hint as a corner badge). Set it per bar or app-wide with the `UiConfig` entry `BulkActionBar: { labels }`. New types `BulkActionBarConfig` and `BulkBarLabels`.
+
+## 0.53.0
+
+### Minor Changes
+
+- [#306](https://github.com/vvedantb/packages/pull/306) [`aba7c60`](https://github.com/vvedantb/packages/commit/aba7c60531924c6e24bc11ae7543bb90d49ef201) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `MotionProvider reducedMotion` ("user" by default, "always" or "never") now governs the whole package, not only `m.*` components, like HeroUI's provider. It stamps `html[data-reduced-motion]` and provides context. `prefersReducedMotion()`, the Dialog zoom, the `motion-reduce:` Tailwind variant (`utilities.css`), `motion.css` and the landing CSS follow it. New: `useReducedMotionSetting()` and the `ReducedMotion` type. With no provider, or "user", nothing changes.
+
 ## 0.52.0
 
 ### Minor Changes
