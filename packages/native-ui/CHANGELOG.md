@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.31.0
+
+### Minor Changes
+
+- [#305](https://github.com/vvedantb/packages/pull/305) [`8f74763`](https://github.com/vvedantb/packages/commit/8f7476377467d50eb5ac3070be28cc0d01ed2e6c) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `UpdateChecker` and `UpdatePrompt`: an "Update available" prompt for apps that ship their Android APK as GitHub releases. `UpdateChecker` looks for a newer release once at start (`source={{ repo, tagPrefix }}`, or your own `check`) and offers it with Later, Download and "Install from V Store". "Install from V Store" only opens V Store (`vstore://updates` by default, set `vStoreUrl` to change it); when V Store is not installed the button is replaced by a notice and Download stays. `showDownload` and `showVStore` choose which of the two is offered. Later is remembered through the `storage` you pass. Also exports `fetchGitHubUpdate`, `newerGitHubRelease`, `isNewerVersion` and `V_STORE_UPDATES_URL`.
+
 ## 0.30.0
 
 ### Minor Changes
