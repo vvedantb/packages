@@ -111,6 +111,43 @@ describe("AppShell", () => {
       "flex min-w-0 flex-1 flex-col pt-[var(--app-shell-mobile-header-height)] md:pt-0",
     );
   });
+
+  it("variant=\"rail\" drops the card and gutter, groups the rail slots on troughs and hides dividers", async () => {
+    const shell = (variant: "floating" | "rail") => (
+      <AppShell
+        variant={variant}
+        sidebar={
+          <SidebarRail showDivider top={<RailTile label="Home">h</RailTile>} footer={<RailDivider />}>
+            <RailTile label="Chats" active>
+              c
+            </RailTile>
+          </SidebarRail>
+        }
+      >
+        Page
+      </AppShell>
+    );
+    await mount(shell("rail"));
+    const frame = first();
+    expect(frame.getAttribute("data-shell-variant")).toBe("rail");
+    const main = q("main", frame);
+    expect(main.className).toBe(
+      `relative z-10 flex h-full min-h-0 outline-none md:ml-[var(--app-shell-sidebar-width)] ${MAIN_TRANSITION}`,
+    );
+    expect(first(main).className).toBe(
+      "flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--app-shell-mobile-header-height)] md:pt-0",
+    );
+    expect(frame.querySelectorAll("[role=group]")).toHaveLength(3);
+    expect(q("[aria-label=Chats]", frame).hasAttribute("data-active")).toBe(true);
+    expect(frame.querySelector(".bg-separator")).toBeNull();
+    expect(frame.querySelector(".border-r")).toBeNull();
+
+    await rerender(shell("floating"));
+    expect(first().hasAttribute("data-shell-variant")).toBe(false);
+    expect(first().querySelector("[role=group]")).toBeNull();
+    expect(first().querySelector(".bg-separator")).not.toBeNull();
+    expect(first().querySelector(".border-r")).not.toBeNull();
+  });
 });
 
 describe("SidebarRail", () => {

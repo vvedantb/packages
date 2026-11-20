@@ -21,6 +21,8 @@ export type {
   AppShellScroll,
   AppShellSkipLinkProps,
 } from "./AppShell.js";
+export { useAppShellVariant } from "./shell-variant.js";
+export type { AppShellVariant } from "./shell-variant.js";
 export { AppSidebar } from "./AppSidebar.js";
 export type { AppSidebarProps } from "./AppSidebar.js";
 // Composable sidebar parts (`Sidebar.Root`, `Sidebar.Rail`, ...) and their prop types.

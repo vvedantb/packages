@@ -8,6 +8,7 @@ import type { ProductAppName } from "../../src/brand/AppWordmark";
 import { moveTabsPillXY } from "../../src/ui/tabsSliding";
 import { SIDEBAR_RAIL_APP_ICON_SIZE, railGroupClass, railGroupPillClass, railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
+import { useAppShellVariant } from "./shell-variant";
 
 export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
   /** Pinned at the top, above the scroll body. */
@@ -16,7 +17,7 @@ export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" 
   children?: ReactNode;
   /** Pinned at the bottom. */
   footer?: ReactNode;
-  /** Adds a right border between the rail and the panel. Default `false`. */
+  /** Adds a right border between the rail and the panel. Default `false`. No effect in an `AppShell variant="rail"`. */
   showDivider?: boolean;
   /** Render the body as its single child element (for example a tabs list), with the body classes merged. */
   bodyAsChild?: boolean;
@@ -38,6 +39,10 @@ export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" 
  * Legacy (still supported): the `top`, `footer`, `bodyAsChild`, `tabs` and
  * `*ClassName` props. Compose `Sidebar.Rail`, `.RailHeader`, `.RailBody` and
  * `.RailFooter` instead.
+ *
+ * In an `AppShell variant="rail"` each of `top`, the body and `footer` sits on
+ * its own `RailGroup` trough, and `showDivider` and `RailDivider` draw nothing.
+ * A `bodyAsChild` body is left as it is.
  */
 export function SidebarRail({
   top,
@@ -52,16 +57,21 @@ export function SidebarRail({
   footerClassName,
   ...props
 }: SidebarRailProps) {
+  const rail = useAppShellVariant() === "rail";
+  const slot = (node: ReactNode) => (rail ? <RailGroup className={railSlotGroupClass}>{node}</RailGroup> : node);
   return (
-    <Rail {...props} showDivider={showDivider} className={className}>
-      {top == null ? null : <RailHeader className={topClassName}>{top}</RailHeader>}
+    <Rail {...props} showDivider={showDivider && !rail} className={className}>
+      {top == null ? null : <RailHeader className={topClassName}>{slot(top)}</RailHeader>}
       <RailBody asChild={bodyAsChild} tabs={tabs} className={bodyClassName}>
-        {children}
+        {bodyAsChild ? children : slot(children)}
       </RailBody>
-      {footer == null ? null : <RailFooter className={footerClassName}>{footer}</RailFooter>}
+      {footer == null ? null : <RailFooter className={footerClassName}>{slot(footer)}</RailFooter>}
     </Rail>
   );
 }
+
+/** A slot's trough hides while the slot renders nothing (the pill is then its only child). */
+const railSlotGroupClass = "[&:not(:has(>:not([data-rail-pill])))]:hidden";
 
 export type SidebarRailRootProps = ComponentPropsWithoutRef<"div"> & {
   /** Adds a right border between the rail and the panel. Default `false`. */
@@ -169,7 +179,7 @@ export function RailGroup({ className, children, ...props }: SidebarRailGroupPro
   return (
     <RailGroupContext value>
       <div {...props} ref={groupRef} role="group" className={cn(railGroupClass, className)}>
-        <span ref={pillRef} aria-hidden className={railGroupPillClass} />
+        <span ref={pillRef} aria-hidden data-rail-pill="" className={railGroupPillClass} />
         {children}
       </div>
     </RailGroupContext>
@@ -298,8 +308,9 @@ export function RailSeparator({ className, ...props }: SidebarRailSeparatorProps
 
 export type RailDividerProps = { className?: string };
 
-/** Legacy name of `Sidebar.RailSeparator`. */
+/** Legacy name of `Sidebar.RailSeparator`. Draws nothing in an `AppShell variant="rail"`: the gap between troughs divides. */
 export function RailDivider({ className }: RailDividerProps) {
+  if (useAppShellVariant() === "rail") return null;
   return <RailSeparator className={className} />;
 }
 
