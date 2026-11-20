@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.0
+
+### Minor Changes
+
+- [#304](https://github.com/vvedantb/packages/pull/304) [`16a1397`](https://github.com/vvedantb/packages/commit/16a1397e2744209e31dde2d32a20ea6b1163b554) Thanks [@vvedantb](https://github.com/vvedantb)! - Auth: add `ResetPasswordScreen` (`SignInScreen` with `mode="reset-password"`), the forgot-password flow: email, emailed code, new password typed twice, then signed in. `SignInScreen` takes `forgotPasswordHref` for a "Forgot password?" link. Sign-up now has a confirm-password field: a mismatch blocks the submit and shows under the field. Every password field has the show and hide button.
+
 ## 0.29.0
 
 ### Minor Changes
