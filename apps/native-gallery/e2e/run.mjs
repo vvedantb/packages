@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage chatOverlays)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage chatOverlays auth)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -111,6 +111,21 @@ async function hold(target) {
 async function goBack() {
   back();
   await settle();
+}
+
+/** Closes the soft keyboard when it is up. A back press with no keyboard would leave the screen. */
+async function closeKeyboard() {
+  const shown = /mInputShown=true/.test(String(adb(["shell", "dumpsys", "input_method"], { allowFail: true })));
+  if (shown) back();
+  await settle();
+}
+
+/** Tap a field, type into it, and close the keyboard. */
+async function fill(target, text) {
+  await press(target);
+  typeText(text);
+  await settle();
+  await closeKeyboard();
 }
 
 const shot = (name) => log({ screenshot: screenshot(resolve(shots, `${name}.png`)).path });
@@ -277,6 +292,86 @@ async function sectionsWithAnimations() {
 }
 
 const scenarios = {
+  // The auth screens on the mocked Clerk: show/hide password, "Forgot password?", the
+  // reset flow (email, code, new password twice) and sign-up's confirm password.
+  // The mock takes any email and the code 424242.
+  async auth() {
+    await fresh();
+    await press("link-auth");
+    await see("sign-in-submit");
+
+    // Show and hide the password.
+    await fill("sign-in-password", "hunter22pw");
+    if (visible("text=hunter22pw")) throw new AgentError("the password shows before the toggle is pressed");
+    await see("desc=Show password");
+    await press("sign-in-password-toggle");
+    await see("text=hunter22pw");
+    await see("desc=Hide password");
+    await press("sign-in-password-toggle");
+    await gone("text=hunter22pw");
+
+    // Forgot password opens the reset screen. No email: an error, and no code step.
+    await press("sign-in-forgot-password");
+    await see("reset-password-submit");
+    await gone("reset-password-password");
+    await press("reset-password-submit");
+    await see("Enter your email");
+    await fill("reset-password-email", "a.very.long.email.address.for.a.stress.case@example-domain.co.uk");
+    shot("auth-reset-email");
+    await press("reset-password-submit");
+
+    // A wrong code shows the error. Back, send again, then the right code.
+    await see("reset-password-email-code-code");
+    shot("auth-reset-code");
+    await fill("reset-password-email-code-code", "111111");
+    await press("reset-password-email-code-verify");
+    await see("reset-password-email-code-error");
+    await press("reset-password-email-code-back");
+    await see("reset-password-submit");
+    await press("reset-password-submit");
+    await see("reset-password-resend");
+    await fill("reset-password-email-code-code", "424242");
+    await press("reset-password-email-code-verify");
+
+    // New password: a mismatch blocks, a match finishes.
+    await see("reset-password-new-password");
+    await fill("reset-password-new-password", "abcdefgh1");
+    await fill("reset-password-confirm-password", "abcdefgh");
+    await press("reset-password-new-password-submit");
+    await see("The passwords do not match");
+    shot("auth-reset-mismatch");
+    await fill("reset-password-confirm-password", "1");
+    await press("reset-password-new-password-submit");
+    await see("code:reset-done");
+
+    // Sign-up: the confirm password must match before the form is sent.
+    await press("auth-mode-sign-up");
+    await fill("sign-up-email", "new.person@example.com");
+    await fill("sign-up-password", "abcdefgh1");
+    await fill("sign-up-confirm-password", "abcdefgh");
+    await press("sign-up-submit");
+    await see("sign-up-confirm-error");
+    await gone("sign-up-error");
+    shot("auth-sign-up-mismatch");
+    await fill("sign-up-confirm-password", "1");
+    await gone("sign-up-confirm-error");
+    await press("sign-up-submit");
+    // The mock has no sign-up: reaching its error shows the form was sent.
+    await see("sign-up-error");
+
+    // Stress: larger text and dark mode.
+    for (let i = 0; i < 3 && !visible("home"); i++) await goBack();
+    await see("home");
+    await press("toggle-larger-text");
+    await press("toggle-dark");
+    await press("link-auth");
+    await press("auth-mode-reset");
+    await see("reset-password-submit");
+    shot("auth-reset-dark-large");
+    await press("auth-mode-sign-up");
+    await see("sign-up-confirm-password");
+    shot("auth-sign-up-dark-large");
+  },
   async screens() {
     await fresh();
     shot("home");

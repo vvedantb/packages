@@ -238,7 +238,19 @@ export default function SignUp() {
 - `needs_new_password` shows a new-password step (`signIn.resetPassword`), then starts the session.
 - `onIncomplete(signIn)`: optional. Called only for statuses the built-in UI cannot finish: `needs_identifier`, `needs_first_factor` without an `email_code` or `phone_code` first factor, unknown statuses, and `needs_second_factor` or `needs_client_trust` when no supported strategy (totp, backup code, phone code, email code) exists. The built-in screen always runs `needs_second_factor`, `needs_client_trust` and `needs_new_password`, and runs `needs_first_factor` when an email or phone code exists. When `onIncomplete` is called, the screen shows no message. Without it, those statuses show "This account needs another step to sign in. Finish it on the web." and log the status and strategy ids with `console.warn`. Ignored in `sign-up`.
 - Keyboard: `AuthScreen` (and so every screen here) pads for the soft keyboard on iOS and Android, including edge-to-edge Android, and scrolls the focused field and the button above it.
-- No forgot-password step. An app that needs one keeps its own screen.
+- Sign-up has a confirm-password field. A mismatch blocks the submit and shows "The passwords do not match" under the field, also with `errorDisplay="toast"`.
+- Forgot password: `ResetPasswordScreen` (`SignInScreen` with `mode="reset-password"`, same props) on its own route, and `forgotPasswordHref` on the sign-in screen for the "Forgot password?" link.
+
+  ```tsx
+  // app/(auth)/sign-in.tsx
+  <SignInScreen scheme="myapp" signUpHref="/sign-up" forgotPasswordHref="/reset-password" />
+
+  // app/(auth)/reset-password.tsx
+  <ResetPasswordScreen scheme="myapp" signInHref="/sign-in" minPasswordLength={8} />
+  ```
+
+  It asks for the email and sends a code (`signIn.create` with `reset_password_email_code`), checks the code (`attemptFirstFactor`), then takes the new password twice (`signIn.resetPassword`) and starts the session. An account with two-step verification gets that step before the session. "Send a new code" sends another; back returns to the email form. The dashboard must have email-code password reset on. Test IDs: `reset-password-email`, `reset-password-submit`, `reset-password-email-code-code`, `reset-password-resend`, `reset-password-new-password`, `reset-password-confirm-password`, `reset-password-new-password-submit`.
+- Every password field is a `PasswordInput`, so each has the show and hide button.
 
 `GoogleSignInButton` (`scheme`, `redirectPath`, `afterAuthHref`, `replaceOptions`, `onSuccess`, `onError`, `label` and the `Button` props), `AuthScreen`, `OrDivider` and `FieldError` build custom screens. The module calls `WebBrowser.maybeCompleteAuthSession()` once when it loads, so the app no longer needs its own call.
 

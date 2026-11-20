@@ -199,6 +199,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   SafeAreaContainer: "layout",
   ScreenContainer: "layout",
   SearchInput: "forms",
+  ResetPasswordScreen: "auth",
   SecondFactorScreen: "auth",
   SectionLabel: "parity",
   MenuSheet: "layering",

@@ -28,8 +28,14 @@ export type {
   GoogleSignInOptions,
   GoogleSignInButtonProps,
 } from "./GoogleSignInButton";
-export { SignInScreen, SignUpScreen, AUTH_MESSAGES } from "./SignInScreen";
-export type { IncompleteSignIn, SignInMode, SignInScreenProps, SignUpScreenProps } from "./SignInScreen";
+export { SignInScreen, SignUpScreen, ResetPasswordScreen, AUTH_MESSAGES } from "./SignInScreen";
+export type {
+  IncompleteSignIn,
+  ResetPasswordScreenProps,
+  SignInMode,
+  SignInScreenProps,
+  SignUpScreenProps,
+} from "./SignInScreen";
 export { SecondFactorScreen } from "./SecondFactorScreen";
 export type { SecondFactorScreenProps } from "./SecondFactorScreen";
 export {
