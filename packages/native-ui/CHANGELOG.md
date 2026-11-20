@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.34.0
+
+### Minor Changes
+
+- [#311](https://github.com/vvedantb/packages/pull/311) [`d9e066d`](https://github.com/vvedantb/packages/commit/d9e066de912ae29aac417c84d3587e7d237ee754) Thanks [@vvedantb](https://github.com/vvedantb)! - `UpdateChecker`: new `vStore` prop. It asks V Store for the app's newest version (`{ packageName }`), so the check also works for an app in a private repository, where `source` cannot read the GitHub releases. Without `vStore.downloadUrl`, Download is hidden and "Install from V Store" is the one action. New exports: `fetchVStoreUpdate`, `V_STORE_SITE_URL` and the `VStoreSource` type. Apps that use `source` or `check` need no change.
+
 ## 0.33.0
 
 ### Minor Changes
