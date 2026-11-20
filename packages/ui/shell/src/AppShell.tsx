@@ -6,8 +6,9 @@ import {
   useSidebarResizeState,
   type SidebarResizeOptions,
 } from "./SidebarResize";
+import { AppShellVariantContext, useAppShellVariant, type AppShellVariantProps } from "./shell-variant";
 
-export type AppShellProps = {
+type AppShellBaseProps = {
   /** Rendered between the skip link and `<main>`, usually an `AppSidebar`. */
   sidebar?: ReactNode;
   children?: ReactNode;
@@ -45,6 +46,13 @@ export type AppShellProps = {
   contentClassName?: string;
 };
 
+/**
+ * `variant` picks the layout: `"floating"` (default) or `"rail"`. Both take
+ * the same inputs, so an app switches with this one prop. The sidebar pieces
+ * inside (`SidebarRail`, `RailDivider`) read it from the shell.
+ */
+export type AppShellProps = AppShellBaseProps & AppShellVariantProps;
+
 export type AppShellScroll = "contained" | "document";
 
 type ShellVars = CSSProperties & Record<`--app-shell-${string}`, string>;
@@ -58,7 +66,8 @@ const AppShellContext = createContext<AppShellContextValue>({
 });
 
 export type AppShellRootProps = ComponentProps<"div"> &
-  Pick<AppShellProps, "panelHidden" | "railWidth" | "sidebarWidth" | "resizable" | "scroll" | "mobileHeaderHeight" | "mainId">;
+  Pick<AppShellBaseProps, "panelHidden" | "railWidth" | "sidebarWidth" | "resizable" | "scroll" | "mobileHeaderHeight" | "mainId"> &
+  AppShellVariantProps;
 
 /** Frame `<div>`: sets the `--app-shell-*` variables and owns the resize state. `style` merges over the variables. */
 function Root({
@@ -69,6 +78,7 @@ function Root({
   scroll = "contained",
   mobileHeaderHeight = "calc(3.5rem + env(safe-area-inset-top, 0px))",
   mainId = "main-content",
+  variant = "floating",
   className,
   style,
   ...props
@@ -81,18 +91,21 @@ function Root({
   };
   return (
     <AppShellContext.Provider value={{ mainId, panelHidden, scroll }}>
-      <SidebarResizeProvider value={resize}>
-        <div
-          {...props}
-          className={cn(
-            scroll === "document"
-              ? "relative min-h-dvh bg-background"
-              : "relative h-dvh overflow-hidden bg-background",
-            className,
-          )}
-          style={{ ...vars, ...style }}
-        />
-      </SidebarResizeProvider>
+      <AppShellVariantContext value={variant}>
+        <SidebarResizeProvider value={resize}>
+          <div
+            {...props}
+            data-shell-variant={variant === "rail" ? "rail" : undefined}
+            className={cn(
+              scroll === "document"
+                ? "relative min-h-dvh bg-background"
+                : "relative h-dvh overflow-hidden bg-background",
+              className,
+            )}
+            style={{ ...vars, ...style }}
+          />
+        </SidebarResizeProvider>
+      </AppShellVariantContext>
     </AppShellContext.Provider>
   );
 }
@@ -128,6 +141,7 @@ function Main({ id, className, ...props }: AppShellMainProps) {
   const { mainId, panelHidden, scroll } = useContext(AppShellContext);
   const pageScrolls = scroll === "document";
   const resize = useSidebarResizeContext();
+  const rail = useAppShellVariant() === "rail";
   return (
     <main
       id={id ?? mainId}
@@ -136,7 +150,7 @@ function Main({ id, className, ...props }: AppShellMainProps) {
       className={cn(
         pageScrolls
           ? "relative z-10 flex min-h-dvh outline-none"
-          : "relative z-10 flex h-full min-h-0 outline-none md:p-2",
+          : cn("relative z-10 flex h-full min-h-0 outline-none", !rail && "md:p-2"),
         panelHidden ? "md:ml-[var(--app-shell-rail-width)]" : "md:ml-[var(--app-shell-sidebar-width)]",
         !pageScrolls &&
           !resize?.isResizing &&
@@ -149,16 +163,23 @@ function Main({ id, className, ...props }: AppShellMainProps) {
 
 export type AppShellContentProps = ComponentProps<"div">;
 
-/** Content card inside `<main>` (a plain column while the Root `scroll` is `"document"`). Pads for the mobile header below `md`. */
+/**
+ * Content card inside `<main>`. A plain column, with no card, while the Root
+ * `scroll` is `"document"` or its `variant` is `"rail"`. Pads for the mobile
+ * header below `md`.
+ */
 function Content({ className, ...props }: AppShellContentProps) {
   const { scroll } = useContext(AppShellContext);
+  const rail = useAppShellVariant() === "rail";
   return (
     <div
       {...props}
       className={cn(
         scroll === "document"
           ? "flex min-w-0 flex-1 flex-col pt-[var(--app-shell-mobile-header-height)] md:pt-0"
-          : "flex min-h-0 flex-1 flex-col overflow-hidden bg-surface pt-[var(--app-shell-mobile-header-height)] md:rounded-lg md:pt-0",
+          : rail
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden pt-[var(--app-shell-mobile-header-height)] md:pt-0"
+            : "flex min-h-0 flex-1 flex-col overflow-hidden bg-surface pt-[var(--app-shell-mobile-header-height)] md:rounded-lg md:pt-0",
         className,
       )}
     />
@@ -181,6 +202,7 @@ function LegacyAppShell({
   mobileHeaderHeight,
   skipLinkLabel,
   mainId = "main-content",
+  variant = "floating",
   className,
   mainClassName,
   contentClassName,
@@ -194,6 +216,7 @@ function LegacyAppShell({
       scroll={scroll}
       mobileHeaderHeight={mobileHeaderHeight}
       mainId={mainId}
+      variant={variant}
       className={className}
     >
       <SkipLink label={skipLinkLabel} targetId={mainId} />
