@@ -7,6 +7,7 @@ import { EntriesSection } from "./entries";
 import { FormsSection } from "./forms";
 import { GlassSection } from "./glass";
 import { LayoutSection } from "./layout";
+import { UpdatesSection } from "./updates";
 
 export type SectionDef = {
   id: string;
@@ -20,6 +21,7 @@ export const SECTIONS: SectionDef[] = [
   { id: "glass", title: "Floating, glass and tab bar", Component: GlassSection },
   { id: "layout", title: "Layout, settings and artifacts", Component: LayoutSection },
   { id: "brand", title: "Brand marks", Component: BrandSection },
+  { id: "updates", title: "Update prompt and checker", Component: UpdatesSection },
   { id: "entries", title: "Entry points and coverage", Component: EntriesSection },
   { id: "ai-cards", title: "AI cards, sheets and Markdown", Component: AiCardsSection },
 ];

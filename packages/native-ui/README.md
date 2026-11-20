@@ -82,7 +82,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/tab-bar` | `FloatingTabBar`, `FloatingTabBarProps`, `FLOATING_INSET`, `FLOATING_TAB_BAR_HEIGHT`, `FLOATING_TAB_BAR_HEIGHT_LARGE`, `tabBarReserve` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/brand` | `AppMark`, `AppWordmark`, `GoogleMark` (from 0.3.15), `APP_ICONS`, `IconVibot` and the other `Icon*`, the SVG helpers (`APP_MARKS`, `appMarkSvg`, `appTileSvg` and the rest), `FAMILY_APPS`, `familyApp`, `V_PRO_APP_BENEFITS` | none |
 | `@vvedantb/native-ui/button` | `Button`, `ButtonProps`, `ButtonShape` (0.6.0), `ButtonSize`, `ButtonVariant` | none |
-| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types. From 0.6.0: the `ButtonShape` type. Unreleased: `DropdownMenu` and its parts, `BulkActionBar`, `SwipeableRow` (with `closeSwipeRows`, `swipeActionsAccessibility` and the `SwipeAction` and `SwipeableRowProps` types). From 0.14.0: `formatCompactRelativeTime` (with the `CompactRelativeTimeOptions` type), and `TabsTrigger` `minHeight` | `expo-blur`, `expo-haptics` (loaders) |
+| `@vvedantb/native-ui/primitives` | `Button`, `Input`, `SearchInput`, `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `LabeledSwitchRow`, `Checkbox`, `Card` and its parts, `Badge`, `StatusDot`, `Avatar`, `Separator`, `Progress`, `Spinner`, `Skeleton`, `EmptyState`, `ListRow`, `Chip`, `HeaderIconButton`, `ThemeToggle` (from 0.3.16), `Tabs`, `PillTabs`, `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet`, `toast`, `Toaster`. From 0.5.0: `Text` and `TextClassContext` (only here, not on the root), `ColorSwatches`, `StatGrid`, `SectionLabel`, `SheetRow`, `PageIndicator`, `IconButton`, `CaptureButton`, and the `ListRowProps` and `CardProps` types. From 0.6.0: the `ButtonShape` type. Unreleased: `DropdownMenu` and its parts, `BulkActionBar`, `SwipeableRow` (with `closeSwipeRows`, `swipeActionsAccessibility` and the `SwipeAction` and `SwipeableRowProps` types). From 0.14.0: `formatCompactRelativeTime` (with the `CompactRelativeTimeOptions` type), and `TabsTrigger` `minHeight`. Unreleased: `UpdateChecker`, `UpdatePrompt`, `fetchGitHubUpdate`, `newerGitHubRelease`, `isNewerVersion`, `V_STORE_UPDATES_URL` | `expo-blur`, `expo-haptics` (loaders) |
 | `@vvedantb/native-ui/search-input` | `SearchInput`, `SearchInputProps` | none |
 | `@vvedantb/native-ui/password-input` | `PasswordInput`, `PasswordInputProps` (from 0.11.0) | none |
 | `@vvedantb/native-ui/page-title` | `PageTitle`, `PageHeader`, `PageTitleProps`, `PageHeaderProps` (from 0.3.13), `StackPageHeader`, `StackPageHeaderProps` (from 0.5.0; it brings the Tabler package for its chevron) | none |
@@ -388,6 +388,27 @@ Overlays hold their own open state, or take `open` and `onOpenChange`:
 As on the web, `AlertDialogAction` does not close the dialog; `ConfirmDialog` closes on either button. `DialogFooter` and `AlertDialogFooter` lay their buttons out in a row at the end, as the web does from `sm` up. Pass `fullWidth={false}` to a plain `Button` there (`AlertDialogAction` and `AlertDialogCancel` already default to it). `SheetFooter` stacks full width.
 
 From 0.3.7, in a compact window (639 wide or less, or 500 high or less: the web `COMPACT_OVERLAY_QUERY`) `DialogContent`, and so `AlertDialogContent` and `ConfirmDialog`, is the web phone bottom sheet: full width, top corners 16, a handle, the bottom safe-area inset. Its footer stacks the buttons full width and at least 44 high, the last child on top, whatever `fullWidth` says. Pass `viewportAware={false}` to keep the centred dialog at every size.
+
+### Update prompt (Unreleased)
+
+For an Android app that ships its APK as GitHub releases tagged `<tagPrefix><version>`. Mount `UpdateChecker` once near the app root. It checks once at start and offers a newer version with Later, Download and "Install from V Store".
+
+```tsx
+<UpdateChecker
+  appName="My app"
+  currentVersion={Constants.expoConfig?.version}
+  source={{ repo: "owner/my-app", tagPrefix: "myapp-apk-" }}
+  storage={{ getItem: SecureStore.getItemAsync, setItem: SecureStore.setItemAsync }}
+/>
+```
+
+- **Download** opens the release's first `.apk` asset, else its release page.
+- **Install from V Store** only opens V Store (`vStoreUrl`, default `V_STORE_UPDATES_URL`, `vstore://updates`). It downloads and installs nothing itself.
+- **V Store not installed:** the link fails to open, so the V Store button is replaced by a notice ("V Store is not installed on this device.") and the prompt stays open with Download and Later. `onVStoreMissing` fires. The button is not hidden up front, because Android 11+ only reports another app's link as openable to an app that declares it in its manifest `<queries>`.
+- `showDownload={false}` or `showVStore={false}` offers only one of the two.
+- **Later** (and Android back) hides that version until a newer one is out, when `storage` is given. Download and V Store close the prompt for this run only.
+- `currentVersion` `null` skips the check (a local build). A failed, offline or rate-limited check shows nothing.
+- Pass `check` instead of `source` for another release source. `UpdatePrompt` is the controlled dialog alone.
 
 From 0.3.8 `UpgradeToProCard` has the web `SidebarUpgradeCard` sizes: a 14 / 600 title, a 32-high pill with a 12 / 500 label (the web `Button` `sm`), `px-3 py-2.5` padding and radius 16. With larger text the title and pill keep their larger sizes.
 

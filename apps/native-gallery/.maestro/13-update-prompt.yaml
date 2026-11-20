@@ -1,0 +1,102 @@
+# The update prompt offers Download and "Install from V Store", says so when
+# V Store is missing, and the checker shows nothing when there is no update
+# and remembers Later.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-updates
+- tapOn:
+    id: link-updates
+- assertVisible:
+    id: section-updates
+
+# Update available: all three actions, and Later closes it.
+- tapOn:
+    id: update-open-both
+- assertVisible:
+    id: update-download
+- assertVisible:
+    id: update-vstore
+- takeScreenshot: screenshots/update-prompt-both
+- tapOn:
+    id: update-later
+- assertNotVisible:
+    id: update-later
+- assertVisible: "Later"
+
+# "Install from V Store" only opens the V Store link.
+- tapOn:
+    id: update-open-both
+- tapOn:
+    id: update-vstore
+- assertNotVisible:
+    id: update-later
+- assertVisible: "Opened vstore://updates"
+
+# V Store missing: the button goes, the notice shows, Download stays.
+- tapOn:
+    id: update-open-missing
+- tapOn:
+    id: update-vstore
+- assertVisible:
+    id: update-vstore-missing
+- assertNotVisible:
+    id: update-vstore
+- assertVisible:
+    id: update-download
+- takeScreenshot: screenshots/update-prompt-vstore-missing
+- tapOn:
+    id: update-later
+
+# Only one of the two actions.
+- tapOn:
+    id: update-open-vstore-only
+- assertVisible:
+    id: update-vstore
+- assertNotVisible:
+    id: update-download
+- tapOn:
+    id: update-later
+- tapOn:
+    id: update-open-download-only
+- assertVisible:
+    id: update-download
+- assertNotVisible:
+    id: update-vstore
+- tapOn:
+    id: update-later
+
+# Long text wraps and every action stays reachable.
+- tapOn:
+    id: update-open-long
+- assertVisible:
+    id: update-download
+- takeScreenshot: screenshots/update-prompt-long-text
+- tapOn:
+    id: update-later
+
+# The checker: nothing for no update, a prompt for a newer one, and Later is remembered.
+- scrollUntilVisible:
+    element:
+      id: checker-newer
+- tapOn:
+    id: checker-none
+- assertVisible: "No update: nothing is shown"
+- assertNotVisible:
+    id: checker-later
+- tapOn:
+    id: checker-newer
+- assertVisible:
+    id: checker-download
+- tapOn:
+    id: checker-later
+- assertNotVisible:
+    id: checker-later
+- tapOn:
+    id: checker-newer
+- assertVisible: "Update found"
+- assertNotVisible:
+    id: checker-later
