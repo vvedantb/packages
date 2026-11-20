@@ -10,7 +10,10 @@ name: Release Android APK (reusable)
 # APK but publishes nothing. The sideload key is not a Google Play key.
 # With release_on: always (the default), every push that reaches this
 # workflow releases, so the caller's paths gate is the only gate and the
-# commit message is not read. With release_on: feat (opt-in), a branch push
+# commit message is not read. An optional early_gate_command can soft-skip
+# after checkout (exit 2), so a caller can start this job in parallel with CI
+# and still skip when its own paths are unchanged.
+# With release_on: feat (opt-in), a branch push
 # releases only for a feature merge (feat: PR title or commit subject) or a
 # message with [release]; any other branch push skips cleanly before
 # checkout. A tag push and workflow_dispatch always release.
@@ -131,6 +134,11 @@ on:
         required: false
         type: string
         default: always
+      early_gate_command:
+        description: "Optional inline bash run from the repo root after checkout and the release_on gate, before input checks and toolchain setup. Empty continues. Exit 0 continues. Exit 2 soft-skips the rest of the job: the job succeeds, outputs stay empty, and there is no version bump, tag or release. Any other exit fails the job."
+        required: false
+        type: string
+        default: ""
       dry_run:
         description: "Build and sign the APK, but skip gh release create and post-publish (no tag, no release)."
         required: false
@@ -158,6 +166,11 @@ on:
         default: ""
       pre_build_command:
         description: "Optional inline bash run from the repo root after pre_build_script and before the build script. Empty skips it."
+        required: false
+        type: string
+        default: ""
+      pre_publish_command:
+        description: "Optional inline bash run from the repo root after the build output check and the dry-run artifact upload, and before publishing. Empty skips it. Skipped when dry_run is true, and skipped when the release was already skipped. A failure stops the publish. Gets VERSION_NAME, VERSION_CODE, TAG, APK, RELEASE_JSON, SHA256 and GH_TOKEN (the job github.token), plus the standard GITHUB_* environment."
         required: false
         type: string
         default: ""
@@ -211,7 +224,7 @@ on:
         description: "SHA-256 of the APK."
         value: ${{ jobs.release.outputs.sha256 }}
       published:
-        description: "true when a release was created, false on dry_run, empty when the push was skipped (release_on: feat)."
+        description: "true when a release was created, false on dry_run, empty when the push was skipped (release_on: feat or early_gate_command exit 2)."
         value: ${{ jobs.release.outputs.published }}
       release_url:
         description: "URL of the published release. Empty on dry_run."
@@ -246,8 +259,10 @@ jobs:
       # release_on: feat (opt-in; the default is always, which releases every
       # push), release only for a feature merge. A tag push
       # always releases, because the tag is the release. The github
-      # context is the caller's, so head_commit is the pushed commit. Every
-      # later step runs only when should_release is true.
+      # context is the caller's, so head_commit is the pushed commit. Checkout
+      # and the early gate run only when should_release is true. Every step
+      # after the early gate also requires steps.early.outputs.continue ==
+      # 'true'.
       - name: Decide whether to release
         id: gate
         env:
@@ -308,10 +323,40 @@ jobs:
       - uses: actions/checkout@v6
         if: steps.gate.outputs.should_release == 'true'
 
+      # After checkout, before input checks and the toolchain. Empty
+      # continues. Exit 2 soft-skips the rest of the job (success, no
+      # release). Any other non-zero exit fails the job.
+      - name: Early release gate
+        id: early
+        if: steps.gate.outputs.should_release == 'true'
+        env:
+          EARLY_GATE_COMMAND: ${{ inputs.early_gate_command }}
+        run: |
+          if [ -z "$EARLY_GATE_COMMAND" ]; then
+            echo "early_gate_command is empty: continuing the release"
+            echo "continue=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Running early_gate_command"
+          set +e
+          bash -eo pipefail -c "$EARLY_GATE_COMMAND"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "early_gate_command passed: continuing the release"
+            echo "continue=true" >> "$GITHUB_OUTPUT"
+          elif [ "$status" -eq 2 ]; then
+            echo "Early gate skipped the release (early_gate_command exited 2). No version bump, no tag, no release."
+            echo "continue=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::early_gate_command failed with exit ${status}."
+            exit "$status"
+          fi
+
       # Inputs are checked before anything slow runs. Paths in inputs are
       # read through env, never pasted into a script.
       - name: Check inputs
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         env:
           APP_CONFIG_PATH: ${{ inputs.app_config_path }}
           VERSION_NAME_SOURCE: ${{ inputs.version_name_source }}
@@ -390,7 +435,7 @@ jobs:
 
       # Before the toolchain, so it can free disk space for the setup steps.
       - name: Pre-setup
-        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_setup_command != '')
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true' && (inputs.pre_setup_command != '')
         env:
           PRE_SETUP_COMMAND: ${{ inputs.pre_setup_command }}
         run: |
@@ -398,7 +443,7 @@ jobs:
           bash -eo pipefail -c "$PRE_SETUP_COMMAND"
 
       - name: Choose versionName, versionCode and tag
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -601,7 +646,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Decode signing keystore
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -623,16 +668,16 @@ jobs:
 
       # Version from packageManager in the caller's root package.json.
       - uses: pnpm/action-setup@v6
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
 
       - uses: actions/setup-node@v6
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         with:
           node-version: ${{ inputs.node_version }}
           cache: pnpm
 
       - uses: actions/setup-java@v5
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         with:
           distribution: temurin
           java-version: ${{ inputs.java_version }}
@@ -643,7 +688,7 @@ jobs:
       # sdk_packages are what React Native 0.86 pins, and AGP's default CMake,
       # installed before Gradle needs them.
       - name: Install Android SDK packages
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         env:
           SDK_PACKAGES: ${{ inputs.sdk_packages }}
           # Used only when the runner has no Android SDK.
@@ -697,10 +742,10 @@ jobs:
           "$sdkmanager" --install "${packages[@]}"
 
       - uses: gradle/actions/setup-gradle@v4
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
 
       - name: Pre-build
-        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_build_script != '' || inputs.pre_build_command != '')
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true' && (inputs.pre_build_script != '' || inputs.pre_build_command != '')
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
           VERSION_CODE: ${{ steps.version.outputs.version_code }}
@@ -731,7 +776,7 @@ jobs:
       # The vmem script installs the mobile workspace deps, runs expo
       # prebuild, builds with Gradle and writes release.json.
       - name: Build signed APK
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         id: build
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -759,7 +804,7 @@ jobs:
       # trusts the tag, asset names and release.json. Check them against the
       # chosen version and the APK on disk.
       - name: Check build outputs
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         id: check
         env:
           EXPECTED_VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -832,7 +877,7 @@ jobs:
 
       # Lets a dry_run's APK be installed and checked without a release.
       - name: Upload dry-run artifact
-        if: steps.gate.outputs.should_release == 'true' && (inputs.dry_run && inputs.upload_dry_run_artifact)
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true' && (inputs.dry_run && inputs.upload_dry_run_artifact)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.app_name }}-android-dry-run
@@ -841,8 +886,22 @@ jobs:
             ${{ steps.build.outputs.release_json }}
           if-no-files-found: error
 
+      - name: Pre-publish
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true' && inputs.pre_publish_command != '' && inputs.dry_run != true
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          APK: ${{ steps.build.outputs.apk }}
+          RELEASE_JSON: ${{ steps.build.outputs.release_json }}
+          VERSION_NAME: ${{ steps.check.outputs.version_name }}
+          VERSION_CODE: ${{ steps.check.outputs.version_code }}
+          SHA256: ${{ steps.check.outputs.sha256 }}
+          PRE_PUBLISH_COMMAND: ${{ inputs.pre_publish_command }}
+        run: |
+          echo "Running pre_publish_command"
+          bash -eo pipefail -c "$PRE_PUBLISH_COMMAND"
+
       - name: Publish GitHub Release
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         id: publish
         env:
           TAG: ${{ steps.version.outputs.tag }}
@@ -912,7 +971,7 @@ jobs:
           echo "Published $url"
 
       - name: Post-publish
-        if: steps.gate.outputs.should_release == 'true' && (steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != ''))
+        if: steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true' && (steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != ''))
         env:
           TAG: ${{ steps.version.outputs.tag }}
           RELEASE_URL: ${{ steps.publish.outputs.release_url }}
@@ -949,7 +1008,7 @@ jobs:
           fi
 
       - name: Remove keystore
-        if: always() && steps.gate.outputs.should_release == 'true'
+        if: always() && steps.gate.outputs.should_release == 'true' && steps.early.outputs.continue == 'true'
         run: |
           # Only a plain file name, as "Check inputs" requires, so this never
           # removes anything outside RUNNER_TEMP.

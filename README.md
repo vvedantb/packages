@@ -131,7 +131,7 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ### What it does
 
-1. Decides whether to release, before checkout or any setup. By default every push that reaches the workflow releases; the skip applies only with `release_on: feat` (see "Feature-only releases"). On a skip it logs `Not a feature merge, skipping release` and every later step is skipped, so the run passes with no version bump, tag or release.
+1. Decides whether to release, before checkout or any setup. By default every push that reaches the workflow releases; the skip applies only with `release_on: feat` (see "Feature-only releases"). On a skip it logs `Not a feature merge, skipping release` and every later step is skipped, so the run passes with no version bump, tag or release. After checkout, the optional `early_gate_command` can still skip. Empty or exit 0 continues. Exit 2 logs that the early gate skipped the release; the job passes with empty outputs and no version bump, tag or release. Any other exit fails the job.
 2. Checks the inputs, then runs the optional `pre_setup_command` (velth uses it to free runner disk space) before any toolchain setup.
 3. Picks versionName, versionCode and the tag. With no `version`, it bumps the patch of the highest semver `versionName` in published `<tag_prefix>*` (`mobile-apk-*`) `release.json` files, with `DEFAULT_VERSION_NAME` in `app.config.ts` as the floor. With `version_name_source: app_json`, it follows v-store's rules instead: the floor is `expo.version` in `app_json_path`, which wins if it is higher than the bumped patch, and the versionName must be higher than every published one. versionCode is the highest published versionCode plus 1, and at least `version_code_floor` (1000). `version_code` can set a higher one. A release with no `release.json` counts as versionCode 1. The run stops if the tag or release already exists.
 4. On a tag push (`GITHUB_REF_TYPE=tag`), the pushed tag is the release tag. The versionName is the tag without `tag_prefix`, and `version`, if set, must match it. The tag may exist already, but the release must not.
@@ -139,8 +139,8 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 6. Sets up pnpm (version from `packageManager`), Node with the pnpm cache, Temurin Java and Gradle, then installs the Android SDK packages with the runner's own `sdkmanager`. It does not use `android-actions/setup-android`.
 7. Runs the optional pre-build hook, then the app's build script (Expo prebuild and a signed Gradle `assembleRelease`). Next it checks the outputs: the APK name, the SHA-256, the `release.json` values, and, with `package_id`, the APK badging.
 8. With `dry_run` and `upload_dry_run_artifact`, uploads the APK and `release.json` as the Actions artifact `<app_name>-android-dry-run`.
-9. Publishes the tag with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), with `--target $GITHUB_SHA`, or `--verify-tag` on a tag push. The notes are the template and the generated "What's changed" notes since the release with the highest semver versionName. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
-10. Removes the keystore (`if: always()`, unless step 1 skipped the release).
+9. The optional `pre_publish_command` runs after the output check and any dry-run artifact upload, and before publish. It is skipped on `dry_run` and when the release was already skipped. If it fails, nothing is published. It gets `VERSION_NAME`, `VERSION_CODE`, `TAG`, `APK`, `RELEASE_JSON`, `SHA256` and `GH_TOKEN`. Publishes the tag with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), with `--target $GITHUB_SHA`, or `--verify-tag` on a tag push. The notes are the template and the generated "What's changed" notes since the release with the highest semver versionName. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
+10. Removes the keystore (`if: always()`, unless step 1 skipped the release). It also does not run when the early gate soft-skips, because the keystore was never decoded.
 
 ### Feature-only releases
 
@@ -158,7 +158,7 @@ Anything else, such as `fix:` or `chore:`, skips the release. To release a chang
 
 Values other than `always` and `feat` are refused.
 
-On a skip, the job passes and all outputs are empty.
+On a skip, the job passes and all outputs are empty. An `early_gate_command` exit 2 does the same.
 
 The asset names and the `release.json` shape `{"versionName","versionCode","sha256"}` are fixed, not inputs. The tag is `<tag_prefix><versionName>`; keep the default `tag_prefix`, `mobile-apk-`, for any app V Store lists. V Store's catalog sync depends on all three.
 
@@ -229,12 +229,14 @@ The four `ANDROID_*` secrets are declared `required: false`, so `secrets: inheri
 | `mark_as_latest` | boolean | `false` | Mark the release as the repo's latest release |
 | `version` | string | empty | versionName to release, like `1.0.1`. Must match the tag on a tag push. Empty: the tag's version on a tag push, else the next patch |
 | `release_on` | string | `always` | Which pushes release. `always`: every push that reaches the workflow. `feat` (opt-in): only feature merges or messages with `[release]` (see "Feature-only releases"). Tag pushes and `workflow_dispatch` always release |
+| `early_gate_command` | string | empty | Inline bash run from the repo root after checkout and the `release_on` gate, before input checks and toolchain setup. Empty continues. Exit 0 continues. Exit 2 soft-skips the rest of the job: the job succeeds, outputs stay empty, and there is no version bump, tag or release. Any other exit fails the job |
 | `dry_run` | boolean | `false` | Build and sign, publish nothing |
 | `upload_dry_run_artifact` | boolean | `false` | With `dry_run`, upload the APK and `release.json` as the artifact `<app_name>-android-dry-run` |
 | `pre_setup_command` | string | empty | Inline bash run from the repo root before the Node, pnpm and Java setup, like freeing disk space. Does not get `build_env` |
 | `build_env` | string | empty | Extra environment for the pre-build, build and post-publish steps. One `NAME=value` per line, `#` for comments, no multi-line values. Not masked. Names the workflow sets (`VERSION_*`, `ANDROID_KEY*`, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, `GITHUB_*`, `RUNNER_*`, `ACTIONS_*`, `PATH`) are refused |
 | `pre_build_script` | string | empty | Script run with bash after toolchain setup, before the build |
 | `pre_build_command` | string | empty | Inline bash run after `pre_build_script` |
+| `pre_publish_command` | string | empty | Inline bash run from the repo root after the build output check and the dry-run artifact upload, and before publishing. Skipped when `dry_run` is true and when the release was already skipped. A failure stops the publish. Gets `VERSION_NAME`, `VERSION_CODE`, `TAG`, `APK`, `RELEASE_JSON`, `SHA256` and `GH_TOKEN` |
 | `post_publish_script` | string | empty | Script run with bash after a real publish. Gets `TAG`, `RELEASE_URL`, `APK`, `RELEASE_JSON`, `VERSION_NAME`, `VERSION_CODE`, `SHA256` and `GH_TOKEN` |
 | `post_publish_command` | string | empty | Inline bash run after `post_publish_script` |
 | `runs_on` | string | `ubuntu-latest` | Linux runner. If it has no Android SDK at `ANDROID_HOME` (boat.dev runners, for one), the workflow installs the command line tools first |
