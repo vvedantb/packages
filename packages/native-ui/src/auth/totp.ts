@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSignIn } from "@clerk/expo/legacy";
+import { useSignIn } from "@clerk/expo";
 import {
   authErrorMessage,
   DEFAULT_STAGE_TIMEOUT_MS,
@@ -7,6 +7,7 @@ import {
   logAuthFailure,
   withAuthTimeout,
 } from "./authErrors";
+import { signInCalls } from "./clerkCore3";
 
 /** Logs a timed-out stage. Other failures are not logged here. */
 const logTimeout = (stage: string, error: unknown) => {
@@ -329,7 +330,8 @@ export type UseSecondFactorResult = {
  * `{ ok: true }` the session is active: navigate in the caller.
  */
 export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecondFactorResult {
-  const { isLoaded, signIn, setActive } = useSignIn();
+  // Always defined: before Clerk loads, a call waits for it, inside the stage timeout.
+  const signIn = signInCalls(useSignIn().signIn);
   const [chosen, setChosen] = useState<SecondFactorStrategy | null>(null);
   const strategy = chosen ?? options.strategy ?? "totp";
   const [loading, setLoading] = useState(false);
@@ -338,13 +340,9 @@ export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecond
 
   const submit = async (code: string): Promise<TotpResult> => {
     if (loading) return { ok: false, error };
-    if (!isLoaded || !signIn || !setActive) {
-      setError(TOTP_MESSAGES.notReady);
-      return { ok: false, error: TOTP_MESSAGES.notReady };
-    }
     setLoading(true);
     setError("");
-    const result = await submitSecondFactor({ signIn, setActive, code, strategy, timeoutMs });
+    const result = await submitSecondFactor({ signIn, setActive: signIn.setActive, code, strategy, timeoutMs });
     if (!result.ok) setError(result.error);
     setLoading(false);
     return result;
@@ -354,10 +352,6 @@ export function useSecondFactor(options: UseSecondFactorOptions = {}): UseSecond
     prepareStrategy: SecondFactorStrategy = strategy,
     factor?: SecondFactor,
   ): Promise<TotpResult> => {
-    if (!isLoaded || !signIn) {
-      setError(TOTP_MESSAGES.notReady);
-      return { ok: false, error: TOTP_MESSAGES.notReady };
-    }
     setLoading(true);
     setError("");
     const result = await prepareSecondFactorIfNeeded({ signIn, strategy: prepareStrategy, factor, timeoutMs });

@@ -20,7 +20,7 @@ if (process.env.NODE_ENV !== "production") {
 // so resolve every bare import from the app. That also keeps one copy of React.
 // Clerk is replaced by a mock: the gallery needs no Clerk keys or network.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName === "@clerk/expo" || moduleName === "@clerk/expo/legacy") {
+  if (moduleName === "@clerk/expo") {
     return { type: "sourceFile", filePath: clerkMock };
   }
   const bare = !moduleName.startsWith(".") && !path.isAbsolute(moduleName);

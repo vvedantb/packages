@@ -200,7 +200,7 @@
   },
   "peerDependencies": {
     "expo-paste-input": ">=0.2.0",
-    "@clerk/expo": ">=4.0.0",
+    "@clerk/expo": ">=4.16.0",
     "@expo/vector-icons": "*",
     "@json-render/core": ">=0.21.0",
     "@json-render/react-native": ">=0.21.0",

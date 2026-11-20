@@ -1,4 +1,4 @@
-// A stand-in for `@clerk/expo` and `@clerk/expo/legacy`, wired in by `metro.config.js`. The gallery
+// A stand-in for `@clerk/expo`, wired in by `metro.config.js`. The gallery
 // has no Clerk keys and makes no network call. The hooks return enough for the
 // native-ui auth screens to render and to take input. Nothing signs in.
 // The password reset runs end to end: any email gets a "code", `424242` is the
@@ -14,38 +14,71 @@ const reject = async () => {
   throw new Error("Mock Clerk: sign-in is not available in the gallery");
 };
 
-const RESET_STRATEGY = "reset_password_email_code";
+// The sign-in and sign-up calls of `@clerk/expo` 4 do not reject: they resolve with `{ error }`.
+const ok = async () => ({ error: null });
+const unavailable = async () => ({ error: new Error("Mock Clerk: sign-in is not available in the gallery") });
+
 export const MOCK_RESET_CODE = "424242";
 
-type MockParams = { strategy?: string; code?: string };
-
-const create = async (params: MockParams) => {
-  if (params.strategy !== RESET_STRATEGY) return reject();
-  return { status: "needs_first_factor", createdSessionId: null };
+// One sign-in for the app, as in Clerk: the calls change it, and the screens read it after each call.
+const signIn = {
+  status: "needs_identifier",
+  createdSessionId: null as string | null,
+  supportedFirstFactors: [] as { strategy: string }[],
+  supportedSecondFactors: [] as { strategy: string }[],
+  // `create` with an identifier alone starts the password reset.
+  create: async () => {
+    signIn.status = "needs_first_factor";
+    signIn.createdSessionId = null;
+    return { error: null };
+  },
+  password: unavailable,
+  emailCode: { sendCode: unavailable, verifyCode: unavailable },
+  phoneCode: { sendCode: unavailable, verifyCode: unavailable },
+  resetPasswordEmailCode: {
+    sendCode: ok,
+    verifyCode: async (params: { code: string }) => {
+      if (params.code !== MOCK_RESET_CODE) {
+        // The shape of an API error, which `authErrorMessage` reads.
+        return { error: { errors: [{ code: "form_code_incorrect", message: "Incorrect code" }] } };
+      }
+      signIn.status = "needs_new_password";
+      return { error: null };
+    },
+    submitPassword: async () => {
+      signIn.status = "complete";
+      signIn.createdSessionId = "sess_mock";
+      return { error: null };
+    },
+  },
+  mfa: {
+    sendPhoneCode: unavailable,
+    verifyPhoneCode: unavailable,
+    sendEmailCode: unavailable,
+    verifyEmailCode: unavailable,
+    verifyTOTP: unavailable,
+    verifyBackupCode: unavailable,
+  },
+  // Nothing signs in: the next reset starts from a new sign-in.
+  finalize: async () => {
+    signIn.status = "needs_identifier";
+    signIn.createdSessionId = null;
+    return { error: null };
+  },
 };
 
-const attemptFirstFactor = async (params: MockParams) => {
-  if (params.strategy !== RESET_STRATEGY) return reject();
-  if (params.code !== MOCK_RESET_CODE) {
-    // The shape of an API error, which `authErrorMessage` reads.
-    throw { errors: [{ code: "form_code_incorrect", message: "Incorrect code" }] };
-  }
-  return { status: "needs_new_password", createdSessionId: null };
+export const useSignIn = () => ({ errors: null, fetchStatus: "idle" as const, signIn });
+
+const signUp = {
+  status: "missing_requirements",
+  createdSessionId: null as string | null,
+  create: unavailable,
+  password: unavailable,
+  verifications: { sendEmailCode: unavailable, verifyEmailCode: unavailable },
+  finalize: unavailable,
 };
 
-const resetPassword = async () => ({ status: "complete", createdSessionId: "sess_mock" });
-
-export const useSignIn = () => ({
-  isLoaded: true,
-  setActive: async () => undefined,
-  signIn: { create, prepareFirstFactor: reject, attemptFirstFactor, prepareSecondFactor: reject, attemptSecondFactor: reject, resetPassword },
-});
-
-export const useSignUp = () => ({
-  isLoaded: true,
-  setActive: async () => undefined,
-  signUp: { create: reject, prepareEmailAddressVerification: reject, attemptEmailAddressVerification: reject },
-});
+export const useSignUp = () => ({ errors: null, fetchStatus: "idle" as const, signUp });
 
 export const MOCK_CURRENT_PASSWORD = "correct-horse";
 
