@@ -1,14 +1,11 @@
 import * as React from "react";
+import { prefersReducedMotion } from "../motion/reduced-motion";
 
 /** Phones, plus short landscape viewports such as 844×390. */
 export const COMPACT_OVERLAY_QUERY = "(max-width: 639px), (max-height: 500px)";
 
-export function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
+/** The root `MotionProvider reducedMotion` setting, then the OS query. */
+export { prefersReducedMotion };
 
 export function useCompactOverlay(): boolean {
   const [compact, setCompact] = React.useState(false);

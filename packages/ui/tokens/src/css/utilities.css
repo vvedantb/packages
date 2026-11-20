@@ -10,6 +10,20 @@
  *   --motion-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1)
  */
 
+/* `motion-reduce:` follows the root `MotionProvider reducedMotion` setting
+   (`html[data-reduced-motion]`), not only the OS: `"never"` turns it off,
+   `"always"` turns it on, `"user"` (or no provider) keeps the media query. */
+@custom-variant motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    html:not([data-reduced-motion="never"]) & {
+      @slot;
+    }
+  }
+  html[data-reduced-motion="always"] & {
+    @slot;
+  }
+}
+
 /* Extends sub-40px controls to a 40x40px tap target without changing layout.
    Only force `relative` when the element is otherwise static: absolute /
    fixed / sticky already form a containing block for ::after. */

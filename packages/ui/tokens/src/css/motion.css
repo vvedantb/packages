@@ -106,20 +106,33 @@
     }
   }
 
+  /*
+   * Reduced motion follows the root `MotionProvider reducedMotion` setting
+   * (`html[data-reduced-motion]`): the OS query unless it is `"never"`, and
+   * always when it is `"always"`.
+   */
   @media (prefers-reduced-motion: reduce) {
-    .ui-page-enter,
-    .ui-enter,
-    .ui-enter-up,
-    .ui-stagger > * {
+    html:not([data-reduced-motion="never"]) :is(.ui-page-enter, .ui-enter, .ui-enter-up, .ui-stagger > *) {
       animation-duration: 1ms;
       animation-name: ui-fade-only;
     }
 
-    ::view-transition-group(*),
-    ::view-transition-old(*),
-    ::view-transition-new(*) {
+    html:not([data-reduced-motion="never"])::view-transition-group(*),
+    html:not([data-reduced-motion="never"])::view-transition-old(*),
+    html:not([data-reduced-motion="never"])::view-transition-new(*) {
       animation: none !important;
     }
+  }
+
+  html[data-reduced-motion="always"] :is(.ui-page-enter, .ui-enter, .ui-enter-up, .ui-stagger > *) {
+    animation-duration: 1ms;
+    animation-name: ui-fade-only;
+  }
+
+  html[data-reduced-motion="always"]::view-transition-group(*),
+  html[data-reduced-motion="always"]::view-transition-old(*),
+  html[data-reduced-motion="always"]::view-transition-new(*) {
+    animation: none !important;
   }
 
   /*
