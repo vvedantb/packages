@@ -122,9 +122,9 @@ export function ChangePasswordScreen({
     } catch (caught) {
       logAuthFailure("update-password", caught);
       setError(authErrorMessage(caught, ACCOUNT_MESSAGES.changePasswordFailed));
-    } finally {
-      setSubmitting(false);
     }
+    // No `finally`: React Compiler does not memoise a component with one.
+    setSubmitting(false);
   };
 
   return (
@@ -240,9 +240,9 @@ export function DeleteAccountScreen({
     } catch (caught) {
       if (isAuthTimeoutError(caught)) logAuthFailure("delete-account", caught);
       setError(authErrorMessage(caught, ACCOUNT_MESSAGES.deleteFailed));
-    } finally {
-      setSubmitting(false);
     }
+    // No `finally`: React Compiler does not memoise a component with one.
+    setSubmitting(false);
   };
 
   const label = `Type ${confirmWord} to confirm`;
