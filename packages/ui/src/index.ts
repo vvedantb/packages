@@ -34,7 +34,7 @@ export { RollingNumber } from "./ui/rolling-number";
 export { ConfettiBurst } from "./ui/confetti-burst";
 export { SendQueueIcon } from "./ui/send-queue-icon";
 export { BulkActionBar } from "./ui/bulk-action-bar";
-export type { BulkActionBarProps, BulkBarAction } from "./ui/bulk-action-bar";
+export type { BulkActionBarConfig, BulkActionBarProps, BulkBarAction, BulkBarLabels } from "./ui/bulk-action-bar";
 export { CopyLinkMenuItem } from "./ui/copy-link-menu-item";
 export { ToggleSearch } from "./ui/toggle-search";
 export type { ToggleSearchProps, ToggleSearchVariant } from "./ui/toggle-search";
