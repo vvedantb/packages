@@ -1,6 +1,7 @@
 /*
  * @vvedantb/ui/tokens/css/modal.css: .t-modal open / close transition used by
- * @vvedantb/ui Dialog (transitions.dev pattern).
+ * @vvedantb/ui Dialog (transitions.dev pattern). `modalTransition.ts` aims
+ * the transform origin at the trigger and sets a wider inline --modal-scale.
  *
  * Reads --modal-open-dur, --modal-close-dur, --modal-scale,
  * --modal-scale-close and --modal-ease. tokens.css sets them on :root; set
