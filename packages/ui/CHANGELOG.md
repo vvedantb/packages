@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.58.0
+
+### Minor Changes
+
+- [#319](https://github.com/vvedantb/packages/pull/319) [`60df46c`](https://github.com/vvedantb/packages/commit/60df46c449e69c0627e99798577868a5b39fdbdf) Thanks [@vvedantb](https://github.com/vvedantb)! - Add an opt-in neutral theme to `@vvedantb/ui/tokens`: soft-dark grey surfaces from eva. Set `<html class="dark neutral">` to use it. Status and accent colours stay as in dark. It does not depend on the `AppShell` variant.
+
 ## 0.57.0
 
 ### Minor Changes
