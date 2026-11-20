@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.0
+
+### Minor Changes
+
+- [#310](https://github.com/vvedantb/packages/pull/310) [`7a3b876`](https://github.com/vvedantb/packages/commit/7a3b876c75ec766ec00e3abc9156a7ce694d21a3) Thanks [@vvedantb](https://github.com/vvedantb)! - `@vvedantb/native-ui/auth`: sign-in, sign-up, reset password and second factor now use the `useSignIn` and `useSignUp` hooks from the root of `@clerk/expo`. The import of `@clerk/expo/legacy` is gone. Screen props, `testID`s, copy and error messages are the same, so apps need no code change. The `@clerk/expo` peer range is now `>=4.16.0`.
+  
+  Two things differ underneath. The second-factor code by SMS or email is sent with no explicit phone number or email id: Clerk uses the one on the sign-in. A password reset passes `signOutOfOtherSessions: false`, which keeps other sessions signed in as before.
+
 ## 0.32.0
 
 ### Minor Changes
