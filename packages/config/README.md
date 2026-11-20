@@ -557,16 +557,15 @@ Paths and filters are as read from each app's current script. Check them against
 
 ```jsonc
 // v-store (repo root is the app; VERSION_NAME may be omitted)
-{ "packageId": "<v-store package id>", "apkPrefix": "v-store",
+{ "packageId": "com.projectvdotuk.vstore", "apkPrefix": "v-store",
   "appDir": ".", "prebuildNoInstall": false,
   "syncAppVersion": true, "versionNameFromAppJson": true,
   "publicEnv": ["EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY"],
   "optionalEnv": ["EXPO_PUBLIC_CONVEX_URL"],
+  "unsetEnv": ["EXPO_PUBLIC_LOCAL_APK_BASE", "APP_VARIANT"],
   "summary": { "label": "Convex", "envVar": "EXPO_PUBLIC_CONVEX_URL" },
-  "gradleWrapperPin": { "ifContains": "<unsupported wrapper>", "distributionUrl": "<the -bin.zip URL in v-store's script>" } }
+  "gradleWrapperPin": { "ifContains": "gradle-9", "distributionUrl": "https://services.gradle.org/distributions/gradle-8.14.3-bin.zip" } }
 ```
-
-The v-store sample is a starting point. Copy `packageId`, `publicEnv`, the Convex handling and the wrapper pin from v-store's `scripts/build-android-release.sh`.
 
 ### Gradle settings
 
