@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.54.1
+
+### Patch Changes
+
+- [#308](https://github.com/vvedantb/packages/pull/308) [`2513796`](https://github.com/vvedantb/packages/commit/2513796e487a266de33cbc229cc89a6bd72e7013) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Dialog close now animates. The closing styles (shrink to `--modal-scale-close`, toward the trigger since 0.52.0, plus the `t-modal-presence-wait` animation) also key on Radix `data-state="closed"`. Radix Presence reads the animation in the same commit that sets `data-state`. `.is-closing` arrives a moment later from a MutationObserver, so Presence saw no animation and removed the dialog at once. `html[data-page-motion="off"]` covers the new selector too.
+
 ## 0.54.0
 
 ### Minor Changes
