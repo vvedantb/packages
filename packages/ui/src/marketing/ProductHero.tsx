@@ -1,7 +1,7 @@
 import type { ComponentProps, MouseEventHandler, ReactNode } from "react";
 import { Button } from "../ui/button";
 import { pageTitleClass } from "../ui/page-title";
-import { useMediaQuery } from "../hooks/use-media-query";
+import { useReducedMotionSetting } from "../motion/reduced-motion";
 import { cn } from "../utils/cn";
 import { landingShellClass, productHeroSocialProofClass } from "./marketing-classes";
 import { PROJECT_V_HOME_URL } from "./projectV";
@@ -63,7 +63,7 @@ export type ProductHeroProps = {
 const titleClass = `text-balance text-4xl sm:text-5xl lg:text-6xl ${pageTitleClass.replace(/\btext-xl\s*/, "")}`;
 
 function UserCountProof({ count }: { count: number }) {
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const reducedMotion = useReducedMotionSetting();
   return (
     <p className={productHeroSocialProofClass} data-testid="user-count">
       <span data-testid="user-count-dot" aria-hidden="true" className={cn("size-2 rounded-full bg-success", !reducedMotion && "animate-pulse")} />

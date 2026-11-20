@@ -39,6 +39,7 @@ export { CopyLinkMenuItem } from "./ui/copy-link-menu-item";
 export { ToggleSearch } from "./ui/toggle-search";
 export type { ToggleSearchProps, ToggleSearchVariant } from "./ui/toggle-search";
 export { MotionProvider } from "./motion/motion-provider";
+export { useReducedMotionSetting, type ReducedMotion } from "./motion/reduced-motion";
 export { MarqueeOnHover } from "./ui/marquee-on-hover";
 export { RelativeDateTime } from "./ui/relative-date-time";
 export type { RelativeDateTimeProps } from "./ui/relative-date-time";
