@@ -1,0 +1,61 @@
+name: CI layout 1 (one job, parallel steps)
+
+# Throwaway: Part C measurement. One job, shared install + build, then
+# typecheck / guards / test run in parallel inside a single step. Not merged.
+
+on:
+  push:
+    branches: [ci/layout-probe]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-layout1-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  all:
+    name: Layout 1 one job
+    runs-on: boat-large
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Find the pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+      - run: pnpm install --frozen-lockfile
+      - name: Prune the pnpm store
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm store prune
+      - name: Build
+        run: pnpm build
+      - name: Typecheck, guards and test in parallel
+        shell: bash
+        run: |
+          set +e
+          pnpm typecheck      > typecheck.log 2>&1 & tc=$!
+          pnpm check:guards   > guards.log    2>&1 & gd=$!
+          pnpm test           > test.log      2>&1 & ts=$!
+          wait $tc; rc_tc=$?
+          wait $gd; rc_gd=$?
+          wait $ts; rc_ts=$?
+          echo "----- typecheck -----"; cat typecheck.log
+          echo "----- guards -----";    cat guards.log
+          echo "----- test -----";      cat test.log
+          echo "exit codes: typecheck=$rc_tc guards=$rc_gd test=$rc_ts"
+          [ $rc_tc -eq 0 ] && [ $rc_gd -eq 0 ] && [ $rc_ts -eq 0 ]

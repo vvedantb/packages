@@ -1,0 +1,111 @@
+name: CI layout 2 (separate jobs)
+
+# Throwaway: Part C measurement. lint / typecheck / test as separate jobs,
+# each with its own install and the same pnpm store cache. Build is repeated
+# in the jobs that need it. Not merged.
+
+on:
+  push:
+    branches: [ci/layout-probe]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-layout2-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Layout 2 lint
+    runs-on: boat-large
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Find the pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+      - run: pnpm install --frozen-lockfile
+      - name: Prune the pnpm store
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm store prune
+      - name: Lint tests
+        run: pnpm lint:tests
+
+  typecheck:
+    name: Layout 2 typecheck
+    runs-on: boat-large
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Find the pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+      - run: pnpm install --frozen-lockfile
+      - name: Prune the pnpm store
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm store prune
+      - name: Build
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    name: Layout 2 test
+    runs-on: boat-large
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Find the pnpm store
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+      - run: pnpm install --frozen-lockfile
+      - name: Prune the pnpm store
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm store prune
+      - name: Build
+        run: pnpm build
+      - name: Guards
+        run: pnpm check:guards
+      - name: Test
+        run: pnpm test
