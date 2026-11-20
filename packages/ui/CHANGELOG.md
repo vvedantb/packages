@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.53.0
+
+### Minor Changes
+
+- [#306](https://github.com/vvedantb/packages/pull/306) [`aba7c60`](https://github.com/vvedantb/packages/commit/aba7c60531924c6e24bc11ae7543bb90d49ef201) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `MotionProvider reducedMotion` ("user" by default, "always" or "never") now governs the whole package, not only `m.*` components, like HeroUI's provider. It stamps `html[data-reduced-motion]` and provides context. `prefersReducedMotion()`, the Dialog zoom, the `motion-reduce:` Tailwind variant (`utilities.css`), `motion.css` and the landing CSS follow it. New: `useReducedMotionSetting()` and the `ReducedMotion` type. With no provider, or "user", nothing changes.
+
 ## 0.52.0
 
 ### Minor Changes
