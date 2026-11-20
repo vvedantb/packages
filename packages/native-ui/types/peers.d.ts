@@ -19,6 +19,11 @@ declare class URL {
   constructor(url: string);
   readonly hostname: string;
 }
+// React Native's global `fetch`; `src/updateCheck.ts` reads a repository's GitHub releases.
+declare function fetch(
+  url: string,
+  init?: { headers?: Record<string, string> },
+): Promise<{ ok: boolean; json(): Promise<unknown> }>;
 // Metro's `require`, used for the optional peers (`src/blur.ts`, `src/haptics.ts`,
 // `src/gradient.ts`, `src/highlight.ts`). React Native's own typing returns
 // `any`; `src/highlight.ts` assigns without a cast, so its peer has an overload.

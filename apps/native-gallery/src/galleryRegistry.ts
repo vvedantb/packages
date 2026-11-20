@@ -12,6 +12,7 @@ export const GALLERY_SECTIONS = {
   "glass": ["apps/native-gallery/src/sections/glass.tsx"],
   "layout": ["apps/native-gallery/src/sections/layout.tsx"],
   "brand": ["apps/native-gallery/src/sections/brand.tsx"],
+  "updates": ["apps/native-gallery/src/sections/updates.tsx"],
   "ai-cards": ["apps/native-gallery/src/sections/ai-cards.tsx"],
   "auth": ["apps/native-gallery/src/sections/auth.tsx"],
   "layering": ["apps/native-gallery/src/sections/layering.tsx"],
@@ -259,6 +260,8 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   ToolApprovalCard: "ai-cards",
   ToolDraftCard: "ai-cards",
   UnifiedDiff: "ai-cards",
+  UpdateChecker: "updates",
+  UpdatePrompt: "updates",
   UpgradeToProCard: "parity",
 };
 
