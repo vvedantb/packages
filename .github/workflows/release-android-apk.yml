@@ -14,6 +14,13 @@ name: Release Android APK (reusable)
 # releases only for a feature merge (feat: PR title or commit subject) or a
 # message with [release]; any other branch push skips cleanly before
 # checkout. A tag push and workflow_dispatch always release.
+# pathspecs (opt-in): on a branch push, after that gate, the release runs only
+# if a file changed between github.event.before and github.sha matches these
+# git pathspecs (one per line; blank lines and # comments ignored). No match
+# is a soft skip. Tag pushes, workflow_dispatch and an empty input skip this
+# check. wait_for_check_job (opt-in): after the APK is built and checked,
+# and before publish, wait for the named job in the caller's run to succeed.
+# That lets the caller start this job in parallel with its Check job.
 #
 # Ported from vmem .github/workflows/release-android.yml. This repo only
 # defines the workflow; it never runs a release itself, so the only trigger
@@ -131,6 +138,16 @@ on:
         required: false
         type: string
         default: always
+      pathspecs:
+        description: "Git pathspecs, one per line (blank lines and # comments ignored), like :(glob)apps/mobile/** and :(exclude,glob)apps/mobile/e2e/**. On a branch push, a release needs a changed file between github.event.before and github.sha that matches; no match skips cleanly (No release paths changed.). A missing or all-zero before counts as changed. Tag pushes and workflow_dispatch ignore it. Empty (default) applies no path filter."
+        required: false
+        type: string
+        default: ""
+      wait_for_check_job:
+        description: "Name of a job in the caller's run, like Check. After the APK is built and checked, and before publish, the workflow waits (up to 45 minutes) until that job succeeds, and fails if it fails or is cancelled. Matches the job name, or a name ending in ' / <input>' (reusable workflow jobs). Applies on dry_run too. Empty (default) does not wait."
+        required: false
+        type: string
+        default: ""
       dry_run:
         description: "Build and sign the APK, but skip gh release create and post-publish (no tag, no release)."
         required: false
@@ -305,13 +322,66 @@ jobs:
             echo "should_release=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Full history only when the pathspecs check below needs it.
       - uses: actions/checkout@v6
         if: steps.gate.outputs.should_release == 'true'
+        with:
+          fetch-depth: ${{ (inputs.pathspecs != '' && github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) && 0 || 1 }}
+
+      # The final should_release for every later step: the gate's answer, then
+      # (branch push with pathspecs only) whether a changed file matches.
+      - name: Resolve should_release
+        id: paths
+        env:
+          GATE: ${{ steps.gate.outputs.should_release }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PATHSPECS: ${{ inputs.pathspecs }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GATE" != true ]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$PATHSPECS" ] || [ "$EVENT_NAME" != push ] || [[ "$REF" == refs/tags/* ]]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          specs=()
+          while IFS= read -r line || [ -n "$line" ]; do
+            line="${line%$'\r'}"
+            if [ -z "${line//[[:space:]]/}" ] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+              continue
+            fi
+            specs+=("$line")
+          done <<<"$PATHSPECS"
+          if [ "${#specs[@]}" -eq 0 ]; then
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # No usable before (new branch, force push): count as changed.
+          if [[ "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "No usable before commit ($BEFORE): treating as changed, releasing"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- "${specs[@]}")"
+          if [ -z "$changed" ]; then
+            echo "No release paths changed."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Release paths changed:"
+            echo "$changed"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
 
       # Inputs are checked before anything slow runs. Paths in inputs are
       # read through env, never pasted into a script.
       - name: Check inputs
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         env:
           APP_CONFIG_PATH: ${{ inputs.app_config_path }}
           VERSION_NAME_SOURCE: ${{ inputs.version_name_source }}
@@ -390,7 +460,7 @@ jobs:
 
       # Before the toolchain, so it can free disk space for the setup steps.
       - name: Pre-setup
-        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_setup_command != '')
+        if: steps.paths.outputs.should_release == 'true' && (inputs.pre_setup_command != '')
         env:
           PRE_SETUP_COMMAND: ${{ inputs.pre_setup_command }}
         run: |
@@ -398,7 +468,7 @@ jobs:
           bash -eo pipefail -c "$PRE_SETUP_COMMAND"
 
       - name: Choose versionName, versionCode and tag
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -597,7 +667,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Decode signing keystore
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -619,16 +689,16 @@ jobs:
 
       # Version from packageManager in the caller's root package.json.
       - uses: pnpm/action-setup@v6
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
 
       - uses: actions/setup-node@v6
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         with:
           node-version: ${{ inputs.node_version }}
           cache: pnpm
 
       - uses: actions/setup-java@v5
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         with:
           distribution: temurin
           java-version: ${{ inputs.java_version }}
@@ -639,7 +709,7 @@ jobs:
       # sdk_packages are what React Native 0.86 pins, and AGP's default CMake,
       # installed before Gradle needs them.
       - name: Install Android SDK packages
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         env:
           SDK_PACKAGES: ${{ inputs.sdk_packages }}
           # Used only when the runner has no Android SDK.
@@ -693,10 +763,10 @@ jobs:
           "$sdkmanager" --install "${packages[@]}"
 
       - uses: gradle/actions/setup-gradle@v4
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
 
       - name: Pre-build
-        if: steps.gate.outputs.should_release == 'true' && (inputs.pre_build_script != '' || inputs.pre_build_command != '')
+        if: steps.paths.outputs.should_release == 'true' && (inputs.pre_build_script != '' || inputs.pre_build_command != '')
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
           VERSION_CODE: ${{ steps.version.outputs.version_code }}
@@ -727,7 +797,7 @@ jobs:
       # The vmem script installs the mobile workspace deps, runs expo
       # prebuild, builds with Gradle and writes release.json.
       - name: Build signed APK
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         id: build
         env:
           VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -755,7 +825,7 @@ jobs:
       # trusts the tag, asset names and release.json. Check them against the
       # chosen version and the APK on disk.
       - name: Check build outputs
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         id: check
         env:
           EXPECTED_VERSION_NAME: ${{ steps.version.outputs.version_name }}
@@ -828,7 +898,7 @@ jobs:
 
       # Lets a dry_run's APK be installed and checked without a release.
       - name: Upload dry-run artifact
-        if: steps.gate.outputs.should_release == 'true' && (inputs.dry_run && inputs.upload_dry_run_artifact)
+        if: steps.paths.outputs.should_release == 'true' && (inputs.dry_run && inputs.upload_dry_run_artifact)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.app_name }}-android-dry-run
@@ -837,8 +907,53 @@ jobs:
             ${{ steps.build.outputs.release_json }}
           if-no-files-found: error
 
+      # Runs before publish so a failed Check never releases. Also on dry_run.
+      - name: Wait for check job
+        if: steps.paths.outputs.should_release == 'true' && inputs.wait_for_check_job != ''
+        env:
+          CHECK_JOB: ${{ inputs.wait_for_check_job }}
+        run: |
+          deadline=$((SECONDS + 45 * 60))
+          while true; do
+            jobs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" \
+              --jq '.jobs[] | [.name, (.conclusion // "")] | @tsv')"
+            conclusion=""
+            matched=""
+            while IFS=$'\t' read -r name result; do
+              if [ "$name" = "$CHECK_JOB" ] || [[ "$name" == *" / $CHECK_JOB" ]]; then
+                matched="$name"
+                conclusion="$result"
+                break
+              fi
+            done <<<"$jobs"
+
+            case "$conclusion" in
+              success)
+                echo "Job '$matched' succeeded."
+                exit 0
+                ;;
+              failure|cancelled|timed_out|startup_failure)
+                echo "::error::Job '$matched' concluded $conclusion. Not publishing."
+                exit 1
+                ;;
+              skipped)
+                echo "::error::Job '$matched' was skipped, so it never succeeded. Not publishing."
+                exit 1
+                ;;
+            esac
+
+            state="no matching job found yet"
+            [ -z "$matched" ] || state="job '$matched' not finished"
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::Timed out after 45 minutes waiting for job '$CHECK_JOB' to succeed ($state)."
+              exit 1
+            fi
+            echo "Waiting for '$CHECK_JOB': $state"
+            sleep 15
+          done
+
       - name: Publish GitHub Release
-        if: steps.gate.outputs.should_release == 'true'
+        if: steps.paths.outputs.should_release == 'true'
         id: publish
         env:
           TAG: ${{ steps.version.outputs.tag }}
@@ -908,7 +1023,7 @@ jobs:
           echo "Published $url"
 
       - name: Post-publish
-        if: steps.gate.outputs.should_release == 'true' && (steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != ''))
+        if: steps.paths.outputs.should_release == 'true' && (steps.publish.outputs.published == 'true' && (inputs.post_publish_script != '' || inputs.post_publish_command != ''))
         env:
           TAG: ${{ steps.version.outputs.tag }}
           RELEASE_URL: ${{ steps.publish.outputs.release_url }}
@@ -945,7 +1060,7 @@ jobs:
           fi
 
       - name: Remove keystore
-        if: always() && steps.gate.outputs.should_release == 'true'
+        if: always() && steps.paths.outputs.should_release == 'true'
         run: |
           # Only a plain file name, as "Check inputs" requires, so this never
           # removes anything outside RUNNER_TEMP.
