@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { defineWebVitestConfig } from "../src/vite.js";
 import { SHARED_WORKER_SETUP, sharedWorkerVitestConfig } from "../src/vitest-shared.js";
 

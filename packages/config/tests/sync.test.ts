@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { runCli } from "../src/run.js";
 import { CLAUDE_INSTALL_SNIPPET, ENVIRONMENT_INSTALL, parseJsonc } from "../src/sync.js";
 import { versions } from "../src/versions.js";

@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "bun:test";
 
 // Runs the real oxlint binary over a throwaway fixture with the shipped JS
 // plugin wired in, so each rule is exercised by the linter the apps use, not a

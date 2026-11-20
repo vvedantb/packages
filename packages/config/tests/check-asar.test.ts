@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { CHECK_ASAR_CHILD_ENV, findBareImports, findSpecifiers, packageName, runCheckAsar, type CheckAsarIo } from "../src/check-asar.js";
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -212,7 +212,11 @@ describe("resolve mode", () => {
     expect(result.code).toBe(1);
     expect(result.out).toEqual(["checked 3 JS files, 4 unbundled imports"]);
     expect(result.err).toHaveLength(1);
-    expect(result.err[0]).toMatch(/^FAIL unresolved import "vvedantb-not-installed": Cannot find module .vvedantb-not-installed./);
+    // In production the resolve child runs under Node (ELECTRON_RUN_AS_NODE=1); here it runs in-process
+    // under the test runner. Node's createRequire throws "Cannot find module 'x'"; Bun's throws a
+    // ResolveMessage "Cannot find package 'x' from ...". Assert the runtime-agnostic guarantee: the
+    // unresolved specifier is reported as a FAIL with a cannot-find reason that names the module.
+    expect(result.err[0]).toMatch(/^FAIL unresolved import "vvedantb-not-installed": .*Cannot find (module|package) .vvedantb-not-installed./);
   });
 
   it("throws when a scan dir is missing, as the original script did", async () => {

@@ -24,6 +24,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      # `@vvedantb/config` tests run under `bun test`; the rest stay on Vitest.
+      - name: Install Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.5
       # The pnpm store, with a fallback key: after a lockfile change the last
       # store is restored and only the changed packages are downloaded.
       - name: Find the pnpm store
@@ -44,16 +49,26 @@ jobs:
       - name: Prune the pnpm store
         if: steps.pnpm-cache.outputs.cache-hit != 'true'
         run: pnpm store prune
-      # Some tests load built output (for example `@vvedantb/config` dist).
+      # Some tests load built output (for example `@vvedantb/config` dist), and
+      # the client-graph guard bundles `@vvedantb/ui` against built
+      # `@vvedantb/server`. Build once here, then fan out.
       - name: Build
         run: pnpm build
-      - name: Typecheck
-        run: pnpm typecheck
-      # Hermes ES2023 ban, client import graph, native-ui exports and app names.
-      # The client graph check bundles `@vvedantb/ui` against built `@vvedantb/server`,
-      # so it runs after Build.
-      - name: Guards
-        run: pnpm check:guards
-      # Runs the no-source-text check, then the package tests.
-      - name: Test
-        run: pnpm test
+      # Typecheck, guards and tests do not depend on one another once the build
+      # is in place, so run them together and wait for all three. The job fails
+      # if any one fails; every log is printed.
+      - name: Typecheck, guards and test
+        shell: bash
+        run: |
+          set +e
+          pnpm typecheck    > typecheck.log 2>&1 & tc=$!
+          pnpm check:guards > guards.log    2>&1 & gd=$!
+          pnpm test         > test.log      2>&1 & ts=$!
+          wait $tc; rc_tc=$?
+          wait $gd; rc_gd=$?
+          wait $ts; rc_ts=$?
+          echo "::group::typecheck"; cat typecheck.log; echo "::endgroup::"
+          echo "::group::guards";    cat guards.log;    echo "::endgroup::"
+          echo "::group::test";      cat test.log;      echo "::endgroup::"
+          echo "exit codes: typecheck=$rc_tc guards=$rc_gd test=$rc_ts"
+          [ $rc_tc -eq 0 ] && [ $rc_gd -eq 0 ] && [ $rc_ts -eq 0 ]

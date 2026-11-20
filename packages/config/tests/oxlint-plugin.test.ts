@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it } from "bun:test";
 // @ts-expect-error plain .mjs module with no type declarations
 import plugin from "../oxlint/plugin.mjs";
 

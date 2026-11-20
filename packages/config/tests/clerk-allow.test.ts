@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { CLERK_INSTANCE_URL, runClerkAllow, type ClerkAllowFetch } from "../src/clerk-allow.js";
 
 const ID = "abcdefghijklmnopabcdefghijklmnop";

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import {
   REACT_DEDUPE,
   defineWebViteConfig,
@@ -356,14 +356,14 @@ describe("app-e web vite config", () => {
     };
   }
 
-  it.each([false, true])("matches with the e2e mock=%s", (mock) => {
+  it.each([false, true])("matches with the e2e mock=%s", (mock: boolean) => {
     expect(adopted(mock)).toStrictEqual(current(mock));
   });
 });
 
 describe("vitest configs", () => {
   it("app-a web", () => {
-    const current = {
+    const current: ReturnType<typeof defineWebVitestConfig> = {
       plugins: [react()],
       esbuild: { jsx: "automatic" },
       resolve: {
@@ -389,7 +389,7 @@ describe("vitest configs", () => {
   });
 
   it("app-c web", () => {
-    const current = {
+    const current: ReturnType<typeof defineWebVitestConfig> = {
       esbuild: { jsx: "automatic" },
       test: {
         environment: "node",
@@ -403,7 +403,7 @@ describe("vitest configs", () => {
   });
 
   it("app-c chrome extension", () => {
-    const current = {
+    const current: ReturnType<typeof defineWebVitestConfig> = {
       esbuild: { jsx: "automatic" },
       resolve: {
         alias: { "@": "/repo/apps/chrome-extension/src" },
@@ -419,7 +419,7 @@ describe("vitest configs", () => {
   });
 
   it("app-d web", () => {
-    const current = {
+    const current: ReturnType<typeof defineWebVitestConfig> = {
       resolve: {
         alias: [{ find: "@", replacement: path.resolve(__dirname, "./src") }],
       },

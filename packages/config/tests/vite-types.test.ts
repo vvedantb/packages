@@ -1,6 +1,6 @@
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { REACT_DEDUPE, defineWebViteConfig, srcAlias } from "../src/index.js";
 
 // Type check against the real Vite and plugin-react types (dev dependencies

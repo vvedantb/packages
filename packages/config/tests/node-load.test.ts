@@ -3,13 +3,16 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 
 // Loads the built root with plain Node from a folder that holds only this
 // package: no vite, no plugins, no @electron/asar. Run `pnpm build` first.
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = join(pkgDir, "dist");
+// Spawn real Node, not the test runner: under `bun test` `process.execPath` is
+// the Bun binary, and these cases must load the built package under plain Node.
+const NODE = "node";
 let dir = "";
 
 beforeAll(() => {
@@ -28,7 +31,7 @@ afterAll(() => {
 
 function node(file: string, source: string) {
   writeFileSync(join(dir, file), source);
-  return spawnSync(process.execPath, [file], { cwd: dir, encoding: "utf8" });
+  return spawnSync(NODE, [file], { cwd: dir, encoding: "utf8" });
 }
 
 const CHECK = `
@@ -96,13 +99,13 @@ console.log(JSON.stringify({ manifest: preset.manifest({ mode: "production" }), 
   it("runs the vvedantb-clerk-allow bin: exit 2 without an ID or a key, and no request", () => {
     const bin = join(dir, "node_modules/@vvedantb/config/dist/clerk-allow-cli.js");
     const env = { ...process.env, CLERK_SECRET_KEY: "" };
-    const missingId = spawnSync(process.execPath, [bin], { cwd: dir, encoding: "utf8", env });
+    const missingId = spawnSync(NODE, [bin], { cwd: dir, encoding: "utf8", env });
     expect(missingId.status).toBe(2);
     expect(missingId.stderr).toMatch(/^Missing the extension ID\.\nUsage: vvedantb-clerk-allow <extension-id>/);
-    const missingKey = spawnSync(process.execPath, [bin, "abcdefghijklmnopabcdefghijklmnop"], { cwd: dir, encoding: "utf8", env });
+    const missingKey = spawnSync(NODE, [bin, "abcdefghijklmnopabcdefghijklmnop"], { cwd: dir, encoding: "utf8", env });
     expect(missingKey.status).toBe(2);
     expect(missingKey.stderr).toBe("CLERK_SECRET_KEY is not set.\n");
-    const help = spawnSync(process.execPath, [bin, "--help"], { cwd: dir, encoding: "utf8", env });
+    const help = spawnSync(NODE, [bin, "--help"], { cwd: dir, encoding: "utf8", env });
     expect(help.status).toBe(0);
     expect(help.stdout).toMatch(/^Usage: vvedantb-clerk-allow/);
   });
