@@ -54,7 +54,7 @@ export function UpdatesSection() {
   const [result, setResult] = useState("Nothing pressed yet");
   // Remounts the checker, as a new app start does.
   const [run, setRun] = useState(0);
-  const [found, setFound] = useState<"none" | "newer" | null>(null);
+  const [found, setFound] = useState<"none" | "newer" | "vstore" | null>(null);
 
   const current = CASES.find((item) => item.id === open);
   const recordLink = (url: string) => {
@@ -96,7 +96,13 @@ export function UpdatesSection() {
           not offered twice.
         </GText>
         <GText testID="checker-result">
-          {found === null ? "Not checked yet" : found === "none" ? "No update: nothing is shown" : "Update found"}
+          {found === null
+            ? "Not checked yet"
+            : found === "none"
+              ? "No update: nothing is shown"
+              : found === "vstore"
+                ? "Asked V Store: a prompt without Download when it answers"
+                : "Update found"}
         </GText>
         <Button
           testID="checker-none"
@@ -128,7 +134,28 @@ export function UpdatesSection() {
         >
           Forget Later
         </Button>
-        {found === null ? null : (
+        <Button
+          testID="checker-vstore"
+          variant="outline"
+          onPress={() => {
+            setFound("vstore");
+            setRun((value) => value + 1);
+          }}
+        >
+          Check: ask V Store (real request)
+        </Button>
+        {found === "vstore" ? (
+          // The gallery is in V Store's catalogue. "0.0.1" is older than any release, so an answer always offers one.
+          <UpdateChecker
+            key={run}
+            testID="checker"
+            appName="native-ui gallery"
+            currentVersion="0.0.1"
+            vStore={{ packageName: "dev.vvedantb.nativegallery" }}
+            openUrl={recordLink}
+            onLater={() => setResult("Checker: Later")}
+          />
+        ) : found === null ? null : (
           <UpdateChecker
             key={run}
             testID="checker"
