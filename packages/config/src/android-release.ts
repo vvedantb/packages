@@ -163,9 +163,14 @@ export interface GradlePropertyEdit {
 
 /** The edits the release build makes to `gradle.properties`, in order. */
 export const DEFAULT_GRADLE_PROPERTY_EDITS: readonly GradlePropertyEdit[] = [
-  { key: "reactNativeArchitectures", value: "arm64-v8a,x86_64", replace: true },
+  // arm64-v8a only: published APKs target phones. x86_64 is for emulators.
+  { key: "reactNativeArchitectures", value: "arm64-v8a", replace: true },
   { key: "org.gradle.jvmargs", value: "-Xmx4096m -XX:MaxMetaspaceSize=1024m", replace: true },
-  { key: "org.gradle.workers.max", value: "2", replace: false },
+  // boat-large has 8 cores. Replace Expo's lower default.
+  { key: "org.gradle.workers.max", value: "8", replace: true },
+  { key: "org.gradle.parallel", value: "true", replace: true },
+  // org.gradle.configuration-cache stays off: ephemeral CI runners never reuse
+  // the cache, and native modules may still be incompatible on release tasks.
   { key: "android.lint.checkReleaseBuilds", value: "false", replace: false },
 ];
 
@@ -261,6 +266,14 @@ export interface AndroidReleaseConfig {
   publicEnvSources: readonly PublicEnvSource[];
   /** `pnpm install --filter` values, such as `["@vmem/mobile...", "{.}"]`. */
   pnpmFilters: readonly string[];
+  /**
+   * After versionName resolves, write it to `<appDir>/app.json` (`expo.version`)
+   * and the root `package.json` (`version`) when those files exist, before
+   * prebuild. Default `false`.
+   */
+  syncAppVersion: boolean;
+  /** Read `expo.version` from `<appDir>/app.json` when `VERSION_NAME` is unset. Default `false`. */
+  versionNameFromAppJson: boolean;
   /** Pass `--no-install` to `expo prebuild` (vibot installs during prebuild). */
   prebuildNoInstall: boolean;
   /** Extra environment set for the whole build, such as `{ APP_VARIANT: "production" }`. */
@@ -286,6 +299,8 @@ const DEFAULT_CONFIG: Omit<AndroidReleaseConfig, "packageId" | "apkPrefix" | "pu
   publicEnvSources: [],
   pnpmFilters: ["{.}"],
   prebuildNoInstall: true,
+  syncAppVersion: false,
+  versionNameFromAppJson: false,
   extraEnv: {},
   unsetEnv: [],
   optionalEnv: [],
@@ -341,6 +356,11 @@ export function parseAndroidReleaseConfig(input: unknown): AndroidReleaseConfig 
       throw new Error('android-release config: "prebuildNoInstall" must be a boolean.');
     }
     config.prebuildNoInstall = raw.prebuildNoInstall;
+  }
+  for (const key of ["syncAppVersion", "versionNameFromAppJson"] as const) {
+    if (raw[key] === undefined) continue;
+    if (typeof raw[key] !== "boolean") throw new Error(`android-release config: "${key}" must be a boolean.`);
+    config[key] = raw[key];
   }
   if (raw.extraEnv !== undefined) config.extraEnv = parseStringRecord(raw.extraEnv, "extraEnv");
   if (raw.unsetEnv !== undefined) config.unsetEnv = asStringArray(raw.unsetEnv, "unsetEnv");
@@ -429,4 +449,40 @@ function parseSummary(input: unknown): { label: string; envVar: string } {
 /** The published APK file name for a version, such as `vmem-1.0.1-android.apk`. */
 export function apkFileName(apkPrefix: string, versionName: string): string {
   return `${apkPrefix}-${versionName}-android.apk`;
+}
+
+/** `expo.version` from app.json contents, or `undefined` when absent or not a string. */
+export function readExpoVersion(appJsonContents: string): string | undefined {
+  const parsed: unknown = JSON.parse(appJsonContents);
+  if (typeof parsed !== "object" || parsed === null) return undefined;
+  const expo = (parsed as { expo?: unknown }).expo;
+  if (typeof expo !== "object" || expo === null) return undefined;
+  const version = (expo as { version?: unknown }).version;
+  return typeof version === "string" && version !== "" ? version : undefined;
+}
+
+/** app.json contents with `expo.version` set. Throws when there is no `expo` object. */
+export function syncExpoVersion(appJsonContents: string, versionName: string): string {
+  const parsed: unknown = JSON.parse(appJsonContents);
+  const expo = typeof parsed === "object" && parsed !== null ? (parsed as { expo?: unknown }).expo : undefined;
+  if (typeof expo !== "object" || expo === null) {
+    throw new Error('app.json has no "expo" object to set the version on.');
+  }
+  (expo as { version?: string }).version = versionName;
+  return JSON.stringify(parsed, null, 2) + "\n";
+}
+
+/** package.json contents with `version` set. */
+export function syncPackageJsonVersion(packageJsonContents: string, versionName: string): string {
+  const parsed: unknown = JSON.parse(packageJsonContents);
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error("package.json is not a JSON object.");
+  }
+  (parsed as { version?: string }).version = versionName;
+  return JSON.stringify(parsed, null, 2) + "\n";
+}
+
+/** True when the generated `android/app/build.gradle` sets `versionName "<versionName>"`. */
+export function gradleVersionNameOk(gradleText: string, versionName: string): boolean {
+  return new RegExp(`^[\\t ]*versionName ["']${escapeRegExp(versionName)}["'][\\t ]*$`, "m").test(gradleText);
 }

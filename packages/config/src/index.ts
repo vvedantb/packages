@@ -126,9 +126,13 @@ export {
   parseAndroidReleaseConfig,
   parseBadging,
   publicEnvDefault,
+  readExpoVersion,
   releaseJson,
+  syncPackageJsonVersion,
+  syncExpoVersion,
   validateVersionCode,
   validateVersionName,
+  gradleVersionNameOk,
   type AndroidReleaseConfig,
   type BadgingFields,
   type GradlePropertyEdit,
@@ -136,3 +140,14 @@ export {
   type ReadAppFile,
   type ReleaseJson,
 } from "./android-release.js";
+export {
+  compareSemver,
+  highestSemver,
+  isSemver,
+  pickAndroidReleaseVersion,
+  publishedVersionNames,
+  type AndroidReleaseVersion,
+  type PickAndroidReleaseVersionInput,
+  type PublishedReleases,
+  type VersionNameSource,
+} from "./android-release-version.js";

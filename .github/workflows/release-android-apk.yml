@@ -448,51 +448,52 @@ jobs:
             fi
           fi
 
-          # Highest versionName and versionCode in published <tag_prefix>*
-          # release.json files. A release without release.json (before this
-          # workflow) counts as versionCode 1. Any other gh error stops the
-          # run rather than undercounting.
-          # releases has a "versionName tag" line for each release.json, so
-          # the release notes can start from the highest published version.
+          # packages/config/src/android-release-version.ts owns this algorithm
+          # and its tests (pickAndroidReleaseVersion). Keep the bash below
+          # equivalent to it.
+          #
+          # Published versionNames come from the tag suffixes
+          # (<tag_prefix><semver>) of one `gh release list`. Only the highest
+          # semver tag's release.json is downloaded: the highest versionName
+          # carries the highest versionCode. A release without release.json
+          # (before this workflow) counts as versionCode 1. Any other gh error
+          # stops the run rather than undercounting. Tags that are not
+          # <tag_prefix><semver> are ignored.
           # name_tags maps each semver versionName to its tag, and
           # highest_name is the highest one (no floor), for app_json.
           names="$app_version"
-          releases=""
           highest_code=0
           highest_name=""
           declare -A name_tags=()
           tags="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1000 \
             --json tagName --jq ".[].tagName | select(startswith(\"$TAG_PREFIX\"))")"
           for tag in $tags; do
-            manifest="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
-              --json assets --jq '.assets[] | select(.name == "release.json") | .name')"
-            if [ -z "$manifest" ]; then
-              code=1
-            else
-              release_json="$(gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern release.json --output -)"
-              code="$(jq -r '.versionCode // empty' <<<"$release_json")"
-              name="$(jq -r '.versionName // empty' <<<"$release_json")"
-              if ! [[ "$code" =~ ^[0-9]+$ ]]; then
-                echo "::error::$tag release.json has no valid versionCode."
-                exit 1
-              fi
-              # A legacy release with a non-semver versionName still counts
-              # for versionCode, but not for versionName or release notes.
-              if [[ "$name" =~ $semver ]]; then
-                names="$names"$'\n'"$name"
-                releases="$releases"$'\n'"$name $tag"
-                name_tags["$name"]="$tag"
-                if [ -z "$highest_name" ] || version_gt "$name" "$highest_name"; then
-                  highest_name="$name"
-                fi
-              else
-                echo "::warning::$tag release.json versionName '$name' is not like 1.0.1. Ignored for versionName."
-              fi
+            name="${tag#"$TAG_PREFIX"}"
+            if ! [[ "$name" =~ $semver ]]; then
+              echo "::warning::$tag is not $TAG_PREFIX followed by a version like 1.0.1. Ignored."
+              continue
             fi
-            if [ "$code" -gt "$highest_code" ]; then
-              highest_code="$code"
+            names="$names"$'\n'"$name"
+            name_tags["$name"]="$tag"
+            if [ -z "$highest_name" ] || version_gt "$name" "$highest_name"; then
+              highest_name="$name"
             fi
           done
+          if [ -n "$highest_name" ]; then
+            highest_tag="${name_tags[$highest_name]}"
+            manifest="$(gh release view "$highest_tag" --repo "$GITHUB_REPOSITORY" \
+              --json assets --jq '.assets[] | select(.name == "release.json") | .name')"
+            if [ -z "$manifest" ]; then
+              highest_code=1
+            else
+              release_json="$(gh release download "$highest_tag" --repo "$GITHUB_REPOSITORY" --pattern release.json --output -)"
+              highest_code="$(jq -r '.versionCode // empty' <<<"$release_json")"
+              if ! [[ "$highest_code" =~ ^[0-9]+$ ]]; then
+                echo "::error::$highest_tag release.json has no valid versionCode."
+                exit 1
+              fi
+            fi
+          fi
 
           if [ "$VERSION_NAME_SOURCE" = app_json ]; then
             # v-store's rules: the version input; else the tag's version;
@@ -526,8 +527,8 @@ jobs:
           elif [ -n "$tag_version" ]; then
             version_name="$tag_version"
           else
-            highest_name="$(sort -V <<<"$names" | tail -n 1)"
-            IFS=. read -r major minor patch <<<"$highest_name"
+            base_name="$(sort -V <<<"$names" | tail -n 1)"
+            IFS=. read -r major minor patch <<<"$base_name"
             version_name="$major.$minor.$((patch + 1))"
           fi
 
@@ -582,14 +583,9 @@ jobs:
 
           # The release with the highest semver versionName. GitHub's "latest
           # release" can be another product's release in the same repo.
-          # app_json takes the tag that carries highest_name, as v-store did.
-          if [ "$VERSION_NAME_SOURCE" = app_json ]; then
-            previous_tag=""
-            if [ -n "$highest_name" ]; then
-              previous_tag="${name_tags[$highest_name]}"
-            fi
-          else
-            previous_tag="$(sort -V <<<"$releases" | tail -n 1 | cut -s -d ' ' -f 2)"
+          previous_tag=""
+          if [ -n "$highest_name" ]; then
+            previous_tag="${name_tags[$highest_name]}"
           fi
 
           echo "Releasing $tag: versionName $version_name, versionCode $version_code (highest release: $highest_code, floor: $VERSION_CODE_FLOOR). Previous release: ${previous_tag:-none}"
