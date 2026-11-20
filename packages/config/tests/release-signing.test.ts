@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   DEFAULT_RELEASE_SIGNING_MARKER,
   appendReleaseSigning,

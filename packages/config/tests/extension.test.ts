@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   EXTENSION_ICONS,
   defineVExtensionConfig,
@@ -221,10 +221,7 @@ describe("defineVExtensionConfig", () => {
       hosts: [],
       manifest: { action: { default_title: "Ext" }, name: "Ext (beta)", icons: { "128": "custom.png" } },
     });
-    // `as unknown`: bun:test types the expected against the actual's declared type; this asserts the
-    // runtime shape (a single overridden icon), narrower than the declared ExtensionIcons. The
-    // deep-equality comparison is unchanged; only bun's new static coupling is dropped. (Same below.)
-    expect(config.manifest({ mode: "production" }) as unknown).toStrictEqual({
+    expect(config.manifest({ mode: "production" })).toStrictEqual({
       name: "Ext (beta)",
       icons: { "128": "custom.png" },
       action: { default_icon: { ...EXTENSION_ICONS }, default_title: "Ext" },
@@ -275,10 +272,10 @@ describe("defineVExtensionConfig", () => {
       tailwindcss,
       plugins: [false, { name: "app" }, null, undefined],
     });
-    expect(config.vite() as unknown).toStrictEqual({
+    expect(config.vite()).toStrictEqual({
       plugins: [{ name: "react", args: [] }, { name: "babel", args: [{ presets: ["react-compiler"] }] }, { name: "tailwindcss", args: [] }, { name: "app" }],
     });
-    expect(defineVExtensionConfig({ app: "ext", hosts: [], react: { plugin: react, compiler: true } }).vite().plugins as unknown).toStrictEqual([
+    expect(defineVExtensionConfig({ app: "ext", hosts: [], react: { plugin: react, compiler: true } }).vite().plugins).toStrictEqual([
       { name: "react", args: [{ compiler: true }] },
     ]);
   });

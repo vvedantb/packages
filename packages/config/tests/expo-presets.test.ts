@@ -1,5 +1,5 @@
 import path from "node:path";
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { defineExpoMetroConfig, expoBabelConfig, type NativeWindMetroOptions } from "../src/index.js";
 
 // Each `current*` function is a verbatim copy of an app's babel.config.js or
@@ -62,10 +62,7 @@ describe("babel.config.js (app-b, app-c, app-d are identical)", () => {
   it("matches and caches forever", () => {
     const calls: boolean[][] = [];
     const api = { cache: (...args: boolean[]) => void calls.push(args) };
-    // `as unknown`: bun:test types the expected against the actual's declared type; these checks
-    // assert the runtime shape, which is narrower/looser than the declared type. The deep-equality
-    // comparison is unchanged; only bun's new static coupling (which Vitest did not apply) is dropped.
-    expect(expoBabelConfig(api) as unknown).toStrictEqual(current({ cache: () => undefined }));
+    expect(expoBabelConfig(api)).toStrictEqual(current({ cache: () => undefined }));
     expect(calls).toStrictEqual([[true]]);
   });
 });
