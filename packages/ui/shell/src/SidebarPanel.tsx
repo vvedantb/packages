@@ -15,6 +15,7 @@ import {
   sidebarNavItemTrailingClass,
 } from "./app-shell-classes";
 import { useOptionalSidebar } from "./SidebarChrome";
+import { useAppShellPanelDock } from "./shell-variant";
 
 export type SidebarPanelProps = {
   title: string;
@@ -72,9 +73,11 @@ export type SidebarPanelRootProps = ComponentPropsWithoutRef<"div"> & {
 /** Panel column `<div>` beside the rail. */
 export function Panel({ collapsed, panelHidden, className, ...props }: SidebarPanelRootProps) {
   const sidebar = useOptionalSidebar();
+  const dock = useAppShellPanelDock();
   if (panelHidden ?? sidebar?.panelHidden ?? false) return null;
   return (
     <div
+      data-shell-dock-panel={dock ? "" : undefined}
       {...props}
       className={cn(
         // No border-r: the main content card floats beside this panel, so a

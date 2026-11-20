@@ -1239,7 +1239,30 @@ Single-plan callers need no change. To move to the multi-plan layout, replace
 - `signOut={{ onSignOut, description? }}`: a separator and a danger "Sign out" item, last. It opens `SignOutDialog`; Alt-click skips the dialog and `ConfirmSkipHint` shows while Alt is held. The menu owns the dialog state. If `onSignOut` rejects, the dialog buttons enable again.
 - `itemIconSize`: `size` of those two items' icons. Default: the icon's own size.
 
-`RailCollapseTile({ collapsed, onToggle })`: the rail tile that shows or hides the sidebar panel ("Show sidebar" with the expand icon, or "Hide sidebar").
+`RailCollapseTile({ collapsed, onToggle })`: the rail tile that shows or hides the sidebar panel ("Show sidebar" with the expand icon, or "Hide sidebar"). In `AppShell variant="rail"` it runs the dock motion (below).
+
+Rail-variant pieces (all work without the rail variant too, except the first):
+
+- **Dock motion of the sidebar panel.** In `variant="rail"` the panel shrinks into the `RailCollapseTile` on hide and grows back out on show, and the main content slides with the sidebar width. `panelMotion="none"` on `AppShell` turns it off (a rail-only input: a type error on `"floating"`). For a toggle of your own (a hotkey, a context setter) call `toggleShellPanel(collapsed, toggle)`, or `popOutShellPanel(hide)` and `popInShellPanelNextFrame()`. For a tile of your own, spread `shellDockTileProps` on it.
+- **`dockPopIn`, `dockNudge`, `dockPopOut`, `slideWith`, `slideNextResize`** (`DockEdge`, `DOCK_MOTION_EVENT`, `DockMotionEvent`, `dockMotionOff`): the same motion for any panel that docks into a tile. All of it stops with `MotionProvider reducedMotion` and `PageMotionProvider disabled`: a show is instant and a hide runs at once.
+- **`ButtonTrack`** (`buttonTrackClass`): a trough for a group of flat buttons, for page header actions (`direction="row"`, default) or tools under a side rail (`direction="column"`). It renders nothing visible when empty.
+- **`SidePanelTabs`**: tabs on a rail beside a content card, for a side panel. `SidePanelTabs.Frame({ collapsed, rail })` holds a `SidePanelTabs.Rail` with a `SidePanelTabs.List({ value, onValueChange })` of `SidePanelTabs.Tab({ value, label, icon, activeIcon, layout, count, indicator, onReselect })`. From `md` up the rail is on the right edge and an arrow on the card points at the active tab; below `md` the tabs are a strip on top. `collapsed` hides the card and leaves the rail (`SIDE_PANEL_RAIL_WIDTH_PX`, 44; `SIDE_PANEL_RAIL_LABELLED_WIDTH_PX`, 76). Close it with `popOutSidePanel(root, collapse)`. It does not depend on the `AppShell` variant. The rail is on the right only.
+
+```tsx
+<SidePanelTabs.Frame
+  collapsed={collapsed}
+  rail={
+    <SidePanelTabs.Rail>
+      <SidePanelTabs.List value={tab} onValueChange={setTab} aria-label="Panel">
+        <SidePanelTabs.Tab value="files" label="Files" icon={<IconFiles />} count={3} onReselect={toggleCard} />
+        <SidePanelTabs.Tab value="notes" label="Notes" icon={<IconNote />} />
+      </SidePanelTabs.List>
+    </SidePanelTabs.Rail>
+  }
+>
+  {tab === "files" ? <Files /> : <Notes />}
+</SidePanelTabs.Frame>
+```
 
 ## Animated nav icons (0.11.0)
 

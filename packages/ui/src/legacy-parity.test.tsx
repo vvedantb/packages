@@ -173,7 +173,7 @@ function sidebar(props: Partial<AppSidebarProps> = {}) {
   );
 }
 
-function shell(props: Partial<AppShellProps> = {}, sidebarProps?: Partial<AppSidebarProps>) {
+function shell(props: AppShellProps = {}, sidebarProps?: Partial<AppSidebarProps>) {
   return (
     <AppShell sidebar={sidebarProps ? sidebar(sidebarProps) : undefined} {...props}>
       <p>Page</p>

@@ -158,8 +158,14 @@
   html[data-page-motion="off"] .t-modal,
   html[data-page-motion="off"] .t-modal.is-closing,
   html[data-page-motion="off"] .t-modal[data-state="closed"],
-  html[data-page-motion="off"] .t-tabs-pill {
+  html[data-page-motion="off"] .t-tabs-pill,
+  html[data-page-motion="off"] .t-side-panel-arrow {
     transition-duration: 0s !important;
+  }
+
+  /* `slideNextResize`: the panes of a resizable group slide for one resize. */
+  [data-dock-slide] > [data-panel] {
+    transition: flex-grow var(--dock-slide-dur) var(--dock-slide-ease);
   }
 
   html[data-page-motion="off"]::view-transition-group(*),

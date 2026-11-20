@@ -6,7 +6,7 @@ import {
   useSidebarResizeState,
   type SidebarResizeOptions,
 } from "./SidebarResize";
-import { AppShellVariantContext, useAppShellVariant, type AppShellVariantProps } from "./shell-variant";
+import { AppShellPanelDockContext, AppShellVariantContext, useAppShellVariant, type AppShellVariantProps } from "./shell-variant";
 
 type AppShellBaseProps = {
   /** Rendered between the skip link and `<main>`, usually an `AppSidebar`. */
@@ -79,6 +79,7 @@ function Root({
   mobileHeaderHeight = "calc(3.5rem + env(safe-area-inset-top, 0px))",
   mainId = "main-content",
   variant = "floating",
+  panelMotion,
   className,
   style,
   ...props
@@ -92,19 +93,21 @@ function Root({
   return (
     <AppShellContext.Provider value={{ mainId, panelHidden, scroll }}>
       <AppShellVariantContext value={variant}>
-        <SidebarResizeProvider value={resize}>
-          <div
-            {...props}
-            data-shell-variant={variant === "rail" ? "rail" : undefined}
-            className={cn(
-              scroll === "document"
-                ? "relative min-h-dvh bg-background"
-                : "relative h-dvh overflow-hidden bg-background",
-              className,
-            )}
-            style={{ ...vars, ...style }}
-          />
-        </SidebarResizeProvider>
+        <AppShellPanelDockContext value={variant === "rail" && panelMotion !== "none"}>
+          <SidebarResizeProvider value={resize}>
+            <div
+              {...props}
+              data-shell-variant={variant === "rail" ? "rail" : undefined}
+              className={cn(
+                scroll === "document"
+                  ? "relative min-h-dvh bg-background"
+                  : "relative h-dvh overflow-hidden bg-background",
+                className,
+              )}
+              style={{ ...vars, ...style }}
+            />
+          </SidebarResizeProvider>
+        </AppShellPanelDockContext>
       </AppShellVariantContext>
     </AppShellContext.Provider>
   );
@@ -203,10 +206,12 @@ function LegacyAppShell({
   skipLinkLabel,
   mainId = "main-content",
   variant = "floating",
+  panelMotion,
   className,
   mainClassName,
   contentClassName,
 }: AppShellProps) {
+  const layout: AppShellVariantProps = variant === "rail" ? { variant: "rail", panelMotion } : {};
   return (
     <Root
       panelHidden={panelHidden}
@@ -216,7 +221,7 @@ function LegacyAppShell({
       scroll={scroll}
       mobileHeaderHeight={mobileHeaderHeight}
       mainId={mainId}
-      variant={variant}
+      {...layout}
       className={className}
     >
       <SkipLink label={skipLinkLabel} targetId={mainId} />

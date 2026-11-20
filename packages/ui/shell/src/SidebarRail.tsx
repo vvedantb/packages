@@ -8,7 +8,8 @@ import type { ProductAppName } from "../../src/brand/AppWordmark";
 import { moveTabsPillXY } from "../../src/ui/tabsSliding";
 import { SIDEBAR_RAIL_APP_ICON_SIZE, railGroupClass, railGroupPillClass, railTileClass, railTileStateClass } from "./app-shell-classes";
 import { SidebarIconTooltip } from "./SidebarIconTooltip";
-import { useAppShellVariant } from "./shell-variant";
+import { toggleShellPanel } from "./shell-panel-motion";
+import { useAppShellPanelDock, useAppShellVariant } from "./shell-variant";
 
 export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" | "className"> & {
   /** Pinned at the top, above the scroll body. */
@@ -314,16 +315,28 @@ export function RailDivider({ className }: RailDividerProps) {
   return <RailSeparator className={className} />;
 }
 
+/** Spread on the rail tile that the panel docks into, when it is not a `RailCollapseTile`. */
+export const shellDockTileProps = { "data-shell-dock-tile": "" } as const;
+
 export type RailCollapseTileProps = {
   /** Panel is collapsed: shows the expand icon and "Show sidebar". */
   collapsed: boolean;
   onToggle: () => void;
 };
 
-/** Rail tile that shows or hides the sidebar panel. */
+/**
+ * Rail tile that shows or hides the sidebar panel. In an `AppShell
+ * variant="rail"` (unless `panelMotion="none"`) the panel shrinks into this
+ * tile and grows back out of it (`toggleShellPanel`).
+ */
 export function RailCollapseTile({ collapsed, onToggle }: RailCollapseTileProps) {
+  const dock = useAppShellPanelDock();
   return (
-    <RailItem label={collapsed ? "Show sidebar" : "Hide sidebar"} onClick={onToggle}>
+    <RailItem
+      label={collapsed ? "Show sidebar" : "Hide sidebar"}
+      onClick={dock ? () => toggleShellPanel(collapsed, onToggle) : onToggle}
+      {...(dock ? shellDockTileProps : undefined)}
+    >
       {collapsed ? (
         <IconLayoutSidebarLeftExpandFilled className="size-[22px]" />
       ) : (
