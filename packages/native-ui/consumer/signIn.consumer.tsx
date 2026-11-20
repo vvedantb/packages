@@ -1,9 +1,9 @@
 /**
  * Consumer-style type test. Compiled by `tsconfig.consumer.json` against the
- * real `@clerk/clerk-expo` types (not `types/peers.d.ts`), with `strict` and
+ * real `@clerk/expo` types (not `types/peers.d.ts`), with `strict` and
  * `strictFunctionTypes`. It never runs.
  */
-import { useSignIn } from "@clerk/clerk-expo";
+import { useSignIn } from "@clerk/expo/legacy";
 import {
   prepareFirstFactorIfNeeded,
   prepareSecondFactorIfNeeded,

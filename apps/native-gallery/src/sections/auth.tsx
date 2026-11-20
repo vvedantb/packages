@@ -6,6 +6,8 @@ import {
   AuthProviders,
   AuthScreen,
   AuthTimeoutError,
+  ChangePasswordScreen,
+  DeleteAccountScreen,
   FieldError,
   GoogleSignInButton,
   OrDivider,
@@ -18,7 +20,7 @@ import { Button } from "@vvedantb/native-ui/button";
 import { Input } from "@vvedantb/native-ui/primitives";
 import { GText } from "../ui";
 
-export type Mode = "sign-in" | "sign-up" | "reset" | "second-factor" | "frame";
+export type Mode = "sign-in" | "sign-up" | "reset" | "second-factor" | "change-password" | "delete-account" | "frame";
 
 // "Forgot password?" opens this route again in the reset mode.
 const RESET_HREF = { pathname: "/auth", params: { mode: "reset" } } as const;
@@ -28,6 +30,8 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "sign-up", label: "Sign up" },
   { id: "reset", label: "Reset password" },
   { id: "second-factor", label: "Second factor" },
+  { id: "change-password", label: "Change password" },
+  { id: "delete-account", label: "Delete account" },
   { id: "frame", label: "Frame parts" },
 ];
 
@@ -55,6 +59,13 @@ export function AuthSection({ initial = "sign-in" }: { initial?: Mode }) {
         ) : null}
         {mode === "second-factor" ? (
           <SecondFactorScreen title={AUTH_MESSAGES.secondFactorTitle} description={AUTH_MESSAGES.secondFactorDescription} onSubmit={setCode} onBack={() => setMode("sign-in")} />
+        ) : null}
+        {/* Mock: the current password is `correct-horse`. */}
+        {mode === "change-password" ? (
+          <ChangePasswordScreen minPasswordLength={8} onSuccess={() => setCode("password-changed")} onCancel={() => setMode("sign-in")} />
+        ) : null}
+        {mode === "delete-account" ? (
+          <DeleteAccountScreen onDeleted={() => setCode("account-deleted")} onCancel={() => setMode("sign-in")} />
         ) : null}
         {mode === "frame" ? (
           <AuthScreen title="Frame" subtitle="AuthScreen, OrDivider, FieldError and the Google button">

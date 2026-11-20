@@ -24,7 +24,7 @@ Optional, only if you import those components:
 - `@rn-primitives/portal` — `Select`. Mount one `<PortalHost />` from this package at the app root (for example in the root layout), outside any `Modal`. The package does not re-export it, so install it with `@rn-primitives/select`.
 - `@swmansion/react-native-bottom-sheet` — `BottomSheetContainer`. It needs the New Architecture, React Native 0.82 or later and a native build (no Expo Go), and no root provider.
 - `@react-native-community/datetimepicker` and `dayjs` — `DateTimeField`
-- `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
+- `@clerk/expo`, `convex`, `expo-auth-session`, `expo-web-browser` and `expo-router` — `@vvedantb/native-ui/auth` (0.7.0). `expo-router` also for `@vvedantb/native-ui/expo-web-root`.
 - `react-native-gesture-handler` (`>=2.0.0`) — `@vvedantb/native-ui/gesture-handler` (Unreleased). Wrap the app in `GestureHandlerRootView`, and put `GestureHandlerProvider` from that entry inside it: the sheet drags (`SheetContent`, the compact `DialogContent`) then run on Gesture Handler, on the UI thread, and each overlay's `Modal` gets its own root view (Android needs one in every `Modal`). It also turns on the `SwipeableRow` swipe. Without the provider, the sheets drag with `PanResponder`, with the same rules, and a `SwipeableRow` does not swipe. Only that entry imports the peer, so an app without it bundles as before. In a Metro monorepo, resolve the peer from the app (one copy), as for `react`.
 - `react-native-keyboard-controller` (`>=1.21.0`) — `@vvedantb/native-ui/keyboard-controller` (Unreleased). Put `KeyboardControllerProvider` from that entry inside the app's `KeyboardProvider`: the chat transcript (`ConversationList`), the dock (`ConversationDock`) and its scroll button then follow the keyboard frame by frame, a drag down on the transcript moves the keyboard with the finger (iOS, Android 11+; Android 10 and below lower it at once), and `PromptInput`, `ChatThread`, the overlays and `KeyboardAvoidingView` pad frame by frame. The dock moves by the keyboard less the bottom inset: its content pads that inset, as `PromptInput` does. Without the provider, every part keeps React Native's `KeyboardAvoidingView`. Only that entry imports the peer. In a Metro monorepo, resolve the peer from the app (one copy): the parts read its provider's context.
 - `react-native-svg` — the app marks (`APP_ICONS`, `Icon*`, `AppMark`, `AppWordmark`), `GoogleMark` and `PricingModal`. Apps with the icon peers above already have it: `lucide-react-native` and `@tabler/icons-react-native` both require it.
@@ -100,7 +100,7 @@ The root entry exports everything. It still imports `BottomSheetContainer` and `
 | `@vvedantb/native-ui/date-time` | `DateTimeField`, `DateTimeFieldProps` (0.5.0) | `@react-native-community/datetimepicker`, `dayjs` (import) |
 | `@vvedantb/native-ui/ai` | The AI chat parts (from 0.4.0): `Conversation`, `Message`, `Reasoning`, `AgentTrace`, `ChainOfThought`, `ActivityStep`, `PromptInput`, `Suggestions`, `Sources`, `FileChip`, `Attachments`, `CodeBlock`, `ResponseText`, `Shimmer`, `Collapsible`, `useStreamingDisclosure` and their parts. See [AI chat](#ai-chat-040). Not on the root entry.. From 0.12.0: `ChatThread`, `UIMessage`, `ChatJumpRail` and the `Attachment` props `onPress` and `accessibilityLabel` | none |
 | `@vvedantb/native-ui/ai-gallery` | `AiChatGallery`, `AiChatSamples` (from 0.4.0) | none |
-| `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage`, `SecondFactorScreen`, `useSecondFactor`, `submitTotpSecondFactor`, `submitSecondFactor`, `prepareSecondFactorIfNeeded`, `prepareFirstFactorIfNeeded`, `submitFirstFactor`, `pickFirstFactorStrategy`, `TOTP_MESSAGES` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/clerk-expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
+| `@vvedantb/native-ui/auth` | From 0.7.0: `AuthProviders`, `SignInScreen`, `SignUpScreen`, `ChangePasswordScreen`, `DeleteAccountScreen` (0.32.0), `GoogleSignInButton`, `useGoogleSignIn`, `AuthScreen`, `OrDivider`, `FieldError`, `authErrorMessage`, `SecondFactorScreen`, `useSecondFactor`, `submitTotpSecondFactor`, `submitSecondFactor`, `prepareSecondFactorIfNeeded`, `prepareFirstFactorIfNeeded`, `submitFirstFactor`, `pickFirstFactorStrategy`, `TOTP_MESSAGES` and their props types. See [Auth](#auth-070). Not on the root entry. | `@clerk/expo`, `convex`, `expo-auth-session`, `expo-web-browser`, `expo-router` (import) |
 | `@vvedantb/native-ui/expo-router` | From 0.12.0: `RouterStackPageHeader`, `RouterStackPageHeaderProps`, `goBackOrReplace`. Not on the root, `/layout` or `/page-title` entries. | `expo-router` (import) |
 | `@vvedantb/native-ui/expo-web-root` | From 0.7.0: `ExpoWebRoot`, `ExpoWebRootProps`, `ExpoWebRootViewport`, `EXPO_WEB_VIEWPORT`, `expoWebBackgroundCss`. Not on the root entry. | `expo-router` (import of `expo-router/html`) |
 | `@vvedantb/native-ui/tailwind-preset` | From 0.7.0, CommonJS for `tailwind.config.js`: `nativeUiPreset`, `nativeUiContent`, `cssVar`, `hslVar`, `rgbAlpha`, `cssVariables`, `schemeColors` and a default preset. See [Expo / NativeWind](#expo--nativewind). | `nativewind` (`require`, when installed) |
@@ -197,12 +197,12 @@ It renders `<html lang="en">`, the charset, `X-UA-Compatible` and viewport meta 
 
 ## Auth (0.7.0)
 
-`@vvedantb/native-ui/auth` has the Clerk and Convex providers and a sign-in and sign-up screen. It needs `@clerk/clerk-expo`, `expo-auth-session`, `expo-web-browser` and `expo-router`, and `convex` when you pass a Convex client.
+`@vvedantb/native-ui/auth` has the Clerk and Convex providers and a sign-in and sign-up screen. It needs `@clerk/expo`, `expo-auth-session`, `expo-web-browser` and `expo-router`, and `convex` when you pass a Convex client.
 
 ```tsx
 // app/_layout.tsx
-import { useAuth } from "@clerk/clerk-expo";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { useAuth } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 import { AuthProviders } from "@vvedantb/native-ui/auth";
 
 <AuthProviders publishableKey={publishableKey} tokenCache={tokenCache} convex={convex} useAuth={useAuth}>
@@ -210,7 +210,7 @@ import { AuthProviders } from "@vvedantb/native-ui/auth";
 </AuthProviders>
 ```
 
-`AuthProviders` nests `ClerkProvider`, `ConvexProviderWithClerk` (only with `convex`) and `ClerkLoaded` (with `loaded`, default `true`). Without `convex` the children sit under Clerk only. `clerk={false}` gives a plain `ConvexProvider`, for UI preview builds. The app reads its own key; the component checks nothing.
+`AuthProviders` nests `ClerkProvider`, `ConvexProviderWithClerk` (only with `convex`) and `ClerkLoaded` (with `loaded`, default `true`). Without `convex` the children sit under Clerk only. `clerk={false}` gives a plain `ConvexProvider`, for UI preview builds. The app reads its own key; the component checks nothing. From 0.32.0 the Clerk peer is `@clerk/expo` 4 or later (not `@clerk/clerk-expo`): pass `publishableKey`, because `@clerk/expo` does not read it from the environment.
 
 ```tsx
 // app/(auth)/sign-in.tsx
@@ -255,6 +255,22 @@ export default function SignUp() {
 `GoogleSignInButton` (`scheme`, `redirectPath`, `afterAuthHref`, `replaceOptions`, `onSuccess`, `onError`, `label` and the `Button` props), `AuthScreen`, `OrDivider` and `FieldError` build custom screens. The module calls `WebBrowser.maybeCompleteAuthSession()` once when it loads, so the app no longer needs its own call.
 
 ### Second factor (0.10.0)
+
+Account screens (0.32.0), for a signed-in user. Both use `useUser` from `@clerk/expo` and show errors under the fields.
+
+```tsx
+import { ChangePasswordScreen, DeleteAccountScreen } from "@vvedantb/native-ui/auth";
+
+// app/(app)/change-password.tsx
+<ChangePasswordScreen minPasswordLength={8} onCancel={() => router.back()} />
+
+// app/(app)/delete-account.tsx
+<DeleteAccountScreen afterDeleteHref="/sign-in" onCancel={() => router.back()} />
+```
+
+- `ChangePasswordScreen` calls `user.updatePassword`: the current password, then the new one twice. An account with no password (Google only) gets no current-password field. `signOutOfOtherSessions` defaults to `true`. After the change it calls `onSuccess`, or `router.back()`.
+- `DeleteAccountScreen` calls `user.delete()`. The user types `confirmWord` (default `DELETE`) first; the button stays off until it matches. Turn on "Allow users to delete their accounts" in the Clerk dashboard, or the call fails. After the delete it calls `onDeleted`, or `router.replace(afterDeleteHref)`.
+- `testID`s: `change-password-current`, `-new`, `-confirm`, `-error`, `-submit`, `-cancel`; `delete-account-confirm`, `-error`, `-submit`, `-cancel`. Change the prefix with `testIDPrefix`.
 
 `SecondFactorScreen` is a one-time code step with no Clerk import. The caller owns the check.
 

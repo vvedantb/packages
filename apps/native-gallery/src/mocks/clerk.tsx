@@ -1,4 +1,4 @@
-// A stand-in for `@clerk/clerk-expo`, wired in by `metro.config.js`. The gallery
+// A stand-in for `@clerk/expo` and `@clerk/expo/legacy`, wired in by `metro.config.js`. The gallery
 // has no Clerk keys and makes no network call. The hooks return enough for the
 // native-ui auth screens to render and to take input. Nothing signs in.
 // The password reset runs end to end: any email gets a "code", `424242` is the
@@ -46,6 +46,21 @@ export const useSignUp = () => ({
   setActive: async () => undefined,
   signUp: { create: reject, prepareEmailAddressVerification: reject, attemptEmailAddressVerification: reject },
 });
+
+export const MOCK_CURRENT_PASSWORD = "correct-horse";
+
+// The signed-in user: the current password is `correct-horse`, and deleting works.
+const mockUser = {
+  passwordEnabled: true,
+  updatePassword: async (params: { currentPassword?: string }) => {
+    if (params.currentPassword !== MOCK_CURRENT_PASSWORD) {
+      throw { errors: [{ code: "form_password_incorrect", message: "Password is incorrect. Try again." }] };
+    }
+  },
+  delete: async () => undefined,
+};
+
+export const useUser = () => ({ isLoaded: true as const, isSignedIn: true as const, user: mockUser });
 
 export const useSSO = () => ({ startSSOFlow: reject });
 

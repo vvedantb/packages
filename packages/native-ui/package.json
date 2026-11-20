@@ -200,7 +200,7 @@
   },
   "peerDependencies": {
     "expo-paste-input": ">=0.2.0",
-    "@clerk/clerk-expo": "*",
+    "@clerk/expo": ">=4.0.0",
     "@expo/vector-icons": "*",
     "@json-render/core": ">=0.21.0",
     "@json-render/react-native": ">=0.21.0",
@@ -244,7 +244,7 @@
     "expo-paste-input": {
       "optional": true
     },
-    "@clerk/clerk-expo": {
+    "@clerk/expo": {
       "optional": true
     },
     "@swmansion/react-native-bottom-sheet": {
@@ -318,7 +318,7 @@
     }
   },
   "devDependencies": {
-    "@clerk/clerk-expo": "2.20.2",
+    "@clerk/expo": "4.17.2",
     "@types/react": "^19.1.0",
     "react": "^19.1.0",
     "typescript": "^5.9.0",

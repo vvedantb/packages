@@ -29,12 +29,12 @@ vi.mock("expo-web-browser", () => ({
   warmUpAsync: vi.fn(async () => {}),
   coolDownAsync: vi.fn(async () => {}),
 }));
-vi.mock("@clerk/clerk-expo", () => ({
+vi.mock("@clerk/expo/legacy", () => ({ useSignIn: vi.fn(), useSignUp: vi.fn() }));
+vi.mock("@clerk/expo", () => ({
   ClerkProvider: "ClerkProvider",
   ClerkLoaded: "ClerkLoaded",
   useAuth: function useAuth() {},
-  useSignIn: vi.fn(),
-  useSignUp: vi.fn(),
+  useUser: vi.fn(),
   useSSO: vi.fn(),
   isClerkAPIResponseError: (error: unknown) =>
     typeof error === "object" && error !== null && "clerkError" in error,

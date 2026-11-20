@@ -39,7 +39,7 @@ Larger text and dark mode apply to every screen except `/parity`, which always d
 
 ### Clerk is mocked
 
-`metro.config.js` swaps `@clerk/clerk-expo` for `src/mocks/clerk.tsx`. There are no Clerk keys, no network call and no real sign-in. A submit shows the error that the mock throws.
+`metro.config.js` swaps `@clerk/expo` for `src/mocks/clerk.tsx`. There are no Clerk keys, no network call and no real sign-in. A submit shows the error that the mock throws.
 
 ### Entry points
 
