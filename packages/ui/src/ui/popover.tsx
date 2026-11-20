@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import {
-  floatingSurfaceAnimateClass,
+  triggerZoomAnimateClass,
   floatingSurfaceClass,
 } from "./_menu-classes";
 import { fitViewportClass } from "./_menu-parts";
@@ -58,7 +58,7 @@ const PopoverContent = React.forwardRef<
           config?.classes?.content ?? [
             "z-50 w-72 max-sm:max-w-[calc(100vw-2rem)] max-sm:max-h-[85dvh] max-sm:overflow-y-auto p-4 outline-none",
             floatingSurfaceClass,
-            floatingSurfaceAnimateClass,
+            triggerZoomAnimateClass,
           ],
           fitViewport &&
             `max-sm:max-w-[calc(100vw-1.5rem)] ${fitViewportClass}`,

@@ -12,11 +12,22 @@ export const floatingSurfaceAnimateClass = [
   "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[var(--radix-popper-transform-origin)]",
 ].join(" ");
 
+/**
+ * Menus and popovers grow out of what opened them and shrink back into it, as
+ * Dialog does (`modalTransition`): 40% scale at the Radix transform origin,
+ * which is the trigger (or the cursor for a context menu). Open 150 ms, close
+ * 100 ms: a slower close makes a menu linger after a selection. The arbitrary
+ * `zoom-*-[0.4]` works with both `tailwindcss-animate` and `tw-animate-css`.
+ * Hover cards and selects keep `floatingSurfaceAnimateClass`.
+ */
+export const triggerZoomAnimateClass =
+  "origin-[var(--radix-popper-transform-origin)] duration-150 data-[state=closed]:duration-100 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.4] data-[state=closed]:zoom-out-[0.4]";
+
 // shared floating menu surfaces: popover tone + smooth-shadow-ring-lg
 export const menuContentClass = [
   "z-50 min-w-[12rem] overflow-hidden p-1 outline-none max-sm:max-h-[85dvh] max-sm:overflow-y-auto",
   menuSurfaceClass,
-  floatingSurfaceAnimateClass,
+  triggerZoomAnimateClass,
 ].join(" ");
 
 export const menuSubTriggerClass =
