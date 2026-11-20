@@ -142,6 +142,10 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 9. Publishes the tag with `<apk_basename>-<versionName>-android.apk` and `release.json`. It uses `gh release create --latest=false` (unless `mark_as_latest`), with `--target $GITHUB_SHA`, or `--verify-tag` on a tag push. The notes are the template and the generated "What's changed" notes since the release with the highest semver versionName. Then it runs the optional post-publish hook. `dry_run` builds and signs but publishes nothing and skips post-publish.
 10. Removes the keystore (`if: always()`, unless step 1 skipped the release).
 
+### Path filter and waiting for Check
+
+Two opt-in inputs let a caller start this job in parallel with its Check job. `pathspecs` is a list of git pathspecs, one per line (blank lines and `#` comments ignored). On a branch push, after the `release_on` gate, the workflow checks out full history and releases only if a file changed between `github.event.before` and `github.sha` matches. No match logs `No release paths changed.` and skips every later step, so the run passes. A missing or all-zero `before` counts as changed. Tag pushes, `workflow_dispatch` and an empty input skip the check. `wait_for_check_job` names a job in the caller's run, such as `Check`. After the build outputs pass, and before publish, the workflow polls every 15 seconds for up to 45 minutes until that job succeeds. It matches the job name, or a name ending in ` / <input>`. A failed or cancelled job fails the run with no release. It also waits on `dry_run`.
+
 ### Feature-only releases
 
 The default is `release_on: always`: every push that reaches the workflow releases, and the commit message is not read. The caller decides which pushes reach it, with a paths gate. No app needs a `feat:` title or `[release]` to release.
