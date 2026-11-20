@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.52.0
+
+### Minor Changes
+
+- [#303](https://github.com/vvedantb/packages/pull/303) [`bf9fb43`](https://github.com/vvedantb/packages/commit/bf9fb431b2c6039fd47bd1214a42c704f32c435a) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Dialog grows out of its trigger and shrinks back into it (macOS-style). The origin is the press that opened it (within 500 ms) or the focused control. With neither, it keeps the centred zoom. Instant surfaces (`--modal-scale: 1`, the command palette) are unchanged. Also fixes a replayed entrance: a content re-render that re-runs the ref no longer re-primes a modal that is already open.
+
 ## 0.51.0
 
 ### Minor Changes
