@@ -3,7 +3,7 @@
  * real `@clerk/expo` types (not `types/peers.d.ts`), with `strict` and
  * `strictFunctionTypes`. It never runs.
  */
-import { useSignIn } from "@clerk/expo/legacy";
+import { useSignIn } from "@clerk/expo";
 import {
   prepareFirstFactorIfNeeded,
   prepareSecondFactorIfNeeded,
@@ -12,31 +12,27 @@ import {
   submitSecondFactor,
   type SignInScreenProps,
 } from "../src/auth";
+import { signInCalls } from "../src/auth/clerkCore3";
 
-/** Clerk's real `SignInResource`, as `useSignIn` returns it. */
-type SignInResource = NonNullable<ReturnType<typeof useSignIn>["signIn"]>;
+/** Clerk's real sign-in resource, as the root `useSignIn` returns it. */
+type SignInResource = ReturnType<typeof useSignIn>["signIn"];
 
 declare const resource: SignInResource;
 
 export async function helpers(): Promise<void> {
-  await prepareFirstFactorIfNeeded({ signIn: resource, strategy: "email_code" });
-  await submitFirstFactor({ signIn: resource, code: "123456", strategy: "phone_code" });
-  await prepareSecondFactorIfNeeded({ signIn: resource, strategy: "phone_code" });
-  await submitSecondFactor({
-    signIn: resource,
-    setActive: async () => {},
-    code: "123456",
-    strategy: "totp",
-  });
+  const signIn = signInCalls(resource);
+  await prepareFirstFactorIfNeeded({ signIn, strategy: "email_code" });
+  await submitFirstFactor({ signIn, code: "123456", strategy: "phone_code" });
+  await prepareSecondFactorIfNeeded({ signIn, strategy: "phone_code" });
+  await submitSecondFactor({ signIn, setActive: signIn.setActive, code: "123456", strategy: "totp" });
 }
 
 export async function fromHook(): Promise<void> {
-  const { signIn, setActive } = useSignIn();
-  if (!signIn || !setActive) return;
+  const signIn = signInCalls(useSignIn().signIn);
   await prepareFirstFactorIfNeeded({ signIn, strategy: "email_code" });
   await submitFirstFactor({ signIn, code: "123456", strategy: "email_code" });
   await prepareSecondFactorIfNeeded({ signIn, strategy: "email_code" });
-  await submitSecondFactor({ signIn, setActive, code: "123456", strategy: "backup_code" });
+  await submitSecondFactor({ signIn, setActive: signIn.setActive, code: "123456", strategy: "backup_code" });
 }
 
 const props: SignInScreenProps = { scheme: "app", stageTimeoutMs: 20000 };

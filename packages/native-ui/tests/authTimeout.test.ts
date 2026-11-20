@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Per-stage timeouts (0.11.1). Hung promises and fake timers: no network.
 
-vi.mock("@clerk/expo/legacy", () => ({ useSignIn: vi.fn() }));
 vi.mock("@clerk/expo", () => ({
+  useSignIn: vi.fn(),
   isClerkAPIResponseError: (error: unknown) =>
     typeof error === "object" && error !== null && "clerkError" in error,
 }));

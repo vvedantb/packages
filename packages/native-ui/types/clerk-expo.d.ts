@@ -1,5 +1,5 @@
 /**
- * Stub for `@clerk/expo` and `@clerk/expo/legacy`, used only by `pnpm typecheck` (see
+ * Stub for `@clerk/expo`, used only by `pnpm typecheck` (see
  * `peers.d.ts`). `pnpm typecheck:consumer` leaves it out and uses the real types.
  */
 
@@ -51,68 +51,57 @@ declare module "@clerk/expo" {
   export function isClerkAPIResponseError(
     error: unknown,
   ): error is { errors: Array<{ code: string; message: string; longMessage?: string }> };
-}
 
-/** The Core 2 hooks: `{ isLoaded, signIn, setActive }`. */
-declare module "@clerk/expo/legacy" {
-  type SetActive = (params: { session: string | null }) => Promise<void>;
-  interface Attempt {
-    status: string | null;
-    createdSessionId: string | null;
-    supportedFirstFactors?: Array<{ strategy: string; [key: string]: unknown }> | null;
-    supportedSecondFactors?: SecondFactorInfo[] | null;
-  }
-  export interface SecondFactorInfo {
+  /** What every call on the sign-in and sign-up resources resolves with. */
+  type CallResult = Promise<{ error: unknown }>;
+  // A type alias, as in Clerk: an interface is not assignable to an index signature.
+  type FactorInfo = {
     strategy: string;
     emailAddressId?: string;
     phoneNumberId?: string;
     safeIdentifier?: string;
-    [key: string]: unknown;
-  }
-  export function useSignIn():
-    | { isLoaded: false; signIn: undefined; setActive: undefined }
-    | {
-        isLoaded: true;
-        signIn: {
-          create(
-            params:
-              | { identifier: string; password?: string }
-              | { strategy: "reset_password_email_code"; identifier: string },
-          ): Promise<Attempt>;
-          supportedFirstFactors: SecondFactorInfo[] | null;
-          prepareFirstFactor(params: {
-            strategy: "phone_code" | "email_code";
-            phoneNumberId?: string;
-            emailAddressId?: string;
-          }): Promise<Attempt>;
-          attemptFirstFactor(
-            params:
-              | { strategy: "phone_code" | "email_code"; code: string }
-              | { strategy: "reset_password_email_code"; code: string; password?: string },
-          ): Promise<Attempt>;
-          supportedSecondFactors: SecondFactorInfo[] | null;
-          prepareSecondFactor(params: {
-            strategy: "phone_code" | "email_code";
-            phoneNumberId?: string;
-            emailAddressId?: string;
-          }): Promise<Attempt>;
-          attemptSecondFactor(params: {
-            strategy: "totp" | "backup_code" | "phone_code" | "email_code";
-            code: string;
-          }): Promise<Attempt>;
-          resetPassword(params: { password: string; signOutOfOtherSessions?: boolean }): Promise<Attempt>;
-        };
-        setActive: SetActive;
+  };
+  type CodeCalls = { verifyCode(params: { code: string }): CallResult };
+  /** The Core 3 hooks: `{ errors, fetchStatus, signIn }`. The resource is defined before Clerk loads. */
+  export function useSignIn(): {
+    errors: unknown;
+    fetchStatus: "idle" | "fetching";
+    signIn: {
+      readonly status: string;
+      readonly createdSessionId: string | null;
+      readonly supportedFirstFactors: FactorInfo[];
+      readonly supportedSecondFactors: FactorInfo[];
+      create(params: { identifier?: string }): CallResult;
+      password(params: { identifier: string; password: string }): CallResult;
+      emailCode: CodeCalls & { sendCode(params?: { emailAddressId?: string }): CallResult };
+      phoneCode: CodeCalls & { sendCode(params?: { phoneNumberId: string }): CallResult };
+      resetPasswordEmailCode: CodeCalls & {
+        sendCode(): CallResult;
+        submitPassword(params: { password: string; signOutOfOtherSessions?: boolean }): CallResult;
       };
-  export function useSignUp():
-    | { isLoaded: false; signUp: undefined; setActive: undefined }
-    | {
-        isLoaded: true;
-        signUp: {
-          create(params: { emailAddress: string; password?: string }): Promise<Attempt>;
-          prepareEmailAddressVerification(params: { strategy: "email_code" }): Promise<unknown>;
-          attemptEmailAddressVerification(params: { code: string }): Promise<Attempt>;
-        };
-        setActive: SetActive;
+      mfa: {
+        sendPhoneCode(): CallResult;
+        verifyPhoneCode(params: { code: string }): CallResult;
+        sendEmailCode(): CallResult;
+        verifyEmailCode(params: { code: string }): CallResult;
+        verifyTOTP(params: { code: string }): CallResult;
+        verifyBackupCode(params: { code: string }): CallResult;
       };
+      finalize(): CallResult;
+    };
+  };
+  export function useSignUp(): {
+    errors: unknown;
+    fetchStatus: "idle" | "fetching";
+    signUp: {
+      readonly status: string;
+      readonly createdSessionId: string | null;
+      password(params: { emailAddress: string; password: string }): CallResult;
+      verifications: {
+        sendEmailCode(): CallResult;
+        verifyEmailCode(params: { code: string }): CallResult;
+      };
+      finalize(): CallResult;
+    };
+  };
 }

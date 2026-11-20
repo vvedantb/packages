@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Text, View, type TextInput } from "react-native";
-import { useSignIn, useSignUp } from "@clerk/expo/legacy";
+import { useSignIn, useSignUp } from "@clerk/expo";
 import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
 import { textStyle } from "../controlStyles";
@@ -16,6 +16,7 @@ import {
   logAuthFailure,
   withAuthTimeout,
 } from "./authErrors";
+import { clerkCall, signInCalls } from "./clerkCore3";
 import { SecondFactorScreen } from "./SecondFactorScreen";
 import {
   pickFirstFactorStrategy,
@@ -33,9 +34,6 @@ import {
 import { GoogleSignInButton, type AuthNavigationOptions } from "./GoogleSignInButton";
 
 export type SignInMode = "sign-in" | "sign-up" | "reset-password";
-
-/** The first factor that emails a password-reset code. */
-const RESET_STRATEGY = "reset_password_email_code";
 
 /** The messages the screen can show. Generic: none names a provider. */
 export const AUTH_MESSAGES = {
@@ -210,8 +208,9 @@ export function SignInScreen({
   onIncomplete,
   stageTimeoutMs = DEFAULT_STAGE_TIMEOUT_MS,
 }: SignInScreenProps) {
-  const signInState = useSignIn();
-  const signUpState = useSignUp();
+  // Both are always defined: before Clerk loads, a call waits for it.
+  const signIn = signInCalls(useSignIn().signIn);
+  const signUpAttempt = useSignUp().signUp;
   const router = useRouter();
   const colorScheme = useScheme();
   const [email, setEmail] = useState("");
@@ -290,8 +289,6 @@ export function SignInScreen({
   };
 
   const chooseFirstStrategy = async (strategy: FirstFactorStrategy, list: FirstFactor[]) => {
-    const { signIn } = signInState;
-    if (!signIn) return;
     setFirstError("");
     setFirstStrategy(strategy);
     setPendingFirstFactor(true);
@@ -316,11 +313,10 @@ export function SignInScreen({
 
   // Routes a sign-in attempt. `needs_first_factor` is built in only after `signIn.create`.
   const routeAttempt = async (attempt: IncompleteSignIn, afterCreate: boolean) => {
-    const { setActive } = signInState;
     // Clerk's `SignInStatus` omits `needs_client_trust`: widen before comparing.
     const status: string | null = attempt.status;
-    if (status === "complete" && attempt.createdSessionId && setActive) {
-      await withAuthTimeout(setActive({ session: attempt.createdSessionId }), "set-active", stageTimeoutMs);
+    if (status === "complete" && attempt.createdSessionId) {
+      await withAuthTimeout(signIn.setActive(), "set-active", stageTimeoutMs);
       done();
     } else if (status === "needs_new_password") {
       setPendingFirstFactor(false);
@@ -338,8 +334,7 @@ export function SignInScreen({
   };
 
   const onFirstFactor = async (firstCode: string) => {
-    const { isLoaded, signIn } = signInState;
-    if (!isLoaded || !signIn || firstLoading) return;
+    if (firstLoading) return;
     setFirstLoading(true);
     setFirstError("");
     const result = await submitFirstFactor({
@@ -364,8 +359,7 @@ export function SignInScreen({
   };
 
   const onNewPassword = async () => {
-    const { isLoaded, signIn, setActive } = signInState;
-    if (!isLoaded || !signIn || !setActive || submitting) return;
+    if (submitting) return;
     if (!newPassword) return fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.missingNewPassword);
     if (minPasswordLength && newPassword.length < minPasswordLength) {
       return fail(AUTH_MESSAGES.resetPasswordFailed, `Use at least ${minPasswordLength} characters for the password`);
@@ -376,15 +370,11 @@ export function SignInScreen({
     setSubmitting(true);
     setError("");
     try {
-      const result = await withAuthTimeout(
-        signIn.resetPassword({ password: newPassword }),
-        "reset-password",
-        stageTimeoutMs,
-      );
+      const result = await withAuthTimeout(signIn.resetPassword(newPassword), "reset-password", stageTimeoutMs);
       // Clerk's `SignInStatus` omits `needs_client_trust`: widen before comparing.
       const afterReset: string | null = result.status;
       if (afterReset === "complete" && result.createdSessionId) {
-        await withAuthTimeout(setActive({ session: result.createdSessionId }), "set-active", stageTimeoutMs);
+        await withAuthTimeout(signIn.setActive(), "set-active", stageTimeoutMs);
         done();
       } else if (afterReset === "needs_second_factor" || afterReset === "needs_client_trust") {
         // A reset on an account with two-step verification: the code step, then the session.
@@ -405,17 +395,12 @@ export function SignInScreen({
   };
 
   const onSignIn = async () => {
-    const { isLoaded, signIn, setActive } = signInState;
-    if (!isLoaded || !signIn || !setActive || submitting) return;
+    if (submitting) return;
     if (!email || !password) return fail(AUTH_MESSAGES.signInFailed, AUTH_MESSAGES.missingFields);
     setSubmitting(true);
     setError("");
     try {
-      const attempt = await withAuthTimeout(
-        signIn.create({ identifier: email, password }),
-        "create",
-        stageTimeoutMs,
-      );
+      const attempt = await withAuthTimeout(signIn.password(email, password), "create", stageTimeoutMs);
       await routeAttempt(attempt, true);
     } catch (caught) {
       logAuthFailure("create", caught);
@@ -430,18 +415,11 @@ export function SignInScreen({
 
   // Emails the reset code. Throws what the call throws.
   const requestResetCode = async () => {
-    const { signIn } = signInState;
-    if (!signIn) return;
-    await withAuthTimeout(
-      signIn.create({ strategy: RESET_STRATEGY, identifier: email.trim() }),
-      "create",
-      stageTimeoutMs,
-    );
+    await withAuthTimeout(signIn.sendResetCode(email.trim()), "create", stageTimeoutMs);
   };
 
   const onResetRequest = async () => {
-    const { isLoaded, signIn } = signInState;
-    if (!isLoaded || !signIn || submitting) return;
+    if (submitting) return;
     if (!email.trim()) return fail(AUTH_MESSAGES.sendResetFailed, AUTH_MESSAGES.missingEmail);
     setSubmitting(true);
     setError("");
@@ -458,8 +436,7 @@ export function SignInScreen({
   };
 
   const onResetResend = async () => {
-    const { isLoaded, signIn } = signInState;
-    if (!isLoaded || !signIn || resetLoading) return;
+    if (resetLoading) return;
     setResetLoading(true);
     setResetCodeError("");
     try {
@@ -474,16 +451,11 @@ export function SignInScreen({
 
   // Checks the emailed code. A good code gives `needs_new_password`, which `routeAttempt` shows.
   const onResetCode = async (resetCode: string) => {
-    const { isLoaded, signIn } = signInState;
-    if (!isLoaded || !signIn || resetLoading) return;
+    if (resetLoading) return;
     setResetLoading(true);
     setResetCodeError("");
     try {
-      const attempt: IncompleteSignIn = await withAuthTimeout(
-        signIn.attemptFirstFactor({ strategy: RESET_STRATEGY, code: resetCode }),
-        "attempt-first-factor",
-        stageTimeoutMs,
-      );
+      const attempt = await withAuthTimeout(signIn.verifyResetCode(resetCode), "attempt-first-factor", stageTimeoutMs);
       const status: string | null = attempt.status;
       const known = ["complete", "needs_new_password", "needs_second_factor", "needs_client_trust"];
       if (status && known.includes(status)) {
@@ -523,8 +495,7 @@ export function SignInScreen({
   };
 
   const onSignUp = async () => {
-    const { isLoaded, signUp: attempt } = signUpState;
-    if (!isLoaded || !attempt || submitting) return;
+    if (submitting) return;
     if (!email || !password) return fail(AUTH_MESSAGES.signUpFailed, AUTH_MESSAGES.missingFields);
     if (minPasswordLength && password.length < minPasswordLength) {
       return fail(AUTH_MESSAGES.signUpFailed, `Use at least ${minPasswordLength} characters for the password`);
@@ -538,8 +509,8 @@ export function SignInScreen({
     setSubmitting(true);
     setError("");
     try {
-      await attempt.create({ emailAddress: email, password });
-      await attempt.prepareEmailAddressVerification({ strategy: "email_code" });
+      await clerkCall(signUpAttempt.password({ emailAddress: email, password }));
+      await clerkCall(signUpAttempt.verifications.sendEmailCode());
       setPendingVerification(true);
     } catch (caught) {
       fail(AUTH_MESSAGES.signUpFailed, authErrorMessage(caught, AUTH_MESSAGES.signUpFailed));
@@ -549,15 +520,14 @@ export function SignInScreen({
   };
 
   const onVerify = async () => {
-    const { isLoaded, signUp: attempt, setActive } = signUpState;
-    if (!isLoaded || !attempt || !setActive || submitting) return;
+    if (submitting) return;
     if (!code) return fail(AUTH_MESSAGES.verifyFailed, AUTH_MESSAGES.missingCode);
     setSubmitting(true);
     setError("");
     try {
-      const result = await attempt.attemptEmailAddressVerification({ code });
-      if (result.status === "complete" && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
+      await clerkCall(signUpAttempt.verifications.verifyEmailCode({ code }));
+      if (signUpAttempt.status === "complete" && signUpAttempt.createdSessionId) {
+        await clerkCall(signUpAttempt.finalize());
         done();
       } else {
         fail(AUTH_MESSAGES.verifyFailed, AUTH_MESSAGES.needsAnotherStep);
