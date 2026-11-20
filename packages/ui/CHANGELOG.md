@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.54.0
+
+### Minor Changes
+
+- [#307](https://github.com/vvedantb/packages/pull/307) [`e7ad2ec`](https://github.com/vvedantb/packages/commit/e7ad2ec6839f372f8ef24bbea9a9903af898d666) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `BulkActionBar` gains `labels`: `"inline"` (default, icon plus label, label hidden below `sm`) or `"tooltip"` (icon-only at every width, label in a tooltip, skip-confirm hint as a corner badge). Set it per bar or app-wide with the `UiConfig` entry `BulkActionBar: { labels }`. New types `BulkActionBarConfig` and `BulkBarLabels`.
+
 ## 0.53.0
 
 ### Minor Changes
