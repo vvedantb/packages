@@ -32,7 +32,10 @@ import {
 } from "./totp";
 import { GoogleSignInButton, type AuthNavigationOptions } from "./GoogleSignInButton";
 
-export type SignInMode = "sign-in" | "sign-up";
+export type SignInMode = "sign-in" | "sign-up" | "reset-password";
+
+/** The first factor that emails a password-reset code. */
+const RESET_STRATEGY = "reset_password_email_code";
 
 /** The messages the screen can show. Generic: none names a provider. */
 export const AUTH_MESSAGES = {
@@ -66,6 +69,16 @@ export const AUTH_MESSAGES = {
   passwordTooShort: "Use a longer password",
   resetPasswordFailed: "Could not set the new password",
   setPassword: "Set password",
+  missingNewPassword: "Enter a new password",
+  confirmSignUpPasswordLabel: "Confirm password",
+  forgotPassword: "Forgot password?",
+  resetTitle: "Reset password",
+  resetSubtitle: "Enter your email and we will send you a code.",
+  resetNewPasswordDescription: "Choose a new password for your account.",
+  missingEmail: "Enter your email",
+  sendResetCode: "Send code",
+  sendResetFailed: "Could not send the code",
+  resendCode: "Send a new code",
 } as const;
 
 /**
@@ -104,11 +117,15 @@ function secondFactorCopy(strategy: SecondFactorStrategy, clientTrust: boolean) 
 }
 
 export type SignInScreenProps = AuthNavigationOptions & {
-  /** Default `"sign-in"`. `"sign-up"` creates the account and checks an emailed code. */
+  /**
+   * Default `"sign-in"`. `"sign-up"` creates the account and checks an emailed
+   * code. `"reset-password"` emails a code, checks it, then sets a new password
+   * and signs in.
+   */
   mode?: SignInMode;
-  /** Default "Welcome back", or "Create account" in `sign-up`. */
+  /** Default "Welcome back", "Create account" in `sign-up`, or "Reset password" in `reset-password`. */
   title?: string;
-  /** Default "Sign in to continue", or "Sign up to get started" in `sign-up`. */
+  /** Default "Sign in to continue", "Sign up to get started" in `sign-up`, or the reset hint in `reset-password`. */
   subtitle?: string;
   /** The app URL scheme, such as `"vibot"`, for the Google redirect `scheme://sso-callback`. */
   scheme: string;
@@ -120,9 +137,14 @@ export type SignInScreenProps = AuthNavigationOptions & {
   googleLabel?: string;
   /** In `sign-in`: the "Sign up" link in the footer. No link without it. */
   signUpHref?: Href;
-  /** In `sign-up`: the "Sign in" link in the footer. No link without it. */
+  /** In `sign-up` and `reset-password`: the "Sign in" link in the footer. No link without it. */
   signInHref?: Href;
-  /** Sign-up rejects a shorter password before sending it. Default: no check. */
+  /**
+   * In `sign-in`: the "Forgot password?" link under the password, to a route
+   * that renders `ResetPasswordScreen`. No link without it.
+   */
+  forgotPasswordHref?: Href;
+  /** Sign-up and the new-password step reject a shorter password before sending it. Default: no check. */
   minPasswordLength?: number;
   /** Default `"toast"`. `"inline"` shows errors under the fields. */
   errorDisplay?: "toast" | "inline";
@@ -158,7 +180,13 @@ export type SignInScreenProps = AuthNavigationOptions & {
  * code and checks it before the session starts. On success it calls
  * `onSuccess`, or `router.replace(afterAuthHref, replaceOptions)`.
  *
- * Forgot-password is not here: an app that needs it keeps its own screen.
+ * Sign-up has a confirm-password field: a mismatch blocks the submit and shows
+ * under the field, whatever `errorDisplay` is.
+ *
+ * `mode="reset-password"` (`ResetPasswordScreen`) is the forgot-password flow:
+ * email, then the emailed code, then a new password typed twice. It ends
+ * signed in, through the same second-factor step when the account has one.
+ * `forgotPasswordHref` links the sign-in form to it.
  */
 export function SignInScreen({
   mode = "sign-in",
@@ -173,6 +201,7 @@ export function SignInScreen({
   googleLabel,
   signUpHref,
   signInHref,
+  forgotPasswordHref,
   minPasswordLength,
   errorDisplay = "toast",
   testIDPrefix,
@@ -200,6 +229,11 @@ export function SignInScreen({
   const [pendingNewPassword, setPendingNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [signUpConfirm, setSignUpConfirm] = useState("");
+  const [mismatch, setMismatch] = useState(false);
+  const [pendingResetCode, setPendingResetCode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetCodeError, setResetCodeError] = useState("");
   const secondFactor = useSecondFactor({ stageTimeoutMs });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -207,6 +241,7 @@ export function SignInScreen({
   const passwordField = useRef<TextInput>(null);
   const confirmField = useRef<TextInput>(null);
   const signUp = mode === "sign-up";
+  const reset = mode === "reset-password";
   const id = (name: string) => `${testIDPrefix ?? mode}-${name}`;
 
   const fail = (heading: string, message: string) => {
@@ -289,9 +324,11 @@ export function SignInScreen({
       done();
     } else if (status === "needs_new_password") {
       setPendingFirstFactor(false);
+      setPendingResetCode(false);
       setPendingNewPassword(true);
     } else if (status === "needs_second_factor" || status === "needs_client_trust") {
       setPendingFirstFactor(false);
+      setPendingResetCode(false);
       await startSecondFactor(attempt, status === "needs_client_trust");
     } else if (status === "needs_first_factor" && afterCreate) {
       await startFirstFactor(attempt);
@@ -329,7 +366,7 @@ export function SignInScreen({
   const onNewPassword = async () => {
     const { isLoaded, signIn, setActive } = signInState;
     if (!isLoaded || !signIn || !setActive || submitting) return;
-    if (!newPassword) return fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.missingFields);
+    if (!newPassword) return fail(AUTH_MESSAGES.resetPasswordFailed, AUTH_MESSAGES.missingNewPassword);
     if (minPasswordLength && newPassword.length < minPasswordLength) {
       return fail(AUTH_MESSAGES.resetPasswordFailed, `Use at least ${minPasswordLength} characters for the password`);
     }
@@ -344,9 +381,15 @@ export function SignInScreen({
         "reset-password",
         stageTimeoutMs,
       );
-      if (result.status === "complete" && result.createdSessionId) {
+      // Clerk's `SignInStatus` omits `needs_client_trust`: widen before comparing.
+      const afterReset: string | null = result.status;
+      if (afterReset === "complete" && result.createdSessionId) {
         await withAuthTimeout(setActive({ session: result.createdSessionId }), "set-active", stageTimeoutMs);
         done();
+      } else if (afterReset === "needs_second_factor" || afterReset === "needs_client_trust") {
+        // A reset on an account with two-step verification: the code step, then the session.
+        setPendingNewPassword(false);
+        await startSecondFactor(result, afterReset === "needs_client_trust");
       } else if (onIncomplete) {
         onIncomplete(result);
       } else {
@@ -385,6 +428,80 @@ export function SignInScreen({
     }
   };
 
+  // Emails the reset code. Throws what the call throws.
+  const requestResetCode = async () => {
+    const { signIn } = signInState;
+    if (!signIn) return;
+    await withAuthTimeout(
+      signIn.create({ strategy: RESET_STRATEGY, identifier: email.trim() }),
+      "create",
+      stageTimeoutMs,
+    );
+  };
+
+  const onResetRequest = async () => {
+    const { isLoaded, signIn } = signInState;
+    if (!isLoaded || !signIn || submitting) return;
+    if (!email.trim()) return fail(AUTH_MESSAGES.sendResetFailed, AUTH_MESSAGES.missingEmail);
+    setSubmitting(true);
+    setError("");
+    try {
+      await requestResetCode();
+      setResetCodeError("");
+      setPendingResetCode(true);
+    } catch (caught) {
+      logAuthFailure("create", caught);
+      fail(AUTH_MESSAGES.sendResetFailed, authErrorMessage(caught, AUTH_MESSAGES.sendResetFailed));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onResetResend = async () => {
+    const { isLoaded, signIn } = signInState;
+    if (!isLoaded || !signIn || resetLoading) return;
+    setResetLoading(true);
+    setResetCodeError("");
+    try {
+      await requestResetCode();
+    } catch (caught) {
+      logAuthFailure("create", caught);
+      setResetCodeError(authErrorMessage(caught, AUTH_MESSAGES.sendResetFailed));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Checks the emailed code. A good code gives `needs_new_password`, which `routeAttempt` shows.
+  const onResetCode = async (resetCode: string) => {
+    const { isLoaded, signIn } = signInState;
+    if (!isLoaded || !signIn || resetLoading) return;
+    setResetLoading(true);
+    setResetCodeError("");
+    try {
+      const attempt: IncompleteSignIn = await withAuthTimeout(
+        signIn.attemptFirstFactor({ strategy: RESET_STRATEGY, code: resetCode }),
+        "attempt-first-factor",
+        stageTimeoutMs,
+      );
+      const status: string | null = attempt.status;
+      const known = ["complete", "needs_new_password", "needs_second_factor", "needs_client_trust"];
+      if (status && known.includes(status)) {
+        await routeAttempt(attempt, false);
+      } else if (onIncomplete) {
+        onIncomplete(attempt);
+      } else {
+        warnIncomplete(attempt);
+        setResetCodeError(AUTH_MESSAGES.needsAnotherStep);
+      }
+    } catch (caught) {
+      if (isAuthTimeoutError(caught)) logAuthFailure("attempt-first-factor", caught);
+      setResetCodeError(authErrorMessage(caught, AUTH_MESSAGES.verifyFailed));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const onSecondFactor = async (secondFactorCode: string) => {
     const result = await secondFactor.submit(secondFactorCode);
     if (result.ok) done();
@@ -395,6 +512,8 @@ export function SignInScreen({
     setPendingSecondFactor(false);
     setPendingFirstFactor(false);
     setFirstError("");
+    setPendingResetCode(false);
+    setResetCodeError("");
     setPendingNewPassword(false);
     setNewPassword("");
     setConfirmPassword("");
@@ -409,6 +528,12 @@ export function SignInScreen({
     if (!email || !password) return fail(AUTH_MESSAGES.signUpFailed, AUTH_MESSAGES.missingFields);
     if (minPasswordLength && password.length < minPasswordLength) {
       return fail(AUTH_MESSAGES.signUpFailed, `Use at least ${minPasswordLength} characters for the password`);
+    }
+    if (password !== signUpConfirm) {
+      // Always under the confirm field, also with `errorDisplay="toast"`.
+      setError("");
+      setMismatch(true);
+      return;
     }
     setSubmitting(true);
     setError("");
@@ -444,22 +569,23 @@ export function SignInScreen({
     }
   };
 
-  const linkHref = signUp ? signInHref : signUpHref;
+  const toSignIn = signUp || reset;
+  const linkHref = toSignIn ? signInHref : signUpHref;
   const footerRow = (
     <>
       {linkHref && !pendingVerification ? (
         <>
           <Text className="font-instrument-sans text-sm" style={textStyle("muted", colorScheme)}>
-            {signUp ? "Already have an account?" : "Don't have an account?"}
+            {reset ? "Remembered your password?" : signUp ? "Already have an account?" : "Don't have an account?"}
           </Text>
           <Button
-            testID={id(signUp ? "sign-in-link" : "sign-up-link")}
+            testID={id(toSignIn ? "sign-in-link" : "sign-up-link")}
             variant="link"
             size="sm"
             fullWidth={false}
             onPress={() => router.push(linkHref)}
           >
-            {signUp ? "Sign in" : "Sign up"}
+            {toSignIn ? "Sign in" : "Sign up"}
           </Button>
         </>
       ) : null}
@@ -473,7 +599,7 @@ export function SignInScreen({
       <AuthScreen
         testID={id("new-password-screen")}
         title={AUTH_MESSAGES.newPasswordTitle}
-        subtitle={AUTH_MESSAGES.newPasswordDescription}
+        subtitle={reset ? AUTH_MESSAGES.resetNewPasswordDescription : AUTH_MESSAGES.newPasswordDescription}
         header={header}
       >
         <PasswordInput
@@ -508,9 +634,38 @@ export function SignInScreen({
           {AUTH_MESSAGES.setPassword}
         </Button>
         <Button testID={id("new-password-back")} variant="ghost" onPress={onSecondFactorBack}>
-          Use a different account
+          {reset ? "Use a different email" : "Use a different account"}
         </Button>
       </AuthScreen>
+    );
+  }
+
+  if (pendingResetCode && !pendingSecondFactor) {
+    return (
+      <SecondFactorScreen
+        key="reset-code"
+        title={AUTH_MESSAGES.emailCodeTitle}
+        description={AUTH_MESSAGES.emailCodeDescription}
+        footer={
+          <Button
+            testID={id("resend")}
+            variant="link"
+            size="sm"
+            fullWidth={false}
+            disabled={resetLoading}
+            onPress={() => void onResetResend()}
+          >
+            {AUTH_MESSAGES.resendCode}
+          </Button>
+        }
+        onSubmit={onResetCode}
+        error={resetCodeError}
+        loading={resetLoading}
+        onBack={onSecondFactorBack}
+        backLabel="Use a different email"
+        header={header}
+        testIDPrefix={id("email-code")}
+      />
     );
   }
 
@@ -638,12 +793,14 @@ export function SignInScreen({
   return (
     <AuthScreen
       testID={id("screen")}
-      title={title ?? (signUp ? "Create account" : "Welcome back")}
-      subtitle={subtitle ?? (signUp ? "Sign up to get started" : "Sign in to continue")}
+      title={title ?? (reset ? AUTH_MESSAGES.resetTitle : signUp ? "Create account" : "Welcome back")}
+      subtitle={
+        subtitle ?? (reset ? AUTH_MESSAGES.resetSubtitle : signUp ? "Sign up to get started" : "Sign in to continue")
+      }
       header={header}
       footer={hasFooter ? footerRow : undefined}
     >
-      {showGoogle ? (
+      {showGoogle && !reset ? (
         <>
           <GoogleSignInButton
             testID={id("google")}
@@ -666,33 +823,73 @@ export function SignInScreen({
         autoComplete="email"
         textContentType="emailAddress"
         keyboardType="email-address"
-        returnKeyType="next"
-        submitBehavior="submit"
-        onSubmitEditing={() => passwordField.current?.focus()}
+        returnKeyType={reset ? "go" : "next"}
+        submitBehavior={reset ? undefined : "submit"}
+        onSubmitEditing={() => (reset ? void onResetRequest() : passwordField.current?.focus())}
         value={email}
         placeholder="Email"
         onChangeText={setEmail}
       />
-      <PasswordInput
-        testID={id("password")}
-        ref={passwordField}
-        accessibilityLabel="Password"
-        autoCapitalize="none"
-        autoComplete={signUp ? "new-password" : "password"}
-        textContentType={signUp ? "newPassword" : "password"}
-        returnKeyType="go"
-        value={password}
-        placeholder="Password"
-        onChangeText={setPassword}
-        onSubmitEditing={() => void (signUp ? onSignUp() : onSignIn())}
-      />
+      {reset ? null : (
+        <PasswordInput
+          testID={id("password")}
+          ref={passwordField}
+          accessibilityLabel="Password"
+          autoCapitalize="none"
+          autoComplete={signUp ? "new-password" : "password"}
+          textContentType={signUp ? "newPassword" : "password"}
+          returnKeyType={signUp ? "next" : "go"}
+          submitBehavior={signUp ? "submit" : undefined}
+          value={password}
+          placeholder="Password"
+          onChangeText={(text) => {
+            setPassword(text);
+            setMismatch(false);
+          }}
+          onSubmitEditing={() => (signUp ? confirmField.current?.focus() : void onSignIn())}
+        />
+      )}
+      {signUp ? (
+        <>
+          <PasswordInput
+            testID={id("confirm-password")}
+            ref={confirmField}
+            accessibilityLabel={AUTH_MESSAGES.confirmSignUpPasswordLabel}
+            autoCapitalize="none"
+            autoComplete="new-password"
+            textContentType="newPassword"
+            returnKeyType="go"
+            value={signUpConfirm}
+            placeholder={AUTH_MESSAGES.confirmSignUpPasswordLabel}
+            onChangeText={(text) => {
+              setSignUpConfirm(text);
+              setMismatch(false);
+            }}
+            onSubmitEditing={() => void onSignUp()}
+          />
+          <FieldError testID={id("confirm-error")} message={mismatch ? AUTH_MESSAGES.passwordMismatch : ""} />
+        </>
+      ) : null}
+      {!signUp && !reset && forgotPasswordHref ? (
+        <View className="items-end">
+          <Button
+            testID={id("forgot-password")}
+            variant="link"
+            size="sm"
+            fullWidth={false}
+            onPress={() => router.push(forgotPasswordHref)}
+          >
+            {AUTH_MESSAGES.forgotPassword}
+          </Button>
+        </View>
+      ) : null}
       <FieldError testID={id("error")} message={error} />
       <Button
         testID={id("submit")}
         loading={submitting}
-        onPress={() => void (signUp ? onSignUp() : onSignIn())}
+        onPress={() => void (reset ? onResetRequest() : signUp ? onSignUp() : onSignIn())}
       >
-        {signUp ? "Create account" : "Sign in"}
+        {reset ? AUTH_MESSAGES.sendResetCode : signUp ? "Create account" : "Sign in"}
       </Button>
       {/* Bot protection mounts its widget here on web sign-up. */}
       {signUp ? <View nativeID="clerk-captcha" /> : null}
@@ -705,4 +902,11 @@ export type SignUpScreenProps = Omit<SignInScreenProps, "mode">;
 /** `SignInScreen` with `mode="sign-up"`. */
 export function SignUpScreen(props: SignUpScreenProps) {
   return <SignInScreen {...props} mode="sign-up" />;
+}
+
+export type ResetPasswordScreenProps = Omit<SignInScreenProps, "mode">;
+
+/** `SignInScreen` with `mode="reset-password"`: the forgot-password flow. */
+export function ResetPasswordScreen(props: ResetPasswordScreenProps) {
+  return <SignInScreen {...props} mode="reset-password" />;
 }
