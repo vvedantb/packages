@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Text, View, type TextInput } from "react-native";
-import { useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { useSignIn, useSignUp } from "@clerk/expo/legacy";
 import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
 import { textStyle } from "../controlStyles";

@@ -1,9 +1,9 @@
 /**
- * Stub for `@clerk/clerk-expo`, used only by `pnpm typecheck` (see
+ * Stub for `@clerk/expo` and `@clerk/expo/legacy`, used only by `pnpm typecheck` (see
  * `peers.d.ts`). `pnpm typecheck:consumer` leaves it out and uses the real types.
  */
 
-declare module "@clerk/clerk-expo" {
+declare module "@clerk/expo" {
   import type * as React from "react";
 
   export interface TokenCache {
@@ -12,7 +12,7 @@ declare module "@clerk/clerk-expo" {
     clearToken?(key: string): void | Promise<void>;
   }
   export const ClerkProvider: React.ComponentType<{
-    publishableKey?: string;
+    publishableKey: string;
     tokenCache?: TokenCache;
     children?: React.ReactNode;
   }>;
@@ -25,6 +25,36 @@ declare module "@clerk/clerk-expo" {
     orgId?: string | null;
     orgRole?: string | null;
   };
+  type SetActive = (params: { session: string | null }) => Promise<void>;
+  export function useUser():
+    | { isLoaded: false; isSignedIn: undefined; user: undefined }
+    | { isLoaded: true; isSignedIn: false; user: null }
+    | {
+        isLoaded: true;
+        isSignedIn: true;
+        user: {
+          passwordEnabled: boolean;
+          updatePassword(params: {
+            newPassword: string;
+            currentPassword?: string;
+            signOutOfOtherSessions?: boolean;
+          }): Promise<unknown>;
+          delete(): Promise<void>;
+        };
+      };
+  export function useSSO(): {
+    startSSOFlow(params: { strategy: string; redirectUrl?: string }): Promise<{
+      createdSessionId: string | null;
+      setActive?: SetActive;
+    }>;
+  };
+  export function isClerkAPIResponseError(
+    error: unknown,
+  ): error is { errors: Array<{ code: string; message: string; longMessage?: string }> };
+}
+
+/** The Core 2 hooks: `{ isLoaded, signIn, setActive }`. */
+declare module "@clerk/expo/legacy" {
   type SetActive = (params: { session: string | null }) => Promise<void>;
   interface Attempt {
     status: string | null;
@@ -85,13 +115,4 @@ declare module "@clerk/clerk-expo" {
         };
         setActive: SetActive;
       };
-  export function useSSO(): {
-    startSSOFlow(params: { strategy: string; redirectUrl?: string }): Promise<{
-      createdSessionId: string | null;
-      setActive?: SetActive;
-    }>;
-  };
-  export function isClerkAPIResponseError(
-    error: unknown,
-  ): error is { errors: Array<{ code: string; message: string; longMessage?: string }> };
 }

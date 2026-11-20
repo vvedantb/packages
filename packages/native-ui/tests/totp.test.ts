@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 // `submitTotpSecondFactor` (0.10.0), ported from Eva. The sign-in resource is
 // a mock: no network and no real sign-in. Clerk is stubbed as in auth.test.ts.
 
-vi.mock("@clerk/clerk-expo", () => ({
-  useSignIn: vi.fn(),
+vi.mock("@clerk/expo/legacy", () => ({ useSignIn: vi.fn() }));
+vi.mock("@clerk/expo", () => ({
   isClerkAPIResponseError: (error: unknown) =>
     typeof error === "object" && error !== null && "clerkError" in error,
 }));

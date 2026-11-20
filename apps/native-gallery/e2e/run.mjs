@@ -371,6 +371,43 @@ const scenarios = {
     await press("auth-mode-sign-up");
     await see("sign-up-confirm-password");
     shot("auth-sign-up-dark-large");
+
+    // Change password (still dark, larger text): nothing typed, a mismatch, a
+    // wrong current password, then the right one. The mock takes `correct-horse`.
+    await press("auth-mode-change-password");
+    await see("change-password-submit");
+    shot("auth-change-password-dark-large");
+    await press("change-password-submit");
+    await see("Enter your current password");
+    await fill("change-password-current", "wrong-password");
+    await fill("change-password-new", "abcdefgh1");
+    await fill("change-password-confirm", "abcdefgh");
+    await press("change-password-submit");
+    await see("The passwords do not match");
+    await fill("change-password-confirm", "1");
+    await press("change-password-submit");
+    await see("Password is incorrect");
+    await gone("code:password-changed");
+    await press("auth-mode-sign-in");
+    await press("auth-mode-change-password");
+    await fill("change-password-current", "correct-horse");
+    await fill("change-password-new", "abcdefgh1");
+    await fill("change-password-confirm", "abcdefgh1");
+    await press("change-password-submit");
+    await see("code:password-changed");
+
+    // Delete account: the wrong word leaves the button off, the right word deletes.
+    await press("auth-mode-delete-account");
+    await see("delete-account-submit");
+    shot("auth-delete-account-dark-large");
+    await fill("delete-account-confirm", "remove");
+    await press("delete-account-submit");
+    await gone("code:account-deleted");
+    await press("auth-mode-sign-in");
+    await press("auth-mode-delete-account");
+    await fill("delete-account-confirm", "delete");
+    await press("delete-account-submit");
+    await see("code:account-deleted");
   },
   async screens() {
     await fresh();

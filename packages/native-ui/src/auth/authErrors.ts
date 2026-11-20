@@ -1,4 +1,4 @@
-import { isClerkAPIResponseError } from "@clerk/clerk-expo";
+import { isClerkAPIResponseError } from "@clerk/expo";
 
 /** Words that must not reach the user: the auth provider and stack names. */
 const PRODUCT_NAMES = /\b(clerk|convex)\b/gi;

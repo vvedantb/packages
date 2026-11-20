@@ -1,17 +1,20 @@
 import type { ReactNode } from "react";
-import { ClerkLoaded, ClerkProvider, useAuth as useClerkAuth, type TokenCache } from "@clerk/clerk-expo";
+import { ClerkLoaded, ClerkProvider, useAuth as useClerkAuth, type TokenCache } from "@clerk/expo";
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 
 export type AuthProvidersProps = {
   children: ReactNode;
-  /** The Clerk publishable key. The app reads it from its own config; this component does not check it. */
+  /**
+   * The Clerk publishable key. The app reads it from its own config; this component does not check it.
+   * `@clerk/expo` needs it: pass it unless `clerk` is `false`.
+   */
   publishableKey?: string;
-  /** `tokenCache` from `@clerk/clerk-expo/token-cache`, so the session survives a restart. */
+  /** `tokenCache` from `@clerk/expo/token-cache`, so the session survives a restart. */
   tokenCache?: TokenCache;
   /** A Convex client. Without one, the children sit under Clerk only (vmem). */
   convex?: ConvexReactClient | null;
-  /** `useAuth` from `@clerk/clerk-expo`, for `ConvexProviderWithClerk`. Default: the one this package imports. */
+  /** `useAuth` from `@clerk/expo`, for `ConvexProviderWithClerk`. Default: the one this package imports. */
   useAuth?: typeof useClerkAuth;
   /** Wrap the children in `ClerkLoaded`, so they wait for the session. Default `true`. */
   loaded?: boolean;
@@ -42,7 +45,7 @@ export function AuthProviders({
   }
   const inner = loaded ? <ClerkLoaded>{children}</ClerkLoaded> : children;
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+    <ClerkProvider publishableKey={publishableKey ?? ""} tokenCache={tokenCache}>
       {convex ? (
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           {inner}

@@ -1757,7 +1757,7 @@ describe("AI parts (package contract)", () => {
     // Highlighting: the optional peer prism-react-renderer, reached only through the lazy loader in src/highlight.ts.
     expect(pkg.peerDependencies["prism-react-renderer"]).toBe(">=2.0.0");
     expect(pkg.peerDependenciesMeta["prism-react-renderer"]).toEqual({ optional: true });
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/clerk-expo", "@types/react", "react", "typescript", "vitest"]);
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/expo", "@types/react", "react", "typescript", "vitest"]);
     expect(pkg.dependencies).toBeUndefined();
   });
 

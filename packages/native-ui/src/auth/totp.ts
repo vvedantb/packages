@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSignIn } from "@clerk/clerk-expo";
+import { useSignIn } from "@clerk/expo/legacy";
 import {
   authErrorMessage,
   DEFAULT_STAGE_TIMEOUT_MS,

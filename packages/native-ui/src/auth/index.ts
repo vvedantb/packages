@@ -1,5 +1,5 @@
 // Clerk + Convex providers and the shared sign-in and sign-up screens. On
-// `@vvedantb/native-ui/auth` only: they import `@clerk/clerk-expo`, `convex`,
+// `@vvedantb/native-ui/auth` only: they import `@clerk/expo`, `convex`,
 // `expo-auth-session`, `expo-web-browser` and `expo-router`, and Metro does not
 // tree-shake.
 export { AuthProviders } from "./AuthProviders";
@@ -36,6 +36,8 @@ export type {
   SignInScreenProps,
   SignUpScreenProps,
 } from "./SignInScreen";
+export { ChangePasswordScreen, DeleteAccountScreen, ACCOUNT_MESSAGES } from "./AccountScreens";
+export type { ChangePasswordScreenProps, DeleteAccountScreenProps } from "./AccountScreens";
 export { SecondFactorScreen } from "./SecondFactorScreen";
 export type { SecondFactorScreenProps } from "./SecondFactorScreen";
 export {
