@@ -2,6 +2,7 @@ import * as React from "react";
 import type { ClassValue } from "clsx";
 import { cn } from "../utils/cn";
 import type { AccordionConfig } from "./accordion";
+import type { BulkActionBarConfig } from "./bulk-action-bar";
 import type { ActivityQuestionCardConfig } from "../ai-elements/activity-question";
 import type { ActivityTasksConfig } from "../ai-elements/activity-shared";
 import type { ArtifactConfig } from "../ai-elements/artifact";
@@ -82,6 +83,7 @@ export interface UiConfig {
   Artifact?: ArtifactConfig;
   Attachments?: AttachmentsConfig;
   Badge?: BadgeConfig;
+  BulkActionBar?: BulkActionBarConfig;
   Button?: ButtonConfig;
   ButtonGroup?: ButtonGroupConfig;
   Calendar?: CalendarConfig;
