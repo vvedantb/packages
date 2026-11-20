@@ -4,7 +4,7 @@
 // Covers the five flows that used to live in .maestro/, plus pager-linked tabs. Each step
 // prints one JSON line; a failure saves screenshots/FAIL-<scenario>.png and exits 1.
 //
-// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog messageSheet menuSheet contextMenu chatHold questionRecord chatImage chatOverlays)
+// Usage: node e2e/run.mjs [scenario ...]   (scenarios: screens sections dropdown composer sheets nativeSheet select pager dialog updatePrompt messageSheet menuSheet contextMenu chatHold questionRecord chatImage chatOverlays)
 import { resolve } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
@@ -379,6 +379,67 @@ const scenarios = {
     shot("layering-alert-dialog-open");
     await press("alert-cancel");
     await gone("alert-cancel");
+  },
+  // The update prompt: Later, Download and "Install from V Store"; the notice
+  // when V Store is missing; one action only; and the checker, which shows
+  // nothing for no update and remembers Later. Links go to the section's
+  // recorder, so nothing opens outside the gallery.
+  async updatePrompt() {
+    await fresh();
+    await press("link-updates");
+    await see("section-updates");
+    await press("update-open-both");
+    await see("update-download");
+    await see("update-vstore");
+    shot("update-prompt-both");
+    await press("update-later");
+    await gone("update-later");
+    await see("text=Later");
+    // "Install from V Store" only opens the V Store link.
+    await press("update-open-both");
+    await press("update-vstore");
+    await gone("update-later");
+    await see("Opened vstore://updates");
+    // V Store missing: the button goes, the notice shows, Download stays.
+    await press("update-open-missing");
+    await press("update-vstore");
+    await see("update-vstore-missing");
+    await gone("update-vstore");
+    await see("update-download");
+    shot("update-prompt-vstore-missing");
+    await press("update-later");
+    await gone("update-later");
+    // Only one of the two actions.
+    await press("update-open-vstore-only");
+    await see("update-vstore");
+    if (visible("update-download")) throw new AgentError("Download shows in the V Store only case");
+    await press("update-later");
+    await gone("update-later");
+    await press("update-open-download-only");
+    await see("update-download");
+    if (visible("update-vstore")) throw new AgentError("V Store shows in the Download only case");
+    await press("update-later");
+    await gone("update-later");
+    // Long text wraps and every action stays reachable.
+    await press("update-open-long");
+    await see("update-download");
+    await see("update-vstore");
+    shot("update-prompt-long-text");
+    await press("update-later");
+    await gone("update-later");
+    // The checker.
+    await press("checker-none");
+    await see("No update: nothing is shown");
+    if (visible("checker-later")) throw new AgentError("the checker shows a prompt for no update");
+    await press("checker-newer");
+    await see("checker-download");
+    shot("update-checker-prompt");
+    await press("checker-later");
+    await gone("checker-later");
+    await press("checker-newer");
+    await see("Update found");
+    await settle();
+    if (visible("checker-later")) throw new AgentError("the checker offers a version Later hid");
   },
   // The message action sheet slides up like a sheet and is gone once closed.
   async menuSheet() {
