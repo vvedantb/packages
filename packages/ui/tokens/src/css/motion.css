@@ -157,6 +157,7 @@
 
   html[data-page-motion="off"] .t-modal,
   html[data-page-motion="off"] .t-modal.is-closing,
+  html[data-page-motion="off"] .t-modal[data-state="closed"],
   html[data-page-motion="off"] .t-tabs-pill {
     transition-duration: 0s !important;
   }
