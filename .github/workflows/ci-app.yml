@@ -10,6 +10,15 @@ name: App CI (reusable)
 # parallel commands, a node_modules cache and a blobless checkout -- all opt-in,
 # so callers keep today's behaviour until they turn them on.
 #
+# Two more opt-ins, both off by default:
+#   - bun_version installs that Bun (oven-sh/setup-bun, pinned) before the
+#     commands, so a command can run `bun test`.
+#   - affected_tests computes a test scope from the PR diff and exports
+#     VV_TEST_SCOPE (changed|full) and VV_TEST_CHANGED (--changed=origin/<base>
+#     or empty) to every command, including the parallel runner. A command
+#     appends $VV_TEST_CHANGED to its test runner to run only the tests the diff
+#     can reach; pushes to main and any non-source change run everything.
+#
 # Call it with:
 #   uses: vvedantb/packages/.github/workflows/ci-app.yml@main
 # See the README ("Reusable app CI workflow") for caller examples.
@@ -51,6 +60,18 @@ on:
         default: ""
       env:
         description: "Non-secret environment for every step, as NAME=value lines. HUSKY=0 is always set."
+        type: string
+        default: ""
+      bun_version:
+        description: "When set, installs that Bun with oven-sh/setup-bun (pinned to a commit SHA) before the commands, so a command can run `bun test`. Empty (default) installs no Bun and leaves callers unchanged."
+        type: string
+        default: ""
+      affected_tests:
+        description: "When true, compute a test scope from the PR diff and export VV_TEST_SCOPE (changed or full) and VV_TEST_CHANGED (--changed=origin/<base> when changed, empty otherwise) to every command, including the parallel runner. A command appends $VV_TEST_CHANGED to its test runner. Scope is 'changed' only on a pull_request whose every changed file is an added or modified source file (.ts .tsx .js .jsx .mjs .cjs; .md/.mdx ignored) and none matches a full-run pattern; any delete, rename, config/package.json/lockfile/snapshot/generated/.d.ts/.github/patches change, or a push to main, gives 'full'. Requires fetch_depth: 0 (full history) for the merge-base. Default false leaves callers unchanged."
+        type: boolean
+        default: false
+      full_run_paths:
+        description: "Extra extended-regex lines (one per line), each matched against every changed path; a match forces a full test run. Only used when affected_tests is true."
         type: string
         default: ""
       keep_going:
@@ -154,6 +175,14 @@ jobs:
           cache: ${{ inputs.package_manager == 'npm' && 'npm' || '' }}
           cache-dependency-path: ${{ inputs.package_manager == 'npm' && format('{0}/package-lock.json', inputs.working_directory) || '' }}
 
+      # Install Bun only when the caller asks for it, so a command can run
+      # `bun test`. Pinned to a commit SHA (v2.2.0) rather than a moving tag.
+      - name: Install Bun
+        if: ${{ inputs.bun_version != '' }}
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ inputs.bun_version }}
+
       # node_modules itself, on an exact key only (no restore-keys): a partial
       # node_modules is not safe to reuse. An exact hit means the lockfile is
       # unchanged and a full, matching node_modules is already in place, so the
@@ -210,6 +239,138 @@ jobs:
       - name: Prune the pnpm store
         if: ${{ inputs.package_manager == 'pnpm' && steps.node-modules-cache.outputs.cache-hit != 'true' && steps.pnpm-cache.outputs.cache-hit != 'true' }}
         run: pnpm store prune
+
+      # Decide the test scope from the PR diff and export it to every later
+      # step (via GITHUB_ENV, so the command runner's `bash -c` children inherit
+      # it too). VV_TEST_SCOPE is `changed` or `full`; VV_TEST_CHANGED is
+      # `--changed=origin/<base>` when changed, empty otherwise. Skipped unless
+      # affected_tests is true, so default callers see neither variable and run
+      # everything. Needs full history (fetch_depth: 0) for a reliable
+      # merge-base; fails with a clear message when the checkout is shallow.
+      - name: Compute test scope
+        if: ${{ inputs.affected_tests }}
+        env:
+          FULL_RUN_PATHS: ${{ inputs.full_run_paths }}
+        run: |
+          set -euo pipefail
+
+          emit_full() { # $1 = reason
+            {
+              echo "VV_TEST_SCOPE=full"
+              echo "VV_TEST_CHANGED="
+            } >> "$GITHUB_ENV"
+            echo "Test scope: full -- $1"
+            {
+              echo "### Test scope"
+              echo
+              echo "**full** -- $1"
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          emit_changed() { # $1 = base branch
+            {
+              echo "VV_TEST_SCOPE=changed"
+              echo "VV_TEST_CHANGED=--changed=origin/$1"
+            } >> "$GITHUB_ENV"
+            echo "Test scope: changed (--changed=origin/$1) -- every changed file is reachable source"
+            {
+              echo "### Test scope"
+              echo
+              echo "**changed** -- \`--changed=origin/$1\`; every changed file is reachable source"
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          # Only a pull_request can be narrowed; pushes to main and everything
+          # else run the full suite.
+          if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
+            emit_full "event ${GITHUB_EVENT_NAME} is not a pull_request"
+            exit 0
+          fi
+
+          BASE="${GITHUB_BASE_REF:-}"
+          if [ -z "$BASE" ]; then
+            emit_full "no base branch ref on this event"
+            exit 0
+          fi
+
+          # A reliable merge-base needs the full history, not a shallow clone.
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            echo "::error::affected_tests needs the full history. Set fetch_depth: 0 on the caller so a merge-base with origin/$BASE can be found."
+            exit 1
+          fi
+
+          # Make sure origin/<base> exists locally (checkout of a PR ref does not
+          # always create it), then find the merge-base.
+          if ! git rev-parse --verify --quiet "refs/remotes/origin/$BASE" >/dev/null; then
+            git fetch --no-tags --filter=blob:none origin "+refs/heads/$BASE:refs/remotes/origin/$BASE"
+          fi
+          if ! MB="$(git merge-base "refs/remotes/origin/$BASE" HEAD)"; then
+            echo "::error::Could not find a merge-base between HEAD and origin/$BASE. Set fetch_depth: 0 on the caller."
+            exit 1
+          fi
+
+          # Full-run patterns (extended regex, matched against each path). A path
+          # that matches any of these forces a full run even when its extension
+          # looks like source. Each element is indented for YAML; the leading
+          # whitespace is part of the array-literal layout, not the pattern.
+          patterns=(
+            '(^|/)[^/]*\.config\.[^/]+$'
+            '(^|/)vitest[^/]*'
+            '(^|/)vite[^/]*'
+            '(^|/)bunfig[^/]*'
+            '(^|/)tsconfig[^/]*'
+            '(^|/)setup[^/]*'
+            '(^|/)tests/setup[^/]*'
+            '\.d\.ts$'
+            '(^|/)_generated/'
+            '\.snap$'
+            '^\.github/'
+            '(^|/)patches/'
+            '(^|/)package\.json$'
+            '(^|/)(pnpm-lock\.yaml|package-lock\.json|yarn\.lock|bun\.lock|bun\.lockb)$'
+          )
+          # Append any caller extras, one regex per line.
+          if [ -n "${FULL_RUN_PATHS:-}" ]; then
+            while IFS= read -r extra; do
+              [ -z "${extra//[[:space:]]/}" ] && continue
+              patterns+=("$extra")
+            done <<< "$FULL_RUN_PATHS"
+          fi
+
+          scope=changed
+          reason=
+          while IFS=$'\t' read -r status path _rest; do
+            [ -z "$status" ] && continue
+            # Only straight adds and modifies can be narrowed. A delete, rename,
+            # copy or type change (status not A/M) forces a full run.
+            case "$status" in
+              A|M) ;;
+              *) scope=full; reason="$path ($status: a delete, rename or other change)"; break ;;
+            esac
+            # Full-run pattern match wins over the extension check below.
+            matched=
+            for pat in "${patterns[@]}"; do
+              if printf '%s' "$path" | grep -Eq -- "$pat"; then matched="$pat"; break; fi
+            done
+            if [ -n "$matched" ]; then
+              scope=full; reason="$path (full-run pattern: $matched)"; break
+            fi
+            # .md/.mdx are ignored; source extensions are narrowable; anything
+            # else forces a full run.
+            case "$path" in
+              *.md|*.mdx) ;;
+              *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs) ;;
+              *) scope=full; reason="$path (not a source or markdown file)"; break ;;
+            esac
+          done < <(git diff --name-status "$MB"..HEAD)
+
+          if [ "$scope" = "changed" ]; then
+            emit_changed "$BASE"
+          else
+            emit_full "$reason"
+          fi
 
       # Write the shared command runner once; the Checks and End-to-end
       # steps both run it. It lives here (not as a repo file) because the

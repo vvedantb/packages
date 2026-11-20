@@ -481,9 +481,22 @@ It does this:
 3. Installs (`pnpm install --frozen-lockfile`, or `npm ci`), with `HUSKY=0`.
 4. Runs each line of `commands` as its own check. A failure does not stop the next line (set `keep_going: false` to stop at the first). With `parallel: true` the lines run at once instead of in order. Either way it records each command's wall time, writes a table to the job summary, and fails at the end listing every failed command.
 5. Runs `vvedantb-doctor` from the caller's installed `@vvedantb/config`, even when a check failed. Drift fails the job. No input turns it off: record an exception as a waiver with a reason in `.vvedantb-doctor.json`. A caller without `@vvedantb/config` fails with a message that says to add it.
-6. Optionally installs Playwright browsers and runs `e2e_command` (always serial), then uploads `failure_artifact_paths` if the job failed.
+6. With `bun_version` set, installs that Bun (pinned `oven-sh/setup-bun`) before the commands.
+7. With `affected_tests: true`, decides the test scope from the PR diff before the commands and exports `VV_TEST_SCOPE` and `VV_TEST_CHANGED` to every command (see "Affected tests" below).
+8. Optionally installs Playwright browsers and runs `e2e_command` (always serial), then uploads `failure_artifact_paths` if the job failed.
 
-The whole thing is one job on one runner: splitting it would add another runner pickup and another setup. The speed inputs (`parallel`, `cache_node_modules`, blobless checkout) are opt-in, so a caller keeps today's behaviour until it turns them on. None of them hides a failure: no command is retried, skipped or allowed to pass.
+The whole thing is one job on one runner: splitting it would add another runner pickup and another setup. The speed inputs (`parallel`, `cache_node_modules`, `affected_tests`, blobless checkout) are opt-in, so a caller keeps today's behaviour until it turns them on. None of them hides a failure: no command is retried, skipped or allowed to pass.
+
+### Affected tests
+
+With `affected_tests: true` the workflow computes the test scope once, before the commands, and exports it to every command (including the parallel runner's `bash -c` children):
+
+- `VV_TEST_SCOPE` is `changed` or `full`.
+- `VV_TEST_CHANGED` is `--changed=origin/<base branch>` when the scope is `changed`, and empty when it is `full`.
+
+A command appends `$VV_TEST_CHANGED` to its test runner, for example `bun test --parallel $VV_TEST_CHANGED` or `vitest run $VV_TEST_CHANGED`. On a full run the variable is empty and the runner runs everything. The scope is `changed` only on a `pull_request` whose every changed file is an added or modified source file (`.ts .tsx .js .jsx .mjs .cjs`; `.md`/`.mdx` are ignored) and none matches a full-run pattern: config files (`*.config.*`, `vitest*`, `vite*`, `bunfig*`, `tsconfig*`), test setup files (`setup*`, `**/tests/setup*`), `*.d.ts`, generated code (`_generated/`), snapshots, `.github/**`, `patches/**`, any `package.json`, lockfiles, plus the caller's `full_run_paths`. Any delete or rename, any other file, or a push to `main`, gives `full`. The workflow prints the decision and the first file that forced a full run to the log and the step summary.
+
+`affected_tests` needs `fetch_depth: 0` so a merge-base with `origin/<base>` can be found; a shallow checkout fails with a clear message. A narrowed run that selects no tests must exit 0 (`--pass-with-no-tests` for Bun, `--passWithNoTests` for Vitest); a full run with no tests should still fail.
 
 The caller keeps `on:` triggers, `concurrency` and the job `name`.
 
@@ -500,6 +513,9 @@ The caller keeps `on:` triggers, `concurrency` and the job `name`.
 | `fetch_depth` | number | `1` | Checkout depth. Use `0` for a step that diffs against the merge base (eva); `0` is a blobless checkout (`filter: blob:none`) |
 | `install_command` | string | empty | Replaces the default install |
 | `env` | string | empty | Non-secret `NAME=value` lines for every step |
+| `bun_version` | string | empty | When set, installs that Bun with `oven-sh/setup-bun` (pinned to a commit SHA) before the commands, so a command can run `bun test`. Empty installs no Bun |
+| `affected_tests` | boolean | `false` | When `true`, compute a test scope from the PR diff and export `VV_TEST_SCOPE` (`changed` or `full`) and `VV_TEST_CHANGED` (`--changed=origin/<base>` when `changed`, empty otherwise) to every command. Append `$VV_TEST_CHANGED` to a test runner to run only the tests the diff can reach. Needs `fetch_depth: 0`. See below |
+| `full_run_paths` | string | empty | Extra extended-regex lines (one per line), each matched against every changed path; a match forces a full test run. Only used with `affected_tests: true` |
 | `keep_going` | boolean | `true` | Run every command, or stop at the first failure. Must be `true` when `parallel` is `true` |
 | `parallel` | boolean | `false` | Run every `commands` line at once in the background, print each command's log as it finishes and fail if any failed. If the job is cancelled or times out, the partial logs of unfinished commands are printed. Needs `keep_going: true` |
 | `max_parallel` | number | `0` | Cap on commands running at once when `parallel` is `true`. `0` runs them all at once |
@@ -629,6 +645,23 @@ jobs:
         pnpm lint
         pnpm typecheck
         pnpm test
+```
+
+```yaml
+# Bun tests, narrowed on PRs: PRs run only the tests the diff can reach,
+# pushes to main run everything. Needs fetch_depth: 0.
+jobs:
+  check:
+    uses: vvedantb/packages/.github/workflows/ci-app.yml@main
+    with:
+      parallel: true
+      fetch_depth: 0
+      bun_version: "1.4.5"
+      affected_tests: true
+      commands: |
+        pnpm lint
+        pnpm typecheck
+        bun test --parallel --pass-with-no-tests $VV_TEST_CHANGED
 ```
 
 Turn on `parallel` only when the lines do not depend on each other (a build that a later line imports must stay serial, as in the `redline` and `flowtape` callers, which set `keep_going: false`). The `node_modules` cache needs the workflow to run on push to `main`, so `main` seeds the cache the pull requests read; every caller here already does.
