@@ -51,7 +51,8 @@ function aimAtTrigger(el: HTMLElement): void {
     return;
   }
   const point = triggerPoint(el);
-  if (point === null) return;
+  // No layout (jsdom, a hidden host): nothing to aim from.
+  if (point === null || el.offsetWidth === 0) return;
   const r = el.getBoundingClientRect();
   const left = r.left + r.width / 2 - el.offsetWidth / 2;
   const top = r.top + r.height / 2 - el.offsetHeight / 2;
