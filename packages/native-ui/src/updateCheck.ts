@@ -101,3 +101,48 @@ export async function fetchGitHubUpdate(
   if (!Array.isArray(body) || !body.every(isRelease)) return null;
   return newerGitHubRelease(body, currentVersion, source.tagPrefix);
 }
+
+/**
+ * The HTTP host of V Store, the Project V Android app store. Its
+ * `GET /latest-version?package=<Android package>` answers
+ * `{ packageName, versionName }` for an app in its catalogue.
+ */
+export const V_STORE_SITE_URL = "https://blessed-porcupine-303.eu-west-1.convex.site";
+
+export type VStoreSource = {
+  /** The app's Android package, as V Store lists it. */
+  packageName: string;
+  /**
+   * What Download opens for a version: the APK, or its release page. Leave it
+   * out when the APK has no public link (a private repository). Download is
+   * then hidden, and "Install from V Store" is the one way to update.
+   */
+  downloadUrl?: (version: string) => string;
+  /** Default `V_STORE_SITE_URL`. */
+  siteUrl?: string;
+};
+
+/**
+ * Asks V Store for the app's newest version and returns it when it is newer
+ * than `currentVersion`, else null. V Store knows the releases of private
+ * repositories too, so this works where `fetchGitHubUpdate` cannot. Null too
+ * when the app is not in the catalogue, the request fails, or the answer has
+ * another shape. A network error rejects. Without `downloadUrl`, `url` is
+ * `fallbackUrl`.
+ */
+export async function fetchVStoreUpdate(
+  source: VStoreSource,
+  currentVersion: string,
+  fallbackUrl: string,
+): Promise<AvailableUpdate | null> {
+  const site = source.siteUrl ?? V_STORE_SITE_URL;
+  const response = await fetch(`${site}/latest-version?package=${encodeURIComponent(source.packageName)}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) return null;
+  const body: unknown = await response.json();
+  if (!body || typeof body !== "object") return null;
+  const version = (body as Record<string, unknown>).versionName;
+  if (typeof version !== "string" || !isNewerVersion(version, currentVersion)) return null;
+  return { version, url: source.downloadUrl?.(version) ?? fallbackUrl };
+}

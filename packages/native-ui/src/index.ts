@@ -191,8 +191,8 @@ export type {
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 export { UpdateChecker, UpdatePrompt, V_STORE_UPDATES_URL } from "./UpdateChecker";
 export type { UpdateCheckerProps, UpdateDismissStorage, UpdatePromptProps } from "./UpdateChecker";
-export { fetchGitHubUpdate, isNewerVersion, newerGitHubRelease } from "./updateCheck";
-export type { AvailableUpdate, GitHubRelease, GitHubReleaseSource } from "./updateCheck";
+export { fetchGitHubUpdate, fetchVStoreUpdate, isNewerVersion, newerGitHubRelease, V_STORE_SITE_URL } from "./updateCheck";
+export type { AvailableUpdate, GitHubRelease, GitHubReleaseSource, VStoreSource } from "./updateCheck";
 export {
   Sheet,
   SheetTrigger,

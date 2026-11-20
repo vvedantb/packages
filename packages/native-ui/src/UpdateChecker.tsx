@@ -10,7 +10,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./AlertDialog";
-import { fetchGitHubUpdate, type AvailableUpdate, type GitHubReleaseSource } from "./updateCheck";
+import {
+  fetchGitHubUpdate,
+  fetchVStoreUpdate,
+  type AvailableUpdate,
+  type GitHubReleaseSource,
+  type VStoreSource,
+} from "./updateCheck";
 
 /** Opens the Updates tab of V Store, the Project V Android app store. */
 export const V_STORE_UPDATES_URL = "vstore://updates";
@@ -194,9 +200,15 @@ export type UpdateCheckerProps = Omit<
    * a local or preview build that has no release to compare with.
    */
   currentVersion: string | null | undefined;
-  /** GitHub releases to read: the repository and the tag prefix before the version. */
+  /** GitHub releases to read: the repository and the tag prefix before the version. Public repositories only. */
   source?: GitHubReleaseSource;
-  /** Your own check, used instead of `source`. Returns the update to offer, or null. */
+  /**
+   * Ask V Store for the newest version, used instead of `source`. It works
+   * for a private repository too. Without `vStore.downloadUrl`, Download is
+   * hidden unless `showDownload` says otherwise.
+   */
+  vStore?: VStoreSource;
+  /** Your own check, used instead of `source` and `vStore`. Returns the update to offer, or null. */
   check?: (currentVersion: string) => Promise<AvailableUpdate | null>;
   /** `false` skips the check. Default `true`. */
   enabled?: boolean;
@@ -216,7 +228,8 @@ export type UpdateCheckerProps = Omit<
  * Looks for a newer version once when it mounts and offers it in an
  * `UpdatePrompt`. Mount it once, near the app root.
  *
- * - The check reads the GitHub releases of `source`, or calls `check`.
+ * - The check reads the GitHub releases of `source`, asks V Store (`vStore`),
+ *   or calls `check`.
  *   Offline, rate limited, a failed check or no `currentVersion`: nothing is
  *   offered, and nothing is shown.
  * - Later (and Android back) hides that version until a newer one is out,
@@ -227,6 +240,7 @@ export type UpdateCheckerProps = Omit<
 export function UpdateChecker({
   currentVersion,
   source,
+  vStore,
   check,
   enabled = true,
   storage,
@@ -238,22 +252,28 @@ export function UpdateChecker({
 }: UpdateCheckerProps) {
   const [update, setUpdate] = useState<AvailableUpdate | null>(null);
   // The latest callbacks, so a new function each render does not check again.
-  const latest = useRef({ check, storage, storageKey });
+  const latest = useRef({ check, vStore, storage, storageKey });
   useEffect(() => {
-    latest.current = { check, storage, storageKey };
+    latest.current = { check, vStore, storage, storageKey };
   });
 
   const repo = source?.repo;
   const tagPrefix = source?.tagPrefix;
   const hasCheck = check !== undefined;
+  const vStorePackage = vStore?.packageName;
+  const vStoreSite = vStore?.siteUrl;
+  // Without a download link, the update's link is the one that opens V Store.
+  const vStoreUrl = prompt.vStoreUrl ?? V_STORE_UPDATES_URL;
   useEffect(() => {
     if (!enabled || !currentVersion) return;
     let cancelled = false;
     const run = async () => {
-      const { check: custom, storage: store, storageKey: key } = latest.current;
+      const { check: custom, vStore: vStoreSource, storage: store, storageKey: key } = latest.current;
       const found = custom
         ? await custom(currentVersion)
-        : repo !== undefined && tagPrefix !== undefined
+        : vStoreSource
+          ? await fetchVStoreUpdate(vStoreSource, currentVersion, vStoreUrl)
+          : repo !== undefined && tagPrefix !== undefined
           ? await fetchGitHubUpdate({ repo, tagPrefix }, currentVersion)
           : null;
       if (!found) return;
@@ -265,11 +285,12 @@ export function UpdateChecker({
     return () => {
       cancelled = true;
     };
-  }, [enabled, currentVersion, repo, tagPrefix, hasCheck]);
+  }, [enabled, currentVersion, repo, tagPrefix, hasCheck, vStorePackage, vStoreSite, vStoreUrl]);
 
   return (
     <UpdatePrompt
       {...prompt}
+      showDownload={prompt.showDownload ?? !(vStore !== undefined && vStore.downloadUrl === undefined)}
       update={update}
       onLater={(current) => {
         setUpdate(null);
