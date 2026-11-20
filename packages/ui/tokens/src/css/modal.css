@@ -24,6 +24,14 @@
     opacity: 1;
     pointer-events: auto;
   }
+  /*
+   * Closing keys on Radix `data-state="closed"` as well as `.is-closing`.
+   * Radix Presence reads the animation name in the same commit that sets
+   * `data-state`; the MutationObserver adds `.is-closing` a moment later, so
+   * keyed on the class alone Presence saw no animation and unmounted at once
+   * (no close transition ever played).
+   */
+  .t-modal[data-state="closed"],
   .t-modal.is-closing {
     transform: translate(-50%, -50%) scale(var(--modal-scale-close));
     opacity: 0;
