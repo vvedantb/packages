@@ -6,10 +6,14 @@ import {
   formatGithubOutput,
   formatReleaseJson,
   gradlePropertiesEdits,
+  gradleVersionNameOk,
   parseAndroidReleaseConfig,
   parseBadging,
   publicEnvDefault,
+  readExpoVersion,
   releaseJson,
+  syncExpoVersion,
+  syncPackageJsonVersion,
   validateVersionCode,
   validateVersionName,
   type ReadAppFile,
@@ -113,10 +117,13 @@ describe("gradlePropertiesEdits", () => {
   it("replaces reactNativeArchitectures and appends the absent keys", () => {
     const input = "reactNativeArchitectures=armeabi-v7a\nsomething=else\n";
     const out = gradlePropertiesEdits(input);
-    expect(out).toContain("reactNativeArchitectures=arm64-v8a,x86_64");
+    expect(out).toContain("reactNativeArchitectures=arm64-v8a\n");
+    expect(out).not.toContain("x86_64");
     expect(out).not.toContain("armeabi-v7a");
     expect(out).toContain("org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m");
-    expect(out).toContain("org.gradle.workers.max=2");
+    expect(out).toContain("org.gradle.workers.max=8");
+    expect(out).toContain("org.gradle.parallel=true");
+    expect(out).not.toContain("configuration-cache");
     expect(out).toContain("android.lint.checkReleaseBuilds=false");
     expect(out).toContain("something=else");
   });
@@ -129,18 +136,25 @@ describe("gradlePropertiesEdits", () => {
     expect(out).not.toContain("trueorg.gradle");
   });
 
-  it("leaves a present non-replace key untouched", () => {
-    const input = "org.gradle.workers.max=8\n";
-    const out = gradlePropertiesEdits(input);
+  it("overrides Expo's lower workers.max and parallel=false", () => {
+    const out = gradlePropertiesEdits("org.gradle.workers.max=2\norg.gradle.parallel=false\n");
     expect(out).toContain("org.gradle.workers.max=8");
-    expect(out).not.toContain("org.gradle.workers.max=2");
+    expect(out).toContain("org.gradle.parallel=true");
+    expect(out).not.toContain("workers.max=2");
   });
 
-  it("exposes the four default edits", () => {
+  it("leaves a present non-replace key untouched", () => {
+    const out = gradlePropertiesEdits("android.lint.checkReleaseBuilds=true\n");
+    expect(out).toContain("android.lint.checkReleaseBuilds=true");
+    expect(out).not.toContain("checkReleaseBuilds=false");
+  });
+
+  it("exposes the default edits", () => {
     expect(DEFAULT_GRADLE_PROPERTY_EDITS.map((edit) => edit.key)).toStrictEqual([
       "reactNativeArchitectures",
       "org.gradle.jvmargs",
       "org.gradle.workers.max",
+      "org.gradle.parallel",
       "android.lint.checkReleaseBuilds",
     ]);
   });
@@ -250,5 +264,44 @@ describe("parseAndroidReleaseConfig", () => {
         publicEnvSources: [{ kind: "nope" }],
       }),
     ).toThrow();
+  });
+});
+
+describe("app version sync helpers", () => {
+  it("reads expo.version and returns undefined when absent", () => {
+    expect(readExpoVersion('{"expo":{"version":"1.2.3"}}')).toBe("1.2.3");
+    expect(readExpoVersion('{"expo":{}}')).toBeUndefined();
+    expect(readExpoVersion('{"name":"x"}')).toBeUndefined();
+    expect(readExpoVersion("[]")).toBeUndefined();
+  });
+
+  it("sets expo.version and keeps other fields", () => {
+    const out = syncExpoVersion('{"expo":{"name":"V Store","version":"1.0.0"}}', "1.0.5");
+    expect(JSON.parse(out)).toStrictEqual({ expo: { name: "V Store", version: "1.0.5" } });
+    expect(out.endsWith("\n")).toBe(true);
+    expect(() => syncExpoVersion("{}", "1.0.5")).toThrow('no "expo" object');
+  });
+
+  it("sets the package.json version", () => {
+    const out = syncPackageJsonVersion('{"name":"v-store","version":"0.0.1"}', "1.0.5");
+    expect(JSON.parse(out)).toStrictEqual({ name: "v-store", version: "1.0.5" });
+    expect(JSON.parse(syncPackageJsonVersion('{"name":"x"}', "2.0.0"))).toStrictEqual({ name: "x", version: "2.0.0" });
+  });
+
+  it("checks versionName in the generated build.gradle", () => {
+    const gradle = '    defaultConfig {\n        versionCode 1000\n        versionName "1.0.5"\n    }\n';
+    expect(gradleVersionNameOk(gradle, "1.0.5")).toBe(true);
+    expect(gradleVersionNameOk(gradle, "1.0.50")).toBe(false);
+    expect(gradleVersionNameOk(gradle, "1.0.4")).toBe(false);
+    expect(gradleVersionNameOk("", "1.0.5")).toBe(false);
+  });
+
+  it("parses the new config flags, off by default", () => {
+    const base = { packageId: "a.b", apkPrefix: "x" };
+    expect(parseAndroidReleaseConfig(base)).toMatchObject({ syncAppVersion: false, versionNameFromAppJson: false });
+    expect(
+      parseAndroidReleaseConfig({ ...base, syncAppVersion: true, versionNameFromAppJson: true }),
+    ).toMatchObject({ syncAppVersion: true, versionNameFromAppJson: true });
+    expect(() => parseAndroidReleaseConfig({ ...base, syncAppVersion: "yes" })).toThrow("syncAppVersion");
   });
 });

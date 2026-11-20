@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // `vvedantb-android-release`: build a signed, sideloadable Android release APK
-// (arm64-v8a + x86_64, embedded JS) with Gradle, then write release.json next to
+// (arm64-v8a, embedded JS) with Gradle, then write release.json next to
 // it. No EAS. One bin for every app; per-app differences come from a JSON config:
 //
 //   VERSION_NAME=1.0.1 VERSION_CODE=1000 \
@@ -32,10 +32,14 @@ import {
   formatGithubOutput,
   formatReleaseJson,
   gradlePropertiesEdits,
+  gradleVersionNameOk,
   parseAndroidReleaseConfig,
   parseBadging,
   publicEnvDefault,
+  readExpoVersion,
   releaseJson,
+  syncExpoVersion,
+  syncPackageJsonVersion,
   validateVersionCode,
   validateVersionName,
   type AndroidReleaseConfig,
@@ -144,10 +148,28 @@ try {
 const appDir = join(root, config.appDir);
 const env: NodeJS.ProcessEnv = { ...process.env };
 
-const versionName = validateVersionName(env.VERSION_NAME);
+// VERSION_NAME is required, unless the config reads expo.version from app.json.
+let rawVersionName = env.VERSION_NAME;
+if ((rawVersionName === undefined || rawVersionName === "") && config.versionNameFromAppJson) {
+  const appJsonFile = join(appDir, "app.json");
+  rawVersionName = existsSync(appJsonFile) ? readExpoVersion(readFileSync(appJsonFile, "utf8")) : undefined;
+}
+const versionName = validateVersionName(rawVersionName);
 const versionCode = validateVersionCode(env.VERSION_CODE);
 env.VERSION_NAME = versionName;
 env.VERSION_CODE = String(versionCode);
+
+// Keep app.json and the root package.json on the released version (v-store).
+if (config.syncAppVersion) {
+  const appJsonFile = join(appDir, "app.json");
+  if (existsSync(appJsonFile)) {
+    writeFileSync(appJsonFile, syncExpoVersion(readFileSync(appJsonFile, "utf8"), versionName));
+  }
+  const packageJsonFile = join(root, "package.json");
+  if (existsSync(packageJsonFile)) {
+    writeFileSync(packageJsonFile, syncPackageJsonVersion(readFileSync(packageJsonFile, "utf8"), versionName));
+  }
+}
 
 // Bake the production runtime config into the APK. Each value comes from the
 // environment, else a baked-in default named in the config. A release never
@@ -228,8 +250,9 @@ for (const step of config.postPrebuildSteps) {
 const appGradle = join(appDir, "android", "app", "build.gradle");
 const appGradleText = existsSync(appGradle) ? readFileSync(appGradle, "utf8") : "";
 const versionCodeOk = new RegExp(`^[\\t ]*versionCode ${versionCode}[\\t ]*$`, "m").test(appGradleText);
-if (!versionCodeOk || !appGradleText.includes("withReleaseSigning")) {
-  fail("android/ is stale (versionCode or signing). Run again without SKIP_PREBUILD=1.");
+const versionNameOk = gradleVersionNameOk(appGradleText, versionName);
+if (!versionCodeOk || !versionNameOk || !appGradleText.includes("withReleaseSigning")) {
+  fail("android/ is stale (versionCode, versionName or signing). Run again without SKIP_PREBUILD=1.");
 }
 
 // Optionally pin the Gradle wrapper (one app ships an incompatible default).

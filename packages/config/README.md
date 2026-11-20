@@ -495,6 +495,8 @@ The config (parsed by `parseAndroidReleaseConfig`) covers the differences betwee
 | `unsetEnv` | `[]` | Names removed from the build environment (before `extraEnv`). |
 | `preChecks` / `preBuildSteps` | — | bash steps run in the repo root / app dir before the build. |
 | `postPrebuildSteps` | `[]` | bash steps run in the app dir after prebuild, before Gradle. |
+| `syncAppVersion` | `false` | After versionName resolves, write it to `<appDir>/app.json` (`expo.version`) and the root `package.json` (`version`) when they exist, before prebuild. |
+| `versionNameFromAppJson` | `false` | Read `expo.version` from `<appDir>/app.json` when `VERSION_NAME` is unset. Otherwise `VERSION_NAME` is required. |
 | `gradleWrapperPin` | — | `{ ifContains, distributionUrl }` to pin the Gradle wrapper. |
 | `summary` | — | `{ label, envVar }` echoed at the end. |
 
@@ -553,9 +555,29 @@ Paths and filters are as read from each app's current script. Check them against
   "postPrebuildSteps": ["grep -q 'gradle-8.14.3-bin.zip' android/gradle/wrapper/gradle-wrapper.properties"] }
 ```
 
+```jsonc
+// v-store (repo root is the app; VERSION_NAME may be omitted)
+{ "packageId": "com.projectvdotuk.vstore", "apkPrefix": "v-store",
+  "appDir": ".", "prebuildNoInstall": false,
+  "syncAppVersion": true, "versionNameFromAppJson": true,
+  "publicEnv": ["EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY"],
+  "optionalEnv": ["EXPO_PUBLIC_CONVEX_URL"],
+  "unsetEnv": ["EXPO_PUBLIC_LOCAL_APK_BASE", "APP_VARIANT"],
+  "summary": { "label": "Convex", "envVar": "EXPO_PUBLIC_CONVEX_URL" },
+  "gradleWrapperPin": { "ifContains": "gradle-9", "distributionUrl": "https://services.gradle.org/distributions/gradle-8.14.3-bin.zip" } }
+```
+
+### Gradle settings
+
+The bin edits `android/gradle.properties` (`DEFAULT_GRADLE_PROPERTY_EDITS`): `reactNativeArchitectures=arm64-v8a` (published APKs run on phones; emulator builds in `apps/native-gallery` set `x86_64` themselves), `org.gradle.workers.max=8` and `org.gradle.parallel=true` (boat-large has 8 cores; both override Expo's defaults). `org.gradle.configuration-cache` stays off: ephemeral CI runners never reuse the cache, so a cold `assembleRelease` only pays the store cost, and Expo and third-party native modules can still be incompatible on release tasks. After prebuild the bin checks `versionCode`, `versionName` and signing in `android/app/build.gradle`.
+
+### Version pick
+
+`pickAndroidReleaseVersion` (exported) holds the versionName, versionCode and tag rules of `release-android-apk.yml`; its tests own the algorithm. The workflow lists tags once, takes published versionNames from the tag suffixes and downloads `release.json` only for the highest semver tag, instead of every release. `versionCode` is `max(highest published + 1, version_code_floor)`, so it assumes the highest semver tag carries the highest versionCode.
+
 Not covered, so it stays local: the keystore location (a `withReleaseSigning` plugin option), velth's own signing-completeness pre-check (the Gradle plugin enforces it), and eva's Clerk native-API check (use the workflow's `pre_build_command`).
 
-Pure helpers (`validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `easProfileEntries`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
+Pure helpers (`pickAndroidReleaseVersion`, `readExpoVersion`, `syncExpoVersion`, `syncPackageJsonVersion`, `gradleVersionNameOk`, `validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `easProfileEntries`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
 
 ## Versions
 
