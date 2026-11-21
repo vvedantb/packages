@@ -35,7 +35,7 @@ export function railTileStateClass(active: boolean, grouped = false): string {
  * `--radius`. A plain `rounded-xl` is a fixed 12px, smaller than a 16px pill.
  */
 export const railGroupClass =
-  "relative isolate flex flex-col items-center gap-1 rounded-[calc(var(--radius-lg)+0.25rem)] bg-default p-1";
+  "relative isolate flex flex-col items-center gap-1 rounded-[calc(var(--radius-lg)+0.25rem)] bg-default p-1 dark:bg-surface";
 
 /** The `RailGroup` sliding pill: the segmented tabs pill, with the tile radius. */
 export const railGroupPillClass = "t-tabs-pill rounded-lg bg-segment";

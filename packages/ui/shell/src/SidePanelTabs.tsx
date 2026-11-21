@@ -168,7 +168,7 @@ function Frame({ collapsed = false, rail, children, className, cardClassName, ar
         ref={cardRef}
         data-side-panel-card=""
         className={cn(
-          "relative min-h-0 min-w-0 flex-1 overflow-hidden bg-surface md:my-2 md:mr-1.5 md:rounded-lg",
+          "relative min-h-0 min-w-0 flex-1 overflow-hidden bg-surface md:my-2 md:mr-1.5 md:rounded-surface",
           collapsed && "md:hidden",
           cardClassName,
         )}
@@ -230,7 +230,7 @@ function List({ value, onValueChange, labelled = false, className, listClassName
       <TabsList
         aria-label={props["aria-label"]}
         className={cn(
-          "scrollbar-none h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-xl border-0 bg-default p-0.5 shadow-none md:max-w-none md:flex-col md:overflow-x-hidden md:overflow-y-auto [&>.t-tabs-pill]:bg-segment",
+          "scrollbar-none h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-xl border-0 bg-default p-0.5 shadow-none dark:bg-surface md:max-w-none md:flex-col md:overflow-x-hidden md:overflow-y-auto [&>.t-tabs-pill]:bg-segment",
           labelled && "md:w-full",
           listClassName,
         )}
