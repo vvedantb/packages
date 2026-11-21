@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.59.4
+
+### Patch Changes
+
+- [#330](https://github.com/vvedantb/packages/pull/330) [`7a6d278`](https://github.com/vvedantb/packages/commit/7a6d278ea2367eaf36f466cf167b326ebbf7ae77) Thanks [@vvedantb](https://github.com/vvedantb)! - `@vvedantb/ui/tokens` now imports `css/tabs.css`. Without it, the rail trough pill sits in the normal flow and pushes the rail tiles down. Apps that import `tabs.css` themselves still work.
+
 ## 0.59.3
 
 ### Patch Changes
