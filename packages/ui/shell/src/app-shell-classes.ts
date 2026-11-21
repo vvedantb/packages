@@ -30,9 +30,12 @@ export function railTileStateClass(active: boolean, grouped = false): string {
 
 /**
  * `Sidebar.RailGroup` trough: the segmented tabs bar (`bg-default`) as a column.
- * 4px padding and a 12px radius sit concentric with the 8px tile corners.
+ * Its radius is the tile radius (`rounded-lg`, the theme `--radius`) plus the
+ * 4px padding, so the trough corners stay concentric with the pill at any
+ * `--radius`. A plain `rounded-xl` is a fixed 12px, smaller than a 16px pill.
  */
-export const railGroupClass = "relative isolate flex flex-col items-center gap-1 rounded-xl bg-default p-1";
+export const railGroupClass =
+  "relative isolate flex flex-col items-center gap-1 rounded-[calc(var(--radius-lg)+0.25rem)] bg-default p-1";
 
 /** The `RailGroup` sliding pill: the segmented tabs pill, with the tile radius. */
 export const railGroupPillClass = "t-tabs-pill rounded-lg bg-segment";
