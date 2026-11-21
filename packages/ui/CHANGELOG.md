@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.59.1
+
+### Patch Changes
+
+- [#325](https://github.com/vvedantb/packages/pull/325) [`f8393ca`](https://github.com/vvedantb/packages/commit/f8393ca89501d2c8ea3c63ce02874be7edee9972) Thanks [@vvedantb](https://github.com/vvedantb)! - `SidePanelTabs.List` always shows the sliding pill on the active tab. Before, the pill showed only when the app set `UiConfig.Tabs.variant` to `segmented`. `TabsList` takes a `pillMotion` prop, which overrides `UiConfig.Tabs.pillMotion`.
+
 ## 0.59.0
 
 ### Minor Changes
