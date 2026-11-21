@@ -402,29 +402,93 @@ function workflowFiles(root: string): { name: string; text: string }[] {
   return files;
 }
 
-/** The plain `boat` runner label. Every boat.dev job runs on `boat-large` (8 cores, 15 GB). */
-const SMALL_RUNNER = "boat";
+const BOAT_LABELS = ["boat-small", "boat", "boat-large", "boat-xlarge"];
+const BOAT_GUIDANCE = "check jobs use boat; boat-large is for Android release builds";
+const ANDROID_RELEASE_WORKFLOW = /(?:^|\/)(?:release-android-apk|release-gallery-android)\.ya?ml(?:@|$)/;
+const CI_APP_WORKFLOW = /(?:^|\/)ci-app\.ya?ml(?:@|$)/;
+
+/** One `runs-on` or `runs_on` line, tied to the index of the job that holds it. */
+interface RunnerLine {
+  line: number;
+  key: string;
+  labels: string[];
+  job: number;
+}
 
 /**
- * Fails on a job that names the small `boat` runner, as `runs-on: boat` or as the `runs_on: boat`
- * input of a reusable workflow. GitHub-hosted labels and `boat-large` pass.
+ * Scans a workflow for runner lines and for each job's own `uses:` value (the reusable workflow
+ * it calls). Jobs are the keys one level under `jobs:`. A `uses:` counts only at the job's own
+ * level, so a step's `uses: actions/checkout` is ignored.
+ */
+function scanRunners(text: string): { runners: RunnerLine[]; jobUses: (string | undefined)[] } {
+  const runners: RunnerLine[] = [];
+  const jobUses: (string | undefined)[] = [];
+  let inJobs = false;
+  let jobIndent = -1;
+  let childIndent = -1;
+  let job = -1;
+  text.split(/\r?\n/).forEach((line, index) => {
+    if (line.trim() === "" || line.trim().startsWith("#")) return;
+    const indent = line.length - line.trimStart().length;
+    if (indent === 0) inJobs = /^jobs\s*:/.test(line);
+    if (inJobs && indent > 0) {
+      if (jobIndent < 0) jobIndent = indent;
+      if (indent === jobIndent && /^\s*[\w.-]+\s*:/.test(line)) {
+        job = jobUses.length;
+        jobUses.push(undefined);
+        childIndent = -1;
+        return;
+      }
+      if (job >= 0 && childIndent < 0 && indent > jobIndent) childIndent = indent;
+      const uses = line.match(/^\s*uses\s*:\s*(.+?)\s*(?:#.*)?$/);
+      if (uses?.[1] && job >= 0 && indent === childIndent) jobUses[job] = stripQuotes(uses[1]);
+    }
+    const match = line.match(/^\s*(?:-\s+)?(runs[-_]on)\s*:\s*(.+?)\s*(?:#.*)?$/);
+    if (!match?.[1] || match[2] === undefined) return;
+    const labels = match[2].includes("${{")
+      ? [match[2]]
+      : match[2]
+          .replace(/^\[|\]$/g, "")
+          .split(",")
+          .map((label) => stripQuotes(label));
+    runners.push({ line: index + 1, key: match[1], labels, job: inJobs ? job : -1 });
+  });
+  return { runners, jobUses };
+}
+
+/**
+ * Checks the Boat runner policy on every `runs-on` line and every `runs_on` input of a reusable
+ * workflow.
+ *
+ * - `boat-small`, `boat` and `boat-xlarge` pass.
+ * - GitHub-hosted labels (any label not starting `boat`) and expressions (`${{ ... }}`) pass.
+ * - `boat-large` passes as the `runs_on` input of a job that calls `release-android-apk.yml` or
+ *   `release-gallery-android.yml`, and on any job in a workflow file whose name contains `android`.
+ *   It fails elsewhere, including on a job that calls the shared `ci-app.yml`.
+ * - An unknown `boat*` label (for example `boat-medium`) fails.
  */
 export function checkCiRunner(repo: RepoModel): CheckResult {
   const details: string[] = [];
   for (const file of workflowFiles(repo.root)) {
-    file.text.split(/\r?\n/).forEach((line, index) => {
-      const match = line.match(/^\s*(?:-\s+)?(runs[-_]on)\s*:\s*(.+?)\s*(?:#.*)?$/);
-      if (!match?.[1] || match[2] === undefined) return;
-      const labels = match[2]
-        .replace(/^\[|\]$/g, "")
-        .split(",")
-        .map((label) => stripQuotes(label));
-      if (labels.includes(SMALL_RUNNER)) {
-        details.push(`.github/workflows/${file.name}:${index + 1} ${match[1]} is ${SMALL_RUNNER}; use boat-large`);
+    const { runners, jobUses } = scanRunners(file.text);
+    const androidFile = /android/i.test(file.name);
+    for (const runner of runners) {
+      const uses = runner.job >= 0 ? jobUses[runner.job] : undefined;
+      const where = `.github/workflows/${file.name}:${runner.line} ${runner.key}`;
+      for (const label of runner.labels) {
+        if (label.includes("${{") || !label.startsWith("boat")) continue;
+        if (label === "boat-large") {
+          if (androidFile) continue;
+          if (runner.key === "runs_on" && uses !== undefined && ANDROID_RELEASE_WORKFLOW.test(uses)) continue;
+          const caller = uses !== undefined && CI_APP_WORKFLOW.test(uses) ? " on a ci-app.yml job" : "";
+          details.push(`${where} is boat-large${caller}; ${BOAT_GUIDANCE}`);
+        } else if (!BOAT_LABELS.includes(label)) {
+          details.push(`${where} is ${label}, an unknown boat label; valid labels are ${BOAT_LABELS.join(", ")}`);
+        }
       }
-    });
+    }
   }
-  return result("ci-runner", "No job runs on the small boat runner", details);
+  return result("ci-runner", "Jobs use valid Boat runners and boat-large only for Android release builds", details);
 }
 
 /** The lines of every `commands: |` block in the workflows that call the shared ci-app.yml. */

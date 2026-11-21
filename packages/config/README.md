@@ -202,7 +202,7 @@ Each check has a stable id:
 | `oxlint-script` | No `lint` script that runs `oxlint`. |
 | `config-version` | The `@vvedantb/config` range floor is an older minor than the running `vvedantb-doctor` version. |
 | `ci-reusable-workflow` | No workflow calls `vvedantb/packages/.github/workflows/ci-app.yml`. |
-| `ci-runner` | A workflow has `runs-on: boat` or `runs_on: boat`. Every boat.dev job runs on `boat-large`. GitHub-hosted labels pass. |
+| `ci-runner` | A job uses a runner the Boat policy does not allow. `boat`, `boat-small` and `boat-xlarge` pass, as do GitHub-hosted labels and `${{ ... }}` expressions. `boat-large` is for Android release builds only: it passes as `runs_on` for `release-android-apk.yml` or `release-gallery-android.yml`, or in a workflow file with `android` in its name, and fails on check jobs such as `ci-app.yml`. An unknown `boat*` label such as `boat-medium` fails. |
 | `ci-commands` | A line in the `commands` input of the shared workflow is not `lint`, `typecheck` or `test` and has no written reason, or a reason names a command that CI does not run. |
 
 **CI commands.** The standard commands are `pnpm lint`, `pnpm typecheck` and `pnpm test` (`npm run` or `bun run` also pass, and so does `--filter <package>`). Every other line needs a reason, keyed by the exact command, in `.vvedantb-doctor.json` or under `vvedantbDoctor.ciCommands` in the root `package.json`:

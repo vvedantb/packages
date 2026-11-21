@@ -143,21 +143,104 @@ describe("CI checks", () => {
     ].join("\n");
   }
 
-  it("fails on the small boat runner and passes boat-large", () => {
-    writeJson("package.json", { name: "x" });
-    write(".github/workflows/ci.yml", ciWorkflow("boat", ["pnpm lint"]));
-    const small = byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-runner");
-    expect(small.status).toBe("fail");
-    expect(small.details.join("\n")).toContain("ci.yml:5");
+  function runner(): CheckResult {
+    return byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-runner");
+  }
 
+  it("passes boat, boat-small and boat-xlarge on a ci-app.yml caller", () => {
+    writeJson("package.json", { name: "x" });
+    for (const label of ["boat", "boat-small", "boat-xlarge", '"boat"']) {
+      write(".github/workflows/ci.yml", ciWorkflow(label, ["pnpm lint"]));
+      expect(runner().status).toBe("pass");
+    }
+  });
+
+  it("fails boat-large on a ci-app.yml caller and says why", () => {
+    writeJson("package.json", { name: "x" });
     write(".github/workflows/ci.yml", ciWorkflow("boat-large", ["pnpm lint"]));
-    expect(byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-runner").status).toBe("pass");
+    const result = runner();
+    expect(result.status).toBe("fail");
+    const text = result.details.join("\n");
+    expect(text).toContain("ci.yml:5");
+    expect(text).toContain("use boat");
+    expect(text).toContain("Android");
+  });
+
+  it("passes boat-large for the Android release workflows, with or without owner and ref", () => {
+    writeJson("package.json", { name: "x" });
+    for (const uses of [
+      "vvedantb/packages/.github/workflows/release-android-apk.yml@main",
+      "./.github/workflows/release-gallery-android.yml",
+    ]) {
+      write(
+        ".github/workflows/release.yml",
+        ["jobs:", "  apk:", `    uses: ${uses}`, "    with:", "      runs_on: boat-large", ""].join("\n"),
+      );
+      expect(runner().status).toBe("pass");
+    }
+  });
+
+  it("passes boat-large in a workflow file named for Android, and fails it in another file", () => {
+    writeJson("package.json", { name: "x" });
+    const plain = "jobs:\n  build:\n    runs-on: boat-large\n";
+    write(".github/workflows/Android-Build.yml", plain);
+    expect(runner().status).toBe("pass");
+
+    rmSync(join(dir, ".github/workflows/Android-Build.yml"));
+    write(".github/workflows/build.yml", plain);
+    expect(runner().status).toBe("fail");
+  });
+
+  it("does not take a step's uses as the job's called workflow", () => {
+    writeJson("package.json", { name: "x" });
+    write(
+      ".github/workflows/build.yml",
+      [
+        "jobs:",
+        "  build:",
+        "    runs-on: boat-large",
+        "    steps:",
+        "      - uses: ./.github/workflows/release-android-apk.yml",
+        "",
+      ].join("\n"),
+    );
+    expect(runner().status).toBe("fail");
+  });
+
+  it("passes GitHub-hosted labels, list form and expressions", () => {
+    writeJson("package.json", { name: "x" });
+    write(
+      ".github/workflows/ci.yml",
+      [
+        "jobs:",
+        "  a:",
+        "    runs-on: ubuntu-latest",
+        "  b:",
+        "    runs-on: [self-hosted, windows-latest]",
+        "  c:",
+        "    uses: vvedantb/packages/.github/workflows/ci-app.yml@main",
+        "    with:",
+        "      runs_on: ${{ inputs.runs_on }}",
+        "",
+      ].join("\n"),
+    );
+    expect(runner().status).toBe("pass");
+  });
+
+  it("fails an unknown boat label and lists the valid ones", () => {
+    writeJson("package.json", { name: "x" });
+    write(".github/workflows/ci.yml", ciWorkflow("boat-medium", ["pnpm lint"]));
+    const result = runner();
+    expect(result.status).toBe("fail");
+    const text = result.details.join("\n");
+    expect(text).toContain("boat-medium");
+    for (const label of ["boat-small", "boat", "boat-large", "boat-xlarge"]) expect(text).toContain(label);
   });
 
   it("fails on an extra CI command until it has a reason, and on a reason CI no longer needs", () => {
     writeJson("package.json", { name: "x" });
     const commands = ["pnpm lint", "pnpm --filter web typecheck", "pnpm test", "# note", "pnpm --filter web build"];
-    write(".github/workflows/ci.yml", ciWorkflow("boat-large", commands));
+    write(".github/workflows/ci.yml", ciWorkflow("boat", commands));
 
     const bare = byId(runDoctorChecks(dir, { runningVersion: "0.10.0" }), "ci-commands");
     expect(bare.status).toBe("fail");
