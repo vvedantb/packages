@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.58.1
+
+### Patch Changes
+
+- [#323](https://github.com/vvedantb/packages/pull/323) [`e64c976`](https://github.com/vvedantb/packages/commit/e64c976fbfe14d32d4308858f4161e8c66e6b9d0) Thanks [@vvedantb](https://github.com/vvedantb)! - `Sidebar.RailGroup` trough: the radius is now the tile radius plus the 4px padding, so the corners stay concentric with the pill. Before, a fixed 12px trough sat around a 16px pill and the corners looked square.
+
 ## 0.58.0
 
 ### Minor Changes
