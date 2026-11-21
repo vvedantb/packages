@@ -281,7 +281,7 @@ export { SidebarIconTooltip } from "../shell/src/SidebarIconTooltip";
 export type { SidebarIconTooltipProps } from "../shell/src/SidebarIconTooltip";
 export { SidebarPanel } from "../shell/src/SidebarPanel";
 export type { SidebarPanelProps } from "../shell/src/SidebarPanel";
-export { SidebarAccountMenu, SidebarAccountMenuPlaceholder } from "../shell/src/SidebarAccountMenu";
+export { SidebarAccountMenu, SidebarAccountMenuPlaceholder, nextThemeInCycle } from "../shell/src/SidebarAccountMenu";
 export type {
   SidebarAccountMenuProps,
   SidebarAccountMenuPlaceholderProps,

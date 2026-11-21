@@ -280,7 +280,7 @@ export { SidebarIconTooltip } from "../shell/src/SidebarIconTooltip";
 export type { SidebarIconTooltipProps } from "../shell/src/SidebarIconTooltip";
 export { SidebarPanel } from "../shell/src/SidebarPanel";
 export type { SidebarPanelProps } from "../shell/src/SidebarPanel";
-export { SidebarAccountMenu, SidebarAccountMenuPlaceholder } from "../shell/src/SidebarAccountMenu";
+export { SidebarAccountMenu, SidebarAccountMenuPlaceholder, nextThemeInCycle } from "../shell/src/SidebarAccountMenu";
 export type {
   SidebarAccountMenuProps,
   SidebarAccountMenuPlaceholderProps,
@@ -420,6 +420,7 @@ export { SettingsSection, type SettingsSectionConfig } from "../app/src/settings
 export { SettingsField } from "../app/src/settings/SettingsField";
 export { SettingsStack } from "../app/src/settings/SettingsStack";
 export { SettingsToggleRow } from "../app/src/settings/SettingsToggleRow";
+export { THEME_MODES, ThemeModePicker, type ThemeMode, type ThemeModePickerProps } from "../app/src/settings/ThemeModePicker";
 export { SettingsEmptyState, type SettingsEmptyStateConfig } from "../app/src/settings/SettingsEmptyState";
 export {
   DefaultSettingsLayout,

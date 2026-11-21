@@ -1235,7 +1235,7 @@ Single-plan callers need no change. To move to the multi-plan layout, replace
 
 `SidebarAccountMenu` takes three optional props. Without them it renders as before.
 
-- `themeToggle={{ isDark, onToggle }}`: a "Light mode" / "Dark mode" item after `children`.
+- `themeToggle={{ isDark, onToggle }}`: a "Light mode" / "Dark mode" item after `children`. Pass `{ theme, onToggle }` instead to cycle light, neutral, dark; `nextThemeInCycle(theme)` gives the theme `onToggle` must set.
 - `signOut={{ onSignOut, description? }}`: a separator and a danger "Sign out" item, last. It opens `SignOutDialog`; Alt-click skips the dialog and `ConfirmSkipHint` shows while Alt is held. The menu owns the dialog state. If `onSignOut` rejects, the dialog buttons enable again.
 - `itemIconSize`: `size` of those two items' icons. Default: the icon's own size.
 
