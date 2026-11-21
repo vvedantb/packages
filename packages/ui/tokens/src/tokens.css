@@ -26,12 +26,16 @@
  *
  * It also brings the `text-*` type scale with size-specific
  * tracking (css/type-scale.css), including the `3xs`, `2xs` and `2sm` tiers.
+ *
+ * It also brings the sliding pill (css/tabs.css), which the rail troughs
+ * (`RailGroup`) and the sliding tabs need to place their pill.
  */
 
 @import "./css/clear-input.css";
 @import "./css/scrollbar-thin.css";
 @import "./css/motion.css";
 @import "./css/type-scale.css";
+@import "./css/tabs.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
