@@ -43,6 +43,12 @@ export { SettingsField } from "./settings/SettingsField.js";
 export { SettingsStack } from "./settings/SettingsStack.js";
 export { SettingsToggleRow } from "./settings/SettingsToggleRow.js";
 export {
+  THEME_MODES,
+  ThemeModePicker,
+  type ThemeMode,
+  type ThemeModePickerProps,
+} from "./settings/ThemeModePicker.js";
+export {
   SettingsEmptyState,
   type SettingsEmptyStateConfig,
 } from "./settings/SettingsEmptyState.js";

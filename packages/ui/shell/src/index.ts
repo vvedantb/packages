@@ -55,7 +55,7 @@ export { SidebarIconTooltip } from "./SidebarIconTooltip.js";
 export type { SidebarIconTooltipProps } from "./SidebarIconTooltip.js";
 export { SidebarPanel } from "./SidebarPanel.js";
 export type { SidebarPanelProps } from "./SidebarPanel.js";
-export { SidebarAccountMenu, SidebarAccountMenuPlaceholder } from "./SidebarAccountMenu.js";
+export { SidebarAccountMenu, SidebarAccountMenuPlaceholder, nextThemeInCycle } from "./SidebarAccountMenu.js";
 export type {
   SidebarAccountMenuProps,
   SidebarAccountMenuPlaceholderProps,

@@ -1,5 +1,5 @@
 import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
-import { IconLogout, IconMoon, IconSun } from "@tabler/icons-react";
+import { IconCircleHalf, IconLogout, IconMoon, IconSun } from "@tabler/icons-react";
 import { ConfirmSkipHint, skipConfirmTitle } from "../../app/src/confirm/ConfirmSkipHint";
 import { useRequestConfirm } from "../../app/src/confirm/useRequestConfirm";
 import { Button, type ButtonProps } from "../../src/ui/button";
@@ -51,8 +51,12 @@ export type SidebarAccountMenuProps = {
   >;
   /** Menu items after the label and separator. */
   children?: ReactNode;
-  /** Adds a "Light mode" / "Dark mode" item after `children`. */
-  themeToggle?: { isDark: boolean; onToggle: () => void };
+  /**
+   * Adds a theme item after `children`. With `isDark` it names the other of
+   * light and dark. With `theme` it names the next theme in the cycle light,
+   * neutral, dark (system counts as light), and `onToggle` must move to it.
+   */
+  themeToggle?: { isDark: boolean; onToggle: () => void } | { theme: string | undefined; onToggle: () => void };
   /**
    * Adds a separator and a danger "Sign out" item last. Selecting it opens
    * `SignOutDialog` (Alt-click skips it, with `ConfirmSkipHint`). The menu owns
@@ -114,12 +118,7 @@ export function SidebarAccountMenu({
         <AccountLabel userName={name} email={email} imageUrl={imageUrl} stacked={stackedLabel} />
         <AccountSeparator />
         {children}
-        {themeToggle ? (
-          <DropdownMenuItem onSelect={() => themeToggle.onToggle()}>
-            {themeToggle.isDark ? <IconSun size={itemIconSize} /> : <IconMoon size={itemIconSize} />}
-            {themeToggle.isDark ? "Light mode" : "Dark mode"}
-          </DropdownMenuItem>
-        ) : null}
+        {themeToggle ? <ThemeItem toggle={themeToggle} iconSize={itemIconSize} /> : null}
         {signOut ? (
           <>
             <DropdownMenuSeparator />
@@ -330,4 +329,30 @@ export type SidebarAccountMenuPlaceholderProps = { className?: string };
 /** Tile-sized placeholder while the account loads. */
 export function SidebarAccountMenuPlaceholder({ className }: SidebarAccountMenuPlaceholderProps) {
   return <div className={cn("size-11 rounded-lg bg-surface-tertiary md:size-10", className)} />;
+}
+
+type NextTheme = "light" | "neutral" | "dark";
+
+/** The theme the menu item moves to: light, then neutral, then dark, then light. */
+export function nextThemeInCycle(theme: string | undefined): NextTheme {
+  if (theme === "dark") return "light";
+  if (theme === "neutral") return "dark";
+  return "neutral";
+}
+
+const THEME_ITEM = {
+  light: { label: "Light mode", Icon: IconSun },
+  neutral: { label: "Neutral mode", Icon: IconCircleHalf },
+  dark: { label: "Dark mode", Icon: IconMoon },
+};
+
+function ThemeItem({ toggle, iconSize }: { toggle: NonNullable<SidebarAccountMenuProps["themeToggle"]>; iconSize?: number }) {
+  const next: NextTheme = "theme" in toggle ? nextThemeInCycle(toggle.theme) : toggle.isDark ? "light" : "dark";
+  const { label, Icon } = THEME_ITEM[next];
+  return (
+    <DropdownMenuItem onSelect={() => toggle.onToggle()}>
+      <Icon size={iconSize} />
+      {label}
+    </DropdownMenuItem>
+  );
 }
