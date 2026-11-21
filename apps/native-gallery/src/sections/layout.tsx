@@ -33,6 +33,8 @@ import {
   SurfaceRow,
   SwipeableRow,
   Switch,
+  ThemeModePicker,
+  type ThemeMode,
 } from "@vvedantb/native-ui";
 import { Button } from "@vvedantb/native-ui/button";
 import { Text, TextClassContext } from "@vvedantb/native-ui/primitives";
@@ -49,6 +51,7 @@ const PAGES = ["Chats", "Files", "Settings"];
 
 export function LayoutSection() {
   const [on, setOn] = useState(true);
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [opened, setOpened] = useState("none");
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [page, setPage] = useState(0);
@@ -83,6 +86,13 @@ export function LayoutSection() {
           </SettingsSection>
           <SettingsEmptyState title="No devices" description="Nothing is linked yet." icon={IconFolder} />
         </SettingsStack>
+      </Block>
+      <Block title="ThemeModePicker">
+        <SettingsSection title="Appearance">
+          <ThemeModePicker value={themeMode} onChange={setThemeMode} testID="theme-mode" />
+        </SettingsSection>
+        <GText testID="theme-mode-value">{`Theme: ${themeMode}`}</GText>
+        <ThemeModePicker value="dark" onChange={() => undefined} modes={["light", "dark"]} />
       </Block>
       <Block title="PinnedBotTile and BotPinGrid">
         <BotPinGrid>

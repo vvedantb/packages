@@ -216,6 +216,7 @@ export const GALLERY_COVERAGE: Record<string, GallerySectionId> = {
   SettingsSection: "layout",
   SettingsStack: "layout",
   SettingsToggleRow: "layout",
+  ThemeModePicker: "layout",
   Sheet: "layering",
   SheetBody: "layering",
   SheetClose: "layering",
