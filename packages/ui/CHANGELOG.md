@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.60.0
+
+### Minor Changes
+
+- [#331](https://github.com/vvedantb/packages/pull/331) [`b83dde2`](https://github.com/vvedantb/packages/commit/b83dde26bfa9fd11106b40f7cae4f6fc05745c07) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ThemeModePicker` (and `THEME_MODES`, `ThemeMode`): Light, Neutral, Dark and System tiles for an Appearance settings section.
+  
+  `SidebarAccountMenu` `themeToggle` also takes `{ theme, onToggle }`. The item then cycles light, neutral, dark. `nextThemeInCycle(theme)` gives the next theme. `{ isDark, onToggle }` works as before.
+
 ## 0.59.4
 
 ### Patch Changes
