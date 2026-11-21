@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.59.2
+
+### Patch Changes
+
+- [#326](https://github.com/vvedantb/packages/pull/326) [`f9892b2`](https://github.com/vvedantb/packages/commit/f9892b28ef3800ff98947345d1369802369bdb92) Thanks [@vvedantb](https://github.com/vvedantb)! - The mobile header of `Sidebar.MobileHeader` and `AppSidebar` uses `bg-background`, the page tone. Before, it used `bg-surface`, so a white bar showed above a grey page. Change it with `className`.
+
 ## 0.59.1
 
 ### Patch Changes
