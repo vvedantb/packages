@@ -7,7 +7,7 @@ import { cn } from "../../src/utils/cn";
  * pill tone. Empty, it takes no space.
  */
 export const buttonTrackClass =
-  "flex shrink-0 items-center gap-0.5 rounded-xl bg-default p-0.5 empty:hidden [&_button]:bg-transparent [&_button:not([data-active]):not(:disabled):hover]:bg-segment/50";
+  "flex shrink-0 items-center gap-0.5 rounded-xl bg-default p-0.5 empty:hidden dark:bg-surface [&_button]:bg-transparent [&_button:not([data-active]):not(:disabled):hover]:bg-segment/50";
 
 export type ButtonTrackProps = ComponentPropsWithoutRef<"div"> & {
   /** `"column"` stacks the buttons from `md` up (a side rail). Default `"row"`. */
