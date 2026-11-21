@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+### Minor Changes
+
+- [#333](https://github.com/vvedantb/packages/pull/333) [`659811a`](https://github.com/vvedantb/packages/commit/659811aa48efa54b1a6f3c8f908d1fa78d34d16b) Thanks [@vvedantb](https://github.com/vvedantb)! - `ci-runner` now matches the new Boat runner policy. Check jobs use `boat` (or `boat-small`). `boat-large` is only for Android release builds: the `release-android-apk.yml` and `release-gallery-android.yml` workflows, or a workflow file with `android` in its name. A `boat-large` runner on a `ci-app.yml` job fails. An unknown `boat*` label such as `boat-medium` fails and the message lists the valid labels.
+
 ## 0.12.0
 
 ### Minor Changes
