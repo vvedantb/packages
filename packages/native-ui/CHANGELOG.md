@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.35.0
+
+### Minor Changes
+
+- [#334](https://github.com/vvedantb/packages/pull/334) [`23e36ca`](https://github.com/vvedantb/packages/commit/23e36cafb9c8688bac8d568f88b398809bfacfa3) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ThemeModePicker`, `THEME_MODES` and `ThemeMode`: the web theme tiles (Light, Neutral, Dark, System) for a mobile Appearance section. Export from the root and `@vvedantb/native-ui/layout`.
+
 ## 0.34.0
 
 ### Minor Changes
