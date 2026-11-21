@@ -415,7 +415,7 @@ describe("AppSidebar mobileHeaderActions", () => {
     expect(spacer?.getAttribute("aria-hidden")).toBe("true");
     expect(spacer?.children).toHaveLength(0);
     expect(header.querySelector("[data-app-sidebar-mobile-actions]")).toBeNull();
-    expect(header.classList.contains("bg-surface")).toBe(true);
+    expect(header.classList.contains("bg-background")).toBe(true);
     expect(header.className).not.toContain("bg-background/80");
     expect(header.className).not.toContain("backdrop-blur-md");
   });
