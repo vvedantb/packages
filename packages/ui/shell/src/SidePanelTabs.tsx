@@ -227,7 +227,11 @@ function List({ value, onValueChange, labelled = false, className, listClassName
       onValueChange={onValueChange}
       className={cn("min-w-0 flex-1 md:flex md:min-h-0 md:w-full md:flex-col md:items-center md:justify-center-safe", className)}
     >
+      {/* Always segmented, whatever `UiConfig.Tabs` says: the rail needs the
+          sliding pill. `xy`: the rail is a row below `md`, a column above. */}
       <TabsList
+        variant="segmented"
+        pillMotion="xy"
         aria-label={props["aria-label"]}
         className={cn(
           "scrollbar-none h-auto max-w-full justify-start gap-1 overflow-x-auto rounded-xl border-0 bg-default p-0.5 shadow-none dark:bg-surface md:max-w-none md:flex-col md:overflow-x-hidden md:overflow-y-auto [&>.t-tabs-pill]:bg-segment",

@@ -47,12 +47,14 @@ const TabsList = React.forwardRef<
     variant?: TabsListVariant;
     /** `sm` makes the triggers smaller. No classes for `default`. */
     size?: TabsListSize;
+    /** How the segmented pill moves. Overrides `UiConfig.Tabs.pillMotion`. */
+    pillMotion?: TabsPillMotion;
   }
->(({ className, children, variant: variantProp, size, ...props }, ref) => {
+>(({ className, children, variant: variantProp, size, pillMotion: pillMotionProp, ...props }, ref) => {
   const config = useUiConfig("Tabs");
   const cn = useCn();
   const variant = variantProp ?? config?.variant ?? "pills";
-  const pillMotion = config?.pillMotion ?? "x";
+  const pillMotion = pillMotionProp ?? config?.pillMotion ?? "x";
   const listRef = React.useRef<React.ComponentRef<
     typeof TabsPrimitive.List
   > | null>(null);
