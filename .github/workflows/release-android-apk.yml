@@ -27,6 +27,10 @@ name: Release Android APK (reusable)
 # is workflow_call. Each app keeps a thin caller with its own push paths
 # filter, workflow_dispatch inputs, permissions (contents: write) and
 # concurrency group. See the README, "Android APK release workflow".
+# This workflow sets no permissions of its own, so it inherits the caller's.
+# The caller must grant contents: write, plus actions: read when it uses
+# wait_for_check_job on a private repo (the Actions API needs it to list the
+# run's jobs; public repos can list jobs without it).
 #
 # The caller's build script must:
 #   - read VERSION_NAME, VERSION_CODE, ANDROID_KEYSTORE_PATH,
@@ -238,10 +242,6 @@ jobs:
   release:
     runs-on: ${{ inputs.runs_on }}
     timeout-minutes: ${{ inputs.timeout_minutes }}
-    # A called workflow can only keep or lower the caller's permissions, so
-    # the caller must grant contents: write too.
-    permissions:
-      contents: write
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       version_name: ${{ steps.check.outputs.version_name }}
@@ -915,8 +915,17 @@ jobs:
         run: |
           deadline=$((SECONDS + 45 * 60))
           while true; do
-            jobs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" \
-              --jq '.jobs[] | [.name, (.conclusion // "")] | @tsv')"
+            err_file="$(mktemp)"
+            if ! jobs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" \
+              --jq '.jobs[] | [.name, (.conclusion // "")] | @tsv' 2>"$err_file")"; then
+              cat "$err_file" >&2
+              if grep -qE 'HTTP 403|Resource not accessible by integration' "$err_file"; then
+                echo "::error::Cannot list this run's jobs (HTTP 403). The caller must grant actions: read, in addition to contents: write, when it uses wait_for_check_job on a private repo."
+              fi
+              rm -f "$err_file"
+              exit 1
+            fi
+            rm -f "$err_file"
             conclusion=""
             matched=""
             while IFS=$'\t' read -r name result; do

@@ -144,7 +144,7 @@ Navigation layout (icon rails, sidebars, sidebar and header size variables), pag
 
 ### Path filter and waiting for Check
 
-Two opt-in inputs let a caller start this job in parallel with its Check job. `pathspecs` is a list of git pathspecs, one per line (blank lines and `#` comments ignored). On a branch push, after the `release_on` gate, the workflow checks out full history and releases only if a file changed between `github.event.before` and `github.sha` matches. No match logs `No release paths changed.` and skips every later step, so the run passes. A missing or all-zero `before` counts as changed. Tag pushes, `workflow_dispatch` and an empty input skip the check. `wait_for_check_job` names a job in the caller's run, such as `Check`. After the build outputs pass, and before publish, the workflow polls every 15 seconds for up to 45 minutes until that job succeeds. It matches the job name, or a name ending in ` / <input>`. A failed or cancelled job fails the run with no release. It also waits on `dry_run`.
+Two opt-in inputs let a caller start this job in parallel with its Check job. `pathspecs` is a list of git pathspecs, one per line (blank lines and `#` comments ignored). On a branch push, after the `release_on` gate, the workflow checks out full history and releases only if a file changed between `github.event.before` and `github.sha` matches. No match logs `No release paths changed.` and skips every later step, so the run passes. A missing or all-zero `before` counts as changed. Tag pushes, `workflow_dispatch` and an empty input skip the check. `wait_for_check_job` names a job in the caller's run, such as `Check`. After the build outputs pass, and before publish, the workflow polls every 15 seconds for up to 45 minutes until that job succeeds. It matches the job name, or a name ending in ` / <input>`. A failed or cancelled job fails the run with no release. It also waits on `dry_run`. On a private repo, the caller must grant `actions: read` as well as `contents: write` for this wait.
 
 ### Feature-only releases
 
@@ -170,7 +170,7 @@ The asset names and the `release.json` shape `{"versionName","versionCode","sha2
 
 - The `push` trigger and its `paths` filter, and the `workflow_dispatch` inputs.
 - `concurrency` (vmem: `group: release-android`, `cancel-in-progress: false`). The version is chosen inside the job, so runs must not overlap.
-- `permissions: contents: write`. A called workflow cannot get more than the caller grants, and publishing needs `contents: write`.
+- `permissions: contents: write`. The workflow sets no permissions of its own and inherits the caller's, and publishing needs `contents: write`. Also grant `actions: read` when you use `wait_for_check_job` on a private repo. The Actions API needs it to list the run's jobs (public repos do not). Without it the wait step fails with HTTP 403.
 - The secrets, passed with `secrets: inherit` (or by name).
 - The build script, the notes template and `app.config.ts`. The workflow changes no app code. If an app needs a patch before the build, such as the Groovy `${}` escape that vmem's `withReleaseSigning.js` has as `\${...}`, use `pre_build_script` or `pre_build_command`.
 
