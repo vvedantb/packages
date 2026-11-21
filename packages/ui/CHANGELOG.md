@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.59.0
+
+### Minor Changes
+
+- [#324](https://github.com/vvedantb/packages/pull/324) [`16c94b2`](https://github.com/vvedantb/packages/commit/16c94b2961cbdc96504e70e1bc629cb1579d6a66) Thanks [@vvedantb](https://github.com/vvedantb)! - Tab troughs take the card tone in dark mode, as Eva did with its own override.
+  
+  - `SidePanelTabs.List`, `Sidebar.RailGroup` (`railGroupClass`) and `ButtonTrack` (`buttonTrackClass`) add `dark:bg-surface` to their `bg-default` trough. In dark the trough was lighter than the card; in `.dark.neutral` it was the same tone as the `bg-segment` pill, so the pill did not show. Light mode is unchanged.
+  - `SidePanelTabs.Frame` card radius is now `md:rounded-surface` (was `md:rounded-lg`).
+  - Apps that copied Eva's `.tabs-segmented` / `.rail-track` dark override can remove it.
+
 ## 0.58.1
 
 ### Patch Changes
