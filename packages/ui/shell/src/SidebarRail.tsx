@@ -42,7 +42,8 @@ export type SidebarRailProps = Omit<ComponentPropsWithoutRef<"div">, "children" 
  * `.RailFooter` instead.
  *
  * In an `AppShell variant="rail"` each of `top`, the body and `footer` sits on
- * its own `RailGroup` trough, and `showDivider` and `RailDivider` draw nothing.
+ * its own `RailGroup` trough, the body trough is centred vertically, and
+ * `showDivider` and `RailDivider` draw nothing.
  * A `bodyAsChild` body is left as it is.
  */
 export function SidebarRail({
@@ -63,7 +64,7 @@ export function SidebarRail({
   return (
     <Rail {...props} showDivider={showDivider && !rail} className={className}>
       {top == null ? null : <RailHeader className={topClassName}>{slot(top)}</RailHeader>}
-      <RailBody asChild={bodyAsChild} tabs={tabs} className={bodyClassName}>
+      <RailBody asChild={bodyAsChild} tabs={tabs} className={cn(rail && "justify-center-safe", bodyClassName)}>
         {bodyAsChild ? children : slot(children)}
       </RailBody>
       {footer == null ? null : <RailFooter className={footerClassName}>{slot(footer)}</RailFooter>}

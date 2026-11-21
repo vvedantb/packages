@@ -17,7 +17,12 @@ export type ThemeProviderProps = {
   attribute?: ThemeAttribute | ThemeAttribute[];
   /** Theme names. Default `["light", "dark"]`. */
   themes?: string[];
-  /** Theme name to the class or attribute value written. */
+  /**
+   * Theme name to the class or attribute value written. With `attribute="class"`
+   * a value can hold more than one class, for example
+   * `{ neutral: "dark neutral" }`; such a theme counts as dark when one of its
+   * classes is `dark`.
+   */
   value?: Record<string, string>;
   /** Shown on `<html>` instead of the stored theme, which is left unchanged. */
   forcedTheme?: string;
@@ -41,7 +46,7 @@ export type ThemeState = {
   systemTheme: string | undefined;
   /** `false` until the provider's first effect has run. */
   mounted: boolean;
-  /** `mounted && resolvedTheme === "dark"`. */
+  /** `mounted` and `resolvedTheme` is `"dark"`, or its `value` has the `dark` class. */
   isDark: boolean;
   /** `setTheme(resolvedTheme === "dark" ? "light" : "dark")`. */
   toggleTheme: () => void;
@@ -89,6 +94,17 @@ export function applyThemeClass(theme: string): void {
   document.documentElement.classList.add(theme);
 }
 
+/** The classes in a `value` entry. */
+function classesOf(written: string): string[] {
+  return written.split(" ").filter((name) => name !== "");
+}
+
+/** `light` or `dark` for a theme whose `value` has more than one class, from those classes. */
+function schemeOf(written: string | undefined): string | undefined {
+  if (!written || !written.includes(" ")) return undefined;
+  return classesOf(written).find((name) => COLOR_SCHEMES.includes(name));
+}
+
 function systemThemeOf(media: { matches: boolean }): "light" | "dark" {
   return media.matches ? "dark" : "light";
 }
@@ -129,11 +145,11 @@ function applyTheme(theme: string | undefined, options: DomOptions): void {
   const written = options.value ? options.value[resolved] : resolved;
   const restoreTransitions = options.disableTransitionOnChange ? disableTransitions(options.nonce) : null;
   const root = document.documentElement;
-  const removable = options.value ? Object.values(options.value) : options.themes;
+  const removable = options.value ? Object.values(options.value).flatMap(classesOf) : options.themes;
   for (const attribute of Array.isArray(options.attribute) ? options.attribute : [options.attribute]) {
     if (attribute === "class") {
       root.classList.remove(...removable);
-      if (written) root.classList.add(written);
+      if (written) root.classList.add(...classesOf(written));
     } else if (attribute.startsWith("data-")) {
       if (written) root.setAttribute(attribute, written);
       else root.removeAttribute(attribute);
@@ -142,7 +158,8 @@ function applyTheme(theme: string | undefined, options: DomOptions): void {
   if (options.enableColorScheme) {
     const fallback = COLOR_SCHEMES.includes(options.defaultTheme) ? options.defaultTheme : null;
     // `null` clears the property in browsers; assigned as-is, as next-themes does.
-    Reflect.set(root.style, "colorScheme", COLOR_SCHEMES.includes(resolved) ? resolved : fallback);
+    const scheme = COLOR_SCHEMES.includes(resolved) ? resolved : (schemeOf(written) ?? fallback);
+    Reflect.set(root.style, "colorScheme", scheme);
   }
   restoreTransitions?.();
 }
@@ -253,7 +270,9 @@ export function createThemeProvider(options: ThemeProviderOptions = {}): ThemePr
       themes: enableSystem ? [...themes, "system"] : themes,
       systemTheme: enableSystem ? systemTheme : undefined,
       mounted,
-      isDark: mounted && resolvedTheme === "dark",
+      isDark:
+        mounted &&
+        (resolvedTheme === "dark" || (resolvedTheme !== undefined && schemeOf(domOptions.value?.[resolvedTheme]) === "dark")),
       toggleTheme: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
     };
     return <Context value={state}>{children}</Context>;

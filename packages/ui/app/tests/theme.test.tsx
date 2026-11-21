@@ -137,6 +137,37 @@ describe("added fields", () => {
     app.unmount();
   });
 
+  it("a value with more than one class writes them all and counts as dark", () => {
+    resetDom();
+    installColorScheme(false);
+    let isDark = false;
+    let set: SetTheme = () => {};
+    function Read() {
+      const state = core.useTheme();
+      isDark = state.isDark;
+      set = state.setTheme;
+      return null;
+    }
+    const app = mount(
+      <core.ThemeProvider
+        attribute="class"
+        themes={["light", "dark", "neutral"]}
+        value={{ light: "light", dark: "dark", neutral: "dark neutral" }}
+      >
+        <Read />
+      </core.ThemeProvider>,
+    );
+    const root = document.documentElement;
+    step(() => set("neutral"));
+    expect([...root.classList].sort()).toEqual(["dark", "neutral"]);
+    expect(root.style.colorScheme).toBe("dark");
+    expect(isDark).toBe(true);
+    step(() => set("light"));
+    expect([...root.classList]).toEqual(["light"]);
+    expect(isDark).toBe(false);
+    app.unmount();
+  });
+
   it("outside the provider: an empty state by default, or the configured error", () => {
     let state: ReturnType<typeof core.useTheme> | undefined;
     function Read() {
