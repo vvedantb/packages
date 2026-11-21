@@ -322,11 +322,12 @@ jobs:
             echo "should_release=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Full history only when the pathspecs check below needs it.
+      # Full history only when the pathspecs check below needs it. 0 is falsy in
+      # expressions, so the condition is inverted to keep 0 as the last operand.
       - uses: actions/checkout@v6
         if: steps.gate.outputs.should_release == 'true'
         with:
-          fetch-depth: ${{ (inputs.pathspecs != '' && github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) && 0 || 1 }}
+          fetch-depth: ${{ !(inputs.pathspecs != '' && github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) && 1 || 0 }}
 
       # The final should_release for every later step: the gate's answer, then
       # (branch push with pathspecs only) whether a changed file matches.
@@ -361,7 +362,11 @@ jobs:
             exit 0
           fi
 
-          # No usable before (new branch, force push): count as changed.
+          # Fetch before if the checkout lacks it. Only an all-zero before, or one
+          # that stays unavailable (new branch, force push), counts as changed.
+          if [[ ! "$BEFORE" =~ ^0+$ ]] && ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$BEFORE" || true
+          fi
           if [[ "$BEFORE" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             echo "No usable before commit ($BEFORE): treating as changed, releasing"
             echo "should_release=true" >> "$GITHUB_OUTPUT"
