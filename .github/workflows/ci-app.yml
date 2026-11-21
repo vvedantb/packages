@@ -41,7 +41,7 @@ on:
       runs_on:
         description: "Runner label (a single label)."
         type: string
-        default: boat-large
+        default: boat
       timeout_minutes:
         description: "Job timeout in minutes."
         type: number
