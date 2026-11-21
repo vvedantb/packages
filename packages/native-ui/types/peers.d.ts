@@ -145,6 +145,7 @@ declare module "react-native" {
     testID?: string;
     nativeID?: string;
     numberOfLines?: number;
+    adjustsFontSizeToFit?: boolean;
     ellipsizeMode?: "head" | "middle" | "tail" | "clip";
     selectable?: boolean;
     allowFontScaling?: boolean;
@@ -738,8 +739,18 @@ declare module "react-native-svg" {
   export const G: React.ComponentType<GProps>;
   export const Path: React.ComponentType<PaintProps & { d: string }>;
   export const Rect: React.ComponentType<
-    PaintProps & { x?: number; y?: number; width: number; height: number; rx?: number }
+    PaintProps & { x?: number; y?: number; width: number | string; height: number | string; rx?: number }
   >;
+  export const Defs: React.ComponentType<{ children?: React.ReactNode }>;
+  export const LinearGradient: React.ComponentType<{
+    id: string;
+    x1?: number | string;
+    y1?: number | string;
+    x2?: number | string;
+    y2?: number | string;
+    children?: React.ReactNode;
+  }>;
+  export const Stop: React.ComponentType<{ offset: number | string; stopColor: string; stopOpacity?: number }>;
   declare const Svg: React.ComponentType<SvgProps>;
   export default Svg;
 }
@@ -1111,9 +1122,11 @@ declare module "@tabler/icons-react-native" {
   export const IconChevronUp: Icon;
   export const IconCircle: Icon;
   export const IconCircleCheck: Icon;
+  export const IconCircleHalf: Icon;
   export const IconCircleX: Icon;
   export const IconCopy: Icon;
   export const IconTextWrap: Icon;
+  export const IconDeviceDesktop: Icon;
   export const IconDots: Icon;
   export const IconFile: Icon;
   export const IconFileText: Icon;

@@ -15,6 +15,8 @@ export { SettingsToggleRow } from "../settings/SettingsToggleRow";
 export { SettingsStack } from "../settings/SettingsStack";
 export { SettingsEmptyState } from "../settings/SettingsEmptyState";
 export type { SettingsEmptyStateProps } from "../settings/SettingsEmptyState";
+export { ThemeModePicker, THEME_MODES } from "../settings/ThemeModePicker";
+export type { ThemeMode, ThemeModePickerProps } from "../settings/ThemeModePicker";
 export { PinnedBotTile, BotPinGrid } from "../PinnedBotTile";
 export type { PinnedBotTileProps, BotPinGridProps } from "../PinnedBotTile";
 export { ArtifactList } from "../ArtifactList";

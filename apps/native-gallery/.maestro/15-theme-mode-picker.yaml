@@ -1,0 +1,33 @@
+# The theme tiles: each tap selects that theme, and only one tile is selected.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-layout
+- tapOn:
+    id: link-layout
+- assertVisible:
+    id: section-layout
+- scrollUntilVisible:
+    element:
+      id: theme-mode-value
+    timeout: 60000
+- assertVisible: "Theme: system"
+- tapOn:
+    id: theme-mode-neutral
+- assertVisible: "Theme: neutral"
+- assertVisible:
+    id: theme-mode-neutral
+    checked: true
+- assertVisible:
+    id: theme-mode-system
+    checked: false
+- takeScreenshot: screenshots/theme-mode-neutral
+- tapOn:
+    id: theme-mode-light
+- assertVisible: "Theme: light"
+- tapOn:
+    id: theme-mode-dark
+- assertVisible: "Theme: dark"
