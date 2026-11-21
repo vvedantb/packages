@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.59.3
+
+### Patch Changes
+
+- [#329](https://github.com/vvedantb/packages/pull/329) [`d00f938`](https://github.com/vvedantb/packages/commit/d00f938585ecf4e46f54e486a1730f5d84238f41) Thanks [@vvedantb](https://github.com/vvedantb)! - `SidebarRail`: in an `AppShell variant="rail"`, the body trough is now centred vertically between the top and footer troughs. Apps no longer need to pass `justify-center-safe` in `bodyClassName`.
+
+- [#329](https://github.com/vvedantb/packages/pull/329) [`d00f938`](https://github.com/vvedantb/packages/commit/d00f938585ecf4e46f54e486a1730f5d84238f41) Thanks [@vvedantb](https://github.com/vvedantb)! - `createThemeProvider`: with `attribute="class"`, a `value` entry can now hold more than one class. For the Neutral theme pass `themes={["light", "dark", "neutral"]}` and `value={{ light: "light", dark: "dark", neutral: "dark neutral" }}`. A theme whose classes include `dark` sets `color-scheme: dark` and gives `isDark: true`.
+
 ## 0.59.2
 
 ### Patch Changes
