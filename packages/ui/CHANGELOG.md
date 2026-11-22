@@ -2,12 +2,28 @@
 
 ## Unreleased
 
+## 0.61.0
+
+### Minor Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Add semantic aliases, exported recipes and a `Field` compound. Nothing existing changes.
+
+  - `Button` `variant`: `primary` (= `default`), `tertiary` (= `ghost`) and `danger` (= `destructive`). `size`: `md` (= `default`). The omitted-prop defaults stay the same. Native `Button` also gains `success`, `warning` and `flat`.
+  - `Spinner` `size="default"` equals `md`. `SearchInput` `size="default"` equals `md` (web); its omitted default stays `sm`. `ConfirmDialog` sizes are documented as width caps.
+  - Web: export `buttonVariants`, `badgeVariants`, `tabsBarVariants` and the `ButtonVariant`, `ButtonSize` and `ButtonShape` types. `UiConfigProvider` overrides do not apply to raw `buttonVariants()` calls.
+  - `Field`, `FieldLabel`, `FieldControl`, `FieldDescription` and `FieldError` link a label, a control, a hint and an error (`htmlFor`, `id` and `aria-describedby` on web; `nativeID` and `accessibilityLabelledBy` on native). A plain `Input` is unchanged.
+  - Native `controlStyles` helpers are documented as internal.
+
+### Patch Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix the invalid SVG path in the `Spinner` ring variant.
+
 ## 0.60.0
 
 ### Minor Changes
 
 - [#331](https://github.com/vvedantb/packages/pull/331) [`b83dde2`](https://github.com/vvedantb/packages/commit/b83dde26bfa9fd11106b40f7cae4f6fc05745c07) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ThemeModePicker` (and `THEME_MODES`, `ThemeMode`): Light, Neutral, Dark and System tiles for an Appearance settings section.
-  
+
   `SidebarAccountMenu` `themeToggle` also takes `{ theme, onToggle }`. The item then cycles light, neutral, dark. `nextThemeInCycle(theme)` gives the next theme. `{ isDark, onToggle }` works as before.
 
 ## 0.59.4
@@ -41,7 +57,7 @@
 ### Minor Changes
 
 - [#324](https://github.com/vvedantb/packages/pull/324) [`16c94b2`](https://github.com/vvedantb/packages/commit/16c94b2961cbdc96504e70e1bc629cb1579d6a66) Thanks [@vvedantb](https://github.com/vvedantb)! - Tab troughs take the card tone in dark mode, as Eva did with its own override.
-  
+
   - `SidePanelTabs.List`, `Sidebar.RailGroup` (`railGroupClass`) and `ButtonTrack` (`buttonTrackClass`) add `dark:bg-surface` to their `bg-default` trough. In dark the trough was lighter than the card; in `.dark.neutral` it was the same tone as the `bg-segment` pill, so the pill did not show. Light mode is unchanged.
   - `SidePanelTabs.Frame` card radius is now `md:rounded-surface` (was `md:rounded-lg`).
   - Apps that copied Eva's `.tabs-segmented` / `.rail-track` dark override can remove it.
@@ -137,7 +153,7 @@
 ### Minor Changes
 
 - [#246](https://github.com/vvedantb/packages/pull/246) [`8cf9bb0`](https://github.com/vvedantb/packages/commit/8cf9bb00f91176e84e1e0460018986a14cc476cf) Thanks [@vvedantb](https://github.com/vvedantb)! - Visual change. The sidebar rail is more compact: `AppShell` `railWidth` defaults to `3.5rem` (was `4rem`) and `sidebarWidth` to `19.5rem` (was `20rem`, so the panel keeps its 16rem), rail tiles and the account trigger are 40px from `md` up (44px below, as before), the gap between tiles is `gap-1` (was `gap-1.5`) and `SIDEBAR_RAIL_APP_ICON_SIZE` is 24 (was 26). An app that passes its own `railWidth` or `sidebarWidth` keeps them.
-  
+
   Menu surfaces (`DropdownMenu`, `ContextMenu`, `Select`, `RadixSelect`) use the new `rounded-menu` utility (12px at the default radius, was `rounded-lg`, 16px): the item radius plus the surface inset, so the gap between a highlighted item and the surface edge is the same round the corner. Menus are also more compact: the surface inset is `p-1` (was `p-1.5`), items are `py-1.5` (32px, was `py-2`, 36px; `max-sm:min-h-10` as before) and separators are `-mx-1`. `Command` matches: the root and, from `sm`, the `CommandDialog` content use `rounded-menu`, `CommandGroup` is `p-1`, `CommandItem` is `py-1.5`, `CommandSeparator` is `-mx-1` and `CommandList` drops `pb-2`. `ComposerSlashMenu` (was `rounded-surface`, 16px) and the model picker (`modelPickerSurfaceClass` and `ModelPickerContent`, was `rounded-lg`, 16px) use `rounded-menu` too; the model picker list inset is `p-1` (was `px-1.5 py-1.5`) and its rows and rail tiles use `rounded-menu-item` (was `rounded-md`, 14px). `rounded-menu` comes with `tokens.css` and `compat-shadcn-rgb.css`, and the root `cn` treats it as a radius class.
 
 ## 0.48.0
@@ -151,11 +167,11 @@
 ### Minor Changes
 
 - [#236](https://github.com/vvedantb/packages/pull/236) [`7db4f19`](https://github.com/vvedantb/packages/commit/7db4f194aeaa25b5352ce5524cd236d6f386f404) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Generative UI in the kits: agent-composed panels from one shared catalog.
-  
+
   - `@vvedantb/server/generative-ui`: the 16 component definitions (zod props), the `reply` and `open_url` actions, tones and styles, `parseGenerativeUiSpec` and `isHttpUrl`. No json-render runtime: pass `generativeUiCatalogDefinition` to json-render's `defineCatalog`.
   - `@vvedantb/ui/generative-ui`: `GenerativeUiPanel` (stored spec, `onReply`, `onOpenUrl`), `GenerativeUiRenderer` and `generativeUiCatalog` on `@json-render/react`.
   - `@vvedantb/native-ui/generative-ui`: `GenerativeUiPanel` (plus `onCopy` and `renderUnsupported`) and `generativeUiNativeCatalog` on `@json-render/react-native`, drawn as the web panel on the native tokens.
-  
+
   New optional peers: `@json-render/core`, `@json-render/react` (ui), `@json-render/react-native` (native-ui), `>=0.21.0`.
 
 ### Patch Changes
@@ -191,7 +207,7 @@
 ### Minor Changes
 
 - [#222](https://github.com/vvedantb/packages/pull/222) [`f470a3a`](https://github.com/vvedantb/packages/commit/f470a3a058b88946ec8005fe9bc95e8951fd5b11) Thanks [@vvedantb](https://github.com/vvedantb)! - Add shared stale-deploy / chunk-load recovery beside the update watcher. After a new deploy serves HTML that points at removed asset hashes, the app can throw a chunk-load error and wedge; this recovers by reloading once with a cooldown guard and a cache-bust param.
-  
+
   New exports (root and `@vvedantb/ui/client`): `isChunkLoadError`, `installStaleDeployReload` (registers `vite:preloadError`, capture-phase `error`, and `unhandledrejection` listeners, with an `onBeforeReload` callback for app-specific teardown such as `convex.close()`), plus the primitives `claimStaleDeployReload`, `reloadForStaleDeploy`, `stripStaleDeployReloadParam` and the `STALE_DEPLOY_RELOAD_KEY` / `STALE_DEPLOY_RELOAD_PARAM` constants.
 
 ### Patch Changes
@@ -228,7 +244,7 @@
 - [#170](https://github.com/vvedantb/packages/pull/170) [`94abbff`](https://github.com/vvedantb/packages/commit/94abbfff0b682f473c7383b094f6ad162d557765) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ActivityTasks`: the folded layout now shows mid-turn reply text (`response` steps) in the timeline, like the inline layout. A live turn no longer needs a separate text block after the timeline, so its first words stay above newer steps.
 
 - [#158](https://github.com/vvedantb/packages/pull/158) [`8cda130`](https://github.com/vvedantb/packages/commit/8cda130cefa50a9940922ff3e5c513c0a8bdbcfe) Thanks [@vvedantb](https://github.com/vvedantb)! - Add `ProductHero`, a shared hero for product landing pages, and `PROJECT_V_HOME_URL`. Both are exported from `@vvedantb/ui` and `@vvedantb/ui/client`.
-  
+
   - Copy first, then the visual on mobile. Side by side from `lg`. Uses `landingShellClass` width.
   - One `h1` with the `pageTitleClass` family, weight 600, leading and tracking, at a display scale.
   - Pill primary action, optional secondary action, and at most one "Sign in" control (`signIn`).
@@ -236,9 +252,9 @@
   - `visual` slot for an animated concept visual, not an app replica or screenshot. Decorative (`aria-hidden`) unless `visualLabel` is set.
   - Optional `userCount` social proof under the actions: "Free to use · 1,284+ people already here", with a green dot that pulses unless `prefers-reduced-motion: reduce`. Hidden for `undefined`, `null` and 0 or less. The package does no fetching; apps feed the number (for example a Convex action around Clerk `users.getCount()`).
   - "a product of Project V" line, always linked to `PROJECT_V_HOME_URL`. No prop changes the link; `showProductOf={false}` hides the line. `SiteFooter` now uses the same constant; its rendered output does not change.
-  
+
   The Velth docs and playground example links its V Store CTA to `https://projectv.uk/download/v-store` with `rel="nofollow"`.
-  
+
   `LandingHero` from `createLandingKit` is unchanged.
 
 ## 0.39.1
@@ -246,17 +262,17 @@
 ### Patch Changes
 
 - [#175](https://github.com/vvedantb/packages/pull/175) [`350f606`](https://github.com/vvedantb/packages/commit/350f6064ab84130e0cbd20b32a300730aa627778) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - native-ui `/ai`: the web activity timeline's pure logic, as byte-identical copies of the `@vvedantb/ui` files (`activity-step-label.ts`, `activity-tasks-utils.ts`, `activity-step-types.ts`): `deriveStepRowPresentation` (short verbs, file chips, "Checked git status", "Used Linear: List Issues"), `deriveActionGroupSummary` ("used Linear", "ran hooks"), `resolveCommandVisualKind`, `buildActivityRows` (subagent steps nest under their row) and `groupActivityRows`, `activityStepHasRichDetail`, and the step type as `ActivityTimelineStep`. New `foldedActivitySegments`, `activityChildRows`, `activityStepSeconds`, `ACTIVITY_MAX_VISIBLE_BLOCKS` and `ACTIVITY_MAX_VISIBLE_CHILDREN`: the folded `ActivityTasks` rules, for an app that draws the rows with the `AgentTrace` parts.
-  
+
   native-ui `CodeBlock`: colours match the web's Shiki `github-light` / `github-dark`. JavaScript and TypeScript recolour Prism's tokens where Shiki differs (`null`, `undefined` and `this` as constants, parameters, `const` names, type names, string escapes, regex classes, `${…}` punctuation, type-argument brackets; `scriptTokens`). `bash`, `sh`, `shell` and `zsh` are coloured by a small tokenizer in the Shiki roles (`shellTokens`); before, they were plain.
-  
+
   native-ui `Markdown`: tables have the web table actions a phone can use, above the table: Copy table (a sheet of Markdown, CSV and TSV, the web formats; new `onCopyTable` prop) and View fullscreen (the table at its own column widths, scrolling sideways). Download table is left out.
-  
+
   native-ui `PromptInput`: the `pill` composer's placeholder is the muted colour at 90%, as Eva's web composer.
-  
+
   ui: the activity step types move to `activity-step-types.ts` (still exported from the package root), so native-ui can copy the pure timeline files unchanged.
 
 - [#186](https://github.com/vvedantb/packages/pull/186) [`2c08bea`](https://github.com/vvedantb/packages/commit/2c08bea5491495fa9207cc67a688e623dad3422a) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Phone-browser fixes:
-  
+
   - Hover styles in the kit CSS now apply only under `@media (hover: hover) and (pointer: fine)`. On touch, a tap leaves `:hover` stuck, so icons stayed scaled, marquees stayed scrolled and links stayed lit. This covers `nav-icons.css`, `marquee.css`, `markdown.css` (`.markdown-link`), `tabs.css`, `tabs-pills.css`, `scrollbar-thin.css`, `.sidebar-section-label` in `tokens.css`, the `reveal-on-hover` utility (now also needs a fine pointer) and the `AgentTraceLine` button-hover colour. `nav-icons.css` now sets each shape's animation in `--vv-icon-animation`; two shared rules run it for `data-animate="true"` and for group hover. A `data-animate="true"` icon still animates on touch.
   - `Input`, `Textarea`, `Select`, `ClearInput`, `SearchInput` and the `Command` input keep 16 px text on coarse pointers at every width (`sm:pointer-fine:text-sm`). An iPad is wider than `sm`, so it got 14 px fields and iOS zoomed in on focus. The `Queue` edit field no longer forces `text-sm`, for the same reason.
   - `base.css` sets `touch-action: manipulation` on buttons, links, `summary`, `label`, checkboxes, radios and the `button`, `link`, `tab`, `option`, `menuitem*`, `checkbox`, `radio` and `switch` roles. This removes the double-tap-zoom wait on taps. The rule is in `@layer base`, so `touch-*` utilities still win.
@@ -326,11 +342,11 @@ Additive: quoted-reply building blocks for chat. No removed or renamed export, a
   - Not moved: the vmem logo loaders (`VmemPaths`, `VmemDrawInIcon`, `VmemSpinner`, `VmemThinkingLoader`) and `vmem-anim.css`. They are product marks.
 - After adoption the apps can delete:
 
-  | App | Deletable |
-  | --- | --- |
-  | openwork | `apps/web/src/components/brand-icons/**` except `EvaIcon.tsx`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/svg-animations/`, every file except `VmemPaths.tsx`, `VmemDrawInIcon.tsx`, `VmemSpinner.tsx`, `VmemThinkingLoader.tsx` and `vmem-anim.css` (trim `index.ts` to those) |
-  | vmem | `apps/web/src/components/icons/logos/**`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/icons/animations/`, `AnimatedBellIcon.tsx`, `AnimatedCounter.tsx`, `AnimatedKeyIcon.tsx`, `AnimatedNotificationIcon.tsx` and `MorphingMenuIcon.tsx` (keep the `Vmem*` loaders and `vmem-anim.css`) |
-  | Eva | In `apps/web/src/lib/components/ui/providerLogos.tsx`: `VercelLogo`, `ConvexLogo`, `FigmaLogo`, `LinearLogo`. Keep the `ProviderIcon` wrappers (`ClaudeLogo`, `OpenAILogo`, `CursorLogo`, `OpenCodeLogo`) if still wanted |
+  | App      | Deletable                                                                                                                                                                                                                                                                                                                   |
+  | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | openwork | `apps/web/src/components/brand-icons/**` except `EvaIcon.tsx`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/svg-animations/`, every file except `VmemPaths.tsx`, `VmemDrawInIcon.tsx`, `VmemSpinner.tsx`, `VmemThinkingLoader.tsx` and `vmem-anim.css` (trim `index.ts` to those)         |
+  | vmem     | `apps/web/src/components/icons/logos/**`; `apps/web/src/components/settings/ClaudeLogo.tsx`; in `apps/web/src/components/icons/animations/`, `AnimatedBellIcon.tsx`, `AnimatedCounter.tsx`, `AnimatedKeyIcon.tsx`, `AnimatedNotificationIcon.tsx` and `MorphingMenuIcon.tsx` (keep the `Vmem*` loaders and `vmem-anim.css`) |
+  | Eva      | In `apps/web/src/lib/components/ui/providerLogos.tsx`: `VercelLogo`, `ConvexLogo`, `FigmaLogo`, `LinearLogo`. Keep the `ProviderIcon` wrappers (`ClaudeLogo`, `OpenAILogo`, `CursorLogo`, `OpenCodeLogo`) if still wanted                                                                                                   |
 
 - No new dependencies. The animated icons use the existing optional `motion` peer.
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.14.0
+
+### Minor Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - `defineWebVitestConfig` takes `dedupe` (`resolve.dedupe`, as `defineWebViteConfig` does). Pass `dedupe: REACT_DEDUPE` when the tests load a workspace package from source: without it that package can load another copy of React than the app's.
+
+### Patch Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - The `vvedantb-*` bins are now small committed files in `bin/` that import the built CLI from `dist`. pnpm links a bin only when its file exists at install: in a workspace `dist` does not exist yet, so no bin was linked and scripts such as `vvedantb-check-shared-ui` failed. The commands and their behaviour do not change.
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-doctor` accepts the shared workflow from `vvedantb/workflows`. Before, `ci-reusable-workflow` and `ci-commands` failed for a repo that called `vvedantb/workflows/.github/workflows/ci-app.yml`, because the doctor looked only for the `vvedantb/packages` path. A call to the older path still passes.
+
 ## 0.13.0
 
 ### Minor Changes
@@ -11,7 +23,7 @@
 ### Minor Changes
 
 - [#318](https://github.com/vvedantb/packages/pull/318) [`5f7ce9d`](https://github.com/vvedantb/packages/commit/5f7ce9d342f04bfd979baacc17fd00930f34bb56) Thanks [@vvedantb](https://github.com/vvedantb)! - Speed up the shared Android APK release path.
-  
+
   - Add `pickAndroidReleaseVersion` and its helpers (`compareSemver`, `highestSemver`, `publishedVersionNames`). The tests own the version rules. The `release-android-apk.yml` version step now lists tags once, takes published versionNames from tag suffixes and downloads `release.json` only for the highest semver tag, instead of every release.
   - `vvedantb-android-release` builds `arm64-v8a` only (no `x86_64`), sets `org.gradle.workers.max=8` (replacing Expo's lower default) and `org.gradle.parallel=true`. `org.gradle.configuration-cache` stays off: ephemeral CI runners never reuse the cache, so a cold release build only pays the store cost, and native modules can still be incompatible on release tasks.
   - Add the config flags `syncAppVersion` (write the version to `app.json` and the root `package.json`) and `versionNameFromAppJson` (use `expo.version` when `VERSION_NAME` is unset) so v-store can use the shared bin. Both default to `false`.
@@ -40,7 +52,7 @@
 ### Minor Changes
 
 - [#292](https://github.com/vvedantb/packages/pull/292) [`dfd2849`](https://github.com/vvedantb/packages/commit/dfd2849e95d2f55e2a697767d3de171aaf1fe763) Thanks [@vvedantb](https://github.com/vvedantb)! - Add a shared-worker Vitest preset and a `vvedantb-doctor` CLI.
-  
+
   - `sharedWorkerVitestConfig` (and `SHARED_WORKER_SETUP`): an opt-in Vitest preset that lets test files share a worker (`isolate: false`), shuffles file order, and resets mocks, env stubs, global stubs and fake timers after each test. Trades per-file isolation for a faster run; adopt it per repo where tests are independent.
   - `vvedantb-doctor`: a dependency-free CLI that inspects a repo for drift from the shared CI and tooling house rules (ESLint, Prettier, plain `tsc`, missing `tsrs`, missing `oxlint` dep or script, an older `@vvedantb/config` minor, a CI workflow that does not call the shared reusable workflow). It walks workspace packages, supports `--json` and a per-repo waiver file, makes no network requests, and exits non-zero on drift.
 
@@ -85,7 +97,7 @@
 ### Minor Changes
 
 - [#225](https://github.com/vvedantb/packages/pull/225) [`4eada13`](https://github.com/vvedantb/packages/commit/4eada137e0ff7871dd1003c9b92e92fa29c1b892) Thanks [@vvedantb](https://github.com/vvedantb)! - Add four shared tooling items used across the apps:
-  
+
   - `withReleaseSigning`: an Expo config plugin that signs the Android `release` build type from a keystore (environment, else `keystore.properties`), failing a release when a value is missing. `expo/config-plugins` is an optional, lazily resolved peer. Marker is configurable and defaults to a value containing `plugins/withReleaseSigning.js` so build-script greps pass.
   - `singletons` (and `nativeWindConfig`) on `defineExpoMetroConfig`: rewrites `originModulePath` to the app's `package.json` for the given module heads so a single copy resolves. Backward compatible for apps that omit it.
   - `vvedantb-android-release`: a config-driven Android release build bin that merges the per-app build scripts into one and keeps the reusable-workflow `GITHUB_OUTPUT` interface (`apk`, `release_json`, `version_name`, `version_code`, `sha256`). Runs on Linux CI.

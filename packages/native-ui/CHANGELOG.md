@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.36.0
+
+### Minor Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Add semantic aliases, exported recipes and a `Field` compound. Nothing existing changes.
+
+  - `Button` `variant`: `primary` (= `default`), `tertiary` (= `ghost`) and `danger` (= `destructive`). `size`: `md` (= `default`). The omitted-prop defaults stay the same. Native `Button` also gains `success`, `warning` and `flat`.
+  - `Spinner` `size="default"` equals `md`. `SearchInput` `size="default"` equals `md` (web); its omitted default stays `sm`. `ConfirmDialog` sizes are documented as width caps.
+  - Web: export `buttonVariants`, `badgeVariants`, `tabsBarVariants` and the `ButtonVariant`, `ButtonSize` and `ButtonShape` types. `UiConfigProvider` overrides do not apply to raw `buttonVariants()` calls.
+  - `Field`, `FieldLabel`, `FieldControl`, `FieldDescription` and `FieldError` link a label, a control, a hint and an error (`htmlFor`, `id` and `aria-describedby` on web; `nativeID` and `accessibilityLabelledBy` on native). A plain `Input` is unchanged.
+  - Native `controlStyles` helpers are documented as internal.
+
+### Patch Changes
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix `ExpoWebRoot` on Expo SDK 58: it now renders the HTML and body attributes, the head nodes (CSS links, metadata, preloads) and the body nodes (script tags) from `useServerDocumentContext`. Without them the static web export had no styles and no scripts, so every page was blank. Earlier SDKs are not affected.
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Update the package for the React Native version in Expo SDK 58: type component refs with `ComponentRef<typeof ...>`, and change `FloatingTabBar` to the SDK 58 `tabBar` props (`emitter` and `navigateToTab` in place of `navigation`).
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - Type the view and text-input refs and the floating tab bar style option so they hold under React Native 0.88 and Expo Router 58.
+
+- [#335](https://github.com/vvedantb/packages/pull/335) [`86d63c8`](https://github.com/vvedantb/packages/commit/86d63c83d4a927575fb2a7a812895442de095b22) Thanks [@vvedantb](https://github.com/vvedantb)! - `WindowLayerHost`: with Reduce Motion (Android "Remove animations") a layer gets no fade at all and shows at once, as the fallback `Modal` does. Before, the context menu and `ImageViewer` layers could stay hidden with animations off.
+
 ## 0.35.0
 
 ### Minor Changes
@@ -17,7 +39,7 @@
 ### Minor Changes
 
 - [#310](https://github.com/vvedantb/packages/pull/310) [`7a3b876`](https://github.com/vvedantb/packages/commit/7a3b876c75ec766ec00e3abc9156a7ce694d21a3) Thanks [@vvedantb](https://github.com/vvedantb)! - `@vvedantb/native-ui/auth`: sign-in, sign-up, reset password and second factor now use the `useSignIn` and `useSignUp` hooks from the root of `@clerk/expo`. The import of `@clerk/expo/legacy` is gone. Screen props, `testID`s, copy and error messages are the same, so apps need no code change. The `@clerk/expo` peer range is now `>=4.16.0`.
-  
+
   Two things differ underneath. The second-factor code by SMS or email is sent with no explicit phone number or email id: Clerk uses the one on the sign-in. A password reset passes `signOutOfOtherSessions: false`, which keeps other sessions signed in as before.
 
 ## 0.32.0
@@ -25,11 +47,11 @@
 ### Minor Changes
 
 - [#309](https://github.com/vvedantb/packages/pull/309) [`69ea4ad`](https://github.com/vvedantb/packages/commit/69ea4ad1c508de9a8ba1191b592001b3f50284dd) Thanks [@vvedantb](https://github.com/vvedantb)! - `@vvedantb/native-ui/auth` now uses `@clerk/expo` 4 in place of the deprecated `@clerk/clerk-expo`, and adds `ChangePasswordScreen` and `DeleteAccountScreen`.
-  
+
   **Breaking for apps that use `/auth`:** the peer dependency is now `@clerk/expo` `>=4.0.0`. Remove `@clerk/clerk-expo`, add `@clerk/expo`, and change the app's own imports (see Clerk's Core 3 upgrade guide). Pass `publishableKey` to `AuthProviders`: `@clerk/expo` needs it.
-  
+
   The sign-in, sign-up, reset and second-factor screens keep their behaviour: they use the same hooks from `@clerk/expo/legacy`.
-  
+
   - `ChangePasswordScreen`: current password, then the new one twice, with `user.updatePassword`. No current-password field for an account without a password.
   - `DeleteAccountScreen`: type-to-confirm, then `user.delete()`. Needs "Allow users to delete their accounts" turned on in the Clerk dashboard.
 
@@ -88,7 +110,7 @@
 ### Patch Changes
 
 - [#279](https://github.com/vvedantb/packages/pull/279) [`e784baa`](https://github.com/vvedantb/packages/commit/e784baa2ac785ddab56c5d9ac6ac9bdd2614b75d) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Hold menu fixes:
-  
+
   - `Message` in a `ConversationList` with the keyboard parts: the hold menu freezes the list's keyboard handling from open until its close settles (`Conversation` `overlay`). Before, on Android, the menu's window took the focus as it opened and as it closed, and each time the list jumped to the newest message; the jump on open also closed the menu. `MessageContextMenu` gains `onDismissed` (iOS).
   - `MessageContextMenu`: a pressed card row now takes the `SheetRow` pressed fill. Before, the row's own opacity style hid the press.
 
@@ -163,11 +185,11 @@
 ### Minor Changes
 
 - [#236](https://github.com/vvedantb/packages/pull/236) [`7db4f19`](https://github.com/vvedantb/packages/commit/7db4f194aeaa25b5352ce5524cd236d6f386f404) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Generative UI in the kits: agent-composed panels from one shared catalog.
-  
+
   - `@vvedantb/server/generative-ui`: the 16 component definitions (zod props), the `reply` and `open_url` actions, tones and styles, `parseGenerativeUiSpec` and `isHttpUrl`. No json-render runtime: pass `generativeUiCatalogDefinition` to json-render's `defineCatalog`.
   - `@vvedantb/ui/generative-ui`: `GenerativeUiPanel` (stored spec, `onReply`, `onOpenUrl`), `GenerativeUiRenderer` and `generativeUiCatalog` on `@json-render/react`.
   - `@vvedantb/native-ui/generative-ui`: `GenerativeUiPanel` (plus `onCopy` and `renderUnsupported`) and `generativeUiNativeCatalog` on `@json-render/react-native`, drawn as the web panel on the native tokens.
-  
+
   New optional peers: `@json-render/core`, `@json-render/react` (ui), `@json-render/react-native` (native-ui), `>=0.21.0`.
 
 ### Patch Changes
@@ -180,7 +202,7 @@
 ### Minor Changes
 
 - [#221](https://github.com/vvedantb/packages/pull/221) [`ee759db`](https://github.com/vvedantb/packages/commit/ee759db259713612a79822dab69465df3c9c3bff) Thanks [@vvedantb](https://github.com/vvedantb)! - Export `useScheme` from `@vvedantb/native-ui/theme` and add `TabScreen` to `@vvedantb/native-ui/expo-router`.
-  
+
   `useScheme` returns the active NativeWind colour scheme as a `"light" | "dark"` key and redraws the caller after each `configureTheme`. `TabScreen` wraps its children in a `GlassBlurTarget` that is active only while the tab is focused, so the focused tab owns the floating tab bar's Android blur target.
 
 ### Patch Changes
@@ -214,18 +236,16 @@
 ### Patch Changes
 
 - [#153](https://github.com/vvedantb/packages/pull/153) [`1d7fcb9`](https://github.com/vvedantb/packages/commit/1d7fcb9e670a1dd2a32b2a4663ed9314d201ec7f) Thanks [@vvedantb](https://github.com/vvedantb)! - Gallery, Maestro CI, and Android hand-sweep fixes. No breaking change, no removed or renamed export, no new dependency.
-  
+
   ### Fixed
-  
   - `DropdownMenu`: `DROPDOWN_MENU.itemPaddingY` is 12 (was 8) so rows are a full 44-point target from padding and one `text-sm` line. `minHeight` stays 44 (56 with larger text).
   - `Select` options (`SelectItem`): `min-h-[44px]` / `min-h-[56px]` with larger text.
   - `SelectContent` on Android: options now show. Root cause: `SelectHost` put an RN `Modal` inside the primitive's Portal, and the Modal mounted as an empty window (host view only, no options). Android now skips the Portal and `SelectHost` renders a transparent `Modal` directly, as `DropdownMenuContent` does. Because the Portal's `open` gate no longer applies, `SelectHost` mounts the Modal only while the Select is open, and its `animationType` is `none` with reduce motion. iOS keeps the Portal and `FullWindowOverlay`. Web is unchanged.
   - `BottomSheetContainer`: the sheet now opens on Android. Root cause: `BottomSheetModal.present()` did nothing after an RN `Modal` had been dismissed, and the named `BottomSheet` export is undefined. The component now uses the controlled default-export gorhom `BottomSheet` (`index={0}`, rendered only while `visible`), with explicit `snapPoints` (`40%`), `BottomSheetView` padding set by `style`, and a solid background on Android (glass stays on iOS). The public props are unchanged. The gallery mounts the sheet outside `GlassBlurTarget`.
   - `AmbientBackground` fallback uses `StyleSheet.absoluteFill` (RN 0.86 dropped `absoluteFillObject`).
   - Types for expo-router 57 (`useRouter` instead of the renamed `Router`) and RN 0.86 (`Message` layout `style`).
-  
+
   ### Added
-  
   - `PromptInput`: with a `testID`, the field gets `<testID>-input` for UI tests.
   - Expo gallery app `apps/native-gallery` (private, not published) covering every entry point, with layering and keyboard stress screens, mocked Clerk, a registry test, Maestro flows, and the `native-ui-gallery-android` CI job.
 
@@ -236,7 +256,7 @@
 - [#157](https://github.com/vvedantb/packages/pull/157) [`7ef4add`](https://github.com/vvedantb/packages/commit/7ef4addcaa3c0c0428776a36bbeba5689c6cfa3c) Thanks [@vvedantb](https://github.com/vvedantb)! - Add optional `/ai` card props. `ToolApprovalCard` and `ToolDraftCard` take `server`, `routineMode`, `expiresLabel`, `target`, `meta` and `chrome`, and `onDecide` passes `edits`. `ToolDraftCard` takes `fields` for an inline editor, with `changedDraftEdits`, `DRAFT_ROLE_LABELS` and the `DraftField`, `DraftFieldRole` and `DraftEdit` types. `SubagentRunCard` adds `queued` and `timed_out` statuses, `statusLine`, `error` and `avatar`, and Cancel shows while queued. `SubagentResultCard` takes `approvalPending`, `approvalPendingIn`, `handoffs` and `avatar`, with the `SubagentHandoff` type.
 
 - [#157](https://github.com/vvedantb/packages/pull/157) [`7ef4add`](https://github.com/vvedantb/packages/commit/7ef4addcaa3c0c0428776a36bbeba5689c6cfa3c) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix two type errors in apps that typecheck the package source against `react-native-reanimated` 4.3.
-  
+
   - `ConversationScroller` (the type of `useConversation().scrollRef`) gains an optional `scrollTo({ y, animated })`. Only the `ScrollView` of `ConversationContent` has it, so call `scrollRef.current?.scrollTo?.(...)`. 0.12.0 narrowed the ref to `scrollToEnd` and broke apps that scroll to a message.
   - The `/ai` collapsible chevron turns on the predefined `ease-out` curve, not `cubicBezier(0.23, 1, 0.32, 1)`. The duration (150 ms) and reduced-motion handling do not change.
 
@@ -255,32 +275,32 @@
 - [#178](https://github.com/vvedantb/packages/pull/178) [`5891350`](https://github.com/vvedantb/packages/commit/58913502aa8a3c805e839aad274a67124d3fa03d) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `BulkActionBar` takes `pinCancel`. With it, Cancel selection (X) and its divider sit outside the sideways scroll, at the bar's right end, so the X shows even when the bar is wider than a phone screen. The count, Select all and the actions still scroll. Default `false`: the X scrolls with the actions, as before and as the web.
 
 - [#194](https://github.com/vvedantb/packages/pull/194) [`142eb0a`](https://github.com/vvedantb/packages/commit/142eb0aa4de5925af5ef21c63049d174c02aa829) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `BulkActionBar` takes `placement="tabBar"`, the phone contextual bar. It sits in the slot and shape of `FloatingTabBar` (same insets, height and pill radius) and shows up and leaves at once, so the two bars swap with no gap. Each action is its icon over its `shortLabel` (12 px; 14 px with larger text) in a box at least 48 high (56 with larger text), and the actions share the spare width. There is no count chip, because the screen header shows the count. The default `placement="float"` is unchanged.
-  
+
   `FloatingTabBar` draws nothing while the focused route's `tabBarStyle` resolves to `display: "none"`, as React Navigation's own bar does. A screen hides the bar with `navigation.setOptions` or Expo Router's `<Tabs.Screen options>` inside the screen. New type: `BulkBarPlacement`.
-  
+
   `PageHeader` takes `leading`: content before the title, such as a close button while a page is in select mode.
-  
+
   Docked, the bar has no Cancel (X): the screen header carries the exit, as Android's contextual action bar, which leaves room for every label.
 
 - [#175](https://github.com/vvedantb/packages/pull/175) [`350f606`](https://github.com/vvedantb/packages/commit/350f6064ab84130e0cbd20b32a300730aa627778) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - native-ui `/ai`: the web activity timeline's pure logic, as byte-identical copies of the `@vvedantb/ui` files (`activity-step-label.ts`, `activity-tasks-utils.ts`, `activity-step-types.ts`): `deriveStepRowPresentation` (short verbs, file chips, "Checked git status", "Used Linear: List Issues"), `deriveActionGroupSummary` ("used Linear", "ran hooks"), `resolveCommandVisualKind`, `buildActivityRows` (subagent steps nest under their row) and `groupActivityRows`, `activityStepHasRichDetail`, and the step type as `ActivityTimelineStep`. New `foldedActivitySegments`, `activityChildRows`, `activityStepSeconds`, `ACTIVITY_MAX_VISIBLE_BLOCKS` and `ACTIVITY_MAX_VISIBLE_CHILDREN`: the folded `ActivityTasks` rules, for an app that draws the rows with the `AgentTrace` parts.
-  
+
   native-ui `CodeBlock`: colours match the web's Shiki `github-light` / `github-dark`. JavaScript and TypeScript recolour Prism's tokens where Shiki differs (`null`, `undefined` and `this` as constants, parameters, `const` names, type names, string escapes, regex classes, `${…}` punctuation, type-argument brackets; `scriptTokens`). `bash`, `sh`, `shell` and `zsh` are coloured by a small tokenizer in the Shiki roles (`shellTokens`); before, they were plain.
-  
+
   native-ui `Markdown`: tables have the web table actions a phone can use, above the table: Copy table (a sheet of Markdown, CSV and TSV, the web formats; new `onCopyTable` prop) and View fullscreen (the table at its own column widths, scrolling sideways). Download table is left out.
-  
+
   native-ui `PromptInput`: the `pill` composer's placeholder is the muted colour at 90%, as Eva's web composer.
-  
+
   ui: the activity step types move to `activity-step-types.ts` (still exported from the package root), so native-ui can copy the pure timeline files unchanged.
 
 - [#165](https://github.com/vvedantb/packages/pull/165) [`531f4e7`](https://github.com/vvedantb/packages/commit/531f4e7abaa3ca50469d1f75505349254db7a048) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Composer footer parts for a chip row under the field, as the bar under Eva's web composer:
-  
+
   - `PromptInput` takes a `footer` slot. It sits under the field, inside the keyboard lift and above the bottom safe-area inset, in both layouts.
   - `PromptInputChip` (from `/ai`) is the web `ModelPicker` trigger: 28 high (`h-7`), `px-2`, `gap-1.5`, `rounded-md`, `text-xs` medium in the muted colour, with an optional 14 icon, a suffix at 70% after " · ", a count in tabular figures and a 12 chevron at 60%. It reaches 44 high with slop, and its label truncates. `weight="normal"` and `color` are opt-in. `PROMPT_INPUT_CHIP` holds the metrics.
   - `SheetRow` takes a `leading` node in place of `icon`, for a mark that is not a Tabler icon, such as `ProviderIcon`.
   - `providerLabel` (from `/brand`, beside `ProviderIcon`) names a provider as the web `getProviderLabel`: "Claude", "GPT", "Opencode", "Cursor".
 
 - [#192](https://github.com/vvedantb/packages/pull/192) [`fa1a178`](https://github.com/vvedantb/packages/commit/fa1a17897cec701848e871317f679a97f840aa84) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ConversationList` honours `inverted` (give `data` newest first). The newest message is the first row, drawn at the bottom, so a thread opens at its end in its first frame, with no scroll, no measuring and no hidden frame. Without `inverted`, a thread still opens hidden until its first jump to the measured end, and rows drawn or measured after that can still move it.
-  
+
   - A streamed reply (row 0) grows upwards and stays in view; there is no follow to run. A thread shorter than the view starts at its top, as before.
   - Scrolled up, new content keeps what the reader sees in place (`maintainVisibleContentPosition`, set only while away from the bottom, on iOS and Android). `ConversationScrollButton` scrolls to the newest message, animated or at once with Reduce Motion.
   - `ListHeaderComponent` draws at the bottom, under the newest message, and `ListFooterComponent` at the top. An empty list draws `ListEmptyComponent` in place of the list, the right way up.
@@ -289,13 +309,13 @@
   - With `KeyboardControllerProvider`, the chat scroll view is inverted too. On iOS the end moves below offset 0 by the keyboard's space; on Android the content moves instead and 0 stays the end. While the keyboard moves, its scrolling does not count as the reader leaving the bottom, so the scroll button does not flash as the keyboard opens or closes (with or without `inverted`).
 
 - [#182](https://github.com/vvedantb/packages/pull/182) [`0e7f777`](https://github.com/vvedantb/packages/commit/0e7f777b00159035c71486c6ff8c24a75bbd66da) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New entry `@vvedantb/native-ui/keyboard-controller` with `KeyboardControllerProvider`, and a new optional peer `react-native-keyboard-controller` (`>=1.21.0`). Put the provider inside the app's `KeyboardProvider`: the kit then follows the keyboard's real position, frame by frame, on the UI thread.
-  
+
   - `ConversationList` keeps its size as the keyboard opens. It scrolls in `KeyboardChatScrollView`: the content gains the keyboard's height at the end and rises with it, so the newest message stays on the composer. It sits in `KeyboardGestureArea`: a drag down moves the keyboard with the finger once the finger reaches the composer, and lets it go at the finger's speed (iOS, and Android 11+ with `keyboardDismissMode="interactive"`). Android 10 and below keep `on-drag`. Scroll to end and the at-bottom check count the keyboard's space past the content.
   - `ConversationDock` and `ConversationScrollButton` move with the keyboard (`KeyboardStickyView`, `translateY`), less the bottom safe-area inset, which the dock's content pads (as `PromptInput` does) and the keyboard covers. A `PromptInput` in the dock adds no lift of its own.
   - `PromptInput` outside a dock, `ChatThread` and the `Dialog` / `AlertDialog` / `Sheet` overlays pad frame by frame (keyboard-controller's `KeyboardAvoidingView`).
-  
+
   New `KeyboardAvoidingView` on `/primitives` and the root: React Native's, or with the provider keyboard-controller's (padding by default; it takes `style`, not `className`). `PromptInput`'s field has `nativeID="native-ui-composer"`. `ChatThread` lifts the whole column (a new inner `View` takes its `className`), so its footer and scroll button add no lift of their own.
-  
+
   Without the provider (the peer is optional), every part keeps React Native's `KeyboardAvoidingView` as before. Only the new entry imports `react-native-keyboard-controller`.
 
 - [#195](https://github.com/vvedantb/packages/pull/195) [`7f97b14`](https://github.com/vvedantb/packages/commit/7f97b146f10a64814b65368977b8dcfd2f392ea6) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `LoadingState`: the web `LoadingState` with `variant="Drive"` and `iconOnly`, a 3x3 pixel grid whose chevron wavefront drives right. Same cells, delays, 650 ms cycle and keyframes as the web; `size="sm"` is the web session-row grid (3 pt cells). It runs on the UI thread (one Reanimated frame clock per grid) and is named `label` (default "Working") for assistive tech. With Reduce Motion, or `paused`, it holds a still frame and runs no clock. Cells use the muted text colour unless `color` is set. Exported from the root and `/primitives`. The labelled form and the `Dots` and `Orbit` variants are not ported. `colors` sets one colour per column, left to right, as the web `colors` (Eva passes its brand purple-to-blue sweep).
@@ -307,7 +327,7 @@
 - [#168](https://github.com/vvedantb/packages/pull/168) [`1159c7f`](https://github.com/vvedantb/packages/commit/1159c7f2a3cc2a83829707a74028a8d82d9b05ce) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `DropdownMenuItem` and `SheetRow` take `warning`: the web `text-warning` menu item (such as a session's Archive), with the label and icon in `palette.warning`. `destructive` / `danger` still win when both are set.
 
 - [#171](https://github.com/vvedantb/packages/pull/171) [`1f39950`](https://github.com/vvedantb/packages/commit/1f399507f46646ed1ac11ae3ccfbf230afa19044) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Phone quality fixes from a mobile-first pass, and two additive parts:
-  
+
   - `ConversationList` (from `/ai`) is `ConversationContent` as a virtualised `FlatList`, for a thread that can grow long: the same sticking to the bottom, scroll button and keyboard taps. It follows to the end it has measured, not `FlatList.scrollToEnd` (which places the end from estimated row heights, so a thread opened at its end stayed at the top). Its column has `px-3 py-3` and no gap: space messages with `ItemSeparatorComponent`. `useConversation().scrollRef` is now a `ConversationScroller` (`scrollToEnd`), the part both scrollers share.
   - `ListDivider` (from `/primitives` and the root) is the `DividedList` hairline on its own, for the `ItemSeparatorComponent` of a `FlatList` or `SectionList`. `DividedList` draws it.
   - `SheetContent` and the compact `DialogContent` shrink to fit under the top inset when they are taller than the room (a short window, or the keyboard up), so a `SheetBody` inside scrolls and the title stays on screen. Before, the sheet grew past the top edge and hid its title and the backdrop. `FloatingSurface` lets its content shrink with it.
@@ -318,11 +338,11 @@
 - [#188](https://github.com/vvedantb/packages/pull/188) [`c9e3266`](https://github.com/vvedantb/packages/commit/c9e32663f04a37d02f39fe3a779d6129902a5ce9) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `Pager`: a page set from outside (a tab press) slides there in 220 ms (`withTiming`, at once with Reduce Motion) in place of a jump, and the pages it passes are drawn, so it never crosses a blank page. `PAGER_FAIL_OFFSET_Y` is 14 (was 10), so a slightly diagonal swipe still turns the page. New pure helpers `pagesBetween` and `centredTabScroll` (the tab row's centred scroll).
 
 - [#183](https://github.com/vvedantb/packages/pull/183) [`227c890`](https://github.com/vvedantb/packages/commit/227c89001c6f3ec4970bdc34cb75782bfbf9021f) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New `Pager` (on the root and `/primitives` entries), with the `PagerProps` type: side-by-side pages a horizontal swipe moves between, such as the sections under a row of `PillTabs`. The pages follow the finger 1:1 and, on release, spring on at the finger's speed (250 ms, no bounce) to the nearest page; a flick of 500 pt/s the way the drag moved turns one page, and past the first and last page they rubber-band. A drag caught mid-spring carries on from where the pages are. A settled page fires `selectionHaptic` and `onIndexChange`; an `index` set from outside (a tab press, a link) jumps there with no slide. Only a clearly sideways drag takes the pages (24 pt sideways, failing after 10 pt vertical), so a page's vertical list still scrolls. A page is drawn once visited or once a drag starts next to it, and then stays mounted, so it keeps its state. Pages off screen are hidden from screen readers. With Reduce Motion on the pages still follow the finger, and the release settles at once.
-  
+
   `PillTabs` takes an optional `progress` (the pager's shared value): the selected fill is then one indicator that moves with the pages under the finger. Without it nothing changes.
-  
+
   Inside a `Pager`, a `SwipeableRow` takes only the directions it has actions for, and a drag the other way passes to the pager (a row with only trailing actions, swiped right, moves the pages). Outside a pager it is as before.
-  
+
   The swipe runs on Gesture Handler worklets and needs `GestureHandlerProvider` from `@vvedantb/native-ui/gesture-handler`; without it only the current page is drawn, with no swipe, and no Gesture Handler import.
 
 - [#184](https://github.com/vvedantb/packages/pull/184) [`9e52405`](https://github.com/vvedantb/packages/commit/9e524054a0ac2582c86598a33ef231849a7ea8d0) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Add phone touch sizes with no web twin. `ChatIconButton` and `MessageAction` take `size="touch"`: a whole 44 square with a 16 icon, so a row of message actions needs no slop. `PromptInputChip` takes `size="touch"`: 36 high with 4 slop above and below, for a 44 footer bar, so the target stays inside the bar (`PROMPT_INPUT_CHIP.touchHeight`). The defaults keep the web sizes.
@@ -330,14 +350,14 @@
 - [#188](https://github.com/vvedantb/packages/pull/188) [`c9e3266`](https://github.com/vvedantb/packages/commit/c9e32663f04a37d02f39fe3a779d6129902a5ce9) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Tabs are phone-tuned, with the web look. `PillTabs` is one sideways line that never wraps: when the pills do not fit (larger system text) it scrolls, and the active pill scrolls into view, centred, on each change and frame by frame under a `Pager` swipe (Android fades the scrolling edge). Pills are 36 high (`px-3.5`, 14 px labels) with 4 slop above and below (44). With `progress`, the indicator moves on x and width only, each label blends to the selected colour with it (`interpolateColor`), so fill and label agree mid-swipe, and the selected pill paints its own fill until the pills are measured, so the first frame shows the selection. `TabsList` takes the same optional `progress`, so a `Pager` can drive its fill and labels (its triggers are its direct children, in page order). `tabTriggerSize`: `pills` and `segmented` are 36 high (`px-3.5 py-1`), and `sm` keeps a 14 px label (`text-sm`, `px-3 py-1`, 36 high, no letter spacing) in place of the web `text-xs` 30.
 
 - [#189](https://github.com/vvedantb/packages/pull/189) [`747235c`](https://github.com/vvedantb/packages/commit/747235cdf699247047c780d11f5e1306c7754f66) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Tappable labels are at least 14 px, a phone size in place of the web desktop 12 px:
-  
+
   - `Button` `sm` has a `text-sm` label (was `text-xs`) and is 36 high (`min-h-9`, was `min-h-8`). Its hit slop does not change.
   - `PromptInputChip` labels and counts are `text-sm`; `PROMPT_INPUT_CHIP.labelMinWidth` is 28 (was 24).
   - `ConversationScrollButton` with `showLabel` draws its label at `text-sm`.
   - The `UpgradeToProCard` pill follows `Button` `sm`: `text-sm`, 36 high.
 
 - [#166](https://github.com/vvedantb/packages/pull/166) [`e10799a`](https://github.com/vvedantb/packages/commit/e10799a09c6f49e362446cf9295581102d1bb569) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - A docked picker for `@` mentions and `/` skills, as the web composer's `MentionPickerPopup` in its `panel` layout:
-  
+
   - `PromptInput` takes a `menu` slot. It sits right above the field, the field's width and 6 clear of it, inside the keyboard lift, in both layouts. Pass it only while the picker is open.
   - `PromptInputMenu` (from `/ai`) is the popover surface (`palette.overlay`, radius 16, the field border) around a labelled list that scrolls past `promptInputMenuHeight` (35% of the window, kept inside the web's 160 to 340). Taps reach a row while the keyboard is up. With no rows it shows `empty`, default "No matches.".
   - `PromptInputMenuItem` is one row, the web `MentionRow`: at least 44 high, a muted `prefix` (`@` or `/`), the label, a one-line description cut at 72 characters, an optional `leading` (an avatar), and a `trailing` icon or a small `badge` with an optional `badgeIcon`. `selected` takes the web `bg-primary/15` (`/25` dark) and a medium label; a press fades to 70%.
@@ -345,27 +365,27 @@
 - [#189](https://github.com/vvedantb/packages/pull/189) [`747235c`](https://github.com/vvedantb/packages/commit/747235cdf699247047c780d11f5e1306c7754f66) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SettingsToggleRow` takes `checked`, `onCheckedChange`, `disabled` and `accessibilityLabel`. With `onCheckedChange` the whole row is the switch, as `LabeledSwitchRow`: one Pressable with the `switch` role, `checked`, the title as its name, the description as its hint and at least 56 high (`min-h-14`). The `action` switch stays on screen and is hidden from TalkBack and VoiceOver. Without `onCheckedChange` the row is a View, as before.
 
 - [#176](https://github.com/vvedantb/packages/pull/176) [`deba905`](https://github.com/vvedantb/packages/commit/deba9053064fbd8f4b89142d00d5d492d4f2ab0b) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Bottom sheets drag down to close. `SheetContent` and the compact `DialogContent` follow the finger (Reanimated, from a `PanResponder`), the backdrop fades with the drag, and on release a flick or a drag past half the sheet slides it out and closes it, while a slow, short drag springs back. A `SheetBody` / `DialogBody` scrolled down keeps its scroll: the drag takes over only at its top. Reduce Motion settles the release at once; a sheet with `dismissible={false}` stays still.
-  
+
   `/ai` adds `ConversationDock`: put the composer or a docked question card in it, inside `Conversation`, and `ConversationScrollButton` sits 16 above the dock, so it moves with the dock and the keyboard. `ConversationScrollButton` takes `insets` to centre on an off-centre thread.
 
 - [#180](https://github.com/vvedantb/packages/pull/180) [`43a20f9`](https://github.com/vvedantb/packages/commit/43a20f96bb6faf6da96b2bdf3bb43e090355aeb9) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New entry `@vvedantb/native-ui/gesture-handler` with `GestureHandlerProvider`, and a new optional peer `react-native-gesture-handler` (`>=2.0.0`). Put the provider inside the app's `GestureHandlerRootView`: the sheet drags (`SheetContent`, the compact `DialogContent`) then run on `Gesture.Pan()` instead of `PanResponder`. The catch on touch-down, the 1:1 track phase and the velocity-seeded release run as worklets on the UI thread, so a busy JavaScript thread no longer makes the sheet lag the finger. The rules are the same: catch mid-slide, distance or velocity dismiss, rubber-band above rest, the backdrop fades with the sheet, slide-out on every close, Reduce Motion, the light haptic on snap-back.
-  
+
   `DialogBody` / `SheetBody` run their scroll with the pan (`Gesture.Native()`, simultaneous), read the offset on the UI thread (`useScrollOffset`) and hold still while the sheet follows the finger (`scrollTo`), so a drag re-renders nothing; the `PanResponder` drag re-rendered twice. When one touch scrolls the body back to its top and goes on down, the sheet takes over from there, with no jump by the scroll. Each overlay's `Modal` content sits in its own `GestureHandlerRootView`: on Android a `Modal` is a separate root, and without one every gesture in it silently does nothing.
-  
+
   Without the provider (the peer is optional), the sheets drag with `PanResponder` as before. Only the new entry imports `react-native-gesture-handler`.
 
 - [#177](https://github.com/vvedantb/packages/pull/177) [`db61315`](https://github.com/vvedantb/packages/commit/db61315be5e6976c4db60108728e92c04ad93642) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Bottom sheets move as one piece. `SheetContent` and the compact `DialogContent` slide up on open and back down on close, however they close (a drag, the backdrop, a close button, Android back, the parent's `open`), and the backdrop fades with the sheet's position, from one shared value. The `Modal` stays up until the sheet is out of sight. The drag follows the finger from where the sheet is (a touch on a sheet that is still sliding catches it), and the release is a spring that starts at the finger's speed: a flick or a drag past half carries the sheet out, a short slow drag springs it home with a little bounce and a light haptic. Before, the sheet slid in with a fixed 240 ms layout animation, closed with the `Modal` fade, and a released drag slid out on a fixed 120–250 ms timing. Reduce Motion: sheets appear and leave in place, the drag still follows the finger, and the release settles at once. The centred dialog keeps its fade.
-  
+
   Press feedback: the `Button` primitive and `PromptInputChip` scale to 0.97 while pressed (the web buttons and composer chips scale by 3-4%) instead of dimming; with Reduce Motion they dim to 80%.
-  
+
   Haptics, through the optional `expo-haptics` peer: new `impactHaptic("light" | "medium")` and `notificationHaptic("success" | "error")` beside `selectionHaptic`. A success or error toast fires the notification haptic as it shows, the confirm button of a destructive `ConfirmDialog` fires a medium impact, and `PillTabs` fires the selection haptic on a change, as `TabsTrigger` and the tab bar already did.
-  
+
   Motion details: the toast, the `ConversationScrollButton` and the fold content ease out on the strong ease-out curve (new `motion.ts`), and each exit is about 20% quicker than its entry. `BulkActionBar` rises into place from below (it came down from above) and sinks out. `CollapsibleChevron` turns over 150 ms, as on the web (at once with Reduce Motion). Shared values are read and written with `.get()` / `.set()`, the form the React Compiler can follow.
 
 - [#189](https://github.com/vvedantb/packages/pull/189) [`747235c`](https://github.com/vvedantb/packages/commit/747235cdf699247047c780d11f5e1306c7754f66) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SheetRow` with `active` set (`true` or `false`) is one choice of a picker: assistive tech reads it as a `radio` with `checked`, or a `checkbox` with the new `multiple` prop. Without `active` it is an action `button`, as before. The row no longer reports `selected`.
 
 - [#183](https://github.com/vvedantb/packages/pull/183) [`227c890`](https://github.com/vvedantb/packages/commit/227c89001c6f3ec4970bdc34cb75782bfbf9021f) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New `SkeletonRow` and `SkeletonList` (on the root and `/primitives` entries), with their props types: placeholder rows for a loading list, in place of a centred spinner. `SkeletonRow` takes the real row's shape (a round `leading` mark, one or two `lines`, a `trailing` block, its `minHeight`), and its title width varies with `index`. `SkeletonList` draws `count` rows, with a `ListDivider` between them unless `divided` is off, and reads to screen readers as one busy element named `label`.
-  
+
   Fix: `Skeleton` drew nothing. NativeWind does not style a Reanimated `Animated.View`, so its size, fill and radius classes were dropped. The classes now sit on a plain `View`, with the pulse (opacity) on a fill inside. It still holds still with Reduce Motion.
 
 - [#174](https://github.com/vvedantb/packages/pull/174) [`dfe2dcd`](https://github.com/vvedantb/packages/commit/dfe2dcd7276c180853d2328f83b77d8cae98051c) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SurfaceRow` takes `onLongPress` (such as a row menu, the web right-click) and `longPressLabel`, its spoken name; VoiceOver and TalkBack reach it as the `longpress` action.
@@ -373,11 +393,11 @@
 - [#167](https://github.com/vvedantb/packages/pull/167) [`03c9802`](https://github.com/vvedantb/packages/commit/03c9802b72cfbb6bca9e578ccebb6147d5b26b4c) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SurfaceRow` (from `/primitives` and the root) is the shell of a status list row, as the web `ListRow`: a card surface (`tokens.color.surface`, or a `backgroundColor`) at the 16 surface radius, a 4 wide status stripe (`accentColor`) on the leading edge 8 in from top and bottom, an optional 1 wide `borderColor` hairline, and the body at the web inset (`p-2.5 pl-3`, or a `className`). The whole row is one button (`accessibilityLabel`, `accessibilityHint`, `onPress`) that fades while pressed. `SURFACE_ROW` holds the metrics.
 
 - [#181](https://github.com/vvedantb/packages/pull/181) [`0df9ece`](https://github.com/vvedantb/packages/commit/0df9eced8a0fb0ee63d1f2b309b37f813efb7520) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New `SwipeableRow` (on the root and `/primitives` entries), with `closeSwipeRows`, `swipeActionsAccessibility` and the `SwipeAction` and `SwipeableRowProps` types. A horizontal swipe moves the row aside to reveal its `leadingActions` (swipe right) or `trailingActions` (swipe left): icon buttons on the `default`, `warning` or `danger` fill, the first at the screen edge. The row follows the finger 1:1 and, on release, springs on at the finger's speed: past half its buttons it stays open, else it closes. A full swipe (half the row, with the buttons already in view) runs the first action: a light haptic and a slightly larger icon as it arms, and an action with `exits` slides the row out (a rejected promise from its `onPress` brings it back); other actions spring the row back. A fling counts toward each decision; a fling back cancels. Toward a side with no actions, and past the row's width, it rubber-bands. The pan needs 12 pt sideways before it takes the row, and fails after 8 pt vertical, so a small diagonal drag scrolls the list. One row is open at a time: another row opening, a tap on any row (it only closes) or `closeSwipeRows` (pass it to a list's `onScrollBeginDrag`) closes it. With Reduce Motion on it still follows the finger, and the release settles at once.
-  
+
   The swipe runs on Gesture Handler worklets, on the UI thread, and needs `GestureHandlerProvider` from `@vvedantb/native-ui/gesture-handler`; without it the row is drawn as is, with no swipe, and no Gesture Handler import. The buttons behind the row are hidden from screen readers: spread `swipeActionsAccessibility(actions)` on the row's main pressable, so VoiceOver and TalkBack offer the same actions by label.
 
 - [#190](https://github.com/vvedantb/packages/pull/190) [`e10acb4`](https://github.com/vvedantb/packages/commit/e10acb4a3e3131bd132134aafcfa9c2f7caedd43) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `FloatingTabBar`:
-  
+
   - The active pill slides to a newly focused tab again, over the web `--tabs-dur` (200 ms) and `--tabs-ease`. Reduce Motion still moves it at once.
   - The pill fill is the new `palette.tabBarPill` (`#ebebeb` light, `[#474747](https://github.com/vvedantb/packages/issues/474747)` dark), not `palette.default` and `palette.segment`. An app that themes `segment` for the segmented `Tabs` thumb no longer darkens the bar's pill; theme `tabBarPill` to change it.
 
@@ -388,12 +408,12 @@
 - [#183](https://github.com/vvedantb/packages/pull/183) [`227c890`](https://github.com/vvedantb/packages/commit/227c89001c6f3ec4970bdc34cb75782bfbf9021f) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `Toaster` toasts swipe away the way they came in: up. Under `GestureHandlerProvider` a toast follows the finger 1:1 upward and fades as it rises; downward it gives a little, with growing resistance. On release a flick up (500 pt/s) or a drag past half its height dismisses it, carried on at the finger's speed, with a light impact haptic; else it springs home. While a finger is on the toast its auto-dismiss timer pauses, and lifting the finger resumes the time left. A tap still closes it. With Reduce Motion on it still follows the finger, and the release settles at once. Without the provider toasts close on a tap only, as before, and the `/toast` entry still imports no Gesture Handler.
 
 - [#172](https://github.com/vvedantb/packages/pull/172) [`4a8a6f2`](https://github.com/vvedantb/packages/commit/4a8a6f2910bbdb1909d7f93314644263f5c7aab7) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `UnifiedDiff` (from `/ai`) takes `onLinePress`, `linePressHint` and `markedLines`, for line comments on a phone Code tab:
-  
+
   - With `onLinePress`, each code row (not a hunk header) is a button named `Line N`. A tap calls it with the row's index in `lines`. The code is then not selectable, so a tap always lands. Rows have no hit slop: they tile the diff edge to edge, so slop would take the next line's taps. Without it, rows are as before.
   - `markedLines` names rows by index, such as those with a pending comment. Their gutter fills at 12% of the primary colour and the number turns foreground.
 
 - [#169](https://github.com/vvedantb/packages/pull/169) [`02833bf`](https://github.com/vvedantb/packages/commit/02833bf54edf94b62a501ae067f9f788737ecb00) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Diff parts (from `/ai`) for a read-only file diff, as the web Code tab:
-  
+
   - `UnifiedDiff` draws one file's diff in one column, as `@pierre/diffs` in unified view: a line number gutter (the old number on a removed line, the new one otherwise), the `+`/`-` marker and the line in mono 14 / 22. Added lines tint emerald and removed lines red, each at 10%; a hunk header is a muted row on the secondary surface. Long lines do not wrap: the diff scrolls sideways and every row spans the widest line. It takes `lines` (`UnifiedDiffLine`: a hunk, or an added, removed or context line with its old and new numbers). `UNIFIED_DIFF` holds the metrics.
   - `DiffStat` is the web `PrDiffStat`: `+n` in emerald, `−m` in the danger colour, tabular mono at `text-sm`, with `hideZero` to drop a zero side.
 
@@ -420,7 +440,7 @@
 - [#179](https://github.com/vvedantb/packages/pull/179) [`927c0b8`](https://github.com/vvedantb/packages/commit/927c0b8d23194bebdc564162556fa8f9cd4fc885) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - native-ui `PromptInputChip`: a label squeezed below `PROMPT_INPUT_CHIP.labelMinWidth` (24, about two characters and the ellipsis at `text-xs`, scaled up by the system font size) hides, so a narrow chip is its icon and chevron, as the web, not a sliver of a letter. It shows again when the chip has room. The accessibility label keeps the full name.
 
 - [#185](https://github.com/vvedantb/packages/pull/185) [`fa1bb36`](https://github.com/vvedantb/packages/commit/fa1bb36a3ee8d7e019978e9e02fb99eeb425d3ff) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Less motion on surfaces seen many times a day:
-  
+
   - `CollapsibleContent` (the folds of `AgentTrace`, `ChainOfThought`, `Reasoning`, `Sources` and the subagent cards, from `/ai`): the content appears at once. It no longer fades in over 150 ms. The fade also ran each time a list mounted a fold that was already open, such as a chat opening or a virtualised row scrolled back into view. The chevron still turns in 150 ms. The content is now a plain `View` on iOS and Android, as it already was on web. A `className` on it now also styles it on iOS and Android.
 
 ## 0.15.0
@@ -430,7 +450,7 @@
 - [#161](https://github.com/vvedantb/packages/pull/161) [`bf27550`](https://github.com/vvedantb/packages/commit/bf27550b114e38d8edd8a91b51a0e5723916d706) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Add `ProviderIcon` to `@vvedantb/native-ui/brand` (and the root entry): the four AI provider marks of the web `ProviderIcon` (Claude, OpenAI for `codex`, OpenCode, Cursor) as `react-native-svg` marks with the same path data, viewBoxes and fills. Any other provider draws the Claude mark, as on the web. Props: `provider`, `size` (default 14), `title` (accessible name; without it the mark is hidden from assistive tech), `testID` and `style`. The OpenAI and Cursor marks follow the colour scheme, as the web `dark:` classes. `PROVIDER_MARKS` and `providerMark(provider)` expose the data. A test checks the marks against `@vvedantb/ui` `ai-elements/provider-icon.tsx`.
 
 - [#161](https://github.com/vvedantb/packages/pull/161) [`bf27550`](https://github.com/vvedantb/packages/commit/bf27550b114e38d8edd8a91b51a0e5723916d706) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `Switch` takes an optional `size` prop. `"sm"` (the default) is unchanged: the 36 × 20 web `Switch` with a 16 thumb. `"md"` is a 40 × 24 track with a 20 thumb that sits 2 in from the left and moves 18 when on, for apps that set the larger switch on the web through `UiConfig.Switch`. Larger text keeps the 56 × 32 size at both sizes. `switchSize(largerText, size?)` now also returns the `off` thumb class.
-  
+
   `TabsTrigger` labels now use the web type-scale letter spacing: `sm` triggers (`text-xs`) get 0.06 (0.005em), default triggers (`text-sm`) stay 0. Larger text keeps 0. `tabTriggerSize` returns this as `letterSpacing`.
 
 ## 0.14.0
@@ -438,9 +458,9 @@
 ### Minor Changes
 
 - [#155](https://github.com/vvedantb/packages/pull/155) [`531c03a`](https://github.com/vvedantb/packages/commit/531c03ab08622ba2590b0b968b490fd5ae844d74) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - Font, settings and chat parity release. No removed or renamed export, and no prop changes type: every new prop is optional. No new dependency. Some defaults now look different (see Changed); each follows the matching `@vvedantb/ui` part. Looks that only Eva's web app has are opt-in props.
-  
+
   **Added**
-  
+
   - `configureTheme({ font })` and `nativeUiPreset({ font })`: family names for the four weights (`{ regular, medium, semibold, bold }`). The preset sets `sans` and the four `font-instrument-sans*` classes (the class names stay the same); `configureTheme` sets the JS styles, such as `Markdown`. Keys left out keep Instrument Sans. The app loads the font files.
   - `fontFamily` (the current family names) and the `ThemeFonts` type, on the root entry and `/theme`.
   - `formatCompactRelativeTime` and the `CompactRelativeTimeOptions` type (root and `/primitives`): one compact unit ("now" or "42s", "5m", "3h", "2d", "4mo", "1y"), the twin of the `@vvedantb/ui` function, with `now`, `justNow` and `calendar`.
@@ -454,11 +474,11 @@
   - `/ai` `CodeBlock` `variant="markdown"`: the web `MarkdownCodeBlock` (13 / 20.15 code, a 32 header, `icon-xs` actions and a "Wrap long lines" toggle). `CodeBlockCopyButton` `size`.
   - `/ai` `ChoiceQuestion` `buttonWeight="semibold"`: semibold Back, Next and Submit labels.
   - `/markdown` `Markdown` `leading="normal"`: the text size's own line height (14 / 20), as a web `Markdown` with `text-sm`. `inlineCodeStyle` takes an optional `color`.
-  
+
   **Changed**
-  
+
   Visual defaults other apps will see change:
-  
+
   - Settings parts at the web sizes: `SettingsSection` title 14 / 20 semibold and description 14 / 22.75; `SettingsToggleRow` title 14 / 20 medium and description 12 / 19.5, with no minimum row height; `SettingsField` label 14 / 20 medium and help 12 / 19.5; `SettingsEmptyState` a 28 icon at half opacity, a 14 / 20 medium title and a 12 / 19.5 description in `px-4 py-16` (was 16 and 18 semibold titles and larger text).
   - `/ai` chat text (`ResponseText`, `Markdown`) is the web `MessageContent` `text-sm`, 14 / 20 (was 16 / 24). Larger text is unchanged.
   - `/markdown` `Markdown` follows the web `Markdown` more closely: body line height 1.625 (14 / 22.75), 16 between blocks with none outside (the Streamdown `space-y-4` root), no rule under h1 and h2, medium links, muted quotes, inline code in the text colour, tables on the code panel (0.93 em, 1.5 line height, semibold header, rows split by the border at 70%), and fences drawn as `CodeBlock variant="markdown"`.
@@ -466,20 +486,20 @@
   - `/ai` `PromptInputSubmit` stays on the primary fill and fades when there is nothing to send, as the web send buttons (was the `secondary` fill).
   - `/ai` `PromptInput layout="inline"`: the field is the web `Composer` `text-sm leading-6`, 14 / 24 (was 16 / 24). The stacked field stays 16 / 24, the web `Textarea` below `sm`.
   - `/ai` `ChoiceQuestion`: option descriptions 12 / 19.5 (was 12 / 16), a 10 / 14 semibold topic badge (was 12 / 16 medium), the question 15 / 20.625, a plain "Other..." label until picked, option rows with no border width and a 1-wide ring outside when picked (was a 2-wide border, which narrowed the text by 4), and label lines 24 high, as the web card.
-  
+
   Other changes:
-  
+
   - `relaxedSizeStyle` now calls `sizeStyle(size, "relaxed")`, so the 1.625 lives in one place.
   - Strict-consumer type fixes: `Message` types its layout style as `ViewProps["style"]` (no readonly tuple, no cast), and the auth and router parts type router options from `useRouter()`, as expo-router 57 exports no `Router` type.
   - `types/peers.d.ts` declares the `react-native-marked` `Renderer` methods `link`, `blockquote` and `table`, the `strikethrough` style and `IconTextWrap`.
-  
+
   **Fixed**
-  
+
   - `PromptInput`: on web a multiline field starts one row high (React Native Web gave the `textarea` the HTML default of 2 rows, and auto-grow kept it). Clearing the field drops its measured height, so it is one line again.
   - `/markdown` `Markdown`: bold, italic and linked words no longer grow the line (the library starts them at its own 16 / 24); links are no longer italic; blank lines in highlighted code are no longer drawn twice; blocks inside a quote no longer add their outer margins.
-  
+
   **Tests**
-  
+
   - New `tests/chatParity.test.ts`: every chat default kept above reads its `packages/ui` source (message, composer, prompt input, textarea, code blocks, `markdown.css`, the Streamdown root and table, the question card).
   - New `tests/relativeTime.test.ts` and `tests/tabsTriggerHeight.test.ts`; `tests/settingsParity.test.ts`, `tests/configureTheme.test.ts`, `tests/tailwindPreset.test.ts` and `tests/styleTypes.test.ts` for the font and settings work.
   - `tests/ai.test.ts`, `tests/markdown.test.ts`, `tests/choiceQuestion.test.ts` and `tests/turnFold.test.ts` updated for the new defaults and options.
@@ -707,7 +727,7 @@ Chat parity with Eva's web chat: a tinted user bubble and a markdown entry. No n
   1. The app: `canOpenURL("<scheme>://")`, then `openURL`. On Android it then tries `intent://#Intent;scheme=<scheme>;package=<androidPackage>;end`.
   2. V Store's home, if V Store is installed and the app is not V Store: `VSTORE_HOME_URL` (`vstore://`). V Store's `app/[id]` route takes the app's Convex document `_id`, not its catalog id (`vibot`) or Android package, and native-ui cannot know live Convex ids, so it does not deep-link to the app's page.
   3. The website.
-  It resolves to `"app"`, `"store"`, `"website"` or `null`. A rejected `canOpenURL` or `openURL` moves on to the next URL. `projectVAppOpenSteps(id, os)` returns the URLs without opening anything.
+     It resolves to `"app"`, `"store"`, `"website"` or `null`. A rejected `canOpenURL` or `openURL` moves on to the next URL. `projectVAppOpenSteps(id, os)` returns the URLs without opening anything.
 - **Apps must declare the schemes** they check, or `canOpenURL` returns `false` and the row falls through to V Store or the website: `LSApplicationQueriesSchemes` on iOS (`ios.infoPlist` in `app.json`) and `<queries>` on Android 11+.
 - **Data** (new, `src/settings/projectVMobileApps.ts`): `PROJECT_V_MOBILE_APPS` (id, name, description, `androidPackage`, `scheme`, `website`), `projectVMobileApp`, `otherProjectVMobileApps`, `VSTORE_HOME_URL` and `androidIntentUrl`. Types `ProjectVMobileApp`, `ProjectVMobileAppId`, `ProjectVOpenTarget`, `ProjectVOpenStep` and `ProjectVLinking`.
   - Packages are `com.projectvdotuk.<id>` and schemes are the ids. Names and sites for vibot, Verve, Velth and vmem come from `FAMILY_APPS`. V Store is "V Store" at `https://v-store-chi.vercel.app` (`store.projectv.uk` has no DNS record).
