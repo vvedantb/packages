@@ -82,6 +82,7 @@ export * from "./ui/alert-dialog";
 export * from "./ui/confirm-dialog";
 export * from "./ui/dropdown-menu";
 export * from "./ui/empty-state";
+export * from "./ui/field";
 export * from "./ui/hover-card";
 export * from "./ui/input";
 export * from "./ui/label";

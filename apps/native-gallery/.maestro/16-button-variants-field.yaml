@@ -1,0 +1,48 @@
+# The parity screen draws every shared Button variant (the web names `primary`,
+# `tertiary` and `danger` included, plus `success`, `warning` and `flat`) and a
+# Field: a label, a control, a description and an error. Opening it proves they
+# render on a device; typing proves the control accepts input under the label.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: home
+
+- scrollUntilVisible:
+    element:
+      id: link-parity
+- tapOn:
+    id: link-parity
+- assertVisible:
+    id: screen-parity
+
+- scrollUntilVisible:
+    element:
+      id: button-variant-success
+    timeout: 60000
+- assertVisible:
+    id: button-variant-warning
+- assertVisible:
+    id: button-variant-flat
+- assertVisible:
+    id: button-variant-tertiary
+- assertVisible:
+    id: button-variant-danger
+- takeScreenshot: screenshots/parity-button-variants
+
+- scrollUntilVisible:
+    element:
+      id: field-parity
+    timeout: 60000
+- assertVisible:
+    id: field-parity-label
+- assertVisible:
+    id: field-parity-description
+- assertVisible:
+    id: field-parity-error
+- tapOn:
+    id: field-parity-input
+- inputText: "me@example.com"
+- assertVisible: "me@example.com"
+- takeScreenshot: screenshots/parity-field

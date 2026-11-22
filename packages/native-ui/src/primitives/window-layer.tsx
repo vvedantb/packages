@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useLayoutEffect, useSyncExternalStore, type ComponentRef, type ReactNode } from "react";
 import { BackHandler, Modal, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut, ReduceMotion } from "react-native-reanimated";
 import { useReduceMotion } from "../useReduceMotion";
@@ -59,7 +59,7 @@ const onBack = () => {
 };
 
 /** Mounted: the host is there, and it answers Android back for its layers. */
-const hostRef = (view: View | null) => {
+const hostRef = (view: ComponentRef<typeof View> | null) => {
   if (view === null) return undefined;
   hosts += 1;
   const back = BackHandler.addEventListener("hardwareBackPress", onBack);

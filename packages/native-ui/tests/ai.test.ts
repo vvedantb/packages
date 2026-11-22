@@ -1757,7 +1757,38 @@ describe("AI parts (package contract)", () => {
     // Highlighting: the optional peer prism-react-renderer, reached only through the lazy loader in src/highlight.ts.
     expect(pkg.peerDependencies["prism-react-renderer"]).toBe(">=2.0.0");
     expect(pkg.peerDependenciesMeta["prism-react-renderer"]).toEqual({ optional: true });
-    expect(Object.keys(pkg.devDependencies).sort()).toEqual(["@clerk/expo", "@types/react", "react", "typescript", "vitest"]);
+    // Build and test tools, plus the peers pinned to the versions the apps ship.
+    expect(Object.keys(pkg.devDependencies).sort()).toEqual([
+      "@babel/core",
+      "@clerk/expo",
+      "@react-native-community/datetimepicker",
+      "@types/react",
+      "@vvedantb/server",
+      "expo",
+      "expo-auth-session",
+      "expo-blur",
+      "expo-constants",
+      "expo-device",
+      "expo-haptics",
+      "expo-linear-gradient",
+      "expo-notifications",
+      "expo-router",
+      "expo-video",
+      "expo-web-browser",
+      "happy-dom",
+      "react",
+      "react-native",
+      "react-native-gesture-handler",
+      "react-native-keyboard-controller",
+      "react-native-reanimated",
+      "react-native-safe-area-context",
+      "react-native-screens",
+      "react-native-svg",
+      "react-native-webview",
+      "react-native-worklets",
+      "typescript",
+      "vitest",
+    ]);
     expect(pkg.dependencies).toBeUndefined();
   });
 

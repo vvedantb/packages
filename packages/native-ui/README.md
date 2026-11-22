@@ -373,7 +373,7 @@ configureTheme({ font: { regular: "Inter_400Regular", medium: "Inter_500Medium",
 
 | Area | Exports |
 | --- | --- |
-| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Input`, `SearchInput` (0.3.9), `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
+| Actions and fields | `Button` (`default`/`primary`, `secondary`, `outline`, `destructive`, `ghost`, `link`, `tinted`, plus the `tertiary`/`danger`/`success`/`warning`/`flat` aliases; `sm`/`small`, `default`/`medium`, `lg`/`large`, `icon`; `shape` `pill`/`rounded` from 0.6.0), `IconButton` (0.5.0), `CaptureButton` (0.5.0), `Field` (with `FieldLabel`, `FieldControl`, `FieldDescription`, `FieldError`), `Input`, `SearchInput` (0.3.9), `PasswordInput` (0.11.0), `Textarea`, `Label`, `Select`, `Switch`, `Checkbox`, `LabeledSwitchRow`, `ColorSwatches` (0.5.0), `DateTimeField` (date-only, empty and clearable from 0.5.0) |
 | Display | `Card` (+ `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`; `onPress` from 0.5.0), `Badge`, `StatusDot` (`info` from 0.5.0), `Avatar` (+ `AvatarImage`, `AvatarFallback`, `initials()`), `Separator`, `Progress`, `Spinner`, `CenteredSpinner`, `Skeleton`, `EmptyState` (+ `EmptyState.Root` and parts), `ListRow` (`leading`, `titleEnd`, `control`, `onLongPress` from 0.5.0), `StatGrid` (0.5.0), `SectionLabel` (0.5.0), `Chip`, `Text` (0.5.0, `/primitives` only) |
 | Navigation | `Tabs` (+ `TabsList`, `TabsTrigger` (`minHeight` from 0.14.0), `TabsContent`), `PillTabs`, `PageIndicator` (0.5.0), `FloatingTabBar`, `FloatingFAB`, `HeaderIconButton`, `ThemeToggle` (0.3.16), `StackPageHeader` (0.5.0) |
 | Overlays | `Dialog`, `AlertDialog`, `ConfirmDialog`, `Sheet` (a `WindowLayer` from 0.29.0: in the app's window under `WindowLayerHost`, else an RN `Modal`; each with the web part names; a `SheetContent` or compact `DialogContent` drags down to close), `SheetRow` (0.5.0), `BottomSheetContainer` (`@swmansion/react-native-bottom-sheet`; optional `detents`), `DropdownMenu` (Unreleased; see below) |
@@ -383,6 +383,21 @@ configureTheme({ font: { regular: "Inter_400Regular", medium: "Inter_500Medium",
 | Settings and layout | `PageTitle`, `PageHeader` (0.3.13), `SettingsSection`, `SettingsField`, `SettingsToggleRow`, `SettingsStack`, `ScreenContainer`, `SafeAreaContainer`, `FloatingSurface`, `AmbientBackground` |
 
 **Settings at web sizes (0.14.0).** `SettingsSection`, `SettingsToggleRow`, `SettingsField` and `SettingsEmptyState` take the web type: titles and labels `text-sm` (14 / 20; the section title semibold, the others medium), descriptions and help `text-xs leading-relaxed` (12 / 19.5; the section description `text-sm leading-relaxed`, 14 / 22.75). `SettingsToggleRow` steps up one size with larger text and has no minimum height; its control keeps the 44 target.
+
+**`Button` aliases and `Field` (unreleased).** `variant` also accepts `tertiary` (= `ghost`), `danger` (= `destructive`), `success`, `warning` and `flat`, as the web `Button`. `tinted` stays as a legacy alias (the pink tint of `outline` before 0.3.0). `size` accepts `md` (= `default`/`medium`), and `Spinner` `size="default"` equals `md`. Roles: `primary`/`default` is the one main action, `secondary` an alternative, `tertiary`/`ghost` a dismissive action, `destructive`/`danger` a destructive action, `success` and `warning` show status, and `outline`, `link` and `flat` are visual.
+
+`Field`, `FieldLabel`, `FieldControl`, `FieldDescription` and `FieldError` (root and `/primitives`) link a label to a control. `FieldLabel` sets `nativeID`; `FieldControl` sets `accessibilityLabelledBy` while a `FieldLabel` renders, and otherwise keeps the `accessibilityLabel` you pass (the fallback, and what iOS reads). A plain `Input` is unchanged. The `FieldError` in `@vvedantb/native-ui/auth` is a different component (it takes a `message` prop).
+
+```tsx
+<Field>
+  <FieldLabel>Email</FieldLabel>
+  <FieldControl placeholder="you@example.com" accessibilityLabel="Email" />
+  <FieldDescription>We never share it.</FieldDescription>
+  {error ? <FieldError>{error}</FieldError> : null}
+</Field>
+```
+
+**Control styles are internal.** `buttonColors`, `fieldStyle`, `textStyle` and the other helpers in `src/controlStyles.ts` are not exported from any entry. Their names and return values can change in any release; build on the components instead.
 
 **`Button` `shape` (0.6.0).** `Button` is a pill by default, as the web `Button` from `@vvedantb/ui` 0.31.0: `shape="pill"` is fully round (`tokens.radius.pill`, web `rounded-full`) for every variant and size, so `size="icon"` is a circle. `shape="rounded"` keeps the radius from before 0.6.0: 16 at every size (web `rounded-lg`). The web `rounded` is 14 (`rounded-md`) on `xs` and `icon-xs`; native has neither size. The radius is a style, so a `style` radius such as `style={{ borderRadius: 8 }}` wins over either shape; a `className` radius does not.
 

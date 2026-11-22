@@ -72,7 +72,8 @@ export async function buildDist({ root, dirs, flat = false, jsx, explicitExtensi
   const logger = {
     logEvent(filename, event) {
       if (event.kind !== "CompileError" && event.kind !== "PipelineError") return;
-      const file = relative(root, filename ?? "?");
+      // Forward slashes on every platform: the baseline is written on Linux.
+      const file = relative(root, filename ?? "?").replaceAll("\\", "/");
       const reason = String(event.detail?.reason ?? event.detail?.options?.reason ?? event.data ?? event.kind)
         .split("\n")[0]
         .slice(0, 160);

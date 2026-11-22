@@ -142,6 +142,15 @@ describe("Button", () => {
     expect(el(host, "button").classList.contains("h-10")).toBe(true);
   });
 
+  it("renders each alias with the classes of the name it aliases", async () => {
+    for (const [alias, name] of [["primary", "default"], ["tertiary", "ghost"], ["danger", "destructive"]] as const) {
+      expect(cls(await mount(<Button variant={alias}>Go</Button>), "button")).toBe(
+        cls(await mount(<Button variant={name}>Go</Button>), "button"),
+      );
+    }
+    expect(cls(await mount(<Button size="md">Go</Button>), "button")).toBe(cls(await mount(<Button>Go</Button>), "button"));
+  });
+
   it("has an xs size", async () => {
     const host = await mount(<Button size="xs">Go</Button>);
     expect(el(host, "button").classList.contains("h-7")).toBe(true);
@@ -166,8 +175,10 @@ describe("Button", () => {
   });
 
   it("renders the built-in classes under an empty classes entry, for every variant, size and shape", async () => {
-    const variants = ["default", "destructive", "outline", "secondary", "ghost", "link", "flat", "success", "warning"] as const;
-    const sizes = ["default", "xs", "sm", "lg", "icon", "icon-sm", "icon-xs"] as const;
+    const variants = [
+      "default", "primary", "destructive", "danger", "outline", "secondary", "ghost", "tertiary", "link", "flat", "success", "warning",
+    ] as const;
+    const sizes = ["default", "md", "xs", "sm", "lg", "icon", "icon-sm", "icon-xs"] as const;
     const empty: UiConfig = { Button: { classes: {} } };
     for (const variant of variants) {
       for (const size of sizes) {

@@ -7,6 +7,8 @@ import { useCn, useUiConfig } from "./ui-config";
 const sizeClasses = {
   sm: { input: "h-8 pl-8 text-base sm:pointer-fine:text-sm", icon: "left-2" },
   md: { input: "h-10 pl-9", icon: "left-3" },
+  // Alias of `md`.
+  default: { input: "h-10 pl-9", icon: "left-3" },
 };
 
 const variantClasses = {
@@ -42,7 +44,7 @@ export interface SearchInputProps extends Omit<ClearInputProps, "leading" | "siz
   label?: string;
   /** Key hint shown on the right while the value is empty, such as `"/"` or `"⌘K"`. */
   shortcut?: string;
-  /** `sm` is `h-8`, `md` is `h-10`. Default `"sm"`. */
+  /** `sm` is `h-8`; `md` and its alias `default` are `h-10`. Default `"sm"`. */
   size?: keyof typeof sizeClasses;
   /** `toolbar`: transparent until hover or focus, fixed width from `sm`. Default `"default"`. */
   variant?: keyof typeof variantClasses;

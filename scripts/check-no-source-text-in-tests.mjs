@@ -21,7 +21,8 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TEST_FILE = /\.(test|spec)\.[cm]?[jt]sx?$/;
-const SKIP_DIRS = new Set(["node_modules", "dist", "build", ".git", ".expo", ".next", "android", "ios"]);
+// `products` holds the product apps, which have their own test rules.
+const SKIP_DIRS = new Set(["node_modules", "dist", "build", ".git", ".expo", ".next", "android", "ios", "products"]);
 const READ_CALL = /\b(readFileSync|readFile|readdirSync|readdir|createReadStream)\s*\(/g;
 // Arguments that name source files: a `src` path part, a source variable, or a source extension.
 const SOURCE_ARG = /(?:^|[^\w])(?:src|source|sources|srcDir|sourceDir)\b|\.(?:css|scss|md|mdx|[cm]?[jt]sx?)\b/i;

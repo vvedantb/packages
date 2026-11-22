@@ -1,5 +1,14 @@
 import * as Slot from "@rn-primitives/slot";
-import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentRef,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import {
   Pressable,
   ScrollView,
@@ -110,7 +119,7 @@ export type DropdownMenuTriggerProps = PressableProps & {
  */
 export function DropdownMenuTrigger({ asChild, onPress, accessibilityState, ...props }: DropdownMenuTriggerProps) {
   const { open, setOpen, setTrigger } = useMenu("DropdownMenuTrigger");
-  const ref = useRef<View>(null);
+  const ref = useRef<ComponentRef<typeof View>>(null);
   const Component = asChild ? Slot.Pressable : Pressable;
   return (
     <Component

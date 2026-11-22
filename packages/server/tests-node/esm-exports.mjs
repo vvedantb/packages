@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
-import { build, installFixture, pkg, tsc } from "./installed.mjs";
+import { build, installFixture, pkg, tsrs } from "./installed.mjs";
 
 let bare;
 
@@ -293,8 +293,8 @@ export { cost, kind, options };
     };
     for (const [file, config] of Object.entries(checks)) {
       writeFileSync(join(dir, file), JSON.stringify(config));
-      const check = spawnSync(process.execPath, [tsc, "-p", file], { cwd: dir, encoding: "utf8" });
-      assert.equal(check.status, 0, `tsc -p ${file} failed:\n${check.stdout}${check.stderr}`);
+      const check = spawnSync(process.execPath, [tsrs, "-p", file], { cwd: dir, encoding: "utf8" });
+      assert.equal(check.status, 0, `tsrs -p ${file} failed:\n${check.stdout}${check.stderr}`);
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -425,8 +425,8 @@ for (const [label, zodDir] of [
           files: ["consumer.ts", `node_modules/${pkg.name}/dist/index.d.ts`],
         }),
       );
-      const check = spawnSync(process.execPath, [tsc, "-p", "tsconfig.json"], { cwd: dir, encoding: "utf8" });
-      assert.equal(check.status, 0, `tsc failed:\n${check.stdout}${check.stderr}`);
+      const check = spawnSync(process.execPath, [tsrs, "-p", "tsconfig.json"], { cwd: dir, encoding: "utf8" });
+      assert.equal(check.status, 0, `tsrs failed:\n${check.stdout}${check.stderr}`);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

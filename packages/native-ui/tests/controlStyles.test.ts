@@ -76,15 +76,38 @@ describe("buttonColors", () => {
     });
   });
 
+  it("draws the web aliases and status variants from the palette", () => {
+    for (const scheme of schemes) {
+      expect(buttonColors("danger", scheme)).toEqual(buttonColors("destructive", scheme));
+      expect(buttonColors("tertiary", scheme)).toEqual(buttonColors("ghost", scheme));
+      expect(buttonColors("flat", scheme)).toEqual(buttonColors("ghost", scheme));
+      expect(buttonColors("success", scheme)).toEqual({
+        backgroundColor: palette.success[scheme],
+        borderColor: "transparent",
+        color: palette.successForeground[scheme],
+      });
+      expect(buttonColors("warning", scheme)).toEqual({
+        backgroundColor: palette.warning[scheme],
+        borderColor: "transparent",
+        color: palette.warningForeground[scheme],
+      });
+    }
+  });
+
   it("leaves only tinted to the pink NativeWind classes", () => {
     const variants: ButtonVariant[] = [
       "primary",
       "default",
       "secondary",
+      "tertiary",
       "outline",
       "destructive",
+      "danger",
       "ghost",
       "link",
+      "success",
+      "warning",
+      "flat",
     ];
     for (const variant of variants) expect(buttonColors(variant, "light"), variant).not.toBeNull();
     expect(buttonColors("tinted", "light")).toBeNull();

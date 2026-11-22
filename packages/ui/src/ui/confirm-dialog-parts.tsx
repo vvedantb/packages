@@ -19,6 +19,11 @@ import {
 import { Input } from "./input";
 import { useUiConfig } from "./ui-config";
 
+/**
+ * Width caps, not a size scale. `"default"` keeps the dialog's own width;
+ * `"sm"` and `"md"` cap the content at `sm:max-w-96` from the `sm` breakpoint.
+ * They also change the padding and type of the parts (see each part).
+ */
 export type ConfirmDialogSize = "default" | "sm" | "md";
 
 /**
@@ -67,7 +72,7 @@ export function useConfirmDialog(): ConfirmDialogContextValue {
 }
 
 export type ConfirmDialogRootProps = React.ComponentProps<typeof Dialog> & {
-  /** Layout slot for the other parts. Default `"default"`. */
+  /** Layout slot for the other parts. A width cap (`"sm"` and `"md"`: `sm:max-w-96`), not a size scale. Default `"default"`. */
   size?: ConfirmDialogSize;
   /** Blocking alert dialog: no outside dismiss, no close button, Cancel focused. Default `size === "default"`. */
   alert?: boolean;

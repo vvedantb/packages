@@ -195,7 +195,8 @@ const TabsContent = React.forwardRef<
 });
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-const tabsBarVariants = cva(
+/** The class recipe of `TabsBar`. Ignores `UiConfig.Tabs` overrides. */
+export const tabsBarVariants = cva(
   "flex shrink-0 flex-wrap items-center gap-2 border-b border-border",
   {
     variants: {

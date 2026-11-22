@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { graph, writeFixture } from "./graph.mjs";
+import { fixtureNodeArgs, graph, writeFixture } from "./graph.mjs";
 
 const entries = [
   "src/marketing/landing.tsx",
@@ -61,7 +61,7 @@ assert.match(page, /Copyright © 2026 N/);
 assert.equal(typeof PricingModal, "function");
 `,
     );
-    const run = spawnSync(process.execPath, ["check.mjs"], { cwd: dir, encoding: "utf8" });
+    const run = spawnSync(process.execPath, fixtureNodeArgs, { cwd: dir, encoding: "utf8" });
     assert.equal(run.status, 0, `plain Node import failed:\n${run.stdout}${run.stderr}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });

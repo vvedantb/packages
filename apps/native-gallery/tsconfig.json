@@ -8,8 +8,16 @@
       "@vvedantb/server/generative-ui": [
         "../../packages/server/src/generative-ui/index.ts"
       ],
+      "react-native": [
+        "../../node_modules/react-native/types_generated/index.d.ts"
+      ],
+      "react-native/*": [
+        "../../node_modules/react-native/types_generated/*",
+        "../../node_modules/react-native/*"
+      ],
       "*": [
         "./node_modules/@types/*",
+        "../../node_modules/@types/*",
         "./node_modules/*"
       ]
     }

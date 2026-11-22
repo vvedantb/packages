@@ -104,6 +104,12 @@ export interface WebVitestOptions extends PathOptions {
   include?: string[];
   /** Packages Vitest transforms instead of loading from node_modules (`test.server.deps.inline`). */
   inline?: string[];
+  /**
+   * `resolve.dedupe`, as given. See `REACT_DEDUPE`. Set it when the tests load a
+   * workspace package from source: without it that package can load another copy
+   * of React than the app's.
+   */
+  dedupe?: readonly string[];
 }
 
 export interface WebVitestConfig {

@@ -1,6 +1,16 @@
 import type { ReactNode } from "react";
-import { ScrollViewStyleReset } from "expo-router/html";
+import * as expoRouterHtml from "expo-router/html";
 import { tokens } from "./tokens";
+
+const { ScrollViewStyleReset } = expoRouterHtml;
+
+// From Expo SDK 58 the static render no longer writes the page's CSS links and
+// script tags into the HTML afterwards: it hands them to the root as nodes, and
+// a root that leaves them out gives a blank page. Earlier SDKs have no such
+// hook and still write the tags themselves.
+type ServerDocument = ReturnType<NonNullable<typeof expoRouterHtml.useServerDocumentContext>>;
+const emptyDocument: ServerDocument = {};
+const useServerDocument = expoRouterHtml.useServerDocumentContext ?? (() => emptyDocument);
 
 /** `"native"` stops pinch-zoom so the page acts like the app; `"accessible"` allows it (WCAG 1.4.4). Both cover the notch. */
 export type ExpoWebRootViewport = "native" | "accessible";
@@ -65,8 +75,9 @@ export function ExpoWebRoot({
   darkBackground = tokens.color.background.dark,
   head,
 }: ExpoWebRootProps) {
+  const { htmlAttributes, headNodes, bodyAttributes, bodyNodes } = useServerDocument();
   return (
-    <html lang={lang}>
+    <html lang={lang} {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -74,8 +85,12 @@ export function ExpoWebRoot({
         {scrollReset ? <ScrollViewStyleReset /> : null}
         <style dangerouslySetInnerHTML={{ __html: expoWebBackgroundCss(lightBackground, darkBackground) }} />
         {head}
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }

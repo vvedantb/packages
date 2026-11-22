@@ -60,7 +60,10 @@ export function HtmlView({
   ref: handle,
   testID,
 }: HtmlViewProps) {
-  const ref = useRef<WebView>(null);
+  // `WebView<object>`: react-native-webview 14 types the class as
+  // `WebView<P = undefined>`, and its props as `WebViewProps & P`, which is
+  // `never` without a type argument.
+  const ref = useRef<WebView<object>>(null);
   useImperativeHandle(handle, () => ({
     postMessage: (message: string) => ref.current?.injectJavaScript(htmlViewPostScript(message)),
   }));
@@ -77,7 +80,7 @@ export function HtmlView({
 
   return (
     <View testID={testID} style={{ height }}>
-      <WebView
+      <WebView<object>
         ref={ref}
         source={{ html }}
         accessibilityLabel={title}

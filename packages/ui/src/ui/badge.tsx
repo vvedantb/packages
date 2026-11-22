@@ -15,7 +15,8 @@ const badgeVariantClasses = {
   warning: "border-warning/25 bg-warning/12 text-warning",
 };
 
-const badgeVariants = cva(badgeBaseClasses, {
+/** The class recipe of `Badge`. Ignores `UiConfig.Badge` overrides. */
+export const badgeVariants = cva(badgeBaseClasses, {
   variants: {
     variant: badgeVariantClasses,
   },

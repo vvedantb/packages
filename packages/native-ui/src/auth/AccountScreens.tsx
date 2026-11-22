@@ -1,5 +1,5 @@
-import { useRef, useState, type ReactNode } from "react";
-import type { TextInput } from "react-native";
+import { useRef, useState, type ComponentRef, type ReactNode } from "react";
+import { TextInput } from "react-native";
 import { useUser } from "@clerk/expo";
 import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
@@ -86,8 +86,8 @@ export function ChangePasswordScreen({
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const nextField = useRef<TextInput>(null);
-  const confirmField = useRef<TextInput>(null);
+  const nextField = useRef<ComponentRef<typeof TextInput>>(null);
+  const confirmField = useRef<ComponentRef<typeof TextInput>>(null);
   const id = (name: string) => `${testIDPrefix}-${name}`;
   // Until the user loads, show the current-password field: most accounts have one.
   const hasPassword = user ? user.passwordEnabled : true;

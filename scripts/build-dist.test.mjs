@@ -26,7 +26,7 @@ test("worklets keep their helper functions inline after React Compiler", async (
     filename: join(here, "fixtures/worklet-hook.ts"),
     plugins: [workletsPlugin],
   });
-  const closures = [...workletized.matchAll(/__closure = (\{[^;]*\});/g)].map((match) => match[1]);
+  const closures = [...workletized.matchAll(/__closure = (\[[^;]*\]);/g)].map((match) => match[1]);
   assert.equal(closures.length, 3, "expected three worklets: useAnimatedStyle, onUpdate and the \"worklet\" function");
   for (const closure of closures) assert.doesNotMatch(closure, /\b_temp\d*\b/, `a worklet captures a hoisted function: ${closure}`);
 });

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ComponentType, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import {
@@ -143,7 +143,7 @@ export function Message({
   // The open context menu: where the message was and what it offers, read at the hold.
   const [held, setHeld] = useState<{ anchor: MessageMenuRect; menu: MessageMenu } | null>(null);
   // Measured at the hold: the menu draws the message again where it is on screen.
-  const pressable = useRef<View>(null);
+  const pressable = useRef<ComponentRef<typeof View>>(null);
   const hasActions = actions != null && actions.length > 0;
   const longPressable = onLongPress != null || hasActions || menu != null;
   // In a thread, the menu freezes the list's keyboard handling until its close settles (see `overlay`).

@@ -1,5 +1,5 @@
-import { useRef, useState, type ReactNode } from "react";
-import { Text, View, type TextInput } from "react-native";
+import { useRef, useState, type ComponentRef, type ReactNode } from "react";
+import { Text, TextInput, View } from "react-native";
 import { useSignIn, useSignUp } from "@clerk/expo";
 import { useRouter, type Href } from "expo-router";
 import { Button } from "../Button";
@@ -237,8 +237,8 @@ export function SignInScreen({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   // The field each "next" key moves to.
-  const passwordField = useRef<TextInput>(null);
-  const confirmField = useRef<TextInput>(null);
+  const passwordField = useRef<ComponentRef<typeof TextInput>>(null);
+  const confirmField = useRef<ComponentRef<typeof TextInput>>(null);
   const signUp = mode === "sign-up";
   const reset = mode === "reset-password";
   const id = (name: string) => `${testIDPrefix ?? mode}-${name}`;

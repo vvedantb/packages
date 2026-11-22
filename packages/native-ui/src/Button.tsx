@@ -13,8 +13,8 @@ import { useLargerText } from "./theme";
 import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
-/** `sm`, `default` and `lg` are the web names for `small`, `medium` and `large`. `icon` is a square button. */
-type ButtonSize = "small" | "medium" | "large" | "sm" | "default" | "lg" | "icon";
+/** `sm`, `default` (or `md`) and `lg` are the web names for `small`, `medium` and `large`. `icon` is a square button. */
+type ButtonSize = "small" | "medium" | "large" | "sm" | "md" | "default" | "lg" | "icon";
 
 /** The web `shape`. `"pill"` (default) is fully round; `"rounded"` is radius 16, the look before 0.6.0. */
 type ButtonShape = "pill" | "rounded";
@@ -57,6 +57,7 @@ const SIZE_ALIAS = {
   medium: "medium",
   large: "large",
   sm: "small",
+  md: "medium",
   default: "medium",
   lg: "large",
   icon: "icon",
@@ -109,8 +110,8 @@ const RADIUS: Record<ButtonShape, number> = {
   rounded: tokens.radius.lg,
 };
 
-// Colours come from `buttonColors` as styles, except `tinted`, which keeps
-// the pink classes that `outline` used before 0.3.0.
+// Colours come from `buttonColors` as styles, except `tinted` (a legacy
+// alias), which keeps the pink classes that `outline` used before 0.3.0.
 const VARIANT_CLASS: Partial<Record<ButtonVariant, string>> = {
   link: "h-auto border-0 px-0",
   tinted: "border-0 bg-pink-50 dark:bg-pink-900/20",
@@ -128,6 +129,11 @@ const PRIMITIVE_VARIANT = {
   secondary: "secondary",
   destructive: "destructive",
   ghost: "ghost",
+  tertiary: "ghost",
+  danger: "destructive",
+  success: "default",
+  warning: "default",
+  flat: "ghost",
   link: "link",
   tinted: "secondary",
 } as const;

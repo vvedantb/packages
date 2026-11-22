@@ -26,6 +26,31 @@ Removed in 0.4.0-rc.1: the `/cn`, `/sonner`, `/audio`, `/shell`, `/app`, `/compo
 @source "../node_modules/@vvedantb/ui/src/**/*.{ts,tsx}";
 ```
 
+## Component docs and gallery
+
+The web gallery in the repository (`apps/ui-gallery`) renders the components below on one page, in light and dark. Run it with `pnpm --filter ui-gallery dev`. It is the web counterpart of `apps/native-gallery`.
+
+Each doc has a default usage sample, a variant or props table, a composition example and the `@vvedantb/native-ui` equivalent.
+
+| Component | Doc |
+| --- | --- |
+| `Button` | [docs/components/button.md](docs/components/button.md) |
+| `Input` | [docs/components/input.md](docs/components/input.md) |
+| `SearchInput` | [docs/components/search-input.md](docs/components/search-input.md) |
+| `Field` | [docs/components/field.md](docs/components/field.md) |
+| `Dialog` | [docs/components/dialog.md](docs/components/dialog.md) |
+| `Sheet` | [docs/components/sheet.md](docs/components/sheet.md) |
+| `AlertDialog` | [docs/components/alert-dialog.md](docs/components/alert-dialog.md) |
+| `ConfirmDialog` | [docs/components/confirm-dialog.md](docs/components/confirm-dialog.md) |
+| `Tabs` | [docs/components/tabs.md](docs/components/tabs.md) |
+| `TabsBar` | [docs/components/tabs-bar.md](docs/components/tabs-bar.md) |
+| `Badge` | [docs/components/badge.md](docs/components/badge.md) |
+| `Spinner` | [docs/components/spinner.md](docs/components/spinner.md) |
+| `PageTitle` | [docs/components/page-title.md](docs/components/page-title.md) |
+| `Conversation` | [docs/components/conversation.md](docs/components/conversation.md) |
+| `Message` | [docs/components/message.md](docs/components/message.md) |
+| `PromptInput` | [docs/components/prompt-input.md](docs/components/prompt-input.md) |
+
 ## Reply chime
 
 ```tsx
@@ -292,6 +317,24 @@ import {
   ```
 
 - `Button`: variants `flat`, `success` and `warning` (each is `ghost` plus an override). `loading` disables the button, sets `data-loading="true"` and shows a spinner in place of `startContent`; without `loading` there is no `data-loading` attribute. `endContent` renders after the children. Both are ignored with `asChild` (`loading` still disables).
+- `Button` aliases and recipes: `variant` accepts `primary` (= `default`), `tertiary` (= `ghost`) and `danger` (= `destructive`); `size` accepts `md` (= `default`). Roles: `primary`/`default` is the one main action, `secondary` an alternative, `tertiary`/`ghost` a dismissive action, `destructive`/`danger` a destructive action, `success` and `warning` show status, and `outline`, `link` and `flat` are visual. The omitted-prop defaults stay `"default"`. `buttonVariants`, `badgeVariants` and `tabsBarVariants` are the cva recipes; the types `ButtonVariant`, `ButtonSize` and `ButtonShape` are exported. Use a recipe to style a link like a button. `UiConfigProvider` overrides apply to the `Button` component only, not to raw `buttonVariants()` calls.
+
+  ```tsx
+  <a href="/docs" className={buttonVariants({ variant: "default" })}>Read the docs</a>
+  ```
+
+- Sizes: the canonical scale is `sm`, `default` (or `md`) and `lg`. `Spinner` `size="default"` equals `md`. `SearchInput` `size="default"` equals `md` (`h-10`); its omitted default stays `sm`. `ConfirmDialog` sizes are width caps (`sm`/`md`: `sm:max-w-96`), not a scale.
+- `Field`, `FieldLabel`, `FieldControl`, `FieldDescription`, `FieldError`: a labelled control with the wiring done for you. `Field` generates the id (or takes `controlId`); `FieldLabel` sets `htmlFor`; `FieldControl` is an `Input` with that `id`, an `aria-describedby` that lists the description and error ids only while they render, and `aria-invalid` while an error renders. A plain `<Input />` is unchanged.
+
+  ```tsx
+  <Field>
+    <FieldLabel>Email</FieldLabel>
+    <FieldControl type="email" />
+    <FieldDescription>We never share it.</FieldDescription>
+    {error ? <FieldError>{error}</FieldError> : null}
+  </Field>
+  ```
+
 - `DropdownMenuContent`: `fitViewport` caps the height on small screens and scrolls. It reads the optional `--vv-height` CSS variable, which the app may set to the visual viewport height (falls back to `70dvh`). `suppressAltKey` stops a bare Alt press from moving focus. `restoreScrollLockOnClose` calls `restoreModalScrollLock` on close (now and on the next tick). `ContextMenuContent` takes `suppressAltKey` too.
 - `DropdownMenuItem` `endContent` and `ContextMenuItem` `startContent`, `description` and `endContent`: the label moves into a growing column (`min-w-0 flex-1`), the description sits under it and `endContent` sits at the end. `DropdownMenuSubTrigger` and `ContextMenuSubTrigger` take `startContent`.
 - `PopoverContent` `fitViewport`: grows from the trigger (`--radix-popper-transform-origin`) and, on small screens, caps width to `100vw - 1.5rem` and height as above.

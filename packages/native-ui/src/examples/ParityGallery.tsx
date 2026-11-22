@@ -68,6 +68,11 @@ import {
   GoogleMark,
   IconButton,
   Input,
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
   Label,
   LabeledSwitchRow,
   ListRow,
@@ -131,12 +136,19 @@ import {
 } from "../ai";
 import { AiChatSamples } from "./AiChatGallery";
 
+// Every shared variant; the aliases (`primary`, `tertiary`, `danger`) draw as the name they alias.
 const BUTTON_VARIANTS: ButtonVariant[] = [
   "default",
+  "primary",
   "secondary",
   "outline",
   "destructive",
+  "danger",
   "ghost",
+  "tertiary",
+  "flat",
+  "success",
+  "warning",
   "link",
 ];
 
@@ -289,7 +301,7 @@ function GalleryScreen() {
           {/* The web gallery: a full-width column of variants, then the sm row. */}
           <View className="gap-2">
             {BUTTON_VARIANTS.map((variant) => (
-              <Button key={variant} variant={variant} onPress={() => toast(variant)}>
+              <Button key={variant} testID={`button-variant-${variant}`} variant={variant} onPress={() => toast(variant)}>
                 {variant}
               </Button>
             ))}
@@ -307,6 +319,9 @@ function GalleryScreen() {
               Small
             </Button>
             <Button fullWidth={false}>Default</Button>
+            <Button size="md" fullWidth={false}>
+              Medium
+            </Button>
             <Button size="lg" fullWidth={false}>
               Large
             </Button>
@@ -357,6 +372,12 @@ function GalleryScreen() {
             <Label nativeID="gallery-name">Name</Label>
             <Input placeholder="Your name" accessibilityLabel="Name" />
           </View>
+          <Field testID="field-parity">
+            <FieldLabel testID="field-parity-label">Email</FieldLabel>
+            <FieldControl testID="field-parity-input" placeholder="you@example.com" />
+            <FieldDescription testID="field-parity-description">We never share it.</FieldDescription>
+            <FieldError testID="field-parity-error">Enter a valid email.</FieldError>
+          </Field>
           {/* Empty (`sm`: icon and placeholder) and filled (`md`: the clear button). */}
           <SearchInput value={emptySearch} onChange={setEmptySearch} />
           <SearchInput value={search} onChange={setSearch} size="md" label="Search colours" />
