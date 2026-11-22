@@ -15,6 +15,8 @@ export { Textarea } from "../Textarea";
 export type { TextareaProps } from "../Textarea";
 export { Label } from "../Label";
 export type { LabelProps } from "../Label";
+export { Field, FieldControl, FieldDescription, FieldError, FieldLabel } from "../Field";
+export type { FieldProps } from "../Field";
 export { Select } from "../Select";
 export type { SelectOption, SelectProps } from "../Select";
 export { Switch } from "../Switch";

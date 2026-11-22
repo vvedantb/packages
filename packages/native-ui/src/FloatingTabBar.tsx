@@ -28,8 +28,9 @@ const PILL_SLIDE = { duration: 200, easing: Easing.bezier(0.22, 1, 0.36, 1) };
 
 /**
  * The fields this bar reads from the props Expo Router's `Tabs` passes to
- * `tabBar` (React Navigation's `BottomTabBarProps`, Expo SDK 57). Declared
- * here so the tab bar does not import `expo-router`.
+ * `tabBar` (its `BottomTabBarProps`, Expo SDK 58). Declared here so the tab
+ * bar does not import `expo-router`. SDK 58 replaced the `navigation` prop
+ * with an `emitter` (for `tabPress`) and `navigateToTab(routeKey)`.
  */
 export type FloatingTabBarProps = {
   state: {
@@ -37,14 +38,14 @@ export type FloatingTabBarProps = {
     routes: readonly { key: string; name: string; params?: object }[];
   };
   descriptors: Record<string, { options: FloatingTabOptions }>;
-  navigation: {
+  emitter: {
     emit(event: {
       type: "tabPress";
       target: string;
       canPreventDefault: true;
     }): { defaultPrevented: boolean };
-    navigate(name: string, params?: object): void;
   };
+  navigateToTab: (routeKey: string) => void;
 };
 
 /**
@@ -60,7 +61,8 @@ export type FloatingTabBarProps = {
 export function FloatingTabBar({
   state,
   descriptors,
-  navigation,
+  emitter,
+  navigateToTab,
 }: FloatingTabBarProps) {
   const insets = useSafeAreaInsets();
   const largerText = useLargerText();
@@ -113,7 +115,8 @@ export function FloatingTabBar({
               <TabBarItem
                 key={route.key}
                 route={route}
-                navigation={navigation}
+                emitter={emitter}
+                navigateToTab={navigateToTab}
                 focused={focused}
                 label={label}
                 color={color}
@@ -132,7 +135,8 @@ export function FloatingTabBar({
 
 type TabBarItemProps = {
   route: FloatingTabBarProps["state"]["routes"][number];
-  navigation: FloatingTabBarProps["navigation"];
+  emitter: FloatingTabBarProps["emitter"];
+  navigateToTab: FloatingTabBarProps["navigateToTab"];
   focused: boolean;
   label: string;
   color: ColorValue;
@@ -145,12 +149,13 @@ type TabBarItemProps = {
 /**
  * One tab. React Compiler (the package build) memoises it, so a switch
  * renders only the two tabs whose focus changed. Its props are stable between
- * switches: `route` and `navigation` keep their identity, and `tabBarIcon` is
- * the caller's function.
+ * switches: `route`, `emitter` and `navigateToTab` keep their identity, and
+ * `tabBarIcon` is the caller's function.
  */
 function TabBarItem({
   route,
-  navigation,
+  emitter,
+  navigateToTab,
   focused,
   label,
   color,
@@ -161,14 +166,14 @@ function TabBarItem({
 }: TabBarItemProps) {
   const press = usePressed();
   const onPress = () => {
-    const event = navigation.emit({
+    const event = emitter.emit({
       type: "tabPress",
       target: route.key,
       canPreventDefault: true,
     });
     if (!focused && !event.defaultPrevented) {
       selectionHaptic();
-      navigation.navigate(route.name, route.params);
+      navigateToTab(route.key);
     }
   };
 

@@ -4,17 +4,17 @@
 // root modules import `motion`, so the root cannot be loaded this way; this
 // proves the helpers load without a `motion` import.
 // Run with: node --test app/tests-node/helpers-esm.test.mjs
+import { transformSync } from "esbuild";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { depDir } from "./graph.mjs";
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const ts = createRequire(join(pkgDir, "package.json"))("typescript");
 
 const modules = [
   "theme/createThemeProvider.tsx",
@@ -30,15 +30,18 @@ test("plain Node ESM imports and renders the helpers without motion installed", 
       const out = join(dir, file.replace(/\.tsx?$/, ".js"));
       mkdirSync(dirname(out), { recursive: true });
       // allow-source-read: the source is transpiled and run, not matched as text
-      const { outputText } = ts.transpileModule(readFileSync(join(pkgDir, "app/src", file), "utf8"), {
-        compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+      const { code } = transformSync(readFileSync(join(pkgDir, "app/src", file), "utf8"), {
+        loader: file.endsWith(".tsx") ? "tsx" : "ts",
+        format: "esm",
+        target: "es2022",
+        jsx: "automatic",
       });
-      writeFileSync(out, outputText);
+      writeFileSync(out, code);
     }
     writeFileSync(join(dir, "package.json"), JSON.stringify({ type: "module" }));
     mkdirSync(join(dir, "node_modules"));
     for (const name of ["react", "react-dom"]) {
-      symlinkSync(join(pkgDir, "node_modules", name), join(dir, "node_modules", name), "dir");
+      symlinkSync(depDir(name), join(dir, "node_modules", name), "junction");
     }
     writeFileSync(
       join(dir, "check.mjs"),

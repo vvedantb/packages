@@ -5,14 +5,10 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type ComponentRef,
   type ReactNode,
-  type RefObject,
 } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
-import { loadBlur } from "./blur";
-
-type BlurTargetRef = RefObject<ComponentRef<typeof View> | null>;
+import { loadBlur, type BlurTargetElement, type BlurTargetRef } from "./blur";
 
 /**
  * The current blur target, outside React state. A target change (each tab
@@ -84,7 +80,7 @@ export function GlassBlurTarget({
   ...props
 }: GlassBlurTargetProps) {
   const store = useContext(BlurTargetStoreContext);
-  const ref = useRef<ComponentRef<typeof View>>(null);
+  const ref = useRef<BlurTargetElement>(null);
   const BlurTargetView = loadBlur()?.BlurTargetView;
 
   // Publish the ref only once it is attached: expo-blur compares
@@ -102,12 +98,14 @@ export function GlassBlurTarget({
   // Surfaces in here get no target: a blur view must not sit inside its own.
   const content = <BlurTargetStoreContext.Provider value={null}>{children}</BlurTargetStoreContext.Provider>;
 
+  // The plain `View` is the fallback when expo-blur is absent: no `BlurView`
+  // then reads the store, so this branch needs no target ref.
   return BlurTargetView ? (
     <BlurTargetView ref={ref} style={[styles.fill, style]} {...props}>
       {content}
     </BlurTargetView>
   ) : (
-    <View ref={ref} style={[styles.fill, style]} {...props}>
+    <View style={[styles.fill, style]} {...props}>
       {content}
     </View>
   );

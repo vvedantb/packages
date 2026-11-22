@@ -2,6 +2,14 @@ import type * as ExpoBlur from "expo-blur";
 
 export type ExpoBlurModule = typeof ExpoBlur;
 
+/**
+ * The ref an expo-blur `BlurView` blurs (its `blurTarget` prop, and the ref a
+ * `BlurTargetView` takes). Derived from expo-blur's own type so the two match
+ * under any React Native version.
+ */
+export type BlurTargetRef = NonNullable<ExpoBlur.BlurViewProps["blurTarget"]>;
+export type BlurTargetElement = NonNullable<BlurTargetRef["current"]>;
+
 let expoBlur: ExpoBlurModule | null | undefined;
 
 /**

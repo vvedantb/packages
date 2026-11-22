@@ -10,15 +10,30 @@ const ghostClass =
 const buttonBaseClasses =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium tracking-normal transition-[transform,background-color,box-shadow,opacity,border-color] duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.96] active:duration-[var(--motion-fast,150ms)] [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0";
 
+const defaultVariantClass =
+  "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:opacity-90";
+const destructiveVariantClass =
+  "bg-[oklch(47.2%_0.195_25.7)] text-white hover:bg-[oklch(42.5%_0.185_25.7)]";
+
+/**
+ * Variant hierarchy:
+ * - `primary` (alias of `default`): the one main action.
+ * - `secondary`: an alternative action.
+ * - `tertiary` (alias of `ghost`): a dismissive action.
+ * - `destructive` (alias `danger`): a destructive action.
+ * - `success`, `warning`: status.
+ * - `outline`, `link`, `flat`: visual treatments with no fixed role.
+ */
 const buttonVariantClasses = {
-  default:
-    "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:opacity-90",
-  destructive:
-    "bg-[oklch(47.2%_0.195_25.7)] text-white hover:bg-[oklch(42.5%_0.185_25.7)]",
+  default: defaultVariantClass,
+  primary: defaultVariantClass,
+  destructive: destructiveVariantClass,
+  danger: destructiveVariantClass,
   outline:
     "border border-border bg-transparent text-foreground hover:bg-default",
   secondary: "bg-default text-default-foreground hover:bg-default/78",
   ghost: ghostClass,
+  tertiary: ghostClass,
   link: "text-primary underline-offset-4 hover:underline active:scale-100",
   // Ghost plus an override; tailwind-merge drops the clashing ghost classes.
   flat: `${ghostClass} bg-transparent text-muted hover:bg-surface-tertiary hover:text-foreground`, // check-tokens-allow: text-muted
@@ -29,6 +44,8 @@ const buttonVariantClasses = {
 // No radius here: `shape` sets it.
 const buttonSizeClasses = {
   default: "h-10 px-4 py-2",
+  // Alias of `default`, for the canonical sm / md / lg scale.
+  md: "h-10 px-4 py-2",
   xs: "h-7 px-2 text-xs hit-target [&_svg:not([class*='size-'])]:size-3.5",
   sm: "h-8 px-3 text-xs max-sm:hit-target",
   lg: "h-11 px-6",
@@ -44,15 +61,22 @@ const buttonShapeClasses = {
   rounded: "rounded-lg",
 };
 
-type ButtonVariant = keyof typeof buttonVariantClasses;
-type ButtonSize = keyof typeof buttonSizeClasses;
-type ButtonShape = keyof typeof buttonShapeClasses;
+/** `primary`, `tertiary` and `danger` alias `default`, `ghost` and `destructive`. */
+export type ButtonVariant = keyof typeof buttonVariantClasses;
+/** `md` aliases `default` (`h-10`). */
+export type ButtonSize = keyof typeof buttonSizeClasses;
+export type ButtonShape = keyof typeof buttonShapeClasses;
 
 // `rounded` keeps the smaller radius the two 28px sizes had.
 const roundedSmallSizes: ButtonSize[] = ["xs", "icon-xs"];
 const roundedSmallClass = "rounded-md";
 
-const buttonVariants = cva(buttonBaseClasses, {
+/**
+ * The class recipe of `Button`, for links and other elements that should look
+ * like one: `<a className={buttonVariants({ variant: "default" })}>`. It
+ * ignores `UiConfig.Button` overrides; only the `Button` component applies those.
+ */
+export const buttonVariants = cva(buttonBaseClasses, {
   variants: {
     variant: buttonVariantClasses,
     size: buttonSizeClasses,
@@ -89,6 +113,15 @@ export interface ButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  /**
+   * `primary` (alias of `default`) is the one main action; `secondary` an
+   * alternative; `tertiary` (alias of `ghost`) a dismissive one; `destructive`
+   * (alias `danger`) a destructive one; `success` and `warning` show status;
+   * `outline`, `link` and `flat` are visual. Default `"default"`.
+   */
+  variant?: ButtonVariant | null;
+  /** `md` is an alias of `default`. Default `"default"`. */
+  size?: ButtonSize | null;
   asChild?: boolean;
   /** Rendered before the children. Ignored with `asChild`. */
   startContent?: React.ReactNode;

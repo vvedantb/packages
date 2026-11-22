@@ -201,7 +201,7 @@ Each check has a stable id:
 | `oxlint-dep` | No `oxlint` dependency. |
 | `oxlint-script` | No `lint` script that runs `oxlint`. |
 | `config-version` | The `@vvedantb/config` range floor is an older minor than the running `vvedantb-doctor` version. |
-| `ci-reusable-workflow` | No workflow calls `vvedantb/packages/.github/workflows/ci-app.yml`. |
+| `ci-reusable-workflow` | No workflow calls `vvedantb/workflows/.github/workflows/ci-app.yml`. A call to the older `vvedantb/packages/.github/workflows/ci-app.yml` also passes. |
 | `ci-runner` | A job uses a runner the Boat policy does not allow. `boat`, `boat-small` and `boat-xlarge` pass, as do GitHub-hosted labels and `${{ ... }}` expressions. `boat-large` is for Android release builds only: it passes as `runs_on` for `release-android-apk.yml` or `release-gallery-android.yml`, or in a workflow file with `android` in its name, and fails on check jobs such as `ci-app.yml`. An unknown `boat*` label such as `boat-medium` fails. |
 | `ci-commands` | A line in the `commands` input of the shared workflow is not `lint`, `typecheck` or `test` and has no written reason, or a reason names a command that CI does not run. |
 
@@ -262,7 +262,7 @@ export default defineConfig({
 
 Keys that are not asked for are left out, so `resolve` and `build` appear only when set. `reactPlugins(setup)` and `vendorChunkBuild(tests?)` are exported on their own.
 
-`defineWebVitestConfig` takes `plugins`, `tsconfigPaths`, `alias`, `automaticJsx` (`esbuild: { jsx: "automatic" }`), `include` (default `["src/**/*.test.ts"]`) and `inline` (`test.server.deps.inline`). It always sets `test.environment: "node"`. Pass the result to `defineConfig` from `vitest/config`.
+`defineWebVitestConfig` takes `plugins`, `tsconfigPaths`, `alias`, `automaticJsx` (`esbuild: { jsx: "automatic" }`), `include` (default `["src/**/*.test.ts"]`), `inline` (`test.server.deps.inline`) and `dedupe` (`resolve.dedupe`). Pass `dedupe: REACT_DEDUPE` when the tests load a workspace package from source (`workspace:*` with `inline`): without it that package can load another copy of React than the app's, and hooks fail. It always sets `test.environment: "node"`. Pass the result to `defineConfig` from `vitest/config`.
 
 ### Shared-worker Vitest preset (opt-in, faster)
 

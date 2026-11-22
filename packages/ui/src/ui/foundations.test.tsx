@@ -115,6 +115,12 @@ describe("Spinner mark", () => {
     expect(host.querySelector("polygon")).toBeNull();
   });
 
+  it("treats size default as md", async () => {
+    const fromDefault = await mount(<Spinner size="default" />);
+    expect(classes(first(fromDefault))).toContain("size-6");
+    expect(classes(first(fromDefault))).toEqual(classes(first(await mount(<Spinner />))));
+  });
+
   it("draws UiConfig.Spinner.mark with a running dash per shape", async () => {
     const host = await mount(<Spinner size="sm" className="mr-1" />, { Spinner: { mark } });
     const svg = first(host);

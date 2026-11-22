@@ -87,6 +87,12 @@ describe("SearchInput", () => {
     expect(input().className).not.toContain("h-8");
   });
 
+  it("accepts default as an alias of md", async () => {
+    await mount(<SearchInput value="" onChange={() => {}} size="default" />);
+    expect(input().className).toContain("h-10");
+    expect(input().className).not.toContain("h-8");
+  });
+
   it("toolbar variant is transparent with rounded-field and the light focus ring", async () => {
     await mount(<SearchInput value="" onChange={() => {}} variant="toolbar" />);
     const classes = input().className.split(" ");

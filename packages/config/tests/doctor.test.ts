@@ -127,11 +127,11 @@ describe("runDoctorChecks", () => {
 });
 
 describe("CI checks", () => {
-  function ciWorkflow(runner: string, commands: string[]): string {
+  function ciWorkflow(runner: string, commands: string[], repo = "vvedantb/packages"): string {
     return [
       "jobs:",
       "  check:",
-      "    uses: vvedantb/packages/.github/workflows/ci-app.yml@main",
+      `    uses: ${repo}/.github/workflows/ci-app.yml@main`,
       "    with:",
       `      runs_on: ${runner}`,
       "      # A comment between inputs.",
@@ -235,6 +235,16 @@ describe("CI checks", () => {
     const text = result.details.join("\n");
     expect(text).toContain("boat-medium");
     for (const label of ["boat-small", "boat", "boat-large", "boat-xlarge"]) expect(text).toContain(label);
+  });
+
+  it("takes the shared workflow from vvedantb/workflows and reads its commands", () => {
+    writeJson("package.json", { name: "x" });
+    write(".github/workflows/ci.yml", ciWorkflow("boat", ["pnpm lint", "pnpm --filter web build"], "vvedantb/workflows"));
+
+    const reasons = { "pnpm --filter web build": "the web app deploys from this build" };
+    const results = runDoctorChecks(dir, { runningVersion: "0.10.0", ciCommandReasons: reasons });
+    expect(byId(results, "ci-reusable-workflow").status).toBe("pass");
+    expect(byId(results, "ci-commands").status).toBe("pass");
   });
 
   it("fails on an extra CI command until it has a reason, and on a reason CI no longer needs", () => {

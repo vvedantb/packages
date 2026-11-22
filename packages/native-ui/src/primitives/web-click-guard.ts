@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Platform, type View } from "react-native";
+import { useRef, type ComponentRef } from "react";
+import { Platform, View } from "react-native";
 
 /** The part of a DOM element the web click guard uses: on the web a `View` is a DOM element. */
 type DomNode = {
@@ -27,7 +27,7 @@ export function useWebClickGuard(swallowOnDown: () => boolean = () => false) {
     swallowNext: () => {
       swallow.current = true;
     },
-    ref: (node: View | null) => {
+    ref: (node: ComponentRef<typeof View> | null) => {
       if (Platform.OS !== "web" || !node || !isDomNode(node)) return;
       const onClick = (event: DomEvent) => {
         if (!swallow.current) return;

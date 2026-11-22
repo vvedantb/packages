@@ -14,7 +14,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { graph, writeFixture } from "./graph.mjs";
+import { fixtureNodeArgs, graph, writeFixture } from "./graph.mjs";
 
 const CONVEX_OR_CLERK = /^(convex|@clerk\/clerk-react)$/;
 
@@ -36,7 +36,7 @@ function run(prefix, entries, links, check) {
   try {
     writeFixture(dir, files, new Set([...packages.keys(), ...links]));
     writeFileSync(join(dir, "check.mjs"), check);
-    const result = spawnSync(process.execPath, ["check.mjs"], { cwd: dir, encoding: "utf8" });
+    const result = spawnSync(process.execPath, fixtureNodeArgs, { cwd: dir, encoding: "utf8" });
     assert.equal(result.status, 0, `plain Node import failed:\n${result.stdout}${result.stderr}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });

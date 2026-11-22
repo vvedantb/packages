@@ -801,7 +801,7 @@ declare module "react-native-webview" {
     mediaPlaybackRequiresUserAction?: boolean;
     nestedScrollEnabled?: boolean;
   }
-  export class WebView extends React.Component<WebViewProps> {
+  export class WebView<P = undefined> extends React.Component<WebViewProps & P> {
     injectJavaScript(script: string): void;
   }
 }
@@ -938,6 +938,14 @@ declare module "expo-router" {
 declare module "expo-router/html" {
   import type * as React from "react";
   export const ScrollViewStyleReset: React.ComponentType;
+  export type ServerDocumentData = {
+    bodyAttributes?: React.ComponentPropsWithoutRef<"body">;
+    htmlAttributes?: React.ComponentPropsWithoutRef<"html">;
+    bodyNodes?: React.ReactNode;
+    headNodes?: React.ReactNode;
+  };
+  // Expo SDK 58 and later only, so `undefined` on earlier SDKs.
+  export const useServerDocumentContext: (() => ServerDocumentData) | undefined;
 }
 
 declare module "expo-auth-session" {

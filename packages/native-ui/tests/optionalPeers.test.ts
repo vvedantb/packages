@@ -14,10 +14,12 @@ vi.mock("react-native", () => ({
   View: "View",
   StyleSheet: { absoluteFill: { position: "absolute" }, absoluteFillObject: { position: "absolute" } },
 }));
-// Parts run as plain functions here, outside a renderer: `useScheme` reads the
-// theme version context (`ThemeVersionContext`), so `useContext` gives its default, 0.
-vi.mock("react", async (importOriginal) => ({ ...(await importOriginal<typeof import("react")>()), useContext: () => 0 }));
-vi.mock("nativewind", () => ({ useColorScheme: () => scheme }));
+// `AmbientBackground` is the only part here that reads the colour scheme. Mock
+// the hook (as `tabBar.test.ts` mocks its sibling hooks), so the test needs
+// neither React nor nativewind and the scheme follows `scheme.colorScheme`.
+vi.mock("../src/useScheme", () => ({
+  useScheme: () => (scheme.colorScheme === "dark" ? "dark" : "light"),
+}));
 vi.mock("../src/cn", () => ({ cn: (...classes: unknown[]) => classes.filter(Boolean).join(" ") }));
 
 type Load = (this: unknown, request: string, ...rest: unknown[]) => unknown;

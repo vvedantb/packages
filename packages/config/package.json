@@ -14,13 +14,13 @@
     "directory": "packages/config"
   },
   "bin": {
-    "vvedantb-config": "./dist/cli.js",
-    "vvedantb-check-asar": "./dist/check-asar-cli.js",
-    "vvedantb-clerk-allow": "./dist/clerk-allow-cli.js",
-    "vvedantb-android-release": "./dist/android-release-cli.js",
-    "vvedantb-check-shared-ui": "./dist/check-shared-ui-cli.js",
-    "vvedantb-check-no-source-text": "./dist/check-no-source-text-cli.js",
-    "vvedantb-doctor": "./dist/doctor-cli.js"
+    "vvedantb-config": "./bin/vvedantb-config.js",
+    "vvedantb-check-asar": "./bin/vvedantb-check-asar.js",
+    "vvedantb-clerk-allow": "./bin/vvedantb-clerk-allow.js",
+    "vvedantb-android-release": "./bin/vvedantb-android-release.js",
+    "vvedantb-check-shared-ui": "./bin/vvedantb-check-shared-ui.js",
+    "vvedantb-check-no-source-text": "./bin/vvedantb-check-no-source-text.js",
+    "vvedantb-doctor": "./bin/vvedantb-doctor.js"
   },
   "exports": {
     ".": {
@@ -46,6 +46,7 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
+    "bin",
     "dist",
     "files",
     "tsconfig",
@@ -83,8 +84,9 @@
     "esbuild": "0.28.2",
     "eslint-plugin-react-you-might-not-need-an-effect": "1.0.2",
     "@vitejs/plugin-react": "^6.1.2",
+    "happy-dom": "18.0.1",
     "oxlint": "^1.80.0",
-    "typescript": "^5.9.0",
+    "typescript": "catalog:",
     "vite": "^8.3.4",
     "vitest": "^3.2.0"
   }

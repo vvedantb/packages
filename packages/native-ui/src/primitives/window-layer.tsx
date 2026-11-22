@@ -1,6 +1,6 @@
-import { useId, useLayoutEffect, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useLayoutEffect, useSyncExternalStore, type ComponentRef, type ReactNode } from "react";
 import { BackHandler, Modal, StyleSheet, View } from "react-native";
-import Animated, { FadeIn, FadeOut, ReduceMotion } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useReduceMotion } from "../useReduceMotion";
 
 // Overlays drawn in the app's own window. A React Native `Modal` is a window
@@ -59,7 +59,7 @@ const onBack = () => {
 };
 
 /** Mounted: the host is there, and it answers Android back for its layers. */
-const hostRef = (view: View | null) => {
+const hostRef = (view: ComponentRef<typeof View> | null) => {
   if (view === null) return undefined;
   hosts += 1;
   const back = BackHandler.addEventListener("hardwareBackPress", onBack);
@@ -79,9 +79,11 @@ const hostRef = (view: View | null) => {
 export function WindowLayerHost({ children }: { children: ReactNode }) {
   const shown = useSyncExternalStore(subscribe, () => layers, () => EMPTY);
   // The layers fade in and out as a Modal's `fade`, unless they move on their
-  // own (`fade={false}`); with Reduce Motion they appear at once.
-  const enter = FadeIn.duration(200).reduceMotion(ReduceMotion.System);
-  const exit = FadeOut.duration(150).reduceMotion(ReduceMotion.System);
+  // own (`fade={false}`). With Reduce Motion they get no layout animation at
+  // all, as the fallback Modal gets `animationType="none"`.
+  const reduceMotion = useReduceMotion();
+  const enter = reduceMotion ? undefined : FadeIn.duration(200);
+  const exit = reduceMotion ? undefined : FadeOut.duration(150);
   return (
     <View ref={hostRef} style={styles.fill}>
       <View

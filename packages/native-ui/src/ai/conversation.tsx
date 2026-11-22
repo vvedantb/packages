@@ -287,7 +287,7 @@ export function ConversationList<T>({
   // only if the element takes a `style`: draw it the right way up instead.
   if (inverted && !hasRows) {
     const Empty = props.ListEmptyComponent;
-    return <View style={styles.fill}>{isValidElement(Empty) ? Empty : Empty ? <Empty /> : null}</View>;
+    return <View style={styles.fill}>{isValidElement(Empty) ? Empty : typeof Empty === "function" ? <Empty /> : null}</View>;
   }
   // The newest message's offset: inverted, 0 less the space before it.
   const end = () =>

@@ -47,7 +47,7 @@
     "@jitl/quickjs-singlefile-cjs-release-sync": false
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsrs -p tsconfig.json",
     "typecheck": "tsrs --noEmit --fast -p tsconfig.test.json",
     "test": "vitest run && node --test --test-concurrency=1 tests-node/esm-exports.mjs tests-node/bundle.mjs",
     "prepack": "tsc -p tsconfig.json"
@@ -105,8 +105,9 @@
     "ai": "^7.0.162",
     "convex": "^1.47.0",
     "convex-helpers": "^0.1.114",
+    "happy-dom": "18.0.1",
     "quickjs-emscripten-core": "^0.32.0",
-    "typescript": "^5.9.0",
+    "typescript": "catalog:",
     "vitest": "^3.2.0",
     "zod": "^4.0.0",
     "zod3": "npm:zod@^3.25.76"

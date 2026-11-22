@@ -6,7 +6,12 @@ import { tokens } from "../src/tokens";
 // here, so `ScrollViewStyleReset` is a stub; the checks call the component and
 // read the element tree.
 
-vi.mock("expo-router/html", () => ({ ScrollViewStyleReset: "ScrollViewStyleReset" }));
+const serverDocument = vi.hoisted((): { current: Record<string, unknown> } => ({ current: {} }));
+
+vi.mock("expo-router/html", () => ({
+  ScrollViewStyleReset: "ScrollViewStyleReset",
+  useServerDocumentContext: () => serverDocument.current,
+}));
 
 const { ExpoWebRoot, EXPO_WEB_VIEWPORT } = await import("../src/ExpoWebRoot");
 
@@ -29,7 +34,23 @@ describe("ExpoWebRoot", () => {
     expect(nodes[0]!.props.charSet).toBe("utf-8");
     expect(nodes[1]!.props).toMatchObject({ httpEquiv: "X-UA-Compatible", content: "IE=edge" });
     expect(body.type).toBe("body");
-    expect(body.props.children).toBe("app");
+    expect(body.props.children).toEqual(["app", undefined]);
+  });
+
+  it("renders the attributes, head nodes and body nodes of the Expo SDK 58 server document", () => {
+    serverDocument.current = {
+      htmlAttributes: { dir: "rtl" },
+      bodyAttributes: { className: "app" },
+      headNodes: createElement("link", { rel: "stylesheet", href: "/_expo/static/css/web.css" }),
+      bodyNodes: createElement("script", { src: "/_expo/static/js/web/entry.js", defer: true }),
+    };
+    const { html, head: nodes, body } = head();
+    serverDocument.current = {};
+    expect(html.props).toMatchObject({ lang: "en", dir: "rtl" });
+    expect(nodes.at(-1)!.props).toMatchObject({ rel: "stylesheet", href: "/_expo/static/css/web.css" });
+    expect(body.props.className).toBe("app");
+    expect(kids(body).map((n) => n.type)).toEqual(["script"]);
+    expect(kids(body)[0]!.props.src).toBe("/_expo/static/js/web/entry.js");
   });
 
   it("has the native and accessible viewports, native by default", () => {

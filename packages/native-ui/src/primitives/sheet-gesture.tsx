@@ -4,7 +4,6 @@ import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  type NativeGesture,
 } from "react-native-gesture-handler";
 import Animated, {
   cancelAnimation,
@@ -46,7 +45,7 @@ import { GestureToastDrag } from "./toast-drag-gesture";
 /** What a body inside the sheet needs from the drag around it. */
 type SheetScrollLink = {
   /** The body's native scroll, run together with the sheet's pan. */
-  native: NativeGesture;
+  native: ReturnType<typeof Gesture.Native>;
   /** While the sheet follows the finger: the scroll offset the body holds; else `null`. */
   heldTop: SharedValue<number | null>;
 };

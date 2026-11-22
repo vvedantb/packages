@@ -13,9 +13,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { before, test } from "node:test";
 import { pathToFileURL } from "node:url";
-import { build, installFixture, pkg, pkgDir } from "./installed.mjs";
+import { build, depDir, installFixture, pkg, pkgDir } from "./installed.mjs";
 
-const convexPackageJson = realpathSync(join(pkgDir, "node_modules", "convex", "package.json"));
+const convexPackageJson = realpathSync(join(depDir("convex"), "package.json"));
 const { default: esbuild } = await import(pathToFileURL(createRequire(convexPackageJson).resolve("esbuild")).href);
 
 // Server root exports a Convex backend uses (the MCP token cache among them), plus pure MCP client OAuth and artifacts ones.

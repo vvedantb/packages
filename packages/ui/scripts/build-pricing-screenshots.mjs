@@ -16,9 +16,7 @@ const out = resolve(process.argv[2] ?? join(pkg, "brand/pricing-modal"));
 mkdirSync(out, { recursive: true });
 const work = mkdtempSync(join(tmpdir(), "pricing-shots-"));
 
-const store = join(pkg, "../../node_modules/.pnpm");
-const esbuildDir = readdirSync(store).filter((d) => d.startsWith("esbuild@")).sort().at(-1);
-const esbuild = createRequire(join(store, esbuildDir, "node_modules/"))("esbuild");
+const esbuild = createRequire(join(pkg, "package.json"))("esbuild");
 const { compile } = await import(pathToFileURL(createRequire(join(pkg, "package.json")).resolve("@tailwindcss/node")).href);
 
 // Load Instrument Sans (every @font-face Google returns, inlined) so text matches the library, not the system fallback.
@@ -67,7 +65,8 @@ const js = await esbuild.build({
   format: "iife",
   jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"' },
-  nodePaths: [join(pkg, "node_modules")],
+  // The package's own node_modules, then the repository root, where the hoisted install puts most packages.
+  nodePaths: [join(pkg, "node_modules"), join(pkg, "..", "..", "node_modules")],
   absWorkingDir: pkg,
 });
 

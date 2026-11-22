@@ -98,7 +98,7 @@
   "scripts": {
     "check:client-graph": "node scripts/check-client-graph.mjs",
     "check:tokens": "node tokens/scripts/check-component-tokens.mjs",
-    "build": "node scripts/build-dist.mjs && node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsc -p tsconfig.json",
+    "build": "node scripts/build-dist.mjs && node tokens/scripts/check-exports.mjs && node tokens/scripts/check-component-tokens.mjs && tsrs -p tsconfig.json",
     "typecheck": "tsrs --noEmit --fast -p tsconfig.json && tsrs --noEmit --fast -p tsconfig.consumer.json && tsrs --noEmit --fast -p tsconfig.consumer-speech.json && tsrs --noEmit --fast -p tokens/tsconfig.json",
     "test": "node tokens/scripts/check-component-tokens.mjs && vitest run && node --test tokens/test/*.test.mjs app/tests-node/*.test.mjs",
     "verify": "node tokens/scripts/check-component-tokens.mjs && node tokens/verify/run.mjs",
@@ -222,7 +222,7 @@
     "streamdown": "^2.7.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "4.3.3",
-    "typescript": "^5.9.0",
+    "typescript": "catalog:",
     "use-stick-to-bottom": "^1.1.0",
     "vaul": "^1.1.0",
     "vitest": "^3.2.0",

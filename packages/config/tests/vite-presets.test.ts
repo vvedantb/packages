@@ -436,6 +436,11 @@ describe("vitest configs", () => {
       }),
     ).toStrictEqual(current);
   });
+
+  it("passes dedupe to resolve", () => {
+    const config = defineWebVitestConfig({ inline: ["@vvedantb/ui"], dedupe: REACT_DEDUPE });
+    expect(config.resolve).toStrictEqual({ dedupe: [...REACT_DEDUPE] });
+  });
 });
 
 describe("defineWebViteConfig", () => {

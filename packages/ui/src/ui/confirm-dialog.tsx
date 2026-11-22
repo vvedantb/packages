@@ -47,6 +47,9 @@ export type ConfirmDialogProps = Omit<
    * button close it). Confirm does not close it; the caller controls `open`.
    * `"md"`: dismissible dialog like `"sm"`, with a header, description and
    * footer in separate sections and default-size buttons.
+   *
+   * The sizes are width caps: `"sm"` and `"md"` cap the content at
+   * `sm:max-w-96`; `"default"` keeps the dialog width.
    */
   size?: "default" | "sm" | "md";
 };

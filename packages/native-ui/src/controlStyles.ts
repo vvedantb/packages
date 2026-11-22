@@ -14,17 +14,29 @@ type Scheme = "light" | "dark";
 
 /**
  * `primary` and `default` are the same (`default` is the web name). `outline`
- * is the web bordered neutral button. `tinted` is the pink tint that `outline`
- * drew before 0.3.0.
+ * is the web bordered neutral button. `tertiary` is the web name for `ghost`
+ * and `danger` for `destructive`. `success`, `warning` and `flat` match the web
+ * variants. `tinted` is a legacy alias: the pink tint that `outline` drew
+ * before 0.3.0 (it keeps its NativeWind classes).
+ *
+ * Hierarchy: `primary`/`default` is the one main action, `secondary` an
+ * alternative, `tertiary`/`ghost` a dismissive action, `destructive`/`danger`
+ * a destructive action, `success` and `warning` show status, and `outline`,
+ * `link` and `flat` are visual.
  */
 export type ButtonVariant =
   | "primary"
   | "default"
   | "secondary"
+  | "tertiary"
   | "outline"
   | "destructive"
+  | "danger"
   | "ghost"
   | "link"
+  | "success"
+  | "warning"
+  | "flat"
   | "tinted";
 
 export type ButtonColors = {
@@ -54,9 +66,24 @@ export function buttonColors(variant: ButtonVariant, scheme: Scheme): ButtonColo
         color: tokens.color.foreground[scheme],
       };
     case "destructive":
+    case "danger":
       return { backgroundColor: palette.destructive, borderColor: none, color: tokens.color.white };
     case "ghost":
+    case "tertiary":
+    case "flat":
       return { backgroundColor: none, borderColor: none, color: tokens.color.muted[scheme] };
+    case "success":
+      return {
+        backgroundColor: palette.success[scheme],
+        borderColor: none,
+        color: palette.successForeground[scheme],
+      };
+    case "warning":
+      return {
+        backgroundColor: palette.warning[scheme],
+        borderColor: none,
+        color: palette.warningForeground[scheme],
+      };
     case "link":
       return { backgroundColor: none, borderColor: none, color: palette.primary[scheme] };
     case "tinted":

@@ -11,6 +11,8 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const dirs = ["src", "app/src", "shell/src", "tokens/src/css"];
 const exts = /\.(ts|tsx|css)$/;
+// Forward slashes on every platform, so the allow lists below match on Windows.
+const rel = (file) => relative(root, file).replaceAll("\\", "/");
 const skip = /\.(test|spec)\.|\/__tests__\//;
 
 const UTIL = "(?:bg|text|border|ring|from|to|via|outline|fill|stroke|shadow|divide|decoration|caret|accent)";
@@ -80,13 +82,13 @@ for (const d of dirs) {
     const isTs = /\.tsx?$/.test(file);
     const isCss = file.endsWith(".css");
     // The token stylesheets hold CSS, not class lists: only the CSS rule applies.
-    const tokensCss = relative(root, file).startsWith("tokens/");
+    const tokensCss = rel(file).startsWith("tokens/");
     readFileSync(file, "utf8").split("\n").forEach((line, i) => {
       for (const r of rules) {
         if (r.tsOnly && !isTs) continue;
         if (r.cssOnly ? !isCss : tokensCss) continue;
-        if (r.allow && line.includes(r.allow) && (r.files ?? ALLOW_FILES).has(relative(root, file))) continue;
-        for (const m of line.matchAll(r.re)) hits.push(`${relative(root, file)}:${i + 1}: ${m[0]} (${r.msg})`);
+        if (r.allow && line.includes(r.allow) && (r.files ?? ALLOW_FILES).has(rel(file))) continue;
+        for (const m of line.matchAll(r.re)) hits.push(`${rel(file)}:${i + 1}: ${m[0]} (${r.msg})`);
       }
     });
   }

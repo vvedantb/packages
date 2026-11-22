@@ -135,11 +135,9 @@ const descriptors: FloatingTabBarProps["descriptors"] = {
 
 async function bar(index: number, defaultPrevented = false, options = descriptors) {
   const { FloatingTabBar } = await import("../src/FloatingTabBar");
-  const navigation = {
-    emit: vi.fn(() => ({ defaultPrevented })),
-    navigate: vi.fn(),
-  };
-  const tree = FloatingTabBar({ state: { index, routes }, descriptors: options, navigation });
+  const emitter = { emit: vi.fn(() => ({ defaultPrevented })) };
+  const navigateToTab = vi.fn();
+  const tree = FloatingTabBar({ state: { index, routes }, descriptors: options, emitter, navigateToTab });
   const all = elements(tree);
   const tabs = all.filter((element) => element.type === "Pressable");
   const press = (label: string) => {
@@ -149,7 +147,7 @@ async function bar(index: number, defaultPrevented = false, options = descriptor
   // The pill is a function component: the elements whose type is a function named `ActiveTabPill`.
   const pills = all.filter((element) => typeof element.type === "function" && element.type.name === "ActiveTabPill");
   const tablist = all.find((element) => element.props.accessibilityRole === "tablist")!;
-  return { tree: tree as Element, tabs, pills, tablist, navigation, press };
+  return { tree: tree as Element, tabs, pills, tablist, emitter, navigateToTab, press };
 }
 
 /** The pill's outer view and its `Animated.View`, from calling the pill element's component. */
@@ -207,15 +205,15 @@ describe("FloatingTabBar with hidden routes", () => {
     expect(selected((await bar(0)).tabs)).toEqual(["Home"]);
   });
 
-  it("navigates to the pressed route by name, with its params", async () => {
-    const { navigation, press } = await bar(0);
+  it("navigates to the pressed route by its key", async () => {
+    const { emitter, navigateToTab, press } = await bar(0);
     press("Profile");
-    expect(navigation.emit).toHaveBeenCalledWith({ type: "tabPress", target: "profile-5", canPreventDefault: true });
-    expect(navigation.navigate).toHaveBeenCalledWith("profile", { id: "me" });
+    expect(emitter.emit).toHaveBeenCalledWith({ type: "tabPress", target: "profile-5", canPreventDefault: true });
+    expect(navigateToTab).toHaveBeenCalledWith("profile-5");
     press("Home");
     // Home is focused: the press is emitted but does not navigate.
-    expect(navigation.emit).toHaveBeenCalledTimes(2);
-    expect(navigation.navigate).toHaveBeenCalledTimes(1);
+    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(navigateToTab).toHaveBeenCalledTimes(1);
   });
 
   it("sits in tabBarSlotStyle", async () => {
@@ -230,16 +228,16 @@ describe("FloatingTabBar with hidden routes", () => {
   });
 
   it("keeps working while a hidden route is focused", async () => {
-    const { tabs, navigation, press } = await bar(1);
+    const { tabs, navigateToTab, press } = await bar(1);
     expect(selected(tabs)).toEqual([]);
     press("Home");
-    expect(navigation.navigate).toHaveBeenCalledWith("home", undefined);
+    expect(navigateToTab).toHaveBeenCalledWith("home-1");
   });
 
   it("does not navigate when the press is prevented", async () => {
-    const { navigation, press } = await bar(0, true);
+    const { navigateToTab, press } = await bar(0, true);
     press("Profile");
-    expect(navigation.navigate).not.toHaveBeenCalled();
+    expect(navigateToTab).not.toHaveBeenCalled();
   });
 });
 

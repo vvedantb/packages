@@ -10,8 +10,8 @@ import { tokens } from "./tokens";
 import { useScheme } from "./useScheme";
 
 export type SpinnerProps = Omit<ActivityIndicatorProps, "size" | "color"> & {
-  /** `sm` is 16, the web `sm` and the `Button` loading ring. `md` is the small system spinner (20), `lg` the large one. A number sets the size on Android; iOS picks small below 30. Default `"md"`. */
-  size?: "sm" | "md" | "lg" | number;
+  /** `sm` is 16, the web `sm` and the `Button` loading ring. `md` is the small system spinner (20), `lg` the large one. `default` is an alias of `md`. A number sets the size on Android; iOS picks small below 30. Default `"md"`. */
+  size?: "sm" | "md" | "default" | "lg" | number;
   /** `"muted"` (default) uses the muted text colour, `"inherit"` the foreground. Native has no `currentColor`. */
   tone?: "muted" | "inherit";
   /** Overrides `tone`. */

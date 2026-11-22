@@ -127,9 +127,9 @@ rm -f "$APK" "$OUT/release.json" "$OUT"/native-gallery-*-android.apk
 cd "$MOBILE/android"
 chmod +x gradlew
 # Vital lint is not needed for a sideload APK and can run out of Metaspace.
-# pnpm keeps hoisted packages here; the Gradle scripts resolve some by name
+# The install is hoisted, so packages sit in the root node_modules; the Gradle scripts resolve some by name
 # (as build:android in package.json does).
-NODE_PATH="$ROOT/node_modules/.pnpm/node_modules" ./gradlew assembleRelease --no-daemon -x lint -x lintVitalAnalyzeRelease -x lintVitalRelease
+NODE_PATH="$ROOT/node_modules" ./gradlew assembleRelease --no-daemon -x lint -x lintVitalAnalyzeRelease -x lintVitalRelease
 
 # Check the APK itself before describing it: package, versionCode,
 # versionName, and a release signature rather than the debug key. aapt2 and

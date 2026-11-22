@@ -34,14 +34,18 @@ describe("package.json", () => {
   it("is publishable and ships the bins", () => {
     expect(pkg.private).toBeUndefined();
     expect(pkg.bin).toEqual({
-      "vvedantb-config": "./dist/cli.js",
-      "vvedantb-check-asar": "./dist/check-asar-cli.js",
-      "vvedantb-clerk-allow": "./dist/clerk-allow-cli.js",
-      "vvedantb-android-release": "./dist/android-release-cli.js",
-      "vvedantb-check-shared-ui": "./dist/check-shared-ui-cli.js",
-      "vvedantb-check-no-source-text": "./dist/check-no-source-text-cli.js",
-      "vvedantb-doctor": "./dist/doctor-cli.js",
+      "vvedantb-config": "./bin/vvedantb-config.js",
+      "vvedantb-check-asar": "./bin/vvedantb-check-asar.js",
+      "vvedantb-clerk-allow": "./bin/vvedantb-clerk-allow.js",
+      "vvedantb-android-release": "./bin/vvedantb-android-release.js",
+      "vvedantb-check-shared-ui": "./bin/vvedantb-check-shared-ui.js",
+      "vvedantb-check-no-source-text": "./bin/vvedantb-check-no-source-text.js",
+      "vvedantb-doctor": "./bin/vvedantb-doctor.js",
     });
+    // pnpm links a bin only when its file exists at install. dist does not exist then in a workspace, so each bin is a committed file.
+    for (const target of Object.values(pkg.bin)) {
+      expect(existsSync(join(pkgDir, target))).toBe(true);
+    }
   });
 
   it("exports versions and the CLIs from the root", () => {

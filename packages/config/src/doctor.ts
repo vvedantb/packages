@@ -367,7 +367,15 @@ export function checkConfigVersion(repo: RepoModel, runningVersion: string): Che
   return result("config-version", "@vvedantb/config is current to the running minor", details);
 }
 
-const CI_WORKFLOW_REF = "vvedantb/packages/.github/workflows/ci-app.yml";
+/** Where the shared ci-app.yml lives. A repo may call either one; the first is the one to use from now on. */
+const CI_WORKFLOW_REFS = [
+  "vvedantb/workflows/.github/workflows/ci-app.yml",
+  "vvedantb/packages/.github/workflows/ci-app.yml",
+];
+
+function callsSharedCi(text: string): boolean {
+  return CI_WORKFLOW_REFS.some((ref) => text.includes(ref));
+}
 
 export function checkCiReusableWorkflow(repo: RepoModel): CheckResult {
   const dir = join(repo.root, ".github", "workflows");
@@ -378,12 +386,12 @@ export function checkCiReusableWorkflow(repo: RepoModel): CheckResult {
   for (const name of readdirSync(dir)) {
     if (!/\.ya?ml$/.test(name)) continue;
     try {
-      if (readFileSync(join(dir, name), "utf8").includes(CI_WORKFLOW_REF)) found = true;
+      if (callsSharedCi(readFileSync(join(dir, name), "utf8"))) found = true;
     } catch {
       // Unreadable workflow file: ignore and keep scanning.
     }
   }
-  const details = found ? [] : [`no workflow calls ${CI_WORKFLOW_REF}`];
+  const details = found ? [] : [`no workflow calls ${CI_WORKFLOW_REFS[0]}`];
   return result("ci-reusable-workflow", "CI calls the shared ci-app.yml workflow", details);
 }
 
@@ -495,7 +503,7 @@ export function checkCiRunner(repo: RepoModel): CheckResult {
 export function ciCommands(repo: RepoModel): { file: string; command: string }[] {
   const found: { file: string; command: string }[] = [];
   for (const file of workflowFiles(repo.root)) {
-    if (!file.text.includes(CI_WORKFLOW_REF)) continue;
+    if (!callsSharedCi(file.text)) continue;
     let blockIndent = -1;
     for (const line of file.text.split(/\r?\n/)) {
       const indent = line.length - line.trimStart().length;
