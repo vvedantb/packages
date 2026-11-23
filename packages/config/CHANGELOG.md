@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.1
+
+### Patch Changes
+
+- [#337](https://github.com/vvedantb/packages/pull/337) [`8bb6944`](https://github.com/vvedantb/packages/commit/8bb69441de755f833033b02fb2a65d72d692dd24) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-android-release` can request ABIs for `reactNativeArchitectures` through the `REACT_NATIVE_ARCHITECTURES` env var or the `reactNativeArchitectures` config field, in that order. The default stays `arm64-v8a`. New helpers: `resolveReactNativeArchitectures` and `buildGradlePropertyEdits`.
+
 ## 0.14.0
 
 ### Minor Changes
