@@ -118,6 +118,9 @@ export {
 } from "./release-signing.js";
 export {
   DEFAULT_GRADLE_PROPERTY_EDITS,
+  DEFAULT_REACT_NATIVE_ARCHITECTURES,
+  buildGradlePropertyEdits,
+  resolveReactNativeArchitectures,
   apkFileName,
   easProfileEntries,
   formatGithubOutput,

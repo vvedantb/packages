@@ -161,10 +161,25 @@ export interface GradlePropertyEdit {
   replace: boolean;
 }
 
-/** The edits the release build makes to `gradle.properties`, in order. */
-export const DEFAULT_GRADLE_PROPERTY_EDITS: readonly GradlePropertyEdit[] = [
-  // arm64-v8a only: published APKs target phones. x86_64 is for emulators.
-  { key: "reactNativeArchitectures", value: "arm64-v8a", replace: true },
+/** Default `reactNativeArchitectures`: published APKs target phones. */
+export const DEFAULT_REACT_NATIVE_ARCHITECTURES = "arm64-v8a";
+
+/**
+ * Resolves the `reactNativeArchitectures` value. Precedence: explicit `option`
+ * (for example the `REACT_NATIVE_ARCHITECTURES` env var), then `fallback` (the
+ * config field), then `arm64-v8a`. Empty or blank values are skipped. The
+ * existing `gradle.properties` value is not preserved: Expo's prebuild default
+ * is fat, so keeping it would widen every app that relies on the arm64 force.
+ */
+export function resolveReactNativeArchitectures(option?: string, fallback?: string): string {
+  for (const candidate of [option, fallback]) {
+    const trimmed = candidate?.trim();
+    if (trimmed !== undefined && trimmed !== "") return trimmed;
+  }
+  return DEFAULT_REACT_NATIVE_ARCHITECTURES;
+}
+
+const BASE_GRADLE_PROPERTY_EDITS: readonly GradlePropertyEdit[] = [
   { key: "org.gradle.jvmargs", value: "-Xmx4096m -XX:MaxMetaspaceSize=1024m", replace: true },
   // boat-large has 8 cores. Replace Expo's lower default.
   { key: "org.gradle.workers.max", value: "8", replace: true },
@@ -173,6 +188,24 @@ export const DEFAULT_GRADLE_PROPERTY_EDITS: readonly GradlePropertyEdit[] = [
   // the cache, and native modules may still be incompatible on release tasks.
   { key: "android.lint.checkReleaseBuilds", value: "false", replace: false },
 ];
+
+/** The edits the release build makes to `gradle.properties`, in order. */
+export function buildGradlePropertyEdits(
+  reactNativeArchitectures?: string,
+): readonly GradlePropertyEdit[] {
+  return [
+    {
+      key: "reactNativeArchitectures",
+      value: resolveReactNativeArchitectures(reactNativeArchitectures),
+      replace: true,
+    },
+    ...BASE_GRADLE_PROPERTY_EDITS,
+  ];
+}
+
+/** The default edits (arm64-v8a only), in order. */
+export const DEFAULT_GRADLE_PROPERTY_EDITS: readonly GradlePropertyEdit[] =
+  buildGradlePropertyEdits();
 
 function withTrailingNewline(contents: string): string {
   if (contents.length === 0) return contents;
@@ -290,6 +323,12 @@ export interface AndroidReleaseConfig {
   postPrebuildSteps: readonly string[];
   /** Pin the Gradle wrapper: replace `distributionUrl` when it contains `ifContains`. */
   gradleWrapperPin?: { ifContains: string; distributionUrl: string };
+  /**
+   * ABIs for `reactNativeArchitectures` in `gradle.properties`, such as
+   * `"arm64-v8a,x86_64"`. The `REACT_NATIVE_ARCHITECTURES` env var wins over it.
+   * Default `"arm64-v8a"`.
+   */
+  reactNativeArchitectures?: string;
   /** Label and env var for the final summary line, such as `{ label: "Convex", envVar: "EXPO_PUBLIC_CONVEX_URL" }`. */
   summary?: { label: string; envVar: string };
 }
@@ -371,6 +410,12 @@ export function parseAndroidReleaseConfig(input: unknown): AndroidReleaseConfig 
     config.postPrebuildSteps = asStringArray(raw.postPrebuildSteps, "postPrebuildSteps");
   }
   if (raw.gradleWrapperPin !== undefined) config.gradleWrapperPin = parseWrapperPin(raw.gradleWrapperPin);
+  if (raw.reactNativeArchitectures !== undefined) {
+    if (typeof raw.reactNativeArchitectures !== "string") {
+      throw new Error('android-release config: "reactNativeArchitectures" must be a string.');
+    }
+    config.reactNativeArchitectures = raw.reactNativeArchitectures;
+  }
   if (raw.summary !== undefined) config.summary = parseSummary(raw.summary);
   return config;
 }
