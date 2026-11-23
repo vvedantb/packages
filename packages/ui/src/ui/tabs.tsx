@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { assignRef } from "../utils/ref";
 import { syncTabsPill, type TabsPillMotion } from "./tabsSliding";
 import { useCn, useUiConfig } from "./ui-config";
+import type { TabsTransitionVariant } from "./tabs-transition";
 
 const Tabs = TabsPrimitive.Root;
 
@@ -24,6 +25,8 @@ type TabsListSize = "default" | "sm";
 export interface TabsConfig {
   variant?: TabsListVariant;
   pillMotion?: TabsPillMotion;
+  /** Default `TabsTransition` variant for every tab set in the app. */
+  transition?: TabsTransitionVariant;
   classes?: {
     list?: string;
     size?: Partial<Record<TabsListSize, string>>;
