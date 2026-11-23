@@ -31,7 +31,9 @@ import {
   easProfileEntries,
   formatGithubOutput,
   formatReleaseJson,
+  buildGradlePropertyEdits,
   gradlePropertiesEdits,
+  resolveReactNativeArchitectures,
   gradleVersionNameOk,
   parseAndroidReleaseConfig,
   parseBadging,
@@ -272,7 +274,16 @@ if (config.gradleWrapperPin !== undefined) {
 
 const propsPath = join(appDir, "android", "gradle.properties");
 const propsText = existsSync(propsPath) ? readFileSync(propsPath, "utf8") : "";
-writeFileSync(propsPath, gradlePropertiesEdits(propsText));
+// Architectures precedence: REACT_NATIVE_ARCHITECTURES env, config field, arm64-v8a.
+writeFileSync(
+  propsPath,
+  gradlePropertiesEdits(
+    propsText,
+    buildGradlePropertyEdits(
+      resolveReactNativeArchitectures(process.env.REACT_NATIVE_ARCHITECTURES, config.reactNativeArchitectures),
+    ),
+  ),
+);
 
 writeFileSync(join(appDir, "android", "local.properties"), `sdk.dir=${sdkRoot}\n`);
 

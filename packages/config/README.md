@@ -569,7 +569,7 @@ Paths and filters are as read from each app's current script. Check them against
 
 ### Gradle settings
 
-The bin edits `android/gradle.properties` (`DEFAULT_GRADLE_PROPERTY_EDITS`): `reactNativeArchitectures=arm64-v8a` (published APKs run on phones; emulator builds in `apps/native-gallery` set `x86_64` themselves), `org.gradle.workers.max=8` and `org.gradle.parallel=true` (boat-large has 8 cores; both override Expo's defaults). `org.gradle.configuration-cache` stays off: ephemeral CI runners never reuse the cache, so a cold `assembleRelease` only pays the store cost, and Expo and third-party native modules can still be incompatible on release tasks. After prebuild the bin checks `versionCode`, `versionName` and signing in `android/app/build.gradle`.
+The bin edits `android/gradle.properties` (`DEFAULT_GRADLE_PROPERTY_EDITS`): `reactNativeArchitectures=arm64-v8a` by default (published APKs run on phones; emulator builds in `apps/native-gallery` set `x86_64` themselves). The `REACT_NATIVE_ARCHITECTURES` env var, then the config field `reactNativeArchitectures`, override it, such as `arm64-v8a,x86_64` for an app whose start-up test runs on an x86_64 emulator. It also sets `org.gradle.workers.max=8` and `org.gradle.parallel=true` (boat-large has 8 cores; both override Expo's defaults). `org.gradle.configuration-cache` stays off: ephemeral CI runners never reuse the cache, so a cold `assembleRelease` only pays the store cost, and Expo and third-party native modules can still be incompatible on release tasks. After prebuild the bin checks `versionCode`, `versionName` and signing in `android/app/build.gradle`.
 
 ### Version pick
 
@@ -577,7 +577,7 @@ The bin edits `android/gradle.properties` (`DEFAULT_GRADLE_PROPERTY_EDITS`): `re
 
 Not covered, so it stays local: the keystore location (a `withReleaseSigning` plugin option), velth's own signing-completeness pre-check (the Gradle plugin enforces it), and eva's Clerk native-API check (use the workflow's `pre_build_command`).
 
-Pure helpers (`pickAndroidReleaseVersion`, `readExpoVersion`, `syncExpoVersion`, `syncPackageJsonVersion`, `gradleVersionNameOk`, `validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `easProfileEntries`, `gradlePropertiesEdits`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
+Pure helpers (`pickAndroidReleaseVersion`, `readExpoVersion`, `syncExpoVersion`, `syncPackageJsonVersion`, `gradleVersionNameOk`, `validateVersionName`, `validateVersionCode`, `publicEnvDefault`, `easProfileEntries`, `gradlePropertiesEdits`, `buildGradlePropertyEdits`, `resolveReactNativeArchitectures`, `parseBadging`, `releaseJson`, `formatReleaseJson`, `formatGithubOutput`, `apkFileName`, `parseAndroidReleaseConfig`) are exported from the root and unit-tested. The full Android build was not exercised on Windows.
 
 ## Versions
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_GRADLE_PROPERTY_EDITS,
+  buildGradlePropertyEdits,
+  resolveReactNativeArchitectures,
   apkFileName,
   easProfileEntries,
   formatGithubOutput,
@@ -160,6 +162,37 @@ describe("gradlePropertiesEdits", () => {
   });
 });
 
+describe("resolveReactNativeArchitectures", () => {
+  it("defaults to arm64-v8a", () => {
+    expect(resolveReactNativeArchitectures()).toBe("arm64-v8a");
+    expect(resolveReactNativeArchitectures("", "  ")).toBe("arm64-v8a");
+  });
+
+  it("prefers the option, then the fallback", () => {
+    expect(resolveReactNativeArchitectures("arm64-v8a,x86_64", "x86_64")).toBe("arm64-v8a,x86_64");
+    expect(resolveReactNativeArchitectures(undefined, "arm64-v8a,x86_64")).toBe("arm64-v8a,x86_64");
+    expect(resolveReactNativeArchitectures("", "arm64-v8a,x86_64")).toBe("arm64-v8a,x86_64");
+  });
+});
+
+describe("buildGradlePropertyEdits", () => {
+  it("keeps both ABIs when requested, overriding the plugin value", () => {
+    const out = gradlePropertiesEdits(
+      "reactNativeArchitectures=armeabi-v7a\n",
+      buildGradlePropertyEdits("arm64-v8a,x86_64"),
+    );
+    expect(out).toContain("reactNativeArchitectures=arm64-v8a,x86_64\n");
+    expect(out).not.toContain("armeabi-v7a");
+  });
+
+  it("matches the default edits when no value is given", () => {
+    expect(buildGradlePropertyEdits()).toStrictEqual(DEFAULT_GRADLE_PROPERTY_EDITS);
+    const out = gradlePropertiesEdits("reactNativeArchitectures=arm64-v8a,x86_64\n", buildGradlePropertyEdits());
+    expect(out).toContain("reactNativeArchitectures=arm64-v8a\n");
+    expect(out).not.toContain("x86_64");
+  });
+});
+
 describe("parseBadging", () => {
   it("reads package, versionCode and versionName from the package line", () => {
     const output = [
@@ -195,6 +228,19 @@ describe("formatGithubOutput", () => {
 describe("apkFileName", () => {
   it("joins prefix, version and the android suffix", () => {
     expect(apkFileName("vmem", "1.0.1")).toBe("vmem-1.0.1-android.apk");
+  });
+});
+
+describe("parseAndroidReleaseConfig architectures", () => {
+  it("parses reactNativeArchitectures and rejects a non-string", () => {
+    const base = { packageId: "com.x.app", apkPrefix: "app" };
+    expect(
+      parseAndroidReleaseConfig({ ...base, reactNativeArchitectures: "arm64-v8a,x86_64" }).reactNativeArchitectures,
+    ).toBe("arm64-v8a,x86_64");
+    expect(parseAndroidReleaseConfig(base).reactNativeArchitectures).toBeUndefined();
+    expect(() => parseAndroidReleaseConfig({ ...base, reactNativeArchitectures: 1 })).toThrow(
+      /reactNativeArchitectures/,
+    );
   });
 });
 
