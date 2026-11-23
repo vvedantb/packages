@@ -51,6 +51,12 @@ export interface TabsTransitionProps {
   /** Defaults to the app's `UiConfig.Tabs.transition`, then `"none"`. */
   variant?: TabsTransitionVariant;
   className?: string;
+  /**
+   * Classes on the moving panel. Full-height layouts pass the same flex
+   * classes as their container (`flex min-h-0 flex-1 flex-col`) so the panel
+   * still fills it.
+   */
+  panelClassName?: string;
   /** The selected tab's content. */
   children: ReactNode;
 }
@@ -67,6 +73,7 @@ export function TabsTransition({
   order,
   variant: variantProp,
   className,
+  panelClassName,
   children,
 }: TabsTransitionProps) {
   const configVariant = useUiConfig("Tabs")?.transition;
@@ -81,7 +88,11 @@ export function TabsTransition({
   }
 
   if (variant === "none") {
-    return <div className={className}>{children}</div>;
+    return (
+      <div className={className}>
+        <div className={panelClassName}>{children}</div>
+      </div>
+    );
   }
 
   return (
@@ -89,6 +100,7 @@ export function TabsTransition({
       <AnimatePresence initial={false} custom={direction} mode="popLayout">
         <m.div
           key={value}
+          className={panelClassName}
           custom={direction}
           variants={variants[variant]}
           initial="enter"
