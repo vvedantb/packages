@@ -8,6 +8,7 @@ import {
   type ComponentRef,
   type ComponentType,
   type ReactNode,
+  type Ref,
 } from "react";
 import {
   Pressable,
@@ -111,19 +112,55 @@ export type DropdownMenuTriggerProps = PressableProps & {
    * native view, so the menu can measure it.
    */
   asChild?: boolean;
+  /** Also receives the native view; the menu keeps its own handle. */
+  ref?: Ref<ComponentRef<typeof View>>;
 };
+
+/** A measured box is usable when it has a size: Android reports 0, 0, 0, 0 for a view it has not laid out. */
+export function isMeasuredRect(rect: DropdownMenuRect): boolean {
+  return rect.width > 0 && rect.height > 0;
+}
+
+type Measurable = Pick<ComponentRef<typeof View>, "measureInWindow" | "measure">;
+
+/**
+ * The view's box in window coordinates, or `null` when it cannot be measured.
+ * `measureInWindow` first; when it returns an empty box, `measure` (its
+ * `pageX` and `pageY` are window coordinates too) as a second reading.
+ */
+export function measureAnchor(view: Measurable, done: (rect: DropdownMenuRect | null) => void) {
+  view.measureInWindow((x, y, width, height) => {
+    const rect = { x, y, width, height };
+    if (isMeasuredRect(rect)) return done(rect);
+    view.measure((_x, _y, w, h, pageX, pageY) => {
+      const second = { x: pageX, y: pageY, width: w, height: h };
+      done(isMeasuredRect(second) ? second : null);
+    });
+  });
+}
 
 /**
  * Opens the menu, or closes it when open. On press it measures itself
- * (`measureInWindow`) and the menu opens under it. Reports `expanded`.
+ * (`measureInWindow`) and the menu opens under it. Reports `expanded`. A
+ * caller `ref` is kept: the menu's own handle never replaces it.
  */
-export function DropdownMenuTrigger({ asChild, onPress, accessibilityState, ...props }: DropdownMenuTriggerProps) {
+export function DropdownMenuTrigger({
+  asChild,
+  onPress,
+  accessibilityState,
+  ref: callerRef,
+  ...props
+}: DropdownMenuTriggerProps) {
   const { open, setOpen, setTrigger } = useMenu("DropdownMenuTrigger");
-  const ref = useRef<ComponentRef<typeof View>>(null);
+  const ref = useRef<ComponentRef<typeof View> | null>(null);
   const Component = asChild ? Slot.Pressable : Pressable;
   return (
     <Component
-      ref={ref}
+      ref={(view: ComponentRef<typeof View> | null) => {
+        ref.current = view;
+        if (typeof callerRef === "function") callerRef(view);
+        else if (callerRef) callerRef.current = view;
+      }}
       accessibilityRole="button"
       {...props}
       accessibilityState={{ ...accessibilityState, expanded: open }}
@@ -132,8 +169,8 @@ export function DropdownMenuTrigger({ asChild, onPress, accessibilityState, ...p
         if (open) return setOpen(false);
         const view = ref.current;
         if (!view) return setOpen(true);
-        view.measureInWindow((x, y, width, height) => {
-          setTrigger({ x, y, width, height });
+        measureAnchor(view, (rect) => {
+          if (rect) setTrigger(rect);
           setOpen(true);
         });
       }}

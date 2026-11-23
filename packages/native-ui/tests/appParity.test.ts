@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, PAGE_HEADER_HEIGHT, cardStyle, touchSlop } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { callForwardRef } from "./callForwardRef";
 import { expand, usePressScale } from "./pressScaleStub";
 
 // The 0.5.0 pieces for Verve, vibot and Velth: `ColorSwatches`, the
@@ -665,9 +666,13 @@ describe("IconButton", () => {
   function TestIcon() {
     return null;
   }
-  async function button(props: Record<string, unknown> = {}) {
+  async function wrapper(props: Record<string, unknown> = {}) {
     const { IconButton } = await import("../src/IconButton");
-    return IconButton({ icon: TestIcon, label: "Close camera", ...props } as Parameters<typeof IconButton>[0]) as unknown as Element;
+    return callForwardRef(IconButton, { icon: TestIcon, label: "Close camera", ...props } as Parameters<typeof IconButton>[0]) as Element;
+  }
+  // The pressable inside the measurable View wrapper.
+  async function button(props: Record<string, unknown> = {}) {
+    return (await wrapper(props)).props.children as Element;
   }
 
   it("is a labelled button that reaches 44 at every size", async () => {
@@ -688,6 +693,11 @@ describe("IconButton", () => {
       accessibilityLabel: "Close camera",
       accessibilityState: { disabled: false },
     });
+  });
+
+  it("wraps the pressable in a non-collapsable View of the button diameter", async () => {
+    const tree = await wrapper();
+    expect(tree.props).toMatchObject({ collapsable: false, style: { width: 40, height: 40 } });
   });
 
   it("overlay is a translucent black circle with a white icon in both schemes", async () => {

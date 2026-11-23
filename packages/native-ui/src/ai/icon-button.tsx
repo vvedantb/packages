@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { forwardRef, type ComponentType, type ElementRef } from "react";
 import type { IconProps } from "@tabler/icons-react-native";
 import { Button, type ButtonProps } from "../Button";
 import { cn } from "../cn";
@@ -51,7 +51,7 @@ export type ChatIconButtonProps = Omit<ButtonProps, "children" | "size" | "icon"
  * actions, the composer tools and its send button, and the code copy button.
  * Round from the `Button` pill default; `shape="rounded"` gives radius 16.
  */
-export function ChatIconButton({
+export const ChatIconButton = forwardRef<ElementRef<typeof Button>, ChatIconButtonProps>(function ChatIconButton({
   icon: Icon,
   label,
   iconColor,
@@ -60,7 +60,7 @@ export function ChatIconButton({
   slop = "square",
   className,
   ...props
-}: ChatIconButtonProps) {
+}, ref) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const metrics = largerText
@@ -69,6 +69,7 @@ export function ChatIconButton({
   const color = iconColor ?? buttonColors(variant, scheme)?.color ?? tokens.color.foreground[scheme];
   return (
     <Button
+      ref={ref}
       variant={variant}
       size="icon"
       accessibilityLabel={label}
@@ -83,4 +84,4 @@ export function ChatIconButton({
       <Icon size={metrics.icon} color={color} />
     </Button>
   );
-}
+});

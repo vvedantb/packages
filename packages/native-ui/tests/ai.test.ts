@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MIN_TOUCH_TARGET, buttonColors, touchSlop } from "../src/controlStyles";
 import { palette, withAlpha } from "../src/palette";
 import { tokens } from "../src/tokens";
+import { callForwardRef } from "./callForwardRef";
 import { expand } from "./pressScaleStub";
 
 // The AI chat parts (`@vvedantb/native-ui/ai`). There is no React renderer in
@@ -263,7 +264,10 @@ const flatten = (style: unknown): Record<string, unknown> =>
   Array.isArray(style) ? Object.assign({}, ...style.map(flatten)) : ((style as Record<string, unknown>) ?? {});
 
 /** Calls a function component element, as React would. */
-const render = (element: Element) => (element.type as (props: unknown) => unknown)(element.props);
+const render = (element: Element) =>
+  typeof element.type === "function"
+    ? (element.type as (props: unknown) => unknown)(element.props)
+    : callForwardRef(element.type, element.props);
 
 /** Makes `value` what `useContext` returns for the context a provider element names. */
 const provide = (provider: Element) => hooks.state.contexts.set(provider.type, provider.props.value);
@@ -602,7 +606,7 @@ describe("Message", () => {
     expect(button.props).not.toHaveProperty("shape");
     expect(32 + 2 * touchSlop(32).top).toBe(44);
     // Other chat icon buttons keep the square slop.
-    const send = ChatIconButton({ icon: () => null, label: "Send" }) as unknown as Element;
+    const send = callForwardRef(ChatIconButton, { icon: () => null, label: "Send" }) as Element;
     expect(send.props.hitSlop).toEqual(touchSlop(32));
     expect((button.props.children as Element).props).toEqual({ size: 16, color: buttonColors("ghost", "light")!.color });
     (button.props.onPress as () => void)();
@@ -1626,7 +1630,7 @@ describe("CodeBlock", () => {
     expect(copy.props.slop).toEqual({ left: 0, right: 5 });
     // The 28 `xs` square: 8 above and below to 44, and only the outer side.
     const button = (slop: { left: number; right: number }) =>
-      ChatIconButton({ icon: () => null, label: "x", size: "xs", slop }) as unknown as Element;
+      callForwardRef(ChatIconButton, { icon: () => null, label: "x", size: "xs", slop }) as Element;
     expect(button({ left: 8, right: 0 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 8, right: 0 });
     expect(button({ left: 0, right: 5 }).props.hitSlop).toEqual({ top: 8, bottom: 8, left: 0, right: 5 });
   });

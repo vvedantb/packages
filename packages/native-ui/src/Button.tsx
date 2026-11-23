@@ -140,7 +140,11 @@ const PRIMITIVE_VARIANT = {
 
 export type { ButtonProps, ButtonShape, ButtonSize, ButtonVariant };
 
-export function Button({
+/**
+ * Forwards `ref` to the native view, so a parent (such as `DropdownMenuTrigger
+ * asChild`) can measure it.
+ */
+export const Button = React.forwardRef<React.ElementRef<typeof PrimitiveButton>, ButtonProps>(function Button({
   onPress,
   variant = "primary",
   icon,
@@ -155,7 +159,7 @@ export function Button({
   shadowType = "flat",
   className,
   ...props
-}: ButtonProps) {
+}, ref) {
   const scale = useLargerText() ? "larger" : "regular";
   const scheme = useScheme();
   const dialog = useDialogLayout();
@@ -186,6 +190,7 @@ export function Button({
 
   return (
     <PrimitiveButton
+      ref={ref}
       onPress={onPress}
       variant={PRIMITIVE_VARIANT[variant]}
       shape={shape}
@@ -239,4 +244,4 @@ export function Button({
       </View>
     </PrimitiveButton>
   );
-}
+});

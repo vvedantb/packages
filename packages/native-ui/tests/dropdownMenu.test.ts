@@ -159,6 +159,56 @@ describe("DropdownMenu parts", () => {
     expect(open.setTrigger).not.toHaveBeenCalled();
   });
 
+  it("an empty measureInWindow box (Android, not laid out) falls back to measure; with both empty it opens without an anchor", async () => {
+    const { DropdownMenuTrigger, measureAnchor, isMeasuredRect } = await import("../src/DropdownMenu");
+    expect(isMeasuredRect({ x: 0, y: 0, width: 0, height: 0 })).toBe(false);
+    expect(isMeasuredRect({ x: 0, y: 0, width: 32, height: 32 })).toBe(true);
+
+    const done = vi.fn();
+    measureAnchor(
+      {
+        measureInWindow: (callback) => callback(0, 0, 0, 0),
+        measure: (callback) => callback(0, 0, 32, 32, 300, 700),
+      },
+      done,
+    );
+    expect(done).toHaveBeenCalledWith({ x: 300, y: 700, width: 32, height: 32 });
+
+    const empty = vi.fn();
+    measureAnchor({ measureInWindow: (callback) => callback(0, 0, 0, 0), measure: (callback) => callback(0, 0, 0, 0, 0, 0) }, empty);
+    expect(empty).toHaveBeenCalledWith(null);
+
+    // Through the trigger: a zero box is never stored as the anchor (it would place the menu top left).
+    const closed = context(false);
+    menu.ref = {
+      current: {
+        measureInWindow: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0),
+        measure: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0, 0, 0),
+      },
+    };
+    const trigger = DropdownMenuTrigger({}) as unknown as Element;
+    (trigger.props.onPress as (event: unknown) => void)({});
+    expect(closed.setTrigger).not.toHaveBeenCalled();
+    expect(closed.setOpen).toHaveBeenCalledWith(true);
+  });
+
+  it("the trigger keeps a caller ref and fills its own handle from the same view", async () => {
+    const { DropdownMenuTrigger } = await import("../src/DropdownMenu");
+    context(false);
+    const view = { measureInWindow: vi.fn() };
+    const own = { current: null as unknown };
+    menu.ref = own;
+    const object = { current: null as unknown };
+    const element = DropdownMenuTrigger({ ref: object as never }) as unknown as Element;
+    (element.props.ref as (view: unknown) => void)(view);
+    expect(own.current).toBe(view);
+    expect(object.current).toBe(view);
+    const calls: unknown[] = [];
+    const withCallback = DropdownMenuTrigger({ ref: ((node: unknown) => calls.push(node)) as never }) as unknown as Element;
+    (withCallback.props.ref as (view: unknown) => void)(view);
+    expect(calls).toEqual([view]);
+  });
+
   it("the content is a window layer with the overlay surface at radius 16, closed by an outside tap or Android back", async () => {
     const { DropdownMenuContent } = await import("../src/DropdownMenu");
     const value = context(true);

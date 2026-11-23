@@ -1,4 +1,5 @@
-import type { ComponentType } from "react";
+import { forwardRef, type ComponentRef, type ComponentType } from "react";
+import { View } from "react-native";
 import type { IconProps } from "@tabler/icons-react-native";
 import { touchSlop } from "./controlStyles";
 import { AnimatedPressable, usePressScale } from "./pressScale";
@@ -54,7 +55,7 @@ export function iconButtonColors(variant: IconButtonVariant, scheme: "light" | "
  * 32, `md` 40) and 48, each reaching 44 with its hit slop. Not the AI chat
  * `ChatIconButton`.
  */
-export function IconButton({
+export const IconButton = forwardRef<ComponentRef<typeof View>, IconButtonProps>(function IconButton({
   icon: Icon,
   label,
   onPress,
@@ -63,13 +64,14 @@ export function IconButton({
   size = "md",
   testID,
   iconColor,
-}: IconButtonProps) {
+}, ref) {
   const scheme = useScheme();
   const largerText = useLargerText();
   const [diameter, iconSize] = METRICS[largerText ? "larger" : "regular"][size];
   const { color, ...frame } = iconButtonColors(variant, scheme);
   const press = usePressScale({ restOpacity: disabled ? 0.5 : 1, disabled });
   return (
+    <View ref={ref} collapsable={false} style={{ width: diameter, height: diameter }}>
     <AnimatedPressable
       testID={testID}
       accessibilityRole="button"
@@ -85,5 +87,6 @@ export function IconButton({
     >
       <Icon size={iconSize} color={iconColor ?? color} />
     </AnimatedPressable>
+    </View>
   );
-}
+});
