@@ -18,6 +18,11 @@ import {
   syncPackageJsonVersion,
   validateVersionCode,
   validateVersionName,
+  resolveReleaseApkNames,
+  splitApkFileName,
+  splitArchitectures,
+  withAbiSplits,
+  abiSplitsGradle,
   type ReadAppFile,
 } from "../src/index.js";
 
@@ -349,5 +354,65 @@ describe("app version sync helpers", () => {
       parseAndroidReleaseConfig({ ...base, syncAppVersion: true, versionNameFromAppJson: true }),
     ).toMatchObject({ syncAppVersion: true, versionNameFromAppJson: true });
     expect(() => parseAndroidReleaseConfig({ ...base, syncAppVersion: "yes" })).toThrow("syncAppVersion");
+  });
+});
+
+describe("abi splits", () => {
+  const base = { packageId: "a.b", apkPrefix: "x" };
+  const velth = {
+    ...base,
+    reactNativeArchitectures: "arm64-v8a,x86_64",
+    abiSplits: true,
+    publishArchitectures: ["arm64-v8a"],
+  };
+
+  it("stays off by default", () => {
+    const config = parseAndroidReleaseConfig(base);
+    expect(config.abiSplits).toBeUndefined();
+    expect(resolveReleaseApkNames({ architectures: "arm64-v8a,x86_64" })).toEqual({
+      publish: "app-release.apk",
+    });
+  });
+
+  it("parses and validates the opt-in", () => {
+    expect(parseAndroidReleaseConfig(velth)).toMatchObject({
+      abiSplits: true,
+      publishArchitectures: ["arm64-v8a"],
+    });
+    expect(() => parseAndroidReleaseConfig({ ...base, abiSplits: "yes" })).toThrow("abiSplits");
+    expect(() => parseAndroidReleaseConfig({ ...velth, publishArchitectures: [1] })).toThrow("publishArchitectures");
+    expect(() => parseAndroidReleaseConfig({ ...velth, publishArchitectures: undefined })).toThrow("exactly one");
+    expect(() => parseAndroidReleaseConfig({ ...velth, publishArchitectures: ["x86"] })).toThrow("must be in");
+  });
+
+  it("builds the gradle block without a versionCode override", () => {
+    const block = abiSplitsGradle(["arm64-v8a", "x86_64"]);
+    expect(block).toContain("include 'arm64-v8a', 'x86_64'");
+    expect(block).toContain("universalApk false");
+    expect(block).not.toContain("versionCodeOverride");
+  });
+
+  it("inserts the block once and replaces it on a second run", () => {
+    const once = withAbiSplits("android {\n}", ["arm64-v8a", "x86_64"]);
+    expect(withAbiSplits(once, ["arm64-v8a", "x86_64"])).toBe(once);
+    const narrowed = withAbiSplits(once, ["arm64-v8a"]);
+    expect(narrowed.match(/splits \{/g)).toHaveLength(1);
+    expect(narrowed).not.toContain("x86_64");
+    expect(narrowed.startsWith("android {\n}\n")).toBe(true);
+  });
+
+  it("selects the split APK names", () => {
+    expect(splitArchitectures(" arm64-v8a, x86_64,")).toEqual(["arm64-v8a", "x86_64"]);
+    expect(splitApkFileName("x86_64")).toBe("app-x86_64-release.apk");
+    expect(
+      resolveReleaseApkNames({
+        abiSplits: true,
+        architectures: "arm64-v8a,x86_64",
+        publishArchitectures: ["arm64-v8a"],
+      }),
+    ).toEqual({ publish: "app-arm64-v8a-release.apk", startup: "app-x86_64-release.apk" });
+    expect(
+      resolveReleaseApkNames({ abiSplits: true, architectures: "arm64-v8a", publishArchitectures: ["arm64-v8a"] }),
+    ).toEqual({ publish: "app-arm64-v8a-release.apk" });
   });
 });

@@ -329,6 +329,15 @@ export interface AndroidReleaseConfig {
    * Default `"arm64-v8a"`.
    */
   reactNativeArchitectures?: string;
+  /**
+   * Build one APK per ABI with Gradle ABI splits (no universal APK). Only the
+   * single `publishArchitectures` APK is renamed, hashed and published; another
+   * ABI in `reactNativeArchitectures` (such as `x86_64`) is the start-up test
+   * APK. versionCode is not changed per ABI. Default `false`.
+   */
+  abiSplits?: boolean;
+  /** With `abiSplits`: the one ABI to publish, such as `["arm64-v8a"]`. */
+  publishArchitectures?: readonly string[];
   /** Label and env var for the final summary line, such as `{ label: "Convex", envVar: "EXPO_PUBLIC_CONVEX_URL" }`. */
   summary?: { label: string; envVar: string };
 }
@@ -415,6 +424,23 @@ export function parseAndroidReleaseConfig(input: unknown): AndroidReleaseConfig 
       throw new Error('android-release config: "reactNativeArchitectures" must be a string.');
     }
     config.reactNativeArchitectures = raw.reactNativeArchitectures;
+  }
+  if (raw.abiSplits !== undefined) {
+    if (typeof raw.abiSplits !== "boolean") throw new Error('android-release config: "abiSplits" must be a boolean.');
+    config.abiSplits = raw.abiSplits;
+  }
+  if (raw.publishArchitectures !== undefined) {
+    config.publishArchitectures = asStringArray(raw.publishArchitectures, "publishArchitectures");
+  }
+  if (config.abiSplits === true) {
+    const publish = config.publishArchitectures ?? [];
+    if (publish.length !== 1) {
+      throw new Error('android-release config: "abiSplits" needs "publishArchitectures" with exactly one ABI.');
+    }
+    const all = splitArchitectures(resolveReactNativeArchitectures(undefined, config.reactNativeArchitectures));
+    if (!all.includes(publish[0]!)) {
+      throw new Error('android-release config: "publishArchitectures" must be in "reactNativeArchitectures".');
+    }
   }
   if (raw.summary !== undefined) config.summary = parseSummary(raw.summary);
   return config;
@@ -530,4 +556,83 @@ export function syncPackageJsonVersion(packageJsonContents: string, versionName:
 /** True when the generated `android/app/build.gradle` sets `versionName "<versionName>"`. */
 export function gradleVersionNameOk(gradleText: string, versionName: string): boolean {
   return new RegExp(`^[\\t ]*versionName ["']${escapeRegExp(versionName)}["'][\\t ]*$`, "m").test(gradleText);
+}
+
+/** Splits a `reactNativeArchitectures` value such as `"arm64-v8a,x86_64"` into ABIs. */
+export function splitArchitectures(value: string): string[] {
+  return value
+    .split(",")
+    .map((abi) => abi.trim())
+    .filter((abi) => abi !== "");
+}
+
+/** Marker line that makes the ABI splits block idempotent. */
+export const ABI_SPLITS_MARKER = "// vvedantb-android-release: abi splits";
+
+/**
+ * The `android { splits { abi { ... } } }` block for `abis`. No universal APK,
+ * and no `versionCodeOverride`, so every ABI APK keeps the same versionCode.
+ */
+export function abiSplitsGradle(abis: readonly string[]): string {
+  const include = abis.map((abi) => `'${abi}'`).join(", ");
+  return [
+    ABI_SPLITS_MARKER,
+    "android {",
+    "  splits {",
+    "    abi {",
+    "      enable true",
+    "      reset()",
+    `      include ${include}`,
+    "      universalApk false",
+    "    }",
+    "  }",
+    "}",
+    ABI_SPLITS_MARKER + " (end)",
+    "",
+  ].join("\n");
+}
+
+/** Adds the ABI splits block to `build.gradle` text, or replaces an earlier one. */
+export function withAbiSplits(gradleText: string, abis: readonly string[]): string {
+  const start = gradleText.indexOf(ABI_SPLITS_MARKER);
+  const endMarker = ABI_SPLITS_MARKER + " (end)\n";
+  const end = gradleText.indexOf(endMarker);
+  const base =
+    start >= 0 && end > start
+      ? gradleText.slice(0, start) + gradleText.slice(end + endMarker.length)
+      : gradleText;
+  return withTrailingNewline(base) + abiSplitsGradle(abis);
+}
+
+/** The Gradle output name of an ABI split APK, such as `app-arm64-v8a-release.apk`. */
+export function splitApkFileName(abi: string): string {
+  return `app-${abi}-release.apk`;
+}
+
+/** Which Gradle output APKs the release publishes and the start-up test installs. */
+export interface ReleaseApkNames {
+  /** The APK renamed, hashed and published. */
+  publish: string;
+  /** The APK the start-up test installs, when it differs from `publish`. */
+  startup?: string;
+}
+
+/**
+ * Resolves the Gradle output file names. Without `abiSplits` it is
+ * `app-release.apk` and no start-up APK. With it, `publish` is the split for the
+ * publish ABI and `startup` the first other ABI in `architectures`, if any.
+ */
+export function resolveReleaseApkNames(options: {
+  abiSplits?: boolean;
+  architectures: string;
+  publishArchitectures?: readonly string[];
+}): ReleaseApkNames {
+  if (options.abiSplits !== true) return { publish: "app-release.apk" };
+  const publishAbi = options.publishArchitectures?.[0];
+  if (publishAbi === undefined) throw new Error("abiSplits needs a publish ABI.");
+  const startupAbi = splitArchitectures(options.architectures).find((abi) => abi !== publishAbi);
+  return {
+    publish: splitApkFileName(publishAbi),
+    ...(startupAbi === undefined ? {} : { startup: splitApkFileName(startupAbi) }),
+  };
 }

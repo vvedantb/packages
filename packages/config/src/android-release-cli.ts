@@ -34,6 +34,9 @@ import {
   buildGradlePropertyEdits,
   gradlePropertiesEdits,
   resolveReactNativeArchitectures,
+  resolveReleaseApkNames,
+  splitArchitectures,
+  withAbiSplits,
   gradleVersionNameOk,
   parseAndroidReleaseConfig,
   parseBadging,
@@ -272,30 +275,43 @@ if (config.gradleWrapperPin !== undefined) {
   }
 }
 
+// Architectures precedence: REACT_NATIVE_ARCHITECTURES env, config field, arm64-v8a.
+const architectures = resolveReactNativeArchitectures(
+  process.env.REACT_NATIVE_ARCHITECTURES,
+  config.reactNativeArchitectures,
+);
+const apkNames = resolveReleaseApkNames({
+  abiSplits: config.abiSplits,
+  architectures,
+  publishArchitectures: config.publishArchitectures,
+});
+if (config.abiSplits === true) {
+  const publishAbi = config.publishArchitectures?.[0] ?? "";
+  if (!splitArchitectures(architectures).includes(publishAbi)) {
+    fail(`Publish ABI ${publishAbi} is not in reactNativeArchitectures (${architectures}).`);
+  }
+  writeFileSync(appGradle, withAbiSplits(appGradleText, splitArchitectures(architectures)));
+}
+
 const propsPath = join(appDir, "android", "gradle.properties");
 const propsText = existsSync(propsPath) ? readFileSync(propsPath, "utf8") : "";
-// Architectures precedence: REACT_NATIVE_ARCHITECTURES env, config field, arm64-v8a.
-writeFileSync(
-  propsPath,
-  gradlePropertiesEdits(
-    propsText,
-    buildGradlePropertyEdits(
-      resolveReactNativeArchitectures(process.env.REACT_NATIVE_ARCHITECTURES, config.reactNativeArchitectures),
-    ),
-  ),
-);
+writeFileSync(propsPath, gradlePropertiesEdits(propsText, buildGradlePropertyEdits(architectures)));
 
 writeFileSync(join(appDir, "android", "local.properties"), `sdk.dir=${sdkRoot}\n`);
 
 const outDir = join(appDir, "android", "app", "build", "outputs", "apk", "release");
-const apk = join(outDir, "app-release.apk");
+const apk = join(outDir, apkNames.publish);
+const startupApk = apkNames.startup === undefined ? undefined : join(outDir, apkNames.startup);
 // A failed run must not leave an older APK or release.json to publish.
 for (const stale of [apk, join(outDir, "release.json")]) {
   if (existsSync(stale)) rmSync(stale);
 }
 if (existsSync(outDir)) {
   for (const name of readdirSync(outDir)) {
-    if (new RegExp(`^${config.apkPrefix}-.*-android\\.apk$`).test(name)) {
+    if (
+      new RegExp(`^${config.apkPrefix}-.*-android\\.apk$`).test(name) ||
+      (config.abiSplits === true && /^app-.*release\.apk$/.test(name))
+    ) {
       rmSync(join(outDir, name));
     }
   }
@@ -328,6 +344,13 @@ if (
       `expected ${config.packageId} ${versionCode} ${versionName}.`,
   );
 }
+if (startupApk !== undefined) {
+  if (!existsSync(startupApk)) fail(`Gradle did not write the start-up APK ${startupApk}.`);
+  const other = parseBadging(capture(join(buildTools, "aapt2"), ["dump", "badging", startupApk], androidDir));
+  if (other.versionCode !== badging.versionCode || other.versionName !== badging.versionName) {
+    fail(`The start-up APK is ${other.versionCode} ${other.versionName}; the published APK is ${badging.versionCode} ${badging.versionName}.`);
+  }
+}
 const certs = capture(join(buildTools, "apksigner"), ["verify", "--print-certs", apk], androidDir);
 if (certs.includes("CN=Android Debug")) {
   fail("The APK is signed with the debug key. Not writing release.json.");
@@ -352,6 +375,7 @@ if (env.GITHUB_OUTPUT !== undefined && env.GITHUB_OUTPUT !== "") {
     env.GITHUB_OUTPUT,
     formatGithubOutput({
       apk: named,
+      ...(startupApk === undefined ? {} : { startup_apk: startupApk }),
       release_json: manifest,
       version_name: versionName,
       version_code: String(versionCode),

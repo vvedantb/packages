@@ -117,6 +117,13 @@ export {
   type WithReleaseSigningOptions,
 } from "./release-signing.js";
 export {
+  ABI_SPLITS_MARKER,
+  abiSplitsGradle,
+  resolveReleaseApkNames,
+  splitApkFileName,
+  splitArchitectures,
+  withAbiSplits,
+  type ReleaseApkNames,
   DEFAULT_GRADLE_PROPERTY_EDITS,
   DEFAULT_REACT_NATIVE_ARCHITECTURES,
   buildGradlePropertyEdits,
