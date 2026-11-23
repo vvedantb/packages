@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.2
+
+### Patch Changes
+
+- [#338](https://github.com/vvedantb/packages/pull/338) [`5352f85`](https://github.com/vvedantb/packages/commit/5352f852ed51e4807e04fce84be83fbf522f7fe5) Thanks [@vvedantb](https://github.com/vvedantb)! - `vvedantb-android-release` supports opt-in Gradle ABI splits through the `abiSplits` and `publishArchitectures` config fields. One `assembleRelease` writes one APK per ABI; only the publish ABI APK is renamed, hashed into `release.json` and published, with an unchanged versionCode. The `startup_apk` GitHub output names the x86_64 split for the start-up test. Default behaviour is unchanged. New helpers: `withAbiSplits`, `abiSplitsGradle`, `resolveReleaseApkNames`, `splitApkFileName` and `splitArchitectures`.
+
 ## 0.14.1
 
 ### Patch Changes
