@@ -1,0 +1,45 @@
+# Shared element transition: a list row opens its detail card, Back returns, and the
+# empty state replaces the list. The move itself is judged by eye (screenshots); the
+# flow checks that both screens render and the tagged views are reachable.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-shared-transition
+- tapOn:
+    id: link-shared-transition
+- assertVisible:
+    id: st-card-1
+- assertVisible:
+    id: st-card-2
+- takeScreenshot: screenshots/shared-transition-list
+# Open the row: the card and title move to the detail screen.
+- tapOn:
+    id: st-row-1
+- assertVisible:
+    id: st-detail-card
+- assertVisible:
+    id: st-detail-body
+- takeScreenshot: screenshots/shared-transition-detail
+# Back moves it home again.
+- tapOn:
+    id: back
+- assertVisible:
+    id: st-card-1
+# A long title opens too.
+- tapOn:
+    id: st-row-2
+- assertVisible:
+    id: st-detail-card
+- tapOn:
+    id: back
+- assertVisible:
+    id: st-card-2
+# Empty state.
+- tapOn:
+    id: st-empty-toggle
+- assertVisible: "No visits"
+- assertNotVisible:
+    id: st-card-1

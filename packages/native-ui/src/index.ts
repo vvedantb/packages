@@ -29,6 +29,20 @@ export {
 } from "./floating";
 export { impactHaptic, notificationHaptic, selectionHaptic } from "./haptics";
 export { useReduceTransparency } from "./useReduceTransparency";
+export {
+  DEFAULT_SHARED_TRANSITION,
+  DEFAULT_FADE_CONTENT,
+  createSharedTransition,
+  sharedTransitionTag,
+  useSharedTransitionStyle,
+  SharedTransitionView,
+  SharedTransitionText,
+} from "./SharedTransition";
+export type {
+  SharedTransitionOverrides,
+  SharedTransitionViewProps,
+  SharedTransitionTextProps,
+} from "./SharedTransition";
 export { FloatingSurface, GlassSheetBackground } from "./FloatingSurface";
 export {
   LiquidGlass,

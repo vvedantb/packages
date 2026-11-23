@@ -465,12 +465,40 @@ declare module "react-native-reanimated" {
   }
   export function cubicBezier(x1: number, y1: number, x2: number, y2: number): CubicBezier;
 
-  export type AnimatedProps<P> = Omit<P, "style"> & {
-    style?: StyleProp<ViewStyle & CSSTransitionStyle>;
-    entering?: LayoutAnimationBuilder;
-    exiting?: LayoutAnimationBuilder;
-    layout?: LayoutAnimationBuilder;
+  /** `fadeContent()` config (Reanimated 4.8): `fadeOut.end` is move progress in (0, 1]; `fadeIn.duration` is in ms. */
+  export type FadeContentConfig = {
+    fadeOut?: { end?: number };
+    fadeIn?: { duration?: number };
   };
+  /**
+   * The shared element transition builder (Reanimated 4.8). The modifiers return the same
+   * instance, and each static method starts a new one.
+   */
+  export class SharedTransition {
+    static springify(duration?: number): SharedTransition;
+    static dampingRatio(dampingRatio: number): SharedTransition;
+    static duration(durationMs: number): SharedTransition;
+    static reduceMotion(reduceMotion: ReduceMotion): SharedTransition;
+    static fadeContent(config?: FadeContentConfig): SharedTransition;
+    springify(duration?: number): this;
+    dampingRatio(value: number): this;
+    duration(durationMs: number): this;
+    reduceMotion(reduceMotion: ReduceMotion): this;
+    fadeContent(config?: FadeContentConfig): this;
+  }
+  /** Props that mark a view as one end of a shared element transition. */
+  export type SharedTransitionProps = {
+    sharedTransitionTag?: string;
+    sharedTransitionStyle?: SharedTransition;
+  };
+
+  export type AnimatedProps<P> = Omit<P, "style"> &
+    SharedTransitionProps & {
+      style?: StyleProp<ViewStyle & CSSTransitionStyle>;
+      entering?: LayoutAnimationBuilder;
+      exiting?: LayoutAnimationBuilder;
+      layout?: LayoutAnimationBuilder;
+    };
 
   export interface SharedValue<T> {
     value: T;
@@ -554,7 +582,9 @@ declare module "react-native-reanimated" {
 
   declare const Animated: {
     View: React.ComponentType<AnimatedProps<ViewProps>>;
-    Text: React.ComponentType<Omit<TextProps, "style"> & { style?: StyleProp<TextStyle> }>;
+    Text: React.ComponentType<
+      Omit<TextProps, "style"> & SharedTransitionProps & { style?: StyleProp<TextStyle> }
+    >;
     ScrollView: typeof AnimatedScrollView;
     /** Wraps a component so its `style` takes animated styles (`Pressable` in `src/motion.ts`). */
     createAnimatedComponent<P extends object>(
