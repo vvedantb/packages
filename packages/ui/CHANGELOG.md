@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.62.0
+
+### Minor Changes
+
+- [#336](https://github.com/vvedantb/packages/pull/336) [`7adf626`](https://github.com/vvedantb/packages/commit/7adf626c87566b9787300bdaf491a894abf40c7c) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - New `TabsTransition`: wrap a tab set's content to move it when the tab changes. The new panel comes from the side of the picked tab, as a phone swipe does. Variants: `"none"` (default), `"slide"` (32px plus fade, 240 ms in, 140 ms out) and `"push"` (full-width pager, 320 ms). Pass `value` and `order` (the tab values left to right). Set an app-wide default with `UiConfig.Tabs.transition`. It works with routed tab content, and `MotionProvider reducedMotion` and page-motion off still apply.
+
 ## 0.61.0
 
 ### Minor Changes
