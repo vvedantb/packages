@@ -1,4 +1,4 @@
-import { useContext, useState, type ReactNode } from "react";
+import { forwardRef, useContext, useState, type ElementRef, type ReactNode } from "react";
 import { Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconArrowUp, IconChevronDown, IconPlayerStopFilled } from "@tabler/icons-react-native";
@@ -83,9 +83,11 @@ export function PromptInputSubmit({
 export type PromptInputButtonProps = ChatIconButtonProps;
 
 /** A ghost tool button for the composer `toolbar`, such as attach (web `PromptInputButton`). Give it `icon` and `label`. */
-export function PromptInputButton(props: PromptInputButtonProps) {
-  return <ChatIconButton variant="ghost" {...props} />;
-}
+export const PromptInputButton = forwardRef<ElementRef<typeof ChatIconButton>, PromptInputButtonProps>(
+  function PromptInputButton(props, ref) {
+    return <ChatIconButton ref={ref} variant="ghost" {...props} />;
+  },
+);
 
 /**
  * The web `ModelPicker` trigger (`model-picker.tsx` `TRIGGER_CLASS`), the

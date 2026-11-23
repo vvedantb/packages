@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { tokens } from "../src/tokens";
+import { callForwardRef } from "./callForwardRef";
 
 // `Button` `shape` (0.6.0): a pill by default, as the web `Button` from
 // @vvedantb/ui 0.31.0, with `shape="rounded"` for the radius before 0.6.0.
@@ -62,7 +63,7 @@ const VARIANTS = ["primary", "default", "secondary", "outline", "destructive", "
 
 async function paint(props: ButtonProps) {
   const { Button } = await import("../src/Button");
-  const element = Button(props) as unknown as Element;
+  const element = callForwardRef(Button, props) as Element;
   expect(element.type).toBe("PrimitiveButton");
   return element;
 }
@@ -155,6 +156,22 @@ describe("Button shape", () => {
   });
 });
 
+describe("Button ref forwarding", () => {
+  // `DropdownMenuTrigger asChild` measures the child through its ref: a kit
+  // button that drops the ref left the menu with no anchor.
+  it("Button, ChatIconButton and PromptInputButton pass their ref on to the primitive button", async () => {
+    const { Button } = await import("../src/Button");
+    const { ChatIconButton } = await import("../src/ai/icon-button");
+    const ref = { current: null };
+    expect(callForwardRef(Button, { children: "Go" }, ref)).toMatchObject({ ref });
+    const icon = "IconCopy" as unknown as Parameters<typeof ChatIconButton>[0]["icon"];
+    const chat = callForwardRef(ChatIconButton, { icon, label: "Copy" }, ref) as Element & { ref?: unknown };
+    // The chat button hands `ref` to `Button`, which hands it to the primitive.
+    expect(chat.type).toBe(Button);
+    expect(chat.props.ref ?? chat.ref).toBe(ref);
+  });
+});
+
 describe("Button shape in composites", () => {
   it("AlertDialogAction and AlertDialogCancel are pills, as the web footer buttons; shape passes through", async () => {
     const { Button } = await import("../src/Button");
@@ -163,10 +180,10 @@ describe("Button shape in composites", () => {
       const element = Part({ children: "OK" }) as unknown as Element;
       expect(element.type).toBe(Button);
       expect(element.props.shape).toBeUndefined();
-      expect(radius(Button(element.props as ButtonProps) as unknown as Element)).toBe(tokens.radius.pill);
+      expect(radius(callForwardRef(Button, element.props as ButtonProps) as Element)).toBe(tokens.radius.pill);
       const rounded = Part({ children: "OK", shape: "rounded" }) as unknown as Element;
       expect(rounded.props.shape).toBe("rounded");
-      expect(radius(Button(rounded.props as ButtonProps) as unknown as Element)).toBe(16);
+      expect(radius(callForwardRef(Button, rounded.props as ButtonProps) as Element)).toBe(16);
     }
   });
 
@@ -176,17 +193,17 @@ describe("Button shape in composites", () => {
     const icon = "IconCopy" as unknown as Parameters<typeof ChatIconButton>[0]["icon"];
     for (const largerText of [false, true]) {
       larger.value = largerText;
-      const element = ChatIconButton({ icon, label: "Copy" }) as unknown as Element;
+      const element = callForwardRef(ChatIconButton, { icon, label: "Copy" }) as Element;
       expect(element.type).toBe(Button);
       expect(element.props.style).toBeUndefined();
       expect(element.props.shape).toBeUndefined();
       expect(element.props.className).toBe(largerText ? "h-11 w-11" : "h-8 w-8");
-      const button = Button(element.props as ButtonProps) as unknown as Element;
+      const button = callForwardRef(Button, element.props as ButtonProps) as Element;
       expect(radius(button) as number).toBeGreaterThanOrEqual((largerText ? 44 : 32) / 2);
-      const rounded = ChatIconButton({ icon, label: "Copy", shape: "rounded" }) as unknown as Element;
-      expect(radius(Button(rounded.props as ButtonProps) as unknown as Element)).toBe(16);
-      const own = ChatIconButton({ icon, label: "Copy", style: { borderRadius: 8 } }) as unknown as Element;
-      expect(radius(Button(own.props as ButtonProps) as unknown as Element)).toBe(8);
+      const rounded = callForwardRef(ChatIconButton, { icon, label: "Copy", shape: "rounded" }) as Element;
+      expect(radius(callForwardRef(Button, rounded.props as ButtonProps) as Element)).toBe(16);
+      const own = callForwardRef(ChatIconButton, { icon, label: "Copy", style: { borderRadius: 8 } }) as Element;
+      expect(radius(callForwardRef(Button, own.props as ButtonProps) as Element)).toBe(8);
     }
   });
 });

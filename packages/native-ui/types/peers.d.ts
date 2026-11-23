@@ -136,6 +136,9 @@ declare module "react-native" {
   }
   export class View extends React.Component<ViewProps> {
     measureInWindow(callback: (x: number, y: number, width: number, height: number) => void): void;
+    measure(
+      callback: (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => void,
+    ): void;
   }
 
   export interface TextProps extends AccessibilityProps {
