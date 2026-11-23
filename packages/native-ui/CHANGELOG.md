@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.36.1
+
+### Patch Changes
+
+- [#339](https://github.com/vvedantb/packages/pull/339) [`2bb272b`](https://github.com/vvedantb/packages/commit/2bb272b5bfd52816aac5615672562c9f6634f46c) Thanks [@vvedantb](https://github.com/vvedantb)! - Fix `DropdownMenu` opening at the top left of the screen on Android. `Button`, `IconButton`, `ChatIconButton` and `PromptInputButton` now forward `ref`, so `DropdownMenuTrigger asChild` can measure them. The trigger also treats an empty `measureInWindow` box as unmeasured, reads `measure` as a second source, and keeps a `ref` passed by the caller.
+
 ## 0.36.0
 
 ### Minor Changes
