@@ -116,6 +116,7 @@ export * from "./ui/surface";
 export * from "./ui/switch";
 export * from "./ui/table";
 export * from "./ui/tabs";
+export * from "./ui/tabs-transition";
 export * from "./ui/textarea";
 export * from "./ui/toolbar-search-input";
 export * from "./ui/time-picker";
