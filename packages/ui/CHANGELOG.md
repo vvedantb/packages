@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.62.1
+
+### Patch Changes
+
+- [#340](https://github.com/vvedantb/packages/pull/340) [`95921d6`](https://github.com/vvedantb/packages/commit/95921d6b62e41f770c9ff5a1019ee912dce8a877) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `TabsTransition` gains `panelClassName`, the classes for the moving panel, so a full-height layout (`flex min-h-0 flex-1 flex-col`) still fills its container while it slides.
+
 ## 0.62.0
 
 ### Minor Changes
