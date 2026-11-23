@@ -1,0 +1,5 @@
+---
+"@vvedantb/native-ui": patch
+---
+
+fix(native-ui): `DropdownMenu` opens at its trigger on Android when the trigger sits in a keyboard-lifted slot such as the `PromptInput` leading slot. Two faults caused the bug: the trigger measured empty on some paths, and for a measured trigger near the bottom of the screen the menu first laid out below with no room, then switched from `top` to `bottom`, which Android ignores inside `WindowLayerHost`. The fix has five parts. The trigger sits in a `collapsable={false}` host that Android keeps as a native view. Measures retry for two frames when they read empty. A press anchors the menu at once from the press point and a size (the `onLayout` size, then a numeric `style` width and height, then 44), and a live measure then refines it. Before the content is measured, the menu flips above the trigger when less than one item row fits below. A flipped menu sets `top` only, from the content height (two item rows and padding before measure), never `bottom`. The menu panel sets every edge, with `null` for unused ones, so a flip clears the old edge. A caller `ref` now receives the host view.

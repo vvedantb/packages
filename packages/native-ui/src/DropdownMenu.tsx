@@ -18,6 +18,7 @@ import {
   View,
   useWindowDimensions,
   type GestureResponderEvent,
+  type LayoutChangeEvent,
   type PressableProps,
   type ViewProps,
 } from "react-native";
@@ -123,58 +124,140 @@ export function isMeasuredRect(rect: DropdownMenuRect): boolean {
 
 type Measurable = Pick<ComponentRef<typeof View>, "measureInWindow" | "measure">;
 
+/** The wrapper shrink-wraps the trigger in a flex row (such as the PromptInput `leading` slot). */
+const TRIGGER_HOST = { alignSelf: "flex-start" } as const;
+
+/** Frames to wait for layout to settle, when a view reads empty. */
+const MEASURE_RETRIES = 2;
+
+type LayoutSize = { width: number; height: number };
+
+/** Last-resort trigger size when a press has a touch point but no `onLayout` size and no style size: a 44 point touch target. */
+const FALLBACK_SIZE: LayoutSize = { width: 44, height: 44 };
+
+/** Numeric `width` and `height` of a plain style object, such as `{ width: 44, height: 44 }`; `undefined` for a function, array or missing size. */
+export function sizeFromStyle(style: PressableProps["style"]): LayoutSize | undefined {
+  if (!style || typeof style !== "object" || Array.isArray(style)) return undefined;
+  if (!("width" in style) || !("height" in style)) return undefined;
+  const { width, height } = style;
+  if (typeof width !== "number" || typeof height !== "number") return undefined;
+  return width > 0 && height > 0 ? { width, height } : undefined;
+}
+
+/**
+ * The trigger's box from a press: the press point in window coordinates
+ * (`pageX`, `pageY`) less its point in the view (`locationX`, `locationY`) is
+ * the view's origin, and `size` is its laid-out size. `null` without a size or a usable touch point.
+ */
+export function triggerRectFromPress(
+  event: { nativeEvent?: Partial<Record<"pageX" | "pageY" | "locationX" | "locationY", number>> } | null | undefined,
+  size: LayoutSize | undefined,
+): DropdownMenuRect | null {
+  const point = event?.nativeEvent;
+  if (!size || !point) return null;
+  const { pageX, pageY, locationX, locationY } = point;
+  if (
+    typeof pageX !== "number" || !Number.isFinite(pageX) ||
+    typeof pageY !== "number" || !Number.isFinite(pageY) ||
+    typeof locationX !== "number" || !Number.isFinite(locationX) ||
+    typeof locationY !== "number" || !Number.isFinite(locationY)
+  ) {
+    return null;
+  }
+  const rect = { x: pageX - locationX, y: pageY - locationY, width: size.width, height: size.height };
+  return isMeasuredRect(rect) ? rect : null;
+}
+
 /**
  * The view's box in window coordinates, or `null` when it cannot be measured.
  * `measureInWindow` first; when it returns an empty box, `measure` (its
- * `pageX` and `pageY` are window coordinates too) as a second reading.
+ * `pageX` and `pageY` are window coordinates too) as a second reading. When
+ * both are empty, it tries again on the next frame, up to `retries` times: a
+ * view under a keyboard-lifted or avoiding parent may not be laid out yet.
  */
-export function measureAnchor(view: Measurable, done: (rect: DropdownMenuRect | null) => void) {
+export function measureAnchor(view: Measurable, done: (rect: DropdownMenuRect | null) => void, retries = MEASURE_RETRIES) {
   view.measureInWindow((x, y, width, height) => {
     const rect = { x, y, width, height };
     if (isMeasuredRect(rect)) return done(rect);
     view.measure((_x, _y, w, h, pageX, pageY) => {
       const second = { x: pageX, y: pageY, width: w, height: h };
-      done(isMeasuredRect(second) ? second : null);
+      if (isMeasuredRect(second)) return done(second);
+      if (retries <= 0) return done(null);
+      requestAnimationFrame(() => measureAnchor(view, done, retries - 1));
     });
   });
 }
 
 /**
- * Opens the menu, or closes it when open. On press it measures itself
- * (`measureInWindow`) and the menu opens under it. Reports `expanded`. A
- * caller `ref` is kept: the menu's own handle never replaces it.
+ * Opens the menu, or closes it when open. On press it measures its wrapper
+ * (`measureInWindow`) and the menu opens under it. The wrapper is a
+ * `collapsable={false}` view, so Android keeps a native view to measure. On
+ * press, the box comes at once from the press point and a size (`onLayout`,
+ * then a numeric `style` width and height, then 44), and the menu opens; a live
+ * measure then refines it. When the press has no touch point and every measure
+ * reads empty, the last good box is used. Reports `expanded`. A caller `ref` is
+ * kept: it gets the wrapper, as the menu's own handle does.
  */
 export function DropdownMenuTrigger({
   asChild,
   onPress,
   accessibilityState,
   ref: callerRef,
+  style,
   ...props
 }: DropdownMenuTriggerProps) {
   const { open, setOpen, setTrigger } = useMenu("DropdownMenuTrigger");
   const ref = useRef<ComponentRef<typeof View> | null>(null);
+  // This trigger's last `onLayout` size and last good measured box, kept for when a live reading is empty.
+  const layoutSizeRef = useRef<LayoutSize | undefined>(undefined);
+  const lastRectRef = useRef<DropdownMenuRect | undefined>(undefined);
+  const styleSize = sizeFromStyle(style);
   const Component = asChild ? Slot.Pressable : Pressable;
   return (
-    <Component
+    <View
       ref={(view: ComponentRef<typeof View> | null) => {
         ref.current = view;
         if (typeof callerRef === "function") callerRef(view);
         else if (callerRef) callerRef.current = view;
       }}
-      accessibilityRole="button"
-      {...props}
-      accessibilityState={{ ...accessibilityState, expanded: open }}
-      onPress={(event: GestureResponderEvent) => {
-        onPress?.(event);
-        if (open) return setOpen(false);
+      collapsable={false}
+      accessible={false}
+      style={styleSize ? { ...TRIGGER_HOST, ...styleSize } : TRIGGER_HOST}
+      onLayout={(event: LayoutChangeEvent) => {
         const view = ref.current;
-        if (!view) return setOpen(true);
+        if (!view) return;
+        const { width, height } = event.nativeEvent.layout;
+        if (width > 0 && height > 0) layoutSizeRef.current = { width, height };
         measureAnchor(view, (rect) => {
-          if (rect) setTrigger(rect);
-          setOpen(true);
+          if (rect) lastRectRef.current = rect;
         });
       }}
-    />
+    >
+      <Component
+        accessibilityRole="button"
+        {...props}
+        style={style}
+        accessibilityState={{ ...accessibilityState, expanded: open }}
+        onPress={(event: GestureResponderEvent) => {
+          onPress?.(event);
+          if (open) return setOpen(false);
+          const view = ref.current;
+          const size = layoutSizeRef.current ?? styleSize ?? FALLBACK_SIZE;
+          const pressRect = triggerRectFromPress(event, size);
+          // Anchor and open at once from the press, then refine from a live measure.
+          if (pressRect) setTrigger(pressRect);
+          setOpen(true);
+          if (!view) return;
+          measureAnchor(view, (rect) => {
+            if (rect) {
+              lastRectRef.current = rect;
+              return setTrigger(rect);
+            }
+            if (!pressRect && lastRectRef.current) setTrigger(lastRectRef.current);
+          });
+        }}
+      />
+    </View>
   );
 }
 
@@ -192,8 +275,10 @@ export type DropdownMenuPosition = {
  * Where the menu goes: under the trigger, `sideOffset` away, its start edge on
  * the trigger's start (`"start"`) or its end edge on the trigger's end
  * (`"end"`), kept 8 inside the safe area. It flips above the trigger when its
- * content does not fit below and there is more room above. Without a trigger
- * box it sits at the top of the safe area.
+ * content does not fit below and there is more room above; it then sets `top`
+ * only, never `bottom`. Before the content
+ * is measured (0), it flips only when less than one item row fits below. Without
+ * a trigger box it sits at the top of the safe area.
  */
 export function dropdownMenuPosition({
   trigger,
@@ -224,8 +309,14 @@ export function dropdownMenuPosition({
   const above = trigger.y - sideOffset;
   const roomBelow = maxBottom - below;
   const roomAbove = above - minTop;
-  if (contentHeight > roomBelow && roomAbove > roomBelow) {
-    return { ...horizontal, bottom: window.height - above, maxHeight: roomAbove };
+  // Not measured yet (0): flip only when almost no room is below, so a bottom
+  // trigger never gets a first layout with a tiny `maxHeight`.
+  const tooTight = contentHeight > 0 ? contentHeight > roomBelow : roomBelow < DROPDOWN_MENU.itemHeight;
+  if (tooTight && roomAbove > roomBelow) {
+    // `top` only: `bottom` is ignored inside `WindowLayerHost` on Android. The menu's
+    // bottom edge lands on `above`; before measure, a two-row estimate stands in.
+    const height = contentHeight > 0 ? contentHeight : Math.min(roomAbove, DROPDOWN_MENU.itemHeight * 2 + DROPDOWN_MENU.padding * 2);
+    return { ...horizontal, top: Math.max(minTop, above - height), maxHeight: roomAbove };
   }
   return { ...horizontal, top: below, maxHeight: roomBelow };
 }
@@ -338,7 +429,13 @@ export function DropdownMenuContent({
           pointerEvents={open ? "auto" : "none"}
           style={{
             position: "absolute",
-            ...position,
+            // Every edge is set, `null` when unused, so React Native clears the one
+            // a flip leaves behind instead of keeping a stale `top`.
+            top: position.top ?? null,
+            bottom: position.bottom ?? null,
+            left: position.left ?? null,
+            right: position.right ?? null,
+            maxHeight: position.maxHeight,
             minWidth: DROPDOWN_MENU.minWidth,
             maxWidth: window.width - insets.left - insets.right - 2 * DROPDOWN_MENU.edge,
             opacity: contentHeight === null ? 0 : 1,

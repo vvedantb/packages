@@ -1,0 +1,35 @@
+# A DropdownMenu opened from the PromptInput `leading` slot (inline layout).
+# Repro for the Android anchor bug: the menu opens at the top-left because the
+# trigger never measures. Maestro cannot read positions, so the screenshots
+# are the evidence; the flow fails today only if the menu does not open at all.
+appId: dev.vvedantb.nativegallery
+---
+- launchApp:
+    clearState: true
+- scrollUntilVisible:
+    element:
+      id: link-keyboard
+- tapOn:
+    id: link-keyboard
+# Default DropdownMenuTrigger around a + icon.
+- tapOn:
+    id: kb-leading-dd-default
+- tapOn:
+    id: composer-dd-trigger
+- assertVisible:
+    id: composer-dd-item-photo
+- takeScreenshot: screenshots/composer-leading-dropdown-default
+- tapOn:
+    id: composer-dd-item-photo
+- assertVisible: "Composer menu: photo"
+# asChild around PromptInputButton.
+- tapOn:
+    id: kb-leading-dd-aschild
+- tapOn:
+    id: composer-dd-aschild-trigger
+- assertVisible:
+    id: composer-dd-item-file
+- takeScreenshot: screenshots/composer-leading-dropdown-aschild
+- tapOn:
+    id: composer-dd-item-file
+- assertVisible: "Composer menu: file"

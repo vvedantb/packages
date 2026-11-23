@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { palette } from "../src/palette";
 import { tokens } from "../src/tokens";
 
@@ -18,7 +18,8 @@ vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useContext: () => menu.value,
   useState: <T>(initial: T) => [initial, vi.fn()],
-  useRef: () => menu.ref,
+  // The view ref starts `null`; the trigger's size and box refs start `undefined` and belong to each render.
+  useRef: <T>(initial: T) => (initial === null ? menu.ref : { current: initial }),
   useEffect: () => {},
 }));
 vi.mock("react-native", () => ({
@@ -83,7 +84,20 @@ function context(open: boolean, trigger: unknown = { x: 300, y: 100, width: 40, 
   return value;
 }
 
+function layout(wrapper: Element, width: number, height: number) {
+  (wrapper.props.onLayout as (event: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width, height } } });
+}
+
+beforeEach(() => {
+  // Frames run at once, unless a test queues them itself.
+  vi.stubGlobal("requestAnimationFrame", (run: () => void) => {
+    run();
+    return 0;
+  });
+});
+
 afterEach(() => {
+  vi.unstubAllGlobals();
   menu.value = null;
   menu.ref = { current: null };
   menu.larger = false;
@@ -115,10 +129,27 @@ describe("dropdownMenuPosition", () => {
     const trigger = { x: 20, y: 700, width: 100, height: 40 };
     expect(dropdownMenuPosition({ trigger, window, insets, align: "start", contentHeight: 300 })).toEqual({
       left: 20,
-      bottom: 844 - 696,
+      top: 696 - 300,
       maxHeight: 696 - 55,
     });
     expect(dropdownMenuPosition({ trigger, window, insets, align: "start", contentHeight: 40 }).top).toBe(744);
+  });
+
+  it("flips above before the content is measured when almost no room is below", async () => {
+    const { dropdownMenuPosition } = await import("../src/DropdownMenu");
+    const trigger = { x: 20, y: 820, width: 100, height: 40 };
+    const position = dropdownMenuPosition({ trigger, window, insets, align: "start", contentHeight: 0 });
+    // Provisional height: two item rows plus padding.
+    expect(position.top).toBe(816 - (48 * 2 + 6 * 2));
+    expect(position.bottom).toBeUndefined();
+  });
+
+  it("stays below a mid-screen trigger before the content is measured", async () => {
+    const { dropdownMenuPosition } = await import("../src/DropdownMenu");
+    const trigger = { x: 20, y: 300, width: 100, height: 40 };
+    const position = dropdownMenuPosition({ trigger, window, insets, align: "start", contentHeight: 0 });
+    expect(position.top).toBe(344);
+    expect(position.bottom).toBeUndefined();
   });
 
   it("sits at the top of the safe area without a trigger box", async () => {
@@ -142,7 +173,11 @@ describe("DropdownMenu parts", () => {
     const closed = context(false);
     menu.ref = { current: { measureInWindow: (callback: (...box: number[]) => void) => callback(10, 20, 30, 40) } };
     const onPress = vi.fn();
-    const trigger = DropdownMenuTrigger({ onPress, accessibilityLabel: "More" }) as unknown as Element;
+    const wrapper = DropdownMenuTrigger({ onPress, accessibilityLabel: "More" }) as unknown as Element;
+    // A native view that Android cannot flatten away, so it can be measured.
+    expect(wrapper.type).toBe("View");
+    expect(wrapper.props).toMatchObject({ collapsable: false, accessible: false, style: { alignSelf: "flex-start" } });
+    const trigger = wrapper.props.children as Element;
     expect(trigger.type).toBe("Pressable");
     expect(trigger.props).toMatchObject({ accessibilityRole: "button", accessibilityLabel: "More", accessibilityState: { expanded: false } });
     (trigger.props.onPress as (event: unknown) => void)({});
@@ -151,7 +186,7 @@ describe("DropdownMenu parts", () => {
     expect(closed.setOpen).toHaveBeenCalledWith(true);
 
     const open = context(true);
-    const again = DropdownMenuTrigger({ asChild: true }) as unknown as Element;
+    const again = (DropdownMenuTrigger({ asChild: true }) as unknown as Element).props.children as Element;
     expect(again.type).toBe("SlotPressable");
     expect(again.props.accessibilityState).toEqual({ expanded: true });
     (again.props.onPress as (event: unknown) => void)({});
@@ -186,10 +221,123 @@ describe("DropdownMenu parts", () => {
         measure: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0, 0, 0),
       },
     };
-    const trigger = DropdownMenuTrigger({}) as unknown as Element;
+    const trigger = (DropdownMenuTrigger({}) as unknown as Element).props.children as Element;
     (trigger.props.onPress as (event: unknown) => void)({});
     expect(closed.setTrigger).not.toHaveBeenCalled();
     expect(closed.setOpen).toHaveBeenCalledWith(true);
+  });
+
+  it("retries on the next frames when both readings are empty, and uses the first good one", async () => {
+    const { measureAnchor } = await import("../src/DropdownMenu");
+    const frames: (() => void)[] = [];
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) => frames.push(run));
+    let reads = 0;
+    const view = {
+      measureInWindow: (callback: (...box: number[]) => void) => callback(...(++reads < 3 ? [0, 0, 0, 0] : [12, 700, 40, 40])),
+      measure: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0, 0, 0),
+    };
+    const done = vi.fn();
+    measureAnchor(view, done);
+    expect(done).not.toHaveBeenCalled();
+    frames.shift()!();
+    expect(done).not.toHaveBeenCalled();
+    frames.shift()!();
+    expect(done).toHaveBeenCalledOnce();
+    expect(done).toHaveBeenCalledWith({ x: 12, y: 700, width: 40, height: 40 });
+
+    // Out of retries: null, and no further frame.
+    const never = vi.fn();
+    measureAnchor({ measureInWindow: (callback) => callback(0, 0, 0, 0), measure: (callback) => callback(0, 0, 0, 0, 0, 0) }, never, 0);
+    expect(never).toHaveBeenCalledWith(null);
+    expect(frames).toHaveLength(0);
+  });
+
+  it("the wrapper's layout box is kept, and used when the live reading stays empty; an empty box is never stored", async () => {
+    const { DropdownMenuTrigger } = await import("../src/DropdownMenu");
+    const closed = context(false);
+    let box = [30, 640, 44, 44];
+    const view = {
+      measureInWindow: (callback: (...box: number[]) => void) => callback(...box),
+      measure: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0, 0, 0),
+    };
+    menu.ref = { current: view };
+    const wrapper = DropdownMenuTrigger({}) as unknown as Element;
+    layout(wrapper, 44, 44);
+    expect(closed.setTrigger).not.toHaveBeenCalled();
+    const press = () => ((wrapper.props.children as Element).props.onPress as (event: unknown) => void)({});
+
+    box = [0, 0, 0, 0];
+    press();
+    expect(closed.setTrigger).toHaveBeenCalledOnce();
+    expect(closed.setTrigger).toHaveBeenCalledWith({ x: 30, y: 640, width: 44, height: 44 });
+    expect(closed.setOpen).toHaveBeenCalledWith(true);
+
+    // A layout that reads empty does not replace the good box, and no empty box reaches `setTrigger`.
+    layout(wrapper, 0, 0);
+    press();
+    expect(closed.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 640, width: 44, height: 44 });
+    for (const [rect] of closed.setTrigger.mock.calls) expect(rect).not.toMatchObject({ width: 0 });
+  });
+
+  it("builds the box from the press point and the layout size when every measure is empty", async () => {
+    const { DropdownMenuTrigger, triggerRectFromPress, sizeFromStyle } = await import("../src/DropdownMenu");
+    vi.stubGlobal("console", { ...console, log: vi.fn() });
+    const empty = {
+      measureInWindow: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0),
+      measure: (callback: (...box: number[]) => void) => callback(0, 0, 0, 0, 0, 0),
+    };
+    const touch = { nativeEvent: { pageX: 50, pageY: 2210, locationX: 20, locationY: 10 } };
+
+    const closed = context(false);
+    menu.ref = { current: empty };
+    const wrapper = DropdownMenuTrigger({}) as unknown as Element;
+    const press = () => ((wrapper.props.children as Element).props.onPress as (event: unknown) => void)(touch);
+    // No layout size and no style size yet: the press anchors with the 44 point fallback.
+    press();
+    expect(closed.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 2200, width: 44, height: 44 });
+    expect(closed.setOpen).toHaveBeenCalledWith(true);
+    // An empty layout is not kept: still the fallback.
+    layout(wrapper, 0, 0);
+    press();
+    expect(closed.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 2200, width: 44, height: 44 });
+    layout(wrapper, 40, 46);
+    press();
+    expect(closed.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 2200, width: 40, height: 46 });
+
+    // A numeric style size is used before the fallback, and sizes the host.
+    const styled = context(false);
+    const sized = DropdownMenuTrigger({ style: { width: 32, height: 36 } }) as unknown as Element;
+    expect(sized.props.style).toEqual({ alignSelf: "flex-start", width: 32, height: 36 });
+    expect((sized.props.children as Element).props.style).toEqual({ width: 32, height: 36 });
+    ((sized.props.children as Element).props.onPress as (event: unknown) => void)(touch);
+    expect(styled.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 2200, width: 32, height: 36 });
+    expect(sizeFromStyle([{ width: 1, height: 1 }])).toBeUndefined();
+    expect(sizeFromStyle(() => ({ width: 1, height: 1 }))).toBeUndefined();
+
+    // The anchor is set before the measure completes; the live box then refines it.
+    const order = context(false);
+    let finish: (...box: number[]) => void = () => {};
+    menu.ref = { current: { ...empty, measureInWindow: (callback: (...box: number[]) => void) => (finish = callback) } };
+    const pending = DropdownMenuTrigger({}) as unknown as Element;
+    ((pending.props.children as Element).props.onPress as (event: unknown) => void)(touch);
+    expect(order.setTrigger).toHaveBeenCalledOnce();
+    expect(order.setTrigger).toHaveBeenLastCalledWith({ x: 30, y: 2200, width: 44, height: 44 });
+    expect(order.setOpen).toHaveBeenCalledWith(true);
+    finish(31, 2201, 42, 43);
+    expect(order.setTrigger).toHaveBeenLastCalledWith({ x: 31, y: 2201, width: 42, height: 43 });
+
+    // A live measure is preferred over the press.
+    const live = context(false);
+    menu.ref = {
+      current: { ...empty, measureInWindow: (callback: (...box: number[]) => void) => callback(5, 6, 7, 8) },
+    };
+    const again = DropdownMenuTrigger({}) as unknown as Element;
+    layout(again, 40, 44);
+    ((again.props.children as Element).props.onPress as (event: unknown) => void)(touch);
+    expect(live.setTrigger).toHaveBeenCalledWith({ x: 5, y: 6, width: 7, height: 8 });
+
+    expect(triggerRectFromPress(touch, undefined)).toBeNull();
+    expect(triggerRectFromPress(touch, { width: 0, height: 44 })).toBeNull();
   });
 
   it("the trigger keeps a caller ref and fills its own handle from the same view", async () => {
@@ -236,6 +384,8 @@ describe("DropdownMenu parts", () => {
     expect(panel.props.accessibilityViewIsModal).toBe(true);
     // Hidden until the content is measured, so it never shows below and then flips above.
     expect(panel.props.style).toMatchObject({ position: "absolute", right: 50, top: 144, minWidth: 192, maxWidth: 374, opacity: 0 });
+    // Unused edges are `null`, so React Native clears an edge a flip leaves behind.
+    expect(panel.props.style).toMatchObject({ bottom: null, left: null });
     const surface = elements(modal).find((element) => element.type === "FloatingSurface")!;
     expect(surface.props).toMatchObject({ blur: false, radius: tokens.radius.lg });
     expect(elements(modal).find((element) => element.type === "ScrollView")!.props.contentContainerStyle).toEqual({ padding: 6 });
