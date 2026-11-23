@@ -175,5 +175,17 @@ export { Toaster } from "../Toast";
 export { toast } from "../toastStore";
 export type { ToastOptions, ToastVariant } from "../toastStore";
 
+// Shared element transitions (Reanimated 4.8): the same `tag` on two screens moves the view between them.
+export {
+  DEFAULT_SHARED_TRANSITION,
+  DEFAULT_FADE_CONTENT,
+  createSharedTransition,
+  sharedTransitionTag,
+  useSharedTransitionStyle,
+  SharedTransitionView,
+  SharedTransitionText,
+} from "../SharedTransition";
+export type { SharedTransitionOverrides, SharedTransitionViewProps, SharedTransitionTextProps } from "../SharedTransition";
+
 // Overlays in the app's window (the hold menu, the image viewer): wrap the navigator once.
 export { WindowLayerHost } from "../primitives/window-layer";

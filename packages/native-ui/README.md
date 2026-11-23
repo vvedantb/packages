@@ -715,6 +715,34 @@ A small menu anchored to its trigger, the native counterpart of the web `Dropdow
 
 Sizes come from the web menu classes: content at least 192 wide, `p-1.5`, radius 16, on the opaque overlay surface of `Dialog` and `Sheet` (`FloatingSurface` without blur); items `px-2.5 py-2` at radius 8, `text-sm` with a 16 icon, at least 44 high; radio items `pl-8` with a 16 check; the label `text-xs` semibold, uppercase, `tracking-widest`, muted; the separator a 1-high `separator` line. Items are `palette.overlayForeground` (`palette.danger` when `destructive`) and take the `default` fill while pressed. A tap outside, Android back and the VoiceOver escape gesture close the menu. Roles: `menu`, `menuitem`, `radio` (with `checked`), `header`. With larger text, items are `text-lg` and 56 high. No sub-menus, checkbox items, shortcuts or `align="center"`.
 
+## Shared element transitions (Unreleased)
+
+A view with the same tag on two screens moves and resizes from one to the other (Reanimated 4.8 `SharedTransition`; needs `react-native-reanimated` 4.8 or later). On the root and on `@vvedantb/native-ui/primitives`. Use it between native-stack screens, such as a list row and its detail.
+
+```tsx
+import { SharedTransitionView, SharedTransitionText } from "@vvedantb/native-ui";
+
+// List screen
+<SharedTransitionView tag={`card-${item.id}`} style={{ height: 72, borderRadius: 16 }}>
+  <SharedTransitionText tag={`title-${item.id}`}>{item.title}</SharedTransitionText>
+</SharedTransitionView>
+
+// Detail screen: the same tags
+<SharedTransitionView tag={`card-${id}`} style={{ height: 240, borderRadius: 16 }}>
+  <SharedTransitionText tag={`title-${id}`}>{title}</SharedTransitionText>
+</SharedTransitionView>
+```
+
+| Export | Use |
+| --- | --- |
+| `SharedTransitionView`, `SharedTransitionText` | `tag` (required), `style`, `testID` and the other `View` or `Text` props. An `Animated.View` or `Animated.Text` with `sharedTransitionTag` and `sharedTransitionStyle` set. Use `style`, not `className`: NativeWind does not style Reanimated views. |
+| `useSharedTransitionStyle()` | `DEFAULT_SHARED_TRANSITION`, or `undefined` with Reduce Motion on. For your own `Animated.*` view: pass `sharedTransitionTag={sharedTransitionTag(id)}` and `sharedTransitionStyle={style}` only when it is defined. |
+| `sharedTransitionTag(id)` | The tag, prefixed `nui:`. Use it on both screens. |
+| `DEFAULT_SHARED_TRANSITION` | `SharedTransition.springify(280).dampingRatio(1).reduceMotion(ReduceMotion.System).fadeContent({ fadeOut: { end: 0.55 }, fadeIn: { duration: 180 } })`. |
+| `createSharedTransition({ duration, dampingRatio, fadeContent })` | A new builder with these changed. `fadeContent: false` leaves children as they are. It always applies `ReduceMotion.System`. |
+
+The spring is critically damped: no bounce. `fadeContent` fades the children of the source view out by 55% of the move and the children of the target in over 180 ms, so text does not squash while the box resizes. The two views may have different children. With Reduce Motion on, the wrappers render a plain `View` or `Text` with no tag, and the screens change as without a shared transition. Tag only one view per id on each screen.
+
 ## BulkActionBar (Unreleased)
 
 The floating selection bar, as the web `BulkActionBar`. On `/primitives` and the root. Put it last in a full-size container: it sits at the bottom, centred.
