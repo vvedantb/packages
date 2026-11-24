@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.63.0
+
+### Minor Changes
+
+- [#343](https://github.com/vvedantb/packages/pull/343) [`a581542`](https://github.com/vvedantb/packages/commit/a5815421dc8752fae0b01e8869f7586394da8976) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `SidePanelTabs.Frame`: a tab switch now slides the card's content in from the side of the new tab (24px, 240 ms), as `TabsTransition` does, in place of the scale settle. `dockNudge` is replaced by `dockSwitch(panel, fromTab, toTab)`.
+
 ## 0.62.1
 
 ### Patch Changes
