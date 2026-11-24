@@ -56,7 +56,7 @@ function StatusPill({ status, testID }: { status: SubagentStatus; testID: string
       className="rounded-full border px-2.5 py-0.5"
       style={{ borderColor: colors.borderColor, backgroundColor: colors.backgroundColor }}
     >
-      <Text className={cn(caption, "font-instrument-sans-semibold")} style={[sizeStyle(caption), typeStyle("semibold"), { color: colors.color }]}>
+      <Text className={cn(caption, "font-instrument-sans-medium")} style={[sizeStyle(caption), typeStyle("medium"), { color: colors.color }]}>
         {STATUS_LABEL[status]}
       </Text>
     </View>
@@ -114,8 +114,8 @@ export function SubagentRunCard({
         )}
         <Text
           numberOfLines={2}
-          className={cn(body, "min-w-0 flex-1 font-instrument-sans-semibold")}
-          style={[sizeStyle(body), typeStyle("semibold"), textStyle("foreground", scheme)]}
+          className={cn(body, "min-w-0 flex-1 font-instrument-sans-medium")}
+          style={[sizeStyle(body), typeStyle("medium"), textStyle("foreground", scheme)]}
         >
           {title}
         </Text>
@@ -218,8 +218,8 @@ export function SubagentResultCard({
         {avatar}
         <Text
           numberOfLines={2}
-          className={cn(body, "min-w-0 flex-1 font-instrument-sans-semibold")}
-          style={[sizeStyle(body), typeStyle("semibold"), textStyle("foreground", scheme)]}
+          className={cn(body, "min-w-0 flex-1 font-instrument-sans-medium")}
+          style={[sizeStyle(body), typeStyle("medium"), textStyle("foreground", scheme)]}
         >
           {title}
         </Text>

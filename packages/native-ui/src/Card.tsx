@@ -65,11 +65,11 @@ export function Card({
               )}
               {title ? (
                 <PrimitiveCardTitle
-                  className={cn("font-instrument-sans-semibold leading-tight", titleSize)}
+                  className={cn("font-instrument-sans-medium leading-tight", titleSize)}
                   style={[
                     textStyle("foreground", scheme),
                     sizeStyle(titleSize, "tight"),
-                    typeStyle("semibold"),
+                    typeStyle("medium"),
                   ]}
                 >
                   {title}
@@ -112,7 +112,7 @@ export function CardHeader({ className, ...props }: PartProps) {
 }
 
 /**
- * Web `font-semibold leading-none` at the inherited 16. The line height is
+ * Web `font-medium leading-none` at the inherited 16. The line height is
  * `leading-tight` (20), not 16: below the face's ascent and descent, iOS and
  * Android can clip the glyphs.
  */
@@ -123,11 +123,11 @@ export function CardTitle({ className, style, ...props }: TextPartProps) {
   return (
     <Text
       accessibilityRole="header"
-      className={cn("font-instrument-sans-semibold leading-tight", size, className)}
+      className={cn("font-instrument-sans-medium leading-tight", size, className)}
       style={[
         textStyle("foreground", scheme),
         sizeStyle(size, "tight"),
-        typeStyle("semibold"),
+        typeStyle("medium"),
         style,
       ]}
       {...props}

@@ -15,7 +15,7 @@ const SWATCHES: Record<ThemeMode, string> = {
   light: "bg-white",
   neutral: "bg-zinc-700",
   dark: "bg-zinc-900",
-  system: "bg-linear-to-br from-white to-zinc-900",
+  system: "relative overflow-hidden bg-white",
 };
 const ICON_COLOURS: Record<ThemeMode, string> = {
   light: "text-amber-500",
@@ -82,7 +82,15 @@ export function ThemeModePicker({ value, onChange, modes = THEME_MODES, compact 
                   SWATCHES[mode],
                 )}
               >
-                <Icon size={compact ? 14 : 22} className={ICON_COLOURS[mode]} />
+                {mode === "system" ? (
+                  // Hard diagonal split, white over zinc-900, with no gradient.
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 bg-zinc-900"
+                    style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+                  />
+                ) : null}
+                <Icon size={compact ? 14 : 22} className={cn("relative", ICON_COLOURS[mode])} />
               </div>
               {LABELS[mode]}
             </button>

@@ -77,7 +77,7 @@ export function KeyboardSection() {
         <GText testID="composer-dd-result">{`Composer menu: ${ddResult}`}</GText>
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12, padding: 16, paddingTop: 8 }}>
-        <GText style={{ fontSize: 18, fontWeight: "600" }}>Keyboard</GText>
+        <GText style={{ fontSize: 18, fontWeight: "500" }}>Keyboard</GText>
         <Input testID="kb-input-1" placeholder="First input" />
         <Input testID="kb-input-2" placeholder="Second input" />
         <Textarea testID="kb-textarea" placeholder="Notes" />

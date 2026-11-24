@@ -10,7 +10,7 @@ export function Matrix({ theme }: { theme: "light" | "dark" }) {
       data-theme={theme}
       data-harness-theme={theme}
     >
-      <h2 className="mb-4 text-lg font-semibold">{theme}</h2>
+      <h2 className="mb-4 text-lg font-medium">{theme}</h2>
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
         {Object.entries(chipSets).flatMap(([cLabel, names]) =>
           Object.entries(texts).map(([tLabel, text]) => (

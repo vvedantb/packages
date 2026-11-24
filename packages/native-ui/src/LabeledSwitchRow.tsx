@@ -56,11 +56,11 @@ export function LabeledSwitchRow({
         <View className="min-w-0 flex-1">
           <Text
             className={cn(
-              "font-instrument-sans-semibold",
+              "font-instrument-sans-medium",
               largerText ? "text-xl" : "text-lg",
               disabled && "opacity-70",
             )}
-            style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+            style={[textStyle("foreground", scheme), typeStyle("medium")]}
           >
             {label}
           </Text>

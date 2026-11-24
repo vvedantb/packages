@@ -157,8 +157,8 @@ function ToolCardBase({
       <View className="flex-row items-center gap-2">
         <IconTool size={largerText ? 20 : 16} color={tokens.color.muted[scheme]} />
         <Text
-          className={cn(caption, "font-instrument-sans-semibold")}
-          style={[sizeStyle(caption), typeStyle("semibold"), textStyle("muted", scheme)]}
+          className={cn(caption, "font-instrument-sans-medium")}
+          style={[sizeStyle(caption), typeStyle("medium"), textStyle("muted", scheme)]}
         >
           {pending ? "Sending decision…" : heading}
         </Text>
@@ -174,8 +174,8 @@ function ToolCardBase({
       <Text
         testID={`${testID}-name`}
         numberOfLines={2}
-        className={cn(body, "font-instrument-sans-semibold")}
-        style={[sizeStyle(body), typeStyle("semibold"), textStyle("foreground", scheme)]}
+        className={cn(body, "font-instrument-sans-medium")}
+        style={[sizeStyle(body), typeStyle("medium"), textStyle("foreground", scheme)]}
       >
         {toolName}
       </Text>

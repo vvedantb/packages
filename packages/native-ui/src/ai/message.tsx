@@ -287,8 +287,8 @@ export function MessageBotLabel({ name, avatar, className, testID = "message-bot
       {avatar}
       <Text
         numberOfLines={1}
-        className={cn(size, "font-instrument-sans-semibold")}
-        style={[sizeStyle(size), typeStyle("semibold"), { color: tokens.color.muted[scheme] }]}
+        className={cn(size, "font-instrument-sans-medium")}
+        style={[sizeStyle(size), typeStyle("medium"), { color: tokens.color.muted[scheme] }]}
       >
         {name}
       </Text>

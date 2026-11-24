@@ -367,7 +367,7 @@ describe("UiConfig class replacement", () => {
     const host = await mount(card, { Card: { classes: { root: "app-card", header: "app-header", footer: "app-footer" } } });
     expect(first(host).getAttribute("class")).toBe("app-card extra");
     expect(el(host, ".app-header").firstElementChild?.getAttribute("class")).toBe(
-      "font-semibold leading-none tracking-[-0.02em]",
+      "font-medium leading-none tracking-[-0.02em]",
     );
     expect(el(host, ".app-footer").textContent).toBe("F");
     expect(host.querySelector(".p-6.pt-0")?.textContent).toBe("C");

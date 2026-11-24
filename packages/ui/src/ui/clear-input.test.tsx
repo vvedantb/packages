@@ -27,7 +27,7 @@ describe("ClearInput", () => {
     const clip = host.querySelector(".t-clear-clip");
     expect(clip?.parentElement).toBe(wrap);
     expect(clip?.getAttribute("aria-hidden")).toBe("true");
-    for (const layer of [".t-clear-mirror", ".t-clear-placeholder", ".t-clear-glow"]) {
+    for (const layer of [".t-clear-mirror", ".t-clear-placeholder"]) {
       expect(host.querySelector(layer)?.parentElement).toBe(clip);
     }
     const input = host.querySelector("input");

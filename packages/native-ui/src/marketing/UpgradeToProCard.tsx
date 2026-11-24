@@ -93,8 +93,8 @@ export function UpgradeToProCard({
     >
       <Text
         numberOfLines={1}
-        className={cn("min-w-0 flex-1 font-instrument-sans-semibold", titleSize)}
-        style={[textStyle("foreground", scheme), sizeStyle(titleSize), typeStyle("semibold")]}
+        className={cn("min-w-0 flex-1 font-instrument-sans-medium", titleSize)}
+        style={[textStyle("foreground", scheme), sizeStyle(titleSize), typeStyle("medium")]}
       >
         {title}
       </Text>

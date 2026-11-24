@@ -10,7 +10,7 @@ export default function Home() {
   const { largerText, setLargerText, dark, setDark } = useGallery();
   return (
     <Page testID="home">
-      <GText accessibilityRole="header" style={{ fontSize: 28, fontWeight: "700" }}>
+      <GText accessibilityRole="header" style={{ fontSize: 28, fontWeight: "500" }}>
         Native UI gallery
       </GText>
       <Block title="Display">

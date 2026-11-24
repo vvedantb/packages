@@ -195,8 +195,8 @@ function TabBarItem({
         // The bar has a fixed height (`tabBarReserve`), so labels
         // scale with Dynamic Type only up to what fits in it.
         maxFontSizeMultiplier={1.5}
-        className={`font-instrument-sans-semibold ${largerText ? "text-base" : "text-sm"}`}
-        style={[{ color }, typeStyle("semibold")]}
+        className={`font-instrument-sans-medium ${largerText ? "text-base" : "text-sm"}`}
+        style={[{ color }, typeStyle("medium")]}
       >
         {label}
       </Text>

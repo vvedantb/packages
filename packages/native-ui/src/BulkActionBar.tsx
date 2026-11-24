@@ -217,8 +217,8 @@ export function BulkActionBar({
                   }}
                 >
                   <Text
-                    className="font-instrument-sans-semibold"
-                    style={[metrics.caption, typeStyle("semibold"), { fontVariant: ["tabular-nums"], color: tokens.color.foreground[scheme] }]}
+                    className="font-instrument-sans-medium"
+                    style={[metrics.caption, typeStyle("medium"), { fontVariant: ["tabular-nums"], color: tokens.color.foreground[scheme] }]}
                   >
                     {selectedCount}
                   </Text>

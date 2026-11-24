@@ -49,8 +49,8 @@ export function PinnedBotTile({ title, leading, unread = false, generating = fal
       {leading}
       <Text
         numberOfLines={2}
-        className={cn("text-center font-instrument-sans-semibold", largerText ? "text-lg" : "text-base")}
-        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+        className={cn("text-center font-instrument-sans-medium", largerText ? "text-lg" : "text-base")}
+        style={[textStyle("foreground", scheme), typeStyle("medium")]}
       >
         {title}
       </Text>

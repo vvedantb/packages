@@ -49,8 +49,8 @@ export function MessageQuote({
     <>
       <Text
         numberOfLines={1}
-        className={cn(caption, "font-instrument-sans-semibold")}
-        style={[sizeStyle(caption), typeStyle("semibold"), { color: withAlpha(color, 0.75) }]}
+        className={cn(caption, "font-instrument-sans-medium")}
+        style={[sizeStyle(caption), typeStyle("medium"), { color: withAlpha(color, 0.75) }]}
       >
         {author}
       </Text>

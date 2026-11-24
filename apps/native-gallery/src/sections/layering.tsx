@@ -83,7 +83,7 @@ export function LayeringSection() {
                 <View key={c} style={{ flex: 1, backgroundColor: c }} />
               ))}
             </View>
-            <GText testID="layering-result" style={{ fontSize: 16, fontWeight: "600" }}>{`Result: ${result}`}</GText>
+            <GText testID="layering-result" style={{ fontSize: 16, fontWeight: "500" }}>{`Result: ${result}`}</GText>
             <GText testID="layering-select-value">{`Select: ${String(colour)}`}</GText>
             <View style={{ position: "absolute", left: 16, right: 16, bottom: tabBarReserve(false, insets.bottom) + 8, gap: 12 }}>
             <View className="flex-row items-center gap-3">

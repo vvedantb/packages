@@ -19,7 +19,7 @@ const TEXT_VARIANT = {
 
 export function HeadingElement({ element }: ComponentRenderProps<GenerativeUiProps<"Heading">>) {
   const { text, level } = element.props;
-  return <p className={cn("font-semibold text-foreground", level === "h2" ? "text-base" : "text-sm")}>{text}</p>;
+  return <p className={cn("font-medium text-foreground", level === "h2" ? "text-base" : "text-sm")}>{text}</p>;
 }
 
 export function TextElement({ element }: ComponentRenderProps<GenerativeUiProps<"Text">>) {
@@ -31,7 +31,7 @@ export function MetricElement({ element }: ComponentRenderProps<GenerativeUiProp
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className={cn("text-lg font-semibold tabular-nums leading-tight", TONE_TEXT[tone])}>{value}</span>
+      <span className={cn("text-lg font-medium tabular-nums leading-tight", TONE_TEXT[tone])}>{value}</span>
       {delta ? <span className="text-2xs text-muted-foreground">{delta}</span> : null}
     </div>
   );
@@ -45,7 +45,7 @@ export function CalloutElement({ element }: ComponentRenderProps<GenerativeUiPro
   const { title, text, tone } = element.props;
   return (
     <div className={cn("flex min-w-0 flex-col gap-1 rounded-surface p-3", TONE_SURFACE[tone])}>
-      {title ? <span className={cn("text-xs font-semibold", TONE_TEXT[tone])}>{title}</span> : null}
+      {title ? <span className={cn("text-xs font-medium", TONE_TEXT[tone])}>{title}</span> : null}
       <span className="wrap-anywhere text-sm text-foreground">{text}</span>
     </div>
   );

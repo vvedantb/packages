@@ -127,7 +127,7 @@ describe("BulkActionBar", () => {
     const count = elements(chip).find((element) => element.type === "Text")!;
     expect(count.props.style).toEqual([
       { fontSize: 12, lineHeight: 16 },
-      { fontWeight: "600" },
+      { fontWeight: "500" },
       { fontVariant: ["tabular-nums"], color: tokens.color.foreground.light },
     ]);
     const selectAll = elements(tree).find((element) => element.type === "Pressable" && text(element)[0] === "Select all (5)")!;

@@ -320,7 +320,7 @@ const DialogTitle = React.forwardRef<
     <DialogPrimitive.Title
       ref={ref}
       className={merge(
-        title ?? "text-lg font-semibold tracking-normal text-foreground text-balance",
+        title ?? "text-lg font-medium tracking-normal text-foreground text-balance",
         className,
       )}
       {...props}

@@ -110,7 +110,7 @@ function Pane({ dark }: { dark: boolean }) {
   return (
     <div className={dark ? "dark" : ""}>
       <main className="min-h-screen space-y-8 bg-background p-8 text-foreground">
-        <h1 className="text-lg font-semibold">{dark ? "Dark" : "Light"}</h1>
+        <h1 className="text-lg font-medium">{dark ? "Dark" : "Light"}</h1>
 
         <Section title="Loaders">
           <div className="flex flex-wrap items-center gap-4">

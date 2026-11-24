@@ -149,8 +149,8 @@ export function MessageActionSheet({
               }}
             >
               <Text
-                className={cn(body, "font-instrument-sans-semibold")}
-                style={[sizeStyle(body), typeStyle("semibold"), textStyle("foreground", scheme)]}
+                className={cn(body, "font-instrument-sans-medium")}
+                style={[sizeStyle(body), typeStyle("medium"), textStyle("foreground", scheme)]}
               >
                 {cancelLabel}
               </Text>

@@ -155,7 +155,7 @@ function Calendar({
           // the today dot is `bg-current`: foreground, or primary-foreground
           // when selected
           "not-group-data-selected/day:enabled:hover:bg-surface-tertiary/50",
-          "group-data-today/day:font-semibold group-data-today/day:not-group-data-selected/day:text-foreground group-data-today/day:after:absolute group-data-today/day:after:bottom-1 group-data-today/day:after:left-1/2 group-data-today/day:after:size-1 group-data-today/day:after:-translate-x-1/2 group-data-today/day:after:rounded-full group-data-today/day:after:bg-current",
+          "group-data-today/day:font-medium group-data-today/day:not-group-data-selected/day:text-foreground group-data-today/day:after:absolute group-data-today/day:after:bottom-1 group-data-today/day:after:left-1/2 group-data-today/day:after:size-1 group-data-today/day:after:-translate-x-1/2 group-data-today/day:after:rounded-full group-data-today/day:after:bg-current",
           "group-data-outside/day:not-group-data-selected/day:text-muted-foreground",
           // spelled out (not built from pickerSelectedClass) so Tailwind's
           // scanner sees it

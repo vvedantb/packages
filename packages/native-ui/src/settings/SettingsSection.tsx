@@ -33,11 +33,11 @@ export function SettingsSection({
       <View className="flex-row items-start justify-between gap-4 px-4">
         <View className="min-w-0 flex-1">
           {typeof title === "string" ? (
-            // Web `text-sm font-semibold`: 14 / 20, 600.
+            // Web `text-sm font-medium`: 14 / 20, 600.
             <Text
               accessibilityRole="header"
-              className="text-sm font-instrument-sans-semibold"
-              style={[textStyle("foreground", scheme), sizeStyle("text-sm"), typeStyle("semibold")]}
+              className="text-sm font-instrument-sans-medium"
+              style={[textStyle("foreground", scheme), sizeStyle("text-sm"), typeStyle("medium")]}
             >
               {title}
             </Text>

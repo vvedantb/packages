@@ -96,7 +96,7 @@ describe("Message highlighted", () => {
     const host = await mount(<Message from="user" highlighted>hi</Message>);
     const root = el(host, "div");
     expect(root.hasAttribute("data-highlighted")).toBe(true);
-    for (const name of ["bg-primary/10", "ring-2", "ring-primary/30", "duration-1000", "transition-[background-color,box-shadow]"]) {
+    for (const name of ["bg-primary/10", "ring-2", "ring-primary/30", "duration-200", "transition-[background-color,box-shadow]"]) {
       expect(root.classList.contains(name), name).toBe(true);
     }
   });
@@ -105,7 +105,7 @@ describe("Message highlighted", () => {
     const host = await mount(<Message from="user" highlighted={false}>hi</Message>);
     const root = el(host, "div");
     expect(root.hasAttribute("data-highlighted")).toBe(false);
-    expect(root.classList.contains("duration-1000")).toBe(true);
+    expect(root.classList.contains("duration-200")).toBe(true);
     expect(root.classList.contains("bg-primary/10")).toBe(false);
   });
 

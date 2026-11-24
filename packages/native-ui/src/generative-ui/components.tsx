@@ -27,7 +27,7 @@ const TEXT_2XS = { fontSize: 11, lineHeight: 14 };
 const FONT_CLASS = {
   regular: "font-instrument-sans",
   medium: "font-instrument-sans-medium",
-  semibold: "font-instrument-sans-semibold",
+  semibold: "font-instrument-sans-medium",
 } as const;
 
 function Line({
@@ -154,12 +154,12 @@ export function MetricElement({ element }: ComponentRenderProps<GenerativeUiProp
   return (
     <View className="min-w-0 gap-0.5" accessible accessibilityLabel={`${label}, ${value}`}>
       <Line size="text-xs" color={tokens.color.muted[scheme]} text={label} />
-      {/* The web `text-lg font-semibold tabular-nums leading-tight`. */}
+      {/* The web `text-lg font-medium tabular-nums leading-tight`. */}
       <Text
         className={FONT_CLASS.semibold}
         style={[
           sizeStyle("text-lg", "tight"),
-          typeStyle("semibold"),
+          typeStyle("medium"),
           { fontVariant: ["tabular-nums"], color: toneText(tone, scheme) },
         ]}
       >

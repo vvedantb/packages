@@ -63,11 +63,11 @@ export function ListRow({
     <Text
       numberOfLines={2}
       className={cn(
-        "font-instrument-sans-semibold",
+        "font-instrument-sans-medium",
         largerText ? "text-xl" : "text-lg",
         titleEnd != null && "min-w-0 flex-1",
       )}
-      style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+      style={[textStyle("foreground", scheme), typeStyle("medium")]}
     >
       {title}
     </Text>

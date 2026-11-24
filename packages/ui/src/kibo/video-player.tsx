@@ -49,8 +49,6 @@ const variables: Record<string, string> = {
   "--media-range-thumb-background": "rgb(255 255 255 / 0.95)",
   "--media-tooltip-background-color": "rgb(24 24 27 / 0.98)",
   "--media-tooltip-arrow-color": "rgb(24 24 27 / 0.98)",
-  "--media-tooltip-filter":
-    "drop-shadow(0 6px 16px rgb(0 0 0 / 0.55)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.4))",
   "--media-tooltip-distance": "10px",
   "--media-tooltip-border-radius": "6px",
 };

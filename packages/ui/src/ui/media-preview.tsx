@@ -79,7 +79,7 @@ export function ImageGalleryPreview({ images }: { images: GalleryImage[] }) {
                 )}
               />
               {overflow > 0 && index === tiles.length - 1 ? (
-                <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-xl font-semibold text-white">
+                <span className="absolute inset-0 flex items-center justify-center bg-black/60 text-xl font-medium text-white">
                   +{overflow}
                 </span>
               ) : null}

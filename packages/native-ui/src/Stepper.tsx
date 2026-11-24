@@ -49,8 +49,8 @@ export function Stepper({
       />
       <Text
         accessibilityLabel={valueLabel}
-        className={cn("min-w-8 text-center font-instrument-sans-semibold", largerText ? "text-3xl" : "text-2xl")}
-        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+        className={cn("min-w-8 text-center font-instrument-sans-medium", largerText ? "text-3xl" : "text-2xl")}
+        style={[textStyle("foreground", scheme), typeStyle("medium")]}
       >
         {value}
       </Text>

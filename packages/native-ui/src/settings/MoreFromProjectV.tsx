@@ -49,8 +49,8 @@ export function FromProjectV({ className, testID }: FromProjectVProps) {
       </Text>
       <ProjectVMark size={14} color={muted} />
       <Text
-        className="text-sm font-instrument-sans-semibold"
-        style={[textStyle("muted", scheme), typeStyle("semibold")]}
+        className="text-sm font-instrument-sans-medium"
+        style={[textStyle("muted", scheme), typeStyle("medium")]}
       >
         Project V
       </Text>

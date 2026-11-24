@@ -51,7 +51,7 @@ export const SortableListHeader = (props: SortableListHeaderProps) => {
         className="h-2 w-2 rounded-full"
         style={{ backgroundColor: props.color }}
       />
-      <p className="m-0 font-semibold text-sm">{props.name}</p>
+      <p className="m-0 font-medium text-sm">{props.name}</p>
     </div>
   );
 };

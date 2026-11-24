@@ -53,7 +53,7 @@ export function BottomSheetSection() {
   return (
     <View style={{ flex: 1, backgroundColor: tokens.color.background[scheme] }}>
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 16, gap: 12 }}>
-        <GText accessibilityRole="header" style={{ fontSize: 22, fontWeight: "700" }}>
+        <GText accessibilityRole="header" style={{ fontSize: 22, fontWeight: "500" }}>
           Bottom sheet
         </GText>
         <GText style={{ fontSize: 13 }}>

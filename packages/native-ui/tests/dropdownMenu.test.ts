@@ -497,10 +497,10 @@ describe("DropdownMenu parts", () => {
     context(true);
     const label = DropdownMenuLabel({ children: "Sort" }) as unknown as Element;
     expect(label.props.accessibilityRole).toBe("header");
-    expect(label.props.className).toBe("font-instrument-sans-semibold uppercase");
+    expect(label.props.className).toBe("font-instrument-sans-medium uppercase");
     expect(label.props.style).toEqual([
       { fontSize: 12, lineHeight: 16 },
-      { fontWeight: "600" },
+      { fontWeight: "500" },
       { letterSpacing: 1.2, color: tokens.color.muted.light, paddingHorizontal: 10, paddingVertical: 6 },
     ]);
     const separator = DropdownMenuSeparator() as unknown as Element;

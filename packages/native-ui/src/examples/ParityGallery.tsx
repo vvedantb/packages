@@ -215,8 +215,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <View className="gap-3">
       <GalleryText
         accessibilityRole="header"
-        className="font-instrument-sans-semibold text-lg"
-        style={typeStyle("semibold")}
+        className="font-instrument-sans-medium text-lg"
+        style={typeStyle("medium")}
       >
         {title}
       </GalleryText>

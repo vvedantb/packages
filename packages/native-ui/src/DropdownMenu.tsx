@@ -627,17 +627,17 @@ export function DropdownMenuRadioItem({ checked, ...props }: DropdownMenuRadioIt
 
 export type DropdownMenuLabelProps = { children: ReactNode; className?: string };
 
-/** A group heading: the web `text-xs font-semibold uppercase tracking-widest text-muted-foreground`, `px-2.5 py-1.5`. */
+/** A group heading: the web `text-xs font-medium uppercase tracking-widest text-muted-foreground`, `px-2.5 py-1.5`. */
 export function DropdownMenuLabel({ children, className }: DropdownMenuLabelProps) {
   const scheme = useScheme();
   const text = sizeStyle(useLargerText() ? "text-base" : "text-xs");
   return (
     <Text
       accessibilityRole="header"
-      className={cn("font-instrument-sans-semibold uppercase", className)}
+      className={cn("font-instrument-sans-medium uppercase", className)}
       style={[
         text,
-        typeStyle("semibold"),
+        typeStyle("medium"),
         {
           letterSpacing: text.fontSize / 10,
           color: tokens.color.muted[scheme],

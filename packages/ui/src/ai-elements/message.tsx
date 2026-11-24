@@ -61,7 +61,7 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   actions?: MessageMenuAction[];
   /**
    * The target of a quote click: a soft primary wash and ring. Set it back to
-   * `false` about 1.5 seconds later and it fades out (`duration-1000`). Sets
+   * `false` about 1.5 seconds later and it fades out (`duration-200`). Sets
    * `data-highlighted`.
    */
   highlighted?: boolean;
@@ -85,7 +85,7 @@ export const Message = ({
           ? (classes?.user ?? "is-user ml-auto justify-end")
           : (classes?.assistant ?? "is-assistant"),
                 highlighted !== undefined &&
-          "rounded-xl transition-[background-color,box-shadow] duration-1000",
+          "rounded-xl transition-[background-color,box-shadow] duration-200",
         highlighted && "bg-primary/10 ring-2 ring-primary/30",
         className,
       )}
@@ -229,7 +229,7 @@ export const MessageQuote = ({
   const merge = useCn();
   const body = (
     <>
-      <span className="block truncate text-xs font-semibold opacity-70">
+      <span className="block truncate text-xs font-medium opacity-70">
         {author}
       </span>
       <span className="line-clamp-2 block text-sm opacity-90">{text}</span>

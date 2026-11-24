@@ -61,8 +61,8 @@ export function ReplyQuoteChip({
       <View className="min-w-0 flex-1 py-2">
         <Text
           numberOfLines={1}
-          className={cn(caption, "font-instrument-sans-semibold")}
-          style={[sizeStyle(caption), typeStyle("semibold"), textStyle("muted", scheme)]}
+          className={cn(caption, "font-instrument-sans-medium")}
+          style={[sizeStyle(caption), typeStyle("medium"), textStyle("muted", scheme)]}
         >
           {author}
         </Text>

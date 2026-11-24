@@ -13,7 +13,7 @@ export function GText({ style, ...props }: TextProps) {
 export function Block({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
     <View className="gap-3" testID={id ? `block-${id}` : undefined}>
-      <GText accessibilityRole="header" style={{ fontSize: 18, fontWeight: "600" }}>
+      <GText accessibilityRole="header" style={{ fontSize: 18, fontWeight: "500" }}>
         {title}
       </GText>
       {children}

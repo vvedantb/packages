@@ -124,26 +124,18 @@ describe("expo-linear-gradient loader", () => {
 });
 
 describe("AmbientBackground", () => {
-  // The first child is the backdrop: the gradient, or the solid fallback.
+  // The first child is the backdrop: the flat background layer.
   async function backdrop() {
     const { AmbientBackground } = await import("../src/AmbientBackground");
     return AmbientBackground({ children: "content" }).props.children[0];
   }
 
-  it("draws the background token without expo-linear-gradient", async () => {
+  it("draws a flat background token, even when expo-linear-gradient is installed", async () => {
     const light = await backdrop();
     expect(light.type).toBe("View");
     expect(light.props.style.backgroundColor).toBe(tokens.color.background.light);
     expect(light.props.pointerEvents).toBe("none");
     scheme.colorScheme = "dark";
     expect((await backdrop()).props.style.backgroundColor).toBe(tokens.color.background.dark);
-  });
-
-  it("draws the gradient when expo-linear-gradient is installed", async () => {
-    const LinearGradient = () => null;
-    providePeer("expo-linear-gradient", { LinearGradient });
-    const gradient = await backdrop();
-    expect(gradient.type).toBe(LinearGradient);
-    expect(gradient.props.colors).toEqual(["#f6f6f7", "#fde8f0", "#f4f5f7"]);
   });
 });

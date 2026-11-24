@@ -21,8 +21,8 @@ import { useWebClickGuard } from "./web-click-guard";
 // The toast drag on Gesture Handler: the track phase and the release run as
 // worklets on the UI thread. The rules are plain worklets in `toastDrag`.
 
-/** Back home after a short drag: a little bounce, as the finger applied force. */
-const HOME_SPRING = { duration: 250, dampingRatio: 0.8, reduceMotion: ReduceMotion.System } as const;
+/** Back home after a short drag: critically damped, no bounce. */
+const HOME_SPRING = { duration: 250, dampingRatio: 1, overshootClamping: true, reduceMotion: ReduceMotion.System } as const;
 /** Away up the screen: no overshoot back into view. */
 const AWAY_SPRING = { duration: 250, dampingRatio: 1, overshootClamping: true, reduceMotion: ReduceMotion.System } as const;
 

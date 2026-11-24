@@ -17,26 +17,26 @@ const textVariants = cva(
       variant: {
         default: "",
         h1: cn(
-          "text-4xl font-instrument-sans-semibold tracking-tight",
+          "text-4xl font-instrument-sans-medium tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h2: cn(
-          "text-3xl font-instrument-sans-semibold tracking-tight border-border border-b pb-2",
+          "text-3xl font-instrument-sans-medium tracking-tight border-border border-b pb-2",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h3: cn(
-          "text-2xl font-instrument-sans-semibold tracking-tight",
+          "text-2xl font-instrument-sans-medium tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         h4: cn(
-          "text-xl font-instrument-sans-semibold tracking-tight",
+          "text-xl font-instrument-sans-medium tracking-tight",
           Platform.select({ web: "scroll-m-20" }),
         ),
         p: "leading-7",
         blockquote: "border-l-2 border-border pl-4 italic",
-        code: "bg-muted rounded px-[0.3rem] py-[0.2rem] text-sm font-instrument-sans-semibold",
+        code: "bg-muted rounded px-[0.3rem] py-[0.2rem] text-sm font-instrument-sans-medium",
         lead: "text-xl text-muted-foreground",
-        large: "text-lg font-instrument-sans-semibold",
+        large: "text-lg font-instrument-sans-medium",
         small: "text-sm font-instrument-sans-medium",
         muted: "text-sm text-muted-foreground",
       },
@@ -69,14 +69,14 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
 // The weight of each variant's `font-instrument-sans-*` class, set as a style
 // beside it (`typeStyle`): where an app maps every one of those classes to one
 // family, the class alone draws Regular. Headings are semibold, as the web
-// titles; `h1` was `font-extrabold` before 0.3.13.
+// titles; `h1` was `font-medium` before 0.3.13.
 const WEIGHT: Partial<Record<TextVariant, ReturnType<typeof typeStyle>>> = {
-  h1: typeStyle("semibold"),
-  h2: typeStyle("semibold"),
-  h3: typeStyle("semibold"),
-  h4: typeStyle("semibold"),
-  code: typeStyle("semibold"),
-  large: typeStyle("semibold"),
+  h1: typeStyle("medium"),
+  h2: typeStyle("medium"),
+  h3: typeStyle("medium"),
+  h4: typeStyle("medium"),
+  code: typeStyle("medium"),
+  large: typeStyle("medium"),
   small: typeStyle("medium"),
 };
 
