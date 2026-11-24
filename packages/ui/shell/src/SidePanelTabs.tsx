@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { dockNudge, dockPopIn, dockPopOut } from "../../src/motion/dock-motion";
+import { dockPopIn, dockPopOut, dockSwitch } from "../../src/motion/dock-motion";
 import { Tabs, TabsList, TabsTrigger } from "../../src/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../src/ui/tooltip";
 import { cn } from "../../src/utils/cn";
@@ -47,8 +47,8 @@ export function popOutSidePanel(root: HTMLElement | null, collapse: () => void) 
 
 /**
  * Keeps the card's arrow level with the active rail tab, and plays the card's
- * dock motion: pop in when the card appears, a settle when the active tab
- * changes. It writes the transform straight to the node (no React state), as
+ * dock motion: pop in when the card appears, a content slide when the active
+ * tab changes. It writes the transform straight to the node (no React state), as
  * the tab pill does: the first placement snaps, later moves slide. The arrow
  * hides when the active tab is scrolled out of the card's height. Measure
  * before animating: a scaled card reports a scaled rect.
@@ -74,6 +74,7 @@ function useActiveTabArrow(
       const open = c.width > 0;
       const opened = open && !wasOpen;
       const switched = open && wasOpen && tab !== null && tab !== lastTab;
+      const previousTab = lastTab;
       wasOpen = open;
       if (tab) lastTab = tab;
       if (!tab || !open) {
@@ -98,7 +99,7 @@ function useActiveTabArrow(
         }
       }
       if (opened) dockPopIn(card, tab, "right", arrow);
-      else if (switched) dockNudge(card, tab, "right");
+      else if (switched) dockSwitch(card, previousTab, tab);
     };
     sync();
     if (typeof ResizeObserver === "undefined") return;
@@ -141,7 +142,8 @@ export type SidePanelTabsFrameProps = {
  * edge, the content a rounded card beside it with an arrow that points at the
  * active tab; `collapsed` hides the card and the rail stays. Below `md`: a
  * column, the tab strip on top and the content edge to edge. The card pops
- * out of the active tab when it opens and settles on a tab switch; close it
+ * out of the active tab when it opens; on a tab switch its content slides in
+ * from the side of the new tab; close it
  * through `popOutSidePanel`.
  */
 function Frame({ collapsed = false, rail, children, className, cardClassName, arrowClassName }: SidePanelTabsFrameProps) {

@@ -46,7 +46,7 @@ export {
   DOCK_MOTION_EVENT,
   DockMotionEvent,
   dockMotionOff,
-  dockNudge,
+  dockSwitch,
   dockPopIn,
   dockPopOut,
   slideNextResize,

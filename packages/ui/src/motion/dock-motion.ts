@@ -1,7 +1,7 @@
 /**
  * Dock motion for a panel that docks into a rail tile: it grows out of the
- * tile when shown, shrinks back into it when hidden, and settles when the
- * tile it belongs to changes. The Web Animations API drives it: the motions
+ * tile when shown, shrinks back into it when hidden, and its content slides
+ * in when the tile it belongs to changes. The Web Animations API drives it: the motions
  * are one-shot and imperative, and a hide has to finish before the caller
  * removes the panel.
  *
@@ -18,7 +18,9 @@ export type DockEdge = "left" | "right";
 const DOCKED_SCALE = 0.12;
 const POP_IN_MS = 380;
 const POP_OUT_MS = 260;
-const SWITCH_MS = 220;
+const SWITCH_MS = 240;
+/* The tab-switch slide: the rail page switch and tab content use 24-32px. */
+const SWITCH_SLIDE_PX = 24;
 /* Out-quint: fast start, long settle. The panel lands rather than stops. */
 const SETTLE_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 /* In-cubic: accelerates into the tile, as a minimise does. */
@@ -91,17 +93,32 @@ export function dockPopIn(panel: HTMLElement, tile: HTMLElement | null, edge: Do
   after?.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration: POP_IN_MS });
 }
 
-/** The tile changed with the panel shown: a short settle from the new tile. */
-export function dockNudge(panel: HTMLElement, tile: HTMLElement | null, edge: DockEdge) {
-  if (!aimAt(panel, tile, edge)) return;
+/**
+ * The tile changed with the panel shown: the panel's content slides in from
+ * the side of the new tile, as tab content does (`TabsTransition`). A tile
+ * below the old one brings the content up from below; on a horizontal strip,
+ * a tile to the right brings it in from the right. The panel itself stays put,
+ * so its edges and arrow do not move. Enter only: the caller has already
+ * hidden the old content.
+ */
+export function dockSwitch(panel: HTMLElement, from: Element | null, to: Element | null) {
+  if (!from?.isConnected || !to || dockMotionOff() || typeof panel.animate !== "function") return;
+  if (panel.getBoundingClientRect().height === 0) return;
+  const a = from.getBoundingClientRect();
+  const b = to.getBoundingClientRect();
+  const dx = b.left - a.left;
+  const dy = b.top - a.top;
+  if (dx === 0 && dy === 0) return;
+  const vertical = Math.abs(dy) >= Math.abs(dx);
+  const sign = (vertical ? dy : dx) > 0 ? 1 : -1;
+  const offset = `translate${vertical ? "Y" : "X"}(${sign * SWITCH_SLIDE_PX}px)`;
   panel.dispatchEvent(new DockMotionEvent(SWITCH_MS));
-  panel.animate(
-    [
-      { transform: "scale(0.965)", opacity: 0.4 },
-      { transform: "scale(1)", opacity: 1 },
-    ],
-    { duration: SWITCH_MS, easing: SETTLE_EASE },
-  );
+  for (const child of panel.children) {
+    child.animate([{ transform: offset, opacity: 0 }, { transform: "none", opacity: 1 }], {
+      duration: SWITCH_MS,
+      easing: SETTLE_EASE,
+    });
+  }
 }
 
 /**
