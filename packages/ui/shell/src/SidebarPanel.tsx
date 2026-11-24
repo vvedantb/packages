@@ -109,7 +109,7 @@ export function PanelTitle({ className, ...props }: SidebarPanelTitleProps) {
     <h2
       {...props}
       className={cn(
-        "min-w-0 flex-1 truncate text-left text-base font-semibold leading-none tracking-tight text-foreground",
+        "min-w-0 flex-1 truncate text-left text-base font-medium leading-none tracking-tight text-foreground",
         className,
       )}
     />

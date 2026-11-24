@@ -164,7 +164,6 @@ const DissolveClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsPro
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     const mirrorRef = React.useRef<HTMLDivElement>(null);
     const placeholderRef = React.useRef<HTMLDivElement>(null);
-    const glowRef = React.useRef<HTMLDivElement>(null);
     const clearingRef = React.useRef(false);
     const [clearing, setClearing] = React.useState(false);
 
@@ -200,13 +199,11 @@ const DissolveClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsPro
       const input = inputRef.current;
       const mirror = mirrorRef.current;
       const placeholderLayer = placeholderRef.current;
-      const glow = glowRef.current;
       if (
         !wrap ||
         !input ||
         !mirror ||
         !placeholderLayer ||
-        !glow ||
         clearingRef.current ||
         value.length === 0
       ) {
@@ -217,7 +214,7 @@ const DissolveClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsPro
       setClearing(true);
 
       runClearInputDissolve(
-        { wrap, input, mirror, placeholderLayer, glow },
+        { wrap, input, mirror, placeholderLayer },
         () => {
           onChange("");
         },
@@ -273,7 +270,6 @@ const DissolveClearInput = React.forwardRef<HTMLInputElement, ClearInputPartsPro
           >
             {placeholder}
           </div>
-          <div ref={glowRef} className="t-clear-glow" />
         </div>
         {value.length > 0 && !clearing ? (
           <button

@@ -63,7 +63,7 @@ function Column({ theme }: { theme: "light" | "dark" }) {
       className={`${theme === "dark" ? "dark" : ""} bg-background p-6 text-foreground`}
       data-harness-theme={theme}
     >
-      <h2 className="mb-4 text-lg font-semibold">{theme}</h2>
+      <h2 className="mb-4 text-lg font-medium">{theme}</h2>
       <div className="flex flex-col gap-8">
         {Object.entries(chipSets).flatMap(([cLabel, names]) =>
           Object.entries(texts).map(([tLabel, text]) => (

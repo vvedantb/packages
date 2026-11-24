@@ -42,14 +42,14 @@ const CardTitle = React.forwardRef<
   React.ElementRef<typeof Text>,
   React.ComponentPropsWithoutRef<typeof Text> & { className?: string }
 >(({ className, style, ...props }, ref) => {
-  // The web `font-semibold`: the semibold face, with its weight as a style.
+  // The web `font-medium`: the semibold face, with its weight as a style.
   return (
     <Text
       ref={ref}
       role="heading"
       aria-level={3}
-      className={cn("font-instrument-sans-semibold leading-none", className)}
-      style={[typeStyle("semibold"), style]}
+      className={cn("font-instrument-sans-medium leading-none", className)}
+      style={[typeStyle("medium"), style]}
       {...props}
     />
   );

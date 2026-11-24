@@ -69,8 +69,8 @@ export function AuthScreen({ title, subtitle, children, header, footer, testID, 
           <View className="gap-2">
             <Text
               accessibilityRole="header"
-              className="font-instrument-sans-semibold text-2xl"
-              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+              className="font-instrument-sans-medium text-2xl"
+              style={[textStyle("foreground", scheme), typeStyle("medium")]}
             >
               {title}
             </Text>

@@ -58,11 +58,11 @@ export function StatGrid({ items, columns = 2, testID }: StatGridProps) {
                   {item.label}
                 </Text>
                 <Text
-                  className={cn("font-instrument-sans-semibold", valueSize)}
+                  className={cn("font-instrument-sans-medium", valueSize)}
                   style={[
                     textStyle("foreground", scheme),
                     sizeStyle(valueSize, "tight"),
-                    typeStyle("semibold"),
+                    typeStyle("medium"),
                     { fontVariant: ["tabular-nums"] },
                   ]}
                 >

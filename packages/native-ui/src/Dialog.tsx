@@ -193,7 +193,7 @@ export function DialogHeader({ className, ...props }: PartProps) {
 // Text colours are styles (`textStyle`), so they follow the colour scheme in
 // apps whose `text-foreground` does not. Recolour with `style`, not `className`.
 
-/** Web `text-lg font-semibold`. */
+/** Web `text-lg font-medium`. */
 export function DialogTitle({ className, style, ...props }: TextPartProps) {
   const largerText = useLargerText();
   const scheme = useScheme();
@@ -201,11 +201,11 @@ export function DialogTitle({ className, style, ...props }: TextPartProps) {
     <Text
       accessibilityRole="header"
       className={cn(
-        "font-instrument-sans-semibold",
+        "font-instrument-sans-medium",
         largerText ? "text-2xl" : "text-lg",
         className,
       )}
-      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
+      style={[textStyle("foreground", scheme), typeStyle("medium"), style]}
       {...props}
     />
   );

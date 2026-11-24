@@ -855,7 +855,7 @@ export const ReplyQuoteChip = ({
         className="w-0.5 shrink-0 self-stretch rounded-full bg-primary"
       />
       <div className="min-w-0 flex-1">
-        <span className="block truncate text-xs font-semibold text-muted-foreground">
+        <span className="block truncate text-xs font-medium text-muted-foreground">
           {author}
         </span>
         <span className="line-clamp-2 block text-foreground">{text}</span>

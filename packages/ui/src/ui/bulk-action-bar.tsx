@@ -185,7 +185,7 @@ export function BulkActionBar({
               <div className="flex shrink-0 items-center gap-2 pl-1 pr-0.5">
                 <CountPop
                   label={String(selectedCount)}
-                  className="rounded-md bg-surface-secondary px-2 py-0.5 text-xs font-semibold text-foreground tabular-nums"
+                  className="rounded-md bg-surface-secondary px-2 py-0.5 text-xs font-medium text-foreground tabular-nums"
                 />
                 <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
                   selected

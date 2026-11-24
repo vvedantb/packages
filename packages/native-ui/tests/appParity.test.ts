@@ -493,10 +493,10 @@ describe("StatGrid", () => {
     expect(flatten(label!.props.style)).toMatchObject({ color: tokens.color.muted.light, fontSize: 14 });
     expect(flatten(value!.props.style)).toMatchObject({
       color: tokens.color.foreground.light,
-      fontWeight: "600",
+      fontWeight: "500",
       fontSize: 20,
     });
-    expect(value!.props.className).toMatch(/font-instrument-sans-semibold/);
+    expect(value!.props.className).toMatch(/font-instrument-sans-medium/);
     expect(children(StatGrid({ items, columns: 3 }) as unknown as Element)).toHaveLength(1);
     expect(StatGrid({ items: [] })).toBeNull();
   });

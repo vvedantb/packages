@@ -119,7 +119,7 @@ function ImageGrid({ images, onOpen }: { images: GalleryImage[]; onOpen: (index:
         <Image source={{ uri: image.url }} resizeMode="cover" style={{ width: "100%", height: "100%" }} />
         {tile.overflow > 0 ? (
           <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: withAlpha(tokens.color.black, 0.6) }}>
-            <Text className="font-instrument-sans-semibold text-xl" style={[{ color: tokens.color.white }, typeStyle("semibold")]}>
+            <Text className="font-instrument-sans-medium text-xl" style={[{ color: tokens.color.white }, typeStyle("medium")]}>
               {`+${tile.overflow}`}
             </Text>
           </View>

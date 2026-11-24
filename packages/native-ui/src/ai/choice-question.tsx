@@ -89,8 +89,8 @@ export function ChoiceQuestion({
       text
     ) : (
       <Text
-        className={`${buttonText} font-instrument-sans-semibold`}
-        style={[sizeStyle(buttonText), typeStyle("semibold"), { color: buttonColors(variant, scheme)?.color }]}
+        className={`${buttonText} font-instrument-sans-medium`}
+        style={[sizeStyle(buttonText), typeStyle("medium"), { color: buttonColors(variant, scheme)?.color }]}
       >
         {text}
       </Text>
@@ -127,9 +127,9 @@ export function ChoiceQuestion({
     <View style={{ gap: 16 }}>
       <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
         <Text
-          className="flex-1 font-instrument-sans-semibold"
+          className="flex-1 font-instrument-sans-medium"
           // Web `text-[15px] leading-snug` (15 / 20.625); larger text steps up to 18.
-          style={[{ fontSize: largerText ? 18 : 15, lineHeight: largerText ? 24 : 15 * 1.375 }, textStyle("foreground", scheme), typeStyle("semibold")]}
+          style={[{ fontSize: largerText ? 18 : 15, lineHeight: largerText ? 24 : 15 * 1.375 }, textStyle("foreground", scheme), typeStyle("medium")]}
         >
           {question.question}
         </Text>
@@ -229,7 +229,7 @@ export function ChoiceQuestion({
 
 /**
  * The question's topic, the web `Badge variant="secondary"` with Eva's
- * `text-3xs font-semibold` (10 / 14, 600) in a `px-2.5 py-0.5` pill. Drawn here
+ * `text-3xs font-medium` (10 / 14, 600) in a `px-2.5 py-0.5` pill. Drawn here
  * because `Badge` sets its own size and weight.
  */
 export function TopicBadge({ children }: { children: string }) {
@@ -243,10 +243,10 @@ export function TopicBadge({ children }: { children: string }) {
     >
       <Text
         numberOfLines={1}
-        className="font-instrument-sans-semibold"
+        className="font-instrument-sans-medium"
         style={[
           { fontSize, lineHeight: largerText ? 20 : 14, color: palette.defaultForeground[scheme] },
-          typeStyle("semibold"),
+          typeStyle("medium"),
         ]}
       >
         {children}
@@ -373,13 +373,13 @@ function ChoiceRow({
           ) : mark === "other" ? (
             <IconPencil size={glyph} color={muted} />
           ) : (
-            // Web `text-2xs font-bold tracking-wide`, at semibold: native-ui draws no bold face.
+            // Web `text-2xs font-medium tracking-wide`, at semibold: native-ui draws no bold face.
             <Text
-              className="font-instrument-sans-semibold"
+              className="font-instrument-sans-medium"
               style={[
                 { fontSize: markText, lineHeight: largerText ? 20 : 16, color: muted },
                 trackingStyle(markText, "wide"),
-                typeStyle("semibold"),
+                typeStyle("medium"),
               ]}
             >
               {mark}

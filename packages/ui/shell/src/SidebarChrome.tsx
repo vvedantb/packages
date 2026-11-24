@@ -156,7 +156,7 @@ function MobileTitle({ className, children, ...props }: SidebarMobileTitleProps)
     <h1
       {...props}
       className={cn(
-        "pointer-events-none min-w-0 truncate text-center text-base font-semibold leading-tight tracking-tight text-foreground",
+        "pointer-events-none min-w-0 truncate text-center text-base font-medium leading-tight tracking-tight text-foreground",
         className,
       )}
     >

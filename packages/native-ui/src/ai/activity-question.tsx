@@ -156,7 +156,7 @@ function RecordRow({
         ) : mark === "other" ? (
           <IconPencil size={glyph} strokeWidth={3} color={markColor} />
         ) : (
-          <Text className="font-instrument-sans-semibold" style={[{ fontSize: largerText ? 13 : 10, color: markColor }, typeStyle("semibold")]}>
+          <Text className="font-instrument-sans-medium" style={[{ fontSize: largerText ? 13 : 10, color: markColor }, typeStyle("medium")]}>
             {mark}
           </Text>
         )}

@@ -43,7 +43,7 @@ function Row({ visit }: { visit: Visit }) {
         <SharedTransitionText
           tag={`title-${visit.id}`}
           numberOfLines={2}
-          style={{ color: tokens.color.foreground[scheme], fontSize: 16, fontWeight: "600" }}
+          style={{ color: tokens.color.foreground[scheme], fontSize: 16, fontWeight: "500" }}
         >
           {visit.title}
         </SharedTransitionText>
@@ -96,7 +96,7 @@ export function SharedTransitionDetail() {
       >
         <SharedTransitionText
           tag={`title-${visit.id}`}
-          style={{ color: tokens.color.foreground[scheme], fontSize: 22, fontWeight: "700" }}
+          style={{ color: tokens.color.foreground[scheme], fontSize: 22, fontWeight: "500" }}
         >
           {visit.title}
         </SharedTransitionText>

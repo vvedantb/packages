@@ -68,8 +68,8 @@ describe("SettingsSection", () => {
   it("draws the title 14 / 20 / 600 in the foreground, as a header", async () => {
     const title = textOf(await render(), "General");
     expect(title.props.accessibilityRole).toBe("header");
-    expect(type(title)).toEqual({ fontSize: 14, lineHeight: 20, fontWeight: "600", color: FG });
-    expect(classes(title)).toEqual(expect.arrayContaining(["text-sm", "font-instrument-sans-semibold"]));
+    expect(type(title)).toEqual({ fontSize: 14, lineHeight: 20, fontWeight: "500", color: FG });
+    expect(classes(title)).toEqual(expect.arrayContaining(["text-sm", "font-instrument-sans-medium"]));
   });
 
   it("draws the description 14 / 22.75 muted with a 2 point top margin", async () => {

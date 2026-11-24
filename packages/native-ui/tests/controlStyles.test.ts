@@ -312,12 +312,12 @@ describe("type sizes (source contract)", () => {
     expect(sizeStyle("text-sm").fontSize).toBe(14);
   });
 
-  it("card titles are the web 16 semibold with a tight line height", () => {
+  it("card titles are the web 16 medium with a tight line height", () => {
     expect(sizeStyle("text-base", "tight")).toEqual({ fontSize: 16, lineHeight: 20 });
-    expect(Number(typeStyle("semibold").fontWeight)).toBe(600);
+    expect(Number(typeStyle("medium").fontWeight)).toBe(500);
   });
 
-  it("UpgradeToProCard is the web SidebarUpgradeCard: text-sm semibold title, Button sm pill", () => {
+  it("UpgradeToProCard is the web SidebarUpgradeCard: text-sm medium title, Button sm pill", () => {
     expect(tokens.radius.lg).toBe(16);
     expect(sizeStyle("text-sm")).toEqual({ fontSize: 14, lineHeight: 20 });
     expect(sizeStyle("text-xs")).toEqual({ fontSize: 12, lineHeight: 16 });

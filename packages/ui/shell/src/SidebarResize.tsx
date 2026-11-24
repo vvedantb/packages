@@ -123,8 +123,8 @@ export function useSidebarResizeState(
     animRef.current?.stop();
     animRef.current = animate(from, to, {
       type: "spring",
-      bounce: 0.2,
-      duration: 0.35,
+      bounce: 0,
+      duration: 0.25,
       velocity,
       onUpdate: (value) => setWidth(value),
     });

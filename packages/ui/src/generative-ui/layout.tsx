@@ -39,7 +39,7 @@ export function PanelElement({ element, children }: ComponentRenderProps<Generat
   const { title, description } = element.props;
   return (
     <Surface density="tight" className="flex min-w-0 flex-col gap-2 bg-surface-secondary">
-      {title ? <p className="text-sm font-semibold text-foreground">{title}</p> : null}
+      {title ? <p className="text-sm font-medium text-foreground">{title}</p> : null}
       {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       {children}
     </Surface>

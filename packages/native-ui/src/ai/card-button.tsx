@@ -47,7 +47,7 @@ export function CardButton({ label, variant, onPress, disabled, accessibilityLab
         press.style,
       ]}
     >
-      <Text className={cn(size, "font-instrument-sans-semibold")} style={[sizeStyle(size), typeStyle("semibold"), { color: colors.color }]}>
+      <Text className={cn(size, "font-instrument-sans-medium")} style={[sizeStyle(size), typeStyle("medium"), { color: colors.color }]}>
         {label}
       </Text>
     </AnimatedPressable>

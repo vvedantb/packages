@@ -129,7 +129,7 @@ export function BottomSheetContainer({
             style={[
               { flex: 1, fontSize: largerText ? 24 : 20 },
               textStyle("foreground", scheme),
-              typeStyle("semibold"),
+              typeStyle("medium"),
             ]}
           >
             {title}

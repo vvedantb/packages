@@ -15,10 +15,11 @@ export const SHEET_SPRING = {
   reduceMotion: ReduceMotion.System,
 } as const;
 
-/** A dragged sheet that springs home: a little bounce, as the finger applied force. Add the release `velocity`. */
+/** A dragged sheet that springs home: critically damped, no bounce. Add the release `velocity`. */
 export const SHEET_SNAP_SPRING = {
   duration: 300,
-  dampingRatio: 0.8,
+  dampingRatio: 1,
+  overshootClamping: true,
   reduceMotion: ReduceMotion.System,
 } as const;
 

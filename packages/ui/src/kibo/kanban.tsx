@@ -231,7 +231,7 @@ export type KanbanHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const KanbanHeader = ({ className, ...props }: KanbanHeaderProps) => {
   const merge = useCn();
-  return <div className={merge("m-0 p-2 font-semibold text-sm", className)} {...props} />;
+  return <div className={merge("m-0 p-2 font-medium text-sm", className)} {...props} />;
 };
 
 // --- KanbanProvider: DnD context + Kanban context + a11y ---

@@ -100,8 +100,8 @@ export function DateTimeField({
             style={{ backgroundColor: palette.default[scheme] }}
           >
             <Text
-              className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-semibold`}
-              style={[textColor, typeStyle("semibold")]}
+              className={`${largerText ? "text-xl" : "text-lg"} font-instrument-sans-medium`}
+              style={[textColor, typeStyle("medium")]}
             >
               {button.label}
             </Text>

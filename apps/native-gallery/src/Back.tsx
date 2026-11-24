@@ -10,7 +10,7 @@ export function RouterStackPageHeaderBack({ title }: { title: string }) {
       <Button testID="back" variant="ghost" size="sm" fullWidth={false} onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
         Back
       </Button>
-      <GText accessibilityRole="header" style={{ fontSize: 22, fontWeight: "700" }}>{title}</GText>
+      <GText accessibilityRole="header" style={{ fontSize: 22, fontWeight: "500" }}>{title}</GText>
     </View>
   );
 }

@@ -38,7 +38,7 @@ export function SidebarUpgradeCard({ onUpgrade, collapsed = false, className }: 
         className,
       )}
     >
-      <span className="min-w-0 truncate text-sm font-semibold">Upgrade to Pro</span>
+      <span className="min-w-0 truncate text-sm font-medium">Upgrade to Pro</span>
       <Button type="button" size="sm" onClick={onUpgrade} className={cn("shrink-0 rounded-full", pillClass)}>
         Upgrade
       </Button>

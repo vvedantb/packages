@@ -40,7 +40,7 @@ export const menuCheckboxRadioItemClass =
   "relative flex cursor-pointer select-none items-center rounded-menu-item py-1.5 max-sm:min-h-10 pl-8 pr-2.5 text-sm outline-none transition-[background-color,color] focus:bg-default focus:text-foreground data-[highlighted]:bg-default data-[highlighted]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50";
 
 export const menuLabelClass =
-  "px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground";
+  "px-2.5 py-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground";
 
 export const menuSeparatorClass = "-mx-1 my-1 h-px bg-separator";
 

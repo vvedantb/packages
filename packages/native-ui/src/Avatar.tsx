@@ -125,10 +125,10 @@ export function AvatarFallback({
       {typeof children === "string" ? (
         <Text
           numberOfLines={1}
-          className={cn("font-instrument-sans-semibold", textClassName)}
+          className={cn("font-instrument-sans-medium", textClassName)}
           style={[
             { fontSize: Math.round(size * 0.4), color: palette.defaultForeground[scheme] },
-            typeStyle("semibold"),
+            typeStyle("medium"),
           ]}
         >
           {children}

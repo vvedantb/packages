@@ -42,12 +42,12 @@ export function Chip({
       } ${selected ? "bg-pink-100 dark:bg-pink-900/40" : "bg-secondary"}`}
     >
       <Text
-        className={`font-instrument-sans-semibold ${
+        className={`font-instrument-sans-medium ${
           largerText ? "text-xl" : "text-lg"
         } ${
           selected ? "text-pink-700 dark:text-pink-300" : ""
         }`}
-        style={[selected ? null : textStyle("muted", scheme), typeStyle("semibold")]}
+        style={[selected ? null : textStyle("muted", scheme), typeStyle("medium")]}
       >
         {label}
       </Text>

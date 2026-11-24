@@ -51,7 +51,7 @@ export function DefaultSettingsLayout({
       )}
     >
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-balance text-lg font-semibold text-foreground">
+        <h1 className="text-balance text-lg font-medium text-foreground">
           {title}
         </h1>
         {headerRight ? <div className="shrink-0">{headerRight}</div> : null}

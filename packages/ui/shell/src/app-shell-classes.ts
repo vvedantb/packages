@@ -41,7 +41,7 @@ export const railGroupClass =
 export const railGroupPillClass = "t-tabs-pill rounded-lg bg-segment";
 
 /** Count badge pinned to the bottom-right of a rail tile. */
-export const railBadgeClass = "absolute -bottom-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-accent-foreground"; // check-tokens-allow: accent
+export const railBadgeClass = "absolute -bottom-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-none text-accent-foreground"; // check-tokens-allow: accent
 
 /**
  * Static section label above a group of panel nav rows. `px-4` lines the text

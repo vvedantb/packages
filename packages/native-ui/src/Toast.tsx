@@ -183,8 +183,8 @@ function ToastCard({ item }: { item: ToastItem }) {
             className="rounded-full bg-secondary px-3 py-1.5 active:opacity-70"
           >
             <Text
-              className="font-instrument-sans-semibold text-sm"
-              style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+              className="font-instrument-sans-medium text-sm"
+              style={[textStyle("foreground", scheme), typeStyle("medium")]}
             >
               {item.action.label}
             </Text>

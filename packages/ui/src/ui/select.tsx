@@ -170,7 +170,7 @@ const SelectLabel = React.forwardRef<
       ref={ref}
       className={merge(
         label ??
-          "px-2.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground",
+          "px-2.5 py-1.5 text-xs font-medium uppercase tracking-widest text-muted-foreground",
         className,
       )}
       {...props}

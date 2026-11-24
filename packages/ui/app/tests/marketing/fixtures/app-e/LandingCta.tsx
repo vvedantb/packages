@@ -9,7 +9,7 @@ export function LandingCta() {
     <div className="landing-atmosphere landing-grain relative overflow-hidden border-t border-separator">
       <section className={`${landingShellClass} relative z-10 py-20 sm:py-28`}>
         <LandingReveal className="flex flex-col items-center text-center">
-          <h2 className="max-w-2xl text-balance font-semibold text-3xl leading-[1.1] tracking-[-0.03em] text-foreground sm:text-5xl">
+          <h2 className="max-w-2xl text-balance font-medium text-3xl leading-[1.1] tracking-[-0.03em] text-foreground sm:text-5xl">
             Put every MCP behind one key
           </h2>
           <p className="mt-4 max-w-xl text-pretty text-sm leading-relaxed text-muted sm:text-base">

@@ -98,7 +98,7 @@ function InstanceIcon({
       <ProviderIcon provider={instance.provider} size={size} />
       {showBadge ? (
         <span
-          className="pointer-events-none absolute -right-0.5 -bottom-0.5 z-10 flex h-3 min-w-3 items-center justify-center rounded-full bg-surface-secondary px-0.5 text-[7px] font-semibold leading-none text-muted-foreground"
+          className="pointer-events-none absolute -right-0.5 -bottom-0.5 z-10 flex h-3 min-w-3 items-center justify-center rounded-full bg-surface-secondary px-0.5 text-[7px] font-medium leading-none text-muted-foreground"
           style={{
             boxShadow: `0 0 0 1.5px ${ring}`,
           }}

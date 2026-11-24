@@ -33,10 +33,10 @@ function EmptyStateView({
       <Icon size={largerText ? 44 : 40} color={tokens.color.muted[scheme]} />
       <Text
         className={cn(
-          "mt-4 text-center font-instrument-sans-semibold",
+          "mt-4 text-center font-instrument-sans-medium",
           largerText ? "text-xl" : "text-lg",
         )}
-        style={[textStyle("foreground", scheme), typeStyle("semibold")]}
+        style={[textStyle("foreground", scheme), typeStyle("medium")]}
       >
         {title}
       </Text>
@@ -123,11 +123,11 @@ function Title({ className, style, ...props }: TextProps & { className?: string 
   return (
     <Text
       className={cn(
-        "text-center font-instrument-sans-semibold",
+        "text-center font-instrument-sans-medium",
         largerText ? "text-xl" : "text-lg",
         className,
       )}
-      style={[textStyle("foreground", scheme), typeStyle("semibold"), style]}
+      style={[textStyle("foreground", scheme), typeStyle("medium"), style]}
       {...props}
     />
   );
