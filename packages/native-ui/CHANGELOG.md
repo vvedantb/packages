@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.2
+
+### Patch Changes
+
+- [#344](https://github.com/vvedantb/packages/pull/344) [`8581b16`](https://github.com/vvedantb/packages/commit/8581b1647fb9170a03ccf7d36b1b8cf67abc9772) Thanks [@vvedantb](https://github.com/vvedantb)! - chore: adopt DESIGN_RULES (flat backgrounds, medium weights, no glow, motion <300ms)
+
 ## 0.37.1
 
 ### Patch Changes
