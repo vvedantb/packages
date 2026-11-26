@@ -79,21 +79,39 @@ function OptionRow({
  * Read-only record of an AskUserQuestion prompt and the answer given. The live
  * prompt is `MultipleChoiceQuestion` in the composer dock; this is the history
  * left behind in the transcript once the question is answered.
+ *
+ * `headerAction` renders at the right end of the "Question" header row, for
+ * controls such as a pager when the caller shows one question at a time.
  */
 export function ActivityQuestionCard({
   questions,
   answers,
+  headerAction,
 }: {
   questions: ActivityQuestion[];
   answers?: Record<string, string>;
+  headerAction?: ReactNode;
 }) {
+  const merge = useCn();
   if (questions.length === 0) return null;
 
   return (
     <div className="rounded-surface bg-card p-3 space-y-3">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-        <IconMessageQuestion size={14} />
-        {questions.length > 1 ? "Questions" : "Question"}
+      <div
+        className={merge(
+          "flex items-center justify-between gap-2",
+          // The action row's 28px buttons set the height, so the header keeps
+          // clear of the question text below.
+          headerAction ? "min-h-7" : undefined,
+        )}
+      >
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <IconMessageQuestion size={14} />
+          {questions.length > 1 ? "Questions" : "Question"}
+        </div>
+        {headerAction ? (
+          <div className="flex shrink-0 items-center gap-1">{headerAction}</div>
+        ) : null}
       </div>
       {questions.map((question, questionIndex) => {
         const answer = answers?.[question.question];
