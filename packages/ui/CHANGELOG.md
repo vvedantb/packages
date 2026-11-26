@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.64.0
+
+### Minor Changes
+
+- [#346](https://github.com/vvedantb/packages/pull/346) [`2d722a9`](https://github.com/vvedantb/packages/commit/2d722a9ef8c3cad1b48adfb594863dc7e66a3401) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ActivityQuestionCard` takes an optional `headerAction`, shown at the right end of the "Question" header row (for example a back / next pager). With an action the header row is 28px high, so it keeps clear of the question text.
+
 ## 0.63.1
 
 ### Patch Changes
