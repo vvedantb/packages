@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.65.0
+
+### Minor Changes
+
+- [#347](https://github.com/vvedantb/packages/pull/347) [`aab01ed`](https://github.com/vvedantb/packages/commit/aab01edb146da9305e869e9fdeb9e63dc6eb90ee) Thanks [@agenteva1](https://github.com/apps/agenteva1)! - `ModelPicker` now owns trait controls. Its new `traits` prop is required: pass the selected model's `TraitsPanel` props (`ModelPickerTraits`), or `null` where runs take no traits. The picker pins the panel above the model list and sums the traits up on the trigger, with a bolt for Fast (`modelPickerTraitSummary`). The `header`, `triggerSuffix` and `showFastIcon` props are removed: pass `traits` instead.
+
 ## 0.64.0
 
 ### Minor Changes
