@@ -139,19 +139,38 @@ describe("ModelPicker config", () => {
   const noop = () => {};
 
   it("trigger: built-in classes without an entry, `classes.trigger` replaces them, className merges last", async () => {
-    let host = await mount(<ModelPicker value="opus" options={options} onValueChange={noop} />);
+    let host = await mount(<ModelPicker value="opus" options={options} onValueChange={noop} traits={null} />);
     const trigger = () => el(host, 'button[role="combobox"]').getAttribute("class");
     expect(trigger()).toContain("hover:bg-surface-tertiary");
 
-    host = await mount(<ModelPicker value="opus" options={options} onValueChange={noop} className="w-40" />, {
+    host = await mount(<ModelPicker value="opus" options={options} onValueChange={noop} traits={null} className="w-40" />, {
       ModelPicker: { classes: { trigger: "app-trigger" } },
     });
     expect(trigger()).toBe("app-trigger w-40");
   });
 
+  it("trigger: sums up the traits after the model name, with a bolt for Fast", async () => {
+    const traits = {
+      config: { reasoning: { levels: ["low", "high"], default: "high" }, contextWindow1m: true, fastMode: true },
+      effortLevel: "low",
+      thinkingEnabled: true,
+      use1mContext: true,
+      fastMode: true,
+      getLevelLabel: (level: string) => level.toUpperCase(),
+      onEffortLevelChange: noop,
+      onThinkingEnabledChange: noop,
+      onUse1mContextChange: noop,
+      onFastModeChange: noop,
+    };
+    const host = await mount(<ModelPicker value="opus" options={options} onValueChange={noop} traits={traits} />);
+    const trigger = el(host, 'button[role="combobox"]');
+    expect(trigger.textContent).toContain("Opus · LOW · 1M");
+    expect(trigger.querySelector('[title="Fast"]')).not.toBeNull();
+  });
+
   it("badge ring: tokens by default, the configured colour with an entry", async () => {
     const node = (
-      <ModelPicker value="opus" options={options} onValueChange={noop} accounts={accounts} accountId="acc" />
+      <ModelPicker value="opus" options={options} onValueChange={noop} traits={null} accounts={accounts} accountId="acc" />
     );
     let host = await mount(node);
     const badge = () => el(host, '[aria-hidden="true"][style]').getAttribute("style");

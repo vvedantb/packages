@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { IconBolt, IconChevronDown } from "@tabler/icons-react";
 import { SimpleModelLadder } from "./simple-model-ladder";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -17,6 +17,7 @@ import {
   formatModelDisplayLabel,
   getProviderLabel,
 } from "./model-picker-types";
+import { TraitsPanel, type TraitsMenuProps } from "./prompt-input-traits";
 
 export type { ModelAccount, ModelOption };
 export { findModelOption, formatModelDisplayLabel, getProviderLabel };
@@ -49,6 +50,39 @@ const TRIGGER_CLASS =
 export const modelPickerSurfaceClass =
   "w-100 max-w-[calc(100vw-1rem)] overflow-hidden rounded-menu border-0 bg-transparent p-0 shadow-none";
 
+/**
+ * The selected model's trait controls (reasoning, thinking, context window,
+ * Fast). `ModelPicker` pins them above the model list and sums them up on the
+ * trigger, so every picker shows traits the same way.
+ */
+export type ModelPickerTraits = Omit<TraitsMenuProps, "className" | "disabled">;
+
+/**
+ * What the trigger shows after the model name: the reasoning level, "1M" when
+ * the 1M context is on, "No thinking" when thinking is off, joined by " · ",
+ * and whether Fast is on (the bolt). Only traits the model supports count.
+ */
+export function modelPickerTraitSummary(traits: ModelPickerTraits): {
+  suffix: string | undefined;
+  fast: boolean;
+} {
+  const { config } = traits;
+  const parts: string[] = [];
+  if (config.reasoning) {
+    parts.push(
+      traits.getLevelLabel(traits.effortLevel ?? config.reasoning.default),
+    );
+  }
+  if (config.contextWindow1m && traits.use1mContext) parts.push("1M");
+  if (config.thinkingToggle && !traits.thinkingEnabled) {
+    parts.push("No thinking");
+  }
+  return {
+    suffix: parts.length > 0 ? parts.join(" · ") : undefined,
+    fast: Boolean(config.fastMode && traits.fastMode),
+  };
+}
+
 export interface ModelPickerProps<TModel extends string = string> {
   value: TModel;
   onValueChange: (model: TModel) => void;
@@ -77,14 +111,10 @@ export interface ModelPickerProps<TModel extends string = string> {
    */
   canSelectTeamWhilePersonal?: boolean;
   /**
-   * Compact label after the model name on the trigger (e.g. the active
-   * reasoning level).
+   * The selected model's traits. Required so no picker drops them by
+   * accident: pass `null` only where runs take no traits.
    */
-  triggerSuffix?: string;
-  /** Pinned above the model list — typically trait controls. */
-  header?: ReactNode;
-  /** Bolt before the provider icon when Fast mode is on. */
-  showFastIcon?: boolean;
+  traits: ModelPickerTraits | null;
   /**
    * Simple-view capability ladder (cheapest → strongest). When at least two of
    * these ids are in `options`, the popover opens on a discrete slider;
@@ -111,14 +141,18 @@ export function ModelPicker<TModel extends string>({
   onAccountChange,
   onSelectionChange,
   canSelectTeamWhilePersonal = true,
-  triggerSuffix,
-  header,
-  showFastIcon,
+  traits,
   simpleLadder,
   simpleLadderSnap,
 }: ModelPickerProps<TModel>) {
   const merge = useCn();
   const config = useUiConfig("ModelPicker");
+  const summary = traits === null ? null : modelPickerTraitSummary(traits);
+  const triggerSuffix = summary?.suffix;
+  const header =
+    traits === null ? undefined : (
+      <TraitsPanel {...traits} disabled={disabled} />
+    );
   const [open, setOpen] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [previewId, setPreviewId] = useState<TModel | null>(null);
@@ -208,7 +242,7 @@ export function ModelPicker<TModel extends string>({
           )}
           disabled={disabled}
         >
-          {showFastIcon ? (
+          {summary?.fast ? (
             <span title="Fast" className="inline-flex shrink-0">
               <IconBolt size={12} aria-hidden />
             </span>
