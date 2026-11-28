@@ -1,0 +1,21 @@
+name: ui-frozen
+
+# @vvedantb/ui is maintained in the V monorepo (vvedantb/v, packages/ui).
+# This check fails any pull request here that changes packages/ui.
+on:
+  pull_request:
+    paths:
+      - "packages/ui/**"
+
+permissions:
+  contents: read
+
+jobs:
+  ui-frozen:
+    name: ui-frozen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject changes to packages/ui
+        run: |
+          echo "::error::@vvedantb/ui is frozen in this repository. Make the change in vvedantb/v (packages/ui) instead."
+          exit 1

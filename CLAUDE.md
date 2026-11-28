@@ -3,6 +3,10 @@
 You are the owner and long-term maintainer of this codebase, and its design is up to you.
 Always believe in yourself! Keep going, you got this!
 
+## `@vvedantb/ui` is frozen here
+
+Do not change `packages/ui` in this repository. Make every `@vvedantb/ui` change in the V monorepo (`vvedantb/v`, `packages/ui`) instead. The `ui-frozen` CI check fails any pull request that touches `packages/ui/`. npm still publishes from this repository until the npm cutover, so `@vvedantb/ui` stays at 0.65.0 on npm until then.
+
 ## Releases
 
 - Every user-facing change to a published package (`@vvedantb/ui`, `native-ui`, `server`, `config`) needs a changeset. Run `pnpm changeset`.
